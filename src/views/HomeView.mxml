@@ -1,0 +1,1143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2017  Johan Degraeve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
+
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:charts="mx.charts.*"
+		xmlns:series="mx.charts.series.*"
+		xmlns:chartClasses="mx.charts.chartClasses.*" 
+		title=""
+		initialize="initializeHandler(event)"
+		creationComplete="onCreationComplete(event)" xmlns:mx="library://ns.adobe.com/flex/mx">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.distriqt.extension.bluetoothle.BluetoothLE;
+			import com.distriqt.extension.bluetoothle.BluetoothLEState;
+			import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
+			import com.distriqt.extension.dialog.DateTimeDialogView;
+			import com.distriqt.extension.dialog.Dialog;
+			import com.distriqt.extension.dialog.DialogType;
+			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.PickerDialogView;
+			import com.distriqt.extension.dialog.builders.ActionSheetBuilder;
+			import com.distriqt.extension.dialog.builders.AlertBuilder;
+			import com.distriqt.extension.dialog.builders.DateTimeDialogBuilder;
+			import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
+			import com.distriqt.extension.dialog.events.DialogDateTimeEvent;
+			import com.distriqt.extension.dialog.events.DialogViewEvent;
+			import com.distriqt.extension.dialog.objects.DialogAction;
+			import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+			
+			import mx.charts.chartClasses.IAxis;
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			import spark.formatters.DateTimeFormatter;
+			
+			import G4Model.TransmitterStatus;
+			
+			import G5Model.TransmitterStatus;
+			
+			import Utilities.BgGraphBuilder;
+			import Utilities.FromtimeAndValueArrayCollection;
+			import Utilities.Trace;
+			
+			import databaseclasses.BgReading;
+			import databaseclasses.BlueToothDevice;
+			import databaseclasses.Calibration;
+			import databaseclasses.CommonSettings;
+			import databaseclasses.Database;
+			import databaseclasses.LocalSettings;
+			import databaseclasses.Sensor;
+			
+			import events.BlueToothServiceEvent;
+			import events.CalibrationServiceEvent;
+			import events.DatabaseEvent;
+			import events.DialogServiceEvent;
+			import events.NotificationServiceEvent;
+			import events.SettingsServiceEvent;
+			import events.TransmitterServiceEvent;
+			
+			import model.ModelLocator;
+			
+			import services.BluetoothService;
+			import services.CalibrationService;
+			import services.DialogService;
+			import services.NotificationService;
+			import services.TransmitterService;
+			
+			[ResourceBundle('homeview')]
+			[ResourceBundle("general")]
+			[ResourceBundle("settingsview")]
+			
+			private static var initialStart:Boolean = true;
+			[Bindable]
+			/**
+			 * the label for toppart, this is inclusive arrow
+			 */
+			private static var currentBgLabelText:String = "---";
+			[Bindable]
+			/**
+			 * the label shown in large prt, this is exclusive arrow
+			 */
+			private static var largeBgLabelText:String = "---";
+			[Bindable]
+			private static var minutesAgoText:String = "";
+			[Bindable]
+			private static var deltaValueText:String = "---";
+			[Bindable]
+			private static var _calibrateButtonActive:Boolean = false;
+			private static const ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE:int = 0;
+			private static const ACTION_SHEET_INDEX_FOR_FORGET_DEVICE:int = 1;
+			private static const ACTION_SHEET_INDEX_FOR_START_SENSOR:int = 2;
+			private static const ACTION_SHEET_INDEX_FOR_STOP_SENSOR:int = 3;
+			private static const ACTION_SHEET_INDEX_FOR_STATUS:int = 4;
+			private static const ACTION_SHEET_INDEX_FOR_CANCEL:int = 6;
+			
+			private static const UPDATE_DISPLAY_INFO_EVERY_X_SECONDS:int = 15;
+			
+			//local time, ie if it's here and now 12:20 the 2nd of April 2017, then Hours = 12, ...
+			private static var sensorStartSeconds:int = 0;
+			private static var sensorStartMinutes:int = 0;
+			private static var sensorStartHours:int = 0;
+			private static var userSelectedTime:Boolean = false;
+			private static var sensorStartDate:int = 0;
+			private static var sensorStartYear:int = 0;
+			private static var sensorStartMonth:int = 0;//starts at 0 for January
+			
+			private static var currentInfoUpdateTimer:Timer;
+			
+			private static var peripheralConnected:Boolean = false;
+			/**
+			 * timestamp that has changed connection status<br> 
+			 */
+			private static var peripheralConnectionStatusChangeTimestamp:Number;
+			private static var scanningWasUserInitiated:Boolean = false;
+			
+			[Bindable]
+			private static var currentBgLabellinethrough:Boolean = false;
+			[Bindable]
+			private static var currentBgLabelColor:int = 0xFFFFFF;
+			
+			[Bindable]
+			private static var chartValues:ArrayCollection;
+			
+			private static var hoursToShowInChart:Number = MINIMUM_HOURS_TO_SHOW_IN_CHART;
+			private static const MINIMUM_HOURS_TO_SHOW_IN_CHART:int = 6;
+			private static const MAXIMUM_HOURS_TO_SHOW_IN_CHART:int = 24;
+			private static var hourOffFirstElementInChart:Number = 0;
+			[Bindable]
+			private static var chartMinimumValue:Number;
+			[Bindable]
+			private static var chartMaximumValue:Number;
+			[Bindable]
+			private static var chartInterval:Number;
+			[Bindable]
+			private static var fontSizeForLargeBGLabel:int = 100;
+
+			/**
+			 * default lowest value to show in chart mgdl
+			 */
+			private static const CHART_MINIMUM_VALUE_MGDL:Number = 40;
+			/**
+			 * default highest value to show in chart mgdl, if there's values higher than this, then CHART_MAXIMUM_VALUE_2_MMOL will be used
+			 */
+			private static const CHART_MAXIMUM_VALUE_1_MGDL:Number = 300;
+			/**
+			 * default second highest value to show in chart mgdl
+			 */
+			private static const CHART_MAXIMUM_VALUE_2_MGDL:Number = 400;
+			/**
+			 * default chart interval mgdl 
+			 */
+			private static const CHART_INTERVAL_MGDL:Number = 50;
+			/**
+			 * default lowest value to show in chart mmol
+			 */
+			private static const CHART_MINIMUM_VALUE_MMOL:Number = 2.22;
+			/**
+			 * default highest value to show in chart mmol, if there's values higher than this, then CHART_MAXIMUM_VALUE_2_MMOL will be used
+			 */
+			private static const CHART_MAXIMUM_VALUE_1_MMOL:Number = 16.66;
+			/**
+			 * default second highest value to show in chart mmol
+			 */
+			private static const CHART_MAXIMUM_VALUE_2_MMOL:Number = 22.22;
+			/**
+			 * default chart interval mmol 
+			 */
+			private static const CHART_INTERVAL_MMOL:Number = 4;
+			private static var timeStampOfLatestReadingWithValueHigherThanFirstMax:Number = 0;
+			
+			private static var largeBgLabelTouchTimer:Timer;
+			
+			private static var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter;
+			
+			protected function onCreationComplete(event:FlexEvent):void
+			{
+				ModelLocator.navigator = navigator;
+				//navigator.addEventListener(ElementExistenceEvent.ELEMENT_ADD )
+				if (initialStart) {
+					Trace.init();
+					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
+					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
+					//need to know when modellocator is populated, then we can also update display
+					Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
+					Database.init();
+					initialStart = false;
+					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+					
+
+					dateFormatterForSensorStartTimeAndDate = new DateTimeFormatter();
+					dateFormatterForSensorStartTimeAndDate.dateTimePattern = ModelLocator.resourceManagerInstance.getString('homeview','datetimepatternforstatusinfo');
+					dateFormatterForSensorStartTimeAndDate.useUTC = false;
+					dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
+				} else {
+					//set info
+					displayCurrentInfoFromReading();
+					
+					//start timer to check for delay since last receipt of bgreading
+					restartCurrentInfoUpdateTimer();
+				}
+				
+				function settingChanged(event:SettingsServiceEvent):void {
+					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL 
+						|| 
+						event.data == CommonSettings.COMMON_SETTING_HIGH_MARK 
+						|| 
+						event.data == CommonSettings.COMMON_SETTING_LOW_MARK) {
+						displayCurrentInfoFromReading();
+					} else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
+						if (BlueToothDevice.needsTransmitterId()) {
+							SettingsView.requestNewTransmitterId();
+						}
+						if (BlueToothDevice.alwaysScan()) {
+							scanningWasUserInitiated = false;
+							if (BlueToothDevice.isDexcomG5()) {
+								if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false") {
+									showG5InfoScreen();
+								}
+							} else if (BlueToothDevice.isBluKon()) {
+								if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false") {
+									showBluKonInfoScreen();
+								}
+							}
+						} else {
+							if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
+								showG4InfoScreen();
+							}
+						}
+					}
+					
+					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL 
+						|| 
+						event.data == CommonSettings.COMMON_SETTING_HIGH_MARK 
+						|| 
+						event.data == CommonSettings.COMMON_SETTING_LOW_MARK)
+						resetChartValues();
+				}
+				
+				function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
+					if (de.data != null)
+						if (de.data is String) {
+							if (de.data as String == Database.END_OF_RESULT) {
+								displayCurrentInfoFromReading();
+								restartCurrentInfoUpdateTimer();
+								showInfoAboutClickOnChart();
+							}
+						} else {
+						}
+				} 
+				
+				function onInitResult(event:Event):void
+				{
+					trace("HomeView : database init result ok");
+					//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
+					
+					//set calibration button in the correct state
+					if (Calibration.allForSensor().length > 1) {
+						_calibrateButtonActive = true;
+					}
+					
+					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
+					
+					TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
+					
+					CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
+					CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
+					
+				}
+				
+				function onInitError(event:Event):void
+				{	
+					trace("HomeView : database init error");
+				}
+			}
+			
+			private static function showInfoAboutClickOnChart():void {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_CHART_RANGE_INFO_GIVEN) == "false") {
+					if (ModelLocator.bgReadings.length > 1) {
+						if ((ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading).timestamp - (ModelLocator.bgReadings.getItemAt(0) as BgReading).timestamp > MINIMUM_HOURS_TO_SHOW_IN_CHART * 60 * 60 * 1000) {
+							DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+								ModelLocator.resourceManagerInstance.getString('homeview',"info_about_click_on_chart"));
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_CHART_RANGE_INFO_GIVEN,"true");
+						}
+					}
+				}
+			}
+			
+			public static function notificationServiceInitiated(ev:NotificationServiceEvent):void {
+				NotificationService.updateBgNotification(null);
+				if (DialogService.isInitiated) {
+					dialogServiceInitiated(null);
+				} else {
+					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, dialogServiceInitiated);
+				}
+			}
+						
+			/*private static function peripheralTypeSelected(event:DialogViewEvent):void {
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE, "true");
+				if (event.index== 1) {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G5");
+					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
+						if (!BluetoothLE.service.centralManager.isScanning) {
+							BluetoothService.startScanning();
+						}
+					}
+					showG5InfoScreen();
+					//default battery alert level is 210, assuming xdrip with G4, when user selects G5, that needs to be changed
+					var newSetting:String = FromtimeAndValueArrayCollection.replaceAllValues(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), new Number(G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA), false)
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, newSetting);
+				} else if (event.index == 2) {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G4");
+					showG4InfoScreen();
+				}
+			}*/
+			
+			private static function showG4InfoScreen():void {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+						ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_1"));
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN,"true");
+				}
+			}
+			
+			private static function showG5InfoScreen():void {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false") {
+					var message:String = ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_2");
+					if (Sensor.getActiveSensor() == null) {
+						message += "\n\n" + ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_2_start_sensor");
+					}
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+						message);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN,"true");
+				}
+			}
+			
+			private static function showBluKonInfoScreen():void {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false") {
+					var message:String = ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_blukon");
+					if (Sensor.getActiveSensor() == null) {
+						message += "\n\n" + ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_2_start_sensor");
+					}
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+						message);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN,"true");
+				}
+			}
+			
+			public static function dialogServiceInitiated(event:Event):void {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LICENSE_INFO_ACCEPTED) == "false") {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle("xDrip")
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview', "licenseinfo"))//info about buttons top right corner
+						.addOption(ModelLocator.resourceManagerInstance.getString('homeview', "iagree"), DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString('homeview', "idontagree"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, licenseInfoConfirmed);
+					DialogService.addDialog(alert);
+				} else {
+					licenseInfoConfirmed(null);
+				}
+			}
+			
+			private static function licenseInfoConfirmed(ev:DialogViewEvent):void {
+				if (ev != null) {
+					if (ev.index == 1) {
+						return;
+					}
+				}
+
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LICENSE_INFO_ACCEPTED,"true");
+
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SELECTION_UNIT_DONE) == "false") {
+					selectUnit();
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SELECTION_UNIT_DONE,"true");
+				} else {
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE) == "false") {
+						SettingsView.changeTransmitterType();
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE,"true");
+					}
+				}
+			}
+			
+			private static function selectUnit():void {
+				var units:Array = new Array();
+				units.push(ModelLocator.resourceManagerInstance.getString('settingsview','mgdl'));
+				units.push(ModelLocator.resourceManagerInstance.getString('settingsview','mmol'));
+
+				var picker:PickerDialogView = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview', 'select_unit'))
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn(units)
+					.build()
+				);
+				
+				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler);
+				picker.show();
+				
+				function picker_closedHandler(event:DialogViewEvent): void {
+					if (event.values[0] == ModelLocator.resourceManagerInstance.getString('settingsview','mgdl')) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL, "true");
+					} else {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL, "false");
+					}
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE) == "false") {
+						SettingsView.changeTransmitterType();
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE,"true");
+					}
+				}
+			}
+			
+			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
+				myTrace("in bluetoothDeviceConnectionCompleted");
+				if (!peripheralConnected) {
+					myTrace("in bluetoothDeviceConnectionCompleted, setting peripheralConnected = true");
+					peripheralConnected = true;
+					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
+				}
+			}
+			
+			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
+				if (scanningWasUserInitiated) {
+					scanningWasUserInitiated = false;
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"),
+						ModelLocator.resourceManagerInstance.getString('homeview',"connected_to_peripheral_device_id_stored"),
+						30);
+				}
+			}
+			
+			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
+				if (peripheralConnected) {
+					myTrace("in central_peripheralDisconnectHandler, setting peripheralConnected = false");
+					peripheralConnected = false;
+					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
+				}
+			}
+			
+			private function blueToothServiceInitiated(be:BlueToothServiceEvent):void {
+				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
+				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
+
+				resetChartValues();
+			}
+			
+			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
+				displayCurrentInfoFromReading();
+				addToChartValues(BgReading.lastNoSensor());
+				showInfoAboutClickOnChart();
+				completeChartValues();
+			}
+			
+			private function restartCurrentInfoUpdateTimer():void {
+				if (currentInfoUpdateTimer != null) {
+					if (currentInfoUpdateTimer.running) {
+						currentInfoUpdateTimer.stop();
+					}
+				}
+				currentInfoUpdateTimer = new Timer(UPDATE_DISPLAY_INFO_EVERY_X_SECONDS * 1000, 1);
+				currentInfoUpdateTimer.addEventListener(TimerEvent.TIMER, currentInfoUpdateTimerExpired);
+				currentInfoUpdateTimer.start();
+			}
+			
+			private function currentInfoUpdateTimerExpired(event:Event):void {
+				displayCurrentInfoFromReading();
+				restartCurrentInfoUpdateTimer();
+			}
+			
+			private function initialCalibrationEventReceived(be:CalibrationServiceEvent):void {
+				displayCurrentInfoFromReading();
+				_calibrateButtonActive = true;
+			}
+			
+			private function newCalibrationEventReceived(be:CalibrationServiceEvent):void {
+				displayCurrentInfoFromReading();
+			}
+			
+			protected function initializeHandler(event:FlexEvent):void
+			{
+				//instantiate modellocator because event listeners are being added to the database class, to receive logging information
+				ModelLocator.instance;
+				largeBGLabelGroup.includeInLayout = false;
+				largeBGLabelGroup.visible = false;
+			}
+			
+			private function displayCurrentInfoFromReading(event:Event = null):void {
+				var lastBgReading:BgReading = BgReading.lastNoSensor();
+				var estimate:Number = new Number(0);
+				if (lastBgReading == null) {
+					currentBgLabelText = "---";
+					largeBgLabelText = currentBgLabelText;
+					currentBgLabellinethrough = false;//currentBgLabel.setStyle("lineThrough","false");
+					currentBgLabel.invalidateSize();
+					minutesAgoText = "";
+					deltaValueText = "";
+				} else {
+					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+						estimate = lastBgReading.calculatedValue;
+						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+						currentBgLabellinethrough = true;//currentBgLabel.setStyle("lineThrough","true");
+						largeBgLabelText = currentBgLabelText;
+						currentBgLabel.invalidateSize();
+					} else {
+						estimate = lastBgReading.calculatedValue;
+						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+						var slope_arrow:String = lastBgReading.slopeArrow();
+						if (lastBgReading.hideSlope) {
+							slope_arrow = "";
+						}
+						largeBgLabelText = currentBgLabelText;
+						currentBgLabelText += " " + slope_arrow;
+						currentBgLabellinethrough = false;
+						currentBgLabel.invalidateSize();
+					}
+					var minutes:int = ((new Date()).valueOf() - lastBgReading.timestamp) / (60 * 1000);
+					minutesAgoText = minutes + 
+						(minutes == 1 ? 
+							" " + ModelLocator.resourceManagerInstance.getString('homeview','minuteago')
+							:
+							" " + ModelLocator.resourceManagerInstance.getString('homeview','minutesago'));
+					deltaValueText = BgGraphBuilder.unitizedDeltaString(true, true);
+					if(estimate <= new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))) {
+						currentBgLabelColor = 0xFF0000;
+					} else if (estimate >= new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))) {
+						currentBgLabelColor = 0xFFFF00;
+					} else {
+						currentBgLabelColor = 0xFFFFFF;
+					}
+				}
+			}
+			
+			private function calibrationButtonClicked(e:MouseEvent = null):void {
+				if (!_calibrateButtonActive)
+					return;
+				CalibrationService.calibrationOnRequest();
+			}
+			
+			private function deviceTypeButtonClicked(e:MouseEvent = null):void {
+				var actionsheetBuilder:ActionSheetBuilder = new ActionSheetBuilder();;
+				
+				actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','view_device_status'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_STATUS);
+				
+				if (!BluetoothService.bluetoothPeripheralActive() && !BlueToothDevice.alwaysScan()) {
+					//this is the case where bluetoothdevice is known or not, time for a scan
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','scan_for_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE);
+				} 
+				
+				if (BlueToothDevice.known() && !BlueToothDevice.alwaysScan()) {
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','forget_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_FORGET_DEVICE);
+				}
+				
+				if (Sensor.getActiveSensor() == null) {
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','start_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_START_SENSOR);
+				} else {
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','stop_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_STOP_SENSOR);
+				}
+				
+				actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('general','cancel'),DialogAction.STYLE_CANCEL, ACTION_SHEET_INDEX_FOR_CANCEL);
+				
+				var actionSheet:DialogView = Dialog.service.create(actionsheetBuilder.build());
+				actionSheet.addEventListener(DialogViewEvent.CLOSED, actionSheet_closedHandler);
+				actionSheet.show();
+			}
+			
+			private function actionSheet_closedHandler( event:DialogViewEvent ):void {
+				var actionSheet:DialogView = DialogView(event.currentTarget);
+				actionSheet.dispose();
+				
+				if (event.index == ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE) {
+					//TODO add a check if bluetooth is on, if not give warning message and don't start scanning
+					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
+						BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
+						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, userInitiatedScanningSucceeded);
+						scanningWasUserInitiated = true;
+						BluetoothService.startScanning(true);
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"),
+							ModelLocator.resourceManagerInstance.getString('homeview',"scanning_started_message"), 30);
+						
+						myTrace("in actionSheet_closedHandler, initial scan for device, setting systemIdleMode = SystemIdleMode.KEEP_AWAKE");
+						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+					} else {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_failed_tile"),
+							ModelLocator.resourceManagerInstance.getString('homeview',"bluetooth_not_switched_on"),
+							30);
+					}
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_FORGET_DEVICE) {
+					BlueToothDevice.forgetBlueToothDevice();
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_START_SENSOR) {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor_warning_correct_timing"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, startSensorWarningConfirmed);
+					alert.addEventListener(DialogViewEvent.CANCELLED, startSensorWarningCancelled);
+					DialogService.addDialog(alert, 60);
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_STOP_SENSOR) {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"stop_sensor"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"stop_sensor_ask_confirmation"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, stopSensorConfirmation);
+					alert.addEventListener(DialogViewEvent.CANCELLED, stopSensorcancellation);
+					DialogService.addDialog(alert, 60);
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_STATUS) {
+					var message:String = ModelLocator.resourceManagerInstance.getString('homeview', "status_info_sensor_start");
+					if (Sensor.getActiveSensor() != null) {
+						message += " " + dateFormatterForSensorStartTimeAndDate.format(new Date(Sensor.getActiveSensor().startedAt));
+					} else {
+						message += " " + ModelLocator.resourceManagerInstance.getString('homeview', "status_info_sensor_not_started");
+					}
+					message += "\n\n";
+					message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_title') + '\n';
+					message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_device_name');
+					if (BlueToothDevice.known()) {
+						message += " " + BlueToothDevice.name;
+					} else {
+						message += " " + ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+					}
+					message += "\n";
+					
+					//only for xdrip type of device, the status will be shown, because peripheralConnected is usually not connected for Dexcom (or other alike)
+					//and peripheralConnectionStatusChangeTimestamp is not being set for Dexcom (or other alike)
+					if (peripheralConnected) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','connected');
+					} else if (!isNaN(peripheralConnectionStatusChangeTimestamp)) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','last_connection') + " " +
+						dateFormatterForSensorStartTimeAndDate.format(new Date(peripheralConnectionStatusChangeTimestamp));
+					}
+					message += "\n";
+					if (BlueToothDevice.isDexcomG5()) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEA') + " " + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown")
+							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? "BAD":"NORMAL") + 
+								")" + '\n';
+						else 
+							message += '\n';
+						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEB') + " " + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB);
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB) != "unknown")
+							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? "BAD":"NORMAL") + 
+								")" + '\n';
+						else 
+							message += '\n';
+						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_RESIST') + " " + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST);
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST) != "unknown")
+							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_BAD ? "BAD":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NOTICE ? "NOTICE":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NORMAL ? "NORMAL":"GOOD"))) + 
+								")";
+					} else if (BlueToothDevice.isDexcomG4()) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
+						if (batteryLevel == "0") {
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+							message += " " + batteryLevel;
+						} else {
+							message += " " + G4Model.TransmitterStatus.getBatteryLevel(new Number(batteryLevel));
+						}
+					} else if (BlueToothDevice.isBlueReader()) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
+						if (batteryLevel == "0") {
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+							message += " " + batteryLevel;
+						} else {
+							message += " " + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000;
+						}
+						
+					} else if (BlueToothDevice.isBluKon()) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL);
+						if (batteryLevel == "0") {
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+							message += " " + batteryLevel;
+						} else {
+							message += " " + new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) + " %";
+						}
+					}
+					
+					if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader()) {
+						message += '\n';
+						message += ModelLocator.resourceManagerInstance.getString('homeview','sensor_age');
+						var sensorAge:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
+						if (sensorAge == "0") {
+							sensorAge = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+							message += " " + sensorAge;
+						} else {
+							var sensorAgeInDays:int = (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE)))/1440;
+							message += " " + sensorAgeInDays + " " + ModelLocator.resourceManagerInstance.getString('homeview','days');
+						}
+					}
+					
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"status_title"),
+						message, 60);
+				}
+			}
+			
+			private function startSensorWarningCancelled(event:DialogViewEvent):void {
+			}
+			
+			private function startSensorWarningConfirmed(event:DialogViewEvent):void {
+				if (event.index == 1) {
+					return;
+				}
+				sensorStartYear = 0; sensorStartMonth = 0; sensorStartDate = 0; sensorStartHours = 0; sensorStartMinutes = 0; sensorStartSeconds = 0;
+				userSelectedTime = false;
+				var dateTime:DateTimeDialogView = Dialog.service.create(
+					new DateTimeDialogBuilder()
+					.setMode(DialogType.MODE_DATE)
+					.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor_title_get_date"))
+					.setAcceptLabel("Ok")
+					.setCancelable(true)
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
+					.build()
+				);
+				dateTime.addEventListener(DialogViewEvent.CLOSED, date_closedRequestHandler);
+				dateTime.addEventListener(DialogDateTimeEvent.SELECTED, date_selectedHandler);
+				//dateTime.addEventListener(DialogDateTimeEvent.CHANGED, dateTime_changedHandler);Not needed, this is triggered whenever the user clicks another date, but hasn't closed
+				DialogService.addDialog(dateTime);
+			}
+			
+			private static function stopSensorcancellation(event:DialogViewEvent):void {
+			}
+			
+			private static function stopSensorConfirmation(event:DialogViewEvent):void {
+				if (event.index == 1) {
+					return;
+				}
+				Sensor.stopSensor();
+				NotificationService.updateBgNotification(null);
+				_calibrateButtonActive = false;
+			}
+			
+			private function date_selectedHandler( event:DialogDateTimeEvent ):void
+			{
+				sensorStartDate = event.date.date;
+				sensorStartMonth = event.date.month;
+				sensorStartYear = event.date.fullYear;
+			}
+			
+			private function date_closedRequestHandler(event:DialogViewEvent ):void
+			{
+				if (sensorStartYear == 0) {
+					//use pressed cancel
+					return;
+				}
+				var dateTime:DateTimeDialogView = DateTimeDialogView(event.currentTarget);
+				dateTime.dispose();
+				dateTime = Dialog.service.create(
+					new DateTimeDialogBuilder()
+					.setMode(DialogType.MODE_TIME)
+					.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor_title_get_time"))
+					.setAcceptLabel("Ok")
+					.setCancelable(true)
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
+					.build()
+				);
+				dateTime.addEventListener(DialogViewEvent.CLOSED, time_closedRequestHandler);
+				dateTime.addEventListener(DialogDateTimeEvent.SELECTED, time_selectedHandler);
+				//dateTime.addEventListener(DialogDateTimeEvent.CHANGED, dateTime_changedHandler);Not needed, this is triggered whenever the user clicks another date, but hasn't closed
+				DialogService.addDialog(dateTime);
+			}
+			
+			private function time_selectedHandler( event:DialogDateTimeEvent ):void
+			{
+				sensorStartHours = event.date.hours;
+				sensorStartMinutes = event.date.minutes;
+				sensorStartSeconds = event.date.seconds;
+				userSelectedTime = true;
+			}
+			
+			private function time_closedRequestHandler( event:DialogViewEvent ):void {
+				if (!userSelectedTime) {
+					//use pressed cancel
+					return;
+				}
+				
+				var dateTime:DateTimeDialogView = DateTimeDialogView(event.currentTarget);
+				dateTime.dispose();
+				
+				//ready to start the sensor
+				var sensorStartTimeAsDate:Date = new Date(sensorStartYear, sensorStartMonth, sensorStartDate, sensorStartHours, sensorStartMinutes, sensorStartSeconds);
+				var sensorStartTime:Number = sensorStartTimeAsDate.valueOf();
+				if (sensorStartTime > (new Date()).valueOf() + 5 * 60 * 1000) {
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"),
+						ModelLocator.resourceManagerInstance.getString('homeview',"dont_start_with_time_in_future"),
+						60);
+				} else {
+					Sensor.startSensor(sensorStartTime);
+					var actualTime:Number = (new Date()).valueOf();
+					var timeOfCalibration:Number = 2 * 3600 * 1000 - (actualTime - sensorStartTime);
+					var dateFormatterForSensorStartWarning:DateTimeFormatter = new DateTimeFormatter();
+					dateFormatterForSensorStartWarning.dateTimePattern = ModelLocator.resourceManagerInstance.getString('homeview','timestamppattern_for_sensor_start_warning');
+					dateFormatterForSensorStartWarning.useUTC = false;
+					dateFormatterForSensorStartWarning.setStyle("locale",Capabilities.language.substr(0,2));
+					var message:String;
+					if (timeOfCalibration > 0 && !BlueToothDevice.isTypeLimitter()) {
+						message = ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_wait_needed_1");
+						message += " " + dateFormatterForSensorStartWarning.format(new Date(actualTime + timeOfCalibration)) + " ";
+						message += ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_wait_needed_2");
+					} else {
+						message = ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_no_wait_needed");
+					}
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"),
+						message,
+						60);
+				}
+			}
+			
+			private static function scanningStopped(event:Event):void {
+				BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
+				if (!BluetoothService.bluetoothPeripheralActive()) {
+					//create alert to get the user's input
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_failed_tile"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_failed")
+							+
+							(BlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString('homeview',"with_name") + " " + BlueToothDevice.name) + 
+								"\n\n" + ModelLocator.resourceManagerInstance.getString('homeview',"explain_expected_device_name"): "")
+						)
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					DialogService.addDialog(alert, 30);			
+				}
+			}
+			
+			private static function addToChartValues(bgReading:BgReading):void {
+				if (bgReading == null)
+					return;
+				if ((new Date()).valueOf() - bgReading.timestamp > hoursToShowInChart * 60 * 60 * 1000) {
+					return;
+				}
+				if (chartValues == null)
+					chartValues = new ArrayCollection();
+				if (chartValues.length == 0) {
+					chartValues.addItem(bgReading);
+				} else {
+					if (!(bgReading.timestamp > (chartValues.getItemAt(chartValues.length - 1)).timestamp)) {
+						//it's an old reading, this may happen eg when sensor has been stopped, lastNoSensor is called, but this returns the last reading with calculated value not 0
+						//If a sensor is stopped, the app keeps receiving readings, and hence this function is called, but bgreading is an older reading
+						return;
+					}
+
+					//first if length is already > amount expected, remove those
+					//this can be more than 1 because we're adding some in call to completeChartValues
+					while (chartValues.length > hoursToShowInChart * 12) {
+						chartValues.removeItemAt(0);
+					}
+					
+					if ((new Date()).valueOf() - timeStampOfLatestReadingWithValueHigherThanFirstMax > hoursToShowInChart * 60 * 60 * 1000) {
+						timeStampOfLatestReadingWithValueHigherThanFirstMax = 0;
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
+							if (chartMaximumValue == CHART_MAXIMUM_VALUE_2_MGDL)
+								chartMaximumValue = CHART_MAXIMUM_VALUE_1_MGDL;
+						} else {
+							if (chartMaximumValue == CHART_MAXIMUM_VALUE_2_MMOL)
+								chartMaximumValue = CHART_MAXIMUM_VALUE_1_MMOL;
+						}
+					}
+					
+					//fill up gaps if any
+					var timeStampPreviousReading:Number = (chartValues.getItemAt(chartValues.length - 1)).timestamp;
+					var timeStampOfBgReading:Number = bgReading.timestamp;
+					var newItem:Object
+					while (timeStampOfBgReading - timeStampPreviousReading > (5 + 2) * 60 * 1000) {
+						timeStampPreviousReading += 5 * 60 * 1000;
+						newItem = new Object();
+						newItem.timestamp = timeStampPreviousReading;
+						newItem.calculatedValue = Number.NaN;
+						chartValues.addItem(newItem);
+					}
+					
+					
+					//now add the reading
+					newItem = new Object();
+					newItem.timestamp = bgReading.timestamp;
+					//if the value is zero then set to Number.NaN
+					newItem.calculatedValue = bgReading.calculatedValue;
+					if (newItem.calculatedValue == 0)						
+						newItem.calculatedValue = Number.NaN;
+					
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
+						if (newItem.calculatedValue > CHART_MAXIMUM_VALUE_1_MGDL) {
+							chartMaximumValue = CHART_MAXIMUM_VALUE_2_MGDL;
+							timeStampOfLatestReadingWithValueHigherThanFirstMax = bgReading.timestamp;
+						}
+						if (newItem.calculatedValue > CHART_MAXIMUM_VALUE_2_MGDL) {
+							newItem.calculatedValue = CHART_MAXIMUM_VALUE_2_MGDL;
+						}
+						if (newItem.calculatedValue < CHART_MINIMUM_VALUE_MGDL) {
+							newItem.calculatedValue = CHART_MINIMUM_VALUE_MGDL;
+						}
+					} else {
+						newItem.calculatedValue = BgReading.mgdlToMmol(newItem.calculatedValue as Number);
+						if (newItem.calculatedValue > CHART_MAXIMUM_VALUE_1_MMOL) {
+							chartMaximumValue = CHART_MAXIMUM_VALUE_2_MMOL;
+							timeStampOfLatestReadingWithValueHigherThanFirstMax = bgReading.timestamp;
+						}
+						if (newItem.calculatedValue > CHART_MAXIMUM_VALUE_2_MMOL) {
+							newItem.calculatedValue = CHART_MAXIMUM_VALUE_2_MMOL;
+						}
+						if (newItem.calculatedValue < CHART_MINIMUM_VALUE_MMOL) {
+								newItem.calculatedValue = CHART_MINIMUM_VALUE_MMOL;
+						}
+					}
+					chartValues.addItem(newItem);
+				}
+			}
+			
+			/**
+			 * will add dummy values in front of the list so that the first element has a timestamp close to an hour (less than 2.5 minutes) 
+			 */
+			private static function completeChartValues():void {
+				//if list is empty then no need to fill up
+				if (chartValues == null)
+					return;
+				if (chartValues.length == 0)
+					return;
+				//first check that first element is deviation less than 2,5 minutes from an hour
+				var diffFromHourInSeconds:Number;
+				var firstElementCloseToAnHour:Boolean = false;
+				while (!firstElementCloseToAnHour) { 
+					var dateFirstElement:Date = new Date(chartValues.getItemAt(0).timestamp);
+					var secondsFirstElement:Number = dateFirstElement.minutes * 60 + dateFirstElement.seconds;
+					if (secondsFirstElement > 2.5 * 60 && secondsFirstElement < 57.5 * 60) {
+						var newItem:Object = new Object();
+						newItem.timestamp = (new Date(dateFirstElement.valueOf() - 5 * 60 * 1000)).valueOf();
+						newItem.calculatedValue = Number.NaN;
+						chartValues.addItemAt(newItem, 0);
+					} else {
+						firstElementCloseToAnHour = true;
+						hourOffFirstElementInChart = dateFirstElement.hours;
+						if (secondsFirstElement > 57.5 * 60)
+							hourOffFirstElementInChart++;
+					}
+				}
+			}
+			
+			private static function linearAxis_labelFunction(item:Object, prevValue:Object, axis:IAxis):String {
+				if (chartValues == null)
+					return "";
+				if (item >= chartValues.length)
+					return "";
+				var returnValue:String = "";
+				var hour:Number = hourOffFirstElementInChart + (item as Number)/12;
+				while (hour > 23)
+					hour -= 24;
+				returnValue = hour.toString();
+				if (returnValue.length == 1)
+					returnValue = "0" + returnValue;
+				return returnValue;
+			}
+			
+			private static function resetChartValues():void {
+				//init chart
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+					chartMinimumValue = CHART_MINIMUM_VALUE_MMOL;
+					chartMaximumValue = CHART_MAXIMUM_VALUE_1_MMOL;
+					chartInterval = CHART_INTERVAL_MMOL;
+				} else {
+					chartMinimumValue = CHART_MINIMUM_VALUE_MGDL;
+					chartMaximumValue = CHART_MAXIMUM_VALUE_1_MGDL;
+					chartInterval = CHART_INTERVAL_MGDL;
+				}
+				timeStampOfLatestReadingWithValueHigherThanFirstMax = 0;
+
+				chartValues = new ArrayCollection();
+				if (ModelLocator.bgReadings.length == 0)
+					return;
+				for (var cntr:int = 0; cntr < ModelLocator.bgReadings.length; cntr++) {
+					var reading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+					if (reading.timestamp >= ((new Date()).valueOf() - hoursToShowInChart * 60 * 60 * 1000)) {
+						addToChartValues(reading);
+					}
+				}
+				completeChartValues();
+			}
+			
+			private static function myTrace(log:String):void {
+				Trace.myTrace("HomeView.mxml", log);
+			}
+			
+			protected function myChart_clickHandler(event:MouseEvent = null):void
+			{
+				if (myChart.includeInLayout) {
+					if (hoursToShowInChart == MINIMUM_HOURS_TO_SHOW_IN_CHART) {
+						hoursToShowInChart = MAXIMUM_HOURS_TO_SHOW_IN_CHART;
+						resetChartValues();
+					} else {
+						myChart.includeInLayout = false;
+						myChart.visible = false;
+						largeBGLabelGroup.includeInLayout = true;
+						largeBGLabelGroup.visible = true;
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN) == "false") {
+							DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+								ModelLocator.resourceManagerInstance.getString('homeview',"info_about_long_press_on_home_screen"));
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN, "true");
+						}
+					}
+				} else {
+					myChart.includeInLayout = true;
+					myChart.visible = true;
+					largeBGLabelGroup.includeInLayout = false;
+					largeBGLabelGroup.visible = false;
+					hoursToShowInChart = MINIMUM_HOURS_TO_SHOW_IN_CHART;
+					resetChartValues();
+				}
+			}
+			
+			protected function largeBGLabel_updateCompleteHandler(event:FlexEvent):void
+			{
+				if (!largeBGLabelGroup.includeInLayout)
+					return;
+				if (largeBGLabel.width > 1 * iosxdripreader.deviceScreenWidth) {
+					//myTrace("in largeBGLabel_updateCompleteHandler, decreasing fontSizeForLargeBGLabel");
+					fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 0.9;
+				} else if (largeBGLabel.width < 0.9 * iosxdripreader.deviceScreenWidth) {
+					if (largeBGLabel.height < 0.95 * largeBGLabelGroup.height) {
+						fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 1.1;
+						//myTrace("in largeBGLabel_updateCompleteHandler, increasing fontSizeForLargeBGLabel to " + fontSizeForLargeBGLabel + ", largeBGLabel.height = " + largeBGLabel.height + ", largebglabelgroup.height= " + largeBGLabelGroup.height);
+						//myTrace("labelheight = " + largeBGLabel.height);
+					}
+				}  
+			}
+			
+			protected function largeBGLabelGroup_touchBeginHandler(event:MouseEvent):void
+			{
+				largeBgLabelTouchTimer = new Timer(1 * 1000, 1);
+				largeBgLabelTouchTimer.addEventListener(TimerEvent.TIMER, largeBgLabelTouchTimerExpiry);
+				largeBgLabelTouchTimer.start();
+			}
+			
+			private static function largeBgLabelTouchTimerExpiry (event:TimerEvent):void {
+				myTrace("in largeBgLabelTouchTimerExpiry, setting systemIdleMode = SystemIdleMode.KEEP_AWAKE");
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				BackgroundFetch.vibrate();
+			}
+			
+			protected function largeBGLabelGroup_touchEndHandler(event:MouseEvent):void
+			{
+				if (largeBgLabelTouchTimer != null) {
+					if (largeBgLabelTouchTimer.running) {
+						largeBgLabelTouchTimer.stop();
+						largeBgLabelTouchTimer = null;
+						myChart_clickHandler();
+						return;
+					}
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:actionContent>
+		<s:Button id="devicetypebutton" icon="../assets/bluetooth.png" click="deviceTypeButtonClicked(event)"/>
+		<s:Button icon="{ModelLocator.image_calibrate_active}" id="calibrateButton" alpha="{_calibrateButtonActive ? 1:0.25}" enabled="{_calibrateButtonActive}" click="calibrationButtonClicked(event)"/>
+	</s:actionContent>
+	
+	<s:Group y="0" x="0" width="100%" height="100%" left="5" top="5" right="5">
+		<s:layout>
+			<s:VerticalLayout/>
+		</s:layout>
+		<s:Group width="100%" id="topGroup">
+			<s:layout>
+				<s:HorizontalLayout paddingTop="5" paddingBottom="5" paddingLeft="5" paddingRight="5" gap="5" 
+									horizontalAlign="right" verticalAlign="middle"/>
+			</s:layout>
+			<s:Group width="100%">
+				<s:layout>
+					<s:HorizontalLayout paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" gap="0" 
+										horizontalAlign="left" verticalAlign="middle"/>
+				</s:layout>
+				<s:Group>
+					<s:layout>
+						<s:VerticalLayout>
+							
+						</s:VerticalLayout>
+					</s:layout>
+					<s:Label id = "minutesAgoLabelId" text="{minutesAgoText}"/>
+					<s:Label id = "deltaValueLabelId" text="{deltaValueText}"/>
+				</s:Group>
+			</s:Group>
+			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="60" lineThrough="{currentBgLabellinethrough}" color="{currentBgLabelColor}"/>
+		</s:Group>
+		<mx:LineChart id="myChart" height="100%" width="{topGroup.width}" mouseDown="largeBGLabelGroup_touchBeginHandler(event)" mouseUp="largeBGLabelGroup_touchEndHandler(event)"
+					  dataProvider="{chartValues}" 
+					  showDataTips="false">
+
+			<!-- flex adds by default a DropShadowFilter which looks good at first sight. To remove that filter, uncomment following -->
+			<!--mx:seriesFilters>
+				<fx:Array/>
+			</mx:seriesFilters-->
+			
+			<mx:horizontalAxis>
+				<mx:LinearAxis id="horizontalaxis" labelFunction="linearAxis_labelFunction" interval="12" />
+			</mx:horizontalAxis>
+			
+			<mx:verticalAxis>
+				<mx:LinearAxis id="verticalaxis" baseAtZero="false" minimum="{chartMinimumValue}" maximum = "{chartMaximumValue}" interval="{chartInterval}"
+							   >
+				</mx:LinearAxis>
+			</mx:verticalAxis>
+			<mx:series>
+				<mx:PlotSeries yField="calculatedValue" itemRenderer="renderers.BGGraphItemRenderer"/>
+			</mx:series>
+		</mx:LineChart>	
+		<s:Group width="100%" height="100%" id = "largeBGLabelGroup" mouseDown="largeBGLabelGroup_touchBeginHandler(event)" mouseUp="largeBGLabelGroup_touchEndHandler(event)">
+			<s:layout>
+				<s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+			</s:layout>
+			<s:Label id = "largeBGLabel" text="{largeBgLabelText}" fontSize="{fontSizeForLargeBGLabel}" lineThrough="{currentBgLabellinethrough}" 
+					 color="{currentBgLabelColor}" updateComplete="largeBGLabel_updateCompleteHandler(event)"/>
+		</s:Group>	
+	</s:Group>
+</s:View>

@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2017  Johan Degraeve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
+
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		creationComplete="view1_creationCompleteHandler(event)"
+		initialize="view1_initializeHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Metadata>
+		[ResourceBundle("fromtimeandvalueelementview")]
+		[ResourceBundle("settingsview")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import com.distriqt.extension.dialog.DateTimeDialogView;
+			import com.distriqt.extension.dialog.Dialog;
+			import com.distriqt.extension.dialog.DialogType;
+			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.PickerDialogView;
+			import com.distriqt.extension.dialog.builders.AlertBuilder;
+			import com.distriqt.extension.dialog.builders.DateTimeDialogBuilder;
+			import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
+			import com.distriqt.extension.dialog.events.DialogDateTimeEvent;
+			import com.distriqt.extension.dialog.events.DialogViewEvent;
+			import com.distriqt.extension.dialog.objects.DialogAction;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			import spark.components.View;
+			
+			import Utilities.FromtimeAndValue;
+			import Utilities.FromtimeAndValueArrayCollection;
+			
+			import databaseclasses.AlertType;
+			import databaseclasses.BgReading;
+			import databaseclasses.CommonSettings;
+			import databaseclasses.Database;
+			import databaseclasses.LocalSettings;
+			
+			import model.ModelLocator;
+			
+			import services.DialogService;
+			
+			[Bindable]
+			private var back_label:String;
+			
+			[Bindable]
+			/**
+			 * topText shown on top of the view.
+			 */private var topText:String;
+			
+			[Bindable]
+			/**
+			 * the value in text format
+			 */private var value:String;
+			
+			[Bindable]
+			/**
+			 * the alarmName in text format
+			 */private var alarmName:String;
+			
+			[Bindable]
+			/**
+			 * topText shown on top of the view.
+			 */private var timeText:String;
+
+			[Bindable]
+			private var showValue:Boolean = true;
+
+			/**
+			 * the list of elements off course
+			 */
+			private var listOfElements:FromtimeAndValueArrayCollection;
+			
+			private var newFromtimeAndValue:FromtimeAndValue;//if stays null then nothing's changed
+			private var thisView:View;
+			
+			private static var fromStartMinutes:int = 0;
+			private static var fromStartHours:int = 0;
+			private static var userSelectedTime:Boolean = false;
+			private static var isBgValue:Boolean = false;
+			private static var unit:String = null;
+			
+			/**
+			 * the selected index
+			 */private var selectedIndex:int;
+			
+			private static var keyboardTypeToUse:Number = 0;
+			
+			/**
+			 * expects in data :<br>
+			 * data.title (optional), used as view title<br>
+			 * data.topText (optional), explanatory text in the top of view<br>
+			 * data.listOfElements (mandatory), list of existing elements, required in order to check the entered values
+			 * data.selectedIndex (optional), if present, then this is about modifying an existing element, selectedIndex points to that element. If not present, then it's about creating a new element.
+			 * 
+			 */
+			protected function view1_creationCompleteHandler(event:FlexEvent):void {
+				//ModelLocator.navigator = navigator;
+				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
+				valueGroupLabelIdforValue.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','value');
+				alarmNameGroupLabelIdforAlarmName.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','alarmname');
+				fromGroupLabelId.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','from');
+				if (data.title)
+					title = data.title;
+				else 
+					title = "";
+				if (data.topText)
+					topTextLabelId.text = data.topText;
+				else {
+					topTextLabelId.text = "";
+				}
+				listOfElements = data.listOfElements;
+				if (data.isBgValue)
+					isBgValue = data.isBgValue;
+				else 
+					isBgValue = false;
+				if (data.unit)
+					unit = data.unit;
+				else {
+					unit = null;
+				}
+				if (data.hideValue)
+					showValue = !data.hideValue;
+				
+				if (data.keyboardtype)
+					keyboardTypeToUse = data.keyboardtype;
+				else
+					keyboardTypeToUse = 0;
+				
+				if (data.selectedIndex != null) {
+					var fromtimeAndValue:FromtimeAndValue;
+					selectedIndex = data.selectedIndex;
+					fromtimeAndValue = listOfElements.getItemAt(selectedIndex) as FromtimeAndValue;
+					timeText = fromtimeAndValue.fromAsString();
+					var valueInCorrectUnit:Number = fromtimeAndValue.value;
+					if (isBgValue) {
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+							valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
+						}
+					}
+					value = (Math.round(valueInCorrectUnit) == valueInCorrectUnit ?
+						valueInCorrectUnit.toString()
+						:
+						(Math.round((valueInCorrectUnit * 10)) / 10).toString());
+					if (unit == null) {
+						if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
+							valueGroupLabelIdforUnit.text = ModelLocator.resourceManagerInstance.getString('settingsview','mgdl');
+						} else {
+							valueGroupLabelIdforUnit.text = ModelLocator.resourceManagerInstance.getString('settingsview','mmol');
+						}
+					} else {
+						valueGroupLabelIdforUnit.text = unit;
+					}
+					alarmName = fromtimeAndValue.alarmName;
+					var alertType:AlertType = Database.getAlertType(alarmName);
+					if (!alertType.enabled) {
+						valueGroup.enabled = false;
+						valueGroup.alpha = 0.25;
+					}
+					if (showValue) {
+						if (!alertType.enabled) {
+							if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN) == "false") {
+								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('settingsview',"warning"),
+									ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"give_info_about_value"));
+								LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN,"true");
+							}
+						}
+					}
+				}
+				
+			}
+			
+			private function fromGroupClicked(event:Event):void {
+				if (selectedIndex == 0) {
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_from_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'first_element_can_not_change_time'));
+					return;
+				} 
+				var minTime:Number;
+				var maxTime:Number;
+				userSelectedTime = false;
+				fromStartHours = 0;
+				fromStartMinutes = 0;
+				userSelectedTime = false;
+				
+				var now:Date = new Date();
+				var nowAt0000:Date = new Date(now.fullYear, now.month, now.date);
+				minTime = (listOfElements.getItemAt(selectedIndex - 1) as FromtimeAndValue).from * 1000 + 1 * 60 * 1000;
+				var minimumTimeStamp:Date = new Date(nowAt0000.valueOf() + minTime);
+				
+				if (selectedIndex < listOfElements.length - 1) {
+					maxTime = (listOfElements.getItemAt(selectedIndex + 1) as FromtimeAndValue).from * 1000 - 1 * 60 * 1000;
+				} else 
+					maxTime = 24 * 3600 * 1000 - 1 * 60 * 1000;
+				var maximumTimeStamp:Date = new Date(nowAt0000.valueOf() + maxTime);
+				
+				var dateTime:DateTimeDialogView = Dialog.service.create(
+					new DateTimeDialogBuilder()
+					.setMode(DialogType.MODE_TIME)
+					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"choose_from_time"))
+					.setAcceptLabel("Ok")
+					.setCancelable(true)
+					.setMinTimestamp(minimumTimeStamp.valueOf())
+					.setMaxTimestamp(maximumTimeStamp.valueOf())
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
+					.is24Hour(true)
+					.build()
+				);
+				dateTime.addEventListener(DialogViewEvent.CLOSED, time_closedRequestHandler);
+				dateTime.addEventListener(DialogDateTimeEvent.SELECTED, time_selectedHandler);
+				DialogService.addDialog(dateTime);
+			}
+			
+			private function time_selectedHandler( event:DialogDateTimeEvent ):void
+			{
+				fromStartHours = event.date.hours;
+				fromStartMinutes = event.date.minutes;
+				userSelectedTime = true;
+			}
+			
+			private function time_closedRequestHandler(event:DialogViewEvent):void {
+				if (!userSelectedTime) {
+					//use pressed cancel
+					return;
+				}
+				
+				var dateTime:DateTimeDialogView = DateTimeDialogView(event.currentTarget);
+				dateTime.dispose();
+				//var fromTimeAsDate:Date = new Date(0, 0, 0, fromStartHours, fromStartMinutes, 0);
+				//var fromTimeAsNumber:Number = fromTimeAsDate.valueOf();
+				var hours:String = fromStartHours.toString();
+				var minutes:String = fromStartMinutes.toString();
+				
+				if (timeText == (hours.length == 1 ? "0" + hours:hours) + ":" + (minutes.length == 1 ? "0" + minutes:minutes))
+					return;
+				
+				timeText = (hours.length == 1 ? "0" + hours:hours) + ":" + (minutes.length == 1 ? "0" + minutes:minutes);
+				
+				if (newFromtimeAndValue == null)
+					newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
+				newFromtimeAndValue = 
+					new FromtimeAndValue(timeText,newFromtimeAndValue.value,newFromtimeAndValue.alarmName,newFromtimeAndValue.editable,newFromtimeAndValue.deletable, newFromtimeAndValue.isBgValue);
+			}
+			
+			private function valueGroupClicked(event:Event = null):void {
+				if (!valueGroup.enabled)
+					return;
+				var newAmount:Number;
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_title'))
+					.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_message'))
+					.addTextField("",value, false, keyboardTypeToUse)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.build()
+				);
+				alert.addEventListener(DialogViewEvent.CLOSED, onAmountSet);
+				DialogService.addDialog(alert);
+				
+				function onAmountSet(event:DialogViewEvent): void {
+					if (event.index == 1) {
+						return;
+					}
+					
+					var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
+					var asNumberAndToStore = asNumber;
+					if (isNaN(asNumber)) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_title'),
+							ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
+						//and ask again a value
+						valueGroupClicked(null);
+						return;
+					} else {
+						if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+							if (isBgValue)
+								asNumberAndToStore = Math.round(asNumber * BgReading.MMOLL_TO_MGDL); 	
+						}
+					}
+					
+					
+					if (value ==  (asNumber).toString())
+						return;
+					
+					value = asNumber.toString();
+					
+					if (newFromtimeAndValue == null)
+						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
+					newFromtimeAndValue = 
+						new FromtimeAndValue(newFromtimeAndValue.from, new Number(asNumberAndToStore), newFromtimeAndValue.alarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable, newFromtimeAndValue.isBgValue);
+				}
+			}
+			
+			private function alarmNameGroupClicked(event:Event = null):void {
+				var alarmNames:Array = new Array();
+				var index:int = 0;
+				var alertTypes:ArrayCollection = Database.getAllAlertTypes();
+				for (var cntr:int = 0;cntr < alertTypes.length;cntr++) {
+					alarmNames.push((alertTypes.getItemAt(cntr) as AlertType).alarmName);
+					if (alarmName == alarmNames[cntr] as String)
+						index = cntr;
+				}
+				var picker:PickerDialogView = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'alarm_picker_title'))
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn( alarmNames, index )
+					.build()
+				);
+				
+				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
+				picker.show();
+				
+				function picker_closedHandler(event:DialogViewEvent): void {
+					var newAlarmName:String = event.values[0];
+					
+					if (alarmName == newAlarmName)
+						return;
+					
+					alarmName = newAlarmName;
+					
+					var alertType:AlertType = Database.getAlertType(alarmName);
+					if (!alertType.enabled) {
+						valueGroup.enabled = false;
+						valueGroup.alpha = 0.25;
+					} else {
+						valueGroup.enabled = true;
+						valueGroup.alpha = 1;
+					}
+					
+					if (newFromtimeAndValue == null)
+						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
+					newFromtimeAndValue = 
+						new FromtimeAndValue(newFromtimeAndValue.from, newFromtimeAndValue.value, newAlarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable, newFromtimeAndValue.isBgValue);
+				}
+			}
+			
+			private function okClicked(e:MouseEvent = null):void {
+				if (newFromtimeAndValue != null) {
+					listOfElements.removeItemAt(selectedIndex);
+					listOfElements.addItem(newFromtimeAndValue);
+				}
+				navigator.popView();
+			}
+			
+			override public function createReturnObject():Object {
+				return listOfElements;
+			}
+			
+			protected function back_clickHandler(event:MouseEvent):void
+			{
+				if (newFromtimeAndValue != null) {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"savechanges"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"chose_yes_or_no"))
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","yes"), DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","no"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, onYesClicked);
+					DialogService.addDialog(alert);
+				} else 
+					navigator.popView();
+			}
+			
+			private function onYesClicked(event:DialogViewEvent): void
+			{
+				if (event.index == 1) {
+					navigator.popView();
+				} else if (event.index == 0) {
+					okClicked();
+				}
+			}
+			
+			protected function view1_initializeHandler(event:FlexEvent):void
+			{
+				thisView = this;
+			}
+			
+		]]>
+	</fx:Script>
+	<s:navigationContent>
+		<s:Button label="{back_label}" click="back_clickHandler(event)" height="48"/>
+	</s:navigationContent>
+	<s:actionContent>
+		<s:Button icon="{ModelLocator.imageDone}" id="OkButton" click="okClicked(event)"/>
+	</s:actionContent>
+	<s:Group y="0" x="0" width="100%" height = "100%" left="5" top="5" right="5">
+		<s:layout>
+			<s:VerticalLayout>
+			</s:VerticalLayout>
+		</s:layout>
+		<s:Label id="topTextLabelId" y="0" x="0" width="100%" height="75" textAlign="center" verticalAlign="middle"/>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
+			</s:stroke>
+		</s:Line>	
+		<s:VGroup id="fromGroup" width="100%" click="fromGroupClicked(event)">
+			<s:HGroup width="100%">
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+				<s:Label  id="fromGroupLabelId" width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label id="time" text="@{timeText}" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+			</s:HGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+		</s:VGroup>
+		<s:VGroup id="valueGroup" width="100%" click="valueGroupClicked(event)" visible="@{showValue}" includeInLayout="@{showValue}">
+			<s:HGroup width="100%">
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+				<s:Label  id="valueGroupLabelIdforValue" width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label id="valueId" text="@{value}" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18" />
+				<s:Label  id="valueGroupLabelIdforUnit" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+			</s:HGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+		</s:VGroup>
+		<s:VGroup id="alarmNameGroup" width="100%" click="alarmNameGroupClicked(event)">
+			<s:HGroup width="100%">
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+				<s:Label  id="alarmNameGroupLabelIdforAlarmName" width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label id="alarmNameId" text="@{alarmName}" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+			</s:HGroup>
+		</s:VGroup>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
+			</s:stroke>
+		</s:Line>	
+	</s:Group>
+</s:View>
