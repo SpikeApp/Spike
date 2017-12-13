@@ -18,8 +18,6 @@
  {
  	import flash.events.EventDispatcher;
  	
- 	import G4Model.TransmitterStatus;
- 	
  	import events.SettingsServiceEvent;
  	
  	import model.ModelLocator;
@@ -216,6 +214,15 @@
 		 public static const COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE:int = 55;
 		 public static const COMMON_SETTING_APP_UPDATE_USER_GROUP:int = 56;
 		 public static const COMMON_SETTING_SPEECH_LANGUAGE:int = 57;
+		 
+		 /**
+		  * urgent low bg value, in mgdl, should be converted each time it is used or displayed
+		  */
+		 public static const COMMON_SETTING_URGENT_LOW_MARK:int = 58;
+		 /**
+		  * urgent high bg value, in mgdl, should be converted each time it is used or displayed
+		  */
+		 public static const COMMON_SETTING_URGENT_HIGH_MARK:int = 59;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -230,7 +237,7 @@
 			 "true",//COMMON_SETTING_DO_MGDL
 			 "70",//COMMON_SETTING_LOW_MARK
 			 "170",//COMMON_SETTING_HIGH_MARK
-			 "00000",//COMMON_SETTING_TRANSMITTER_ID
+			 "",//COMMON_SETTING_TRANSMITTER_ID
 			 "0",//COMMON_SETTING_UNUSED
 			 "",//COMMON_SETTING_G5_BATTERY_MARKER
 			 "0",//COMMON_SETTING_G5_BATTERY_FROM_MARKER
@@ -275,7 +282,9 @@
 			 "0",//COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK
 			 "",//COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE
 			 "",//COMMON_SETTING_APP_UPDATE_USER_GROUP
-			 "en-US"//COMMON_SETTING_SPEECH_LANGUAGE
+			 "en-US",//COMMON_SETTING_SPEECH_LANGUAGE
+			 "55",//COMMON_SETTING_URGENT_LOW_MARK
+			 "200"//COMMON_SETTING_URGENT_HIGH_MARK
 		 ];
 		 
 		 public function CommonSettings()

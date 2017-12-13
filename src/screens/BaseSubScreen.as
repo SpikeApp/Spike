@@ -10,6 +10,8 @@ package screens
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
 	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.display.Sprite;
@@ -19,6 +21,8 @@ package screens
 	import ui.AppInterface;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("globalscreens")]
 	
 	public class BaseSubScreen extends PanelScreen
 	{
@@ -46,7 +50,7 @@ package screens
 			
 			/* Add default back button to the header */
 			backButton = new Button();
-			backButton.label = "Back";
+			backButton.label = ModelLocator.resourceManagerInstance.getString('globalscreens','back');
 			backButton.styleNameList.add( Button.ALTERNATE_STYLE_NAME_BACK_BUTTON );
 			headerProperties.leftItems = new <DisplayObject>[backButton];
 			backButton.addEventListener(Event.TRIGGERED, onBackButtonTriggered);

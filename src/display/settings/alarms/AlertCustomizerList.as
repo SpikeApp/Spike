@@ -9,6 +9,8 @@ package display.settings.alarms
 	
 	import display.LayoutFactory;
 	
+	import events.ScreenEvent;
+	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Check;
@@ -33,8 +35,6 @@ package display.settings.alarms
 
 	public class AlertCustomizerList extends List 
 	{
-		public static const SAVED:String = "saved";
-		public static const CHANGED:String = "changed";
 		private const fiveMinutesInMs:int = 5 * 60 * 1000 - 10000;
 
 		/* Display Objects */
@@ -52,6 +52,7 @@ package display.settings.alarms
 		private var repeatInMinutes:int = 0;
 		private var soundChannel:SoundChannel = new SoundChannel();
 		private var playButtonsList:Array;
+		public var needsSave:Boolean = false;
 		
 		public function AlertCustomizerList()
 		{
@@ -74,7 +75,7 @@ package display.settings.alarms
 			/* Controls */
 			alertEnabled = LayoutFactory.createToggleSwitch(true);
 			alertEnabled.addEventListener(Event.CHANGE, onEnableChanged);
-			alertName = LayoutFactory.createTextInput(false, true, 140, HorizontalAlign.RIGHT);
+			alertName = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
 			alertName.addEventListener(Event.CHANGE, onNameChanged);
 			enableSnoozeInNotification = LayoutFactory.createCheckMark(true);
 			enableSnoozeInNotification.addEventListener(Event.CHANGE, onEnableSnoozeInNotificationChanged);
@@ -198,7 +199,8 @@ package display.settings.alarms
 					int(snoozeMinutes.text), //Default Snooze Period (Minutes)
 					repeatInMinutes); //Default Repeat Interval (Minutes)
 				//Database.insertAlertTypeSychronous(neworExistingAlertType);
-				dispatchEventWith(SAVED);
+				
+				needsSave = false;
 				
 				return true;
 			}
@@ -209,38 +211,37 @@ package display.settings.alarms
 		 */
 		private function onSoundChanged():void
 		{
-			dispatchEventWith(CHANGED);
+			needsSave = true;
 		}
 		
 		private function onEnableVibrationChanged():void
 		{
-			dispatchEventWith(CHANGED);
+			needsSave = true;
 		}
 		
 		private function onEnableRepeatChanged():void
 		{
 			repeatInMinutes = fiveMinutesInMs;
-			dispatchEventWith(CHANGED);
 		}
 		
 		private function onSnoozeMinutesChanged():void
 		{
-			dispatchEventWith(CHANGED);
+			needsSave = true;
 		}
 		
 		private function onEnableSnoozeInNotificationChanged():void
 		{
-			dispatchEventWith(CHANGED);
+			needsSave = true;
 		}
 		
 		private function onNameChanged(e:Event):void
 		{
-			dispatchEventWith(CHANGED);
+			needsSave = true;
 		}
 		
 		private function onEnableChanged():void
 		{
-			dispatchEventWith(CHANGED);
+			needsSave = true;
 		}
 		
 		private function onSave(e:Event):void

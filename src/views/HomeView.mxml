@@ -82,6 +82,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import services.NotificationService;
 			import services.TransmitterService;
 			
+			import utils.Constants;
+			
 			[ResourceBundle('homeview')]
 			[ResourceBundle("general")]
 			[ResourceBundle("settingsview")]
@@ -1040,10 +1042,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			{
 				if (!largeBGLabelGroup.includeInLayout)
 					return;
-				if (largeBGLabel.width > 1 * iosxdripreader.deviceScreenWidth) {
+				if (largeBGLabel.width > 1 * Constants.stageWidth) {
 					//myTrace("in largeBGLabel_updateCompleteHandler, decreasing fontSizeForLargeBGLabel");
 					fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 0.9;
-				} else if (largeBGLabel.width < 0.9 * iosxdripreader.deviceScreenWidth) {
+				} else if (largeBGLabel.width < 0.9 * Constants.stageWidth) {
 					if (largeBGLabel.height < 0.95 * largeBGLabelGroup.height) {
 						fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 1.1;
 						//myTrace("in largeBGLabel_updateCompleteHandler, increasing fontSizeForLargeBGLabel to " + fontSizeForLargeBGLabel + ", largeBGLabel.height = " + largeBGLabel.height + ", largebglabelgroup.height= " + largeBGLabelGroup.height);

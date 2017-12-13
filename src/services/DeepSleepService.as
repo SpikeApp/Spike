@@ -41,7 +41,7 @@ package services
 		
 		public static function init():void {
 			startDeepSleepTimer();
-			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
+			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
 		}
 		
 		private static function startDeepSleepTimer():void {

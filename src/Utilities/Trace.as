@@ -17,8 +17,6 @@ package Utilities
 	
 	import events.SettingsServiceEvent;
 	
-	import model.ModelLocator;
-	
 	
 	public class Trace
 	{

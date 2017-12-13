@@ -312,7 +312,7 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
-				iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
+				iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
 				

@@ -53,7 +53,10 @@ package ui
 		
 		public function start():void 
 		{
+			/* Start Interface Controller */
+			InterfaceController.init();
 			
+			/* Init Theme */
 			new MaterialDeepGreyAmberMobileThemeWithIcons();
 			
 			/* Screen Navigator */

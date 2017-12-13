@@ -2,25 +2,33 @@ package display.settings.general
 {
 	import flash.system.System;
 	
+	import databaseclasses.CommonSettings;
+	
 	import display.LayoutFactory;
 	
 	import feathers.controls.List;
-	import feathers.controls.NumericStepper;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
 	import starling.events.Event;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("globalsettings")]
 
 	public class UpdateSettingsList extends List 
 	{
 		/* Display Objects */
 		private var updatesToggle:ToggleSwitch;
-		private var userGroup:NumericStepper;
+		
+		/* Properties */
+		public var needsSave:Boolean = false;
+		private var updatesEnabled:Boolean;
 		
 		public function UpdateSettingsList()
 		{
@@ -30,6 +38,16 @@ package display.settings.general
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupContent();
+			setupInitialState();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
 			//Set Properties
 			clipContent = false;
 			isSelectable = false;
@@ -37,19 +55,17 @@ package display.settings.general
 			hasElasticEdges = false;
 			paddingBottom = 5;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			
+		}
+		
+		private function setupContent():void
+		{
 			///Notifications On/Off Toggle
 			updatesToggle = LayoutFactory.createToggleSwitch(false);
-			updatesToggle.addEventListener( Event.CHANGE, onUpdatesOnOff );
-			
-			//User Group Text Numeric Inpu
-			userGroup = LayoutFactory.createNumericStepper(0, 20, 0);
 			
 			//Define Notifications Settings Data
 			dataProvider = new ArrayCollection(
 				[
-					{ label: "Enabled", accessory: updatesToggle },
-					{ label: "User Group", accessory: userGroup },
+					{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','enabled'), accessory: updatesToggle }
 				]);
 			
 			//Set Item Renderer
@@ -60,51 +76,47 @@ package display.settings.general
 				itemRenderer.accessoryField = "accessory";
 				return itemRenderer;
 			};
-			
-			//Set Update Settings Data
-			reloadUpdateSettings(updatesToggle.isSelected);
 		}
 		
+		private function setupInitialState():void
+		{
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") updatesEnabled = true;
+			else updatesEnabled = false;
+			
+			updatesToggle.isSelected = updatesEnabled;
+			updatesToggle.addEventListener( Event.CHANGE, onUpdatesOnOff );
+		}
+		
+		public function save():void
+		{
+			var updateValueToSave:String;
+			if(updatesEnabled) updateValueToSave = "true";
+			else updateValueToSave = "false";
+			
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) != updateValueToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON, updateValueToSave);
+			
+			needsSave = false;
+		}
+		
+		/**
+		 * Event Handlers
+		 */
 		private function onUpdatesOnOff(event:Event):void
 		{
-			var toggle:ToggleSwitch = ToggleSwitch( event.currentTarget );
-			
-			if(toggle.isSelected)
-				reloadUpdateSettings(true);
-			else
-				reloadUpdateSettings(false);
+			updatesEnabled = updatesToggle.isSelected;
+			needsSave = true;
 		}
 		
-		private function reloadUpdateSettings(fullDisplay:Boolean):void
-		{
-			if(fullDisplay)
-			{
-				dataProvider = new ArrayCollection(
-					[
-						{ label: "Enabled", accessory: updatesToggle },
-						{ label: "User Group", accessory: userGroup },
-					]);
-			}
-			else
-			{
-				dataProvider = new ArrayCollection(
-					[
-						{ label: "Enabled", accessory: updatesToggle },
-					]);
-			}
-		}
-		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
 			if(updatesToggle != null)
 			{
 				updatesToggle.dispose();
 				updatesToggle = null;
-			}
-			if(userGroup != null)
-			{
-				userGroup.dispose();
-				userGroup = null;
 			}
 			
 			System.pauseForGCIfCollectionImminent(0);

@@ -10,6 +10,8 @@ package display.settings.main
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import model.ModelLocator;
+	
 	import screens.Screens;
 	
 	import starling.display.Image;
@@ -19,6 +21,8 @@ package display.settings.main
 	import ui.AppInterface;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("mainsettingsscreen")]
 
 	public class SettingsList extends List 
 	{
@@ -40,13 +44,25 @@ package display.settings.main
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
 			/* Properties */
 			clipContent = false;
 			isSelectable = true;
 			autoHideBackground = true;
 			hasElasticEdges = false;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			
+		}
+		
+		private function setupContent():void
+		{
 			/* Icons */
 			chevronIconTexture = MaterialDeepGreyAmberMobileThemeIcons.chevronRightTexture;
 			generalIconImage = new Image(chevronIconTexture);
@@ -60,13 +76,13 @@ package display.settings.main
 			/* Data */
 			dataProvider = new ListCollection(
 				[
-					{ screen: Screens.SETTINGS_GENERAL, label: "General", accessory: generalIconImage },
-					{ screen: Screens.SETTINGS_TRANSMITTER, label: "Transmitter", accessory: transmitterIconImage },
-					{ screen: Screens.SETTINGS_CHART, label: "Chart", accessory: chartIconImage },
-					{ screen: Screens.SETTINGS_ALARMS, label: "Alarms", accessory: alarmsIconImage },
-					{ screen: Screens.SETTINGS_SPEECH, label: "Speech", accessory: speechIconImage },
-					{ screen: Screens.SETTINGS_SHARE, label: "Share", accessory: shareIconImage },
-					{ screen: Screens.SETTINGS_LOGGING_TRACING, label: "Logging & Tracing", accessory: logginTracingIconImage }
+					{ screen: Screens.SETTINGS_GENERAL, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','general_settings_title'), accessory: generalIconImage },
+					{ screen: Screens.SETTINGS_TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','transmitter_settings_title'), accessory: transmitterIconImage },
+					{ screen: Screens.SETTINGS_CHART, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','chart_settings_title'), accessory: chartIconImage },
+					{ screen: Screens.SETTINGS_ALARMS, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','alarms_settings_title'), accessory: alarmsIconImage },
+					{ screen: Screens.SETTINGS_SPEECH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','speech_settings_title'), accessory: speechIconImage },
+					{ screen: Screens.SETTINGS_SHARE, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','share_settings_title'), accessory: shareIconImage },
+					{ screen: Screens.SETTINGS_LOGGING_TRACING, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','logging_tracing_settings_title'), accessory: logginTracingIconImage }
 				]);
 			
 			/* Renderer */
@@ -82,12 +98,18 @@ package display.settings.main
 			addEventListener( Event.CHANGE, onMenuChanged );
 		}
 		
+		/**
+		 * Event Handlers
+		 */
 		private function onMenuChanged(e:Event):void 
 		{
 			const screenName:String = selectedItem.screen as String;
 			AppInterface.instance.navigator.pushScreen( screenName );
 		}
 		
+		/**
+		 * Utility 
+		 */
 		override public function dispose():void
 		{
 			if(chevronIconTexture != null)

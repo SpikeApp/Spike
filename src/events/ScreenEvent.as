@@ -6,6 +6,8 @@ package events
 	{
 		public static const TOGGLE_MENU:String = "toggleMenu";
 		public static const SWITCH:String = "switch";
+		public static const SAVED:String = "saved";
+		public static const CHANGED:String = "changed";
 		
 		public function ScreenEvent( type:String, bubbles:Boolean = false, data:Object = null ) {
 			super( type, bubbles, data );

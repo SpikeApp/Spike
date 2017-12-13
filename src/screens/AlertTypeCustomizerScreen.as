@@ -44,8 +44,6 @@ package screens
 		private function setupContent():void
 		{
 			alertSettings = new AlertCustomizerList();
-			alertSettings.addEventListener(AlertCustomizerList.SAVED, onSettingsSaved);
-			alertSettings.addEventListener(AlertCustomizerList.CHANGED, onSettingsChanged);
 			screenRenderer.addChild(alertSettings);
 		}
 		
@@ -54,22 +52,9 @@ package screens
 			AppInterface.instance.menu.selectedIndex = 3;
 		}
 		
-		private function onSettingsChanged():void
-		{
-			settingsSaved = false;
-		}
-		
-		private function onSettingsSaved(e:Event):void
-		{
-			settingsSaved = true;
-		}
-		
 		override protected function onBackButtonTriggered(event:Event):void
 		{
-			if(settingsSaved)
-				dispatchEventWith(Event.COMPLETE);
-			else
-			{
+			if(alertSettings.needsSave)
 				var alert:Alert = Alert.show(
 					"Do you want to save your changes?",
 					"Save Changes",
@@ -80,6 +65,9 @@ package screens
 						]
 					)
 				);
+			else
+			{
+				dispatchEventWith(Event.COMPLETE);
 			}
 		}
 		

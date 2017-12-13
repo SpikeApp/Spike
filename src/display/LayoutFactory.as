@@ -148,7 +148,8 @@ package display
 			var stepper:NumericStepper = new NumericStepper();
 			stepper.minimum = minimumValue;
 			stepper.maximum = maximumValue;
-			stepper.value = currentValue;
+			if(!isNaN(currentValue))
+				stepper.value = currentValue;
 			stepper.step = step;
 			return stepper;
 		}
