@@ -223,6 +223,27 @@
 		  * urgent high bg value, in mgdl, should be converted each time it is used or displayed
 		  */
 		 public static const COMMON_SETTING_URGENT_HIGH_MARK:int = 59;
+		 
+		 /**
+		  * Chart Settings
+		  */
+		 public static const COMMON_SETTING_CHART_URGENT_HIGH_COLOR:int = 60;
+		 public static const COMMON_SETTING_CHART_HIGH_COLOR:int = 61;
+		 public static const COMMON_SETTING_CHART_IN_RANGE_COLOR:int = 62;
+		 public static const COMMON_SETTING_CHART_LOW_COLOR:int = 63;
+		 public static const COMMON_SETTING_CHART_URGENT_LOW_COLOR:int = 64;
+		 public static const COMMON_SETTING_CHART_AXIS_COLOR:int = 65;
+		 public static const COMMON_SETTING_CHART_FONT_COLOR:int = 66;
+		 public static const COMMON_SETTING_CHART_AXIS_FONT_COLOR:int = 67;
+		 public static const COMMON_SETTING_CHART_PIE_CHART_FONT_COLOR:int = 68;
+		 public static const COMMON_SETTING_CHART_MARKER_RADIUS:int = 69;
+		 public static const COMMON_SETTING_CHART_BG_FONT_SIZE:int = 70;
+		 public static const COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE:int = 71;
+		 public static const COMMON_SETTING_CHART_AXIS_FONT_SIZE:int = 72;
+		 public static const COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE:int = 73;
+		 public static const COMMON_SETTING_CHART_DISPLAY_LINE:int = 74;
+		 public static const COMMON_SETTING_CHART_DISPLAY_PIE_CHART:int = 75;
+		 public static const COMMON_SETTING_CHART_DATE_FORMAT:int = 76;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -284,9 +305,26 @@
 			 "",//COMMON_SETTING_APP_UPDATE_USER_GROUP
 			 "en-US",//COMMON_SETTING_SPEECH_LANGUAGE
 			 "55",//COMMON_SETTING_URGENT_LOW_MARK
-			 "200"//COMMON_SETTING_URGENT_HIGH_MARK
+			 "200",//COMMON_SETTING_URGENT_HIGH_MARK
+			 "0xff0000",//COMMON_SETTING_CHART_URGENT_HIGH_COLOR
+			 "0xffff00",//COMMON_SETTING_CHART_HIGH_COLOR
+			 "0x00ff00",//COMMON_SETTING_CHART_IN_RANGE_COLOR
+			 "0xffff00",//COMMON_SETTING_CHART_LOW_COLOR
+			 "0xff0000",//COMMON_SETTING_CHART_URGENT_LOW_COLOR
+			 "0xEEEEEE",//COMMON_SETTING_CHART_AXIS_COLOR
+			 "0xEEEEEE",//COMMON_SETTING_CHART_FONT_COLOR
+			 "0xEEEEEE",//COMMON_SETTING_CHART_AXIS_FONT_COLOR
+			 "0xEEEEEE",//COMMON_SETTING_CHART_PIE_CHART_FONT_COLOR
+			 "3",//COMMON_SETTING_CHART_MARKER_RADIUS
+			 "1",//COMMON_SETTING_CHART_BG_FONT_SIZE
+			 "1",//COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE
+			 "1",//COMMON_SETTING_CHART_AXIS_FONT_SIZE
+			 "8",//COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE
+			 "false",//COMMON_SETTING_CHART_DISPLAY_LINE
+			 "true",//COMMON_SETTING_CHART_DISPLAY_PIE_CHART
+			 "24"//COMMON_SETTING_CHART_DATE_FORMAT
 		 ];
-		 
+
 		 public function CommonSettings()
 		 {
 			 if (_instance != null) {

@@ -6,9 +6,11 @@ package ui
 	
 	import events.ScreenEvent;
 	
+	import feathers.controls.DragGesture;
 	import feathers.controls.Drawers;
 	import feathers.controls.StackScreenNavigator;
 	import feathers.controls.StackScreenNavigatorItem;
+	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.motion.Cover;
 	import feathers.motion.Reveal;
 	import feathers.motion.Slide;
@@ -44,6 +46,8 @@ package ui
 		public var menu:MenuList;
 		public var drawers:Drawers;
 		public var navigator:StackScreenNavigator;
+
+		private var preloader:MaterialDesignSpinner;
 		
 		public function AppInterface() 
 		{
@@ -53,9 +57,11 @@ package ui
 		
 		public function start():void 
 		{
-			/* Start Interface Controller */
 			InterfaceController.init();
-			
+		}
+		
+		public function init():void
+		{
 			/* Init Theme */
 			new MaterialDeepGreyAmberMobileThemeWithIcons();
 			

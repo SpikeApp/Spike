@@ -6,36 +6,37 @@ package utils
 	
 	public class Constants 
 	{
-		
-		private static var mScaleFactor:Number;
-		private static var mStageWidth:int;
-		private static var mStageHeight:int;
-		private static var _appStage:Stage;
-		
 		public static const IPAD_WIDTH:int = 512;
 		public static const IPAD_HEIGHT:int = 384;
 		
+		private static var _scaleFactor:Number;
+		private static var _stageWidth:int;
+		private static var _stageHeight:int;
+		private static var _appStage:Stage;
+		private static var _noLockEnabled:Boolean;
+		
 		public static function init( stageWidth:int, stageHeight:int, stage:Stage ):void 
 		{
-			mStageWidth = stageWidth;
-			mStageHeight = stageHeight;
-			mScaleFactor = Starling.contentScaleFactor;
+			_stageWidth = stageWidth;
+			_stageHeight = stageHeight;
+			_scaleFactor = Starling.contentScaleFactor;
 			_appStage = stage;
+			_noLockEnabled = false;
 		}
 		
 		public static function get stageWidth():int 
 		{
-			return mStageWidth;
+			return _stageWidth;
 		}
 		
 		public static function get stageHeight():int 
 		{
-			return mStageHeight;
+			return _stageHeight;
 		}
 		
 		public static function get scaleFactor():int 
 		{
-			return mScaleFactor;
+			return _scaleFactor;
 		}
 
 		public static function get appStage():Stage
@@ -43,5 +44,14 @@ package utils
 			return _appStage;
 		}
 
+		public static function get noLockEnabled():Boolean
+		{
+			return _noLockEnabled;
+		}
+
+		public static function set noLockEnabled(value:Boolean):void
+		{
+			_noLockEnabled = value;
+		}
 	}
 }

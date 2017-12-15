@@ -4,7 +4,13 @@ package chart
     import flash.geom.Point;
     import flash.system.System;
     
+    import databaseclasses.BgReading;
+    import databaseclasses.CommonSettings;
+    
+    import feathers.controls.DragGesture;
     import feathers.controls.Label;
+    
+    import model.ModelLocator;
     
     import starling.display.Image;
     import starling.display.Quad;
@@ -16,7 +22,11 @@ package chart
     import starling.textures.RenderTexture;
     import starling.utils.Align;
     
+    import ui.AppInterface;
+    
     import utils.DeviceInfo;
+	
+	[ResourceBundle("chartscreen")]
     
     public class GlucoseChart extends Sprite
     {
@@ -47,8 +57,9 @@ package chart
         private var lowestGlucoseValue:Number;
         private var highestGlucoseValue:Number;
         private var scaleYFactor:Number;
-        private var lineColor:uint = 0xFFFFFF;
-        private var textColor:uint = 0xFFFFFF;
+        private var lineColor:uint = 0xEEEEEE;
+        private var chartFontColor:uint = 0xEEEEEE;
+		private var axisFontColor:uint = 0xEEEEEE;
         private var highUrgentGlucoseMarkerColor:uint = 0xff0000;//red
         private var highGlucoseMarkerColor:uint = 0xffff00;//yellow
 		private var inrangeGlucoseMarkerColor:uint = 0x00ff00;//green
@@ -58,20 +69,26 @@ package chart
         private var dashLineGap:int = 1;
         private var dashLineThickness:int = 1;
         private var yAxisMargin:int = 40;
-        private var mainChartGlucoseMarkerRadius:int = 3;
+        private var mainChartGlucoseMarkerRadius:int;
         private var scrollerChartGlucoseMarkerRadius:int = 1;
         private var lineThickness:int = 3;
         private var legendMargin:int = 5;
         private var legendSize:int = 10;
         private var legendTextSize:int = 12;
         private var graphDisplayTextSize:int = 20;
-        private var glucoseUnits:String = "mg/dl";
+        private var glucoseUnit:String = "mg/dl";
 		private var handPickerStrokeThickness:int = 1;
 		private var chartTopPadding:int = 50;
 		private var scrollerTopPadding:int = 5;
 		private var _displayLine:Boolean = false;
 		private var fakeChartMaskColor:uint = 0x20222a;
 		private var glucoseStatusLabelsMargin:int = 5;
+		private var retroOutput:String;
+		private var agoSuffix:String;
+		private var userBGFontMultiplier:Number;
+		private var userTimeAgoFontMultiplier:Number;
+		private var userAxisFontMultiplier:Number;
+		private var dateFormat:String;
 
         //Display Objects
         private var glucoseTimelineContainer:Sprite;
@@ -87,15 +104,15 @@ package chart
 		private var textureList:Array;
         
         //Glucose Thresholds
-        private var _glucoseUrgentHigh:Number;
-        private var _glucoseHigh:Number;
-        private var _glucoseLow:Number;
-        private var _glucoseUrgentLow:Number;
+        private var glucoseUrgentHigh:Number;
+        private var glucoseHigh:Number;
+        private var glucoseLow:Number;
+        private var glucoseUrgentLow:Number;
 
 		//Movement
         private var scrollMultiplier:Number;
 
-        public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number, glucoseUrgentLow:Number, glucoseLow:Number, glucoseHigh:Number, glucoseUrgentHigh:Number)
+        public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
         {
             //Set properties
 			this.timelineRange = timelineRange;
@@ -103,10 +120,6 @@ package chart
             this._graphHeight = chartHeight;
             this._scrollerWidth = scrollerWidth;
             this._scrollerHeight = scrollerHeight;
-            this._glucoseUrgentLow = glucoseUrgentLow;
-            this._glucoseLow = glucoseLow;
-            this._glucoseHigh = glucoseHigh;
-            this._glucoseUrgentHigh = glucoseUrgentHigh;
             this.mainChartGlucoseMarkersList = [];
 			this.scrollChartGlucoseMarkersList = [];
 			this.mainChartLineList = [];
@@ -114,6 +127,42 @@ package chart
 			this.scrollerChartLineList = [];
 			this.scrollerChartLinePictureList = [];
 			this.textureList = [];
+			
+			//Unit
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
+				glucoseUnit = "mg/dl";
+			else
+				glucoseUnit = "mmol/L";
+			
+			//Threshold
+			glucoseUrgentLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
+			glucoseLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+			glucoseHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+			glucoseUrgentHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+			
+			//Colors
+			lineColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_COLOR));
+			chartFontColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_FONT_COLOR));
+			axisFontColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_COLOR));
+			highUrgentGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_HIGH_COLOR));
+			highGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_HIGH_COLOR));
+			inrangeGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_IN_RANGE_COLOR));
+			lowGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR));
+			lowUrgentGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)); 
+			
+			//Size
+			mainChartGlucoseMarkerRadius = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_MARKER_RADIUS));
+			userBGFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_BG_FONT_SIZE));
+			userTimeAgoFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
+			userAxisFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE));
+			yAxisMargin += (legendTextSize * userAxisFontMultiplier) - legendTextSize;
+			
+			//Time Format
+			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
+			
+			//Strings
+			retroOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','retro_title');
+			agoSuffix = ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
 
             //Add timeline to display list
             glucoseTimelineContainer = new Sprite();
@@ -146,7 +195,22 @@ package chart
 			createStatusTextDisplays();
 			
 			//Set the glucose value display to the latest glucose value available
-			glucoseValueDisplay.text = String(int((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue) * 10) / 10) + " " + getArrow(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 2].glucoseValue);// + " " + glucoseUnits;
+			var bgValueToDisplay:Number = int((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue) * 10) / 10;
+			if (glucoseUnit != "mg/dl") 
+				bgValueToDisplay = Math.round(((BgReading.mgdlToMmol((bgValueToDisplay))) * 10)) / 10;
+			
+			var glucoseValueOutput:String
+			if (glucoseUnit == "mg/dl")
+				glucoseValueOutput = String(bgValueToDisplay);
+			else
+			{
+				if ( bgValueToDisplay % 1 == 0)
+					glucoseValueOutput = String(bgValueToDisplay) + ".0";
+				else
+					glucoseValueOutput = String(bgValueToDisplay);
+			}
+			
+			glucoseValueDisplay.text = glucoseValueOutput + " " + getArrow(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 2].glucoseValue);// + " " + glucoseUnits;
 			glucoseValueDisplay.invalidate();
 			glucoseValueDisplay.validate();
 			glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width - glucoseStatusLabelsMargin;
@@ -157,15 +221,22 @@ package chart
 			var previousTimestamp:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 2].timestamp);
 			var differenceInSeconds:Number = (currentTimestamp - previousTimestamp) / 1000;
 			
-			glucoseTimeAgoDisplay.text = convertTime(differenceInSeconds) + " ago";
+			glucoseTimeAgoDisplay.text = convertTime(differenceInSeconds) + " " + agoSuffix;
 			
 			//Set slope
-			var glucoseDifference:Number = int((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 2].glucoseValue)*10)/10;
-			if(glucoseDifference >= 0)
-				glucoseSlopeDisplay.text = "+" + String(glucoseDifference) + " " + glucoseUnits;
-			else
-				glucoseSlopeDisplay.text = String(glucoseDifference) + " " + glucoseUnits;
-    
+			var glucoseDifferenceMGDL:Number = int((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 2].glucoseValue)*10)/10;
+			var glucoseDifferenceMMOL:Number = Math.round(((BgReading.mgdlToMmol((glucoseDifferenceMGDL))) * 100)) / 100;
+			if(glucoseDifferenceMGDL >= 0)
+				if(glucoseUnit == "mg/dl")
+					glucoseSlopeDisplay.text = "+ " + String(glucoseDifferenceMGDL) + " " + glucoseUnit;
+				else
+					glucoseSlopeDisplay.text = "+ " + String(glucoseDifferenceMMOL) + " " + glucoseUnit;
+				else
+					if(glucoseUnit == "mg/dl")
+						glucoseSlopeDisplay.text = "- " + String(Math.abs(glucoseDifferenceMGDL)) + " " + glucoseUnit;
+					else
+						glucoseSlopeDisplay.text = "- " + String(Math.abs(glucoseDifferenceMMOL)) + " " + glucoseUnit;
+			
             /**
              * yAxis Line
              */
@@ -239,7 +310,7 @@ package chart
 			/**
 			 * Glucose Delimiter
 			 */
-			glucoseDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, 0xFFFFFF);
+			glucoseDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
 			glucoseDelimiter.y = 0;
 			glucoseDelimiter.x = _graphWidth - yAxisMargin;
 			yAxis.addChild(glucoseDelimiter);
@@ -254,9 +325,27 @@ package chart
 			yAxis.addChild(highestGlucoseLineMarker);
 			
 			//Legend
-			var highestGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(String(Math.round(highestGlucoseValue)), textColor, legendTextSize);
+			var highestGlucoseAxisValue:Number = highestGlucoseValue;
+			if(glucoseUnit != "mg/dl")
+				highestGlucoseAxisValue = Math.round(((BgReading.mgdlToMmol((highestGlucoseAxisValue))) * 10)) / 10;
+			
+			var highestGlucoseOutput:String
+			if (glucoseUnit == "mg/dl")
+				highestGlucoseOutput = String(Math.round(highestGlucoseAxisValue));
+			else
+			{
+				if ( highestGlucoseAxisValue % 1 == 0)
+					highestGlucoseOutput = String(highestGlucoseAxisValue) + ".0";
+				else
+					highestGlucoseOutput = String(highestGlucoseAxisValue);
+			}
+			
+			var highestGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(highestGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
 			yAxis.addChild(highestGlucoseLegend);
-			highestGlucoseLegend.y = 0 - (highestGlucoseLegend.height/3);
+			if (userAxisFontMultiplier >= 1)
+				highestGlucoseLegend.y = (0 - (highestGlucoseLegend.height/3)) / userAxisFontMultiplier;
+			else
+				highestGlucoseLegend.y = (0 - (highestGlucoseLegend.height/3)) * userAxisFontMultiplier;
 			highestGlucoseLegend.x = Math.round(_graphWidth - highestGlucoseLineMarker.width - highestGlucoseLegend.width - legendMargin);
 			
 			/**
@@ -269,8 +358,26 @@ package chart
 			yAxis.addChild(lowestGlucoseLineMarker);
 			
 			//Legend
-			var lowestGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(String(Math.round(lowestGlucoseValue)), textColor, legendTextSize);
-			lowestGlucoseLegend.y = Math.round(_graphHeight - lowestGlucoseLegend.height + (lowestGlucoseLegend.height/6));
+			var lowestGlucoseAxisValue:Number = lowestGlucoseValue;
+			if(glucoseUnit != "mg/dl")
+				lowestGlucoseAxisValue = Math.round(((BgReading.mgdlToMmol((lowestGlucoseAxisValue))) * 10)) / 10;
+			
+			var lowestGlucoseOutput:String
+			if (glucoseUnit == "mg/dl")
+				lowestGlucoseOutput = String(Math.round(lowestGlucoseAxisValue));
+			else
+			{
+				if ( lowestGlucoseAxisValue % 1 == 0)
+					lowestGlucoseOutput = String(lowestGlucoseAxisValue) + ".0";
+				else
+					lowestGlucoseOutput = String(lowestGlucoseAxisValue);
+			}
+			
+			var lowestGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(lowestGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
+			if (userAxisFontMultiplier >= 1)
+				lowestGlucoseLegend.y = Math.round(_graphHeight - lowestGlucoseLegend.height + ((lowestGlucoseLegend.height * userAxisFontMultiplier)/6));
+			else
+				lowestGlucoseLegend.y = Math.round(_graphHeight - lowestGlucoseLegend.height + ((lowestGlucoseLegend.height / userAxisFontMultiplier)/6));
 			lowestGlucoseLegend.x = Math.round(_graphWidth - lowestGlucoseLineMarker.width - lowestGlucoseLegend.width - legendMargin);
 			yAxis.addChild(lowestGlucoseLegend);
 			
@@ -286,13 +393,31 @@ package chart
 				yAxis.addChild(highUrgentGlucoseLineMarker);
 				
 				//Legend
-				var highUrgentGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(String(Math.round(glucoseUrgentHigh)), textColor, legendTextSize);
-				highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - (highUrgentGlucoseLegend.height / 2) - (highUrgentGlucoseLegend.height / 12);
+				var urgentHighGlucoseAxisValue:Number = glucoseUrgentHigh;
+				if(glucoseUnit != "mg/dl")
+					urgentHighGlucoseAxisValue = Math.round(((BgReading.mgdlToMmol((urgentHighGlucoseAxisValue))) * 10)) / 10;
+				
+				var urgentHighGlucoseOutput:String
+				if (glucoseUnit == "mg/dl")
+					urgentHighGlucoseOutput = String(Math.round(urgentHighGlucoseAxisValue));
+				else
+				{
+					if ( urgentHighGlucoseAxisValue % 1 == 0)
+						urgentHighGlucoseOutput = String(urgentHighGlucoseAxisValue) + ".0";
+					else
+						urgentHighGlucoseOutput = String(urgentHighGlucoseAxisValue);
+				}
+				
+				var highUrgentGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(urgentHighGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
+				if (userAxisFontMultiplier >= 1)
+					highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - ((highUrgentGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((highUrgentGlucoseLegend.height / userAxisFontMultiplier) / 15);
+				else
+					highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - ((highUrgentGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((highUrgentGlucoseLegend.height * userAxisFontMultiplier) / 15);
 				highUrgentGlucoseLegend.x = Math.round(_graphWidth - highestGlucoseLineMarker.width - highUrgentGlucoseLegend.width - legendMargin);
 				yAxis.addChild(highUrgentGlucoseLegend);
 				
 				//Dashed Line
-				var highUrgentGlucoseDashedLine:Shape = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth);
+				var highUrgentGlucoseDashedLine:Shape = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
 				highUrgentGlucoseDashedLine.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor);
 				yAxis.addChild(highUrgentGlucoseDashedLine);
 			}
@@ -309,13 +434,31 @@ package chart
 				yAxis.addChild(highGlucoseLineMarker);
 				
 				//Legend
-				var highGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(String(Math.round(glucoseHigh)), textColor, legendTextSize);
-				highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - (highGlucoseLegend.height / 2) - (highGlucoseLegend.height / 12);
+				var highGlucoseAxisValue:Number = glucoseHigh;
+				if(glucoseUnit != "mg/dl")
+					highGlucoseAxisValue = Math.round(((BgReading.mgdlToMmol((highGlucoseAxisValue))) * 10)) / 10;
+				
+				var highGlucoseOutput:String
+				if (glucoseUnit == "mg/dl")
+					highGlucoseOutput = String(Math.round(highGlucoseAxisValue));
+				else
+				{
+					if ( highGlucoseAxisValue % 1 == 0)
+						highGlucoseOutput = String(highGlucoseAxisValue) + ".0";
+					else
+						highGlucoseOutput = String(highGlucoseAxisValue);
+				}
+				
+				var highGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(highGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
+				if (userAxisFontMultiplier >= 1)
+					highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - ((highGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((highGlucoseLegend.height / userAxisFontMultiplier) / 15);
+				else
+					highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - ((highGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((highGlucoseLegend.height * userAxisFontMultiplier) / 15);
 				highGlucoseLegend.x = Math.round(_graphWidth - highestGlucoseLineMarker.width - highGlucoseLegend.width - legendMargin);
 				yAxis.addChild(highGlucoseLegend);
 				
 				//Dashed Line
-				var highGlucoseDashedLine:Shape = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth);
+				var highGlucoseDashedLine:Shape = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
 				highGlucoseDashedLine.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor);
 				yAxis.addChild(highGlucoseDashedLine);
 			}
@@ -332,13 +475,31 @@ package chart
 				yAxis.addChild(lowGlucoseLineMarker);
 				
 				//Legend
-				var lowGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(String(Math.round(glucoseLow)), textColor, legendTextSize);
-				lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - (lowGlucoseLegend.height / 2) - (lowGlucoseLegend.height / 12);
+				var lowGlucoseAxisValue:Number = glucoseLow;
+				if(glucoseUnit != "mg/dl")
+					lowGlucoseAxisValue = Math.round(((BgReading.mgdlToMmol((lowGlucoseAxisValue))) * 10)) / 10;
+				
+				var lowGlucoseOutput:String
+				if (glucoseUnit == "mg/dl")
+					lowGlucoseOutput = String(Math.round(lowGlucoseAxisValue));
+				else
+				{
+					if ( lowGlucoseAxisValue % 1 == 0)
+						lowGlucoseOutput = String(lowGlucoseAxisValue) + ".0";
+					else
+						lowGlucoseOutput = String(lowGlucoseAxisValue);
+				}
+				
+				var lowGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(lowGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
+				if (userAxisFontMultiplier >= 1)
+					lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - ((lowGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((lowGlucoseLegend.height / userAxisFontMultiplier) / 15);
+				else
+					lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - ((lowGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((lowGlucoseLegend.height * userAxisFontMultiplier) / 15);
 				lowGlucoseLegend.x = Math.round(_graphWidth - lowGlucoseLineMarker.width - lowGlucoseLegend.width - legendMargin);
 				yAxis.addChild(lowGlucoseLegend);
 				
 				//Dashed Line
-				var lowGlucoseDashedLine:Shape = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth);
+				var lowGlucoseDashedLine:Shape = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
 				lowGlucoseDashedLine.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor);
 				yAxis.addChild(lowGlucoseDashedLine);
 			}
@@ -355,13 +516,31 @@ package chart
 				yAxis.addChild(lowUrgentGlucoseLineMarker);
 				
 				//Legend
-				var lowUrgentGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(String(Math.round(glucoseUrgentLow)), textColor, legendTextSize);
-				lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - (lowUrgentGlucoseLegend.height / 2) - (lowUrgentGlucoseLegend.height / 12);
+				var urgentLowGlucoseAxisValue:Number = glucoseUrgentLow;
+				if(glucoseUnit != "mg/dl")
+					urgentLowGlucoseAxisValue = Math.round(((BgReading.mgdlToMmol((urgentLowGlucoseAxisValue))) * 10)) / 10;
+				
+				var urgentLowGlucoseOutput:String
+				if (glucoseUnit == "mg/dl")
+					urgentLowGlucoseOutput = String(urgentLowGlucoseAxisValue);
+				else
+				{
+					if ( urgentLowGlucoseAxisValue % 1 == 0)
+						urgentLowGlucoseOutput = String(urgentLowGlucoseAxisValue) + ".0";
+					else
+						urgentLowGlucoseOutput = String(urgentLowGlucoseAxisValue);
+				}
+				
+				var lowUrgentGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(urgentLowGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
+				if (userAxisFontMultiplier >= 1)
+					lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - ((lowUrgentGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((lowUrgentGlucoseLegend.height / userAxisFontMultiplier) / 15);
+				else
+					lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - ((lowUrgentGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((lowUrgentGlucoseLegend.height * userAxisFontMultiplier) / 15);
 				lowUrgentGlucoseLegend.x = Math.round(_graphWidth - lowUrgentGlucoseLineMarker.width - lowUrgentGlucoseLegend.width - legendMargin);
 				yAxis.addChild(lowUrgentGlucoseLegend);
 				
 				//Dashed Line
-				var lowUrgentGlucoseDashedLine:Shape = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth);
+				var lowUrgentGlucoseDashedLine:Shape = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
 				lowUrgentGlucoseDashedLine.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor);
 				yAxis.addChild(lowUrgentGlucoseDashedLine);
 			}
@@ -435,15 +614,15 @@ package chart
         
                 //Define glucose marker color
                 var color:int;
-                if(currentGlucoseValue >= _glucoseUrgentHigh)
+                if(currentGlucoseValue >= glucoseUrgentHigh)
                     color = highUrgentGlucoseMarkerColor;
-                else if(currentGlucoseValue >= _glucoseHigh)
+                else if(currentGlucoseValue >= glucoseHigh)
                     color = highGlucoseMarkerColor;
-                else if(currentGlucoseValue > _glucoseLow && currentGlucoseValue < _glucoseHigh)
+                else if(currentGlucoseValue > glucoseLow && currentGlucoseValue < glucoseHigh)
                     color = inrangeGlucoseMarkerColor;
-                else if(currentGlucoseValue <= _glucoseLow && currentGlucoseValue > _glucoseUrgentLow)
+                else if(currentGlucoseValue <= glucoseLow && currentGlucoseValue > glucoseUrgentLow)
                     color = lowGlucoseMarkerColor;
-                else if(currentGlucoseValue <= _glucoseUrgentLow)
+                else if(currentGlucoseValue <= glucoseUrgentLow)
                     color = lowUrgentGlucoseMarkerColor;
         
                 //Create glucose marker
@@ -548,43 +727,54 @@ package chart
 		private function createStatusTextDisplays():void
 		{
 			/* Calculate Font Sizes */
-			var fontMultiplier:Number = DeviceInfo.getFontMultipier();
-			var glucoseDisplayFont:Number = 38 * fontMultiplier;
-			var timeDisplayFont:Number = 16 * fontMultiplier;
-			var retroDisplayFont:Number = 16 * fontMultiplier;
+			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
+			var glucoseDisplayFont:Number = 38 * deviceFontMultiplier * userBGFontMultiplier;
+			var timeDisplayFont:Number = 16 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			var retroDisplayFont:Number = 16 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			
 			/* Calculate Position & Padding */
-			chartTopPadding *= fontMultiplier;
-			var yPos:Number = 3 * DeviceInfo.getVerticalPaddingMultipier();
+			chartTopPadding *= deviceFontMultiplier;
+			if (userBGFontMultiplier >= userTimeAgoFontMultiplier)
+				chartTopPadding *= userBGFontMultiplier;
+			else
+				chartTopPadding *= userTimeAgoFontMultiplier;
+			
+			var yPos:Number = 3 * DeviceInfo.getVerticalPaddingMultipier() * userBGFontMultiplier;
 			
 			//Glucose Value Display
-			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("", textColor, glucoseDisplayFont, Align.RIGHT, true, 200);
+			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 200);
 			glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width -glucoseStatusLabelsMargin;
 			addChild(glucoseValueDisplay);
 			
 			//Glucose Retro Display
-			glucoseTimeAgoDisplay = GraphLayoutFactory.createChartStatusText("", textColor, retroDisplayFont, Align.LEFT, false);
+			glucoseTimeAgoDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, retroDisplayFont, Align.LEFT, false);
 			glucoseTimeAgoDisplay.x = glucoseStatusLabelsMargin;
 			glucoseTimeAgoDisplay.y = yPos;
 			addChild(glucoseTimeAgoDisplay);
-			glucoseTimeAgoDisplay.text = "RETRO";
+			glucoseTimeAgoDisplay.text = retroOutput;
 			glucoseTimeAgoDisplay.invalidate();
 			glucoseTimeAgoDisplay.validate();
 			
 			//Glucose Time Display
-			glucoseSlopeDisplay = GraphLayoutFactory.createChartStatusText("", textColor, timeDisplayFont, Align.CENTER, false);
+			glucoseSlopeDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, timeDisplayFont, Align.CENTER, false);
 			glucoseSlopeDisplay.x = glucoseTimeAgoDisplay.x;
-			glucoseSlopeDisplay.y = glucoseTimeAgoDisplay.y + glucoseTimeAgoDisplay.height;
+			glucoseSlopeDisplay.y = glucoseTimeAgoDisplay.y + glucoseTimeAgoDisplay.height + 2;
 			glucoseTimeAgoDisplay.text = "";
 			addChild(glucoseSlopeDisplay);
-			
-			
 		}
 		
 		private function onHandPickerTouch (e:TouchEvent):void
 		{
 			//Get touch data
 			var touch:Touch = e.getTouch(stage);
+			
+			/**
+			 * UI Menu
+			 */
+			if(touch != null && touch.phase == TouchPhase.ENDED) //Activate menu drag gesture when drag finishes
+				AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
+			else if(touch != null && touch.phase == TouchPhase.BEGAN) //Deactivate menu drag gesture when drag starts
+				AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
 			//Dragging
 			if(touch != null && touch.phase == TouchPhase.MOVED)
@@ -640,15 +830,30 @@ package chart
 						var previousMarkerGlobalX:Number = previousMaker.x + mainChart.x + (previousMaker.width);
 						
 						//Check if the current marker is the one selected by the main chart's delimiter line
-						var glucoseDifference:Number = int((currentMarker.glucoseValue - previousMaker.glucoseValue)*10)/10;
+						var glucoseDifferenceMGDL:Number = int((currentMarker.glucoseValue - previousMaker.glucoseValue)*10)/10;
+						var glucoseDifferenceMMOL:Number = Math.round(((BgReading.mgdlToMmol((glucoseDifferenceMGDL))) * 100)) / 100;
 						if (currentMarkerGlobalX >= glucoseDelimiter.x && previousMarkerGlobalX < glucoseDelimiter.x)
 						{
-							var arrow:String = getArrow(glucoseDifference);
+							var arrow:String = getArrow(glucoseDifferenceMGDL);
 							
 							var glucoseValue:Number = int((currentMarker.glucoseValue) * 10) / 10;
+							if (glucoseUnit != "mg/dl") 
+								glucoseValue = Math.round(((BgReading.mgdlToMmol((glucoseValue))) * 10)) / 10;
+							
+							var glucoseValueOutput:String
+							if (glucoseUnit == "mg/dl")
+								glucoseValueOutput = String(glucoseValue);
+							else
+							{
+								if ( glucoseValue % 1 == 0)
+									glucoseValueOutput = String(glucoseValue) + ".0";
+								else
+									glucoseValueOutput = String(glucoseValue);
+							}
+							
 							if (glucoseValueDisplay.text != String(glucoseValue))
 							{
-								glucoseValueDisplay.text = String(glucoseValue) + " " + arrow;// + " " + glucoseUnits;
+								glucoseValueDisplay.text = glucoseValueOutput + " " + arrow;
 								glucoseValueDisplay.fontStyles.color = currentMarker.color;
 								glucoseValueDisplay.invalidate();
 								glucoseValueDisplay.validate();
@@ -656,10 +861,16 @@ package chart
 							}
 							
 							//Display Slope
-							if(glucoseDifference >= 0)
-								glucoseSlopeDisplay.text = "+" + String(glucoseDifference) + " " + glucoseUnits;
+							if(glucoseDifferenceMGDL >= 0)
+								if(glucoseUnit == "mg/dl")
+									glucoseSlopeDisplay.text = "+ " + String(glucoseDifferenceMGDL) + " " + glucoseUnit;
+								else
+									glucoseSlopeDisplay.text = "+ " + String(glucoseDifferenceMMOL) + " " + glucoseUnit;
 							else
-								glucoseSlopeDisplay.text = String(glucoseDifference) + " " + glucoseUnits;
+								if(glucoseUnit == "mg/dl")
+									glucoseSlopeDisplay.text = "- " + String(Math.abs(glucoseDifferenceMGDL)) + " " + glucoseUnit;
+								else
+									glucoseSlopeDisplay.text = "- " + String(Math.abs(glucoseDifferenceMMOL)) + " " + glucoseUnit;
 							
 							//Display marker time (time ago)
 							if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
@@ -667,10 +878,43 @@ package chart
 								var markerDate:Date = new Date(currentMarker.timestamp);
 								var hours:Number = markerDate.getHours();
 								var hoursOutput:String;
-								if (hours < 10)
-									hoursOutput = "0" + hours;
+								var ampmOutput:String = "";
+								
+								if (dateFormat.slice(0,2) == "24")
+								{
+									if (hours < 10)
+										hoursOutput = "0" + hours;
+									else
+										hoursOutput = hours.toString();
+								}
 								else
-									hoursOutput = hours.toString();
+								{
+									if (hours >= 12)
+									{
+										if (hours >= 13)
+											hours -= 12; //Subtract 12 to the hour value to get 12H date format
+										
+										if (hours < 10)
+											hoursOutput = "0" + hours;
+										else
+											hoursOutput = hours.toString();
+										
+										ampmOutput = "PM";
+									}
+									else
+									{
+										if (hours < 10)
+											hoursOutput = "0" + hours;
+										else
+											hoursOutput = hours.toString();
+										
+										if (hoursOutput == "00")
+											hoursOutput = "12";
+										
+										ampmOutput = "AM";
+									}
+								}
+								
 								var minutes:Number = markerDate.getMinutes();
 								var minutesOutput:String;
 								if (minutes < 10)
@@ -678,7 +922,7 @@ package chart
 								else
 									minutesOutput = minutes.toString();
 								
-								glucoseTimeAgoDisplay.text = "RETRO - " + (hoursOutput + ":" + minutesOutput);
+								glucoseTimeAgoDisplay.text = retroOutput + " - " + (hoursOutput + ":" + minutesOutput + ampmOutput);
 							}
 							else
 							{
@@ -686,7 +930,7 @@ package chart
 								var currentTimestamp:Number = (new Date()).valueOf();
 								var previousTimestamp:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 2].timestamp);
 								var differenceInSeconds:Number = (currentTimestamp - previousTimestamp) / 1000;
-								glucoseTimeAgoDisplay.text = convertTime(differenceInSeconds) + " ago";
+								glucoseTimeAgoDisplay.text = convertTime(differenceInSeconds) + " " + agoSuffix;
 								
 							}
 							//We found a mach so we can break the loop to save CPU cycles
@@ -998,15 +1242,15 @@ package chart
 				{
 					//Create
 					//Define glucose marker color
-					if(currentGlucoseValue >= _glucoseUrgentHigh)
+					if(currentGlucoseValue >= glucoseUrgentHigh)
 						color = highUrgentGlucoseMarkerColor;
-					else if(currentGlucoseValue >= _glucoseHigh)
+					else if(currentGlucoseValue >= glucoseHigh)
 						color = highGlucoseMarkerColor;
-					else if(currentGlucoseValue > _glucoseLow && currentGlucoseValue < _glucoseHigh)
+					else if(currentGlucoseValue > glucoseLow && currentGlucoseValue < glucoseHigh)
 						color = inrangeGlucoseMarkerColor;
-					else if(currentGlucoseValue <= _glucoseLow && currentGlucoseValue > _glucoseUrgentLow)
+					else if(currentGlucoseValue <= glucoseLow && currentGlucoseValue > glucoseUrgentLow)
 						color = lowGlucoseMarkerColor;
-					else if(currentGlucoseValue <= _glucoseUrgentLow)
+					else if(currentGlucoseValue <= glucoseUrgentLow)
 						color = lowUrgentGlucoseMarkerColor;
 					
 					//Create glucose marker
@@ -1229,38 +1473,6 @@ package chart
         public function set dataSource(source:Array):void
         {
             _dataSource = source;
-        }
-
-        public function get glucoseUrgentHigh():Number {
-            return _glucoseUrgentHigh;
-        }
-
-        public function set glucoseUrgentHigh(value:Number):void {
-            _glucoseUrgentHigh = value;
-        }
-
-        public function get glucoseHigh():Number {
-            return _glucoseHigh;
-        }
-
-        public function set glucoseHigh(value:Number):void {
-            _glucoseHigh = value;
-        }
-
-        public function get glucoseLow():Number {
-            return _glucoseLow;
-        }
-
-        public function set glucoseLow(value:Number):void {
-            _glucoseLow = value;
-        }
-
-        public function get glucoseUrgentLow():Number {
-            return _glucoseUrgentLow;
-        }
-
-        public function set glucoseUrgentLow(value:Number):void {
-            _glucoseUrgentLow = value;
         }
     
         public function get scrollerWidth():Number {

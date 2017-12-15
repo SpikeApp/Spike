@@ -74,12 +74,7 @@ package  chart
 			
 			bitmap = new Palette();
 			paletteBMD = bitmap.bitmapData;
-			addEventListener(Event.ADDED_TO_STAGE, onAdded);
-		}
-		
-		private function onAdded(e:Event):void 
-		{
-			removeEventListener(Event.ADDED_TO_STAGE, onAdded);
+			
 			init();
 		}
 		
@@ -89,7 +84,6 @@ package  chart
 			palette = new Image(Texture.fromBitmapData(paletteBMD));
 			palette.scaleX = palette.scaleY = DeviceInfo.getSizeMultipier();
 			palette.visible = false;
-			//parent.parent.parent.parent.parent..addChild(palette);
 			
 			//Initialize Button
 			baseButtonTexture = Texture.fromColor(displaySize, displaySize, initialColor);
@@ -117,7 +111,6 @@ package  chart
 			else if (hAlign == HorizontalAlign.LEFT && vAlign == VerticalAlign.TOP)
 				globalPoint = baseButton.localToGlobal(new Point(baseButton.width*2, -baseButton.height*2.5));
 			
-			
 			//Palette horizontal align
 			if (hAlign == HorizontalAlign.RIGHT)
 				palette.x = globalPoint.x + baseButton.width;
@@ -135,14 +128,12 @@ package  chart
 		{
 			//Get current color value
 			currentValue = paletteBMD.getPixel(_x, _y);
-			//trace("COLOR", currentValue.toString(16).toUpperCase());
+			
 			//Set button color to current color
 			baseButtonTexture.dispose();
 			baseButtonTexture = null;
 			baseButtonTexture = Texture.fromColor(displaySize, displaySize, currentValue);
 			baseButton.upState = baseButtonTexture;
-			//Dispacth event changing
-			//dispatchEvent(new Event(CHANGING));
 		}
 		
 		public function set value(c:uint):void 
@@ -220,7 +211,6 @@ package  chart
 					if (stage.hitTest(m_TouchEndedPoint) == m_TouchTarget)
 					{
 						value = currentValue;
-						//trace("CHANGED", currentValue.toString(16).toUpperCase());
 						baseButton.upState = Texture.fromColor(displaySize, displaySize, currentValue);
 						dispatchEvent(new Event(CHANGED, false, {name:this.name, color:currentValue}));
 						hidePalette();

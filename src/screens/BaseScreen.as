@@ -9,6 +9,7 @@ package screens
 	import feathers.controls.Callout;
 	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
+	import feathers.layout.RelativePosition;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -31,9 +32,25 @@ package screens
 			super();
 		}
 		
-		override protected function initialize():void {
+		override protected function initialize():void 
+		{
 			super.initialize();
 			
+			setupProperties();
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
+			headerProperties.gap = -10;
+			headerProperties.disposeItems = true;
+		}
+		
+		private function setupContent():void
+		{
 			/* Add default menu button to the header */
 			menuButton = new Button();
 			menuButton.defaultIcon = new Image( MaterialDeepGreyAmberMobileThemeIcons.menuTexture );
@@ -63,11 +80,11 @@ package screens
 				treatmentsButton,
 				moreButton
 			];
-			
-			headerProperties.gap = -10;
-			headerProperties.disposeItems = true;
 		}
 		
+		/**
+		 * Event Handlers
+		 */
 		private function onMenuButtonTriggered():void 
 		{
 			toggleMenu();
@@ -89,6 +106,8 @@ package screens
 			var extraOptionsList:List = new ExtraOptionsList();
 			extraOptionsList.addEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
 			callout = Callout.show( extraOptionsList, moreButton );
+			
+			Callout.stagePaddingRight = -5
 		}
 		
 		private function onCloseCallOut(e:Event):void
@@ -100,11 +119,6 @@ package screens
 		{
 			if(!AppInterface.instance.drawers.isLeftDrawerOpen)
 				dispatchEventWith( ScreenEvent.TOGGLE_MENU );
-		}
-		
-		override protected function draw():void
-		{
-			super.draw();
 		}
 	}
 }

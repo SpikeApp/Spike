@@ -101,7 +101,7 @@ public class GraphLayoutFactory
 			return legend;
         }
 		
-		public static function createPieLegend():Label
+		public static function createPieLegend(fontColor:uint = 0xEEEEEE):Label
 		{
 			/* Calculate Font Size */
 			var fontSize:Number;
@@ -113,7 +113,7 @@ public class GraphLayoutFactory
 			
 			/* Create Legend */
 			var legend:Label = new Label();
-			legend.fontStyles = new TextFormat("Roboto", fontSize, 0xFFFFFF, "left", "top");
+			legend.fontStyles = new TextFormat("Roboto", fontSize, fontColor, "left", "top");
 			
 			return legend;
 		}

@@ -1,15 +1,22 @@
 package chart
 {	
+	import databaseclasses.BgReading;
+	import databaseclasses.CommonSettings;
+	
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
 	
+	import model.ModelLocator;
+	
 	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
 	import starling.events.Event;
+	
+	[ResourceBundle("chartscreen")]
 	
 	public class PieChart extends Sprite
 	{
@@ -17,8 +24,8 @@ package chart
 		private var nGons:Array;
 		private var _dataSource:Array;
 		private var pieRadius:Number;
-		private var highTreshold:int;
-		private var lowTreshold:int;
+		private var highTreshold:Number;
+		private var lowTreshold:Number;
 		private var averageGlucose:Number;
 		private var A1C:Number;
 		
@@ -27,8 +34,17 @@ package chart
 		private var lowColor:uint = 0xff0000;//red
 		private var inRangeColor:uint = 0x00ff00;//green
 		private var highColor:uint = 0xffff00;//yellow
+		private var fontColor:uint = 0xEEEEEE;
 		private var legendGap:Number;
 		private var legendQuadSize:Number;
+		private var pieHeight:Number;
+		private var lowOutput:String;
+		private var highOutput:String;
+		private var inRangeOutput:String;
+		private var readingsOutput:String;
+		private var avgGlucoseOutput:String;
+		private var A1COutput:String;
+		private var glucoseUnit:String
 		
 		//Display Objects
 		private var pieContainer:Sprite;
@@ -41,24 +57,41 @@ package chart
 		private var lowLayoutGroup:LayoutGroup;
 		private var inRangeLayoutGroup:LayoutGroup;
 		private var highLayoutGroup:LayoutGroup;
-
 		private var legendsContainer:Sprite;
-
-		private var pieHeight:Number;
-
 		private var lowQuad:Quad;
-
 		private var inRangeQuad:Quad;
-
 		private var highQuad:Quad;
 		
-		public function PieChart(pieRadius:Number, dataSource:Array, lowTreshold:int, highTreshold:int)
+		public function PieChart(pieRadius:Number, dataSource:Array)
 		{
 			this.pieRadius = pieRadius;
 			this._dataSource = dataSource;
-			this.lowTreshold = lowTreshold;
-			this.highTreshold = highTreshold;
 			nGons = [];
+			
+			//Set Glucose Unit
+			//Unit
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
+				glucoseUnit = "mg/dl";
+			else
+				glucoseUnit = "mmol/L";
+			
+			//Set Thersholds
+			lowTreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
+			highTreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+			
+			//Set Colors
+			lowColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR));
+			inRangeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_IN_RANGE_COLOR));
+			highColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_HIGH_COLOR));
+			fontColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_PIE_CHART_FONT_COLOR));
+			
+			//Set Strings
+			lowOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','low_title');
+			highOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','high_title');
+			inRangeOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','in_range_title');
+			readingsOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','readings_title');
+			avgGlucoseOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','average_glucose_title');
+			A1COutput = ModelLocator.resourceManagerInstance.getString('chartscreen','a1c_title');
 			
 			//Create pie container
 			pieContainer = new Sprite();
@@ -79,7 +112,7 @@ package chart
 			 */
 			pieHeight = 2 * pieRadius;
 			legendGap = pieHeight / 6;
-			legendQuadSize = (pieHeight - (2 * legendGap)) / 4;
+			legendQuadSize = (pieHeight - (2 * legendGap)) / 3;
 			
 			/**
 			 * LOW
@@ -94,7 +127,7 @@ package chart
 			lowQuad = new Quad(legendQuadSize, legendQuadSize, lowColor);
 			lowLayoutGroup.addChild(lowQuad);
 			//Legend
-			lowLegend = GraphLayoutFactory.createPieLegend();
+			lowLegend = GraphLayoutFactory.createPieLegend(fontColor);
 			lowLayoutGroup.addChild(lowLegend);
 			
 			/**
@@ -110,7 +143,7 @@ package chart
 			inRangeQuad = new Quad(legendQuadSize, legendQuadSize, inRangeColor);
 			inRangeLayoutGroup.addChild(inRangeQuad);
 			//Legend
-			inRangeLegend = GraphLayoutFactory.createPieLegend();
+			inRangeLegend = GraphLayoutFactory.createPieLegend(fontColor);
 			inRangeLayoutGroup.addChild(inRangeLegend);
 			
 			/**
@@ -126,20 +159,20 @@ package chart
 			highQuad = new Quad(legendQuadSize, legendQuadSize, highColor);
 			highLayoutGroup.addChild(highQuad);
 			//Legend
-			highLegend = GraphLayoutFactory.createPieLegend();
+			highLegend = GraphLayoutFactory.createPieLegend(fontColor);
 			highLayoutGroup.addChild(highLegend);
 			
 			/**
 			 * STATS
 			 */
 			//Number of Readings
-			numberOfReadingsLabel = GraphLayoutFactory.createPieLegend();
+			numberOfReadingsLabel = GraphLayoutFactory.createPieLegend(fontColor);
 			lowLayoutGroup.addChild(numberOfReadingsLabel);
 			//Average Blood Glucose
-			averageGlucoseLabel = GraphLayoutFactory.createPieLegend();
+			averageGlucoseLabel = GraphLayoutFactory.createPieLegend(fontColor);
 			inRangeLayoutGroup.addChild(averageGlucoseLabel);
 			//A1C
-			A1CLabel = GraphLayoutFactory.createPieLegend();
+			A1CLabel = GraphLayoutFactory.createPieLegend(fontColor);
 			highLayoutGroup.addChild(A1CLabel);
 			//On Legend Creation
 			highLayoutGroup.addEventListener(feathers.events.FeathersEventType.CREATION_COMPLETE, drawChart);
@@ -222,7 +255,21 @@ package chart
 			nGons.push(lowNGon);
 			pieContainer.addChild(lowNGon);
 			//Legend
-			lowLegend.text = "Low (<=" + lowTreshold + "): " + percentageLowRounded + "%";
+			var lowThresholdValue:Number = lowTreshold;
+			if(glucoseUnit != "mg/dl")
+				lowThresholdValue = Math.round(((BgReading.mgdlToMmol((lowThresholdValue))) * 10)) / 10;
+			
+			var lowThresholdOutput:String
+			if (glucoseUnit == "mg/dl")
+				lowThresholdOutput = String(Math.round(lowThresholdValue));
+			else
+			{
+				if ( lowThresholdValue % 1 == 0)
+					lowThresholdOutput = String(lowThresholdValue) + ".0";
+				else
+					lowThresholdOutput = String(lowThresholdValue);
+			}
+			lowLegend.text = lowOutput + " (<=" + lowThresholdOutput + "): " + percentageLowRounded + "%";
 			
 			//IN RANGE PORTION
 			//Graphics
@@ -232,7 +279,7 @@ package chart
 			nGons.push(inRangeNGon);
 			pieContainer.addChild(inRangeNGon);
 			//Legend
-			inRangeLegend.text = "In Range: " + percentageInRangeRounded + "%";
+			inRangeLegend.text = inRangeOutput + ": " + percentageInRangeRounded + "%";
 			
 			//HIGH PORTION
 			//Graphics
@@ -242,19 +289,48 @@ package chart
 			nGons.push(highNGon);
 			pieContainer.addChild(highNGon);
 			//Legend
-			highLegend.text = "High (>=" + highTreshold + "): " + percentageHighRounded + "%";
+			var highThresholdValue:Number = highTreshold;
+			if(glucoseUnit != "mg/dl")
+				highThresholdValue = Math.round(((BgReading.mgdlToMmol((highThresholdValue))) * 10)) / 10;
+			
+			var highThresholdOutput:String
+			if (glucoseUnit == "mg/dl")
+				highThresholdOutput = String(Math.round(highThresholdValue));
+			else
+			{
+				if ( highThresholdValue % 1 == 0)
+					highThresholdOutput = String(highThresholdValue) + ".0";
+				else
+					highThresholdOutput = String(highThresholdValue);
+			}
+			highLegend.text = highOutput + " (>=" + highThresholdOutput + "): " + percentageHighRounded + "%";
 			
 			//Calculate Average Glucose & A1C
 			averageGlucose = (( (totalGlucose / dataLength) * 10 + 0.5)  >> 0) / 10;
+			var averageGlucoseValue:Number = averageGlucose;
+			if (glucoseUnit != "mg/dl")
+				averageGlucoseValue = Math.round(((BgReading.mgdlToMmol((averageGlucoseValue))) * 10)) / 10;
+			
+			var averageGlucoseValueOutput:String
+			if (glucoseUnit == "mg/dl")
+				averageGlucoseValueOutput = String(averageGlucoseValue);
+			else
+			{
+				if ( averageGlucoseValue % 1 == 0)
+					averageGlucoseValueOutput = String(averageGlucoseValue) + ".0";
+				else
+					averageGlucoseValueOutput = String(averageGlucoseValue);
+			}
+			
 			A1C = (( ((46.7 + averageGlucose) / 28.7) * 10 + 0.5)  >> 0) / 10;
 			
 			//Calculate readings percentage
 			var percentageReadings:Number = (( ((dataLength * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 			
 			//Populate Stats
-			numberOfReadingsLabel.text = "Readings: " + dataLength + " (" + percentageReadings + "%)";
-			averageGlucoseLabel.text = "Avg Glucose: " + averageGlucose + " mg/dl";
-			A1CLabel.text = "A1C: " + A1C + "%";
+			numberOfReadingsLabel.text = readingsOutput + ": " + dataLength + " (" + percentageReadings + "%)";
+			averageGlucoseLabel.text = avgGlucoseOutput + ": " + averageGlucoseValueOutput + " " + glucoseUnit;
+			A1CLabel.text = A1COutput + ": " + A1C + "%";
 			
 			//Position Stats
 			positionStats();

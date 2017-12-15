@@ -2,21 +2,24 @@ package display.treatments
 {
 	import flash.system.System;
 	
-	import display.LayoutFactory;
+	import databaseclasses.Calibration;
 	
-	import feathers.controls.Alert;
 	import feathers.controls.List;
-	import feathers.controls.TextInput;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
-	import feathers.layout.HorizontalAlign;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
+	
+	import model.ModelLocator;
+	
+	import services.CalibrationService;
 	
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.Texture;
+	
+	[ResourceBundle("chartscreen")]
 
 	public class TreatmentsList extends List 
 	{
@@ -26,16 +29,27 @@ package display.treatments
 		private var iconImage:Image;
 		
 		/* Properties */
-		private var calibrationValue:TextInput;
+		private var calibrationButtonEnabled:Boolean = false;
 		
 		public function TreatmentsList()
 		{
 			super();
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
+			/* Properties */
 			clipContent = false;
 			isSelectable = true;
 			autoHideBackground = true;
@@ -43,64 +57,69 @@ package display.treatments
 			
 			iconTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
 			iconImage = new Image(iconTexture);
-			
+		}
+		
+		private function setupContent():void
+		{
+			/* Content */
+			if (Calibration.allForSensor().length > 1)
+				calibrationButtonEnabled = true;
 			
 			dataProvider = new ListCollection(
 				[
-					{ label: "Calibration", icon: iconImage, id: 1 }
+					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: iconImage, selectable:calibrationButtonEnabled, id: 1 }
 				]);
 			
-			itemRendererFactory = function():IListItemRenderer 
+			//Calibration Item Renderer Factory
+			function calibrationItemFactory():IListItemRenderer
 			{
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
 				item.iconField = "icon";
+				item.itemHasSelectable = true;
+				item.selectableField = "selectable";
 				item.gap = 5;
+				if(!calibrationButtonEnabled)
+					item.alpha = 0.4;
 				item.paddingLeft = 8;
 				item.paddingRight = 14;
 				item.isQuickHitAreaEnabled = true;
 				return item;
+			}
+			setItemRendererFactoryWithID( "calibration-item", calibrationItemFactory );
+			
+			//Menu Factory
+			factoryIDFunction = function( item:Object, index:int ):String
+			{
+				if(index === 0)
+					return "calibration-item";
+				
+				return "default-item";
 			};
+			
+			//Menu Layout
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
+			
+			/* Event Handlers */
 			addEventListener( Event.CHANGE, onMenuChanged );
 		}
 		
+		/**
+		 * Event Handlers
+		 */
 		private function onMenuChanged(e:Event):void 
 		{
 			const treatmentID:Number = selectedItem.id as Number;
 			
 			if(treatmentID == 1) //Calibration
 			{
-				/* Create and Style Calibration Text Input */
-				calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
-				calibrationValue.maxChars = 3;
-				calibrationValue.paddingRight = 10;
-				
-				/* Create and Style Popup Window */
-				var calibrationPopup:Alert = Alert.show(
-					"",
-					"Enter BG Value",
-					new ListCollection(
-						[
-							{ label: "CANCEL" },
-							{ label: "ADD", triggered: onEnterCalibration }
-						]
-					),
-					calibrationValue
-				);
-				calibrationPopup.gap = 0;
-				calibrationPopup.headerProperties.maxHeight = 30;
-				calibrationPopup.buttonGroupProperties.paddingTop = -10;
-				calibrationPopup.buttonGroupProperties.paddingRight = 24;
+				CalibrationService.calibrationOnRequest();
 			}
 		}
 		
-		private function onEnterCalibration(event:Event):void
-		{
-			//TODO: Apply calibration
-			//trace("Calibration Value:", calibrationValue.text);
-		}
-		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
 			if (iconTexture != null)

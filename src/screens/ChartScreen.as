@@ -1,8 +1,12 @@
 package screens
 {
+	import flash.utils.setTimeout;
+	
 	import chart.GlucoseChart;
 	import chart.GraphLayoutFactory;
 	import chart.PieChart;
+	
+	import databaseclasses.CommonSettings;
 	
 	import display.LayoutFactory;
 	
@@ -15,20 +19,25 @@ package screens
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
+	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.events.Event;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	
+	[ResourceBundle("chartscreen")]
 
 	public class ChartScreen extends BaseScreen
 	{
 		//Objects
 		private var chartData:Array;
 		
-		//Visual variabçes
+		//Visual variables
 		private var glucoseChartTopPadding:int = 7;
-		private var selectedTimelineRange:int;
+		private var selectedTimelineRange:Number;
 		private var drawLineChart:Boolean;
 		private var mainChartHeight:Number;
 		private var scrollChartHeight:Number;
@@ -36,6 +45,7 @@ package screens
 		private var chartSettingsLeftRightPadding:int = 10;
 		private var chartSettingsTopPadding:int = 10;
 		private var delimitterTopPadding:int = 10;
+		private var displayPieChart:Boolean;
 		
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
@@ -51,8 +61,6 @@ package screens
 		private var h1:Radio;
 		private var displayLines:Check;
 		
-		private var teste:Boolean = true;
-		
 		public function ChartScreen() 
 		{
 			super();
@@ -63,6 +71,11 @@ package screens
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			//Set Properties From Database
+			selectedTimelineRange = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE));
+			drawLineChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE) == "true";
+			displayPieChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_PIE_CHART) == "true";
 			
 			//Event listener fired after the screen is finished processing
 			this.addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
@@ -78,6 +91,9 @@ package screens
 			setChartSettings();
 		}
 		
+		/**
+		 * Functionality
+		 */
 		private function setGlucoseChart():void
 		{
 			//CHART
@@ -85,45 +101,69 @@ package screens
 			chartData = populateData();
 			
 			availableScreenHeight = Constants.stageHeight - this.header.height;
-			mainChartHeight = availableScreenHeight / 2; //50% of available screen size
 			scrollChartHeight = availableScreenHeight / 10; //10% of available screen size
+			if (displayPieChart)
+				mainChartHeight = availableScreenHeight / 2; //50% of available screen size
+			else
+			{
+				mainChartHeight = calculateChartHeight();
+			}
 			
 			//Create and setup glucose chart
 			//3h
-			glucoseChart = new GlucoseChart(GlucoseChart.TIMELINE_3H, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight, 45, 50,90,120);
+			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
 			glucoseChart.y = Math.round(glucoseChartTopPadding);
 			glucoseChart.dataSource = chartData.concat();
-			glucoseChart.displayLine = false;
+			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
-			selectedTimelineRange = GlucoseChart.TIMELINE_3H;
-			drawLineChart = false;
 			addChild(glucoseChart);
+			
+			//Prevents Starling Line Mask Bug
+			if(drawLineChart)
+			{
+				Starling.juggler.delayCall(redrawChart, 0.001);
+				chartRequiresReload = false;
+			}
 		}
 		
 		private function setChartSettings():void
 		{
 			/* Line Settings */
-			displayLines = LayoutFactory.createCheckMark(false, "Line");
+			displayLines = LayoutFactory.createCheckMark(false, ModelLocator.resourceManagerInstance.getString('chartscreen','check_box_line_title'));
+			displayLines.isSelected = drawLineChart;
 			displayLines.addEventListener( Event.CHANGE, onDisplayLine );
 			addChild( displayLines );
 			
 			/* Timeline Settings */
 			var timeRangeGroup:ToggleGroup = new ToggleGroup();
-			timeRangeGroup.addEventListener( Event.CHANGE, onTimeRangeChange );
 			
-			h1 = LayoutFactory.createRadioButton("1H", timeRangeGroup, false);
+			//Create Radios
+			h1 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_1h_title'), timeRangeGroup);
 			addChild( h1 );
-			h3 = LayoutFactory.createRadioButton("3H", timeRangeGroup, true);
+			h3 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_3h_title'), timeRangeGroup);
 			addChild( h3 );
-			h6 = LayoutFactory.createRadioButton("6H", timeRangeGroup, false);
+			h6 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_6h_title'), timeRangeGroup);
 			addChild( h6 );
-			h12 = LayoutFactory.createRadioButton("12H", timeRangeGroup, false);
+			h12 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_12h_title'), timeRangeGroup);
 			addChild( h12 );
-			h24 = LayoutFactory.createRadioButton("24H", timeRangeGroup, false);
+			h24 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_24h_title'), timeRangeGroup);
 			h24.addEventListener(FeathersEventType.CREATION_COMPLETE, onRadioCreation);
 			addChild( h24 );
 			
+			//Calculate selected radio
+			if (selectedTimelineRange == GlucoseChart.TIMELINE_1H)
+				timeRangeGroup.selectedItem = h1;
+			else if (selectedTimelineRange == GlucoseChart.TIMELINE_3H)
+				timeRangeGroup.selectedItem = h3;
+			else if (selectedTimelineRange == GlucoseChart.TIMELINE_6H)
+				timeRangeGroup.selectedItem = h6;
+			else if (selectedTimelineRange == GlucoseChart.TIMELINE_12H)
+				timeRangeGroup.selectedItem = h12;
+			else if (selectedTimelineRange == GlucoseChart.TIMELINE_24H)
+				timeRangeGroup.selectedItem = h24;
 			
+			//Add Event Listener For Radios
+			timeRangeGroup.addEventListener( Event.CHANGE, onTimeRangeChange );
 			
 			/* DEBUG, DELETE IN PRODUCTION */
 			/*
@@ -138,6 +178,9 @@ package screens
 			//addChild(glucoseAmount);*/
 		}
 		
+		/**
+		 * Event Handlers
+		 */
 		private function onTimeRangeChange(event:Event):void
 		{
 			var group:ToggleGroup = ToggleGroup( event.currentTarget );
@@ -171,6 +214,10 @@ package screens
 				selectedTimelineRange = GlucoseChart.TIMELINE_24H;
 				redrawChart();
 			}
+			
+			//Save timerange in database
+			if (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE)) != selectedTimelineRange)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE, String(selectedTimelineRange));
 		}
 		
 		private function onRadioCreation(event:Event):void
@@ -195,19 +242,22 @@ package screens
 			displayLines.x = chartSettingsLeftRightPadding;
 			displayLines.y = h24.y;
 			
-			var delimitter:Shape = GraphLayoutFactory.createHorizontalLine(Constants.stageWidth, 1, 0x282a32);
-			delimitter.y = h24.y + h24.height + delimitterTopPadding;
-			addChild(delimitter);
-			
-			var lastAvailableSpace:Number = availableScreenHeight - glucoseChartTopPadding - glucoseChart.height - chartSettingsTopPadding - h24.height - delimitterTopPadding - delimitter.height;
-			var pieHeight:Number = (lastAvailableSpace * 0.8) / 2; //80% of availables space
-			var pieTopPadding:Number = Math.round((lastAvailableSpace * 0.3) / 2);
-			
-			//Pie Chart
-			pieChart = new PieChart(pieHeight, glucoseChart.dataSource.concat(), 50, 90);
-			pieChart.y = Math.round(h24.y + h24.height + delimitterTopPadding + delimitter.height + pieTopPadding);
-			pieChart.x = 10;
-			addChild(pieChart);
+			if (displayPieChart)
+			{
+				var delimitter:Shape = GraphLayoutFactory.createHorizontalLine(Constants.stageWidth, 1, 0x282a32);
+				delimitter.y = h24.y + h24.height + delimitterTopPadding;
+				addChild(delimitter);
+				
+				var lastAvailableSpace:Number = availableScreenHeight - glucoseChartTopPadding - glucoseChart.height - chartSettingsTopPadding - h24.height - delimitterTopPadding - delimitter.height;
+				var pieHeight:Number = (lastAvailableSpace * 0.8) / 2; //80% of availables space
+				var pieTopPadding:Number = Math.round((lastAvailableSpace * 0.3) / 2);
+				
+				//Pie Chart
+				pieChart = new PieChart(pieHeight, glucoseChart.dataSource.concat());
+				pieChart.y = Math.round(h24.y + h24.height + delimitterTopPadding + delimitter.height + pieTopPadding);
+				pieChart.x = 10;
+				addChild(pieChart);
+			}
 		}
 		
 		private function onDisplayLine(event:Event):void
@@ -228,27 +278,19 @@ package screens
 				glucoseChart.hideLine();
 				drawLineChart = false;
 			}
+			
+			//Save setting to database
+			if (drawLineChart)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "true");
+			else
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "false");
 		}
 		
-		/* DEBUG, DELETE IN PRODUCTION */
-		private function onAddGlucose(event:Event):void
-		{
-			glucoseChart.addGlucose(Number(glucoseAmount.text));
-			pieChart.addGlucose(Number(glucoseAmount.text));
-			//glucoseAmount.text = "";
-			/*if(teste)
-			{
-				teste=false;
-				for (var a:int = 0; a < 275; a++) 
-				{
-					glucoseChart.addGlucose(33);
-				}
-			}*/
-		}
-		
+		/**
+		 * Utility
+		 */
 		public function redrawChart():void
 		{
-			
 			var previousData:Array = glucoseChart.dataSource.concat();
 			
 			//Remove previous chart
@@ -257,7 +299,7 @@ package screens
 			glucoseChart = null;
 			
 			//Create new chart
-			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight,45, 50,90,120);
+			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
 			glucoseChart.dataSource = previousData.concat();
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
@@ -266,6 +308,65 @@ package screens
 			
 			previousData.length = 0;
 			previousData = null;
+		}
+		
+		private function calculateChartHeight():Number
+		{
+			//Calculate Multipliers
+			var userGlucoseFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_BG_FONT_SIZE));
+			var userTimeAgoFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
+			var higherMultiplier:Number;
+			if (userGlucoseFontMultiplier >= userTimeAgoFontMultiplier)
+				higherMultiplier = userGlucoseFontMultiplier;
+			else
+				higherMultiplier = userTimeAgoFontMultiplier;
+			
+			//Chart Top Margin
+			var topMargin:int = Math.round(glucoseChartTopPadding);
+			
+			//Main Chart Internal Top Padding
+			var chartDisplayMargin:Number = 50 * higherMultiplier;
+			
+			//Scroller Internal Top Padding
+			var scrollerTopPadding:int = 5;
+			
+			//Settings (Radio Buttons Height)
+			var settingsHeight:int = 20;
+			
+			//Calculate Device Specific Adjustment
+			var deviceAdjustement:Number;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+				deviceAdjustement = 0;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
+				deviceAdjustement = 6 * higherMultiplier;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
+				deviceAdjustement = 12 * higherMultiplier;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+				deviceAdjustement = 20 * higherMultiplier;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X || DeviceInfo.getDeviceType() == DeviceInfo.TABLET)
+				deviceAdjustement = 35 * higherMultiplier;
+			
+			//Return Calculated Chart Height
+			return availableScreenHeight - topMargin - chartDisplayMargin - scrollerTopPadding - scrollChartHeight - chartSettingsTopPadding - settingsHeight - deviceAdjustement;
+		}
+		
+		/**
+		 * DEBUG
+		 */
+		/* DEBUG, DELETE IN PRODUCTION */
+		private function onAddGlucose(event:Event):void
+		{
+			glucoseChart.addGlucose(Number(glucoseAmount.text));
+			pieChart.addGlucose(Number(glucoseAmount.text));
+			//glucoseAmount.text = "";
+			/*if(teste)
+			{
+			teste=false;
+			for (var a:int = 0; a < 275; a++) 
+			{
+			glucoseChart.addGlucose(33);
+			}
+			}*/
 		}
 		
 		/* DEBUG, DELETE IN PRODUCTION */

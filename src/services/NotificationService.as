@@ -319,8 +319,6 @@ package services
 			}
 			
 			function appInForeGround(event:Event):void {
-				myTrace("in appInForeGround, setting active window to Home screen");
-				(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
 				myTrace("in appInForeGround, setting systemIdleMode = SystemIdleMode.NORMAL");
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
 			}

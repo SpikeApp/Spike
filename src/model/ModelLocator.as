@@ -58,6 +58,8 @@ package model
 	import services.TransmitterService;
 	import services.UpdateService;
 	
+	import ui.AppInterface;
+	
 	import views.HomeView;
 
 	/**
@@ -192,6 +194,9 @@ package model
 				if (de.data != null)
 					if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
+							//Start rendering interface now that all data is available
+							AppInterface.instance.init();
+							
 							Database.getBlueToothDevice();
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();

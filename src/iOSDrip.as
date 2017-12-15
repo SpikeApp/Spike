@@ -13,7 +13,10 @@ package
 	
 	import events.IosXdripReaderEvent;
 	
+	import feathers.motion.Fade;
 	import feathers.utils.ScreenDensityScaleFactorManager;
+	
+	import screens.Screens;
 	
 	import services.DialogService;
 	
@@ -27,13 +30,9 @@ package
 	[SWF(frameRate="60", backgroundColor="#20222a")]
 	public class iOSDrip extends Sprite 
 	{
-		
 		private var starling:Starling;
-		
-		private var scaler:ScreenDensityScaleFactorManager;
-		
+		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
-		
 		private static var _instance:iOSDrip;
 		
 		public static function get instance():iOSDrip
@@ -90,9 +89,8 @@ package
 		}
 		
 		/**
-		 * Signal / Event handlers
+		 * Event Handlers
 		 */
-		
 		private function onStarlingReady( event:starling.events.Event, root:AppInterface ):void 
 		{
 			/* Start Starling */
@@ -102,20 +100,32 @@ package
 			root.start();
 		}
 		
-		/**
-		 * Application activate/deactivate handlers
-		 */
-		
 		private function onActivate( event:flash.events.Event ):void 
 		{
+			//Start Starling
+			starling.start();
+			
+			//Push Chart Screen
+			if(AppInterface.instance.navigator != null)
+			{
+				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART)
+				{
+					AppInterface.instance.menu.selectedIndex = 0;
+					AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
+				}
+			}
+			
+			//Notify Services
 			myTrace("dispatching event IosXdripReaderEvent.APP_IN_FOREGROUND");
 			dispatchEvent(new IosXdripReaderEvent(IosXdripReaderEvent.APP_IN_FOREGROUND));
-			
-			starling.start();
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
 		{
+			//Update Variables
+			Constants.noLockEnabled = false;
+			
+			//Stop Starling 
 			starling.stop( true );
 		}
 		

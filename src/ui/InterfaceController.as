@@ -1,6 +1,7 @@
 package ui
 {
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	
 	import Utilities.Trace;
 	
@@ -8,21 +9,24 @@ package ui
 	
 	import events.DatabaseEvent;
 
-	public class InterfaceController
+	public class InterfaceController extends EventDispatcher
 	{
 		private static var initialStart:Boolean = true;
+		private static var _instance:InterfaceController;
 		
 		public function InterfaceController() {}
 		
 		public static function init():void
 		{
+			//if(_instance == null)
+				//_instance = this;
 			
 			if (initialStart) {
 				Trace.init();
 				Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 				Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 				//need to know when modellocator is populated, then we can also update display
-				//Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
+				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				Database.init();
 				initialStart = false;
 				//CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
@@ -59,8 +63,16 @@ package ui
 				trace("Interface Controller : Error initializing database!");
 			}
 			
+			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
+				if (de.data != null)
+				{
+					if (de.data is String) {
+						if (de.data as String == Database.END_OF_RESULT) {
+							//InterfaceController.dispatchEvent(new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT))
+						}
+					}
+				}
+			} 
 		}
-		
-		
 	}
 }
