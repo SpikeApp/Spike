@@ -1,7 +1,6 @@
 package services
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.util.Hex;
@@ -32,6 +31,8 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
+	
+	import utils.AlertManager;
 	
 	public class NightScoutService extends EventDispatcher
 	{
@@ -139,7 +140,12 @@ package services
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
 				&&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false"
-			) {
+				&&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false"
+				&&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true"
+			) 
+			{
 				testNightScoutUrlAndSecret();
 			} 
 			
@@ -186,13 +192,24 @@ package services
 						!syncRunning
 						&& 
 						!DexcomShareService.DexcomShareSyncRunning()) {
-						testNightScoutUrlAndSecret();
+						//testNightScoutUrlAndSecret();
 					}
 				}
 			}
 		}
 		
-		private static function testNightScoutUrlAndSecret():void {
+		public static function testNightScoutUrlAndSecret(externalCall:Boolean = false):void {
+			
+			if((DexcomShareService.DexcomShareSyncRunning() || syncRunning) && externalCall)
+			{
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","sync_in_progress"),
+					60
+				);
+				return;
+			}
+			
 			//test if network is available
 			if (NetworkInfo.networkInfo.isReachable()) {
 				var testEvent:Object = new Object();
@@ -210,6 +227,15 @@ package services
 				createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.PUT,null,JSON.stringify(testEvent), nightScoutUrlTestSuccess, nightScoutUrlTestError);
 			} else {
 				myTrace("call_to_nightscout_to_verify_url_and_secret_can_not_be_made");
+				
+				if(externalCall)
+				{
+					AlertManager.showSimpleAlert(
+						ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+						ModelLocator.resourceManagerInstance.getString("nightscoutservice","call_to_nightscout_to_verify_url_and_secret_can_not_be_made"),
+						60
+					);
+				}
 			}
 		}
 		
@@ -225,10 +251,13 @@ package services
 			
 			myTrace(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"));
 			
-			if (BackgroundFetch.appIsInForeground()) {
-				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+			if (BackgroundFetch.appIsInForeground()) 
+			{	
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
 					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"),
-					60);
+					60
+				);
 			}
 		}
 		
@@ -247,9 +276,12 @@ package services
 				
 				myTrace(errorMessage);
 				
-				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
 					errorMessage,
-					60);
+					60
+				);
+				
 				myTrace("nightscout_test_result_nok");
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN, "true");
 			}
@@ -291,6 +323,9 @@ package services
 				syncFinished();
 				return;
 			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) ==  "false")
+				return
 			
 			syncRunning = true;
 			

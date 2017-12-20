@@ -2,15 +2,23 @@ package screens
 {
 	import display.sensor.SensorStartStopList;
 	
-	import feathers.controls.GroupedList;
+	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import model.ModelLocator;
+	
+	import services.TutorialService;
+	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
+	import starling.events.Event;
 	
 	import ui.AppInterface;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("sensorscreen")]
 
 	public class SensorScreen extends BaseSubScreen
 	{	
@@ -18,13 +26,7 @@ package screens
 		{
 			super();
 			
-			/* Set Header Title */
-			title = "Sensor";
-			
-			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.sensorTexture);
-			iconContainer = new <DisplayObject>[icon];
-			headerProperties.rightItems = iconContainer;
+			setupProperties();	
 		}
 		
 		override protected function initialize():void 
@@ -33,11 +35,26 @@ package screens
 			
 			setupScreen();
 			adjustMainMenu();
+			setupEventHandlers();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
+			/* Set Header Title */
+			title = ModelLocator.resourceManagerInstance.getString('sensorscreen','screen_title');
+			
+			/* Set Header Icon */
+			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.sensorTexture);
+			iconContainer = new <DisplayObject>[icon];
+			headerProperties.rightItems = iconContainer;
 		}
 		
 		private function setupScreen():void
 		{
-			var statusList:GroupedList = new SensorStartStopList();
+			var statusList:SensorStartStopList = new SensorStartStopList();
 			screenRenderer.addChild(statusList);
 		}
 		
@@ -46,6 +63,26 @@ package screens
 			AppInterface.instance.menu.selectedIndex = 1;
 		}
 		
+		private function setupEventHandlers():void
+		{
+			if( TutorialService.isActive && TutorialService.eighthStepActive)
+				addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+		}
+		
+		/**
+		 * Event Handlers
+		 */
+		private function onScreenIn(e:Event):void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+			
+			if( TutorialService.isActive && TutorialService.eighthStepActive)
+				Starling.juggler.delayCall(TutorialService.ninethStep, .2);
+		}
+		
+		/**
+		 * Utility
+		 */
 		override protected function draw():void 
 		{
 			super.draw();

@@ -89,6 +89,7 @@ package chart
 		private var userTimeAgoFontMultiplier:Number;
 		private var userAxisFontMultiplier:Number;
 		private var dateFormat:String;
+		private var dummyModeActive:Boolean = false;
 
         //Display Objects
         private var glucoseTimelineContainer:Sprite;
@@ -111,6 +112,8 @@ package chart
 
 		//Movement
         private var scrollMultiplier:Number;
+
+        
 
         public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
         {
@@ -171,6 +174,10 @@ package chart
 		
         public function drawGraph():void
         {	
+			/* Activate Dummy Mode if there's no bgreadings in */
+			if (_dataSource.length == 0)
+				dummyModeActive = true;
+			
 			/**
              * Main Chart
              */
@@ -679,7 +686,8 @@ package chart
 			if(_displayLine)
 			{
 				//Check if we can create a bitmap representation of the line without exceeding hardware capabilities
-				if(line.width < 2048)
+				trace("DeviceInfo.getDeviceType()", DeviceInfo.getDeviceType());
+				if((line.width < 2048 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.TABLET))
 				{
 					//Create a bitmap from the line. This is more memory and CPU efficient
 					var lineTexture:RenderTexture = new RenderTexture(chartContainer.width, chartContainer.height);
@@ -894,21 +902,15 @@ package chart
 										if (hours >= 13)
 											hours -= 12; //Subtract 12 to the hour value to get 12H date format
 										
-										if (hours < 10)
-											hoursOutput = "0" + hours;
-										else
-											hoursOutput = hours.toString();
+										hoursOutput = hours.toString();
 										
 										ampmOutput = "PM";
 									}
 									else
 									{
-										if (hours < 10)
-											hoursOutput = "0" + hours;
-										else
-											hoursOutput = hours.toString();
+										hoursOutput = hours.toString();
 										
-										if (hoursOutput == "00")
+										if (hoursOutput == "0")
 											hoursOutput = "12";
 										
 										ampmOutput = "AM";
@@ -1033,7 +1035,7 @@ package chart
 				glucoseMarker.alpha = 0;
 			}
 			//Check if we can create a bitmap representation of the line without exceeding hardware capabilities
-			if(line.width < 2048)
+			if((line.width < 2048 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.TABLET))
 			{
 				//Create a bitmap from the line. This is more memory and CPU efficient
 				var lineTexture:RenderTexture;
@@ -1336,7 +1338,7 @@ package chart
 			if(_displayLine)
 			{
 				//Check if we can create a bitmap representation of the line without exceeding hardware capabilities
-				if(line.width < 2048)
+				if((line.width < 2048 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.TABLET))
 				{
 					//Create a bitmap from the line. This is more memory and CPU efficient
 					var lineTexture:RenderTexture;

@@ -2,7 +2,10 @@ package utils
 {
 	import flash.display.Stage;
 	
+	import feathers.controls.Button;
+	
 	import starling.core.Starling;
+	import starling.textures.SubTexture;
 	
 	public class Constants 
 	{
@@ -14,6 +17,10 @@ package utils
 		private static var _stageHeight:int;
 		private static var _appStage:Stage;
 		private static var _noLockEnabled:Boolean;
+		
+		/* Tutorial */
+		public static var mainMenuButton:Button;
+		public static var settingsIcon:SubTexture;
 		
 		public static function init( stageWidth:int, stageHeight:int, stage:Stage ):void 
 		{

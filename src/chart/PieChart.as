@@ -16,6 +16,8 @@ package chart
 	import starling.display.graphics.NGon;
 	import starling.events.Event;
 	
+	import utils.DeviceInfo;
+	
 	[ResourceBundle("chartscreen")]
 	
 	public class PieChart extends Sprite
@@ -112,7 +114,10 @@ package chart
 			 */
 			pieHeight = 2 * pieRadius;
 			legendGap = pieHeight / 6;
-			legendQuadSize = (pieHeight - (2 * legendGap)) / 3;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+				legendQuadSize = (pieHeight - (2 * legendGap)) / 3;
+			else
+				legendQuadSize = (pieHeight - (2 * legendGap)) / 4;
 			
 			/**
 			 * LOW

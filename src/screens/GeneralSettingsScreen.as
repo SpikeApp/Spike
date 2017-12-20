@@ -5,14 +5,18 @@ package screens
 	import display.settings.general.NotificationSettingsList;
 	import display.settings.general.UpdateSettingsList;
 	
-	import feathers.controls.Alert;
+	import events.ScreenEvent;
+	
 	import feathers.controls.Label;
-	import feathers.data.ListCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
+	import services.TutorialService;
+	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
@@ -43,6 +47,7 @@ package screens
 			
 			setupContent();
 			adjustMainMenu();
+			setupEventHandlers();
 		}
 		
 		/**
@@ -91,30 +96,18 @@ package screens
 			AppInterface.instance.menu.selectedIndex = 3;
 		}
 		
+		private function setupEventHandlers():void
+		{
+			addEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			AppInterface.instance.menu.addEventListener(ScreenEvent.BEGIN_SWITCH, onScreenOut);
+			if( TutorialService.isActive && TutorialService.thirdStepActive)
+				addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+		}
+		
 		/**
 		 * Event Handlers
 		 */
-		override protected function onBackButtonTriggered(event:Event):void
-		{
-			//If settings have been modified, display Alert
-			if(glucoseSettings.needsSave || notificationSettings.needsSave || updatesSettingsList.needsSave)
-			{
-				var alert:Alert = Alert.show(
-					ModelLocator.resourceManagerInstance.getString('globalsettings','want_to_save_changes'),
-					ModelLocator.resourceManagerInstance.getString('globalsettings','save_changes'),
-					new ListCollection(
-						[
-							{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','no_uppercase'), triggered: onSkipSaveSettings },
-							{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','yes_uppercase'), triggered: onSaveSettings }
-						]
-					)
-				);
-			}
-			else
-				dispatchEventWith(Event.COMPLETE);
-		}
-		
-		private function onSaveSettings(e:Event):void
+		private function onScreenOut(e:Event):void
 		{
 			//Save Settings
 			if (glucoseSettings.needsSave)
@@ -124,11 +117,19 @@ package screens
 			if (updatesSettingsList.needsSave)
 				updatesSettingsList.save();
 			
-			//Pop Screen
-			dispatchEventWith(Event.COMPLETE);
+			if (TutorialService.isActive && TutorialService.fourthStepActive)
+				Starling.juggler.delayCall(TutorialService.fifthStep, .2);
 		}
 		
-		private function onSkipSaveSettings(e:Event):void
+		private function onScreenIn(e:Event):void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+			
+			if( TutorialService.isActive && TutorialService.thirdStepActive)
+				Starling.juggler.delayCall(TutorialService.fourthStep, .2);
+		}
+		
+		override protected function onBackButtonTriggered(event:Event):void
 		{
 			dispatchEventWith(Event.COMPLETE);
 		}

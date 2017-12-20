@@ -9,7 +9,6 @@ package screens
 	import feathers.controls.Callout;
 	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
-	import feathers.layout.RelativePosition;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -18,6 +17,8 @@ package screens
 	import starling.events.Event;
 	
 	import ui.AppInterface;
+	
+	import utils.Constants;
 	
 	public class BaseScreen extends PanelScreen
 	{
@@ -60,6 +61,8 @@ package screens
 				menuButton
 			];
 			backButtonHandler = onBackButton;
+			Constants.mainMenuButton = menuButton;
+			
 			
 			/* Add more options to the header */
 			moreButton = new Button();

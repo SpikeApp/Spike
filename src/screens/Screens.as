@@ -7,6 +7,7 @@ package screens
 		public static const SENSOR_STATUS:String = "sensorStatus";
 		public static const SENSOR_START:String = "sensorStart";
 		public static const TRANSMITTER:String = "transmitter";
+		public static const SETTINGS_ABOUT:String = "aboutSettings";
 		public static const SETTINGS_MAIN:String = "mainSettings";
 		public static const SETTINGS_GENERAL:String = "generalSettings";
 		public static const SETTINGS_CHART:String = "chartSettings";

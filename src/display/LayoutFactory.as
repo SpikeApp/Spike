@@ -51,6 +51,7 @@ package display
 			{
 				var textFormat:TextFormat = new TextFormat( "Roboto", 14, 0xEEEEEE, horizontalAlign, VerticalAlign.TOP );
 				inputField.fontStyles = textFormat;
+				inputField.promptFontStyles = inputField.fontStyles.clone();
 			}
 			
 			if(isNumeric)

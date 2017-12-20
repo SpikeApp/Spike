@@ -13,7 +13,6 @@ package
 	
 	import events.IosXdripReaderEvent;
 	
-	import feathers.motion.Fade;
 	import feathers.utils.ScreenDensityScaleFactorManager;
 	
 	import screens.Screens;
@@ -110,8 +109,11 @@ package
 			{
 				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART)
 				{
-					AppInterface.instance.menu.selectedIndex = 0;
-					AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
+					/**
+					 * ENABLE IN PRODUCTION
+					 */
+					//AppInterface.instance.menu.selectedIndex = 0;
+					//AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
 				}
 			}
 			

@@ -1,11 +1,5 @@
 package services
 {
-	import com.distriqt.extension.dialog.Dialog;
-	import com.distriqt.extension.dialog.DialogView;
-	import com.distriqt.extension.dialog.builders.AlertBuilder;
-	import com.distriqt.extension.dialog.events.DialogViewEvent;
-	import com.distriqt.extension.dialog.objects.DialogAction;
-	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
@@ -23,7 +17,14 @@ package services
 	import events.IosXdripReaderEvent;
 	import events.SettingsServiceEvent;
 	
+	import feathers.controls.Alert;
+	import feathers.controls.ButtonGroup;
+	
 	import model.ModelLocator;
+	
+	import starling.events.Event;
+	
+	import utils.AlertManager;
 	
 	[ResourceBundle('updateservice')]
 	
@@ -82,7 +83,7 @@ package services
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
 			
 			//Make connection and define listener
-			loader.addEventListener(Event.COMPLETE, onLoadSuccess);
+			loader.addEventListener(flash.events.Event.COMPLETE, onLoadSuccess);
 			awaitingLoadResponse = true;
 			
 			try 
@@ -124,7 +125,7 @@ package services
 				myTrace("App can check for new updates");
 				return true;
 			}
-
+			
 			myTrace("App can not check for new updates");
 			return false;
 		}
@@ -135,7 +136,7 @@ package services
 		}
 		
 		//Event Listeners
-		protected static function onLoadSuccess(event:Event):void
+		protected static function onLoadSuccess(event:flash.events.Event):void
 		{
 			if (awaitingLoadResponse) {
 				myTrace("in onLoadSuccess");
@@ -233,22 +234,20 @@ package services
 					if(userUpdateAvailable)
 					{
 						//Warn User
-						var title:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title");
 						var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + "."; 
-						var ignore:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update");
-						var goToGitHub:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_goto_github");
-						var remind:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later");
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(title)
-							.setMessage(message)
-							.addOption(ignore, DialogAction.STYLE_POSITIVE, 0)
-							.addOption(goToGitHub, DialogAction.STYLE_POSITIVE, 1)
-							.addOption(remind, DialogAction.STYLE_POSITIVE, 2)
-							.build()
+						
+						var alert:Alert = AlertManager.showActionAlert(
+							ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"),
+							message,
+							Number.NaN,
+							[
+								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update"), triggered: onIgnoreUpdate },
+								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_goto_github"), triggered: onGoToGithub },
+								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later") }
+							]
 						);
-						alert.addEventListener(DialogViewEvent.CLOSED, onDialogClosed);
-						DialogService.addDialog(alert);
+						alert.buttonGroupProperties.gap = 0;
+						alert.buttonGroupProperties.paddingLeft = 14;
 					}
 					else
 					{
@@ -259,26 +258,19 @@ package services
 			}
 		}
 		
-		private static function onDialogClosed(event:DialogViewEvent):void 
+		private static function onIgnoreUpdate(e:starling.events.Event):void
 		{
-			var selectedOption:int = int(event.index);
-			if (selectedOption == IGNORE_UPDATE_BUTTON)
+			//Add ignored version to database settings
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE, latestAppVersion as String);
+		}
+		
+		private static function onGoToGithub(e:starling.events.Event):void
+		{
+			//Go to github release page
+			if (updateURL != "")
 			{
-				//Add ignored version to database settings
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE, latestAppVersion as String);
-			}
-			else if (selectedOption == GO_TO_GITHUB_BUTTON)
-			{
-				//Go to github release page
-				if (updateURL != "")
-				{
-					navigateToURL(new URLRequest(updateURL));
-					updateURL = "";
-				}
-			}
-			else if (selectedOption == REMIND_LATER_BUTTON)
-			{
-					//last update check already changed, no need to do anything here
+				navigateToURL(new URLRequest(updateURL));
+				updateURL = "";
 			}
 		}
 		
@@ -296,7 +288,7 @@ package services
 			}
 		}
 		
-		protected static function onApplicationActivated(event:Event = null):void
+		protected static function onApplicationActivated(event:flash.events.Event = null):void
 		{
 			//App is in foreground. Let's see if we can make an update
 			//but not the very first start of the app, otherwise there's too many pop ups

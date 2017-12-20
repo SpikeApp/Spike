@@ -1,7 +1,11 @@
 package screens
 {
-	import flash.text.engine.LineJustification;
-	import flash.text.engine.SpaceJustifier;
+	import flash.system.Capabilities;
+	
+	import spark.formatters.DateTimeFormatter;
+	
+	import databaseclasses.BlueToothDevice;
+	import databaseclasses.Sensor;
 	
 	import display.LayoutFactory;
 	
@@ -9,9 +13,7 @@ package screens
 	import feathers.controls.Button;
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.text.TextBlockTextRenderer;
-	import feathers.core.ITextRenderer;
-	import feathers.data.ListCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.layout.HorizontalAlign;
@@ -20,24 +22,58 @@ package screens
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import model.ModelLocator;
+	
+	import services.TutorialService;
+	
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
 	import ui.AppInterface;
 	
+	import utils.AlertManager;
 	import utils.Constants;
+	
+	[ResourceBundle("sensorscreen")]
 
 	public class SensorStartScreen extends BaseSubScreen
 	{
+		/* Display Objects */
 		private var dateSpinner:DateTimeSpinner;
+		private var startButton:Button;
 		
+		/* Internal Variables */
+		private var initialAlertShowed:Boolean = false;
+
 		public function SensorStartScreen() 
 		{
 			super();
 			
+			setupHeader();
+		}
+		
+		override protected function initialize():void 
+		{
+			super.initialize();
+			
+			/* Display Initial Alert */
+			if( !TutorialService.isActive && !TutorialService.ninethStepActive )
+				Starling.juggler.delayCall(showInitialAlert, 1.25);
+			
+			/* Setup Content and Adjust Main Menu */
+			setupContent();
+			adjustMainMenu();
+			setupEventListeners();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupHeader():void
+		{
 			/* Set Header Title */
-			title = "Start Sensor";
+			title = ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_screen_title');
 			
 			/* Set Header Icon */
 			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.sensorTexture);
@@ -45,32 +81,14 @@ package screens
 			headerProperties.rightItems = iconContainer;
 		}
 		
-		override protected function initialize():void 
-		{
-			super.initialize();
-			
-			Starling.juggler.delayCall(showInitialAlert, 1.25);
-			setupContent();
-			adjustMainMenu();
-		}
-		
 		private function showInitialAlert():void
 		{
-			var alert:Alert = Alert.show(
-				"You need to set the date and time the sensor was inserted. It's important that you set them as accurately as possible otherwise you might compromisse the accuracy of the readings.",
-				"Start Sensor",
-				new ListCollection(
-					[
-						{ label: "OK" }
-					]
-				)
+			initialAlertShowed = true;
+			
+			AlertManager.showSimpleAlert(
+				ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_alert_title'),
+				ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_alert_message')
 			);
-			alert.messageFactory = function():ITextRenderer
-			{
-				var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
-				messageRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
-				return messageRenderer;
-			}
 		}
 		
 		private function setupContent():void
@@ -94,49 +112,92 @@ package screens
 			/* Create DateSpinner */
 			dateSpinner = new DateTimeSpinner();
 			dateSpinner.maximum = new Date();
+			dateSpinner.locale = "en_US";
+			
 			container.addChild( dateSpinner );
 			
 			/* Create Start Button */
-			var startButton:Button = LayoutFactory.createButton("Start Sensor");
+			startButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sensorscreen','start_button_extended_label'));
 			startButton.addEventListener(Event.TRIGGERED, onSensorStarted);
 			container.addChild(startButton);
 		}
-		
-		private function onSensorStarted(e:Event):void
-		{
-			/* Start Sensor */
-			var sensorInsertionDate:Date = dateSpinner.value;
-			trace(sensorInsertionDate);
-			
-			/* Alert */
-			var now:Date = new Date();
-			var millisecondsTillCalibration:Number = 1000 * 60 * 60 * 2;
-			var sum:Number = millisecondsTillCalibration + now.getTime();
-			var calibrationDate:Date = new Date(sum);
-			
-			var alert:Alert = Alert.show(
-				"You'll need to wait till " + calibrationDate.toLocaleTimeString() + " before you can input your initial calibrations. Calibration will be done in 2 steps. When the time comes, you will receive a notification for the first 2 readings. You must calibrate in each of these 2 notifications (total of 2 calibrations in a 10 minute span). Keep your device with you and be on the look out for the initial calibration notifications.",
-				"Sensor Started!",
-				new ListCollection(
-					[
-						{ label: "OK", triggered: onBackButtonTriggered }
-					]
-				)
-			);
-			alert.messageFactory = function():ITextRenderer
-			{
-				var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
-				messageRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
-				return messageRenderer;
-			}
-			alert.height = 425;
-		}	
 		
 		private function adjustMainMenu():void
 		{
 			AppInterface.instance.menu.selectedIndex = 3;
 		}
 		
+		private function setupEventListeners():void
+		{
+			if( TutorialService.isActive && TutorialService.ninethStepActive)
+				addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+		}
+		
+		/**
+		 * Event Handlers
+		 */
+		private function onScreenIn(e:Event):void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+			
+			if( TutorialService.isActive && TutorialService.ninethStepActive)
+			{
+				Starling.juggler.delayCall(TutorialService.tenthStep, .2, startButton);
+				TutorialService.instance.addEventListener(TutorialService.TUTORIAL_FINISHED, onTutorialFinished);	
+			}
+		}
+		
+		private function onTutorialFinished(e:Event):void
+		{
+			Starling.juggler.delayCall(determineIfAlertNeedsToBeShown, .75);
+		}
+		
+		private function determineIfAlertNeedsToBeShown():void
+		{
+			if ( !initialAlertShowed && AppInterface.instance.navigator.activeScreenID == Screens.SENSOR_START )
+				showInitialAlert();
+		}
+		
+		private function onSensorStarted(e:Event):void
+		{
+			/* Calculate Sensor Insertion Time */
+			var sensorStartTime:Number = dateSpinner.value.valueOf();
+			Sensor.startSensor(sensorStartTime);
+			
+			/* Calculate Time Till Next Calibration */
+			var actualTime:Number = (new Date()).valueOf();
+			var timeOfCalibration:Number = 2 * 3600 * 1000 - (actualTime - sensorStartTime);
+			
+			/* Define Date Formater Helper */
+			var dateFormatterForSensorStartWarning:DateTimeFormatter = new DateTimeFormatter();
+			dateFormatterForSensorStartWarning.dateTimePattern = ModelLocator.resourceManagerInstance.getString('sensorscreen','timestamppattern_for_sensor_start_warning');
+			dateFormatterForSensorStartWarning.useUTC = false;
+			dateFormatterForSensorStartWarning.setStyle("locale",Capabilities.language.substr(0,2));
+			
+			/* Define Alert Message */
+			var alertMessage:String;
+			if (timeOfCalibration > 0 && !BlueToothDevice.isTypeLimitter()) {
+				alertMessage = ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_wait_prefix");
+				alertMessage += " " + dateFormatterForSensorStartWarning.format(new Date(actualTime + timeOfCalibration)) + " ";
+				alertMessage += ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_wait_suffix");
+			} else {
+				alertMessage = ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_no_wait");
+			}
+			
+			/* Display Alert */
+			var alert:Alert = AlertManager.showSimpleAlert
+			(
+				ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_started_alert_title"),
+				alertMessage,
+				Number.NaN,
+				onBackButtonTriggered
+			);
+			alert.height = 425;
+		}	
+		
+		/**
+		 * Utility
+		 */
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );

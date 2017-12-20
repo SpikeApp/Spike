@@ -1,6 +1,6 @@
 package screens
 {
-	import display.transmitter.TransmitterStatusList;
+	import display.settings.about.AboutList;
 	
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -10,30 +10,23 @@ package screens
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
-	import ui.AppInterface;
-	
 	import utils.Constants;
 	
-	[ResourceBundle("transmitterscreen")]
+	[ResourceBundle("aboutsettingsscreen")]
 
-	public class TransmitterScreen extends BaseSubScreen
+	public class AboutSettingsScreen extends BaseSubScreen
 	{
-		/* Display Objects */
-		private var statusList:TransmitterStatusList;
-		
-		public function TransmitterScreen() 
+		public function AboutSettingsScreen() 
 		{
 			super();
 			
-			setupHeader();
+			setupHeader();	
 		}
-
 		override protected function initialize():void 
 		{
 			super.initialize();
 			
 			setupContent();
-			adjustMainMenu();
 		}
 		
 		/**
@@ -42,23 +35,20 @@ package screens
 		private function setupHeader():void
 		{
 			/* Set Header Title */
-			title = ModelLocator.resourceManagerInstance.getString('transmitterscreen','screen_title');
+			title = ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','about_screen_title');
+			//title = ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','share_settings_title');
 			
 			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.bluetoothTexture);
+			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.settingsCellTexture);
 			iconContainer = new <DisplayObject>[icon];
 			headerProperties.rightItems = iconContainer;
 		}
 		
 		private function setupContent():void
 		{
-			statusList = new TransmitterStatusList();
-			screenRenderer.addChild(statusList);
-		}
-		
-		private function adjustMainMenu():void
-		{
-			AppInterface.instance.menu.selectedIndex = 2;
+			//About Section
+			var abouSection:AboutList = new AboutList();
+			screenRenderer.addChild(abouSection);
 		}
 		
 		/**
@@ -66,8 +56,8 @@ package screens
 		 */
 		override protected function onBackButtonTriggered(event:Event):void
 		{
+			//Pop Screen
 			dispatchEventWith(Event.COMPLETE);
-			AppInterface.instance.menu.selectedIndex = 0;
 		}
 		
 		/**
@@ -75,7 +65,6 @@ package screens
 		 */
 		override protected function draw():void 
 		{
-			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );
 			super.draw();
 			icon.x = Constants.stageWidth - icon.width - BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding;
 		}

@@ -6,16 +6,15 @@ package ui
 	
 	import events.ScreenEvent;
 	
-	import feathers.controls.DragGesture;
 	import feathers.controls.Drawers;
 	import feathers.controls.StackScreenNavigator;
 	import feathers.controls.StackScreenNavigatorItem;
-	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.motion.Cover;
 	import feathers.motion.Reveal;
 	import feathers.motion.Slide;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeWithIcons;
 	
+	import screens.AboutSettingsScreen;
 	import screens.AlarmsCustomizerSettingsScreen;
 	import screens.AlarmsSettingsScreen;
 	import screens.AlertTypeCustomizerScreen;
@@ -41,13 +40,11 @@ package ui
 	
 	public class AppInterface extends Sprite 
 	{
+		/* Display Objetcts */
 		private static var _instance:AppInterface;
-		
 		public var menu:MenuList;
 		public var drawers:Drawers;
 		public var navigator:StackScreenNavigator;
-
-		private var preloader:MaterialDesignSpinner;
 		
 		public function AppInterface() 
 		{
@@ -162,6 +159,11 @@ package ui
 			loggingTracingSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_LOGGING_TRACING, loggingTracingSettingsScreenItem );
 			
+			/* About Settings Screen */
+			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutSettingsScreen );
+			aboutSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_ABOUT, aboutSettingsScreenItem );
+			
 			/* Disclaimer Screen */
 			var disclaimerScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( DisclaimerScreen );
 			disclaimerScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
@@ -172,7 +174,7 @@ package ui
 			/* Screen Navigator */
 			navigator.rootScreenID = Screens.GLUCOSE_CHART;
 			
-			/* Menu list */
+			/* Main Menu */
 			menu = new MenuList();
 			menu.addEventListener( ScreenEvent.SWITCH, onScreenSwitch );
 			
@@ -194,6 +196,5 @@ package ui
 		{
 			return _instance;
 		}
-
 	}
 }

@@ -161,6 +161,10 @@ package services
 					{
 						ModelLocator.resourceManagerInstance.localeChain = ["pl_PL","en_US"];
 					}
+					else if(speechLanguageCode == "it-IT")
+					{
+						ModelLocator.resourceManagerInstance.localeChain = ["it_IT","en_US"];
+					}
 					
 					//If user wants trend to be spoken...
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")

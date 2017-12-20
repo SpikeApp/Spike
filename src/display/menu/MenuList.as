@@ -74,6 +74,10 @@ package display.menu
 		{
 			if(AppInterface.instance.drawers.isLeftDrawerOpen)
 			{
+				//Notify special screens like the chart settings screen that a new sceen is about to enter
+				dispatchEventWith( ScreenEvent.BEGIN_SWITCH);
+				
+				//Notify navigator of the new screen to be switch to
 				const screenName:String = selectedItem.screen as String;
 				dispatchEventWith( ScreenEvent.SWITCH, false, { screen: screenName } );
 			}

@@ -17,11 +17,12 @@ package services
 	
 	import model.ModelLocator;
 	
-	import views.SettingsView;
+	import utils.AlertManager;
 
 	public class DexcomShareService extends EventDispatcher
 	{
 		[ResourceBundle("dexcomshareservice")]
+		[ResourceBundle("general")]
 		
 		private static const US_SHARE_BASE_URL:String = "https://share2.dexcom.com/ShareWebServices/Services/";
 		private static const NON_US_SHARE_BASE_URL:String = "https://shareous1.dexcom.com/ShareWebServices/Services/";
@@ -39,7 +40,7 @@ package services
 		private static var lastSyncrunningChangeDate:Number = (new Date()).valueOf();
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
 		private static var timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed:Number = 0;
-		private static const timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes = 10;
+		private static const timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes:Number = 10;
 		private static var timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived:Number = 0;
 
 		private static var dexcomShareUrl:String = "";
@@ -124,10 +125,10 @@ package services
 				|| 
 				event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) {
 				if (NetworkInfo.networkInfo.isReachable()) {
-					myTrace("in settingChanged, calling testCredentials");
-					testCredentials();
+					//myTrace("in settingChanged, calling testCredentials");
+					//testCredentials();
 				} else {
-					myTrace("in settingChanged, but network not reachable");
+					//myTrace("in settingChanged, but network not reachable");
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON
 				|| 
@@ -195,10 +196,17 @@ package services
 			dexcomShareStatus = dexcomShareStatus_Waiting_LoginPublisherAccountByName;
 		}
 		
-		private static function testCredentials():void {
+		public static function testCredentials():void {
 			myTrace("in testCredentials");
 			if (syncRunning || NightScoutService.NightScoutSyncRunning()) {
 				myTrace("dexcom or nightscout sync running, return");
+				
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+					ModelLocator.resourceManagerInstance.getString("dexcomshareservice","sync_in_progress"),
+					60
+				);
+				
 				return;
 			}
 			if (NetworkInfo.networkInfo.isReachable()) {
@@ -206,6 +214,13 @@ package services
 				dexcomShareStatus = dexcomShareStatus_Waiting_credentialTest;
 			} else {
 				myTrace("in testCredentials but network  not reachable");
+				
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+					ModelLocator.resourceManagerInstance.getString("dexcomshareservice","network_unreachable"),
+					60
+				);
+				
 			}
 		}
 		
@@ -226,9 +241,13 @@ package services
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_credentialTest) {
 				myTrace("in createAndLoadUrlRequestSuccess and dexcomShareStatus == dexcomShareStatus_Waiting_credentialTest");
 				if (BackgroundFetch.appIsInForeground()) {
-					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credentialtest"),
+					
+					AlertManager.showSimpleAlert(
+						ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credentialtest"),
 						ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credentialtest_success"),
-						60);
+						60
+					);
+					
 					sync();
 				}
 			}
@@ -358,9 +377,11 @@ package services
 				} else if (code == "MonitoredReceiverSerialNumberDoesNotMatch") {
 					myTrace("code MonitoredReceiverSerialNumberDoesNotMatch");
 					if (BackgroundFetch.appIsInForeground()) {
-						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_error"),
+						AlertManager.showSimpleAlert(
+							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_error"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_sn_doesnotmatch"),
-							60);
+							60
+							);
 					}
 					syncRunning = false;
 				} else if (code == "MonitoredReceiverNotAssigned") {
@@ -373,9 +394,12 @@ package services
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_not_assigned_2") +
 							" " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME) + ". " +
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_not_assigned_3");
-						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_error"),
+						
+						AlertManager.showSimpleAlert(
+							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_error"),
 							message,
-							60);
+							60
+						);
 					}
 					syncRunning = false;
 				}  else {
@@ -387,21 +411,31 @@ package services
 				syncRunning = false;
 				if (code == "SSO_AuthenticateAccountNotFound") {
 					if (BackgroundFetch.appIsInForeground()) {
-						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+						AlertManager.showSimpleAlert(
+							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","account_name_not_found"),
-							60);
+							60
+						);
 					}
 				} else if (code == "SSO_AuthenticatePasswordInvalid") {
 					if (BackgroundFetch.appIsInForeground()) {
-						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+						
+						AlertManager.showSimpleAlert(
+							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","invalid_password"),
-							60);
+							60
+						);
+						
 					}
 				} else if (code == "SSO_AuthenticateMaxAttemptsExceeed") {
 					if (BackgroundFetch.appIsInForeground()) {
-						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+						
+						AlertManager.showSimpleAlert(
+							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","max_login_attempts_excceded"),
-							60);
+							60
+						);
+						
 						timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed = (new Date()).valueOf();
 					}
 				} else {
@@ -423,9 +457,12 @@ package services
 					errorMessage = code;
 				}
 				if (BackgroundFetch.appIsInForeground()) {
-					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+					
+					AlertManager.showSimpleAlert(
+						ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
 						errorMessage,
-						60);
+						60
+					);
 				}
 				dexcomShareStatus = "";
 			} else {

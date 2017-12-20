@@ -2,6 +2,10 @@ package display.settings.loggingtracing
 {
 	import flash.system.System;
 	
+	import Utilities.Trace;
+	
+	import databaseclasses.LocalSettings;
+	
 	import display.LayoutFactory;
 	
 	import feathers.controls.Button;
@@ -13,24 +17,43 @@ package display.settings.loggingtracing
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import model.ModelLocator;
+	
 	import starling.events.Event;
 	
 	import utils.Constants;
 
+	[ResourceBundle("logtracesettingsscreen")]
+	
 	public class TracingSettingsList extends List 
 	{
 		/* Display Objects */
 		private var traceToggle:ToggleSwitch;
 		private var sendEmail:Button;
 		
+		/* Properties */
+		public var needsSave:Boolean = false;
+		private var isTraceEnabled:Boolean;
+		
 		public function TracingSettingsList()
 		{
 			super();
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupInitialContent();
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
 			//Set Properties
 			clipContent = false;
 			isSelectable = false;
@@ -38,13 +61,23 @@ package display.settings.loggingtracing
 			hasElasticEdges = false;
 			paddingBottom = 5;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			
+		}
+		
+		private function setupInitialContent():void
+		{
+			/* Get data from database */
+			isTraceEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "true";
+		}
+		
+		private function setupContent():void
+		{
 			//On/Off Toggle
-			traceToggle = LayoutFactory.createToggleSwitch(false);
+			traceToggle = LayoutFactory.createToggleSwitch(isTraceEnabled);
 			traceToggle.addEventListener( Event.CHANGE, onTraceOnOff );
 			
 			//Send Email
-			sendEmail = LayoutFactory.createButton("E-mail Trace File", false, MaterialDeepGreyAmberMobileThemeIcons.sendTexture);
+			sendEmail = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','email_button_title'), false, MaterialDeepGreyAmberMobileThemeIcons.sendTexture);
+			sendEmail.addEventListener(Event.TRIGGERED, onSendEmail);
 			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -56,17 +89,7 @@ package display.settings.loggingtracing
 			};
 			
 			//Define Trace Settings Data
-			reloadTraceSettings(traceToggle.isSelected);
-		}
-		
-		private function onTraceOnOff(event:Event):void
-		{
-			var toggle:ToggleSwitch = ToggleSwitch( event.currentTarget );
-			
-			if(toggle.isSelected)
-				reloadTraceSettings(true);
-			else
-				reloadTraceSettings(false);
+			reloadTraceSettings(isTraceEnabled);
 		}
 		
 		private function reloadTraceSettings(fullDisplay:Boolean):void
@@ -75,7 +98,7 @@ package display.settings.loggingtracing
 			{
 				dataProvider = new ArrayCollection(
 					[
-						{ label: "Enabled", accessory: traceToggle },
+						{ label: ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','enabled_label'), accessory: traceToggle },
 						{ label: "", accessory: sendEmail },
 					]);
 			}
@@ -83,11 +106,51 @@ package display.settings.loggingtracing
 			{
 				dataProvider = new ArrayCollection(
 					[
-						{ label: "Enabled", accessory: traceToggle },
+						{ label: ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','enabled_label'), accessory: traceToggle },
 					]);
 			}
 		}
 		
+		public function save():void
+		{
+			var valueToSave:String;
+			if(isTraceEnabled) valueToSave = "true";
+			else valueToSave = "false";
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) != valueToSave)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED, valueToSave);
+			
+			needsSave = false;
+		}
+		
+		/**
+		 * Event Handlers
+		 */
+		private function onTraceOnOff(event:Event):void
+		{
+			isTraceEnabled = traceToggle.isSelected;
+			
+			needsSave = true;
+			
+			reloadTraceSettings(isTraceEnabled);
+		}
+		
+		private function onSendEmail():void
+		{
+			//Update internal variables and controls
+			isTraceEnabled = false;
+			traceToggle.isSelected = false;
+			
+			//Disable Tracing
+			save();
+			
+			//Send trace file
+			Trace.sendTraceFile();
+		}
+		
+		/**
+		 * Utilty
+		 */
 		override public function dispose():void
 		{
 			if(traceToggle != null)

@@ -6,6 +6,7 @@ package display.settings.transmitter
 	
 	import display.LayoutFactory;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
@@ -20,9 +21,11 @@ package display.settings.transmitter
 	
 	import starling.events.Event;
 	
+	import utils.AlertManager;
 	import utils.Constants;
 	
 	[ResourceBundle("transmittersettingsscreen")]
+	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globalsettings")]
 
 	public class TransmitterSettingsList extends List 
@@ -33,9 +36,11 @@ package display.settings.transmitter
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
+		public var warnUser:Boolean = false;
 		private var transmitterTypeValue:String;
 		private var transmitterIDValue:String;
 		private var currentTransmitterIndex:int;
+		private var transmitterIDisEnabled:Boolean;
 		
 		public function TransmitterSettingsList()
 		{
@@ -46,8 +51,10 @@ package display.settings.transmitter
 			super.initialize();
 			
 			setupProperties();
-			setupContent();
 			setupInitialState();
+			setupContent();
+			
+			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 		}
 		
 		/**
@@ -62,6 +69,20 @@ package display.settings.transmitter
 			hasElasticEdges = false;
 			paddingBottom = 5;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
+		private function setupInitialState():void
+		{
+			/* Get Values From Database */
+			transmitterIDValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+			transmitterTypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
+			
+			/* Ensure BluCon compatibility */
+			if (transmitterTypeValue == "BluKon")
+				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
+			
+			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader'))
+				transmitterIDisEnabled = false;
 		}
 		
 		private function setupContent():void
@@ -87,9 +108,22 @@ package display.settings.transmitter
 				return itemRenderer;
 			}
 			
+			if(transmitterTypeValue == "")
+			{
+				transmitterType.prompt = ModelLocator.resourceManagerInstance.getString('globalsettings','picker_select');
+				transmitterType.selectedIndex = -1;
+			}
+			else transmitterType.selectedIndex = currentTransmitterIndex;
+			
+			transmitterType.addEventListener(Event.CHANGE, onTransmitterTypeChange);
+			
 			//Transmitter ID
 			transmitterID = LayoutFactory.createTextInput(false, false, 100, HorizontalAlign.RIGHT);
+			transmitterID.text = transmitterIDValue;
+			populateTransmitterIDPrompt();
 			transmitterID.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
+			transmitterID.addEventListener(Event.CHANGE, onTransmitterIDChange);
+			transmitterID.addEventListener( FeathersEventType.FOCUS_OUT, onValidateTransmitterID );
 			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -106,32 +140,97 @@ package display.settings.transmitter
 					{ label: ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','transmitter_type_settings_title'), accessory: transmitterType },
 					{ label: ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','transmitter_id_settings_title'), accessory: transmitterID },
 				]);
+			
+			checkWarn();
 		}
 		
-		private function setupInitialState():void
+		private function populateTransmitterIDPrompt():void
 		{
-			/* Get Values From Database */
-			transmitterIDValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
-			transmitterTypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
-			
-			/* Set Conrol's Values */
-			transmitterID.text = transmitterIDValue;
-			
-			if(transmitterTypeValue == "")
+			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') && transmitterID.text == "")
 			{
-				transmitterType.prompt = ModelLocator.resourceManagerInstance.getString('globalsettings','picker_select');
-				transmitterType.selectedIndex = -1;
+				transmitterIDisEnabled = transmitterID.isEnabled = true;
+				transmitterID.prompt = "XXXXXX";
 			}
-			else transmitterType.selectedIndex = currentTransmitterIndex;
-			
-			/* Set Event Listeners */
-			transmitterType.addEventListener(Event.CHANGE, onTransmitterTypeChange);
-			transmitterID.addEventListener(Event.CHANGE, onTransmitterIDChange);
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4') && transmitterID.text == "")
+			{
+				transmitterIDisEnabled = transmitterID.isEnabled = true;
+				transmitterID.prompt = "XXXXX";
+			}
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') && transmitterID.text == "")
+			{
+				transmitterIDisEnabled = transmitterID.isEnabled = false;
+				transmitterID.prompt = "";
+			}
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon') && transmitterID.text == "")
+			{
+				transmitterIDisEnabled = transmitterID.isEnabled = true;
+				transmitterID.prompt = "BLUXXXXX";
+			}
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') && transmitterID.text == "")
+			{
+				transmitterIDisEnabled = transmitterID.isEnabled = false;
+				transmitterID.prompt = "";
+			}
 		}
 		
+		public function save():void
+		{
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != transmitterIDValue)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDValue);
+			
+			/* Save BluCon as BluKon in database to ensure compatibility */
+			var transmitterTypeToSave:String = transmitterTypeValue;
+			if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'))
+				transmitterTypeToSave = "BluKon";
+			
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != transmitterTypeToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, transmitterTypeToSave);
+			
+			needsSave = false;
+		}
+		
+		private function checkWarn():void
+		{
+			if ((transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') ||
+				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4') ||
+				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon')) &&
+				transmitterID.text == "")
+				{
+					warnUser = true;
+				}
+				else
+					warnUser = false;
+				}
+		
+		/**
+		 * Event Handlers
+		 */
 		private function onTransmitterTypeChange(e:Event):void
 		{
 			transmitterTypeValue = transmitterType.selectedItem.label;
+			
+			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter'))
+			{
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','limitter_warning_message')
+				);
+			}
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'))
+			{
+				var alert:Alert = AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'),
+					ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','blucon_id_initial_warning_message')
+				);
+				alert.height = 310;
+			}
+			
+			transmitterIDValue = "";
+			transmitterID.text = transmitterIDValue;
+			
+			populateTransmitterIDPrompt();
+			
+			checkWarn();
 			
 			needsSave = true;
 		}
@@ -140,27 +239,59 @@ package display.settings.transmitter
 		{
 			transmitterIDValue = transmitterID.text;
 			
+			checkWarn();
+			
 			needsSave = true;
 		}
 		
-		public function save():void
+		private function onValidateTransmitterID():void
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != transmitterIDValue)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDValue);
+			var warningTitle:String;
+			var warningMessage:String
 			
-			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != transmitterTypeValue)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, transmitterTypeValue);
+			/* Validate BluCon ID */
+			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'))
+			{
+				warningTitle = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
+				
+				if (transmitterID.text.length != 8) //Incorrect number of characters
+					warningMessage = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','blucon_id_wrong_number_characters_message');
+				else if (transmitterID.text.slice(0, 3) != "BLU") //Missing BLU prefix
+					warningMessage = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','blucon_id_missing_blu_message');
+				else if(isNaN(Number(transmitterID.text.slice(3, transmitterID.text.length)))) //Last 5 characters are not digits
+						warningMessage = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','blucon_id_wrong_last_5_characters_message');
+			}
+			/* Validate Dexcom G5 ID */
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') && transmitterID.text.length != 6) //Incorrect number of characters
+			{
+				warningTitle = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
+				warningMessage = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','dexcom_g5_id_wrong_number_characters_message');
+			}	
+			/* Validate Dexcom G4 ID */
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4') && transmitterID.text.length != 5) //Incorrect number of characters
+			{
+				warningTitle = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
+				warningMessage = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','dexcom_g4_id_wrong__number_characters_message');
+			}
 			
-			needsSave = false;
+			/* Show Alert */
+			if(warningMessage != null)
+				AlertManager.showSimpleAlert
+				(
+					warningTitle,
+					warningMessage
+				);
 		}
 		
-		/**
-		 * Event Handlers
-		 */
 		private function onTextInputEnter(event:Event):void
 		{
 			//Clear focus to dismiss the keyboard
 			transmitterID.clearFocus();
+		}
+		
+		private function onCreation():void
+		{
+			populateTransmitterIDPrompt();
 		}
 		
 		/**

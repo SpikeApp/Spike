@@ -1,7 +1,5 @@
 package screens
 {
-	import flash.utils.setTimeout;
-	
 	import chart.GlucoseChart;
 	import chart.GraphLayoutFactory;
 	import chart.PieChart;
@@ -98,7 +96,9 @@ package screens
 		{
 			//CHART
 			//Get glucose data;
-			chartData = populateData();
+			//chartData = populateData();
+			chartData = ModelLocator.bgReadings.toArray();
+			trace("chartData.length",chartData.length);
 			
 			availableScreenHeight = Constants.stageHeight - this.header.height;
 			scrollChartHeight = availableScreenHeight / 10; //10% of available screen size

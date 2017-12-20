@@ -3,20 +3,24 @@ package screens
 	import display.LayoutFactory;
 	import display.settings.transmitter.TransmitterSettingsList;
 	
-	import feathers.controls.Alert;
+	import events.ScreenEvent;
+	
 	import feathers.controls.Label;
-	import feathers.controls.List;
-	import feathers.data.ListCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
+	import services.TutorialService;
+	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
 	import ui.AppInterface;
 	
+	import utils.AlertManager;
 	import utils.Constants;
 	
 	[ResourceBundle("transmittersettingsscreen")]
@@ -39,6 +43,7 @@ package screens
 			
 			setupContent();
 			adjustMainMenu();
+			setupEventHandlers();
 		}
 		
 		/**
@@ -71,41 +76,47 @@ package screens
 			AppInterface.instance.menu.selectedIndex = 3;
 		}
 		
+		private function setupEventHandlers():void
+		{
+			addEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			AppInterface.instance.menu.addEventListener(ScreenEvent.BEGIN_SWITCH, onScreenOut);
+			if( TutorialService.isActive && TutorialService.fifthStepActive)
+				addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+		}
+		
 		/**
 		 * Event Handlers
 		 */
-		override protected function onBackButtonTriggered(event:Event):void
-		{
-			//If settings have been modified, display Alert
-			if(transmitterSettings.needsSave)
-			{
-				var alert:Alert = Alert.show(
-					ModelLocator.resourceManagerInstance.getString('globalsettings','want_to_save_changes'),
-					ModelLocator.resourceManagerInstance.getString('globalsettings','save_changes'),
-					new ListCollection(
-						[
-							{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','no_uppercase'), triggered: onSkipSaveSettings },
-							{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','yes_uppercase'), triggered: onSaveSettings }
-						]
-					)
-				);
-			}
-			else
-				dispatchEventWith(Event.COMPLETE);
-		}
-		
-		private function onSaveSettings(e:Event):void
+		private function onScreenOut(e:Event):void
 		{
 			//Save Settings
 			if (transmitterSettings.needsSave)
 				transmitterSettings.save();
 			
-			//Pop Screen
-			dispatchEventWith(Event.COMPLETE);
+			if (TutorialService.isActive && TutorialService.sixthStepActive)
+				Starling.juggler.delayCall(TutorialService.seventhStep, .2);
+			else if (transmitterSettings.warnUser) //Warn User if Transmitter ID is Empty
+			{
+				transmitterSettings.warnUser = false;
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','warning_alert_message'),
+					30
+				);
+			}
 		}
 		
-		private function onSkipSaveSettings(e:Event):void
+		private function onScreenIn(e:Event):void
 		{
+			removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+			
+			if( TutorialService.isActive && TutorialService.fifthStepActive)
+				Starling.juggler.delayCall(TutorialService.sixthStep, .2);
+		}
+		
+		override protected function onBackButtonTriggered(event:Event):void
+		{
+			//Pop Screen
 			dispatchEventWith(Event.COMPLETE);
 		}
 		

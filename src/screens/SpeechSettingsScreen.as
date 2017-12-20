@@ -3,10 +3,14 @@ package screens
 	import display.LayoutFactory;
 	import display.settings.speech.SpeechSettingsList;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.Label;
-	import feathers.controls.List;
+	import feathers.data.ListCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
+	
+	import model.ModelLocator;
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
@@ -14,20 +18,18 @@ package screens
 	import ui.AppInterface;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("speechsettingsscreen")]
 
 	public class SpeechSettingsScreen extends BaseSubScreen
 	{	
+
+		private var speechSettings:SpeechSettingsList;
 		public function SpeechSettingsScreen() 
 		{
 			super();
 			
-			/* Set Header Title */
-			title = "Speech";
-			
-			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.phoneSpeakerTexture);
-			iconContainer = new <DisplayObject>[icon];
-			headerProperties.rightItems = iconContainer;
+			setupHeader();
 		}
 		
 		override protected function initialize():void 
@@ -36,16 +38,31 @@ package screens
 			
 			setupContent();
 			adjustMainMenu();
+			setupEventHandlers();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupHeader():void
+		{
+			/* Set Header Title */
+			title = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speech_settings_title');
+			
+			/* Set Header Icon */
+			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.phoneSpeakerTexture);
+			iconContainer = new <DisplayObject>[icon];
+			headerProperties.rightItems = iconContainer;
 		}
 		
 		private function setupContent():void
 		{
 			//Speech Section Label
-			var speechLabel:Label = LayoutFactory.createSectionLabel("Speech");
+			var speechLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speech_settings_title'));
 			screenRenderer.addChild(speechLabel);
 			
 			//Glucose Settings
-			var speechSettings:List = new SpeechSettingsList();
+			speechSettings = new SpeechSettingsList();
 			screenRenderer.addChild(speechSettings);
 		}
 		
@@ -54,11 +71,30 @@ package screens
 			AppInterface.instance.menu.selectedIndex = 3;
 		}
 		
+		private function setupEventHandlers():void
+		{
+			addEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+		}
+		
+		/**
+		 * Event Handlers
+		 */
+		private function onScreenOut(e:Event):void
+		{
+			//Save Settings
+			if (speechSettings.needsSave)
+				speechSettings.save();
+		}
+		
 		override protected function onBackButtonTriggered(event:Event):void
 		{
+			//Pop Screen
 			dispatchEventWith(Event.COMPLETE);
 		}
 		
+		/**
+		 * Utility
+		 */
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );

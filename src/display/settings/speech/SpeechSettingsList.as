@@ -2,6 +2,8 @@ package display.settings.speech
 {
 	import flash.system.System;
 	
+	import databaseclasses.CommonSettings;
+	
 	import display.LayoutFactory;
 	
 	import feathers.controls.List;
@@ -13,9 +15,13 @@ package display.settings.speech
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
 	import starling.events.Event;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("speechsettingsscreen")]
 
 	public class SpeechSettingsList extends List 
 	{
@@ -26,6 +32,15 @@ package display.settings.speech
 		private var speechInterval:NumericStepper;
 		private var languagePicker:PickerList;
 		
+		/* Properties */
+		public var needsSave:Boolean = false;
+		private var selectedLanguageCode:String;
+		private var selectedLanguageIndex:int;
+		private var isSpeechEnabled:Boolean;
+		private var isTrendEnabled:Boolean;
+		private var isDeltaEnabled:Boolean;
+		private var selectedInterval:int;
+		
 		public function SpeechSettingsList()
 		{
 			super();
@@ -34,6 +49,16 @@ package display.settings.speech
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupInitialState();
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
 			//Set Properties
 			clipContent = false;
 			isSelectable = false;
@@ -41,48 +66,62 @@ package display.settings.speech
 			hasElasticEdges = false;
 			paddingBottom = 5;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			
+		}
+		
+		private function setupInitialState():void
+		{
+			/* Get data from database */
+			selectedLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+			isSpeechEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true";
+			isTrendEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true";
+			isDeltaEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true";
+			selectedInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
+		}
+		
+		private function setupContent():void
+		{
 			//On/Off Toggle
-			speechToggle = LayoutFactory.createToggleSwitch(false);
+			speechToggle = LayoutFactory.createToggleSwitch(isSpeechEnabled);
 			speechToggle.addEventListener( Event.CHANGE, onSpeechOnOff );
 			
 			//Trend Toggle
-			trendToggle = LayoutFactory.createToggleSwitch(false);
+			trendToggle = LayoutFactory.createToggleSwitch(isTrendEnabled);
+			trendToggle.addEventListener( Event.CHANGE, onSettingsChanged);
 			
 			//Delta Toggle
-			deltaToggle = LayoutFactory.createToggleSwitch(false);
+			deltaToggle = LayoutFactory.createToggleSwitch(isDeltaEnabled);
+			deltaToggle.addEventListener( Event.CHANGE, onSettingsChanged);
 			
 			//Interval
 			speechInterval = LayoutFactory.createNumericStepper(1, 1000, 1);
+			speechInterval.value = selectedInterval;
+			speechInterval.addEventListener( Event.CHANGE, onSettingsChanged);
 			
-			//Language Picker
+			/* Language Picker */
 			languagePicker = LayoutFactory.createPickerList();
-			var languagePickerList:ArrayCollection = new ArrayCollection(
-				[
-					{ label: "Dutch (Belgium)" },
-					{ label: "Dutch (Netherlands)" },
-					{ label: "English (Australia)" },
-					{ label: "English (Ireland)" },
-					{ label: "English (South Africa)" },
-					{ label: "English (UK)" },
-					{ label: "English (US)" },
-					{ label: "French (Canada)" },
-					{ label: "French (France)" },
-					{ label: "Polish (Poland)" },
-					{ label: "Portuguese (Brazil)" },
-					{ label: "Portuguese (Portugal)" },
-					{ label: "Russian (Russia)" },
-					{ label: "Spanish (Mexico)" },
-					{ label: "Spanish (Spain)" },
-				]);
+			
+			//Temp Data Objects
+			var languagesLabelsList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistdescription').split(",");
+			var languagesCodesList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistcodes').split(",");
+			var languagePickerList:ArrayCollection = new ArrayCollection();
+			var dataLength:int = languagesLabelsList.length;
+			for (var i:int = 0; i < dataLength; i++) 
+			{
+				languagePickerList.push({ label: languagesLabelsList[i], code: languagesCodesList[i] });
+				if (selectedLanguageCode == languagesCodesList[i])
+					selectedLanguageIndex = i;
+			}
+			
+			languagesLabelsList.length = 0;
+			languagesLabelsList = null
+			languagesCodesList.length = 0;
+			languagesCodesList = null;
+			
+			// Populate data and define renderers
 			languagePicker.labelField = "label";
 			languagePicker.dataProvider = languagePickerList;
-			languagePicker.itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				return itemRenderer;
-			}
+			languagePicker.selectedIndex = selectedLanguageIndex;
+			languagePicker.addEventListener( Event.CHANGE, onSettingsChanged);
 			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -93,18 +132,52 @@ package display.settings.speech
 				return itemRenderer;
 			};
 			
-			//Define Speech Settings Data
-			reloadSpeechSettings(speechToggle.isSelected);
+			reloadSpeechSettings(isSpeechEnabled);
 		}
 		
-		private function onSpeechOnOff(event:Event):void
+		public function save():void
 		{
-			var toggle:ToggleSwitch = ToggleSwitch( event.currentTarget );
+			/* Save data to database */
+			//Language Code
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) != selectedLanguageCode)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, selectedLanguageCode);
 			
-			if(toggle.isSelected)
-				reloadSpeechSettings(true);
+			//Speak Interval
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) != String(selectedInterval))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL, String(selectedInterval));
+			
+			//Speech Enabled
+			var speechValueToSave:String
+			if (isSpeechEnabled)
+				speechValueToSave = "true";
 			else
-				reloadSpeechSettings(false);
+				speechValueToSave = "false";
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) != speechValueToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON, speechValueToSave);
+			
+			//Trend Enabled
+			var trendValueToSave:String
+			if (isTrendEnabled)
+				trendValueToSave = "true";
+			else
+				trendValueToSave = "false";
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) != trendValueToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON, trendValueToSave);
+			
+			//Delta Enabled
+			var deltaValueToSave:String
+			if (isDeltaEnabled)
+				deltaValueToSave = "true";
+			else
+				deltaValueToSave = "false";
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) != deltaValueToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON, deltaValueToSave);
+			
+			
+			needsSave = false;
 		}
 		
 		private function reloadSpeechSettings(fullDisplay:Boolean):void
@@ -113,22 +186,50 @@ package display.settings.speech
 			{
 				dataProvider = new ArrayCollection(
 					[
-						{ label: "Speak BG Readings", accessory: speechToggle },
-						{ label: "Speak BG Trend", accessory: trendToggle },
-						{ label: "Speak BG Delta", accessory: deltaToggle },
-						{ label: "Interval", accessory: speechInterval },
-						{ label: "Language", accessory: languagePicker },
+						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_title'), accessory: speechToggle },
+						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_trend_title'), accessory: trendToggle },
+						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_delta_title'), accessory: deltaToggle },
+						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_interval_title'), accessory: speechInterval },
+						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_language_title'), accessory: languagePicker },
 					]);
 			}
 			else
 			{
 				dataProvider = new ArrayCollection(
 					[
-						{ label: "Enabled", accessory: speechToggle },
+						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','enabled_title'), accessory: speechToggle },
 					]);
 			}
 		}
 		
+		/**
+		 * Event Handlers
+		 */
+		private function onSettingsChanged(E:Event):void
+		{
+			/* Update Internal Variables */
+			isTrendEnabled = trendToggle.isSelected;
+			isDeltaEnabled = deltaToggle.isSelected;
+			selectedInterval = speechInterval.value;
+			selectedLanguageCode = languagePicker.selectedItem.code;
+			
+			needsSave = true;
+		}
+		
+		private function onSpeechOnOff(event:Event):void
+		{
+			isSpeechEnabled = speechToggle.isSelected;
+			needsSave = true;
+			
+			if(speechToggle.isSelected)
+				reloadSpeechSettings(true);
+			else
+				reloadSpeechSettings(false);
+		}	
+		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
 			if(speechToggle != null)

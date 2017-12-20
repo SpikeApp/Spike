@@ -27,6 +27,7 @@ package model
 	import mx.collections.ArrayCollection;
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
+	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -59,6 +60,7 @@ package model
 	import services.UpdateService;
 	
 	import ui.AppInterface;
+	import ui.InterfaceController;
 	
 	import views.HomeView;
 
@@ -78,7 +80,7 @@ package model
 		public static var imageDone:Image;
 		public static var iconCache:ContentCache;
 
-		public const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 5;
+		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
 		public static const DEBUG_MODE:Boolean = true;
 
 		public static const IS_PRODUCTION:Boolean = false;
@@ -101,9 +103,6 @@ package model
 		private static var _bgReadings:ArrayCollection;
 
 		/**
-		 * last 24 hour bg readings<br>
-		 * seperate method is there to add a bg reading, which will also there to clean up any items older dan 24 hours<br>
-		 * there's no guarantee that there are no items older dan 24 hours<br>
 		 * Sorted ascending, from small to large, ie latest element is also the last element
 		 */
 		public static function get bgReadings():ArrayCollection
@@ -160,7 +159,7 @@ package model
 			function getBgReadingsAndLogsFromDatabase():void {
 				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
-				Database.getBgReadings(_appStartTimestamp);
+				Database.getBgReadings((new Date()).valueOf() - 24 * 3600 * 1000, _appStartTimestamp);
 			}
 
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
@@ -195,6 +194,11 @@ package model
 					if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
 							//Start rendering interface now that all data is available
+							
+							//trace("Check BG Readings...");
+							//trace("NOW:", ObjectUtil.toString(bgReadings));
+							
+							
 							AppInterface.instance.init();
 							
 							Database.getBlueToothDevice();
@@ -202,7 +206,7 @@ package model
 							TransmitterService.init();
 							BluetoothService.init();
 
-							NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, HomeView.notificationServiceInitiated);
+							NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 							NotificationService.init();
 							
 							CalibrationService.init();
@@ -269,7 +273,7 @@ package model
 		}
 		
 		/**
-		 * add bgreading also removes bgreadings olther than 24 hours but keeps at least 5
+		 * add bgreading also removes bgreadings older than MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR days but keep at least 5<br>
 		 */
 		public static function addBGReading(bgReading:BgReading):void {
 			_bgReadings.addItem(bgReading);
@@ -280,7 +284,7 @@ package model
 			
 			var firstBGReading:BgReading = _bgReadings.getItemAt(0) as BgReading;
 			var now:Number = (new Date()).valueOf();
-			while (now - firstBGReading.timestamp > 24 * 3600 * 1000) {
+			while (now - firstBGReading.timestamp > MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 3600 * 1000) {
 				_bgReadings.removeItemAt(0);
 				if (_bgReadings.length <= 5)
 					break;

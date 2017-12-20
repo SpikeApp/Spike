@@ -2,6 +2,8 @@ package display.settings.share
 {
 	import flash.system.System;
 	
+	import databaseclasses.LocalSettings;
+	
 	import display.LayoutFactory;
 	
 	import feathers.controls.List;
@@ -11,12 +13,22 @@ package display.settings.share
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
+	import starling.events.Event;
+	
 	import utils.Constants;
+	
+	[ResourceBundle("sharesettingsscreen")]
 
 	public class HealthkitSettingsList extends List 
 	{
 		/* Display Objects */
 		private var hkToggle:ToggleSwitch;
+		
+		/* Properties */
+		public var needsSave:Boolean = false;
+		private var isHKEnabled:Boolean;
 		
 		public function HealthkitSettingsList()
 		{
@@ -26,6 +38,16 @@ package display.settings.share
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupInitialState();
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
 			//Set Properties
 			clipContent = false;
 			isSelectable = false;
@@ -33,14 +55,24 @@ package display.settings.share
 			hasElasticEdges = false;
 			paddingBottom = 5;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			
+		}
+		
+		private function setupInitialState():void
+		{
+			/* Get data from database */
+			isHKEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true";
+		}
+		
+		private function setupContent():void
+		{
 			//Healthkit On/Off Toggle
-			hkToggle = LayoutFactory.createToggleSwitch(false);
+			hkToggle = LayoutFactory.createToggleSwitch(isHKEnabled);
+			hkToggle.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Define HealthKit Settings Data
 			dataProvider = new ArrayCollection(
 				[
-					{ label: "Enabled", accessory: hkToggle },
+					{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','enabled_label'), accessory: hkToggle },
 				]);
 			
 			//Set Item Renderer
@@ -53,6 +85,33 @@ package display.settings.share
 			};
 		}
 		
+		public function save():void
+		{
+			var valueToSave:String;
+			if (isHKEnabled == true)
+				valueToSave = "true";
+			else
+				valueToSave = "false";
+			
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) != valueToSave)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON, valueToSave);
+			
+			needsSave = false;
+		}
+		
+		/**
+		 * Event Handlers
+		 */
+		private function onSettingsChanged(e:Event):void
+		{
+			isHKEnabled = hkToggle.isSelected;
+
+			save();
+		}
+		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
 			if(hkToggle != null)

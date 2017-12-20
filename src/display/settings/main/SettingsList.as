@@ -35,6 +35,7 @@ package display.settings.main
 		private var speechIconImage:Image;
 		private var shareIconImage:Image;
 		private var logginTracingIconImage:Image;
+		private var appInfoIconImage:Image;
 		
 		public function SettingsList()
 		{
@@ -72,6 +73,7 @@ package display.settings.main
 			speechIconImage = new Image(chevronIconTexture);
 			shareIconImage = new Image(chevronIconTexture);
 			logginTracingIconImage = new Image(chevronIconTexture);
+			appInfoIconImage = new Image(chevronIconTexture);
 			
 			/* Data */
 			dataProvider = new ListCollection(
@@ -82,7 +84,8 @@ package display.settings.main
 					{ screen: Screens.SETTINGS_ALARMS, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','alarms_settings_title'), accessory: alarmsIconImage },
 					{ screen: Screens.SETTINGS_SPEECH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','speech_settings_title'), accessory: speechIconImage },
 					{ screen: Screens.SETTINGS_SHARE, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','share_settings_title'), accessory: shareIconImage },
-					{ screen: Screens.SETTINGS_LOGGING_TRACING, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','logging_tracing_settings_title'), accessory: logginTracingIconImage }
+					{ screen: Screens.SETTINGS_LOGGING_TRACING, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','logging_tracing_settings_title'), accessory: logginTracingIconImage },
+					{ screen: Screens.SETTINGS_ABOUT, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','about_settings_title'), accessory: appInfoIconImage }
 				]);
 			
 			/* Renderer */
@@ -151,6 +154,11 @@ package display.settings.main
 			{
 				logginTracingIconImage.dispose();
 				logginTracingIconImage = null;
+			}
+			if(appInfoIconImage != null)
+			{
+				appInfoIconImage.dispose();
+				appInfoIconImage = null;
 			}
 			
 			System.pauseForGCIfCollectionImminent(0);

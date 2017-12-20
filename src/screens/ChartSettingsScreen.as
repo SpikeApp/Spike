@@ -1,16 +1,15 @@
 package screens
 {
-	import spark.components.richTextEditorClasses.SizeTool;
-	
 	import display.LayoutFactory;
 	import display.settings.chart.ChartColorSettingsList;
 	import display.settings.chart.ChartDateSettingsList;
 	import display.settings.chart.ChartDisplaySettingsList;
 	import display.settings.chart.ChartSizeSettingsList;
 	
-	import feathers.controls.Alert;
+	import events.ScreenEvent;
+	
 	import feathers.controls.Label;
-	import feathers.data.ListCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -47,6 +46,7 @@ package screens
 			
 			setupContent();
 			adjustMainMenu();
+			setupEventHandlers();
 		}
 		
 		/**
@@ -103,30 +103,16 @@ package screens
 			AppInterface.instance.menu.selectedIndex = 3;
 		}
 		
+		private function setupEventHandlers():void
+		{
+			addEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			AppInterface.instance.menu.addEventListener(ScreenEvent.BEGIN_SWITCH, onScreenOut);
+		}
+		
 		/**
 		 * Event Handlers
 		 */
-		override protected function onBackButtonTriggered(event:Event):void
-		{
-			//If settings have been modified, display Alert
-			if(chartColorSettings.needsSave || chartSizeSettings.needsSave || chartDisplaySettings.needsSave || chartDateSettings.needsSave)
-			{
-				var alert:Alert = Alert.show(
-					ModelLocator.resourceManagerInstance.getString('globalsettings','want_to_save_changes'),
-					ModelLocator.resourceManagerInstance.getString('globalsettings','save_changes'),
-					new ListCollection(
-						[
-							{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','no_uppercase'), triggered: onSkipSaveSettings },
-							{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','yes_uppercase'), triggered: onSaveSettings }
-						]
-					)
-				);
-			}
-			else
-				dispatchEventWith(Event.COMPLETE);
-		}
-		
-		private function onSaveSettings(e:Event):void
+		private function onScreenOut(e:Event):void
 		{
 			//Save Settings
 			if (chartColorSettings.needsSave)
@@ -137,15 +123,13 @@ package screens
 				chartDisplaySettings.save();
 			if (chartDateSettings.needsSave)
 				chartDateSettings.save();
-			
-			//Pop Screen
-			dispatchEventWith(Event.COMPLETE);
 		}
 		
-		private function onSkipSaveSettings(e:Event):void
+		override protected function onBackButtonTriggered(event:Event):void
 		{
 			dispatchEventWith(Event.COMPLETE);
 		}
+
 		
 		/**
 		 * Utility
