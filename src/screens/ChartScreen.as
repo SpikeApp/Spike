@@ -98,7 +98,6 @@ package screens
 			//Get glucose data;
 			//chartData = populateData();
 			chartData = ModelLocator.bgReadings.toArray();
-			trace("chartData.length",chartData.length);
 			
 			availableScreenHeight = Constants.stageHeight - this.header.height;
 			scrollChartHeight = availableScreenHeight / 10; //10% of available screen size

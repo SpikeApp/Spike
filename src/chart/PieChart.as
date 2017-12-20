@@ -36,6 +36,7 @@ package chart
 		private var lowColor:uint = 0xff0000;//red
 		private var inRangeColor:uint = 0x00ff00;//green
 		private var highColor:uint = 0xffff00;//yellow
+		private var dummyColor:uint = 0xEEEEEE;
 		private var fontColor:uint = 0xEEEEEE;
 		private var legendGap:Number;
 		private var legendQuadSize:Number;
@@ -47,6 +48,7 @@ package chart
 		private var avgGlucoseOutput:String;
 		private var A1COutput:String;
 		private var glucoseUnit:String
+		private var dummyModeActive:Boolean = false;
 		
 		//Display Objects
 		private var pieContainer:Sprite;
@@ -94,6 +96,10 @@ package chart
 			readingsOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','readings_title');
 			avgGlucoseOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','average_glucose_title');
 			A1COutput = ModelLocator.resourceManagerInstance.getString('chartscreen','a1c_title');
+			
+			/* Activate Dummy Mode if there's no bgreadings in data source */
+			if (_dataSource == null || _dataSource.length == 0)
+				dummyModeActive = true;
 			
 			//Create pie container
 			pieContainer = new Sprite();
@@ -254,11 +260,14 @@ package chart
 			
 			//LOW PORTION
 			//Graphics
-			var lowNGon:NGon = new NGon(pieRadius, numSides, 0, 0, lowAngle);
-			lowNGon.color = lowColor;
-			lowNGon.x = lowNGon.y = pieRadius;
-			nGons.push(lowNGon);
-			pieContainer.addChild(lowNGon);
+			if (!dummyModeActive)
+			{
+				var lowNGon:NGon = new NGon(pieRadius, numSides, 0, 0, lowAngle);
+				lowNGon.color = lowColor;
+				lowNGon.x = lowNGon.y = pieRadius;
+				nGons.push(lowNGon);
+				pieContainer.addChild(lowNGon);
+			}
 			//Legend
 			var lowThresholdValue:Number = lowTreshold;
 			if(glucoseUnit != "mg/dl")
@@ -278,21 +287,27 @@ package chart
 			
 			//IN RANGE PORTION
 			//Graphics
-			var inRangeNGon:NGon = new NGon(pieRadius, numSides, 0, lowAngle, lowAngle + inRangeAngle);
-			inRangeNGon.color = inRangeColor;
-			inRangeNGon.x = inRangeNGon.y = pieRadius;
-			nGons.push(inRangeNGon);
-			pieContainer.addChild(inRangeNGon);
+			if (!dummyModeActive)
+			{
+				var inRangeNGon:NGon = new NGon(pieRadius, numSides, 0, lowAngle, lowAngle + inRangeAngle);
+				inRangeNGon.color = inRangeColor;
+				inRangeNGon.x = inRangeNGon.y = pieRadius;
+				nGons.push(inRangeNGon);
+				pieContainer.addChild(inRangeNGon);
+			}
 			//Legend
 			inRangeLegend.text = inRangeOutput + ": " + percentageInRangeRounded + "%";
 			
 			//HIGH PORTION
 			//Graphics
-			var highNGon:NGon = new NGon(pieRadius, numSides, 0, lowAngle + inRangeAngle, lowAngle + inRangeAngle + highAngle);
-			highNGon.color = highColor;
-			highNGon.x = highNGon.y = pieRadius;
-			nGons.push(highNGon);
-			pieContainer.addChild(highNGon);
+			if (!dummyModeActive)
+			{
+				var highNGon:NGon = new NGon(pieRadius, numSides, 0, lowAngle + inRangeAngle, lowAngle + inRangeAngle + highAngle);
+				highNGon.color = highColor;
+				highNGon.x = highNGon.y = pieRadius;
+				nGons.push(highNGon);
+				pieContainer.addChild(highNGon);
+			}
 			//Legend
 			var highThresholdValue:Number = highTreshold;
 			if(glucoseUnit != "mg/dl")
@@ -309,6 +324,16 @@ package chart
 					highThresholdOutput = String(highThresholdValue);
 			}
 			highLegend.text = highOutput + " (>=" + highThresholdOutput + "): " + percentageHighRounded + "%";
+			
+			//DUMMY NGON
+			if (dummyModeActive)
+			{
+				var dummyNGon:NGon = new NGon(pieRadius, numSides, 0, 0, 360);
+				dummyNGon.color = dummyColor;
+				dummyNGon.x = dummyNGon.y = pieRadius;
+				nGons.push(dummyNGon);
+				pieContainer.addChild(dummyNGon);
+			}
 			
 			//Calculate Average Glucose & A1C
 			averageGlucose = (( (totalGlucose / dataLength) * 10 + 0.5)  >> 0) / 10;
@@ -327,7 +352,10 @@ package chart
 					averageGlucoseValueOutput = String(averageGlucoseValue);
 			}
 			
-			A1C = (( ((46.7 + averageGlucose) / 28.7) * 10 + 0.5)  >> 0) / 10;
+			if (!dummyModeActive)
+				A1C = (( ((46.7 + averageGlucose) / 28.7) * 10 + 0.5)  >> 0) / 10;
+			else
+				A1C = 0;
 			
 			//Calculate readings percentage
 			var percentageReadings:Number = (( ((dataLength * 100) / 288) * 10 + 0.5)  >> 0) / 10;
