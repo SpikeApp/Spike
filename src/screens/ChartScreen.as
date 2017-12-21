@@ -1,13 +1,19 @@
 package screens
 {
+	import flash.utils.ByteArray;
+	
+	import mx.utils.ObjectUtil;
+	
 	import chart.GlucoseChart;
 	import chart.GraphLayoutFactory;
 	import chart.PieChart;
 	
+	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	
 	import display.LayoutFactory;
 	
+	import feathers.controls.Button;
 	import feathers.controls.Check;
 	import feathers.controls.Radio;
 	import feathers.controls.ScrollBarDisplayMode;
@@ -59,6 +65,10 @@ package screens
 		private var h1:Radio;
 		private var displayLines:Check;
 		
+		
+		//Test
+		private var testReading:BgReading;
+		
 		public function ChartScreen() 
 		{
 			super();
@@ -96,8 +106,44 @@ package screens
 		{
 			//CHART
 			//Get glucose data;
-			//chartData = populateData();
 			chartData = ModelLocator.bgReadings.toArray();
+			
+			
+			/**
+			 * TESTE
+			 */
+			if(ModelLocator.bgReadings.length > 0)
+			{
+				var dummyReading:BgReading = (ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length -1) as BgReading)
+				
+				testReading = new BgReading
+				(
+					(new Date()).valueOf(),//dummyReading.timestamp,
+					dummyReading.sensor,
+					dummyReading.calibration,
+					dummyReading.rawData,
+					dummyReading.filteredData,
+					dummyReading.ageAdjustedRawValue,
+					dummyReading.calibrationFlag,
+					dummyReading.calculatedValue,
+					dummyReading.filteredCalculatedValue,
+					dummyReading.calculatedValueSlope,
+					dummyReading.a,
+					dummyReading.b,
+					dummyReading.c,
+					dummyReading.ra,
+					dummyReading.rb,
+					dummyReading.rc,
+					dummyReading.rawCalculated,
+					dummyReading.hideSlope,
+					dummyReading.noise,
+					dummyReading.lastModifiedTimestamp,
+					""
+				);
+				
+				trace("DEBUG:", dummyReading.calculatedValue);
+			}
+			
 			
 			availableScreenHeight = Constants.stageHeight - this.header.height;
 			scrollChartHeight = availableScreenHeight / 10; //10% of available screen size
@@ -165,16 +211,17 @@ package screens
 			timeRangeGroup.addEventListener( Event.CHANGE, onTimeRangeChange );
 			
 			/* DEBUG, DELETE IN PRODUCTION */
-			/*
+			
 			var addGlucose:Button = new Button();
+			addGlucose.y = 200;
 			addGlucose.label = "Add Glucose";
 			addGlucose.addEventListener(Event.TRIGGERED, onAddGlucose);
-			//addChild(addGlucose);
+			addChild(addGlucose);
 			
-			glucoseAmount = new TextInput();
+			/*glucoseAmount = new TextInput();
 			glucoseAmount.y = addGlucose.y;
 			glucoseAmount.x = 90;
-			//addChild(glucoseAmount);*/
+			addChild(glucoseAmount);*/
 		}
 		
 		/**
@@ -355,17 +402,9 @@ package screens
 		/* DEBUG, DELETE IN PRODUCTION */
 		private function onAddGlucose(event:Event):void
 		{
-			glucoseChart.addGlucose(Number(glucoseAmount.text));
-			pieChart.addGlucose(Number(glucoseAmount.text));
+			glucoseChart.addGlucose(testReading);
+			pieChart.addGlucose(Number(testReading.calculatedValue));
 			//glucoseAmount.text = "";
-			/*if(teste)
-			{
-			teste=false;
-			for (var a:int = 0; a < 275; a++) 
-			{
-			glucoseChart.addGlucose(33);
-			}
-			}*/
 		}
 		
 		/* DEBUG, DELETE IN PRODUCTION */

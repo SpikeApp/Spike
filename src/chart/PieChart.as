@@ -328,11 +328,23 @@ package chart
 			//DUMMY NGON
 			if (dummyModeActive)
 			{
-				var dummyNGon:NGon = new NGon(pieRadius, numSides, 0, 0, 360);
-				dummyNGon.color = dummyColor;
-				dummyNGon.x = dummyNGon.y = pieRadius;
-				nGons.push(dummyNGon);
-				pieContainer.addChild(dummyNGon);
+				var innerNGon:NGon = new NGon(pieRadius, numSides, 0, 0, 360);
+				innerNGon.color = lowColor;
+				innerNGon.x = innerNGon.y = pieRadius;
+				nGons.push(innerNGon);
+				pieContainer.addChild(innerNGon);
+				
+				var middleNGon:NGon = new NGon(pieRadius, numSides, pieRadius/3, 0, 360);
+				middleNGon.color = inRangeColor;
+				middleNGon.x = middleNGon.y = pieRadius;
+				nGons.push(middleNGon);
+				pieContainer.addChild(middleNGon);
+				
+				var outterNGon:NGon = new NGon(pieRadius, numSides, (pieRadius/3) * 2, 0, 360);
+				outterNGon.color = highColor;
+				outterNGon.x = outterNGon.y = pieRadius;
+				nGons.push(outterNGon);
+				pieContainer.addChild(outterNGon);
 			}
 			
 			//Calculate Average Glucose & A1C

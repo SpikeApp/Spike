@@ -25,6 +25,13 @@ package utils
 		 */ 
 		public static const MILLISECONDS_IN_SECOND : Number = 1000;
 		
+		/**
+		 * The different time formats
+		 */
+		public static const TIME_FORMAT_12H:String = "12h";
+		public static const TIME_FORMAT_24H:String = "24h";
+		
+		
 		private var _totalMilliseconds : Number;
 		
 		public function TimeSpan(milliseconds : Number)
@@ -43,6 +50,66 @@ package utils
 			ret.milliseconds += totalMilliseconds;
 			
 			return ret;
+		}
+		
+		/**
+		 * Formats seconds into a reabale hours plus minutes string
+		 */
+		public static function formatHoursMinutesFromSeconds(secs:Number):String
+		{
+			var h:Number=Math.floor(secs/3600);
+			var m:Number=Math.floor((secs%3600)/60);
+			var s:Number=Math.floor((secs%3600)%60);
+			
+			return(h==0?"":(h<10?"0"+h.toString()+"h":h.toString()+"h"))+(m<10?"0"+m.toString():m.toString())+"m";
+		}
+		
+		/**
+		 * Formats hours plus minutes into a reabale hours plus minutes string. Supports 24H/12H TimeFormat
+		 */
+		public static function formatHoursMinutes (hours:Number, minutes:Number, timeFormat:String):String
+		{
+			var hoursOutput:String = "";
+			var amPmOutput:String = "";
+			var minutesOutput:String = "";
+			
+			/* Hours */
+			if (timeFormat == TIME_FORMAT_24H)
+			{
+				if (hours < 10)
+					hoursOutput = "0" + hours;
+				else
+					hoursOutput = hours.toString();
+			}
+			else if (timeFormat == TIME_FORMAT_12H)
+			{
+				if (hours >= 12)
+				{
+					if (hours >= 13)
+						hours -= 12; //Subtract 12 to the hour value to get 12H date format
+					
+					hoursOutput = hours.toString();
+					
+					amPmOutput = "PM";
+				}
+				else
+				{
+					hoursOutput = hours.toString();
+					
+					if (hoursOutput == "0")
+						hoursOutput = "12";
+					
+					amPmOutput = "AM";
+				}
+			}
+			
+			/* Minutes */
+			if (minutes < 10)
+				minutesOutput = "0" + minutes;
+			else
+				minutesOutput = minutes.toString();
+			
+			return hoursOutput + ":" + minutesOutput + amPmOutput;
 		}
 		
 		/**
