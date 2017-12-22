@@ -315,5 +315,6 @@
 		<extensionID>com.distriqt.Message</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
-	</extensions>
+		<extensionID>adobe.nativeExtension.3DiOS</extensionID>
+    </extensions>
 </application>

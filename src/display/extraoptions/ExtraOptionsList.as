@@ -318,12 +318,6 @@ package display.extraoptions
 			buildListLayout();
 		}
 		
-		private function onEnterCalibration(event:starling.events.Event):void
-		{
-			//TODO: Apply calibration
-			//trace("Calibration Value:", calibrationValue.text);
-		}
-		
 		/**
 		 * Utility
 		 */

@@ -368,7 +368,7 @@ package services
 									valueToShow += " " + lastBgReading.slopeArrow();
 								}
 							}
-							valueToShow += "      " + BgGraphBuilder.unitizedDeltaString(true, true);
+							valueToShow += " (" + BgGraphBuilder.unitizedDeltaString(true, true) + ")";
 						}
 					} else {
 						valueToShow = "---"
@@ -376,6 +376,7 @@ package services
 					
 					Notifications.service.notify(
 						new NotificationBuilder()
+						.setCount(int(Math.round(lastBgReading.calculatedValue)))
 						.setId(NotificationService.ID_FOR_BG_VALUE)
 						.setAlert("Bg value")
 						.setTitle(valueToShow)
@@ -383,7 +384,7 @@ package services
 						.setSound("")
 						.enableVibration(false)
 						.enableLights(false)
-						.build());
+						.build())
 				}
 			}
 		}

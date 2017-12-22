@@ -77,11 +77,14 @@ package display.settings.transmitter
 			transmitterIDValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
 			transmitterTypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
 			
-			/* Ensure BluCon compatibility */
+			/* Ensure BluCon and Dexcom compatibility */
 			if (transmitterTypeValue == "BluKon")
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
-			
-			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader'))
+			else if (transmitterTypeValue == "G5")
+				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
+			else if (transmitterTypeValue == "G4")
+				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader'))
 				transmitterIDisEnabled = false;
 		}
 		
@@ -94,7 +97,7 @@ package display.settings.transmitter
 			for (var i:int = 0; i < transitterNamesList.length; i++) 
 			{
 				transmitterTypeList.push({label: transitterNamesList[i], id: i});
-				if(transitterNamesList[i] == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE))
+				if(transitterNamesList[i] == transmitterTypeValue)
 					currentTransmitterIndex = i;
 			}
 			transitterNamesList.length = 0;
@@ -178,10 +181,14 @@ package display.settings.transmitter
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != transmitterIDValue)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDValue);
 			
-			/* Save BluCon as BluKon in database to ensure compatibility */
+			/* Save BluCon as BluKon in database to ensure compatibility, correct Dexcom G5 and G4 values */
 			var transmitterTypeToSave:String = transmitterTypeValue;
 			if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'))
 				transmitterTypeToSave = "BluKon";
+			else if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
+				transmitterTypeToSave = "G5";
+			else if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4'))
+				transmitterTypeToSave = "G4";
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != transmitterTypeToSave)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, transmitterTypeToSave);

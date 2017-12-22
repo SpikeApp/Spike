@@ -1,5 +1,7 @@
 package ui
 {
+	import com.adobe.touch3D.Touch3D;
+	import com.adobe.touch3D.Touch3DEvent;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	
@@ -13,6 +15,7 @@ package ui
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Database;
 	import databaseclasses.LocalSettings;
+	import databaseclasses.Sensor;
 	
 	import events.BlueToothServiceEvent;
 	import events.DatabaseEvent;
@@ -23,7 +26,10 @@ package ui
 	
 	import model.ModelLocator;
 	
+	import screens.Screens;
+	
 	import services.BluetoothService;
+	import services.CalibrationService;
 	import services.NotificationService;
 	import services.TutorialService;
 	
@@ -33,6 +39,7 @@ package ui
 	
 	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globalsettings")]
+	[ResourceBundle("sensorscreen")]
 
 	public class InterfaceController extends EventDispatcher
 	{
@@ -75,6 +82,7 @@ package ui
 				/*CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);*/
 				
+				setup3DTouch();
 			}
 			
 			function onInitError(event:DatabaseEvent):void
@@ -92,8 +100,66 @@ package ui
 					}
 				}
 			}
+		}
+		
+		private static function setup3DTouch():void
+		{
+			if(Capabilities.cpuArchitecture == "ARM") {
+				var touch:Touch3D = new Touch3D();
+				touch.init()
+				touch.addEventListener(Touch3DEvent.SHORTCUT_ITEM, itemStatus);
+				touch.removeShortcutItem("calibration");
+				touch.removeShortcutItem("startsensor");
+				touch.removeShortcutItem("stopsensor");
+				touch.addShortcutItem("calibration","Enter Calibration","","UIApplicationShortcutIconTypeAdd");
+				touch.addShortcutItem("startsensor","Start Sensor","","UIApplicationShortcutIconTypeConfirmation");
+				touch.addShortcutItem("stopsensor","Stop Sensor","","UIApplicationShortcutIconTypeProhibit");
+			}
+		}
+		
+		private static function itemStatus(e:Touch3DEvent):void
+		{
+			if (e.itemValue == "calibration")
+				CalibrationService.calibrationOnRequest();
+			else if (e.itemValue == "stopsensor")
+			{
+				AlertManager.showActionAlert(
+					ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_message'),
+					60,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','cancel_alert_button_label') },
+						{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_alert_button_label'), triggered: onStopSensorTriggered }
+					]
+				);
+			}
+			else if (e.itemValue == "startsensor")
+			{
+				if (Sensor.getActiveSensor() == null)
+					AppInterface.instance.navigator.pushScreen(Screens.SENSOR_START);
+				else
+				{
+					AlertManager.showActionAlert(
+						ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_active_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_active_alert_message'),
+						60,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','cancel_alert_button_label') },
+							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_alert_button_label'), triggered: onStopSensorTriggered }
+						]
+					);
+				}
+			}
+		}
+		
+		private static function onStopSensorTriggered(e:Event):void
+		{
+			/* Stop the Sensor */
+			Sensor.stopSensor();
+			NotificationService.updateBgNotification(null);
 			
-			
+			/* Navigate to the Start Sensor screen */
+			AppInterface.instance.navigator.pushScreen(Screens.SENSOR_START);
 		}
 		/**
 		 * Notification Event Handlers

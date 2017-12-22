@@ -11,14 +11,12 @@ package display.sensor
 	
 	import display.LayoutFactory;
 	
-	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
 	import feathers.controls.renderers.IGroupedListItemRenderer;
 	import feathers.data.HierarchicalCollection;
-	import feathers.data.ListCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalLayoutData;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -33,6 +31,7 @@ package display.sensor
 	
 	import ui.AppInterface;
 	
+	import utils.AlertManager;
 	import utils.Constants;
 	import utils.TimeSpan;
 	
@@ -204,15 +203,14 @@ package display.sensor
 		 */
 		private function onStopSensor(e:Event):void
 		{
-			Alert.show(
-				ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_message'),
+			AlertManager.showActionAlert(
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_title'),
-				new ListCollection(
-					[
-						{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','cancel_alert_button_label') },
-						{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_alert_button_label'), triggered: onStopSensorTriggered }
-					]
-				)
+				ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_message'),
+				60,
+				[
+					{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','cancel_alert_button_label') },
+					{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_alert_button_label'), triggered: onStopSensorTriggered }
+				]
 			);
 		}
 		

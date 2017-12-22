@@ -30,6 +30,8 @@ package services
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
+	import feathers.layout.HorizontalAlign;
+	
 	import model.ModelLocator;
 	
 	import utils.AlertManager;
@@ -256,7 +258,9 @@ package services
 				AlertManager.showSimpleAlert(
 					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
 					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"),
-					60
+					60,
+					null,
+					HorizontalAlign.CENTER
 				);
 			}
 		}

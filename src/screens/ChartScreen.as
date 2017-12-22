@@ -1,9 +1,5 @@
 package screens
 {
-	import flash.utils.ByteArray;
-	
-	import mx.utils.ObjectUtil;
-	
 	import chart.GlucoseChart;
 	import chart.GraphLayoutFactory;
 	import chart.PieChart;
@@ -93,6 +89,7 @@ package screens
 			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 			this.verticalScrollPolicy = ScrollPolicy.OFF;
 		}
+		
 		private function onCreation(event:Event):void
 		{
 			setGlucoseChart();
@@ -107,7 +104,6 @@ package screens
 			//CHART
 			//Get glucose data;
 			chartData = ModelLocator.bgReadings.toArray();
-			
 			
 			/**
 			 * TESTE
@@ -140,8 +136,6 @@ package screens
 					dummyReading.lastModifiedTimestamp,
 					""
 				);
-				
-				trace("DEBUG:", dummyReading.calculatedValue);
 			}
 			
 			
@@ -216,7 +210,7 @@ package screens
 			addGlucose.y = 200;
 			addGlucose.label = "Add Glucose";
 			addGlucose.addEventListener(Event.TRIGGERED, onAddGlucose);
-			addChild(addGlucose);
+			//addChild(addGlucose);
 			
 			/*glucoseAmount = new TextInput();
 			glucoseAmount.y = addGlucose.y;

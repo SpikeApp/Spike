@@ -119,7 +119,7 @@ package
 			
 			//Notify Services
 			myTrace("dispatching event IosXdripReaderEvent.APP_IN_FOREGROUND");
-			dispatchEvent(new IosXdripReaderEvent(IosXdripReaderEvent.APP_IN_FOREGROUND));
+			instance.dispatchEvent(new IosXdripReaderEvent(IosXdripReaderEvent.APP_IN_FOREGROUND));
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
@@ -129,6 +129,10 @@ package
 			
 			//Stop Starling 
 			starling.stop( true );
+			
+			//Notify Services
+			myTrace("dispatching event IosXdripReaderEvent.APP_IN_BACKGROUND");
+			instance.dispatchEvent(new IosXdripReaderEvent(IosXdripReaderEvent.APP_IN_BACKGROUND));
 		}
 		
 		/**

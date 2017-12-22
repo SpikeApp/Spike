@@ -1,5 +1,9 @@
 package utils
 {
+	import model.ModelLocator;
+
+	[ResourceBundle("chartscreen")]
+	
 	/**
 	 * Represents an interval of time 
 	 */ 
@@ -55,13 +59,14 @@ package utils
 		/**
 		 * Formats seconds into a reabale hours plus minutes string
 		 */
-		public static function formatHoursMinutesFromSeconds(secs:Number):String
+		public static function formatHoursMinutesFromSeconds(secs:Number, prefixInHours:Boolean = true, prefixInMinutes:Boolean = true):String
 		{
 			var h:Number=Math.floor(secs/3600);
 			var m:Number=Math.floor((secs%3600)/60);
 			var s:Number=Math.floor((secs%3600)%60);
+			var agoSuffix:String = " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
 			
-			return(h==0?"":(h<10?"0"+h.toString()+"h":h.toString()+"h"))+(m<10?"0"+m.toString():m.toString())+"m";
+			return(h==0?"":(h<10 && prefixInHours?"0"+h.toString()+"h":h.toString()+"h"))+(m==0?"now":m<10 && prefixInMinutes?"0"+m.toString()+"m" + agoSuffix:m.toString()+"m"+ agoSuffix);
 		}
 		
 		/**

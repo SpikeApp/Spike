@@ -15,6 +15,8 @@ package services
 	import events.BackGroundFetchServiceEvent;
 	import events.SettingsServiceEvent;
 	
+	import feathers.layout.HorizontalAlign;
+	
 	import model.ModelLocator;
 	
 	import utils.AlertManager;
@@ -240,12 +242,14 @@ package services
 				uploadBGRecords();
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_credentialTest) {
 				myTrace("in createAndLoadUrlRequestSuccess and dexcomShareStatus == dexcomShareStatus_Waiting_credentialTest");
-				if (BackgroundFetch.appIsInForeground()) {
-					
+				if (BackgroundFetch.appIsInForeground()) 
+				{
 					AlertManager.showSimpleAlert(
 						ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credentialtest"),
 						ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credentialtest_success"),
-						60
+						60,
+						null,
+						HorizontalAlign.CENTER
 					);
 					
 					sync();
