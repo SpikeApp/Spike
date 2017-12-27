@@ -55,8 +55,6 @@ package services
 	
 	import model.ModelLocator;
 	
-	import views.HomeView;
-	
 	/**
 	 * This service<br>
 	 * - registers for notifications<br>

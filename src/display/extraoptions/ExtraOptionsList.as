@@ -5,7 +5,9 @@ package display.extraoptions
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
 	import flash.events.Event;
+	import flash.events.TimerEvent;
 	import flash.system.System;
+	import flash.utils.Timer;
 	
 	import Utilities.Trace;
 	
@@ -55,6 +57,7 @@ package display.extraoptions
 		/* Properties */
 		private var speechEnabled:Boolean;
 		private var listTextRenderers:Array;
+		private var timeoutTimer:Timer;
 		
 		public function ExtraOptionsList()
 		{
@@ -82,6 +85,8 @@ package display.extraoptions
 			/* Internal Properties */
 			selectedFontTxtFormat = new TextFormat("Roboto", 14, 0x0086ff, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			unselectedFontTxtFormat = new TextFormat("Roboto", 14, 15658734, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			timeoutTimer = new Timer(5 * 1000);
+			timeoutTimer.addEventListener(TimerEvent.TIMER, onTimeoutActivated, false, 0, true);
 		}
 		
 		private function setupInitialState():void
@@ -255,6 +260,11 @@ package display.extraoptions
 					
 					//Refresh Layout
 					buildListLayout();
+					
+					//Activate the close timer
+					if (timeoutTimer.running)
+						timeoutTimer.stop();
+					timeoutTimer.start();
 				}
 				else if ( itemAction == "enableNoLock" ) //Speech
 				{
@@ -289,6 +299,11 @@ package display.extraoptions
 					
 					//Vibrate Device
 					BackgroundFetch.vibrate();
+					
+					//Activate the close timer
+					if (timeoutTimer.running)
+						timeoutTimer.stop();
+					timeoutTimer.start();
 				}
 			}
 		}
@@ -316,6 +331,11 @@ package display.extraoptions
 			
 			//Refresh menu layout
 			buildListLayout();
+		}
+		
+		private function onTimeoutActivated(e:TimerEvent):void
+		{
+			dispatchEventWith(CLOSE);
 		}
 		
 		/**
@@ -357,6 +377,13 @@ package display.extraoptions
 			{
 				noLockIconImage.dispose();
 				noLockIconImage = null;
+			}
+			
+			if (timeoutTimer != null)
+			{
+				timeoutTimer.stop();
+				timeoutTimer.removeEventListener(TimerEvent.TIMER, onTimeoutActivated);
+				timeoutTimer = null;
 			}
 			
 			System.pauseForGCIfCollectionImminent(0);

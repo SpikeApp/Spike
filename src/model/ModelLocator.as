@@ -27,7 +27,6 @@ package model
 	import mx.collections.ArrayCollection;
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
-	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -61,8 +60,6 @@ package model
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
-	
-	import views.HomeView;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 

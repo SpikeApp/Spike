@@ -23,7 +23,9 @@ package display.treatments
 
 	public class TreatmentsList extends List 
 	{
-
+		/* Constants */
+		public static const CLOSE:String = "close";
+		
 		/* Display Objects */
 		private var iconTexture:Texture;
 		private var iconImage:Image;
@@ -114,6 +116,8 @@ package display.treatments
 			if(treatmentID == 1) //Calibration
 			{
 				CalibrationService.calibrationOnRequest();
+				
+				dispatchEventWith(CLOSE); //Close Menu
 			}
 		}
 		

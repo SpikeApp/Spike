@@ -60,7 +60,6 @@ package chart
 		private var A1COutput:String;
 		private var glucoseUnit:String
 		private var dummyModeActive:Boolean = false;
-		private var needsRender:Boolean;
 		
 		//Display Objects
 		private var pieContainer:Sprite;
@@ -141,16 +140,17 @@ package chart
 		private function setupEventListeners():void
 		{
 			/* New BG Reading Event Listener */
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			//TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			
 			/* Update Display */
 			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeGround);
+			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackGround);
 		}
 		
 		/**
 		 * Functionality
 		 */
-		private function drawChart(event:Event = null):void
+		public function drawChart(event:Event = null):void
 		{
 			/**
 			 * VARIABLES
@@ -196,10 +196,21 @@ package chart
 			//Glucose Distribution Percentages
 			percentageHigh = (high * 100) / dataLength;
 			percentageHighRounded = (( percentageHigh * 10 + 0.5)  >> 0) / 10;
+			
 			percentageInRange = (inRange * 100) / dataLength;
 			percentageInRangeRounded = (( percentageInRange * 10 + 0.5)  >> 0) / 10;
-			percentageLow = (low * 100) / dataLength;
-			percentageLowRounded = (( percentageLow * 10 + 0.5)  >> 0) / 10;
+			
+			var preLow:Number = Math.round((low * 100) / dataLength) * 10 / 10;
+			if ( preLow != 0 && !isNaN(preLow))
+			{
+				percentageLow = 100 - percentageInRange - percentageHigh;
+				percentageLowRounded = Math.round ((100 - percentageInRangeRounded - percentageHighRounded) * 10) / 10;
+			}
+			else
+			{
+				percentageLow = 0;
+				percentageLowRounded = 0;
+			}
 			
 			//Angles
 			highAngle = (percentageHigh * 360) / 100;
@@ -303,10 +314,11 @@ package chart
 			}
 			
 			/* Create Pie Texture & Image */
-			if(BackgroundFetch.appIsInForeground())
+			renderPieChart();
+			/*if(BackgroundFetch.appIsInForeground())
 				renderPieChart();
 			else
-				needsRender = true;
+				needsRender = true;*/
 			
 			//Calculate Average Glucose & A1C
 			averageGlucose = (( (totalGlucose / dataLength) * 10 + 0.5)  >> 0) / 10;
@@ -488,13 +500,23 @@ package chart
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
 		{
 			//Add new reading
-			addGlucose(Number(BgReading.lastNoSensor().calculatedValue));
+			//addGlucose(Number(BgReading.lastNoSensor().calculatedValue));
 		}
 		
 		private function onAppInForeGround(e:IosXdripReaderEvent):void
 		{
-			if (needsRender)
-				renderPieChart();
+			pieContainer.addChild(pieImage);
+			lowLayoutGroup.visible = true;
+			inRangeLayoutGroup.visible = true;
+			highLayoutGroup.visible = true;
+		}
+		
+		private function onAppInBackGround(e:IosXdripReaderEvent):void
+		{
+			pieContainer.removeChild(pieImage);
+			lowLayoutGroup.visible = false;
+			inRangeLayoutGroup.visible = false;
+			highLayoutGroup.visible = false;
 		}
 		
 		/**
@@ -502,7 +524,7 @@ package chart
 		 */
 		private function renderPieChart():void
 		{
-			needsRender = false;
+			pieContainer.removeChild(pieImage);
 			
 			disposeTextures();
 			

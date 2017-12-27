@@ -1,8 +1,5 @@
 package chart
-{
-    
-    import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-    
+{ 
     import flash.events.Event;
     import flash.events.TimerEvent;
     import flash.geom.Point;
@@ -12,15 +9,14 @@ package chart
     import databaseclasses.BgReading;
     import databaseclasses.CommonSettings;
     
-    import events.IosXdripReaderEvent;
-    import events.TransmitterServiceEvent;
+    import events.CalibrationServiceEvent;
     
     import feathers.controls.DragGesture;
     import feathers.controls.Label;
     
     import model.ModelLocator;
     
-    import services.TransmitterService;
+    import services.CalibrationService;
     
     import starling.display.Image;
     import starling.display.Quad;
@@ -45,7 +41,15 @@ package chart
 		
 		private static const ONE_MINUTE:Number = 1000 * 60;
 		private static const ONE_DAY_IN_MILLISECONDS:Number = 1000 * 60 * 60 * 24;
+		private static const ONE_DAY_IN_MINUTES:Number = 24 * 60;
 		private static const NUM_MINUTES_MISSED_READING_GAP:int = 15;
+		
+		
+		//GOOD
+		private const TIME_6_MINUTES:int = 6 * 60 * 1000;
+		private const TIME_11_MINUTES:int = 11 * 60 * 1000;
+		
+		
 		
 		public static const TIMELINE_1H:Number = 14;
 		public static const TIMELINE_3H:Number = 8;
@@ -61,6 +65,7 @@ package chart
 		private var mainChartLinePictureList:Array;
 		private var scrollerChartLineList:Array;
 		private var scrollerChartLinePictureList:Array;
+		private var textureList:Array;
 		private var lastBGreadingTimeStamp:Number;
 		private var firstBGReadingTimeStamp:Number;
         
@@ -76,7 +81,8 @@ package chart
         private var lineColor:uint = 0xEEEEEE;
         private var chartFontColor:uint = 0xEEEEEE;
 		private var axisFontColor:uint = 0xEEEEEE;
-		private var oldColor:uint = 0xababab;
+		private var oldColor:uint = 0xABABAB;
+		private var newColor:uint = 0xEEEEEE;
         private var highUrgentGlucoseMarkerColor:uint = 0xff0000;//red
         private var highGlucoseMarkerColor:uint = 0xffff00;//yellow
 		private var inrangeGlucoseMarkerColor:uint = 0x00ff00;//green
@@ -106,6 +112,8 @@ package chart
 		private var userAxisFontMultiplier:Number;
 		private var dateFormat:String;
 		private var dummyModeActive:Boolean = false;
+		private var handPickerWidth:Number;
+		private var glucoseDisplayFont:Number;
 
         //Display Objects
         private var glucoseTimelineContainer:Sprite;
@@ -118,7 +126,10 @@ package chart
         private var glucoseTimeAgoDisplay:Label;
 		private var yAxisContainer:Sprite;
 		private var mainChartContainer:Sprite;
-		private var textureList:Array;
+		private var differenceInMinutesForAllTimestamps:Number;
+		
+		//Objects
+		private var statusUpdateTimer:Timer;
         
         //Glucose Thresholds
         private var glucoseUrgentHigh:Number;
@@ -128,12 +139,85 @@ package chart
 
 		//Movement
         private var scrollMultiplier:Number;
-
         private var mainChartXFactor:Number;
+		private var displayLatestBGValue:Boolean = true;
+		private var selectedGlucoseMarkerIndex:int;
 
-        private var statusUpdateTimer:Timer;
-
-        private var handPickerWidth:Number;
+		override public function dispose():void
+		{
+			destroyAllLines();
+			
+			var i:int;
+			var mainDataLength:int = mainChartGlucoseMarkersList.length;
+			for (i = 0; i < mainDataLength; i++) 
+			{
+				var mainGlucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList[i] as GlucoseMarker;
+				mainGlucoseMarker.dispose();
+				mainGlucoseMarker = null;
+			}
+			mainChartGlucoseMarkersList.length = 0;
+			mainChartGlucoseMarkersList = null;
+			
+			var scrollerDataLength:int = scrollChartGlucoseMarkersList.length;
+			for (i = 0; i < scrollerDataLength; i++) 
+			{
+				var scrollerGlucoseMarker:GlucoseMarker = scrollChartGlucoseMarkersList[i] as GlucoseMarker;
+				scrollerGlucoseMarker.dispose();
+				scrollerGlucoseMarker = null;
+			}
+			scrollChartGlucoseMarkersList.length = 0;
+			scrollChartGlucoseMarkersList = null;
+			
+			removeChild(glucoseTimelineContainer);
+			glucoseTimelineContainer != null
+			glucoseTimelineContainer.dispose();
+			glucoseTimelineContainer = null;
+			
+			
+			removeChild(mainChart);
+			mainChart.dispose();
+			mainChart = null;
+			
+			removeChild(glucoseDelimiter);
+			glucoseDelimiter.dispose();
+			glucoseDelimiter = null;
+			
+			removeChild(scrollerChart);
+			scrollerChart.dispose();
+			scrollerChart = null;
+			
+			removeChild(handPicker);
+			handPicker.dispose();
+			handPicker = null;
+			
+			removeChild(glucoseValueDisplay);
+			glucoseValueDisplay.dispose();
+			glucoseValueDisplay = null;
+			
+			removeChild(glucoseSlopeDisplay);
+			glucoseSlopeDisplay.dispose();
+			glucoseSlopeDisplay = null;
+			
+			removeChild(glucoseTimeAgoDisplay);
+			glucoseTimeAgoDisplay.dispose();
+			glucoseTimeAgoDisplay = null;
+			
+			removeChild(yAxisContainer);
+			yAxisContainer.dispose();
+			yAxisContainer = null;
+			
+			removeChild(mainChartContainer);
+			mainChartContainer.dispose();
+			mainChartContainer = null;
+			
+			statusUpdateTimer.stop();
+			statusUpdateTimer.removeEventListener(TimerEvent.TIMER, onUpdateTimerRefresh);
+			statusUpdateTimer = null;
+			
+			disposeTextures();
+			
+			super.dispose();
+		}
 
         public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
         {
@@ -189,15 +273,143 @@ package chart
             //Add timeline to display list
             glucoseTimelineContainer = new Sprite();
             addChild(glucoseTimelineContainer);
+			
+			//Event Listeners
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived);
         }
+		
+		private function onCaibrationReceived(e:CalibrationServiceEvent):void
+		{
+			//Adjust last glucose marker and display texts
+			if (mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
+			{
+				//Get and adjust latest calibration value and chart's lowest and highest glucose values
+				var latestCalibrationGlucose:Number = BgReading.lastNoSensor().calculatedValue;
+				
+				if (latestCalibrationGlucose < 40)
+					latestCalibrationGlucose = 40;
+				else if (latestCalibrationGlucose > 600)
+					latestCalibrationGlucose = 600;
+				
+				var previousLowestGlucoseValue:Number = lowestGlucoseValue;
+				var previousHighestGlucoseValue:Number = highestGlucoseValue;
+				
+				if (latestCalibrationGlucose < lowestGlucoseValue)
+					lowestGlucoseValue = latestCalibrationGlucose;
+				else if (latestCalibrationGlucose > highestGlucoseValue)
+					highestGlucoseValue = latestCalibrationGlucose;
+				
+				//Redraw YAxis if needed
+				if(highestGlucoseValue != previousHighestGlucoseValue || lowestGlucoseValue != previousLowestGlucoseValue)
+				{
+					//Dispose YAxis
+					yAxisContainer.dispose();
+					
+					//Redraw YAxis
+					yAxisContainer.addChild(drawYAxis());
+				}
+				
+				//Calculate positions
+				var totalGlucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
+				scaleYFactor = (_graphHeight - (mainChartGlucoseMarkerRadius*2))/totalGlucoseDifference;
+				var glucoseY:Number = _graphHeight - (mainChartGlucoseMarkerRadius*2) - ((latestCalibrationGlucose - lowestGlucoseValue) * scaleYFactor);
+				
+				//Set and adjust latest marker's properties
+				var latestMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker;
+				latestMarker.newBgReading = BgReading.lastNoSensor();
+				latestMarker.y = glucoseY;
+				var latestGlucoseProperties:Object = GlucoseFactory.getGlucoseOutput(latestCalibrationGlucose);
+				latestMarker.glucoseOutput = latestGlucoseProperties.glucoseOutput;
+				latestMarker.glucoseValueFormatted = latestGlucoseProperties.glucoseValueFormatted;
+				latestMarker.color = GlucoseFactory.getGlucoseColor(latestCalibrationGlucose);
+				if (BgReading.lastNoSensor().hideSlope)
+					latestMarker.slopeArrow = "\u21C4";
+				else
+					latestMarker.slopeArrow = BgReading.lastNoSensor().slopeArrow();
+				
+				if (mainChartGlucoseMarkersList.length > 1)
+				{
+					var previousMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 2] as GlucoseMarker;
+					latestMarker.slopeOutput = GlucoseFactory.getGlucoseSlope
+					(
+						previousMarker.glucoseValue,
+						previousMarker.glucoseValueFormatted,
+						latestCalibrationGlucose,
+						latestMarker.glucoseValueFormatted
+					);
+						
+				}
+				
+				//Redraw Line if needed
+				if(_displayLine)
+				{
+					//Dispose previous lines
+					destroyAllLines(false);
+					
+					var line:Shape = new Shape();
+					line.graphics.lineStyle(1, 0xFFFFFF, 1);
+					
+					var markerLength:int = mainChartGlucoseMarkersList.length;
+					var previousGlucoseMarker:GlucoseMarker;
+					
+					//Redraw Line
+					for (var i:int = 0; i < markerLength; i++) 
+					{
+						var glucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList[i] as GlucoseMarker;
+						
+						if(i == 0)
+							line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
+						else
+						{
+							var currentLineX:Number;
+							var currentLineY:Number;
+							
+							if(i < markerLength -1)
+							{
+								currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
+								currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
+							}
+							else if (i == markerLength -1)
+							{
+								currentLineX = glucoseMarker.x + (glucoseMarker.width);
+								currentLineY = glucoseMarker.y + (glucoseMarker.height);
+							}
+							
+							//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+							line.graphics.lineStyle(1, glucoseMarker.color, 1);
+							if(i > 0)
+							{
+								var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
+								if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
+									line.graphics.lineStyle(1, oldColor, 1);
+							}
+							
+							line.graphics.lineTo(currentLineX, currentLineY);
+							line.graphics.moveTo(currentLineX, currentLineY);
+						}
+						//Hide glucose marker
+						glucoseMarker.alpha = 0;
+						previousGlucoseMarker = glucoseMarker;
+					}
+					
+					mainChart.addChild(line);
+					mainChartLineList.push(line);
+				}
+				
+				// Update Display Fields	
+				glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
+				glucoseValueDisplay.fontStyles.color = latestMarker.color;
+				glucoseSlopeDisplay.text = latestMarker.slopeOutput;
+				glucoseSlopeDisplay.fontStyles.color = newColor;
+				
+				//Deativate DummyMode
+				dummyModeActive = false;
+			}
+		}
 		
         public function drawGraph():void
         {	
-			/**
-			 * Glucose Values Update
-			 */
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
-			
 			/**
              * Main Chart
              */
@@ -221,39 +433,31 @@ package chart
 			//Create the displays
 			createStatusTextDisplays();
 			
-			//Populate them as long as there are bgreadings to display
+			//Set the glucose value display to the latest glucose value available
 			if (!dummyModeActive)
 			{
-				//Set the glucose value display to the latest glucose value available
-				var elapsedTimeSinceLastBGReading:Number = lastBGreadingTimeStamp - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp;
-				var bgValueToDisplay:Number = int((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue) * 10) / 10;
-				if (glucoseUnit != "mg/dl") 
-					bgValueToDisplay = Math.round(((BgReading.mgdlToMmol((bgValueToDisplay))) * 10)) / 10;
+				var nowTimestamp:Number = new Date().valueOf();
+				var latestReadingTimestamp:Number = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp;
 				
-				var glucoseValueOutput:String
-				if (glucoseUnit == "mg/dl")
-					glucoseValueOutput = String(bgValueToDisplay);
+				if (nowTimestamp - latestReadingTimestamp < TIME_6_MINUTES)
+				{
+					glucoseValueDisplay.text = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).glucoseOutput + " " + (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).slopeArrow;
+					glucoseValueDisplay.fontStyles.color = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].color;
+				}
+				else if (nowTimestamp - latestReadingTimestamp < TIME_11_MINUTES)
+				{
+					glucoseValueDisplay.text = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).glucoseOutput + " " + (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).slopeArrow;
+					glucoseValueDisplay.fontStyles.color = oldColor;
+				}
 				else
 				{
-					if ( bgValueToDisplay % 1 == 0)
-						glucoseValueOutput = String(bgValueToDisplay) + ".0";
-					else
-						glucoseValueOutput = String(bgValueToDisplay);
+					glucoseValueDisplay.text = ModelLocator.resourceManagerInstance.getString('chartscreen','no_data');
+					glucoseValueDisplay.fontStyles.color = oldColor;
 				}
-				
-				if ( elapsedTimeSinceLastBGReading <= 15 * ONE_MINUTE)
-					glucoseValueDisplay.text = glucoseValueOutput + " " + mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].slopeArrow;
-				else
-					glucoseValueDisplay.text = "---";
 				
 				glucoseValueDisplay.invalidate();
 				glucoseValueDisplay.validate();
 				glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width - glucoseStatusLabelsMargin;
-				
-				if ( elapsedTimeSinceLastBGReading > 6 * ONE_MINUTE)
-					glucoseValueDisplay.fontStyles.color = oldColor;
-				else
-					glucoseValueDisplay.fontStyles.color = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].color;
 			}
 			else
 			{
@@ -317,80 +521,144 @@ package chart
 			 */
 			//Timer
 			statusUpdateTimer = new Timer(15 * 1000);
-			statusUpdateTimer.addEventListener(TimerEvent.TIMER, onUpdateStatus);
+			statusUpdateTimer.addEventListener(TimerEvent.TIMER, onUpdateTimerRefresh, false, 0, true);
 			statusUpdateTimer.start();
-			
-			//App in foreground
-			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onUpdateStatus);
 			
 			/**
 			 * Time Ago & Slope
 			 */
 			calculateTimeAgo();
 			calculateSlope();
+			
+			/**
+			 * Initial variables
+			 */
+			if(!dummyModeActive)
+				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
         }
 		
-		private function onBgReadingReceived(event:TransmitterServiceEvent):void
+		/**
+		 * Event Handlers
+		 */
+		
+		protected function onUpdateTimerRefresh(event:flash.events.Event = null):void
 		{
-			//Add new reading
-			addGlucose(BgReading.lastNoSensor());
-			
-			//Update Status Displays
 			calculateTimeAgo();
 			calculateSlope();
-			
-			//Restart Update timer
-			statusUpdateTimer.stop();
-			statusUpdateTimer.delay = 60 * 1000; //1 minute
-			statusUpdateTimer.start();
 		}
 		
 		private function calculateSlope():void
 		{
-			try
+			//Set slope
+			if(displayLatestBGValue && !dummyModeActive)
 			{
-				//Set slope
-				if(handPicker.x == _graphWidth - handPickerWidth)
+				var elapsedTimeSinceLastBGReading:Number = lastBGreadingTimeStamp - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp;
+					
+				if ( elapsedTimeSinceLastBGReading > 11 * ONE_MINUTE) //Don't display slope if no new bgreading in the last 15min
 				{
-					var elapsedTimeSinceLastBGReading:Number = lastBGreadingTimeStamp - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp;
-					if ( elapsedTimeSinceLastBGReading <= 15 * ONE_MINUTE)
-					{
-						var glucoseDifferenceMGDL:Number = int((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 2].glucoseValue)*10)/10;
-						var glucoseDifferenceMMOL:Number = Math.round(((BgReading.mgdlToMmol((glucoseDifferenceMGDL))) * 100)) / 100;
-						if(glucoseDifferenceMGDL >= 0)
-							if(glucoseUnit == "mg/dl")
-								glucoseSlopeDisplay.text = "+ " + String(glucoseDifferenceMGDL) + " " + glucoseUnit;
-							else
-								glucoseSlopeDisplay.text = "+ " + String(glucoseDifferenceMMOL) + " " + glucoseUnit;
-							else
-								if(glucoseUnit == "mg/dl")
-									glucoseSlopeDisplay.text = "- " + String(Math.abs(glucoseDifferenceMGDL)) + " " + glucoseUnit;
-								else
-									glucoseSlopeDisplay.text = "- " + String(Math.abs(glucoseDifferenceMMOL)) + " " + glucoseUnit;
-					}
-					else
-						glucoseSlopeDisplay.text = "";
+					glucoseSlopeDisplay.text = "";
+					return;
 				}
-			} 
-			catch(error:Error) {}
-		}
+				
+				glucoseSlopeDisplay.text = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].slopeOutput;
+				if ( elapsedTimeSinceLastBGReading > 6 * ONE_MINUTE)
+					glucoseSlopeDisplay.fontStyles.color = oldColor;
+				else
+					glucoseSlopeDisplay.fontStyles.color = newColor;
+			}
+		} 
 		
 		private function calculateTimeAgo():void
 		{	
-			if(handPicker.x == _graphWidth - handPickerWidth)
+			if (mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0 && !dummyModeActive)
 			{
-				try
-				{
-					var elapsedTimeSinceLastBGReading:Number = lastBGreadingTimeStamp - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp;
-					var currentTimestamp:Number = (new Date()).valueOf();
-					var previousTimestamp:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp);
-					var differenceInSeconds:Number = (currentTimestamp - previousTimestamp) / 1000;
+				var nowTimestamp:Number = (new Date()).valueOf();
+				var latestTimestamp:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp);
+				var differenceInSeconds:Number = (nowTimestamp - latestTimestamp) / 1000;
 					
-					glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds, false, false);
-					if ( elapsedTimeSinceLastBGReading > 6 * ONE_MINUTE)
+				glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
+				
+				if ( nowTimestamp - latestTimestamp < TIME_6_MINUTES)
+					glucoseTimeAgoDisplay.fontStyles.color = newColor;
+				else
+					glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+			}
+		}
+		
+		private function calculateGlucoseDisplay():void
+		{
+			if (!displayLatestBGValue)
+			{
+				if (selectedGlucoseMarkerIndex == mainChartGlucoseMarkersList.length - 1)
+					return;
+				
+				var nextMarker:GlucoseMarker = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex + 1] as GlucoseMarker;
+				var nextTimestamp:Number = nextMarker.timestamp;
+				var nextMarkerGlobalX:Number = nextMarker.x + mainChart.x;
+				var currentMarker:GlucoseMarker = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex] as GlucoseMarker;
+				var currentTimestamp:Number = currentMarker.timestamp;
+				var timeSpan:TimeSpan = TimeSpan.fromDates(new Date(currentTimestamp), new Date(nextTimestamp));
+				var differenceInMinutes:Number = timeSpan.totalMinutes;
+				var differenceInSeconds:Number = timeSpan.totalSeconds;
+				
+				if (differenceInMinutes < 11)
+				{
+					//Glucose Value Display
+					glucoseValueDisplay.text = currentMarker.glucoseOutput + " " + currentMarker.slopeArrow;
+					if (differenceInMinutes < 6)
+						glucoseValueDisplay.fontStyles.color = currentMarker.color;
+					else
+						glucoseValueDisplay.fontStyles.color = oldColor;
+					
+					//Marker Date Time
+					glucoseTimeAgoDisplay.text = retroOutput + " - " + currentMarker.timeFormatted;
+					if (differenceInMinutes < 6)
+						glucoseTimeAgoDisplay.fontStyles.color = newColor;
+					else
 						glucoseTimeAgoDisplay.fontStyles.color = oldColor;
-				} 
-				catch(error:Error) {}
+					
+					//Marker Slope
+					glucoseSlopeDisplay.text = currentMarker.slopeOutput;
+					if (differenceInMinutes < 6)
+						glucoseSlopeDisplay.fontStyles.color = newColor;
+					else
+						glucoseSlopeDisplay.fontStyles.color = oldColor;
+					
+					selectedGlucoseMarkerIndex = currentMarker.index;
+				}
+				else if (nextMarkerGlobalX < glucoseDelimiter.x)
+				{
+					//Glucose Value Display
+					glucoseValueDisplay.text = nextMarker.glucoseOutput + " " + nextMarker.slopeArrow;
+					glucoseValueDisplay.fontStyles.color = nextMarker.color;
+					
+					//Marker Date Time
+					glucoseTimeAgoDisplay.text = retroOutput + " - " + nextMarker.timeFormatted;
+					glucoseTimeAgoDisplay.fontStyles.color = newColor;
+					
+					//Marker Slope
+					glucoseSlopeDisplay.text = nextMarker.slopeOutput;
+					glucoseSlopeDisplay.fontStyles.color = newColor;
+					
+					selectedGlucoseMarkerIndex = nextMarker.index;
+				}
+				else
+				{
+					//Glucose Value Display
+					glucoseValueDisplay.text = "---";
+					glucoseValueDisplay.fontStyles.color = oldColor;
+					
+					//Marker Date Time
+					glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
+					glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+					
+					//Marker Slope
+					glucoseSlopeDisplay.text = ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown');
+					glucoseSlopeDisplay.fontStyles.color = oldColor;
+					
+					if (selectedGlucoseMarkerIndex > 0)
+						selectedGlucoseMarkerIndex -= 1;
+				}
 			}
 		}
 		
@@ -482,7 +750,7 @@ package chart
 			/**
 			 * Urgent High Glucose (Alarm)
 			 */
-			if(glucoseUrgentHigh > lowestGlucoseValue && glucoseUrgentHigh < highestGlucoseValue)
+			if(glucoseUrgentHigh > lowestGlucoseValue && glucoseUrgentHigh < highestGlucoseValue && !dummyModeActive)
 			{
 				//Line Marker
 				var highUrgentGlucoseLineMarker:Shape = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
@@ -605,7 +873,7 @@ package chart
 			/**
 			 * Urgent Low Glucose (Alarm)
 			 */
-			if(glucoseUrgentLow > lowestGlucoseValue && glucoseUrgentLow < highestGlucoseValue)
+			if(glucoseUrgentLow > lowestGlucoseValue && glucoseUrgentLow < highestGlucoseValue && !dummyModeActive)
 			{
 				//Line Marker
 				var lowUrgentGlucoseLineMarker:Shape = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
@@ -653,8 +921,7 @@ package chart
             /**
              * Calculation of X Axis scale factor
              */
-			
-			
+			//Get first and last timestamp and determine the difference between the two
 			if (!dummyModeActive)
 			{
 				firstBGReadingTimeStamp = Number(_dataSource[0].timestamp);
@@ -665,19 +932,23 @@ package chart
 				firstBGReadingTimeStamp = 0;
 				lastBGreadingTimeStamp = 0;
 			}
-            
             var totalTimestampDifference:Number = lastBGreadingTimeStamp - firstBGReadingTimeStamp;
+			
+			//Calculate scaleXFactor
 			var scaleXFactor:Number;
 			if(chartType == MAIN_CHART)
 			{
-				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * timelineRange));
+				differenceInMinutesForAllTimestamps = TimeSpan.fromDates(new Date(firstBGReadingTimeStamp), new Date(lastBGreadingTimeStamp)).totalMinutes;
+				if (differenceInMinutesForAllTimestamps > ONE_DAY_IN_MINUTES)
+					differenceInMinutesForAllTimestamps = ONE_DAY_IN_MINUTES;
+				
+				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
+				//scaleXFactor = 1/(totalTimestampDifference / (chartWidth * timelineRange));
 				mainChartXFactor = scaleXFactor;
 			}
 			else if (chartType == SCROLLER_CHART)
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
 			
-			
-    
             /**
              * Calculation of Y Axis scale factor
              */
@@ -687,7 +958,12 @@ package chart
 			if (!dummyModeActive)
 			{
 				lowestGlucoseValue = sortDataArray[0].calculatedValue as Number;
+				if (lowestGlucoseValue < 40)
+					lowestGlucoseValue = 40;
+				
 				highestGlucoseValue = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+				if (highestGlucoseValue > 600)
+					highestGlucoseValue = 600;
 			}
 			else
 			{
@@ -703,12 +979,12 @@ package chart
              * Internal variables
              */
             var i:int; //common index for loops
-            var previousXCoordinate:Number = 0; //holder for x coordinate of the glucose value to be used by the following one
-			var previousYCoordinate:Number;
+            var previousXCoordinate:Number = 0;
+			var previousYCoordinate:Number = 0;
 			var previousGlucoseMarker:GlucoseMarker;
     
             /**
-             * Creation and placement of the glucose values
+             * Creation of the line component
              */
             //Line Chart
 			if(_displayLine)
@@ -717,11 +993,19 @@ package chart
 				line.graphics.lineStyle(1, 0xFFFFFF, 1);
 			}
 			
+			/**
+			 * Creation and placement of the glucose values
+			 */
 			//Loop through all available data points
 			var dataLength:int = _dataSource.length;
             for(i = 0; i < dataLength; i++)
             {
+				//Get current glucose value
                 var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
+				if(currentGlucoseValue < 40)
+					currentGlucoseValue = 40;
+				else if (currentGlucoseValue > 600)
+					currentGlucoseValue = 600;
         
                 //Define glucose marker x position
                 var glucoseX:Number;
@@ -732,103 +1016,23 @@ package chart
         
                 //Define glucose marker y position
                 var glucoseY:Number = chartHeight - (glucoseMarkerRadius * 2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
-				if(totalGlucoseDifference == 0) //If glucose is a perfect flat line then display it in the middle
+				//If glucose is a perfect flat line then display it in the middle
+				if(totalGlucoseDifference == 0) 
 					glucoseY = (chartHeight - (glucoseMarkerRadius*2)) / 2;
-        
-                //Define glucose marker color
-                var color:int;
-                if(currentGlucoseValue >= glucoseUrgentHigh)
-                    color = highUrgentGlucoseMarkerColor;
-                else if(currentGlucoseValue >= glucoseHigh)
-                    color = highGlucoseMarkerColor;
-                else if(currentGlucoseValue > glucoseLow && currentGlucoseValue < glucoseHigh)
-                    color = inrangeGlucoseMarkerColor;
-                else if(currentGlucoseValue <= glucoseLow && currentGlucoseValue > glucoseUrgentLow)
-                    color = lowGlucoseMarkerColor;
-                else if(currentGlucoseValue <= glucoseUrgentLow)
-                    color = lowUrgentGlucoseMarkerColor;
-        
-                /* Create glucose marker and set properties */
-                var glucoseMarker:GlucoseMarker = new GlucoseMarker(glucoseMarkerRadius, color);
 				
-				//Coordinates
-                glucoseMarker.x = previousXCoordinate + glucoseX;
-                glucoseMarker.y = glucoseY;
-				
-				//Index (for later reference)
-				glucoseMarker.index = i;
-				
-				//Timestamp
-                glucoseMarker.timestamp = _dataSource[i].timestamp;
-				
-				//Glucose Value (Both internal and external)
-                glucoseMarker.glucoseValue = _dataSource[i].calculatedValue;
-				
-				var glucoseValueOutput:String;
-				var glucoseValueFormatted:Number;
-				if (glucoseUnit == "mg/dl")
-				{
-					glucoseValueFormatted = Math.round(_dataSource[i].calculatedValue * 10) / 10;
-					glucoseValueOutput = String( glucoseValueFormatted );
-				}
-				else
-				{
-					glucoseValueFormatted = Math.round(BgReading.mgdlToMmol(_dataSource[i].calculatedValue) * 10) / 10;
-					
-					if ( glucoseValueFormatted % 1 == 0)
-						glucoseValueOutput = String(glucoseValueFormatted) + ".0";
-					else
-						glucoseValueOutput = String(glucoseValueFormatted);
-				}
-				
-				glucoseMarker.glucoseOutput = glucoseValueOutput;
-				glucoseMarker.glucoseValueFormatted = glucoseValueFormatted;
-				
-				//Slope (Both Arrow And Output)
-				//Output
-				if(i >0)
-				{
-					var glucoseDifference:Number;
-					if (glucoseUnit == "mg/dl")
-						glucoseDifference = Math.round((glucoseMarker.glucoseValueFormatted - previousGlucoseMarker.glucoseValueFormatted) * 10)/10;
-					else
+				// Create Glucose Marker
+				var glucoseMarker:GlucoseMarker = new GlucoseMarker
+				(
 					{
-						glucoseDifference = Math.round(      ((Math.round(BgReading.mgdlToMmol(glucoseMarker.glucoseValue) * 100) / 100) - (Math.round(BgReading.mgdlToMmol(previousGlucoseMarker.glucoseValue) * 100) / 100))           * 100)/100;
+						x: previousXCoordinate + glucoseX,
+						y: glucoseY,
+						index: i,
+						radius: glucoseMarkerRadius,
+						bgReading: _dataSource[i],
+						previousGlucoseValueFormatted: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValueFormatted : null,
+						previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 					}
-					
-					if((glucoseUnit == "mg/dl" && Math.abs(glucoseDifference) > 100) || (glucoseUnit == "mmol/L" && Math.abs(glucoseDifference) > 5.5))
-						glucoseMarker.slopeOutput = "ERR";
-					else
-					{
-						var glucoseDifferenceOutput:String;
-						if (glucoseDifference >= 0)
-						{
-							glucoseDifferenceOutput = String(glucoseDifference);
-							
-							if ( glucoseDifference % 1 == 0)
-								glucoseDifferenceOutput += ".0";
-							
-							glucoseMarker.slopeOutput = "+ " + glucoseDifferenceOutput + " " + glucoseUnit;
-						}
-						else
-						{
-							glucoseDifferenceOutput = String(Math.abs(glucoseDifference));
-							
-							if ( glucoseDifference % 1 == 0)
-								glucoseDifferenceOutput += ".0";
-							
-							glucoseMarker.slopeOutput = "- " + glucoseDifferenceOutput + " " + glucoseUnit;
-						}
-					}
-				}
-				else
-					glucoseMarker.slopeOutput = "???";			
-				
-				//Arrow
-				if (_dataSource[i].hideSlope)
-					glucoseMarker.slopeArrow = "";
-				else
-					glucoseMarker.slopeArrow = _dataSource[i].slopeArrow();
+				);
         
 				//Draw line
 				if(_displayLine)
@@ -852,7 +1056,7 @@ package chart
 						}
 						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-						line.graphics.lineStyle(1, color, 1);
+						line.graphics.lineStyle(1, glucoseMarker.color, 1);
 						if(i > 0)
 						{
 							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
@@ -891,6 +1095,15 @@ package chart
 					dummy.x = (lastBGreadingTimeStamp - firstBGReadingTimeStamp) * scaleXFactor;
 					chartContainer.addChild(dummy);
 				}
+			}
+			
+			//Define scroll multiplier for scroller vs main graph
+			if (handPicker != null && chartType == MAIN_CHART)
+			{
+				if (mainChart.x > 0)
+					scrollMultiplier = Math.abs(mainChart.width - (glucoseMarkerRadius * 2))/handPicker.x;
+				else
+					scrollMultiplier = Math.abs(mainChart.x)/handPicker.x;
 			}
 			
 			//Chart Line
@@ -946,7 +1159,7 @@ package chart
 		{
 			/* Calculate Font Sizes */
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
-			var glucoseDisplayFont:Number = 38 * deviceFontMultiplier * userBGFontMultiplier;
+			glucoseDisplayFont = 38 * deviceFontMultiplier * userBGFontMultiplier;
 			var timeDisplayFont:Number = 16 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			var retroDisplayFont:Number = 16 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			
@@ -965,13 +1178,14 @@ package chart
 			addChild(glucoseValueDisplay);
 			
 			//Glucose Retro Display
-			glucoseTimeAgoDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, retroDisplayFont, Align.LEFT, false);
-			glucoseTimeAgoDisplay.x = glucoseStatusLabelsMargin;
+			glucoseTimeAgoDisplay = GraphLayoutFactory.createChartStatusText(retroOutput, 0x20222a, retroDisplayFont, Align.LEFT, false);
+			glucoseTimeAgoDisplay.x = glucoseStatusLabelsMargin + 4;
 			glucoseTimeAgoDisplay.y = yPos;
 			addChild(glucoseTimeAgoDisplay);
-			glucoseTimeAgoDisplay.text = retroOutput;
 			glucoseTimeAgoDisplay.invalidate();
 			glucoseTimeAgoDisplay.validate();
+			glucoseTimeAgoDisplay.text = "";
+			glucoseTimeAgoDisplay.fontStyles.color = chartFontColor;
 			
 			//Glucose Time Display
 			glucoseSlopeDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, timeDisplayFont, Align.CENTER, false);
@@ -997,6 +1211,8 @@ package chart
 			//Dragging
 			if(touch != null && touch.phase == TouchPhase.MOVED)
 			{
+				displayLatestBGValue = false;
+				
 				/**
 				 * Hand Picker
 				 */
@@ -1022,7 +1238,10 @@ package chart
 				if(handPicker.x < 0)
 				{
 					handPicker.x = 0;
-					mainChart.x = 0;
+					if (mainChart.width > _graphWidth)
+						mainChart.x = 0;
+					else
+						mainChart.x = glucoseDelimiter.x - (2 * mainChartGlucoseMarkerRadius);
 				}
 				if(handPicker.x > _graphWidth - handPicker.width)
 				{
@@ -1045,6 +1264,7 @@ package chart
 				var latestMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1];
 				var latestMarkerGlobalX:Number = latestMarker.x + mainChart.x + (latestMarker.width) - glucoseDelimiter.x;
 				var futureTimeStamp:Number = latestMarker.timestamp + (Math.abs(latestMarkerGlobalX) / mainChartXFactor);
+				var nowTimestamp:Number;
 				
 				if (latestMarkerGlobalX < 0 - (fiveMinutesInTimestamp * mainChartXFactor)) //We are in the future and there are missing readings
 				{
@@ -1065,10 +1285,11 @@ package chart
 					}
 					else
 					{
-						var nowTimestamp:Number = (new Date()).valueOf();
+						nowTimestamp = (new Date()).valueOf();
 						var lastTimestamp:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp);
 						var differenceInSec:Number = (nowTimestamp - lastTimestamp) / 1000;
-						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec, false, false);
+						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
+						glucoseTimeAgoDisplay.fontStyles.color = newColor;
 					}
 					
 					glucoseTimeAgoDisplay.fontStyles.color = oldColor;	
@@ -1079,60 +1300,96 @@ package chart
 				}
 				
 				//Loop through all glucose markers displayed in the main chart. Looping backwards because it probably saves CPU cycles
-				for(var i:int = mainChartGlucoseMarkersList.length; --i;)
+				//for(var i:int = mainChartGlucoseMarkersList.length; --i;)
+				for(var i:int = mainChartGlucoseMarkersList.length - 1 ; i >= 0; i--)
 				{
-					//No need to work on the first one, it will never reach the main chart delimiter line
-					if (i > 0)
-					{
-						//Get Current and Previous Glucose Markers
-						var currentMarker:GlucoseMarker = mainChartGlucoseMarkersList[i];
-						var previousMaker:GlucoseMarker = mainChartGlucoseMarkersList[i - 1];
+					//Get Current and Previous Glucose Markers
+					var currentMarker:GlucoseMarker = mainChartGlucoseMarkersList[i];
+					var previousMaker:GlucoseMarker = mainChartGlucoseMarkersList[i - 1];
 						
-						//Transform local coordinates to global
-						var currentMarkerGlobalX:Number = currentMarker.x + mainChart.x + (currentMarker.width);
-						var previousMarkerGlobalX:Number = previousMaker.x + mainChart.x + (previousMaker.width);
-												
-						//Check if the current marker is the one selected by the main chart's delimiter line
-						if (currentMarkerGlobalX >= glucoseDelimiter.x && previousMarkerGlobalX < glucoseDelimiter.x)
+					//Transform local coordinates to global
+					var currentMarkerGlobalX:Number = currentMarker.x + mainChart.x + currentMarker.width;
+					var previousMarkerGlobalX:Number;
+					if (i != 0)
+						previousMarkerGlobalX = previousMaker.x + mainChart.x + previousMaker.width;
+					else
+						previousMarkerGlobalX  = 0;
+					
+					//Check if the current marker is the one selected by the main chart's delimiter line
+					if ((i == 0 && currentMarkerGlobalX >= glucoseDelimiter.x) || (currentMarkerGlobalX >= glucoseDelimiter.x && previousMarkerGlobalX < glucoseDelimiter.x))
+					{
+						nowTimestamp = new Date().valueOf();
+						var latestTimestamp:Number = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).timestamp;
+						
+						//Display Glucose Value
+						if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
 						{
-							//Display Glucose Value
 							glucoseValueDisplay.text = currentMarker.glucoseOutput + " " + currentMarker.slopeArrow;
-							glucoseValueDisplay.fontStyles.color = currentMarker.color;
-							glucoseValueDisplay.invalidate();
-							glucoseValueDisplay.validate();
-							glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width - glucoseStatusLabelsMargin;
-							
-							//Display Slope
-							glucoseSlopeDisplay.text = currentMarker.slopeOutput;
-							
-							//Display marker time (time ago)
-							if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
+							glucoseValueDisplay.fontStyles.color = currentMarker.color;	
+						}
+						else
+						{
+							if (nowTimestamp - latestTimestamp < TIME_6_MINUTES)
 							{
-								var markerDate:Date = new Date(currentMarker.timestamp);
-								var hours:Number = markerDate.getHours();
-								var minutes:Number = markerDate.getMinutes();
-								var timeOutput:String;
-								
-								if (dateFormat.slice(0,2) == "24")
-									timeOutput = TimeSpan.formatHoursMinutes(hours, minutes, TimeSpan.TIME_FORMAT_24H);
-								else
-									timeOutput = TimeSpan.formatHoursMinutes(hours, minutes, TimeSpan.TIME_FORMAT_12H);
-								
-								glucoseTimeAgoDisplay.text = retroOutput + " - " + timeOutput;
-								glucoseTimeAgoDisplay.fontStyles.color = 0xEEEEEE;
+								glucoseValueDisplay.text = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).glucoseOutput + " " + (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).slopeArrow;
+								glucoseValueDisplay.fontStyles.color = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).color;
+							}
+							else if (nowTimestamp - latestTimestamp < TIME_11_MINUTES)
+							{
+								glucoseValueDisplay.text = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).glucoseOutput + " " + (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).slopeArrow;
+								glucoseValueDisplay.fontStyles.color = oldColor;
 							}
 							else
 							{
-								//Set timeago
-								var currentTimestamp:Number = (new Date()).valueOf();
-								var previousTimestamp:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp);
-								var differenceInSeconds:Number = (currentTimestamp - previousTimestamp) / 1000;
-								glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds, false, false);
-								
+								glucoseValueDisplay.text = "---";
+								glucoseValueDisplay.fontStyles.color = oldColor;
 							}
-							//We found a mach so we can break the loop to save CPU cycles
-							break;
 						}
+						glucoseValueDisplay.invalidate();
+						glucoseValueDisplay.validate();
+						glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width - glucoseStatusLabelsMargin;
+							
+						//Display Slope
+						if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
+						{
+							glucoseSlopeDisplay.text = currentMarker.slopeOutput;
+							glucoseSlopeDisplay.fontStyles.color = newColor;
+						}
+						else
+						{
+							if (nowTimestamp - latestTimestamp < TIME_6_MINUTES)
+							{
+								glucoseSlopeDisplay.text = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).slopeOutput;
+								glucoseSlopeDisplay.fontStyles.color = newColor;
+							}
+							else if (nowTimestamp - latestTimestamp < TIME_11_MINUTES)
+							{
+								glucoseSlopeDisplay.text = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).slopeOutput;
+								glucoseSlopeDisplay.fontStyles.color = oldColor;
+							}
+							else
+								glucoseSlopeDisplay.text = "";
+						}
+							
+						//Display marker time
+						if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin) //Display time of BGReading
+						{
+							glucoseTimeAgoDisplay.text = retroOutput + " - " + currentMarker.timeFormatted;
+							glucoseTimeAgoDisplay.fontStyles.color = newColor;
+						}
+						else //Display time ago
+						{
+							displayLatestBGValue = true;
+							calculateTimeAgo();
+						}
+						
+						if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
+							selectedGlucoseMarkerIndex = currentMarker.index;
+						else
+							(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index;
+
+						//We found a mach so we can break the loop to save CPU cycles
+						break;
 					}
 				}
 			}
@@ -1218,14 +1475,13 @@ package chart
 				glucoseMarker.alpha = 0;
 				previousGlucoseMarker = glucoseMarker;
 			}
-			//Check if we can create a bitmap representation of the line without exceeding hardware capabilities
 			
+			//Check if we can create a bitmap representation of the line without exceeding hardware capabilities
 			if(line.width < 2048 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.TABLET && !dummyModeActive)
 			{
 				//Create a bitmap from the line. This is more memory and CPU efficient
 				var lineTexture:RenderTexture;
 				if(chartType == MAIN_CHART)
-					//lineTexture = new RenderTexture(mainChart.width, mainChart.height);
 					lineTexture = new RenderTexture(line.width, line.height);
 				else if (chartType == SCROLLER_CHART)
 					lineTexture = new RenderTexture(_scrollerWidth, _scrollerHeight);
@@ -1302,11 +1558,13 @@ package chart
 			}
 		}
 		
-		//public function addGlucose(glucoseValue:Number):void
-		public function addGlucose(glucoseReading:BgReading):void
+		public function addGlucose(BGReadingsList:Array):void
 		{
-			var readingTimestamp:Number = Number(glucoseReading.timestamp);
-			var readingDate:Date = new Date(readingTimestamp);
+			if(BGReadingsList == null || BGReadingsList.length == 0)
+				return;
+			
+			var latestTimestamp:Number = Number(BGReadingsList[BGReadingsList.length - 1].timestamp);
+			var latestDate:Date = new Date(latestTimestamp);
 			var firstTimestamp:Number;
 			var firstDate:Date;
 			if(_dataSource != null && _dataSource.length >= 1)
@@ -1320,17 +1578,17 @@ package chart
 				firstDate = null;
 			}
 			
-			if(_dataSource.length >= 1 && firstDate != null && TimeSpan.fromDates(firstDate, readingDate).totalHours > 24)
+			var i:int;
+			if(_dataSource.length >= 1 && firstDate != null && TimeSpan.fromDates(firstDate, latestDate).totalHours > 24)
 			{
-				var itemsToRemove:int = 0;
 				//Array has more than 24h of data. Remove timestamps older than 24H
-				var i:int;
+				var itemsToRemove:int = 0;
 				for (i = 0; i < mainChartGlucoseMarkersList.length; i++) 
 				{
 					var currentTimestamp:Number = Number((mainChartGlucoseMarkersList[i] as GlucoseMarker).timestamp);
 					var currentDate:Date = new Date(currentTimestamp);
 					
-					if (TimeSpan.fromDates(currentDate, readingDate).totalHours > 24)
+					if (TimeSpan.fromDates(currentDate, latestDate).totalHours > 24)
 					{
 						itemsToRemove += 1;
 					}
@@ -1369,76 +1627,72 @@ package chart
 				disposeTextures();
 			}
 			
-			//Add the new reading to the data array
-			_dataSource.push(glucoseReading);
+			//Add the new readings to the data array
+			var readingsLength:int = BGReadingsList.length;
+			var latestAvailableTimestamp:Number;
+			if (mainChartGlucoseMarkersList.length > 0)
+				latestAvailableTimestamp = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp;
+			else
+				latestAvailableTimestamp = 0;
+			
+			var numAddedReadings:int = 0;
+			for (i = 0; i < readingsLength; i++) 
+			{
+				if (BGReadingsList[i].timestamp > latestAvailableTimestamp)
+				{
+					_dataSource.push(BGReadingsList[i]);
+					numAddedReadings += 1;
+				}
+				//If this condition isn't met we don't add the reading for the following reasons:
+				//The sensor has been stopped, lastNoSensor is called, but this returns the last reading with calculated value not 0
+				//If a sensor is stopped, the app keeps receiving readings, but bgreading is an older reading
+			}
 			
 			//Deativate DummyMode
 			dummyModeActive = false;
 			
 			//Redraw main chart and scroller chart
-			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
-			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius);
+			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, numAddedReadings);
+			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, numAddedReadings);
 			
 			//Adjust Main Chart Position
-			try
+			if (handPicker.x == _scrollerWidth - handPicker.width)
 			{
-				if (handPicker.x == _scrollerWidth - handPicker.width)
-					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
-			} 
-			catch(error:Error) {
-				
+				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 			}
 			
+			//Restart Update timer
+			statusUpdateTimer.stop();
+			statusUpdateTimer.delay = 60 * 1000; //1 minute
+			statusUpdateTimer.start();
 			
-			/*//var timestampNow:Number = new Date().valueOf();
-			var timestampNow:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp) + (1000 * 60 * 5); //CHEAT: This is last glucose value plus 5 minutes
-			var timestampFirst:Number = Number(mainChartGlucoseMarkersList[0].timestamp);
-			var dayInTimestamp:Number = (1000 * 60 * 60 * 24) - (1000 * 60 * 5); //CHEAT: This is 1 day minus 5 minutes
-			
-			if(timestampNow - timestampFirst > dayInTimestamp)
-			{
-				//Array has more than 24h of data. Remove first glucose marker and object 
-				var firstMainGlucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList.shift();
-				var firstScrollGlucoseMarker:GlucoseMarker = scrollChartGlucoseMarkersList.shift();
-				_dataSource.shift();
-				
-				//Remove that glucose marker from both the main and the scroller chart
-				mainChart.removeChild(firstMainGlucoseMarker);
-				firstMainGlucoseMarker.dispose();
-				firstMainGlucoseMarker = null;
-				scrollerChart.removeChild(firstScrollGlucoseMarker);
-				firstScrollGlucoseMarker.dispose();
-				firstScrollGlucoseMarker = null;
-				
-				if(_displayLine)
-				{
-					//Dispose previous lines
-					destroyAllLines();
-					//Dispose textures
-					disposeTextures();
-				}
-			}
-			
-			//Add the new value to the data array
-			_dataSource.push({timestamp:timestampNow,calculatedValue:glucoseValue});
-			
-			//Redraw main chart and scroller chart
-			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
-			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius);*/
+			//Calculate Slope and Timeago
+			calculateSlope();
+			calculateTimeAgo();
+			calculateGlucoseDisplay();
 		}
 		
-		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):void
+		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int):void
 		{
 			/**
 			 * Calculation of X Axis scale factor
 			 */
 			var firstTimeStamp:Number = Number(_dataSource[0].timestamp);
-			//var lastTimeStamp:Number = Number(_dataSource[_dataSource.length - 1].timestamp);
 			var lastTimeStamp:Number = (new Date()).valueOf();
 			var totalTimestampDifference:Number = lastTimeStamp - firstTimeStamp;
 			var scaleXFactor:Number;
+			
 			if(chartType == MAIN_CHART)
-				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * timelineRange));
+			{
+				//The following 3 lines of code are meant to scale the main chart correctly in case there's less than 24h of data
+				differenceInMinutesForAllTimestamps = TimeSpan.fromDates(new Date(firstTimeStamp), new Date(lastTimeStamp)).totalMinutes;
+				if (differenceInMinutesForAllTimestamps > ONE_DAY_IN_MINUTES)
+					differenceInMinutesForAllTimestamps = ONE_DAY_IN_MINUTES;
+				
+				//scaleXFactor = 1/(totalTimestampDifference / (chartWidth * timelineRange));
+				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
+			}
 			else if (chartType == SCROLLER_CHART)
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
 			
@@ -1455,7 +1709,11 @@ package chart
 			var sortDataArray:Array = _dataSource.concat();
 			sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
 			lowestGlucoseValue = sortDataArray[0].calculatedValue as Number;
+			if (lowestGlucoseValue < 40)
+				lowestGlucoseValue = 40;
 			highestGlucoseValue = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+			if (highestGlucoseValue > 600)
+				highestGlucoseValue = 600;
 			//We find the difference so we can know how big the glucose pseudo graph is
 			var totalGlucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 			//Now we find a multiplier for the y axis so the glucose graph fits entirely with the chart height
@@ -1483,13 +1741,16 @@ package chart
 			for(i = 0; i < dataLength; i++)
 			{
 				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
+				if (currentGlucoseValue < 40)
+					currentGlucoseValue = 40;
+				else if (currentGlucoseValue > 600)
+					currentGlucoseValue = 600;
+				
 				var glucoseMarker:GlucoseMarker;
 				if(i < dataLength - 1 && chartType == MAIN_CHART)
 					glucoseMarker = mainChartGlucoseMarkersList[i]
 				else if(i < dataLength - 1 && chartType == SCROLLER_CHART)
 					glucoseMarker = scrollChartGlucoseMarkersList[i];
-				
-				var color:int = glucoseMarker.color;
 				
 				//Define glucose marker x position
 				var glucoseX:Number;
@@ -1500,46 +1761,38 @@ package chart
 				
 				//Define glucose marker y position
 				var glucoseY:Number = chartHeight - (glucoseMarkerRadius*2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
-				if(totalGlucoseDifference == 0) //If glucose is a perfect flat line then display it in the middle
+				//If glucose is a perfect flat line then display it in the middle
+				if(totalGlucoseDifference == 0) 
 					glucoseY = (chartHeight - (glucoseMarkerRadius*2)) / 2;
 				
-				if(i < dataLength - 1)
+				if(i < dataLength - numNewReadings)
 				{
+					trace("A REPOSICIONAR CURRENT GLUCOSE MARKER");
 					glucoseMarker.x = previousXCoordinate + glucoseX;
 					glucoseMarker.y = glucoseY;
-					
+					glucoseMarker.index = i;
 				}
 				else
 				{
-					//Create
-					//Define glucose marker color
-					if(currentGlucoseValue >= glucoseUrgentHigh)
-						color = highUrgentGlucoseMarkerColor;
-					else if(currentGlucoseValue >= glucoseHigh)
-						color = highGlucoseMarkerColor;
-					else if(currentGlucoseValue > glucoseLow && currentGlucoseValue < glucoseHigh)
-						color = inrangeGlucoseMarkerColor;
-					else if(currentGlucoseValue <= glucoseLow && currentGlucoseValue > glucoseUrgentLow)
-						color = lowGlucoseMarkerColor;
-					else if(currentGlucoseValue <= glucoseUrgentLow)
-						color = lowUrgentGlucoseMarkerColor;
-					
-					//Create glucose marker
-					glucoseMarker = new GlucoseMarker(glucoseMarkerRadius, color);
-					glucoseMarker.x = previousXCoordinate + glucoseX;
-					glucoseMarker.y = glucoseY;
-					glucoseMarker.timestamp = _dataSource[i].timestamp;
-					glucoseMarker.glucoseValue = _dataSource[i].calculatedValue;
-					if (_dataSource[i].hideSlope)
-						glucoseMarker.slopeArrow = "";
-					else
-						glucoseMarker.slopeArrow = _dataSource[i].slopeArrow();
+					trace("ESTOU A FAZER NOVO GLUCOSE MARKER");
+					trace("numNewReadings", numNewReadings);
+					glucoseMarker = new GlucoseMarker
+					(
+						{
+							x: previousXCoordinate + glucoseX,
+							y: glucoseY,
+							index: i,
+							radius: glucoseMarkerRadius,
+							bgReading: _dataSource[i],
+							previousGlucoseValueFormatted: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValueFormatted : null,
+							previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
+						}
+					);
 					
 					if(chartType == MAIN_CHART)
 					{
 						//Add it to the display list
 						mainChart.addChild(glucoseMarker);
-						
 						//Save it in the array for later
 						mainChartGlucoseMarkersList.push(glucoseMarker);
 					}
@@ -1547,13 +1800,19 @@ package chart
 					{
 						//Add it to the display list
 						scrollerChart.addChild(glucoseMarker);
-						
 						//Save it in the array for later
 						scrollChartGlucoseMarkersList.push(glucoseMarker);
 					}
 				}
 				
-				glucoseMarker.index = i;
+				//Define scroll multiplier for scroller vs main graph
+				if (handPicker != null && chartType == MAIN_CHART)
+				{
+					if (mainChart.x > 0)
+						scrollMultiplier = Math.abs(mainChart.width - (glucoseMarkerRadius * 2))/handPicker.x;
+					else
+						scrollMultiplier = Math.abs(mainChart.x)/handPicker.x;
+				}
 				
 				//Draw line
 				if(_displayLine)
@@ -1577,7 +1836,7 @@ package chart
 						}
 						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-						line.graphics.lineStyle(1, color, 1);
+						line.graphics.lineStyle(1, glucoseMarker.color, 1);
 						if(i > 0)
 						{
 							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
@@ -1602,32 +1861,17 @@ package chart
 				if(highestGlucoseValue != previousHighestGlucoseValue || lowestGlucoseValue != previousLowestGlucoseValue)
 				{
 					//Dispose YAxis
-					/**
-					 * 
-					 * DEBUG
-					 * 
-					 */
-					if(BackgroundFetch.appIsInForeground())
-						yAxisContainer.dispose();
-					else
-						yAxisContainer.removeChildren();
-					//yAxisContainer = null;
+					yAxisContainer.dispose();
 					
 					//Redraw YAxis
 					yAxisContainer.addChild(drawYAxis());
 				}
 				
 				//Update glucose display textfield
-				if(handPicker.x == _graphWidth - handPickerWidth)
+				if(displayLatestBGValue)
 				{
-					glucoseValueDisplay.text = String(int((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValue) * 10) / 10);// + " " + glucoseUnits;
-					try
-					{
-						glucoseValueDisplay.fontStyles.color = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].color;
-					} 
-					catch(error:Error) {}
-					
-					//glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width -glucoseStatusLabelsMargin;
+					glucoseValueDisplay.text = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValueFormatted + " " + mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].slopeArrow;
+					glucoseValueDisplay.fontStyles.color = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].color;
 				}
 			}
 			//Chart Line
@@ -1635,33 +1879,7 @@ package chart
 			{
 				//Check if we can create a bitmap representation of the line without exceeding hardware capabilities
 				if((line.width < 2048 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.TABLET))
-				{
-					//Create a bitmap from the line. This is more memory and CPU efficient
-					var lineTexture:RenderTexture;
-					if(chartType == MAIN_CHART)
-						lineTexture = new RenderTexture(mainChart.width, mainChart.height);
-					else if (chartType == SCROLLER_CHART)
-						lineTexture = new RenderTexture(scrollerChart.width, scrollerChart.height);
-					lineTexture.draw(line);
-					var lineImage:Image = new Image(lineTexture);
-					if(chartType == MAIN_CHART)
-						mainChart.addChild(lineImage);
-					else if(chartType == SCROLLER_CHART)
-						scrollerChart.addChild(lineImage);
-					
-					//Dispose line for memory managemnt
-					line.dispose();
-					line = null;
-					
-					//Save texture for later memory cleaning
-					textureList.push(lineTexture);
-					
-					//Save line references for later use
-					if(chartType == MAIN_CHART)
-						mainChartLinePictureList.push(lineImage);
-					else if (chartType == SCROLLER_CHART)
-						scrollerChartLinePictureList.push(lineImage);
-				}
+					createLineTexture(chartType, line);
 				else
 				{
 					//Line size exceeds hardware capabilities to convert it to bitmap.
@@ -1683,64 +1901,87 @@ package chart
 			}
 		}
 		
-		private function destroyAllLines():void
+		private function createLineTexture(chartType:String, line:Shape):void
+		{
+			//Create a bitmap from the line. This is more memory and CPU efficient
+			var lineTexture:RenderTexture;
+			
+			if (chartType == MAIN_CHART)
+				lineTexture = new RenderTexture(line.width, line.height);
+			else
+				lineTexture = new RenderTexture(_scrollerWidth, _scrollerHeight);
+			
+			lineTexture.draw(line);
+			
+			//Create Texture Representation
+			var lineImage:Image = new Image(lineTexture);
+			if(chartType == MAIN_CHART)
+				mainChart.addChild(lineImage);
+			else if(chartType == SCROLLER_CHART)
+				scrollerChart.addChild(lineImage);
+			
+			//Dispose line for memory managemnt
+			line.dispose();
+			line = null;
+			
+			//Save texture for later memory cleaning
+			textureList.push(lineTexture);
+			
+			//Save line references for later use
+			if(chartType == MAIN_CHART)
+				mainChartLinePictureList.push(lineImage);
+			else if (chartType == SCROLLER_CHART)
+				scrollerChartLinePictureList.push(lineImage);
+		}
+		
+		private function destroyAllLines(scrollerIncluded:Boolean = true):void
 		{
 			var i:int = 0
 			if(mainChartLineList != null && mainChartLineList.length > 0)
 			{
 				for (i = 0; i < mainChartLineList.length; i++) 
 				{
-					try
-					{
-						mainChart.removeChild(mainChartLineList[i]);
-						mainChartLineList[i].dispose();
-						mainChartLineList[i] = null;
-					} 
-					catch(error:Error) {}
+					mainChart.removeChild(mainChartLineList[i]);
+					mainChartLineList[i].dispose();
+					mainChartLineList[i] = null;
 				}
 				mainChartLineList.length = 0;
 			}
+				
 			if(mainChartLinePictureList != null && mainChartLinePictureList.length > 0)
 			{
 				for (i = 0; i < mainChartLinePictureList.length; i++) 
 				{
-					try
-					{
-						mainChart.removeChild(mainChartLinePictureList[i]);
-						mainChartLinePictureList[i].dispose();
-						mainChartLinePictureList[i] = null;
-					} 
-					catch(error:Error) {}
+					mainChart.removeChild(mainChartLinePictureList[i]);
+					mainChartLinePictureList[i].dispose();
+					mainChartLinePictureList[i] = null;
 				}
 				mainChartLinePictureList.lenght = 0;
 			}
-			if(scrollerChartLineList != null && scrollerChartLineList.length > 0)
+			
+			if (scrollerIncluded)
 			{
-				for (i = 0; i < scrollerChartLineList.length; i++) 
+				if(scrollerChartLineList != null && scrollerChartLineList.length > 0)
 				{
-					try
+					for (i = 0; i < scrollerChartLineList.length; i++) 
 					{
 						scrollerChart.removeChild(scrollerChartLineList[i]);
 						scrollerChartLineList[i].dispose();
 						scrollerChartLineList[i] = null;
-					} 
-					catch(error:Error) {}
+					}
+					scrollerChartLineList.length = 0;
 				}
-				scrollerChartLineList.length = 0;
-			}
-			if(scrollerChartLinePictureList != null && scrollerChartLinePictureList.length > 0)
-			{
-				for (i = 0; i < scrollerChartLinePictureList.length; i++) 
+				
+				if(scrollerChartLinePictureList != null && scrollerChartLinePictureList.length > 0)
 				{
-					try
+					for (i = 0; i < scrollerChartLinePictureList.length; i++) 
 					{
 						scrollerChart.removeChild(scrollerChartLinePictureList[i]);
 						scrollerChartLinePictureList[i].dispose();
 						scrollerChartLinePictureList[i] = null;
-					} 
-					catch(error:Error) {}
+					}
+					scrollerChartLinePictureList.length = 0;
 				}
-				scrollerChartLinePictureList.length = 0;
 			}
 		}
 		
@@ -1754,20 +1995,10 @@ package chart
 			System.pauseForGCIfCollectionImminent(0);
 		}
 		
-		override public function dispose():void
-		{
-			disposeTextures();
-			super.dispose();
-		}
-		
 		/**
 		 * Event Handlers
 		 */
-		protected function onUpdateStatus(event:flash.events.Event = null):void
-		{
-			/* Update Time Ago */
-			calculateTimeAgo();
-		}
+		
 
         /**
          * Getters & Setters

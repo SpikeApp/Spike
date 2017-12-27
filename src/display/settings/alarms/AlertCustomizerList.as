@@ -9,8 +9,6 @@ package display.settings.alarms
 	
 	import display.LayoutFactory;
 	
-	import events.ScreenEvent;
-	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Check;
@@ -31,6 +29,7 @@ package display.settings.alarms
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
+	import utils.AlertManager;
 	import utils.Constants;
 
 	public class AlertCustomizerList extends List 
@@ -171,14 +170,14 @@ package display.settings.alarms
 				else if (snoozeMinutes.text == "")
 					alertMessage = "You need to define a default snooze time for this alert!"; 
 					
-				var alert:Alert = Alert.show(
-					alertMessage,
+				var alert:Alert = AlertManager.showActionAlert
+				(
 					alertTitle,
-					new ListCollection(
-						[
-							{ label: "Try Again" }
-						]
-					)
+					alertMessage,
+					Number.NaN,
+					[
+						{ label: "Try Again", triggered: null }
+					]
 				);
 				
 				return false;

@@ -101,6 +101,7 @@ package screens
 		protected function onTreatmentButtonTriggered():void 
 		{
 			var treatmentsList:List = new TreatmentsList();
+			treatmentsList.addEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
 			callout = Callout.show( treatmentsList, treatmentsButton );
 		}
 		

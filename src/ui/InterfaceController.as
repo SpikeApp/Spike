@@ -7,12 +7,14 @@ package ui
 	
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
+	import flash.utils.setTimeout;
 	
 	import spark.formatters.DateTimeFormatter;
 	
 	import Utilities.Trace;
 	
 	import databaseclasses.BlueToothDevice;
+	import databaseclasses.CommonSettings;
 	import databaseclasses.Database;
 	import databaseclasses.LocalSettings;
 	import databaseclasses.Sensor;
@@ -20,6 +22,7 @@ package ui
 	import events.BlueToothServiceEvent;
 	import events.DatabaseEvent;
 	import events.NotificationServiceEvent;
+	import events.SettingsServiceEvent;
 	
 	import feathers.controls.Alert;
 	import feathers.layout.HorizontalAlign;
@@ -30,6 +33,7 @@ package ui
 	
 	import services.BluetoothService;
 	import services.CalibrationService;
+	import services.DialogService;
 	import services.NotificationService;
 	import services.TutorialService;
 	
@@ -60,10 +64,9 @@ package ui
 				Trace.init();
 				Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 				Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
-				//need to know when modellocator is populated, then we can also update display
-				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				Database.init();
 				initialStart = false;
+				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 				
 				dateFormatterForSensorStartTimeAndDate = new DateTimeFormatter();
 				dateFormatterForSensorStartTimeAndDate.dateTimePattern = "dd MMM HH:mm";
@@ -89,15 +92,60 @@ package ui
 			{	
 				trace("Interface Controller : Error initializing database!");
 			}
-			
-			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
-				if (de.data != null)
+		}
+		
+		private static function onSettingsChanged(event:SettingsServiceEvent):void 
+		{
+			/* Transmitter Info Alerts */
+			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) 
+			{
+				if (BlueToothDevice.alwaysScan()) 
 				{
-					if (de.data is String) {
-						if (de.data as String == Database.END_OF_RESULT) {
-							_instance.dispatchEvent(new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT))
-						}
+					if (BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
+					{
+						var alertMessageG5:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g5_info_screen');
+						if (Sensor.getActiveSensor() == null)
+							alertMessageG5 += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
+							
+						var alertG5:Alert = AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('transmitterscreen','alert_info_title'),
+							alertMessageG5
+						);
+						alertG5.height = 400;
+						
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN,"true");
+					} 
+					else if (BlueToothDevice.isBluKon() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
+					{
+						var alertMessageBlucon:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','blucon_info_screen');
+						if (Sensor.getActiveSensor() == null)
+							alertMessageBlucon += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
+							
+						var alertBlucon:Alert = AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('transmitterscreen','alert_info_title'),
+							alertMessageBlucon
+						);
+						alertBlucon.height = 400;
+							
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN,"true");
 					}
+				} 
+				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
+				{
+					var alertMessageG4:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g4_info_screen');
+					if (Sensor.getActiveSensor() == null)
+						alertMessageG4 += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
+					
+					var alertG4:Alert = AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('transmitterscreen','alert_info_title'),
+							alertMessageG4
+						);
+					alertG4.height = 400;
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN,"true");
 				}
 			}
 		}

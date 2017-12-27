@@ -7,6 +7,7 @@ package utils
 	import flash.utils.Timer;
 	
 	import feathers.controls.Alert;
+	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.text.TextBlockTextRenderer;
 	import feathers.core.ITextRenderer;
 	import feathers.core.PopUpManager;
@@ -15,6 +16,7 @@ package utils
 	
 	import model.ModelLocator;
 	
+	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
 	[ResourceBundle("general")]
@@ -37,15 +39,15 @@ package utils
 		/**
 		 * Public Methods
 		 */
-		public static function showSimpleAlert (alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, textAlign:String = HorizontalAlign.JUSTIFY):Alert
+		public static function showSimpleAlert (alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
 		{
-			var alert:Alert = processAlert(alertTitle, alertMessage, timeoutDuration, eventHandlerFunct, null, textAlign);
+			var alert:Alert = processAlert(alertTitle, alertMessage, timeoutDuration, eventHandlerFunct, null, textAlign, icon);
 			return alert;
 		}
 		
-		public static function showActionAlert (alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, buttonGroup:Array = null, textAlign:String = HorizontalAlign.JUSTIFY):Alert
+		public static function showActionAlert (alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, buttonGroup:Array = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
 		{
-			var alert:Alert = processAlert(alertTitle, alertMessage, timeoutDuration, null, buttonGroup, textAlign);
+			var alert:Alert = processAlert(alertTitle, alertMessage, timeoutDuration, null, buttonGroup, textAlign, icon);
 			return alert;
 		}
 		
@@ -57,7 +59,7 @@ package utils
 		/**
 		 * Functionality
 		 */
-		private static function processAlert(alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, buttonGroup:Array = null, textAlign:String = HorizontalAlign.JUSTIFY):Alert
+		private static function processAlert(alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, buttonGroup:Array = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
 		{
 			var alert:Alert = new Alert();
 			
@@ -88,6 +90,8 @@ package utils
 			alert.title = alertTitle;
 			alert.message = alertMessage;
 			alert.buttonsDataProvider = buttonCollection;
+			alert.icon = icon;
+			alert.scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
 			
 			/* Define Event Listeners */
 			alert.addEventListener(Event.CLOSE, onAlertClosed );

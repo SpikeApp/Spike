@@ -1,8 +1,15 @@
 package display.settings.speech
 {
+	import com.distriqt.extension.dialog.Dialog;
+	import com.distriqt.extension.dialog.DialogView;
+	import com.distriqt.extension.dialog.builders.AlertBuilder;
+	import com.distriqt.extension.dialog.events.DialogViewEvent;
+	import com.distriqt.extension.dialog.objects.DialogAction;
+	
 	import flash.system.System;
 	
 	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
 	
 	import display.LayoutFactory;
 	
@@ -17,11 +24,15 @@ package display.settings.speech
 	
 	import model.ModelLocator;
 	
+	import services.DialogService;
+	
 	import starling.events.Event;
 	
+	import utils.AlertManager;
 	import utils.Constants;
 	
 	[ResourceBundle("speechsettingsscreen")]
+	[ResourceBundle("general")]
 
 	public class SpeechSettingsList extends List 
 	{
@@ -40,6 +51,7 @@ package display.settings.speech
 		private var isTrendEnabled:Boolean;
 		private var isDeltaEnabled:Boolean;
 		private var selectedInterval:int;
+		private var initialInstructionsDisplayed:Boolean;
 		
 		public function SpeechSettingsList()
 		{
@@ -76,6 +88,7 @@ package display.settings.speech
 			isTrendEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true";
 			isDeltaEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true";
 			selectedInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
+			initialInstructionsDisplayed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED) == "true";
 		}
 		
 		private function setupContent():void
@@ -222,10 +235,35 @@ package display.settings.speech
 			needsSave = true;
 			
 			if(speechToggle.isSelected)
+			{
 				reloadSpeechSettings(true);
+				
+				if (!initialInstructionsDisplayed)
+				{
+					//Display Initial Instructions
+					AlertManager.showActionAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speech_settings_title'),
+						ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','initial_instructions'),
+						Number.NaN,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString('general','dont_show_again'), triggered: onDisableSpeechInstructions },
+							{ label: ModelLocator.resourceManagerInstance.getString('general','ok') }
+						]
+					);
+					
+					initialInstructionsDisplayed = true;
+				}
+			}
 			else
 				reloadSpeechSettings(false);
 		}	
+		
+		private function onDisableSpeechInstructions(e:Event):void
+		{
+			//Don't warn the user again
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED, "true");
+		}
 		
 		/**
 		 * Utility

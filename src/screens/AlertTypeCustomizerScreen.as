@@ -3,7 +3,6 @@ package screens
 	import display.settings.alarms.AlertCustomizerList;
 	
 	import feathers.controls.Alert;
-	import feathers.data.ListCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -12,6 +11,7 @@ package screens
 	
 	import ui.AppInterface;
 	
+	import utils.AlertManager;
 	import utils.Constants;
 
 	public class AlertTypeCustomizerScreen extends BaseSubScreen
@@ -55,20 +55,20 @@ package screens
 		override protected function onBackButtonTriggered(event:Event):void
 		{
 			if(alertSettings.needsSave)
-				var alert:Alert = Alert.show(
-					"Do you want to save your changes?",
-					"Save Changes",
-					new ListCollection(
-						[
-							{ label: "No", triggered: onSkipSaveSettings },
-							{ label: "Yes", triggered: onSaveSettings }
-						]
-					)
-				);
-			else
 			{
-				dispatchEventWith(Event.COMPLETE);
+				var alert:Alert = AlertManager.showActionAlert
+				(
+					"Save Changes",
+					"Do you want to save your changes?",
+					Number.NaN,
+					[
+						{ label: "No", triggered: onSkipSaveSettings },
+						{ label: "Yes", triggered: onSaveSettings }
+					]
+				);
 			}
+			else
+				dispatchEventWith(Event.COMPLETE);
 		}
 		
 		private function onSaveSettings(e:Event):void
