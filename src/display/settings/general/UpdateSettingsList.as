@@ -115,6 +115,7 @@ package display.settings.general
 		{
 			if(updatesToggle != null)
 			{
+				updatesToggle.removeEventListener( Event.CHANGE, onUpdatesOnOff );
 				updatesToggle.dispose();
 				updatesToggle = null;
 			}

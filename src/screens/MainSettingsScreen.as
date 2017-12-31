@@ -1,6 +1,8 @@
 package screens
 {
 	
+	import flash.system.System;
+	
 	import display.settings.main.SettingsList;
 	
 	import feathers.events.FeathersEventType;
@@ -23,6 +25,9 @@ package screens
 	
 	public class MainSettingsScreen extends BaseSubScreen
 	{	
+		/* Display Objects */
+		private var settingsMenu:SettingsList;
+		
 		public function MainSettingsScreen() 
 		{
 			super();
@@ -55,7 +60,7 @@ package screens
 		
 		private function setupScreen():void
 		{
-			var settingsMenu:SettingsList = new SettingsList();
+			settingsMenu = new SettingsList();
 			addChild(settingsMenu);
 		}
 		
@@ -75,7 +80,8 @@ package screens
 		 */
 		private function onTransitionInComplete(e:Event):void
 		{
-			removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
+			if( TutorialService.isActive)
+				removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
 			
 			if( TutorialService.isActive && TutorialService.secondStepActive)
 				Starling.juggler.delayCall(TutorialService.thirdStep, .2);
@@ -84,6 +90,19 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			if (settingsMenu != null)
+			{
+				settingsMenu.dispose();
+				settingsMenu = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			super.draw();

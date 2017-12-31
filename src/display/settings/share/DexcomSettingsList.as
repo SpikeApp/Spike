@@ -234,26 +234,32 @@ package display.settings.share
 		{
 			if(dsUsername != null)
 			{
+				dsUsername.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
 				dsUsername.dispose();
 				dsUsername = null;
 			}
 			if(dsPassword != null)
 			{
+				dsPassword.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
+				dsPassword.removeEventListener(Event.CHANGE, onTextInputChanged);
 				dsPassword.dispose();
 				dsPassword = null;
 			}
 			if(dsLogin != null)
 			{
+				dsLogin.removeEventListener( Event.TRIGGERED, onDexcomShareLogin );
 				dsLogin.dispose();
 				dsLogin = null;
 			}
 			if(dsServer != null)
 			{
+				dsServer.removeEventListener(Event.CHANGE, onServerChanged);
 				dsServer.dispose();
 				dsServer = null;
 			}
 			if(dsToggle != null)
 			{
+				dsToggle.removeEventListener( Event.CHANGE, onDexcomShareOnOff );
 				dsToggle.dispose();
 				dsToggle = null;
 			}

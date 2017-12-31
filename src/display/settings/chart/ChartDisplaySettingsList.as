@@ -122,6 +122,7 @@ package display.settings.chart
 		{
 			if (enablePieChart != null)
 			{
+				enablePieChart.removeEventListener(Event.CHANGE, onEnablePieChartChanged);
 				enablePieChart.dispose();
 				enablePieChart = null;
 			}

@@ -23,12 +23,13 @@ package G5Model
 				byteSequence.writeBytes(packet);
 				byteSequence.position = 0;
 				if (byteSequence.readByte() == opcode) {
+					//status = byteSequence.readByte();
 					status = byteSequence.readByte();
 					voltagea = byteSequence.readUnsignedShort();
 					voltageb = byteSequence.readUnsignedShort();
 					resist = byteSequence.readUnsignedShort();
-					runtime = byteSequence.readUnsignedShort();
-					temperature = byteSequence.readByte(); // not sure if signed or not, but <0c or >127C seems unlikely!
+					runtime = byteSequence.readUnsignedByte();
+					temperature = byteSequence.readByte(); // not sure if signed or not, but <0c or >127C seems unlikely! 
 				} else {
 					myTrace("Invalid opcode for BatteryInfoRxMessage");
 				}

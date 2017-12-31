@@ -115,8 +115,24 @@ package screens
 				iconContainer = null;
 			}
 			
-			screenRenderer.dispose();
-			screenRenderer = null;
+			if (backButton != null)
+			{
+				backButton.addEventListener(Event.TRIGGERED, onBackButtonTriggered);
+				backButton.dispose();
+				backButton = null;
+			}
+			
+			if (icon != null)
+			{
+				icon.dispose();
+				icon = null;
+			}
+			
+			if (screenRenderer != null)
+			{
+				screenRenderer.dispose();
+				screenRenderer = null;
+			}
 			
 			System.pauseForGCIfCollectionImminent(0);
 			

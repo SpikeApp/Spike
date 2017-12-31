@@ -6,6 +6,7 @@ package
 	import flash.display.StageScaleMode;
 	import flash.display3D.Context3DProfile;
 	import flash.events.Event;
+	import flash.system.System;
 	import flash.utils.clearInterval;
 	import flash.utils.setTimeout;
 	
@@ -124,6 +125,9 @@ package
 		
 		private function onDeactivate( event:flash.events.Event ):void 
 		{
+			//Call Garbage Collector
+			System.pauseForGCIfCollectionImminent(0);
+			
 			//Update Variables
 			Constants.noLockEnabled = false;
 			

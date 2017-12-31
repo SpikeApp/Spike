@@ -1,5 +1,7 @@
 package screens
 {	
+	import flash.system.System;
+	
 	import display.extraoptions.ExtraOptionsList;
 	import display.treatments.TreatmentsList;
 	
@@ -27,6 +29,8 @@ package screens
 		protected var treatmentsButton:Button;
 		protected var moreButton:Button;
 		protected var callout:Callout;
+		private var treatmentsList:List;
+		private var extraOptionsList:List;
 		
 		public function BaseScreen()
 		{
@@ -100,14 +104,14 @@ package screens
 		
 		protected function onTreatmentButtonTriggered():void 
 		{
-			var treatmentsList:List = new TreatmentsList();
+			treatmentsList = new TreatmentsList();
 			treatmentsList.addEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
 			callout = Callout.show( treatmentsList, treatmentsButton );
 		}
 		
 		protected function onMoreButtonTriggered():void 
 		{
-			var extraOptionsList:List = new ExtraOptionsList();
+			extraOptionsList = new ExtraOptionsList();
 			extraOptionsList.addEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
 			callout = Callout.show( extraOptionsList, moreButton );
 			
@@ -123,6 +127,51 @@ package screens
 		{
 			if(!AppInterface.instance.drawers.isLeftDrawerOpen)
 				dispatchEventWith( ScreenEvent.TOGGLE_MENU );
+		}
+		
+		/**
+		 * Utility
+		 */
+		override public function dispose():void
+		{
+			if (menuButton != null)
+			{
+				menuButton.removeEventListener( Event.TRIGGERED, onMenuButtonTriggered );
+				menuButton.dispose();
+				menuButton = null;
+			}
+			
+			if (treatmentsButton != null)
+			{
+				treatmentsButton.removeEventListener( Event.TRIGGERED, onTreatmentButtonTriggered );
+				treatmentsButton.dispose();
+				treatmentsButton = null;
+			}
+			
+			if (moreButton != null)
+			{
+				moreButton.removeEventListener( Event.TRIGGERED, onMoreButtonTriggered );
+				moreButton.dispose();
+				moreButton = null;
+			}
+			
+			if (treatmentsList != null)
+			{
+				treatmentsList.removeEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
+				treatmentsList.dispose();
+				treatmentsList = null;
+			}
+			
+			if (extraOptionsList != null)
+			{
+				extraOptionsList.removeEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
+				extraOptionsList.dispose();
+				extraOptionsList = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
 		}
 	}
 }

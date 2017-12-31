@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.LayoutFactory;
 	
 	import feathers.controls.Label;
@@ -20,6 +22,18 @@ package screens
 
 	public class DisclaimerScreen extends BaseSubScreen
 	{
+		/* Display Objects */
+		private var licenseTitleLabel:Label;
+		private var licenseContentLabel:Label;
+		private var disclaimerTitleLabel:Label;
+		private var disclaimerContentLabel:Label;
+		private var noticeTitleLabel:Label;
+		private var noticeContentLabel:Label;
+		private var acknowledgmentsTitleLabel:Label;
+		private var acknowledgmentsContentLabel:Label;
+		private var developersTitleLabel:Label;
+		private var developersContentLabel:Label;
+		
 		public function DisclaimerScreen() 
 		{
 			super();
@@ -45,47 +59,122 @@ package screens
 			adjustMainMenu();
 		}
 		
+		/**
+		 * Functionality
+		 */
 		private function setupContent(event:Event):void
 		{
 			/* License */
-			var licenseTitleLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','license_label'));
+			licenseTitleLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','license_label'));
 			screenRenderer.addChild(licenseTitleLabel);
 			
-			var licenseContentLabel:Label = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','license_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2));
+			licenseContentLabel = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','license_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2));
 			screenRenderer.addChild(licenseContentLabel);
 			
 			/* Disclaimer */
-			var disclaimerTitleLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','disclaimer_label'));
+			disclaimerTitleLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','disclaimer_label'));
 			screenRenderer.addChild(disclaimerTitleLabel);
 			
-			var disclaimerContentLabel:Label = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','disclaimer_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2));
+			disclaimerContentLabel = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','disclaimer_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2));
 			screenRenderer.addChild(disclaimerContentLabel);
 			
 			/* Notice */
-			var noticeTitleLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','important_notice_label'));
+			noticeTitleLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','important_notice_label'));
 			screenRenderer.addChild(noticeTitleLabel);
 			
-			var noticeContentLabel:Label = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','important_notice_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2), true, false);
+			noticeContentLabel = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','important_notice_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2), true, false);
 			screenRenderer.addChild(noticeContentLabel);
 			
 			/* Acknowledgements */
-			var acknowledgmentsTitleLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','acknowledgments_label'));
+			acknowledgmentsTitleLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','acknowledgments_label'));
 			screenRenderer.addChild(acknowledgmentsTitleLabel);
 			
-			var acknowledgmentsContentLabel:Label = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','acknowledgments_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2));
+			acknowledgmentsContentLabel = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','acknowledgments_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2));
 			screenRenderer.addChild(acknowledgmentsContentLabel);
 			
 			/* Developers */
-			var developersTitleLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','developers_label'));
+			developersTitleLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','developers_label'));
 			screenRenderer.addChild(developersTitleLabel);
 			
-			var developersContentLabel:Label = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','developers_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2), true, true);
+			developersContentLabel = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','developers_content'), this.width - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2), true, true);
 			screenRenderer.addChild(developersContentLabel);
 		}
 		
 		private function adjustMainMenu():void
 		{
 			AppInterface.instance.menu.selectedIndex = 4;
+		}
+		
+		/**
+		 * Utility
+		 */
+		override public function dispose():void
+		{
+			removeEventListener(FeathersEventType.CREATION_COMPLETE, setupContent);
+			
+			if (licenseTitleLabel != null)
+			{
+				licenseTitleLabel.dispose();
+				licenseTitleLabel = null;
+			}
+			
+			if (licenseContentLabel != null)
+			{
+				licenseContentLabel.dispose();
+				licenseContentLabel = null;
+			}
+			
+			if (disclaimerTitleLabel != null)
+			{
+				disclaimerTitleLabel.dispose();
+				disclaimerTitleLabel = null;
+			}
+			
+			if (disclaimerContentLabel != null)
+			{
+				disclaimerContentLabel.dispose();
+				disclaimerContentLabel = null;
+			}
+			
+			if (noticeTitleLabel != null)
+			{
+				noticeTitleLabel.dispose();
+				noticeTitleLabel = null;
+			}
+			
+			if (noticeContentLabel != null)
+			{
+				noticeContentLabel.dispose();
+				noticeContentLabel = null;
+			}
+			
+			if (acknowledgmentsTitleLabel != null)
+			{
+				acknowledgmentsTitleLabel.dispose();
+				acknowledgmentsTitleLabel = null;
+			}
+			
+			if (acknowledgmentsContentLabel != null)
+			{
+				acknowledgmentsContentLabel.dispose();
+				acknowledgmentsContentLabel = null;
+			}
+			
+			if (developersTitleLabel != null)
+			{
+				developersTitleLabel.dispose();
+				developersTitleLabel = null;
+			}
+			
+			if (developersContentLabel != null)
+			{
+				developersContentLabel.dispose();
+				developersContentLabel = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
 		}
 		
 		override protected function draw():void 

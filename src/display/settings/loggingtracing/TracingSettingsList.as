@@ -155,11 +155,13 @@ package display.settings.loggingtracing
 		{
 			if(traceToggle != null)
 			{
+				traceToggle.removeEventListener( Event.CHANGE, onTraceOnOff );
 				traceToggle.dispose();
 				traceToggle = null;
 			}
 			if(sendEmail != null)
 			{
+				sendEmail.removeEventListener(Event.TRIGGERED, onSendEmail);
 				sendEmail.dispose();
 				sendEmail = null;
 			}

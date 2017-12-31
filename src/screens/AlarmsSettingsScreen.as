@@ -11,6 +11,8 @@ package screens
 	import ui.AppInterface;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("chartscreen")]
 
 	public class AlarmsSettingsScreen extends BaseSubScreen
 	{

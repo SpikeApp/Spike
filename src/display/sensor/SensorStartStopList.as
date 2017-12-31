@@ -241,6 +241,8 @@ package display.sensor
 			/* Dispose Controls */
 			if(actionButton != null)
 			{
+				actionButton.removeEventListener(Event.TRIGGERED, onStopSensor);
+				actionButton.removeEventListener(Event.TRIGGERED, onStartSensor);
 				actionButton.dispose();
 				actionButton = null;
 			}

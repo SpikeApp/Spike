@@ -992,6 +992,67 @@ package databaseclasses
 			}
 		}
 		
+		public static function getAlertTypesList():Array 
+		{
+			var alertTypesList:Array = [];
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text = "SELECT * FROM alerttypes";
+				getRequest.execute();
+				
+				var result:SQLResult = getRequest.getResult();
+				
+				conn.close();
+				
+				if (result.data != null) 
+				{
+					var numResults:int = result.data.length;
+					for (var i:int = 0; i < numResults; i++) 
+					{ 
+						alertTypesList.push
+						(
+							new AlertType
+							(
+								result.data[i].alerttypeid,
+								result.data[i].lastmodifiedtimestamp,
+								result.data[i].alarmname,
+								result.data[i].enablelights == "1" ? true:false,
+								result.data[i].enablevibration == "1" ? true:false,
+								result.data[i].snoozefromnotification == "1" ? true:false,
+								result.data[i].enabled == "1" ? true:false,
+								result.data[i].overridesilentmode == "1" ? true:false,
+								result.data[i].soundtext,
+								result.data[i].defaultsnoozeperiod,
+								result.data[i].repeatinminutes
+							)
+						);
+					} 
+				}
+			} 
+			catch (error:SQLError) 
+			{
+				if (conn.connected) conn.close();
+					myTrace('error_while_getting_alerttypes_in_db' + ", " + error.message + " - " + error.details);
+			} 
+			catch (other:Error) 
+			{
+				if (conn.connected) conn.close();
+					myTrace('error_while_getting_alerttypes_in_db' + ", " + other.getStackTrace().toString());
+			} 
+			finally 
+			{
+				if (conn.connected) conn.close();
+					return alertTypesList;
+			}
+		}
+		
 		/**
 		 * deletes all calibrations<br>
 		 * REMOVE THIS - CALIBRATIONS SHOULD BE DELETED AFTER X DAYS <br>

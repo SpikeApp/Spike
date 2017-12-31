@@ -116,6 +116,7 @@ package display.settings.general
 		{
 			if(notificationsToggle != null)
 			{
+				notificationsToggle.removeEventListener(Event.CHANGE, onLocalNotificationsChanged);
 				notificationsToggle.dispose();
 				notificationsToggle = null;
 			}

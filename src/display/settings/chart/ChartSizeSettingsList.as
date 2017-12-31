@@ -201,24 +201,28 @@ package display.settings.chart
 		{
 			if (glucoseMarkerRadius != null)
 			{
+				glucoseMarkerRadius.removeEventListener(Event.CHANGE, onSizeChange);
 				glucoseMarkerRadius.dispose();
 				glucoseMarkerRadius = null;
 			}
 			
 			if(glucoseDisplayFontSize != null)
 			{
+				glucoseDisplayFontSize.removeEventListener(Event.CHANGE, onSizeChange);
 				glucoseDisplayFontSize.dispose();
 				glucoseDisplayFontSize = null;
 			}
 			
 			if(timeAgoDisplayFontSize != null)
 			{
+				timeAgoDisplayFontSize.removeEventListener(Event.CHANGE, onSizeChange);
 				timeAgoDisplayFontSize.dispose();
 				timeAgoDisplayFontSize = null;
 			}
 			
 			if(axisFontSize != null)
 			{
+				axisFontSize.removeEventListener(Event.CHANGE, onSizeChange);
 				axisFontSize.dispose();
 				axisFontSize = null;
 			}

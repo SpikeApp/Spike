@@ -116,6 +116,7 @@ package display.settings.share
 		{
 			if(hkToggle != null)
 			{
+				hkToggle.removeEventListener(Event.CHANGE, onSettingsChanged);
 				hkToggle.dispose();
 				hkToggle = null;
 			}

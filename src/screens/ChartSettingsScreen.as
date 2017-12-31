@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.LayoutFactory;
 	import display.settings.chart.ChartColorSettingsList;
 	import display.settings.chart.ChartDateSettingsList;
@@ -32,6 +34,10 @@ package screens
 		private var chartColorSettings:ChartColorSettingsList;
 		private var chartSizeSettings:ChartSizeSettingsList;
 		private var chartDisplaySettings:ChartDisplaySettingsList;
+		private var chartDateFormatLabel:Label;
+		private var chartColorLabel:Label;
+		private var chartSizeLabel:Label;
+		private var chartDisplayLabel:Label;
 		
 		public function ChartSettingsScreen() 
 		{
@@ -66,7 +72,7 @@ package screens
 		private function setupContent():void
 		{
 			//Time Format Section Label
-			var chartDateFormatLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_date_settings_title'), true);
+			chartDateFormatLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_date_settings_title'), true);
 			screenRenderer.addChild(chartDateFormatLabel);
 			
 			//Display Settings
@@ -74,7 +80,7 @@ package screens
 			screenRenderer.addChild(chartDateSettings);
 			
 			//Colors Section Label
-			var chartColorLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_colors_settings_title'));
+			chartColorLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_colors_settings_title'));
 			screenRenderer.addChild(chartColorLabel);
 			
 			//Colors Settings
@@ -82,7 +88,7 @@ package screens
 			screenRenderer.addChild(chartColorSettings);
 			
 			//Size Section Label
-			var chartSizeLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','size_settings_title'), true);
+			chartSizeLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','size_settings_title'), true);
 			screenRenderer.addChild(chartSizeLabel);
 			
 			//Size Settings
@@ -90,7 +96,7 @@ package screens
 			screenRenderer.addChild(chartSizeSettings);
 			
 			//Display Section Label
-			var chartDisplayLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','display_settings_title'), true);
+			chartDisplayLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','display_settings_title'), true);
 			screenRenderer.addChild(chartDisplayLabel);
 			
 			//Display Settings
@@ -134,6 +140,64 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			AppInterface.instance.menu.removeEventListener(ScreenEvent.BEGIN_SWITCH, onScreenOut);
+			
+			if (chartDateSettings != null)
+			{
+				chartDateSettings.dispose();
+				chartDateSettings = null;
+			}
+			
+			if (chartColorSettings != null)
+			{
+				chartColorSettings.dispose();
+				chartColorSettings = null;
+			}
+			
+			if (chartSizeSettings != null)
+			{
+				chartSizeSettings.dispose();
+				chartSizeSettings = null;
+			}
+			
+			if (chartDisplaySettings != null)
+			{
+				chartDisplaySettings.dispose();
+				chartDisplaySettings = null;
+			}
+			
+			if (chartDateFormatLabel != null)
+			{
+				chartDateFormatLabel.dispose();
+				chartDateFormatLabel = null;
+			}
+			
+			if (chartColorLabel != null)
+			{
+				chartColorLabel.dispose();
+				chartColorLabel = null;
+			}
+			
+			if (chartSizeLabel != null)
+			{
+				chartSizeLabel.dispose();
+				chartSizeLabel = null;
+			}
+			
+			if (chartDisplayLabel != null)
+			{
+				chartDisplayLabel.dispose();
+				chartDisplayLabel = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );

@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.LayoutFactory;
 	import display.settings.share.DexcomSettingsList;
 	import display.settings.share.HealthkitSettingsList;
@@ -27,6 +29,9 @@ package screens
 		private var healthkitSettings:HealthkitSettingsList;
 		private var dexcomSettings:DexcomSettingsList;
 		private var nightscoutSettings:NightscoutSettingsList;
+		private var healthkitLabel:Label;
+		private var dexcomLabel:Label;
+		private var nightscoutLabel:Label;
 		
 		public function ShareSettingsScreen() 
 		{
@@ -60,7 +65,7 @@ package screens
 		private function setupContent():void
 		{
 			//Healthkit Section Label
-			var healthkitLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','healthkit_section_label'));
+			healthkitLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','healthkit_section_label'));
 			screenRenderer.addChild(healthkitLabel);
 			
 			//Healthkit Settings
@@ -68,7 +73,7 @@ package screens
 			screenRenderer.addChild(healthkitSettings);
 			
 			//Dexcom Section Label
-			var dexcomLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_section_label'), true);
+			dexcomLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_section_label'), true);
 			screenRenderer.addChild(dexcomLabel);
 			
 			//Dexcom Settings
@@ -76,7 +81,7 @@ package screens
 			screenRenderer.addChild(dexcomSettings);
 			
 			//Nightscout Section Label
-			var nightscoutLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_section_label'), true);
+			nightscoutLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_section_label'), true);
 			screenRenderer.addChild(nightscoutLabel);
 			
 			//Nightscout Settings
@@ -117,6 +122,45 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			
+			if (healthkitSettings != null)
+			{
+				healthkitSettings.dispose();
+				healthkitSettings = null;
+			}
+			
+			if (dexcomSettings != null)
+			{
+				dexcomSettings.dispose();
+				dexcomSettings = null;
+			}
+			
+			if (nightscoutSettings != null)
+			{
+				nightscoutSettings.dispose();
+				nightscoutSettings = null;
+			}
+			
+			if (dexcomLabel != null)
+			{
+				dexcomLabel.dispose();
+				dexcomLabel = null;
+			}
+			
+			if (nightscoutLabel != null)
+			{
+				nightscoutLabel.dispose();
+				nightscoutLabel = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );

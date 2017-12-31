@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.LayoutFactory;
 	import display.settings.transmitter.TransmitterSettingsList;
 	
@@ -28,8 +30,10 @@ package screens
 
 	public class TransmitterSettingsScreen extends BaseSubScreen
 	{		
-
+		/* Display Objects */
 		private var transmitterSettings:TransmitterSettingsList;
+		private var transmitterLabel:Label;
+		
 		public function TransmitterSettingsScreen() 
 		{
 			super();
@@ -63,7 +67,7 @@ package screens
 		private function setupContent():void
 		{
 			//Transmitter Section Label
-			var transmitterLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','transmitter_settings_title'));
+			transmitterLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','transmitter_settings_title'));
 			screenRenderer.addChild(transmitterLabel);
 			
 			//Transmitter Settings
@@ -123,6 +127,30 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			AppInterface.instance.menu.removeEventListener(ScreenEvent.BEGIN_SWITCH, onScreenOut);
+			if( TutorialService.isActive)
+				removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+			
+			if (transmitterSettings != null)
+			{
+				transmitterSettings.dispose();
+				transmitterSettings = null;
+			}
+			
+			if (transmitterLabel != null)
+			{
+				transmitterLabel.dispose();
+				transmitterLabel = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );

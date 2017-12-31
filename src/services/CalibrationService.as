@@ -137,8 +137,16 @@ package services
 			}
 			
 			/* Create and Style Calibration Text Input */
-			calibrationValue = LayoutFactory.createTextInput(false, true, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT);
-			calibrationValue.maxChars = 3;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+			{
+				calibrationValue = LayoutFactory.createTextInput(false, true, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT);
+				calibrationValue.maxChars = 3;
+			}
+			else
+			{
+				calibrationValue = LayoutFactory.createTextInput(false, false, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT, true);
+				calibrationValue.maxChars = 4;
+			}
 			calibrationValue.paddingRight = 10;
 			
 			/* Create and Style Popup Window */
@@ -221,8 +229,16 @@ package services
 						myTrace("opening dialog to request calibration");
 						
 						/* Create and Style Calibration Text Input */
-						calibrationValue = LayoutFactory.createTextInput(false, true, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT);
-						calibrationValue.maxChars = 3;
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+						{
+							calibrationValue = LayoutFactory.createTextInput(false, true, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT);
+							calibrationValue.maxChars = 3;
+						}
+						else
+						{
+							calibrationValue = LayoutFactory.createTextInput(false, false, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT, true);
+							calibrationValue.maxChars = 4;
+						}
 						calibrationValue.paddingRight = 10;
 						
 						/* Create and Style Popup Window */
@@ -302,8 +318,16 @@ package services
 			myTrace("initialCalibrate");
 			
 			/* Create and Style Calibration Text Input */
-			calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
-			calibrationValue.maxChars = 3;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+			{
+				calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
+				calibrationValue.maxChars = 3;
+			}
+			else
+			{
+				calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.RIGHT, true);
+				calibrationValue.maxChars = 4;
+			}
 			calibrationValue.paddingRight = 10;
 			
 			/* Create and Style Popup Window */
@@ -357,8 +381,16 @@ package services
 			else //check if it's an override calibration
 			{ 
 				/* Create and Style Calibration Text Input */
-				calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
-				calibrationValue.maxChars = 3;
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+				{
+					calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
+					calibrationValue.maxChars = 3;
+				}
+				else
+				{
+					calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.RIGHT, true);
+					calibrationValue.maxChars = 4;
+				}
 				calibrationValue.paddingRight = 10;
 				
 				if (((new Date()).valueOf() - (Calibration.latest(2).getItemAt(0) as Calibration).timestamp < (1000 * 60 * 60)) && override) 

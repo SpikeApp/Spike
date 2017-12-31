@@ -41,6 +41,7 @@ package services
 	import flash.utils.Timer;
 	
 	import mx.collections.ArrayCollection;
+	import mx.utils.ObjectUtil;
 	
 	import G5Model.AuthChallengeRxMessage;
 	import G5Model.AuthChallengeTxMessage;
@@ -1128,6 +1129,10 @@ package services
 					} else {
 						doDisconnectMessageG5(characteristic);
 					}
+					
+					//Save Sensor RX Timestmp for transmitter runtime display
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP) != String(sensorRx.timestamp))
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP, String(sensorRx.timestamp));
 					
 					timeStampOfLastG5Reading = (new Date()).valueOf();
 					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);

@@ -85,6 +85,8 @@ package display.menu
 		
 		override public function dispose():void
 		{
+			removeEventListener( Event.CHANGE, onMenuChanged );
+			
 			if(graphIconTexture != null)
 			{
 				graphIconTexture.dispose();

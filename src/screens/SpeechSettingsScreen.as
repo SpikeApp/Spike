@@ -1,11 +1,11 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.LayoutFactory;
 	import display.settings.speech.SpeechSettingsList;
 	
-	import feathers.controls.Alert;
 	import feathers.controls.Label;
-	import feathers.data.ListCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -23,8 +23,10 @@ package screens
 
 	public class SpeechSettingsScreen extends BaseSubScreen
 	{	
-
+		/* Display Objects */
 		private var speechSettings:SpeechSettingsList;
+		private var speechLabel:Label;
+		
 		public function SpeechSettingsScreen() 
 		{
 			super();
@@ -58,7 +60,7 @@ package screens
 		private function setupContent():void
 		{
 			//Speech Section Label
-			var speechLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speech_settings_title'));
+			speechLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speech_settings_title'));
 			screenRenderer.addChild(speechLabel);
 			
 			//Glucose Settings
@@ -95,6 +97,27 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			
+			if (speechSettings != null)
+			{
+				speechSettings.dispose();
+				speechSettings = null;
+			}
+			
+			if (speechLabel != null)
+			{
+				speechLabel.dispose();
+				speechLabel = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );

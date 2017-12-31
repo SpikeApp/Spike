@@ -126,6 +126,8 @@ package display.treatments
 		 */
 		override public function dispose():void
 		{
+			removeEventListener( Event.CHANGE, onMenuChanged );
+			
 			if (iconTexture != null)
 			{
 				iconTexture.dispose();

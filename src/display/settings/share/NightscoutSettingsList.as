@@ -189,21 +189,27 @@ package display.settings.share
 		{
 			if(nsToggle != null)
 			{
+				nsToggle.removeEventListener( Event.CHANGE, onNightscoutOnOff );
 				nsToggle.dispose();
 				nsToggle = null;
 			}
 			if(nsURL != null)
 			{
+				nsURL.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
+				nsURL.removeEventListener(Event.CHANGE, onSettingsChanged);
 				nsURL.dispose();
 				nsURL = null;
 			}
 			if(nsAPISecret != null)
 			{
+				nsAPISecret.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
+				nsAPISecret.removeEventListener(Event.CHANGE, onSettingsChanged);
 				nsAPISecret.dispose();
 				nsAPISecret = null;
 			}
 			if(nsLogin != null)
 			{
+				nsLogin.removeEventListener(Event.TRIGGERED, onNightscoutLogin);
 				nsLogin.dispose();
 				nsLogin = null;
 			}

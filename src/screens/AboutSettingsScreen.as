@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.settings.about.AboutList;
 	
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -16,6 +18,9 @@ package screens
 
 	public class AboutSettingsScreen extends BaseSubScreen
 	{
+		/* Display Objects */
+		private var aboutSection:AboutList;
+		
 		public function AboutSettingsScreen() 
 		{
 			super();
@@ -47,8 +52,8 @@ package screens
 		private function setupContent():void
 		{
 			//About Section
-			var abouSection:AboutList = new AboutList();
-			screenRenderer.addChild(abouSection);
+			aboutSection = new AboutList();
+			screenRenderer.addChild(aboutSection);
 		}
 		
 		/**
@@ -63,6 +68,19 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			if (aboutSection != null)
+			{
+				aboutSection.dispose();
+				aboutSection = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			super.draw();

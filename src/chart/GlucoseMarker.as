@@ -31,6 +31,8 @@ package chart
 		private var data:Object;
 		private var dateFormat:String;
 
+		private var glucoseMarker:Canvas;
+
         public function GlucoseMarker(data:Object)
         {
             this.data = data;
@@ -104,13 +106,26 @@ package chart
         //Function to draw the shape
         public function draw():void
         {
-            var glucoseMarker:Canvas = new Canvas();
+            glucoseMarker = new Canvas();
             glucoseMarker.beginFill(color);
             glucoseMarker.drawCircle(radius,radius,radius);
             glucoseMarker.endFill();
+			
             
             addChild(glucoseMarker);
         }
+		
+		public function updateColor():void
+		{
+			removeChild(glucoseMarker);
+			
+			glucoseMarker = new Canvas();
+			glucoseMarker.beginFill(color);
+			glucoseMarker.drawCircle(radius,radius,radius);
+			glucoseMarker.endFill();
+			
+			addChild(glucoseMarker)
+		}
 		
 		public function set newBgReading(bgReading:BgReading):void
 		{

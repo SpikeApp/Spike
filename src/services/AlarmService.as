@@ -251,7 +251,7 @@ package services
 				var flipTrans:FlipViewTransition = new FlipViewTransition(); 
 				flipTrans.duration = 0;
 				
-				(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
+				//(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
 				//((ModelLocator.navigator.parentNavigator as TabbedViewNavigator).navigators[0] as ViewNavigator).popToFirstView();
 				
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;

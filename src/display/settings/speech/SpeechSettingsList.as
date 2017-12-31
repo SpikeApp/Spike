@@ -1,11 +1,5 @@
 package display.settings.speech
 {
-	import com.distriqt.extension.dialog.Dialog;
-	import com.distriqt.extension.dialog.DialogView;
-	import com.distriqt.extension.dialog.builders.AlertBuilder;
-	import com.distriqt.extension.dialog.events.DialogViewEvent;
-	import com.distriqt.extension.dialog.objects.DialogAction;
-	
 	import flash.system.System;
 	
 	import databaseclasses.CommonSettings;
@@ -23,8 +17,6 @@ package display.settings.speech
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
-	
-	import services.DialogService;
 	
 	import starling.events.Event;
 	
@@ -272,26 +264,31 @@ package display.settings.speech
 		{
 			if(speechToggle != null)
 			{
+				speechToggle.removeEventListener( Event.CHANGE, onSpeechOnOff );
 				speechToggle.dispose();
 				speechToggle = null;
 			}
 			if(trendToggle != null)
 			{
+				trendToggle.removeEventListener( Event.CHANGE, onSettingsChanged);
 				trendToggle.dispose();
 				trendToggle = null;
 			}
 			if(deltaToggle != null)
 			{
+				deltaToggle.removeEventListener( Event.CHANGE, onSettingsChanged);
 				deltaToggle.dispose();
 				deltaToggle = null;
 			}
 			if(speechInterval != null)
 			{
+				speechInterval.removeEventListener( Event.CHANGE, onSettingsChanged);
 				speechInterval.dispose();
 				speechInterval = null;
 			}
 			if(languagePicker != null)
 			{
+				languagePicker.removeEventListener( Event.CHANGE, onSettingsChanged);	
 				languagePicker.dispose();
 				languagePicker = null;
 			}

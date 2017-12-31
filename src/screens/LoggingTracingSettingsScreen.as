@@ -1,12 +1,12 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.LayoutFactory;
 	import display.settings.loggingtracing.LoggingSettingsList;
 	import display.settings.loggingtracing.TracingSettingsList;
 	
-	import feathers.controls.Alert;
 	import feathers.controls.Label;
-	import feathers.data.ListCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -27,6 +27,8 @@ package screens
 		/* Display Objects */
 		private var loggingSettings:LoggingSettingsList;
 		private var tracingSettings:TracingSettingsList;
+		private var tracingLabel:Label;
+		private var loggingLabel:Label;
 		
 		public function LoggingTracingSettingsScreen() 
 		{
@@ -61,7 +63,7 @@ package screens
 		private function setupContent():void
 		{
 			//Tracing Section Label
-			var tracingLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','trace_section_title'));
+			tracingLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','trace_section_title'));
 			screenRenderer.addChild(tracingLabel);
 			
 			//Tracing Settings
@@ -69,7 +71,7 @@ package screens
 			screenRenderer.addChild(tracingSettings);
 			
 			//Logging Section Label
-			var loggingLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','nslog_section_title'), true);
+			loggingLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','nslog_section_title'), true);
 			screenRenderer.addChild(loggingLabel);
 			
 			//Loging Settings
@@ -108,6 +110,39 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			
+			if (loggingSettings != null)
+			{
+				loggingSettings.dispose();
+				loggingSettings = null;
+			}
+			
+			if (tracingSettings != null)
+			{
+				tracingSettings.dispose();
+				tracingSettings = null;
+			}
+			
+			if (tracingLabel != null)
+			{
+				tracingLabel.dispose();
+				tracingLabel = null;
+			}
+			
+			if (loggingLabel != null)
+			{
+				loggingLabel.dispose();
+				loggingLabel = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );

@@ -43,7 +43,7 @@ package screens
 	{
 		/* Constants */
 		private const TIME_6_MINUTES:int = 6 * 60 * 1000;
-		private const TIME_11_MINUTES:int = 11 * 60 * 1000;
+		private const TIME_16_MINUTES:int = 16 * 60 * 1000;
 		
 		/* Display Objects */
 		private var glucoseDisplay:Label;
@@ -171,7 +171,7 @@ package screens
 		
 		private function setupEventListeners():void
 		{
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived, false, 0, true);
 		}
 		
 		private function updateInfo():void
@@ -227,7 +227,7 @@ package screens
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
 				else if (latestGlucoseValue > 600) latestGlucoseValue = 600;
 				
-				if (nowTimestamp - latestGlucoseTimestamp < TIME_11_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp <= TIME_16_MINUTES)
 				{
 					latestGlucoseProperties = GlucoseFactory.getGlucoseOutput(latestGlucoseValue);
 					latestGlucoseOutput = latestGlucoseProperties.glucoseOutput;
@@ -274,7 +274,7 @@ package screens
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
 				else if (latestGlucoseValue > 600) latestGlucoseValue = 600;
 				
-				if (nowTimestamp - latestGlucoseTimestamp < TIME_11_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp <= TIME_16_MINUTES)
 				{
 					latestGlucoseProperties = GlucoseFactory.getGlucoseOutput(latestGlucoseValue);
 					latestGlucoseOutput = latestGlucoseProperties.glucoseOutput;
@@ -292,9 +292,9 @@ package screens
 				}
 				
 				/* SLOPE */
-				if (nowTimestamp - latestGlucoseTimestamp > TIME_11_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TIME_11_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TIME_16_MINUTES)
 					latestGlucoseSlopeOutput = "";
-				else if (latestGlucoseTimestamp - previousGlucoseTimestamp < TIME_11_MINUTES)
+				else if (latestGlucoseTimestamp - previousGlucoseTimestamp < TIME_16_MINUTES)
 				{
 					latestGlucoseSlopeOutput = GlucoseFactory.getGlucoseSlope
 						(
@@ -311,9 +311,9 @@ package screens
 				}
 				
 				//Arrow
-				if (nowTimestamp - latestGlucoseTimestamp > TIME_11_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TIME_11_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TIME_16_MINUTES)
 					latestGlucoseSlopeArrow = "";
-				else if (latestGlucoseTimestamp - previousGlucoseTimestamp < TIME_11_MINUTES)
+				else if (latestGlucoseTimestamp - previousGlucoseTimestamp <= TIME_16_MINUTES)
 				{
 					if ((glucoseList[1] as BgReading).hideSlope)
 						latestGlucoseSlopeArrow = "\u21C4";
@@ -467,7 +467,7 @@ package screens
 				
 				timeAgoDisplay.fontStyles.color = timeAgoColor;
 				
-				if ( nowTimestamp - latestGlucoseTimestamp > TIME_11_MINUTES )
+				if ( nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES )
 				{
 					//Glucose Value
 					latestGlucoseOutput = "---";
@@ -482,7 +482,7 @@ package screens
 					latestGlucoseSlopeArrow = "";
 					slopeArrowDisplay.text = latestGlucoseSlopeArrow;
 				}
-				else if ( nowTimestamp - latestGlucoseTimestamp >= TIME_6_MINUTES )
+				else if ( nowTimestamp - latestGlucoseTimestamp > TIME_6_MINUTES )
 				{
 					glucoseDisplay.fontStyles.color = oldColor;
 					slopeDisplay.fontStyles.color = oldColor;
@@ -502,6 +502,8 @@ package screens
 		
 		override public function dispose():void
 		{
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			
 			if(glucoseDisplay != null)
 			{
 				glucoseDisplay.dispose();

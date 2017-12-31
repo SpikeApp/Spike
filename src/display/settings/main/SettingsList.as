@@ -115,6 +115,8 @@ package display.settings.main
 		 */
 		override public function dispose():void
 		{
+			removeEventListener( Event.CHANGE, onMenuChanged );
+			
 			if(chevronIconTexture != null)
 			{
 				chevronIconTexture.dispose();

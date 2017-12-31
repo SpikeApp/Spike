@@ -249,6 +249,11 @@
 		  * Extra Nightscout Setting (Visual Only)
 		  */
 		 public static const COMMON_SETTING_NIGHTSCOUT_ON:int = 77;
+		 
+		 /**
+		  * Extra G5 Setting for transmitter runtime
+		  */
+		 public static const COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP:int = 78;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -329,6 +334,7 @@
 			 "true",//COMMON_SETTING_CHART_DISPLAY_PIE_CHART
 			 "24",//COMMON_SETTING_CHART_DATE_FORMAT
 			 "false",//COMMON_SETTING_NIGHTSCOUT_ON
+			 "0"//COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP
 		 ];
 
 		 public function CommonSettings()

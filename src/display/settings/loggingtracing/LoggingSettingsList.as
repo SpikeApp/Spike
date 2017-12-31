@@ -110,6 +110,7 @@ package display.settings.loggingtracing
 		{
 			if(nsLogToggle != null)
 			{
+				nsLogToggle.removeEventListener(Event.CHANGE, onSettingsChanged);
 				nsLogToggle.dispose();
 				nsLogToggle = null;
 			}

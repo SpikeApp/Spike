@@ -3,6 +3,8 @@ package  chart
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	import flash.system.System;
 	
 	import feathers.controls.PanelScreen;
 	import feathers.layout.HorizontalAlign;
@@ -21,6 +23,7 @@ package  chart
 	import starling.events.TouchPhase;
 	import starling.textures.Texture;
 	
+	import utils.Constants;
 	import utils.DeviceInfo;
 
 	public class ColorPicker extends Sprite
@@ -95,7 +98,31 @@ package  chart
 			if(_parent != null)
 				_parent.addChild(palette);
 			else
+			{
+				trace("aqui");
 				addChild(palette);
+			}
+				
+			
+			//Event Listener
+			Starling.current.stage.addEventListener(TouchEvent.TOUCH, onStageTouch);
+		}
+		
+		private function onStageTouch (e:TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				if(palette.visible)
+				{
+					var paletteGlobalPosition:Point = palette.localToGlobal(new Point(0, 0));
+					var paletteGlobalRectangle:Rectangle = new Rectangle(paletteGlobalPosition.x, paletteGlobalPosition.y, palette.width, palette.height);
+					if (!paletteGlobalRectangle.containsPoint(new Point(touch.globalX, touch.globalY)))
+						palette.visible = false;
+				}
+				
+			}
 		}
 		
 		private function setPositionPallete():void 
@@ -225,6 +252,35 @@ package  chart
 					}
 				}
 			}
-		}	
+		}
+		
+		override public function dispose():void
+		{
+			Starling.current.stage.addEventListener(TouchEvent.TOUCH, onStageTouch);
+			
+			if (palette != null)
+			{
+				palette.removeEventListener(TouchEvent.TOUCH, onTouchPalette);
+				palette.dispose();
+				palette = null;
+			}
+			
+			if (baseButtonTexture != null)
+			{
+				baseButtonTexture.dispose();
+				baseButtonTexture = null;
+			}
+			
+			if (baseButton != null)
+			{
+				baseButton.removeEventListener(Event.TRIGGERED, showHidePalette);
+				baseButton.dispose();
+				baseButton = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
 	}
 }

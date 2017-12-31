@@ -133,6 +133,7 @@ package display.settings.chart
 		{
 			if (dateFormatPicker != null)
 			{
+				dateFormatPicker.removeEventListener(Event.CHANGE, onDateFormatChange);
 				dateFormatPicker.dispose();
 				dateFormatPicker = null;
 			}

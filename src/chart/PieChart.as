@@ -1,7 +1,5 @@
 package chart
 {	
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import flash.system.System;
 	
 	import databaseclasses.BgReading;
@@ -17,8 +15,6 @@ package chart
 	import feathers.layout.VerticalAlign;
 	
 	import model.ModelLocator;
-	
-	import services.TransmitterService;
 	
 	import starling.display.Image;
 	import starling.display.Quad;
@@ -143,8 +139,8 @@ package chart
 			//TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			
 			/* Update Display */
-			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeGround);
-			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackGround);
+			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeGround, false, 0, true);
+			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackGround, false, 0, true);
 		}
 		
 		/**
@@ -505,7 +501,7 @@ package chart
 		
 		private function onAppInForeGround(e:IosXdripReaderEvent):void
 		{
-			pieContainer.addChild(pieImage);
+			pieImage.visible = true;
 			lowLayoutGroup.visible = true;
 			inRangeLayoutGroup.visible = true;
 			highLayoutGroup.visible = true;
@@ -513,7 +509,7 @@ package chart
 		
 		private function onAppInBackGround(e:IosXdripReaderEvent):void
 		{
-			pieContainer.removeChild(pieImage);
+			pieImage.visible = false;
 			lowLayoutGroup.visible = false;
 			inRangeLayoutGroup.visible = false;
 			highLayoutGroup.visible = false;
@@ -549,6 +545,9 @@ package chart
 		{
 			if (pieImage != null)
 			{
+				if (pieContainer != null)
+					pieContainer.removeChild(pieImage);
+				
 				pieImage.dispose();
 				pieImage = null;
 			}
@@ -562,11 +561,122 @@ package chart
 			System.pauseForGCIfCollectionImminent(0);
 		}
 		
-		/*override public function dispose():void
+		override public function dispose():void
 		{
+			/* Remove Event Listeners */
+			iOSDrip.instance.removeEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeGround);
+			iOSDrip.instance.removeEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackGround);
+			highLayoutGroup.removeEventListener(feathers.events.FeathersEventType.CREATION_COMPLETE, drawChart);
+			
+			/* Dispose Display Objects */
+			if (lowLegend != null)
+			{
+				lowLayoutGroup.removeChild(lowLegend);
+				lowLegend.dispose();
+				lowLegend = null;
+			}
+			
+			if (inRangeLegend != null)
+			{
+				inRangeLayoutGroup.removeChild(inRangeLegend);
+				inRangeLegend.dispose();
+				inRangeLegend = null;
+			}
+			
+			if (highLegend != null)
+			{
+				highLayoutGroup.removeChild(highLegend);
+				highLegend.dispose();
+				highLegend = null;
+			}
+			
+			if (numberOfReadingsLabel != null)
+			{
+				lowLayoutGroup.removeChild(numberOfReadingsLabel);
+				numberOfReadingsLabel.dispose();
+				numberOfReadingsLabel = null;
+			}
+			
+			if (averageGlucoseLabel != null)
+			{
+				inRangeLayoutGroup.removeChild(averageGlucoseLabel);
+				averageGlucoseLabel.dispose();
+				averageGlucoseLabel = null;
+			}
+			
+			if (A1CLabel != null)
+			{
+				highLayoutGroup.removeChild(A1CLabel);
+				A1CLabel.dispose();
+				A1CLabel = null;
+			}
+			
+			if (lowQuad != null)
+			{
+				lowLayoutGroup.removeChild(lowQuad);
+				lowQuad.dispose();
+				lowQuad = null;
+			}
+			
+			if (inRangeQuad != null)
+			{
+				inRangeLayoutGroup.removeChild(inRangeQuad);
+				inRangeQuad.dispose();
+				inRangeQuad = null;
+			}
+			
+			if (highQuad != null)
+			{
+				highLayoutGroup.removeChild(highQuad);
+				highQuad.dispose();
+				highQuad = null;
+			}
+			
+			if (lowLayoutGroup != null)
+			{
+				legendsContainer.removeChild(lowLayoutGroup);
+				lowLayoutGroup.dispose();
+				lowLayoutGroup = null;
+			}
+			
+			if (inRangeLayoutGroup != null)
+			{
+				legendsContainer.removeChild(inRangeLayoutGroup);
+				inRangeLayoutGroup.dispose();
+				inRangeLayoutGroup = null;
+			}
+			
+			if (highLayoutGroup != null)
+			{
+				legendsContainer.removeChild(highLayoutGroup);
+				highLayoutGroup.dispose();
+				highLayoutGroup = null;
+			}
+			
+			if (legendsContainer != null)
+			{
+				removeChild(legendsContainer);
+				legendsContainer.dispose();
+				legendsContainer = null;
+			}
+			
+			if (pieContainer != null)
+			{
+				removeChild(pieContainer);
+				pieContainer.dispose();
+				pieContainer = null;
+			}
+			
+			if (pieGraphicContainer != null)
+			{
+				pieGraphicContainer.dispose();
+				pieGraphicContainer = null;
+			}
+			
 			disposeTextures();
+			
 			super.dispose();
-		}*/
+		}
 		
 		/**
 		 * Getters & Setters

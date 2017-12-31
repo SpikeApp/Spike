@@ -318,29 +318,34 @@ package display.settings.general
 		 * Utility
 		 */
 		override public function dispose():void
-		{
+		{	
 			if(glucoseUnitsPicker != null)
 			{
+				glucoseUnitsPicker.removeEventListener(Event.CHANGE, onUnitsChanged);
 				glucoseUnitsPicker.dispose();
 				glucoseUnitsPicker = null;
 			}
 			if(glucoseUrgentHighStepper != null)
 			{
+				glucoseUrgentHighStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
 				glucoseUrgentHighStepper.dispose();
 				glucoseUrgentHighStepper = null;
 			}
 			if(glucoseHighStepper != null)
 			{
+				glucoseHighStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
 				glucoseHighStepper.dispose();
 				glucoseHighStepper = null;
 			}
 			if(glucoseLowStepper != null)
 			{
+				glucoseLowStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
 				glucoseLowStepper.dispose();
 				glucoseLowStepper = null;
 			}
 			if(glucoseUrgentLowStepper != null)
 			{
+				glucoseUrgentLowStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
 				glucoseUrgentLowStepper.dispose();
 				glucoseUrgentLowStepper = null;
 			}

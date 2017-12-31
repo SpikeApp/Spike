@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.sensor.SensorStartStopList;
 	
 	import feathers.events.FeathersEventType;
@@ -22,6 +24,9 @@ package screens
 
 	public class SensorScreen extends BaseSubScreen
 	{	
+		/* Display Objects */
+		private var statusList:SensorStartStopList;
+		
 		public function SensorScreen() 
 		{
 			super();
@@ -54,7 +59,7 @@ package screens
 		
 		private function setupScreen():void
 		{
-			var statusList:SensorStartStopList = new SensorStartStopList();
+			statusList = new SensorStartStopList();
 			screenRenderer.addChild(statusList);
 		}
 		
@@ -74,7 +79,8 @@ package screens
 		 */
 		private function onScreenIn(e:Event):void
 		{
-			removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+			if( TutorialService.isActive)
+				removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
 			
 			if( TutorialService.isActive && TutorialService.eighthStepActive)
 				Starling.juggler.delayCall(TutorialService.ninethStep, .2);
@@ -83,6 +89,19 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			if (statusList != null)
+			{
+				statusList.dispose();
+				statusList = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			super.draw();

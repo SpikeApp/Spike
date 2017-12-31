@@ -104,8 +104,8 @@ package display.extraoptions
 			setupContent();
 			
 			//Event Listeners
-			this.addEventListener(FeathersEventType.CREATION_COMPLETE, onCreationComplete);
-			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreationComplete);
+			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated, false, 0, true);
 		}
 		
 		private function setupContent():void
@@ -343,6 +343,10 @@ package display.extraoptions
 		 */
 		override public function dispose():void
 		{
+			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreationComplete);
+			iOSDrip.instance.removeEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			removeEventListener( starling.events.Event.CHANGE, onMenuChanged );
+			
 			if (fullScreenIconTexture != null)
 			{
 				fullScreenIconTexture.dispose();

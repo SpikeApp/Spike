@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.LayoutFactory;
 	import display.settings.general.GlucoseSettingsList;
 	import display.settings.general.NotificationSettingsList;
@@ -33,6 +35,9 @@ package screens
 		private var glucoseSettings:GlucoseSettingsList;
 		private var notificationSettings:NotificationSettingsList;
 		private var updatesSettingsList:UpdateSettingsList;
+		private var glucoseLabel:Label;
+		private var notificationsLabel:Label;
+		private var updateLabel:Label;
 		
 		public function GeneralSettingsScreen() 
 		{
@@ -67,7 +72,7 @@ package screens
 		private function setupContent():void
 		{
 			//Glucose Section Label
-			var glucoseLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','glucose_settings_title'));
+			glucoseLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','glucose_settings_title'));
 			screenRenderer.addChild(glucoseLabel);
 			
 			//Glucose Settings
@@ -75,7 +80,7 @@ package screens
 			screenRenderer.addChild(glucoseSettings);
 			
 			//Notifications Section Label
-			var notificationsLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','bg_notifications'), true);
+			notificationsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','bg_notifications'), true);
 			screenRenderer.addChild(notificationsLabel);
 			
 			//Notification Settings
@@ -83,7 +88,7 @@ package screens
 			screenRenderer.addChild(notificationSettings);
 			
 			//Update Section Label
-			var updateLabel:Label = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
+			updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
 			screenRenderer.addChild(updateLabel);
 			
 			//Update Settings
@@ -137,6 +142,54 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			removeEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onScreenOut);
+			AppInterface.instance.menu.removeEventListener(ScreenEvent.BEGIN_SWITCH, onScreenOut);
+			if( TutorialService.isActive)
+				removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
+			
+			if (glucoseSettings != null)
+			{
+				glucoseSettings.dispose();
+				glucoseSettings = null;
+			}
+			
+			if (notificationSettings != null)
+			{
+				notificationSettings.dispose();
+				notificationSettings = null;
+			}
+			
+			if (updatesSettingsList != null)
+			{
+				updatesSettingsList.dispose();
+				updatesSettingsList = null;
+			}
+			
+			if (glucoseLabel != null)
+			{
+				glucoseLabel.dispose();
+				glucoseLabel = null;
+			}
+			
+			if (notificationsLabel != null)
+			{
+				notificationsLabel.dispose();
+				notificationsLabel = null;
+			}
+			
+			if (updateLabel != null)
+			{
+				updateLabel.dispose();
+				updateLabel = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			super.draw();

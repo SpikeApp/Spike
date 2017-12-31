@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import chart.GlucoseChart;
 	import chart.GraphLayoutFactory;
 	import chart.PieChart;
@@ -76,7 +78,7 @@ package screens
 		private var appInBackground:Boolean = false;
 		private var newReadingsList:Array = [];
 
-		private var now:Number;
+		private var nowTimestamp:Number;
 
 		private var minutes:Number = 0;
 		
@@ -97,18 +99,18 @@ package screens
 			displayPieChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_PIE_CHART) == "true";
 			
 			//Event listeners
-			this.addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
-			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackground);
-			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeground);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
+			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackground, false, 0, true);
+			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived, false, 0, true);
 			
 			//Scroll Policies
-			this.scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
-			this.horizontalScrollPolicy = ScrollPolicy.OFF;
-			this.verticalScrollPolicy = ScrollPolicy.OFF;
-			
-			
+			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
+			horizontalScrollPolicy = ScrollPolicy.OFF;
+			verticalScrollPolicy = ScrollPolicy.OFF;
 		}
+		
+		
 		
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
 		{
@@ -145,6 +147,8 @@ package screens
 					
 					newReadingsList.length = 0;
 				}
+				else
+					glucoseChart.calculateDisplayLabels();
 			}
 		}
 		
@@ -479,6 +483,84 @@ package screens
 			
 			//Return Calculated Chart Height
 			return availableScreenHeight - topMargin - chartDisplayMargin - scrollerTopPadding - scrollChartHeight - chartSettingsTopPadding - settingsHeight - deviceAdjustement;
+		}
+		
+		override public function dispose():void
+		{
+			/* Event Listeners */
+			iOSDrip.instance.removeEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackground);
+			iOSDrip.instance.removeEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeground);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
+			
+			/* Objects */
+			chartData.length = 0;
+			chartData = null;
+			newReadingsList.length = 0;
+			newReadingsList = null;
+			
+			/* Display Objects */
+			if (glucoseChart != null)
+			{
+				removeChild(glucoseChart);
+				glucoseChart.dispose();
+				glucoseChart = null;
+			}
+			
+			if (pieChart != null)
+			{
+				removeChild(pieChart);
+				pieChart.dispose();
+				pieChart = null;
+			}
+			
+			if (h24 != null)
+			{
+				h24.removeEventListener(FeathersEventType.CREATION_COMPLETE, onRadioCreation);
+				removeChild(h24);
+				h24.dispose();
+				h24 = null;
+			}
+			
+			if (h12 != null)
+			{
+				removeChild(h12);
+				h12.dispose();
+				h12 = null;
+			}
+			
+			if (h6 != null)
+			{
+				removeChild(h6);
+				h6.dispose();
+				h6 = null;
+			}
+			
+			if (h3 != null)
+			{
+				removeChild(h3);
+				h3.dispose();
+				h3 = null;
+			}
+			
+			if (h1 != null)
+			{
+				removeChild(h1);
+				h1.dispose();
+				h1 = null;
+			}
+			
+			if (displayLines != null)
+			{
+				displayLines.removeEventListener( Event.CHANGE, onDisplayLine );
+				removeChild(displayLines);
+				displayLines.dispose();
+				displayLines = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
 		}
 	}
 }

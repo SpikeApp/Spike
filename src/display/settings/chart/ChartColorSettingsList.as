@@ -399,51 +399,79 @@ package display.settings.chart
 		{
 			if(urgentHighColorPicker != null)
 			{
+				urgentHighColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				urgentHighColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				urgentHighColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				urgentHighColorPicker.dispose();
 				urgentHighColorPicker = null;
 			}
 			if(highColorPicker != null)
 			{
+				highColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				highColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				highColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				highColorPicker.dispose();
 				highColorPicker = null;
 			}
 			if(inRangeColorPicker != null)
 			{
+				inRangeColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				inRangeColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened)
+				inRangeColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				inRangeColorPicker.dispose();
 				inRangeColorPicker = null;
 			}
 			if(lowColorPicker != null)
 			{
+				lowColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				lowColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				lowColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				lowColorPicker.dispose();
 				lowColorPicker = null;
 			}
 			if(urgentLowColorPicker != null)
 			{
+				urgentLowColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				urgentLowColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				urgentLowColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				urgentLowColorPicker.dispose();
 				urgentLowColorPicker = null;
 			}
 			if(axisColorPicker != null)
 			{
+				axisColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				axisColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				axisColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				axisColorPicker.dispose();
 				axisColorPicker = null;
 			}
 			if(chartFontColorPicker != null)
 			{
+				chartFontColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				chartFontColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				chartFontColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				chartFontColorPicker.dispose();
 				chartFontColorPicker = null;
 			}
 			if(axisFontColorPicker != null)
 			{
+				axisFontColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				axisFontColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				axisFontColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				axisFontColorPicker.dispose();
 				axisFontColorPicker = null;
 			}
 			if(pieChartFontColorPicker != null)
 			{
+				pieChartFontColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				pieChartFontColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				pieChartFontColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				pieChartFontColorPicker.dispose();
 				pieChartFontColorPicker = null;
 			}
 			if(resetColors != null)
 			{
+				resetColors.removeEventListener(Event.TRIGGERED, onResetColor);
 				resetColors.dispose();
 				resetColors = null;
 			}

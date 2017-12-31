@@ -306,13 +306,19 @@ package display.settings.transmitter
 		 */
 		override public function dispose():void
 		{
+			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
+			
 			if(transmitterID != null)
 			{
+				transmitterID.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
+				transmitterID.removeEventListener(Event.CHANGE, onTransmitterIDChange);
+				transmitterID.removeEventListener( FeathersEventType.FOCUS_OUT, onValidateTransmitterID );
 				transmitterID.dispose();
 				transmitterID = null;
 			}
 			if(transmitterType != null)
 			{
+				transmitterType.removeEventListener(Event.CHANGE, onTransmitterTypeChange);
 				transmitterType.dispose();
 				transmitterType = null;
 			}

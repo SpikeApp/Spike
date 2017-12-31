@@ -7,7 +7,10 @@ package display.transmitter
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
+	import flash.system.Capabilities;
 	import flash.system.System;
+	
+	import spark.formatters.DateTimeFormatter;
 	
 	import G4Model.TransmitterStatus;
 	
@@ -21,17 +24,22 @@ package display.transmitter
 	import display.LayoutFactory;
 	
 	import events.BlueToothServiceEvent;
+	import events.SettingsServiceEvent;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.TextCallout;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
 	import feathers.controls.renderers.IGroupedListItemRenderer;
+	import feathers.controls.text.TextBlockTextRenderer;
+	import feathers.core.ITextRenderer;
 	import feathers.data.HierarchicalCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.RelativePosition;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayoutData;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -41,8 +49,12 @@ package display.transmitter
 	
 	import services.BluetoothService;
 	
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.events.Event;
+	import starling.events.Touch;
+	import starling.events.TouchEvent;
+	import starling.events.TouchPhase;
 	import starling.textures.Texture;
 	
 	import ui.InterfaceController;
@@ -74,6 +86,11 @@ package display.transmitter
 		private var scanButtonIcon:Texture;
 		private var forgetButton:Button;
 		private var forgetButtonIcon:Texture;
+		private var temperatureLabel:Label;
+		private var refreshG5BatteryButton:Button;
+		private var lastG5BatteryUpdateLabel:Label;
+		private var batteryStatusG5Callout:TextCallout;
+		private var transmitterRuntimeLabel:Label;
 		
 		/* Properties */
 		private var transmitterNameValue:String;
@@ -86,6 +103,12 @@ package display.transmitter
 		private var resistanceStatus:String = "";
 		private var batteryLevelValue:String;
 		private var transmitterConnectionStatusValue:String;
+		private var temperatureValue:String;
+		private var lastG5BatteryUpdateValue:String;
+		private var timestampForRefresh:Number;
+		private var nowDate:Date;
+		private var transmitterRuntimeValue:String;
+		private var sensorRxTimestamp:Number;
 
 		public function TransmitterStatusList()
 		{
@@ -98,6 +121,7 @@ package display.transmitter
 			setupProperties();
 			setupInitialState();
 			setupContent();
+			setupEventListeners();
 		}
 		
 		/**
@@ -134,6 +158,14 @@ package display.transmitter
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
 				
+				/* Transmitter Runtime */
+				transmitterRuntimeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME);
+				sensorRxTimestamp = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP));
+				if (sensorRxTimestamp > 0)
+				{
+					transmitterRuntimeValue += " / " + String(int((sensorRxTimestamp / 86400) *10) / 10);
+				}
+				
 				/* Voltage A */
 				voltageAValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
 				if (voltageAValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageAValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
@@ -154,6 +186,66 @@ package display.transmitter
 				
 				if (resistanceValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown'))
 					resistanceStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_BAD ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_bad'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NOTICE ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_notice'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NORMAL ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_normal'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_good')));
+				
+				/* Temperature */
+				var temperatureValueNumber:Number = Math.abs(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE)));
+				
+				temperatureValue = "";
+				if (isNaN(temperatureValueNumber) || String(temperatureValueNumber) == "0" || String(temperatureValueNumber) == "" || String(temperatureValueNumber).toUpperCase() == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown').toUpperCase())
+					temperatureValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+				{
+					var temperatureCelsius:Number;
+					var temperatureFahrenheit:Number;
+					
+					if (temperatureValueNumber < 60) //Celsius
+					{
+						temperatureCelsius = Math.round(temperatureValueNumber * 10) / 10;
+						temperatureFahrenheit = Math.round(((temperatureValueNumber * 1.8) + 32) * 10) / 10;
+					}
+					else //Fahrenheit
+					{
+						temperatureFahrenheit = Math.round(temperatureValueNumber * 10) / 10;
+						temperatureCelsius = Math.round(((temperatureValueNumber - 32) / 1.8) * 10) / 10;
+					}
+					
+					temperatureValue = String(temperatureCelsius) + "ºC" + " / " + String(temperatureFahrenheit) + "ºF";
+				}	
+				
+				/* Last Update */
+				var lastG5BatteryUpdateTimestamp:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER);
+				
+				if (lastG5BatteryUpdateTimestamp == "0" || lastG5BatteryUpdateTimestamp == "")
+				{
+					lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('transmitterscreen','not_available');
+					
+					nowDate = new Date();
+					timestampForRefresh = nowDate.setFullYear(nowDate.getFullYear() - 1);
+				}
+				else
+				{
+					nowDate = new Date();
+					var lastUpdateDate:Date = new Date(Number(lastG5BatteryUpdateTimestamp));
+					
+					if (nowDate.fullYear - lastUpdateDate.fullYear > 1)
+					{
+						lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('transmitterscreen','not_available');
+						
+						timestampForRefresh = nowDate.setFullYear(nowDate.getFullYear() - 1);
+					}
+					else
+					{
+						timestampForRefresh = lastUpdateDate.setFullYear(lastUpdateDate.getFullYear() - 1);
+						
+						var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter = new DateTimeFormatter();
+						dateFormatterForSensorStartTimeAndDate.dateTimePattern = ModelLocator.resourceManagerInstance.getString('transmitterscreen','datetimepatternforstatusinfo');
+						dateFormatterForSensorStartTimeAndDate.useUTC = false;
+						dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
+						
+						lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + dateFormatterForSensorStartTimeAndDate.format(lastUpdateDate);
+					}
+				}
+				
 			}
 			else if (BlueToothDevice.isDexcomG4()) 
 			{
@@ -208,7 +300,7 @@ package display.transmitter
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 			
 			if (batteryLevelValue == null || batteryLevelValue == "")
-				batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');	
 		}
 		
 		private function setupContent():void
@@ -225,7 +317,10 @@ package display.transmitter
 					voltageAIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;
 				
 				if(voltageAIconTexture != null)
+				{
 					voltageAIcon = new Image(voltageAIconTexture);
+					voltageAIcon.name = "voltageAIcon";
+				}
 				
 				/* Voltage B */
 				if (voltageBStatus == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown') || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
@@ -236,7 +331,10 @@ package display.transmitter
 					voltageBIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;
 				
 				if(voltageBIconTexture != null)
+				{
 					voltageBIcon = new Image(voltageBIconTexture);
+					voltageBIcon.name = "voltageBIcon";
+				}
 				
 				/* Resistance */
 				if (resistanceStatus == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown') || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
@@ -249,7 +347,10 @@ package display.transmitter
 					resistanceIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;
 				
 				if(resistanceIconTexture != null)
+				{
 					resistanceIcon = new Image(resistanceIconTexture);
+					resistanceIcon.name = "resistanceIcon";
+				}
 			}
 			else //Rest of the thansmitters
 			{
@@ -271,6 +372,8 @@ package display.transmitter
 			transmitterNameLabel = LayoutFactory.createLabel(transmitterNameValue, HorizontalAlign.RIGHT);
 			if (transmitterConnectionStatusValue != null)
 				transmitterConnectionStatusLabel = LayoutFactory.createLabel(transmitterConnectionStatusValue, HorizontalAlign.RIGHT);
+			if (BlueToothDevice.isDexcomG5())
+				transmitterRuntimeLabel = LayoutFactory.createLabel(transmitterRuntimeValue, HorizontalAlign.RIGHT);
 			
 			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
 			{
@@ -278,6 +381,12 @@ package display.transmitter
 				voltageALabel = LayoutFactory.createLabel(voltageAValue, HorizontalAlign.RIGHT);
 				voltageBLabel = LayoutFactory.createLabel(voltageBValue, HorizontalAlign.RIGHT);
 				resistanceLabel = LayoutFactory.createLabel(resistanceValue, HorizontalAlign.RIGHT);
+				temperatureLabel = LayoutFactory.createLabel(temperatureValue, HorizontalAlign.RIGHT);
+				lastG5BatteryUpdateLabel = LayoutFactory.createLabel(lastG5BatteryUpdateValue, HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
+				refreshG5BatteryButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('transmitterscreen',"refresh_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
+				refreshG5BatteryButton.gap = 5;
+				refreshG5BatteryButton.pivotX = -15;
+				refreshG5BatteryButton.addEventListener(Event.TRIGGERED, onRefreshG5BatteyInfo);
 			}
 			else
 			{
@@ -295,6 +404,8 @@ package display.transmitter
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_name_label'), accessory: transmitterNameLabel });
 			if (transmitterConnectionStatusValue != null)
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_connection_status_label'), accessory: transmitterConnectionStatusLabel });
+			if (BlueToothDevice.isDexcomG5())
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','transmitter_runtime_label'), accessory: transmitterRuntimeLabel });
 			
 			infoSection.children = infoSectionChildren;
 			
@@ -308,7 +419,10 @@ package display.transmitter
 				batterySection.children = [
 					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_a_label'), accessory: voltageALabel, icon: voltageAIcon },
 					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_b_label'), accessory: voltageBLabel, icon: voltageBIcon },
-					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_label'), accessory: resistanceLabel, icon: resistanceIcon }
+					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_label'), accessory: resistanceLabel, icon: resistanceIcon },
+					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','temperature_label'), accessory: temperatureLabel },
+					{ label: "", accessory: lastG5BatteryUpdateLabel },
+					{ label: "", accessory: refreshG5BatteryButton }
 				];
 			}
 			else
@@ -366,25 +480,98 @@ package display.transmitter
 			dataProvider = new HierarchicalCollection(screenDataContent);	
 			
 			/* Set Content Renderer */
-			this.itemRendererFactory = function ():IGroupedListItemRenderer {
+			this.itemRendererFactory = function ():IGroupedListItemRenderer 
+			{
 				const item:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
 				item.labelField = "label";
 				item.iconField = "icon";
 				item.accessoryField = "accessory";
 				item.gap = 8;
+				if(transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
+					item.addEventListener(TouchEvent.TOUCH, onDisplayBatteryStatus);
+				
 				return item;
-			};
+			};	
+		}
+		
+		private function setupEventListeners():void
+		{
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged, false, 0, true);
 		}
 		
 		/**
 		 * Event Handlers
 		 */
+		private function onSettingsChanged(event:SettingsServiceEvent):void 
+		{
+			if (
+				event.data == CommonSettings.COMMON_SETTING_G5_RESIST ||
+				event.data == CommonSettings.COMMON_SETTING_G5_RUNTIME ||
+				event.data == CommonSettings.COMMON_SETTING_G5_TEMPERATURE ||
+				event.data == CommonSettings.COMMON_SETTING_G5_VOLTAGEA ||
+				event.data == CommonSettings.COMMON_SETTING_G5_VOLTAGEB ||
+				event.data == CommonSettings.COMMON_SETTING_G5_STATUS
+			) 
+			{
+				setupInitialState();
+				setupContent();
+			}
+		}
+		
+		private function onDisplayBatteryStatus(e:TouchEvent):void
+		{
+			//Get touch data
+			var touch:Touch = e.getTouch(stage);
+			
+			//If a click was recorded, show callout with status info
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				var listItem:Object = (e.currentTarget as Object);
+				var message:String;
+				var target:DisplayObject;
+				
+				if (listItem.label != null && listItem.label == ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_a_label'))
+				{
+					message = voltageAStatus;
+					target = voltageAIcon;
+				}
+				else if (listItem.label != null && listItem.label == ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_b_label'))
+				{
+					message = voltageBStatus;
+					target = voltageBIcon;
+				}
+				else if (listItem.label != null && listItem.label == ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_label'))
+				{
+					message = resistanceStatus;
+					target = resistanceIcon;
+				}
+				
+				if (message != null)
+				{
+					batteryStatusG5Callout = TextCallout.show(message, target, new <String>[RelativePosition.TOP], false);
+					batteryStatusG5Callout.textRendererFactory = function calloutTextRenderer():ITextRenderer
+					{
+						var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
+						messageRenderer.textAlign = HorizontalAlign.CENTER;
+						
+						return messageRenderer;
+					};
+				}
+			}
+		}
+		
+		private function onRefreshG5BatteyInfo(e:Event):void
+		{
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, String(timestampForRefresh));
+			lastG5BatteryUpdateLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen',"updating_message");
+		}
+		
 		private function onTransmitterScan(e:Event):void
 		{
 			if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) 
 			{
-				BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
-				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
+				BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped, false, 0, true);
+				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded, false, 0, true);
 				BluetoothService.startScanning(true);
 				
 				AlertManager.showSimpleAlert(
@@ -435,6 +622,10 @@ package display.transmitter
 		
 		override public function dispose():void
 		{
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
+			
 			if(voltageAIconTexture != null)
 			{
 				voltageAIconTexture.dispose();
@@ -497,14 +688,33 @@ package display.transmitter
 				transmitterNameLabel = null;
 			}
 			
+			if(transmitterRuntimeLabel != null)
+			{
+				transmitterRuntimeLabel.dispose();
+				transmitterRuntimeLabel = null;
+			}
+			
+			if (temperatureLabel != null)
+			{
+				temperatureLabel.dispose();
+				temperatureLabel = null;
+			}
+			
 			if(transmitterConnectionStatusLabel != null)
 			{
 				transmitterConnectionStatusLabel.dispose();
 				transmitterConnectionStatusLabel = null;
 			}
 			
+			if (lastG5BatteryUpdateLabel != null)
+			{
+				lastG5BatteryUpdateLabel.dispose();
+				lastG5BatteryUpdateLabel = null;
+			}
+			
 			if(scanButton != null)
 			{
+				scanButton.removeEventListener(Event.TRIGGERED, onTransmitterScan);
 				scanButtonIcon.dispose();
 				scanButtonIcon = null;
 				scanButton.dispose();
@@ -513,12 +723,20 @@ package display.transmitter
 			
 			if(forgetButton != null)
 			{
+				forgetButton.removeEventListener(Event.TRIGGERED, onTransmitterForget);
 				forgetButtonIcon.dispose();
 				forgetButtonIcon = null;
 				forgetButton.dispose();
 				forgetButton = null;
 			}
-
+			
+			if(refreshG5BatteryButton != null)
+			{
+				refreshG5BatteryButton.removeEventListener(Event.TRIGGERED, onRefreshG5BatteyInfo)
+				refreshG5BatteryButton.dispose();
+				refreshG5BatteryButton = null;
+			}
+			
 			System.pauseForGCIfCollectionImminent(0);
 			
 			super.dispose();

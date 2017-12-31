@@ -1,6 +1,7 @@
 package screens
 {
 	import flash.system.Capabilities;
+	import flash.system.System;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -42,6 +43,7 @@ package screens
 		/* Display Objects */
 		private var dateSpinner:DateTimeSpinner;
 		private var startButton:Button;
+		private var container:LayoutGroup;
 		
 		/* Internal Variables */
 		private var initialAlertShowed:Boolean = false;
@@ -97,7 +99,7 @@ package screens
 			layout = new AnchorLayout(); 
 			
 			/* Create Display Object's Container and Corresponding Vertical Layout and Centered LayoutData */
-			var container:LayoutGroup = new LayoutGroup();
+			container = new LayoutGroup();
 			var containerLayout:VerticalLayout = new VerticalLayout();
 			containerLayout.gap = 20;
 			containerLayout.horizontalAlign = HorizontalAlign.CENTER;
@@ -198,6 +200,38 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			if( TutorialService.isActive && TutorialService.ninethStepActive)
+			{
+				removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn)
+				TutorialService.instance.removeEventListener(TutorialService.TUTORIAL_FINISHED, onTutorialFinished);
+			}
+			
+			if (dateSpinner != null)
+			{
+				dateSpinner.dispose();
+				dateSpinner = null;
+			}
+			
+			if (startButton != null)
+			{
+				startButton.removeEventListener(Event.TRIGGERED, onSensorStarted);
+				startButton.dispose();
+				startButton = null;
+			}
+			
+			if (container != null)
+			{
+				container.dispose();
+				container = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );

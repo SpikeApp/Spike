@@ -1,5 +1,7 @@
 package screens
 {
+	import flash.system.System;
+	
 	import display.transmitter.TransmitterStatusList;
 	
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -73,6 +75,19 @@ package screens
 		/**
 		 * Utility
 		 */
+		override public function dispose():void
+		{
+			if (statusList != null)
+			{
+				statusList.dispose();
+				statusList = null;
+			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			
+			super.dispose();
+		}
+		
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );
