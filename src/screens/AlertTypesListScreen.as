@@ -1,9 +1,9 @@
 package screens
 {
-	import mx.utils.ObjectUtil;
+	import display.LayoutFactory;
+	import display.settings.alarms.AlertsList;
 	
-	import databaseclasses.Database;
-	
+	import feathers.controls.Label;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -20,8 +20,9 @@ package screens
 
 	public class AlertTypesListScreen extends BaseSubScreen
 	{	
-		/* Internal Variables/Objects */
-		private var alertTypesList:Array;
+		/* Display Objects */
+		private var alertTypesLabel:Label;
+		private var alertTypesList:AlertsList;
 		
 		public function AlertTypesListScreen() 
 		{
@@ -35,8 +36,6 @@ package screens
 			super.initialize();
 			
 			setupContent();
-			setupInitialContent();
-			setupContent();
 			adjustMainMenu();
 		}
 		
@@ -49,23 +48,20 @@ package screens
 			title = ModelLocator.resourceManagerInstance.getString('alertsettingsscreen','alert_types_list_screen_title');
 			
 			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.alarmTexture);
+			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.alertTexture);
 			iconContainer = new <DisplayObject>[icon];
 			headerProperties.rightItems = iconContainer;
 		}
 		
-		private function setupInitialContent():void
-		{
-			/* Get All Current Alert Types */
-			alertTypesList = Database.getAlertTypesList();
-			
-			trace("LIST OF ALERT TYPES");
-			trace(ObjectUtil.toString(alertTypesList));
-		}
-		
 		private function setupContent():void
 		{
+			//Alert Types Label
+			alertTypesLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('alertsettingsscreen','alerts_list_section_label'), true);
+			screenRenderer.addChild(alertTypesLabel);
 			
+			//Alert Types List
+			alertTypesList = new AlertsList();
+			screenRenderer.addChild(alertTypesList);
 		}
 		
 		private function adjustMainMenu():void

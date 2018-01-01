@@ -22,10 +22,6 @@ package databaseclasses
 {
 	import Utilities.FromtimeAndValue;
 	import Utilities.FromtimeAndValueArrayCollection;
-	
-	import model.ModelLocator;
-	
-	import services.DialogService;
 
 	public class AlertType extends SuperDatabaseClass
 	{

@@ -19,7 +19,7 @@ package display.settings.general
 	
 	import utils.Constants;
 	
-	[ResourceBundle("globalsettings")]
+	[ResourceBundle("globaltranslations")]
 
 	public class NotificationSettingsList extends List 
 	{
@@ -65,7 +65,7 @@ package display.settings.general
 			//Define Notifications Settings Data
 			var settingsData:ArrayCollection = new ArrayCollection(
 				[
-					{ text: ModelLocator.resourceManagerInstance.getString('globalsettings','enabled'), accessory: notificationsToggle },
+					{ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: notificationsToggle },
 				]);
 			dataProvider = settingsData;
 			

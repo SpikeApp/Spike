@@ -7,7 +7,6 @@ package ui
 	
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
-	import flash.utils.setTimeout;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -33,7 +32,6 @@ package ui
 	
 	import services.BluetoothService;
 	import services.CalibrationService;
-	import services.DialogService;
 	import services.NotificationService;
 	import services.TutorialService;
 	
@@ -42,7 +40,7 @@ package ui
 	import utils.AlertManager;
 	
 	[ResourceBundle("transmitterscreen")]
-	[ResourceBundle("globalsettings")]
+	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("sensorscreen")]
 
 	public class InterfaceController extends EventDispatcher
@@ -221,11 +219,11 @@ package ui
 			{
 				var licenseAlert:Alert = AlertManager.showActionAlert
 					(
-						ModelLocator.resourceManagerInstance.getString('globalsettings', "license_alert_title"),
-						ModelLocator.resourceManagerInstance.getString('globalsettings', "license_alert_message"),
+						ModelLocator.resourceManagerInstance.getString('globaltranslations', "license_alert_title"),
+						ModelLocator.resourceManagerInstance.getString('globaltranslations', "license_alert_message"),
 						Number.NaN,
 						[
-							{ label: ModelLocator.resourceManagerInstance.getString('globalsettings', "agree_alert_button_label"), triggered: onLicenseAccepted }
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "agree_alert_button_label"), triggered: onLicenseAccepted }
 						]
 					);
 				licenseAlert.height = 420;

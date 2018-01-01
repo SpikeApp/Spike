@@ -22,7 +22,7 @@ package screens
 	
 	import utils.Constants;
 	
-	[ResourceBundle("globalscreens")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class BaseSubScreen extends PanelScreen
 	{
@@ -50,7 +50,7 @@ package screens
 			
 			/* Add default back button to the header */
 			backButton = new Button();
-			backButton.label = ModelLocator.resourceManagerInstance.getString('globalscreens','back');
+			backButton.label = ModelLocator.resourceManagerInstance.getString('globaltranslations','back');
 			backButton.styleNameList.add( Button.ALTERNATE_STYLE_NAME_BACK_BUTTON );
 			headerProperties.leftItems = new <DisplayObject>[backButton];
 			backButton.addEventListener(Event.TRIGGERED, onBackButtonTriggered);

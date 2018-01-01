@@ -25,7 +25,6 @@ package screens
 	import utils.Constants;
 	
 	[ResourceBundle("chartsettingsscreen")]
-	[ResourceBundle("globalsettings")]
 
 	public class ChartSettingsScreen extends BaseSubScreen
 	{

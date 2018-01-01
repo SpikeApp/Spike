@@ -26,7 +26,6 @@ package screens
 	import utils.Constants;
 	
 	[ResourceBundle("transmittersettingsscreen")]
-	[ResourceBundle("globalsettings")]
 
 	public class TransmitterSettingsScreen extends BaseSubScreen
 	{		

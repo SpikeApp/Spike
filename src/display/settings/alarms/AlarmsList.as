@@ -72,7 +72,7 @@ package display.settings.alarms
 			dataProvider = new ListCollection(
 				[
 					{ screen: null, label: "Override Mute", accessory: muteOverride, selectable:false },
-					{ screen: Screens.SETTINGS_ALERT_TYPE_CUSTOMIZER, label: "Alert Types", accessory: alertTypesIconImage },
+					{ screen: Screens.SETTINGS_ALERT_TYPES_LIST, label: "Alert Types", accessory: alertTypesIconImage },
 					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Battery Low", accessory: batteryLowIconImage, alarmType: AlarmNavigatorData.BATTERY_LOW },
 					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Calibration", accessory: calibrationIconImage, alarmType: AlarmNavigatorData.CALIBRATION },
 					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Missed Reading", accessory: missedReadingIconImage, alarmType: AlarmNavigatorData.MISSED_READING },

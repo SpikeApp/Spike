@@ -26,7 +26,7 @@ package display.settings.transmitter
 	
 	[ResourceBundle("transmittersettingsscreen")]
 	[ResourceBundle("transmitterscreen")]
-	[ResourceBundle("globalsettings")]
+	[ResourceBundle("globaltranslations")]
 
 	public class TransmitterSettingsList extends List 
 	{
@@ -113,7 +113,7 @@ package display.settings.transmitter
 			
 			if(transmitterTypeValue == "")
 			{
-				transmitterType.prompt = ModelLocator.resourceManagerInstance.getString('globalsettings','picker_select');
+				transmitterType.prompt = ModelLocator.resourceManagerInstance.getString('globaltranslations','picker_select');
 				transmitterType.selectedIndex = -1;
 			}
 			else transmitterType.selectedIndex = currentTransmitterIndex;

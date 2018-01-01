@@ -2,6 +2,13 @@ package screens
 {
 	import data.AlarmNavigatorData;
 	
+	import display.LayoutFactory;
+	import display.settings.alarms.AlarmCustomizerList;
+	
+	import feathers.controls.Label;
+	import feathers.controls.RangeSlider;
+	import feathers.controls.Slider;
+	import feathers.controls.TrackLayoutMode;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -35,6 +42,17 @@ package screens
 		{
 			/* Set Header Title */
 			title = options.selectedAlarmTitle;
+			
+			
+			/*var slider:Slider = new Slider();
+			slider.trackLayoutMode = TrackLayoutMode.SPLIT;
+			slider.step = 0;
+			slider.minimum = 0;
+			slider.maximum = 60;
+			screenRenderer.addChild(slider);
+			slider.validate();*/
+		
+			
 			
 			//Settings Label
 			//var alarmSettingsLabel:Label = LayoutFactory.createSectionLabel("Options");

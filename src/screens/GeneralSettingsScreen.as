@@ -27,7 +27,6 @@ package screens
 	import utils.Constants;
 
 	[ResourceBundle("generalsettingsscreen")]
-	[ResourceBundle("globalsettings")]
 	
 	public class GeneralSettingsScreen extends BaseSubScreen
 	{

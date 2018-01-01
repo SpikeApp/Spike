@@ -16,8 +16,10 @@ package display
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
+	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import starling.display.Image;
+	import starling.events.Event;
 	import starling.text.TextFormat;
 	import starling.textures.Texture;
 
@@ -138,6 +140,19 @@ package display
 			button.label = label;
 			if(icon != null)
 				button.defaultIcon = new Image( icon );
+			return button;
+		}
+		
+		public static function createPlayButton(eventHandler:Function):Button
+		{
+			var button:Button = new Button();
+			button.iconOffsetX = 0.1;
+			button.iconOffsetY = -0.1;
+			button.styleNameList.add(Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON);
+			button.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.playOutlineTexture);
+			button.width = button.height = 20;
+			button.addEventListener(Event.TRIGGERED, eventHandler);
+			
 			return button;
 		}
 		

@@ -538,15 +538,13 @@ package chart
 		
 		private function onUpdateTimerRefresh(event:flash.events.Event = null):void
 		{
-			calculateDisplayLabels();
+			if (BackgroundFetch.appIsInForeground())
+				calculateDisplayLabels();
 		}
 		
 		public function calculateDisplayLabels():void
 		{
 			if (currentNumberOfMakers == previousNumberOfMakers && !displayLatestBGValue)
-				return;
-			
-			if (BackgroundFetch.appIsInBackground())
 				return;
 			
 			if (!displayLatestBGValue && !dummyModeActive)
@@ -1484,6 +1482,9 @@ package chart
 							selectedGlucoseMarkerIndex = currentMarker.index;
 						else
 							(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index;
+						
+						if (i == mainChartGlucoseMarkersList.length - 1)
+							displayLatestBGValue = true;
 						
 						//We found a mach so we can break the loop to save CPU cycles
 						break;

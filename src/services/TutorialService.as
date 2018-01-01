@@ -27,7 +27,7 @@ package services
 	import utils.Constants;
 	
 	[ResourceBundle("tutorialservice")]
-	[ResourceBundle("globalsettings")]
+	[ResourceBundle("globaltranslations")]
 
 	public class TutorialService extends EventDispatcher
 	{
@@ -79,8 +79,8 @@ package services
 				ModelLocator.resourceManagerInstance.getString('tutorialservice','alert_message'),
 				Number.NaN,
 				[
-					{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','no_uppercase') },
-					{ label: ModelLocator.resourceManagerInstance.getString('globalsettings','yes_uppercase'), triggered:startTutorial }
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','no_uppercase') },
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','yes_uppercase'), triggered:startTutorial }
 				]
 			)
 		}

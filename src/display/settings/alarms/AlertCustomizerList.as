@@ -1,11 +1,11 @@
 package display.settings.alarms
 {
-	import flash.media.Sound;
-	import flash.media.SoundChannel;
-	import flash.net.URLRequest;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.system.System;
 	
-	import database.AlertType;
+	import databaseclasses.AlertType;
+	import databaseclasses.Database;
 	
 	import display.LayoutFactory;
 	
@@ -13,6 +13,7 @@ package display.settings.alarms
 	import feathers.controls.Button;
 	import feathers.controls.Check;
 	import feathers.controls.List;
+	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
@@ -25,21 +26,30 @@ package display.settings.alarms
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
-	import starling.display.Image;
+	import model.ModelLocator;
+	
+	import starling.display.DisplayObject;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
 	import utils.AlertManager;
 	import utils.Constants;
+	
+	[ResourceBundle("alertsettingsscreen")]
+	[ResourceBundle("globaltranslations")]
 
 	public class AlertCustomizerList extends List 
 	{
-		private const fiveMinutesInMs:int = 5 * 60 * 1000 - 10000;
+		/**
+		 * this is the default value for 5 minutes, to be used as repeat interval<br>
+		 * the real value is a bit less than 5 minutes because if we would take 5 minutes then there's a risk that the check is done just a bit too soon 
+		 */
+		private const TIME_5_MINUTES:int = 5 * 60 * 1000 - 10000;
 
 		/* Display Objects */
 		private var alertName:TextInput;
 		private var enableSnoozeInNotification:Check;
-		private var snoozeMinutes:TextInput;
+		private var snoozeMinutes:NumericStepper;
 		private var enableRepeat:Check;
 		private var enableVibration:Check;
 		private var soundList:PickerList;
@@ -47,14 +57,27 @@ package display.settings.alarms
 		private var alertEnabled:ToggleSwitch;
 		
 		/* Properties */
+		public var needsSave:Boolean = false;
 		private var soundName:String;
 		private var repeatInMinutes:int = 0;
-		private var soundChannel:SoundChannel = new SoundChannel();
-		private var playButtonsList:Array;
-		public var needsSave:Boolean = false;
+		private var selectedAlertType:AlertType;
+		private var mode:String;
+		private var alertEnabledSwitchStateValue:Boolean;
+		private var alertNameValue:String;
+		private var enableSnoozeInNotificationValue:Boolean;
+		private var snoozeMinutesValue:int;
+		private var enableRepeatValue:Boolean;
+		private var enableVibrationValue:Boolean;
+		private var soundAccessoriesList:Array;
+		private var alertTypesList:Array;
+		private var previousAlertName:String;
+		private var selectedSoundFileValue:String;
+		private var alertTypeUniqueID:String;
 		
-		public function AlertCustomizerList()
+		public function AlertCustomizerList(selectedAlertType:AlertType)
 		{
+			this.selectedAlertType = selectedAlertType;
+			
 			super();
 		}
 		
@@ -62,55 +85,122 @@ package display.settings.alarms
 		{
 			super.initialize();
 			
-			playButtonsList = [];
-			
+			setupProperties();
+			setupInitialContent();
+			setupContent();
+		}
+		
+		private function setupProperties():void
+		{
 			/* Properties */
 			clipContent = false;
 			isSelectable = false;
 			autoHideBackground = true;
 			hasElasticEdges = false;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
+		private function setupInitialContent():void
+		{
+			/* Get All Current Alert Types */
+			alertTypesList = Database.getAlertTypesList();
 			
-			/* Controls */
-			alertEnabled = LayoutFactory.createToggleSwitch(true);
-			alertEnabled.addEventListener(Event.CHANGE, onEnableChanged);
-			alertName = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
-			alertName.addEventListener(Event.CHANGE, onNameChanged);
-			enableSnoozeInNotification = LayoutFactory.createCheckMark(true);
-			enableSnoozeInNotification.addEventListener(Event.CHANGE, onEnableSnoozeInNotificationChanged);
-			snoozeMinutes = LayoutFactory.createTextInput(false, true, 3, HorizontalAlign.RIGHT);
-			snoozeMinutes.maxChars = 4;
-			snoozeMinutes.addEventListener(Event.CHANGE, onSnoozeMinutesChanged);
-			enableRepeat = LayoutFactory.createCheckMark(true);
-			enableRepeat.addEventListener(Event.CHANGE, onEnableRepeatChanged);
-			enableVibration = LayoutFactory.createCheckMark(true);
-			enableVibration.addEventListener(Event.CHANGE, onEnableVibrationChanged);
+			/* Setup Initial Values */
+			if (selectedAlertType == null)
+			{
+				mode = "add";
+				alertEnabledSwitchStateValue = true;
+				alertNameValue = "";
+				enableSnoozeInNotificationValue = false;
+				snoozeMinutesValue = 5;
+				enableRepeatValue = false;
+				enableVibrationValue = false;
+				previousAlertName = "";
+				selectedSoundFileValue = "";
+				alertTypeUniqueID = null;
+			}
+			else
+			{
+				mode = "edit";
+				alertEnabledSwitchStateValue = selectedAlertType.enabled;
+				alertNameValue = selectedAlertType.alarmName;
+				enableSnoozeInNotificationValue = selectedAlertType.snoozeFromNotification;
+				snoozeMinutesValue = selectedAlertType.defaultSnoozePeriodInMinutes;
+				enableRepeatValue = selectedAlertType.repeatInMinutes == TIME_5_MINUTES;
+				enableVibrationValue = selectedAlertType.enableVibration;
+				previousAlertName = selectedAlertType.alarmName;
+				selectedSoundFileValue = selectedAlertType.sound;
+				alertTypeUniqueID = selectedAlertType.uniqueId;
+			}
+		}
+		
+		private function setupContent():void
+		{
+			/* Create Controls */
+			alertEnabled = LayoutFactory.createToggleSwitch(alertEnabledSwitchStateValue);
+			alertEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			alertName = LayoutFactory.createTextInput(false, false, 120, HorizontalAlign.RIGHT);
+			alertName.text = alertNameValue;
+			alertName.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			enableSnoozeInNotification = LayoutFactory.createCheckMark(enableSnoozeInNotificationValue);
+			enableSnoozeInNotification.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			snoozeMinutes = LayoutFactory.createNumericStepper(0, 999, snoozeMinutesValue);
+			snoozeMinutes.pivotX = -12;
+			snoozeMinutes.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			enableRepeat = LayoutFactory.createCheckMark(enableRepeatValue);
+			enableRepeat.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			enableVibration = LayoutFactory.createCheckMark(enableVibrationValue);
+			enableVibration.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			soundList = LayoutFactory.createPickerList();
+			soundList.pivotX = -3;
 			soundList.addEventListener(Event.CLOSE, onSoundListClose);
-			saveAlert = LayoutFactory.createButton("Save");
+			
+			saveAlert = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"save_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.saveTexture);
+			saveAlert.pivotX = -15;
 			saveAlert.addEventListener(Event.TRIGGERED, onSave);
 			
-			/* Content */
-			soundList.dataProvider = new ArrayCollection(
-				[
-					{ label: "No Sound", accessory: new Sprite(), soundFile: "" },
-					{ label: "Better WakeUp", accessory: createPlayButton(), soundFile: "../assets/sounds/betterwakeup.mp3" },
-					{ label: "Bruteforce", accessory: createPlayButton(), soundFile: "../assets/sounds/bruteforce.mp3" },
-					{ label: "Default iOS", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Modern Alarm #1", accessory: createPlayButton(), soundFile: "../assets/sounds/modernalarm1.mp3" },
-					{ label: "Modern Alarm #2", accessory: createPlayButton(), soundFile: "../assets/sounds/modernalarm2.mp3" },
-					{ label: "Nightscout", accessory: createPlayButton(), soundFile: "../assets/sounds/nightscout.mp3" },
-					{ label: "Short Low #1", accessory: createPlayButton(), soundFile: "../assets/sounds/shortlow1.mp3" },
-					{ label: "Short Low #2", accessory: createPlayButton(), soundFile: "../assets/sounds/shortlow2.mp3" },
-					{ label: "Short Low #3", accessory: createPlayButton(), soundFile: "../assets/sounds/shortlow3.mp3" },
-					{ label: "Short Low #4", accessory: createPlayButton(), soundFile: "../assets/sounds/shortlow4.mp3" },
-					{ label: "Short High #1", accessory: createPlayButton(), soundFile: "../assets/sounds/shorthigh1.mp3" },
-					{ label: "Short High #2", accessory: createPlayButton(), soundFile: "../assets/sounds/shorthigh2.mp3" },
-					{ label: "Short High #3", accessory: createPlayButton(), soundFile: "../assets/sounds/shorthigh3.mp3" },
-					{ label: "Short High #4", accessory: createPlayButton(), soundFile: "../assets/sounds/shorthigh4.mp3" },
-					{ label: "Spaceship", accessory: createPlayButton(), soundFile: "../assets/sounds/spaceship.mp3" },
-				]);
-			soundList.labelField = "label";
+			/* Setup Content */
+			var soundLabelsList:Array = ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"alert_sounds_names").split(",");
+			var soundFilesList:Array = ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"alert_sounds_files").split(",");
+			var soundListProvider:ArrayCollection = new ArrayCollection();
+			soundAccessoriesList = [];
+			var previousSoundFileIndex:int = 0;
+			
+			var soundListLength:uint = soundLabelsList.length;
+			for (var i:int = 0; i < soundListLength; i++) 
+			{
+				/* Set Label */
+				var labelValue:String = soundLabelsList[i];
+				
+				/* Set Accessory */
+				var accessoryValue:DisplayObject;
+				if (soundFilesList[i] == "no_sound" || soundFilesList[i] == "default")
+					accessoryValue = new Sprite();
+				else
+					accessoryValue = LayoutFactory.createPlayButton(onPlaySound);
+				
+				soundAccessoriesList.push(accessoryValue);
+				
+				/* Set Sound File */
+				var soundFileValue:String;
+				if (soundFilesList[i] != "no_sound" && soundFilesList[i] != "default")
+					soundFileValue = "../assets/sounds/" + soundFilesList[i];
+				else
+					soundFileValue = soundFilesList[i];
+				
+				soundListProvider.push( { label: labelValue, accessory: accessoryValue, soundFile: soundFileValue } );
+				
+				if (mode == "edit" && soundFileValue == selectedSoundFileValue)
+					previousSoundFileIndex = i;
+			}
+			
+			soundList.dataProvider = soundListProvider;
 			soundList.itemRendererFactory = function():IListItemRenderer
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
@@ -120,19 +210,20 @@ package display.settings.alarms
 				itemRenderer.labelOffsetX = 20;
 				
 				return itemRenderer;
-			}
-			soundList.addEventListener(Event.CHANGE, onSoundChanged);
+			};
+			soundList.selectedIndex = previousSoundFileIndex;
+			soundList.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			/* Data */
 			dataProvider = new ListCollection(
 				[
-					{ label: "Enabled", accessory: alertEnabled },
-					{ label: "Name", accessory: alertName },
-					{ label: "Snooze From Notification", accessory: enableSnoozeInNotification },
-					{ label: "Default Snooze (Min)", accessory: snoozeMinutes },
-					{ label: "Repeat", accessory: enableRepeat },
-					{ label: "Sound", accessory: soundList },
-					{ label: "Vibration Enabled", accessory: enableVibration },
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"enabled"), accessory: alertEnabled },
+					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"name_label"), accessory: alertName },
+					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"snooze_notification_label"), accessory: enableSnoozeInNotification },
+					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_label"), accessory: snoozeMinutes },
+					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"repeat_label"), accessory: enableRepeat },
+					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"sound_label"), accessory: soundList },
+					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"vibration_label"), accessory: enableVibration },
 					{ label: "", accessory: saveAlert }
 				]);
 			
@@ -149,153 +240,147 @@ package display.settings.alarms
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
 		}
 		
-		private function onSoundListClose():void
-		{
-			soundChannel.stop();
-		}
-		
 		/**
 		 * Functionality
 		 */
 		public function save():Boolean
 		{
-			if(alertName.text == "" || snoozeMinutes.text == "")
+			if (needsSave)
 			{
-				var alertTitle:String = "Warning";
-				var alertMessage:String;
-				if (alertName.text == "" && snoozeMinutes.text == "")
-					alertMessage = "You need to define a name and a default snooze time for this alert!"
-				else if (alertName.text == "")
-					alertMessage = "You need to define a name for this alert!";
-				else if (snoozeMinutes.text == "")
-					alertMessage = "You need to define a default snooze time for this alert!"; 
+				var alert:Alert;
+				
+				if(alertName.text == "")
+				{
+					alert = AlertManager.showActionAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations',"warning_alert_title"),
+						ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"alarm_name_empty_alert_message"),
+						Number.NaN,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"try_again_button_label"), triggered: null }
+						]
+					);
 					
-				var alert:Alert = AlertManager.showActionAlert
-				(
-					alertTitle,
-					alertMessage,
-					Number.NaN,
-					[
-						{ label: "Try Again", triggered: null }
-					]
-				);
-				
-				return false;
+					needsSave = true;
+					return false;
+				}
+				else
+				{
+					var duplicateName:Boolean = false;
+					var alertTypeLength:uint = alertTypesList.length;
+					for (var i:int = 0; i < alertTypeLength; i++) 
+					{
+						var alertType:AlertType = alertTypesList[i];
+						if (alertNameValue.toUpperCase() == alertType.alarmName.toUpperCase())
+						{
+							duplicateName = true;
+							break;
+						}
+					}
+					
+					if (duplicateName && mode == "add")
+					{
+						alert = AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations',"warning_alert_title"),
+							ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"invalid_alert_name_alert_message"),
+							Number.NaN,
+							null,
+							HorizontalAlign.CENTER
+						);
+						
+						needsSave = true;
+						return false;
+					}
+					else
+					{
+						var newAlertType:AlertType = new AlertType
+						(
+							alertTypeUniqueID,
+							Number.NaN,
+							alertNameValue,
+							false,
+							enableVibrationValue,
+							enableSnoozeInNotificationValue,
+							alertEnabledSwitchStateValue,
+							false,
+							soundList.selectedItem.soundFile,
+							snoozeMinutesValue,
+							repeatInMinutes
+						);
+						
+						if (mode == "edit")
+							Database.updateAlertTypeSynchronous(newAlertType);
+						else
+							Database.insertAlertTypeSychronous(newAlertType);
+						
+						if (previousAlertName != "" && previousAlertName != alertNameValue) 
+							AlertType.alertTypeUsed(previousAlertName, alertNameValue);
+						
+						needsSave = false;
+						return true;
+					}
+				}
 			}
-			else
-			{
-				//New Alert (Still need to implement database retrieve/save and if alert already exists (in that case we need to update the alertt in database)
-				var alertType:AlertType = new AlertType(
-					null, //UniqueID
-					Number.NaN, //Last Modified Timestamp 
-					alertName.text, //Alert Name
-					false, //Enable Lights (android Only)
-					enableVibration.isSelected, //Enable Vibration
-					enableSnoozeInNotification.isSelected, //Snooze From Notification
-					alertEnabled.isSelected, //Alert Enabled
-					false, //Override silent mode
-					soundName,//Sound
-					int(snoozeMinutes.text), //Default Snooze Period (Minutes)
-					repeatInMinutes); //Default Repeat Interval (Minutes)
-				//Database.insertAlertTypeSychronous(neworExistingAlertType);
-				
-				needsSave = false;
-				
-				return true;
-			}
+			
+			return true;
 		}
 		
 		/**
 		 * Event Handlers
 		 */
-		private function onSoundChanged():void
-		{
-			needsSave = true;
-		}
-		
-		private function onEnableVibrationChanged():void
-		{
-			needsSave = true;
-		}
-		
-		private function onEnableRepeatChanged():void
-		{
-			repeatInMinutes = fiveMinutesInMs;
-		}
-		
-		private function onSnoozeMinutesChanged():void
-		{
-			needsSave = true;
-		}
-		
-		private function onEnableSnoozeInNotificationChanged():void
-		{
-			needsSave = true;
-		}
-		
-		private function onNameChanged(e:Event):void
-		{
-			needsSave = true;
-		}
-		
-		private function onEnableChanged():void
-		{
-			needsSave = true;
-		}
-		
 		private function onSave(e:Event):void
+		{	
+			if (save()) //If save was successful, pop screen
+				dispatchEventWith(Event.COMPLETE);
+		}
+		
+		private function onSettingsChanged(e:Event):void
 		{
-			save();
+			//Update internal variables
+			alertEnabledSwitchStateValue = alertEnabled.isSelected;
+			alertNameValue = alertName.text;
+			enableSnoozeInNotificationValue = enableSnoozeInNotification.isSelected;
+			snoozeMinutesValue = snoozeMinutes.value;
+			enableRepeatValue = enableRepeat.isSelected;
+			enableRepeatValue == true ? repeatInMinutes = TIME_5_MINUTES : repeatInMinutes = 0;
+			enableVibrationValue = enableVibration.isSelected;
+			
+			needsSave = true;
 		}
 		
 		private function onPlaySound(e:Event):void
 		{
 			var selectedItemData:Object = DefaultListItemRenderer(Button(e.currentTarget).parent).data;
 			var soundFile:String = selectedItemData.soundFile;
-			if(soundFile != "")
-			{
-				trace("Playing", soundFile);
-				//BackgroundFetch.init();
-				//BackgroundFetch.setAvAudioSessionCategory(true);
-				//BackgroundFetch.playSound(String(selectedItemData.soundFile));
-				soundChannel.stop();
-				var soundPlayer:Sound = new Sound();
-				soundPlayer.load(new URLRequest(soundFile));
-				soundChannel = soundPlayer.play();
-			}
+			if(soundFile != "" && soundFile != "default" && soundFile != "no_sound")
+				BackgroundFetch.playSound(soundFile);
 		}
 		
-		/**
-		 * Layout Factories
-		 */
-		private function createPlayButton():Button
+		private function onSoundListClose():void
 		{
-			var button:Button = new Button();
-			button.iconOffsetX = 0.1;
-			button.iconOffsetY = -0.1;
-			button.styleNameList.add(Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON);
-			button.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.playOutlineTexture);
-			button.width = button.height = 20;
-			button.addEventListener(Event.TRIGGERED, onPlaySound);
 			
-			playButtonsList.push(button);
-			
-			return button;
+			BackgroundFetch.stopPlayingSound();
 		}
-		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
-			if(playButtonsList != null && playButtonsList.length > 0)
+			if(soundAccessoriesList != null && soundAccessoriesList.length > 0)
 			{
-				var length:int = playButtonsList.length;
+				var length:int = soundAccessoriesList.length;
 				for (var i:int = 0; i < length; i++) 
 				{
-					trace(i);
-					var btn:Button = playButtonsList[i] as Button;
-					btn.dispose();
-					btn = null;
+					var btn:Button = soundAccessoriesList[i] as Button;
+					if (btn != null)
+					{
+						btn.dispose();
+						btn = null;
+					}
 				}
-				playButtonsList = null;
+				soundAccessoriesList.length = 0;
+				soundAccessoriesList = null;
 			}
 			
 			if(alertEnabled != null)
