@@ -113,8 +113,9 @@ package screens
 			
 			/* Create DateSpinner */
 			dateSpinner = new DateTimeSpinner();
+			dateSpinner.height = 155;
 			dateSpinner.maximum = new Date();
-			dateSpinner.locale = "en_US";
+			//dateSpinner.locale = "en_US";
 			
 			container.addChild( dateSpinner );
 			

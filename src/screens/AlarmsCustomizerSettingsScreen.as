@@ -2,35 +2,37 @@ package screens
 {
 	import data.AlarmNavigatorData;
 	
-	import display.LayoutFactory;
 	import display.settings.alarms.AlarmCustomizerList;
 	
-	import feathers.controls.Label;
-	import feathers.controls.RangeSlider;
-	import feathers.controls.Slider;
-	import feathers.controls.TrackLayoutMode;
+	import feathers.controls.Alert;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
+	
+	import model.ModelLocator;
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
 	import ui.AppInterface;
 	
+	import utils.AlertManager;
 	import utils.Constants;
+	
+	[ResourceBundle("globaltranslations")]
 
 	public class AlarmsCustomizerSettingsScreen extends BaseSubScreen
 	{
-		protected var _options:AlarmNavigatorData;
+		/* Display Objects */
+		private var alarmCustomizer:AlarmCustomizerList;
 		
+		/* Properties */
+		protected var _options:AlarmNavigatorData;
+
 		public function AlarmsCustomizerSettingsScreen() 
 		{
 			super();;
 			
-			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.alarmTexture);
-			iconContainer = new <DisplayObject>[icon];
-			headerProperties.rightItems = iconContainer;
+			setupHeader();
 		}
 		
 		override protected function initialize():void 
@@ -38,33 +40,24 @@ package screens
 			super.initialize();
 		}
 		
+		/**
+		 * Functionality
+		 */
+		private function setupHeader():void
+		{
+			/* Set Header Icon */
+			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.alarmTexture);
+			iconContainer = new <DisplayObject>[icon];
+			headerProperties.rightItems = iconContainer;
+		}
+		
 		private function setupContent():void
 		{
 			/* Set Header Title */
-			title = options.selectedAlarmTitle;
+			title = _options.alarmTitle;
 			
-			
-			/*var slider:Slider = new Slider();
-			slider.trackLayoutMode = TrackLayoutMode.SPLIT;
-			slider.step = 0;
-			slider.minimum = 0;
-			slider.maximum = 60;
-			screenRenderer.addChild(slider);
-			slider.validate();*/
-		
-			
-			
-			//Settings Label
-			//var alarmSettingsLabel:Label = LayoutFactory.createSectionLabel("Options");
-			//screenRenderer.addChild(alarmSettingsLabel);
-			
-			//Settings List
-			//var alarmSettings:AlarmCustomizerList = new AlarmCustomizerList();
-			//screenRenderer.addChild(alarmSettings);
-			
-			//Schedule Label
-			//var alarmScheduleLabel:Label = LayoutFactory.createSectionLabel("Schedule");
-			//screenRenderer.addChild(alarmScheduleLabel);
+			alarmCustomizer = new AlarmCustomizerList(_options.alarmID, _options.alarmType);
+			screenRenderer.addChild(alarmCustomizer);
 		}
 		
 		private function adjustMainMenu():void
@@ -72,11 +65,44 @@ package screens
 			AppInterface.instance.menu.selectedIndex = 3;
 		}
 		
+		/**
+		 * Event Listeners
+		 */
 		override protected function onBackButtonTriggered(event:Event):void
+		{
+			alarmCustomizer.closeCallout();
+			
+			if(alarmCustomizer.needsSave)
+			{
+				var alert:Alert = AlertManager.showActionAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations',"save_changes"),
+						ModelLocator.resourceManagerInstance.getString('globaltranslations',"want_to_save_changes"),
+						Number.NaN,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"no_uppercase"), triggered: onSkipSaveSettings },
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"yes_uppercase"), triggered: onSaveSettings }
+						]
+					);
+			}
+			else
+				dispatchEventWith(Event.COMPLETE);
+		}
+		
+		private function onSaveSettings(e:Event):void
+		{
+			alarmCustomizer.save()
+			dispatchEventWith(Event.COMPLETE);
+		}
+		
+		private function onSkipSaveSettings(e:Event):void
 		{
 			dispatchEventWith(Event.COMPLETE);
 		}
 		
+		/**
+		 * Utility
+		 */
 		override protected function draw():void 
 		{
 			var layoutInvalid:Boolean = isInvalid( INVALIDATION_FLAG_LAYOUT );
@@ -94,9 +120,6 @@ package screens
 
 		public function set options(value:AlarmNavigatorData):void
 		{	
-			if(_options == value)
-				return;
-			
 			_options = value;
 			
 			setupContent();

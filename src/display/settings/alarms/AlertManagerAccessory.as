@@ -11,7 +11,7 @@ package display.settings.alarms
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
-	public class AlertManagerButton extends Sprite
+	public class AlertManagerAccessory extends Sprite
 	{	
 		/* Constants */
 		public static const DELETE:String = "delete";
@@ -26,7 +26,7 @@ package display.settings.alarms
 		private var editButtonTexture:Texture;
 		private var editButtonIcon:Image;
 		
-		public function AlertManagerButton()
+		public function AlertManagerAccessory()
 		{
 			super();
 			

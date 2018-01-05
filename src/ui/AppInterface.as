@@ -1,7 +1,6 @@
 package ui
 {
 	import data.AlarmNavigatorData;
-	import data.AlertNavigatorData;
 	
 	import display.menu.MenuList;
 	
@@ -18,7 +17,6 @@ package ui
 	import screens.AboutSettingsScreen;
 	import screens.AlarmsCustomizerSettingsScreen;
 	import screens.AlarmsSettingsScreen;
-	import screens.AlertTypeCustomizerScreen;
 	import screens.AlertTypesListScreen;
 	import screens.ChartScreen;
 	import screens.ChartSettingsScreen;
@@ -131,13 +129,6 @@ package ui
 			var alertTypesSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AlertTypesListScreen );
 			alertTypesSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_ALERT_TYPES_LIST, alertTypesSettingsScreenItem );
-			
-			/* Alert Type Customizer Settings Screen */
-			var alertNavigatorData:AlertNavigatorData = AlertNavigatorData.getInstance();
-			var alertTypeCustomizerScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AlertTypeCustomizerScreen );
-			alertTypeCustomizerScreenItem.properties.options = alertNavigatorData;
-			alertTypeCustomizerScreenItem.addPopEvent(Event.COMPLETE);
-			navigator.addScreen( Screens.SETTINGS_ALERT_TYPE_CUSTOMIZER, alertTypeCustomizerScreenItem );
 			
 			/* Alarms Customizer Settings Screen */
 			var alarmNavigatorData:AlarmNavigatorData = AlarmNavigatorData.getInstance();

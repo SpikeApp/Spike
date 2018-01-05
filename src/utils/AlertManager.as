@@ -19,7 +19,7 @@ package utils
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
-	[ResourceBundle("general")]
+	[ResourceBundle("globaltranslations")]
 
 	public class AlertManager
 	{
@@ -70,7 +70,7 @@ package utils
 			else
 				buttonCollection = new ListCollection(
 					[
-						{ label: ModelLocator.resourceManagerInstance.getString('general','ok'), triggered: eventHandlerFunct }
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','ok_alert_button_label'), triggered: eventHandlerFunct }
 					]
 				);
 			

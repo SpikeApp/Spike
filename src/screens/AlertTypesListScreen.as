@@ -74,6 +74,8 @@ package screens
 		 */
 		override protected function onBackButtonTriggered(event:Event):void
 		{
+			alertTypesList.closeAlertCallout();
+			
 			dispatchEventWith(Event.COMPLETE);
 		}
 		

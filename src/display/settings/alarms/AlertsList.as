@@ -2,17 +2,17 @@ package display.settings.alarms
 {
 	import flash.system.System;
 	
-	import data.AlertNavigatorData;
-	
 	import databaseclasses.AlertType;
 	import databaseclasses.Database;
 	
 	import display.LayoutFactory;
 	
 	import feathers.controls.Button;
+	import feathers.controls.Callout;
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.core.PopUpManager;
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -20,14 +20,12 @@ package display.settings.alarms
 	
 	import model.ModelLocator;
 	
-	import screens.Screens;
-	
+	import starling.display.Sprite;
 	import starling.events.Event;
-	
-	import ui.AppInterface;
 	
 	import utils.AlertManager;
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("alertsettingsscreen")]
 
@@ -35,6 +33,9 @@ package display.settings.alarms
 	{
 		/* Display Objects */
 		private var addAlertButton:Button;
+		private var positionHelper:Sprite;
+		private var alertCreatorCallout:Callout;
+		private var alertCreatorList:AlertCustomizerList;
 		
 		/* Internal Variables/Objects */
 		private var alertTypesList:Array;
@@ -91,11 +92,11 @@ package display.settings.alarms
 			{
 				var alertType:AlertType = alertTypesList[i];
 				
-				if (alertType.alarmName != "null")
+				if (alertType.alarmName != "null" && alertType.alarmName != "No Alert")
 				{
-					var alertControls:AlertManagerButton = new AlertManagerButton();
-					alertControls.addEventListener(AlertManagerButton.DELETE, onDeleteAlert);
-					alertControls.addEventListener(AlertManagerButton.EDIT, onEditAlert);
+					var alertControls:AlertManagerAccessory = new AlertManagerAccessory();
+					alertControls.addEventListener(AlertManagerAccessory.DELETE, onDeleteAlert);
+					alertControls.addEventListener(AlertManagerAccessory.EDIT, onEditAlert);
 					alertTypesButtonsList.push(alertControls);
 					
 					listContent.push( { label: alertType.alarmName, accessory: alertControls, data: alertType, index: i } )
@@ -118,13 +119,48 @@ package display.settings.alarms
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
 		}
 		
+		private function setupCalloutPosition():void
+		{
+			positionHelper = new Sprite();
+			positionHelper.x = (Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2)) / 2;
+			positionHelper.y = -45;
+			addChild(positionHelper);
+		}
+		
+		private function showAlertCreator():void
+		{
+			alertCreatorList.addEventListener(Event.COMPLETE, onAlertCreatorClosed);
+			
+			alertCreatorCallout = new Callout();
+			alertCreatorCallout.content = alertCreatorList;
+			
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+				alertCreatorCallout.padding = 18;
+			else
+			{
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
+					alertCreatorCallout.padding = 18;
+				
+				setupCalloutPosition();
+				alertCreatorCallout.origin = positionHelper;
+			}
+			
+			PopUpManager.addPopUp(alertCreatorCallout, false, false);
+		}
+		
+		public function closeAlertCallout():void
+		{
+			if (alertCreatorCallout != null)
+				alertCreatorCallout.close(true);
+		}
+		
 		/**
 		 * Event Handlers
 		 */
 		private function onDeleteAlert(e:Event):void
 		{
 			//Get alert data
-			var alertData:AlertType = (((e.currentTarget as AlertManagerButton).parent as DefaultListItemRenderer).data as Object).data as AlertType;
+			var alertData:AlertType = (((e.currentTarget as AlertManagerAccessory).parent as DefaultListItemRenderer).data as Object).data as AlertType;
 			var alertName:String = alertData.alarmName;
 			
 			//Check if alert is in use
@@ -143,7 +179,7 @@ package display.settings.alarms
 				Database.deleteAlertTypeSynchronous(alertData);
 				
 				//Update screen
-				var alertIndex:int = (((e.currentTarget as AlertManagerButton).parent as DefaultListItemRenderer).data as Object).index;
+				var alertIndex:int = (((e.currentTarget as AlertManagerAccessory).parent as DefaultListItemRenderer).data as Object).index;
 				alertTypesList.removeAt(alertIndex);
 				setupContent();
 			}
@@ -152,20 +188,28 @@ package display.settings.alarms
 		private function onEditAlert(e:Event):void
 		{
 			//Get alert type data
-			var alertData:AlertType = (((e.currentTarget as AlertManagerButton).parent as DefaultListItemRenderer).data as Object).data as AlertType;
+			var alertData:AlertType = (((e.currentTarget as AlertManagerAccessory).parent as DefaultListItemRenderer).data as Object).data as AlertType;
 			
-			//Set data to navigator and navigate to alert costumizer screen
-			AlertNavigatorData.getInstance().alertData = alertData;
-			AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_ALERT_TYPE_CUSTOMIZER );
+			//Create Alert Creator and Show it
+			alertCreatorList = new AlertCustomizerList(alertData);
+			showAlertCreator();
 		}
 		
 		private function onAddAlert(e:Event):void 
 		{
-			//Get alert type data
-			AlertNavigatorData.getInstance().alertData = null; //Null = New Alert
+			//Create Alert Creator and Show it
+			alertCreatorList = new AlertCustomizerList(null);
+			showAlertCreator();
+		}
+		
+		private function onAlertCreatorClosed():void
+		{
+			//Refresh Screen
+			alertTypesList = Database.getAlertTypesList();
+			setupContent();
 			
-			//Navigate to alert costumizer screen
-			AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_ALERT_TYPE_CUSTOMIZER );
+			//Close callout
+			alertCreatorCallout.close(true);
 		}
 		
 		/**
@@ -185,10 +229,29 @@ package display.settings.alarms
 				var buttonsListLength:int = alertTypesButtonsList.length;
 				for (var i:int = 0; i < buttonsListLength; i++) 
 				{
-					var alertManagerButton:AlertManagerButton = alertTypesButtonsList[i];
+					var alertManagerButton:AlertManagerAccessory = alertTypesButtonsList[i];
 					alertManagerButton.dispose();
 					alertManagerButton = null;
 				}
+			}
+			
+			if (positionHelper != null)
+			{
+				removeChild(positionHelper);
+				positionHelper.dispose();
+				positionHelper = null;
+			}
+			
+			if (alertCreatorCallout != null)
+			{
+				alertCreatorCallout.dispose();
+				alertCreatorCallout = null;
+			}
+			
+			if (alertCreatorList != null)
+			{
+				alertCreatorList.dispose();
+				alertCreatorList = null;
 			}
 			
 			System.pauseForGCIfCollectionImminent(0);

@@ -89,12 +89,13 @@ package display
 		}
 		
 		//Label for Settings Sections
-		public static function createSectionLabel(labelText:String, sublabel:Boolean = false):Label
+		public static function createSectionLabel(labelText:String, sublabel:Boolean = false, align:String = HorizontalAlign.LEFT):Label
 		{
 			var label:Label = new Label();
 			label.text = labelText;
 			var txtFormat:TextFormat = new TextFormat("Roboto", 16, 0xEEEEEE,HorizontalAlign.LEFT);
 			txtFormat.bold = true;
+			txtFormat.horizontalAlign = align;
 			label.fontStyles = txtFormat;
 			if(!sublabel)
 				label.paddingTop = SECTION_HEADER_PADDING;
@@ -146,11 +147,8 @@ package display
 		public static function createPlayButton(eventHandler:Function):Button
 		{
 			var button:Button = new Button();
-			button.iconOffsetX = 0.1;
-			button.iconOffsetY = -0.1;
-			button.styleNameList.add(Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON);
+			button.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
 			button.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.playOutlineTexture);
-			button.width = button.height = 20;
 			button.addEventListener(Event.TRIGGERED, eventHandler);
 			
 			return button;

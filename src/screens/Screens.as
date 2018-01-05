@@ -14,7 +14,6 @@ package screens
 		public static const SETTINGS_ALARMS:String = "alarmsSettings";
 		public static const SETTINGS_ALARMS_CUSTOMIZER:String = "alarmsCustomizer";
 		public static const SETTINGS_ALERT_TYPES_LIST:String = "alertTypesList";
-		public static const SETTINGS_ALERT_TYPE_CUSTOMIZER:String = "alertTypeCostumizer";
 		public static const SETTINGS_SPEECH:String = "speechSettings";
 		public static const SETTINGS_SHARE:String = "shareSettings";
 		public static const SETTINGS_LOGGING_TRACING:String = "loggingTracingSettings";

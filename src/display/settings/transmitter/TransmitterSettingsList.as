@@ -10,6 +10,7 @@ package display.settings.transmitter
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
+	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -103,13 +104,8 @@ package display.settings.transmitter
 			transitterNamesList.length = 0;
 			transitterNamesList = null;
 			transmitterType.labelField = "label";
+			transmitterType.popUpContentManager = new DropDownPopUpContentManager();
 			transmitterType.dataProvider = transmitterTypeList;
-			transmitterType.itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				return itemRenderer;
-			}
 			
 			if(transmitterTypeValue == "")
 			{

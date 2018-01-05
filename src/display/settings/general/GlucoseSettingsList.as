@@ -10,6 +10,7 @@ package display.settings.general
 	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
+	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -73,17 +74,12 @@ package display.settings.general
 			glucoseUnitsPicker = LayoutFactory.createPickerList();
 			var glucoseUnits:ArrayCollection = new ArrayCollection(
 				[
-					{ text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','mgdl') },
-					{ text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','mmol') },
+					{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','mgdl') },
+					{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','mmol') },
 				]);
-			glucoseUnitsPicker.labelField = "text";
+			glucoseUnitsPicker.labelField = "label";
+			glucoseUnitsPicker.popUpContentManager = new DropDownPopUpContentManager();
 			glucoseUnitsPicker.dataProvider = glucoseUnits;
-			glucoseUnitsPicker.itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				return itemRenderer;
-			}
 			
 			//Glucose Urgent High Value
 			glucoseUrgentHighStepper = new NumericStepper();

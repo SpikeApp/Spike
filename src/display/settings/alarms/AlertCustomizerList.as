@@ -12,6 +12,7 @@ package display.settings.alarms
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Check;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
@@ -19,11 +20,12 @@ package display.settings.alarms
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.layout.HorizontalAlign;
-	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
+	import feathers.layout.HorizontalLayout;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
@@ -33,7 +35,6 @@ package display.settings.alarms
 	import starling.events.Event;
 	
 	import utils.AlertManager;
-	import utils.Constants;
 	
 	[ResourceBundle("alertsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -55,6 +56,8 @@ package display.settings.alarms
 		private var soundList:PickerList;
 		private var saveAlert:Button;
 		private var alertEnabled:ToggleSwitch;
+		private var cancelAlert:Button;
+		private var actionButtonsContainer:LayoutGroup;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -90,6 +93,9 @@ package display.settings.alarms
 			setupContent();
 		}
 		
+		/**
+		 * Functionality
+		 */
 		private function setupProperties():void
 		{
 			/* Properties */
@@ -97,7 +103,7 @@ package display.settings.alarms
 			isSelectable = false;
 			autoHideBackground = true;
 			hasElasticEdges = false;
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			width = 300;
 		}
 		
 		private function setupInitialContent():void
@@ -161,9 +167,23 @@ package display.settings.alarms
 			soundList.pivotX = -3;
 			soundList.addEventListener(Event.CLOSE, onSoundListClose);
 			
+			/* Action Buttons */
+			//Action buttons container & layout
+			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
+			actionButtonsLayout.gap = 5;
+			
+			actionButtonsContainer = new LayoutGroup();
+			actionButtonsContainer.layout = actionButtonsLayout;
+			actionButtonsContainer.pivotX = -3;
+			
+			//Buttons
+			cancelAlert = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.cancelTexture);
+			cancelAlert.addEventListener(Event.TRIGGERED, onCancel);
+			actionButtonsContainer.addChild(cancelAlert);
+			
 			saveAlert = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"save_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.saveTexture);
-			saveAlert.pivotX = -15;
 			saveAlert.addEventListener(Event.TRIGGERED, onSave);
+			actionButtonsContainer.addChild(saveAlert);
 			
 			/* Setup Content */
 			var soundLabelsList:Array = ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"alert_sounds_names").split(",");
@@ -183,7 +203,10 @@ package display.settings.alarms
 				if (soundFilesList[i] == "no_sound" || soundFilesList[i] == "default")
 					accessoryValue = new Sprite();
 				else
+				{
 					accessoryValue = LayoutFactory.createPlayButton(onPlaySound);
+					accessoryValue.pivotX = -15;
+				}
 				
 				soundAccessoriesList.push(accessoryValue);
 				
@@ -224,7 +247,7 @@ package display.settings.alarms
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"repeat_label"), accessory: enableRepeat },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"sound_label"), accessory: soundList },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"vibration_label"), accessory: enableVibration },
-					{ label: "", accessory: saveAlert }
+					{ label: "", accessory: actionButtonsContainer }
 				]);
 			
 			/* Renderer */
@@ -240,31 +263,30 @@ package display.settings.alarms
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
 		}
 		
-		/**
-		 * Functionality
-		 */
 		public function save():Boolean
 		{
 			if (needsSave)
 			{
 				var alert:Alert;
 				
+				//If alert name is empty, warn the user
 				if(alertName.text == "")
 				{
-					alert = AlertManager.showActionAlert
+					alert = new Alert();
+					alert.title = ModelLocator.resourceManagerInstance.getString('globaltranslations',"warning_alert_title");
+					alert.message = ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"alarm_name_empty_alert_message");
+					alert.buttonsDataProvider = new ListCollection
 					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations',"warning_alert_title"),
-						ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"alarm_name_empty_alert_message"),
-						Number.NaN,
 						[
-							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"try_again_button_label"), triggered: null }
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"ok_alert_button_label") }
 						]
-					);
+					)
+					PopUpManager.addPopUp(alert, true, true);
 					
 					needsSave = true;
 					return false;
 				}
-				else
+				else if (alertName.text != null && alertName.text != "null")
 				{
 					var duplicateName:Boolean = false;
 					var alertTypeLength:uint = alertTypesList.length;
@@ -278,6 +300,7 @@ package display.settings.alarms
 						}
 					}
 					
+					//If alert name already exists and it's not an edit, warn the user
 					if (duplicateName && mode == "add")
 					{
 						alert = AlertManager.showSimpleAlert
@@ -294,6 +317,7 @@ package display.settings.alarms
 					}
 					else
 					{
+						//Create and save alert to the database
 						var newAlertType:AlertType = new AlertType
 						(
 							alertTypeUniqueID,
@@ -321,9 +345,26 @@ package display.settings.alarms
 						return true;
 					}
 				}
+				else
+				{
+					//Something went wrong, warn the user
+					alert = new Alert();
+					alert.title = ModelLocator.resourceManagerInstance.getString('globaltranslations',"warning_alert_title");
+					alert.message = ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"something_went_wrong_alert_message");
+					alert.buttonsDataProvider = new ListCollection
+						(
+							[
+								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"ok_alert_button_label") }
+							]
+						)
+					PopUpManager.addPopUp(alert, true, true);
+					
+					needsSave = true;
+					return false;
+				}
 			}
 			
-			return true;
+			return false;
 		}
 		
 		/**
@@ -331,12 +372,20 @@ package display.settings.alarms
 		 */
 		private function onSave(e:Event):void
 		{	
-			if (save()) //If save was successful, pop screen
+			if(save())
 				dispatchEventWith(Event.COMPLETE);
+		}
+		
+		private function onCancel(e:Event):void
+		{	
+			dispatchEventWith(Event.COMPLETE);
 		}
 		
 		private function onSettingsChanged(e:Event):void
 		{
+			//Restrict characters
+			alertName.text = alertName.text.replace("-", "").replace(":","").replace(">","");
+			
 			//Update internal variables
 			alertEnabledSwitchStateValue = alertEnabled.isSelected;
 			alertNameValue = alertName.text;
@@ -346,6 +395,7 @@ package display.settings.alarms
 			enableRepeatValue == true ? repeatInMinutes = TIME_5_MINUTES : repeatInMinutes = 0;
 			enableVibrationValue = enableVibration.isSelected;
 			
+			saveAlert.isEnabled = true;
 			needsSave = true;
 		}
 		
@@ -359,12 +409,18 @@ package display.settings.alarms
 		
 		private function onSoundListClose():void
 		{
-			
 			BackgroundFetch.stopPlayingSound();
 		}
 		/**
 		 * Utility
 		 */
+		override protected function draw():void
+		{
+			super.draw();
+			
+			saveAlert.isEnabled = false;
+		}
+		
 		override public function dispose():void
 		{
 			if(soundAccessoriesList != null && soundAccessoriesList.length > 0)
@@ -420,8 +476,22 @@ package display.settings.alarms
 			}
 			if(saveAlert != null)
 			{
+				actionButtonsContainer.removeChild(saveAlert);
 				saveAlert.dispose();
 				saveAlert = null;
+			}
+			
+			if(cancelAlert != null)
+			{
+				actionButtonsContainer.removeChild(cancelAlert);
+				cancelAlert.dispose();
+				cancelAlert = null;
+			}
+			
+			if(actionButtonsContainer != null)
+			{
+				actionButtonsContainer.dispose();
+				actionButtonsContainer = null;
 			}
 			
 			System.pauseForGCIfCollectionImminent(0);

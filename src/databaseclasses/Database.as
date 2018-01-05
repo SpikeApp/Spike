@@ -597,6 +597,7 @@ package databaseclasses
 		}
 		
 		private static function createAlertTypeTable():void {
+			trace("createAlertTypeTable");
 			sqlStatement.clearParameters();
 			sqlStatement.text = CREATE_TABLE_ALERT_TYPES;
 			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
@@ -606,7 +607,7 @@ package databaseclasses
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				var noAlertName:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+				var noAlertName:String = "No Alert";
 				if (getAlertType(noAlertName) == null) {
 					var noAlert:AlertType = new AlertType(null, Number.NaN, noAlertName, false, false, false, false, false, "no_sound", 10, 0);
 					insertAlertTypeSychronous(noAlert);
@@ -1049,7 +1050,10 @@ package databaseclasses
 			finally 
 			{
 				if (conn.connected) conn.close();
-					return alertTypesList;
+				
+				alertTypesList = alertTypesList.sortOn(["alarmName"], Array.CASEINSENSITIVE);
+				
+				return alertTypesList;
 			}
 		}
 		

@@ -4,6 +4,10 @@ package display.settings.alarms
 	
 	import data.AlarmNavigatorData;
 	
+	import databaseclasses.BlueToothDevice;
+	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
+	
 	import display.LayoutFactory;
 	
 	import feathers.controls.List;
@@ -15,6 +19,8 @@ package display.settings.alarms
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import model.ModelLocator;
+	
 	import screens.Screens;
 	
 	import starling.display.Image;
@@ -24,6 +30,8 @@ package display.settings.alarms
 	import ui.AppInterface;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("alarmsettingsscreen")]
 
 	public class AlarmsList extends List 
 	{
@@ -40,6 +48,9 @@ package display.settings.alarms
 		private var highIconImage:Image;
 		private var urgentHighIconImage:Image;
 		
+		/* Properties */
+		private var muteOverrideValue:Boolean;
+		
 		public function AlarmsList()
 		{
 			super();
@@ -49,15 +60,34 @@ package display.settings.alarms
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupInitialContent();
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
 			/* List Properties */
 			clipContent = false;
 			isSelectable = true;
 			autoHideBackground = true;
 			hasElasticEdges = false;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			
+		}
+		
+		private function setupInitialContent():void
+		{
+			muteOverrideValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true";
+		}
+		
+		private function setupContent():void
+		{
 			/* Controls & Icons */
-			muteOverride = LayoutFactory.createToggleSwitch(false);
+			muteOverride = LayoutFactory.createToggleSwitch(muteOverrideValue);
+			muteOverride.addEventListener(Event.CHANGE, onOverrideMute);
 			chevronTexture = MaterialDeepGreyAmberMobileThemeIcons.chevronRightTexture;
 			alertTypesIconImage = new Image(chevronTexture);
 			batteryLowIconImage = new Image(chevronTexture);
@@ -69,20 +99,24 @@ package display.settings.alarms
 			highIconImage = new Image(chevronTexture);
 			urgentHighIconImage = new Image(chevronTexture);
 			
-			dataProvider = new ListCollection(
-				[
-					{ screen: null, label: "Override Mute", accessory: muteOverride, selectable:false },
-					{ screen: Screens.SETTINGS_ALERT_TYPES_LIST, label: "Alert Types", accessory: alertTypesIconImage },
-					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Battery Low", accessory: batteryLowIconImage, alarmType: AlarmNavigatorData.BATTERY_LOW },
-					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Calibration", accessory: calibrationIconImage, alarmType: AlarmNavigatorData.CALIBRATION },
-					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Missed Reading", accessory: missedReadingIconImage, alarmType: AlarmNavigatorData.MISSED_READING },
-					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Phone Muted", accessory: phoneMutedIconImage, alarmType: AlarmNavigatorData.PHONE_MUTED },
-					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Urgent Low", accessory: urgentLowIconImage, alarmType: AlarmNavigatorData.URGENT_LOW },
-					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Low", accessory: lowIconImage, alarmType: AlarmNavigatorData.LOW },
-					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "High", accessory: highIconImage, alarmType: AlarmNavigatorData.HIGH },
-					{ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: "Urgent High", accessory: urgentHighIconImage, alarmType: AlarmNavigatorData.URGENT_HIGH },
-				]);
+			/* Data */
+			var dataSectionsContainer:Array = [];
+			dataSectionsContainer.push({ screen: null, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"override_mute_label"), accessory: muteOverride, selectable:false });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALERT_TYPES_LIST, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"alert_types_label"), accessory: alertTypesIconImage });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"urgent_high_label"), accessory: urgentHighIconImage, alarmID: CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"high_label"), accessory: highIconImage, alarmID: CommonSettings.COMMON_SETTING_HIGH_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"low_label"), accessory: lowIconImage, alarmID: CommonSettings.COMMON_SETTING_LOW_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"urgent_low_label"), accessory: urgentLowIconImage, alarmID: CommonSettings.COMMON_SETTING_VERY_LOW_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"calibration_label"), accessory: calibrationIconImage, alarmID: CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_CALIBRATION });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"missed_reading_label"), accessory: missedReadingIconImage, alarmID: CommonSettings.COMMON_SETTING_MISSED_READING_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_MISSED_READING });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"phone_muted_label"), accessory: phoneMutedIconImage, alarmID: CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED });
+			if (BlueToothDevice.isDexcomG5() || BlueToothDevice.isDexcomG4() || BlueToothDevice.isBluKon())
+				dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"transmitter_low_battery_label"), accessory: batteryLowIconImage, alarmID: CommonSettings.COMMON_SETTING_BATTERY_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY });
 			
+			var dataContainer:ListCollection = new ListCollection(dataSectionsContainer);
+			dataProvider = dataContainer;
+			
+			/* Renderer */
 			itemRendererFactory = function():IListItemRenderer 
 			{
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
@@ -94,7 +128,20 @@ package display.settings.alarms
 			};
 			
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
+			
+			/* Event Listeners */
 			addEventListener( Event.CHANGE, onMenuChanged );
+		}
+		
+		/**
+		 * Event Listeners
+		 */
+		private function onOverrideMute(e:Event):void
+		{
+			if (muteOverride.isSelected)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE, "true");
+			else
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE, "false");
 		}
 		
 		private function onMenuChanged(e:Event):void 
@@ -102,19 +149,24 @@ package display.settings.alarms
 			if(selectedItem.screen != null)
 			{
 				const screenName:String = selectedItem.screen as String;
-				const alarmType:String = selectedItem.alarmType as String;
+				const alarmID:Number = selectedItem.alarmID as Number;
 				const alarmLabel:String = selectedItem.label as String;
+				const alarmType:String = selectedItem.alarmType as String;
 				
-				if(alarmType != null)
+				if(!isNaN(alarmID) && alarmLabel != "" && alarmLabel != null && alarmType != null)
 				{
-					AlarmNavigatorData.getInstance().selectedAlarm = alarmType;
-					AlarmNavigatorData.getInstance().selectedAlarmTitle = alarmLabel;
+					AlarmNavigatorData.getInstance().alarmID = alarmID;
+					AlarmNavigatorData.getInstance().alarmTitle = alarmLabel;
+					AlarmNavigatorData.getInstance().alarmType = alarmType;
 				}
 				
 				AppInterface.instance.navigator.pushScreen( screenName );
 			}
 		}
 		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
 			if(muteOverride != null)

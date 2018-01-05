@@ -1,126 +1,611 @@
 package display.settings.alarms
 {
+	import flash.utils.ByteArray;
+	
+	import data.AlarmNavigatorData;
+	
+	import databaseclasses.CommonSettings;
+	
 	import display.LayoutFactory;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.Button;
-	import feathers.controls.Check;
+	import feathers.controls.Callout;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
-	import feathers.controls.PickerList;
-	import feathers.controls.TextInput;
-	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
-	import feathers.data.ArrayCollection;
+	import feathers.core.PopUpManager;
 	import feathers.data.ListCollection;
-	import feathers.layout.AnchorLayoutData;
-	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
-	import starling.display.Image;
-	import starling.events.Event;
+	import model.ModelLocator;
 	
+	import starling.core.Starling;
+	import starling.display.Sprite;
+	import starling.events.Event;
+	import starling.text.TextFormat;
+	
+	import utils.AlertManager;
 	import utils.Constants;
+	import utils.DeviceInfo;
+	import utils.TimeSpan;
+	
+	[ResourceBundle("alarmsettingsscreen")]
+	[ResourceBundle("globaltranslations")]
 
 	public class AlarmCustomizerList extends List 
 	{
-		public function AlarmCustomizerList()
+		/* Constants */
+		private const TIME_1_MINUTE:int = 1000 * 60;
+		private const UNIT_MGDL:String = "mg/dl";
+		private const UNIT_MMOL:String = "mmol/L";
+		
+		/* Display Objects */
+		private var alarmCustomizerCallout:Callout;
+		private var alarmCreatorList:AlarmCreatorList;
+		private var addAlarmtButton:Button;
+		private var positionHelper:Sprite;
+		private var saveAllAlarmsButton:Button;
+		private var actionButtonsContainer:LayoutGroup;
+		
+		/* Properties */
+		public var needsSave:Boolean = false;
+		private var glucoseUnit:String;
+		private var alarmID:Number;
+		private var alarmType:String;
+		private var alarmData:Array = [];
+		private var finalAlarmData:Array;
+		private var alarmControlsList:Array = [];
+		
+		public function AlarmCustomizerList(alarmID:Number, alarmType:String)
 		{
 			super();
+			
+			//Set initial internal variables
+			this.alarmID = alarmID;
+			this.alarmType = alarmType;
 		}
 		override protected function initialize():void 
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupInitialContent();
+			setupContent();
+		}
+		
+		private function setupProperties():void
+		{
 			/* Properties */
 			clipContent = false;
 			isSelectable = false;
 			autoHideBackground = true;
 			hasElasticEdges = false;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
+		private function setupInitialContent():void
+		{
+			/* Set Internal Variables */
+			if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE)
+				glucoseUnit = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? UNIT_MGDL : UNIT_MMOL;
 			
-			/* Controls */
-			var enableAlarm:ToggleSwitch = LayoutFactory.createToggleSwitch(true);
-			var treshold:TextInput = LayoutFactory.createTextInput(false, true, 40, HorizontalAlign.RIGHT);
-			var enableSnoozeInNotification:Check = LayoutFactory.createCheckMark(true);
-			var snoozeMinutes:TextInput = LayoutFactory.createTextInput(false, true, 40, HorizontalAlign.RIGHT);
-			var enableRepeat:Check = LayoutFactory.createCheckMark(true);
-			var enableVibration:Check = LayoutFactory.createCheckMark(true);
-			var soundList:PickerList = LayoutFactory.createPickerList();
+			/* Parse Alarm Settings */
+			var completeAlarmSettings:String = CommonSettings.getCommonSetting(alarmID);
+			var alarmsSettingsDivided:Array = completeAlarmSettings.split("-");
+			var alarmsSettingsLength:uint = alarmsSettingsDivided.length;
 			
-			/* Content */
-			soundList.dataProvider = new ArrayCollection(
-				[
-					{ label: "No Sound", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Better WakeUp", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Bruteforce", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Default iOS", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Modern Alarm #1", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Modern Alarm #2", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Nightscout", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Short Low #1", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Short Low #2", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Short Low #3", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Short Low #4", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Short High #1", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Short High #2", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Short High #3", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Short High #4", accessory: createPlayButton(), soundFile: "" },
-					{ label: "Spaceship", accessory: createPlayButton(), soundFile: "" },
-				]);
-			soundList.labelField = "label";
-			soundList.itemRendererFactory = function():IListItemRenderer
+			var validIndex:uint = 0;
+			for (var i:int = 0; i < alarmsSettingsLength; i++) 
 			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.accessoryOffsetX = -20;
-				itemRenderer.labelOffsetX = 20;
-				return itemRenderer;
+				//Get alarm settings
+				var tempAlarmSettings:Array = (alarmsSettingsDivided[i] as String).split(">");
+				
+				//Get alarm time data
+				var alarmTimeData:Array = (tempAlarmSettings[0] as String).split(":");
+				
+				//Create alarm settings object
+				//Process Start Time
+				var alarmSettings:Object = {};
+				alarmSettings.startTimeStamp = (Number(alarmTimeData[0]) * 60 * 60 * 1000) + (Number(alarmTimeData[1]) * 60 * 1000);
+				alarmSettings.startTimeOutput = tempAlarmSettings[0];
+				alarmSettings.startHour = Number(alarmTimeData[0]);
+				alarmSettings.startMinutes = Number(alarmTimeData[1]);
+				if (i < alarmsSettingsLength - 1)
+				{
+					//Process End Time
+					var tempNextAlarmSettings:Array = (alarmsSettingsDivided[i+1] as String).split(">");
+					var nextAlarmTimeData:Array = (tempNextAlarmSettings[0] as String).split(":");
+					
+					var endHours:Number = Number(nextAlarmTimeData[0]);
+					var endMinutes:Number = Number(nextAlarmTimeData[1]);
+					if (endMinutes == 0)
+					{
+						endHours -= 1;
+						if (endHours == -1)
+							endHours = 23;
+						
+						endMinutes = 59;
+					}
+					else
+						endMinutes -= 1;
+					
+					alarmSettings.endTimeStamp = (endHours * 60 * 60 * 1000) + (endMinutes * 60 * 1000);
+					var timeSpan:TimeSpan = TimeSpan.fromMilliseconds(Number(alarmSettings.endTimeStamp));
+					alarmSettings.endTimeOutput = timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted;
+					alarmSettings.endHour = endHours;
+					alarmSettings.endMinutes = endMinutes;
+				}
+				else
+				{
+					//We are at the end. Ensure the settings fill the entire 24h timespan
+					alarmSettings.endTimeStamp = (23 * 60 * 60 * 1000) + (59 * 60 * 1000);
+					alarmSettings.endTimeOutput = "23:59";
+					alarmSettings.endHour = 23;
+					alarmSettings.endMinutes = 59;
+				}
+				alarmSettings.value = tempAlarmSettings[1];
+				alarmSettings.alertType = tempAlarmSettings[2];
+				alarmSettings.alarmType = alarmType;
+				alarmSettings.alarmID = alarmID;
+				
+				
+				if (alarmSettings.alertType != "No Alert")
+				{
+					alarmSettings.index = validIndex;
+					validIndex += 1;
+					alarmData.push(alarmSettings);
+				}
 			}
+		}
+		
+		private function setupContent():void
+		{
+			/* List action buttons */
+			//Actions buttons container and layout
+			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
+			actionButtonsLayout.gap = 5;
 			
-			/* Data */
-			dataProvider = new ListCollection(
-				[
-					{ label: "Enabled", accessory: enableAlarm },
-					{ label: "Treshold", accessory: treshold },
-					{ label: "Snooze From Notification", accessory: enableSnoozeInNotification },
-					{ label: "Default Snooze (Min)", accessory: snoozeMinutes },
-					{ label: "Repeat", accessory: enableRepeat },
-					{ label: "Sound", accessory: soundList },
-					{ label: "Vibration Enabled", accessory: enableVibration }
-				]);
+			actionButtonsContainer = new LayoutGroup();
+			actionButtonsContainer.layout = actionButtonsLayout;
 			
-			/* Renderer */
+			//Add alarm button
+			addAlarmtButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"add_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.alarmAddTexture);
+			addAlarmtButton.gap = 5;
+			addAlarmtButton.addEventListener(Event.TRIGGERED, onAddAlarm);
+			actionButtonsContainer.addChild(addAlarmtButton);
+			
+			//Save alarms button
+			saveAllAlarmsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"save_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.saveTexture);
+			saveAllAlarmsButton.gap = 5;
+			saveAllAlarmsButton.addEventListener(Event.TRIGGERED, onSaveAllAlarms);
+			if (alarmData.length > 0)
+				actionButtonsContainer.addChild(saveAllAlarmsButton);
+			
+			/* List Content */
+			var listData:ListCollection = new ListCollection();
+			for (var i:int = 0; i < alarmData.length; i++) 
+			{
+				//Define alarm time range
+				var startTime:String = alarmData[i].startTimeOutput;
+				var endTime:String = alarmData[i].endTimeOutput
+				var timeRangeOutput:String = startTime + " - " + endTime;
+				
+				//Define alarm value
+				var valueOutput:String = String(alarmData[i].value);
+				if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE)
+					valueOutput += glucoseUnit;
+				else if (alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION)
+					valueOutput += "h";
+				else if (alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING)
+					valueOutput += "m";
+				
+				//Define alarm alert type
+				var alertTypeOutput:String = String(alarmData[i].alertType);
+				
+				//Create alarm controls, define event listeners and save them for disposal
+				var alarmControls:AlarmManagerAccessory = new AlarmManagerAccessory();
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+					alarmControls.scale = 0.8;
+				alarmControls.addEventListener(AlarmManagerAccessory.EDIT, onEditAlarm);
+				alarmControls.addEventListener(AlarmManagerAccessory.DELETE, onDeleteAlarm);
+				alarmControlsList.push(alarmControls);
+				
+				//Create alarm list item
+				var itemLabel:String = timeRangeOutput;
+				if (alarmType != AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED && alarmType != AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY)
+					itemLabel += " | " + valueOutput;
+				itemLabel += " | " + alertTypeOutput;
+				
+				listData.push( { label: itemLabel, accessory: alarmControls, data: alarmData[i], index: i } );
+			}
+			//Add action buttons to the list
+			listData.push( { label:"", accessory:actionButtonsContainer } );
+			
+			//Set list content
+			dataProvider = listData;
+			
+			//List Renderer
 			itemRendererFactory = function():IListItemRenderer 
 			{
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+					item.fontStyles = new TextFormat("Roboto", 10, 0xEEEEEE, "left", "top");
 				item.accessoryField = "accessory";
+				item.accessoryOffsetX = 18;
 				return item;
 			};
-			
-			/* Layout */
-			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
 		}
 		
-		private function createPlayButton():Button
+		private function processAlarmData():void
 		{
-			var button:Button = new Button();
-			button.iconOffsetX = 0.1;
-			button.iconOffsetY = -0.1;
-			button.styleNameList.add(Button.ALTERNATE_STYLE_NAME_CALL_TO_ACTION_BUTTON);
-			button.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.playOutlineTexture);
-			button.width = button.height = 20;
-			button.addEventListener(Event.TRIGGERED, onPlaySound);
+			//Holder for the parsed alarms, ready to be processed into a final setting's string
+			finalAlarmData = [];
 			
-			return button;
+			//Common index for loop iterations
+			var i:int;
+			
+			if (alarmData == null || alarmData.length == 0)
+			{
+				//There are no alarms. Create a 24h time span NO ALERT filler
+				finalAlarmData.push
+				(
+					{ startTime: "00:00", value: 0, alertType: "No Alert" }
+				)
+			}
+			else
+			{
+				//Sort all alarms by time (ascennding)
+				sortAlarms();
+				
+				//Loop through all alarms to process them
+				var dataLength:uint = alarmData.length;
+				for (i = 0; i < dataLength; i++) 
+				{
+					//Define current alarm relevant settings
+					var currentAlarmSettings:Object = alarmData[i] as Object;
+					var currentAlarmStartTimeStamp:Number = Number(currentAlarmSettings.startTimeStamp);
+					var currentAlarmEndTimeStamp:Number = Number(currentAlarmSettings.endTimeStamp);
+					
+					if (i == 0)
+					{
+						//We are in the first alarm. Does the alarm start at 00:00
+						if (currentAlarmStartTimeStamp > 0)
+						{
+							//We need to insert a NO ALERT first
+							finalAlarmData.push
+							(
+								{ startTime: "00:00", value: 0, alertType: "No Alert" }
+							)
+						}
+						
+						//Push the first alarm into the array
+						finalAlarmData.push
+						(
+							{ startTime: currentAlarmSettings.startTimeOutput, value: currentAlarmSettings.value, alertType: currentAlarmSettings.alertType }
+						)
+					}
+					else
+					{
+						//We are in the following alarms. Define main settings of the previous alarm so we can compare start/end times and add NO ALERT fillers when/if needed
+						var previousAlarmSettings:Object = alarmData[i-1] as Object;
+						var previousAlarmEndTimeStamp:Number = Number(previousAlarmSettings.endTimeStamp);
+						var timeSpan:TimeSpan;
+						
+						if (previousAlarmEndTimeStamp + TIME_1_MINUTE < currentAlarmStartTimeStamp)
+						{
+							//There's a gap between the previous alarm and this one. Let's add a filler NO ALERT alarm that starts 1 minute later
+							timeSpan = TimeSpan.fromMilliseconds(previousAlarmEndTimeStamp + TIME_1_MINUTE);
+							finalAlarmData.push
+							(
+								{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
+							)
+						}
+						
+						//Add the current alarm to the array
+						finalAlarmData.push
+						(
+							{ startTime: currentAlarmSettings.startTimeOutput, value: currentAlarmSettings.value, alertType: currentAlarmSettings.alertType }
+						)
+						
+						if (i == dataLength - 1)
+						{
+							//We're in the final alarm. Check if we need to add a NO ALERT filler to the end to complete the entire 24h span
+							if (Number(currentAlarmSettings.endHour) < 23 && Number(currentAlarmSettings.endMinutes) < 59)
+							{
+								//Complete the 24h timespan with a NO ALERT filler that starts 1 minute later
+								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TIME_1_MINUTE);
+								finalAlarmData.push
+								(
+									{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
+								)
+							}
+						}
+					}
+				}
+			}
+			
+			//All alarms are processed. Let's create the final settings string
+			var finalAlarmSettings:String = "";
+			
+			//Loop through all the alarms and create the settings string
+			var loopLength:uint = finalAlarmData.length;
+			for (i = 0; i < loopLength; i++) 
+			{
+				var alarmObject:Object = finalAlarmData[i];
+				finalAlarmSettings += alarmObject.startTime;
+				finalAlarmSettings += ">";
+				finalAlarmSettings += alarmObject.value;
+				finalAlarmSettings += ">";
+				finalAlarmSettings += alarmObject.alertType;
+				if (i < loopLength - 1)
+					finalAlarmSettings += "-";
+			}
+			
+			//Save settings to database
+			CommonSettings.setCommonSetting(alarmID, finalAlarmSettings);
 		}
 		
-		private function onPlaySound(e:Event):void
+		private function setupCalloutPosition():void
 		{
-			var selectedItemData:Object = DefaultListItemRenderer(Button(e.currentTarget).parent).data;
-			trace("SoundFile:", selectedItemData.soundFile);
+			//Position helper for the callout
+			positionHelper = new Sprite();
+			positionHelper.x = (Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2)) / 2;
+			positionHelper.y = 0;
+			addChild(positionHelper);
+		}
+		
+		private function cloneObject( source:Object ):Object 
+		{ 
+			//ByteArray capable of cloning objects
+			var cloner:ByteArray = new ByteArray(); 
+			cloner.writeObject( source ); 
+			cloner.position = 0; 
+			
+			return( cloner.readObject() ); 
+		}
+		
+		private function displayInvalidAlarmAlert(conflictingTimerange:String):void
+		{
+			//Displays and alert when the user tries to add an alarm with a timerange that conflicts with an existing alarm
+			var alert:Alert = AlertManager.showSimpleAlert
+			(
+				ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"invalid_alarm_alert_title"),
+				ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"invalid_alarm_alert_message") + " " + conflictingTimerange + ".",
+				Number.NaN,
+				onCloseAlert
+			);
+			
+			function onCloseAlert(e:Event):void
+			{
+				Starling.current.juggler.delayCall(showAlarmCustomizerCallout, 0.001);
+			}
+		}
+		
+		private function showAlarmCustomizerCallout(forceCreation:Boolean = false):void
+		{
+			if (forceCreation)
+			{
+				setupCalloutPosition();
+				
+				alarmCustomizerCallout = new Callout();
+				alarmCustomizerCallout.content = alarmCreatorList;
+				alarmCustomizerCallout.origin = positionHelper;
+			}
+			
+			PopUpManager.addPopUp(alarmCustomizerCallout, false, false);
+		}
+		
+		private function validateAlarm(alarm:Object, editMode:Boolean = false):Boolean
+		{
+			//Set initial variables
+			var isValid:Boolean = true;
+			var alarmStartTimeStamp:Number = Number(alarm.startTimeStamp);
+			var alarmEndTimeStamp:Number = Number(alarm.endTimeStamp);
+			var conflictingTimerange:String = "";
+			
+			//Loop through all the alarms
+			var alarmsNumber:uint = alarmData.length;
+			for (var i:int = 0; i < alarmsNumber; i++) 
+			{
+				//If we are in edit mode, skip the alarm we are editing
+				if (editMode && i == alarm.index)
+					continue;
+				
+				var existingAlarm:Object = alarmData[i];
+				var existingStartTimeStamp:Number = Number(existingAlarm.startTimeStamp);
+				var existingEndTimeStamp:Number = Number(existingAlarm.endTimeStamp);
+				
+				//Conditions that make timeranges conflict with each other
+				if ((alarmStartTimeStamp >= existingStartTimeStamp && alarmStartTimeStamp <= existingEndTimeStamp) ||
+					(alarmStartTimeStamp < existingStartTimeStamp && alarmEndTimeStamp >= existingEndTimeStamp) ||
+					(alarmStartTimeStamp == existingStartTimeStamp - TIME_1_MINUTE) ||
+					(alarmStartTimeStamp == existingStartTimeStamp) ||
+					(alarmEndTimeStamp == existingEndTimeStamp) ||
+					(alarmEndTimeStamp >= existingStartTimeStamp && alarmEndTimeStamp <= existingEndTimeStamp))
+				{
+					conflictingTimerange = existingAlarm.startTimeOutput + " - " + existingAlarm.endTimeOutput;
+					isValid = false;
+				}
+			}
+			
+			if (!isValid)
+				displayInvalidAlarmAlert(conflictingTimerange);
+			
+			return isValid;
+		}
+		
+		private function sortAlarms():void
+		{
+			//Basic function that sorts the alarms by start time
+			alarmData.sortOn(["startTimeStamp"], Array.NUMERIC);
+			for (var i:int = 0; i < alarmData.length; i++) 
+			{
+				var alarm:Object = alarmData[i];
+				alarm.index = i;
+			}
+		}
+		
+		public function save():void
+		{
+			processAlarmData();
+			needsSave = false;
+		}
+		
+		/**
+		 * Event Listeners
+		 */
+		private function onSaveAllAlarms(e:Event):void
+		{
+			save();
+		}
+		
+		private function onAddAlarm(e:Event):void
+		{
+			alarmCreatorList = new AlarmCreatorList({alarmType:alarmType, alarmID:alarmID}, AlarmCreatorList.MODE_ADD);
+			alarmCreatorList.addEventListener(AlarmCreatorList.CANCEL, onCancelCallout);
+			alarmCreatorList.addEventListener(AlarmCreatorList.SAVE_ADD, onSaveNewAlarm);
+			
+			showAlarmCustomizerCallout(true);
+		}
+		
+		private function onEditAlarm(e:Event):void
+		{	
+			var alarmData:Object = (((e.currentTarget as AlarmManagerAccessory).parent as DefaultListItemRenderer).data as Object).data as Object;
+			
+			alarmCreatorList = new AlarmCreatorList(cloneObject(alarmData), AlarmCreatorList.MODE_EDIT);
+			alarmCreatorList.addEventListener(AlarmCreatorList.CANCEL, onCancelCallout);
+			alarmCreatorList.addEventListener(AlarmCreatorList.SAVE_EDIT, onSaveEditAlarm);
+			
+			showAlarmCustomizerCallout(true);
+		}
+		
+		private function onSaveNewAlarm(e:Event):void
+		{
+			if (validateAlarm(e.data))
+			{
+				alarmData.push(e.data);
+				sortAlarms()
+				setupContent();
+				
+				PopUpManager.removePopUp(alarmCustomizerCallout, true);
+				
+				needsSave = true;
+				saveAllAlarmsButton.isEnabled = true;
+			}
+		}
+		
+		private function onSaveEditAlarm(e:Event):void
+		{
+			if (validateAlarm(e.data, true))
+			{
+				alarmData[Number(e.data.index)] = e.data;
+				sortAlarms()
+				setupContent();
+				
+				PopUpManager.removePopUp(alarmCustomizerCallout, true);
+				
+				needsSave = true;
+				saveAllAlarmsButton.isEnabled = true;
+			}	
+		}
+		
+		public function closeCallout():void
+		{
+			if (alarmCustomizerCallout != null)
+			{
+				alarmCustomizerCallout.close(true);
+			}
+		}
+		
+		private function onCancelCallout(e:Event):void
+		{
+			alarmCustomizerCallout.close(true);
+		}
+		
+		private function onDeleteAlarm(e:Event):void
+		{
+			var alarmIndex:int = (((e.currentTarget as AlarmManagerAccessory).parent as DefaultListItemRenderer).data as Object).index as int;
+			
+			alarmData.removeAt(alarmIndex);
+			
+			setupContent();
+			
+			needsSave = true;
+			saveAllAlarmsButton.isEnabled = true;
+		}
+		
+		/**
+		 * Utility
+		 */
+		override protected function draw():void
+		{
+			if (!needsSave)
+				saveAllAlarmsButton.isEnabled = false;
+			else
+				saveAllAlarmsButton.isEnabled = true;
+			
+			super.draw();
+		}
+		
+		override public function dispose():void
+		{
+			if (alarmCustomizerCallout != null)
+			{
+				alarmCustomizerCallout.dispose();
+				alarmCustomizerCallout = null;
+			}
+			
+			if (alarmCreatorList != null)
+			{
+				alarmCreatorList.dispose();
+				alarmCreatorList = null;
+			}
+			
+			if (addAlarmtButton != null)
+			{
+				actionButtonsContainer.removeChild(addAlarmtButton);
+				addAlarmtButton.dispose();
+				addAlarmtButton = null;
+			}
+			
+			if (saveAllAlarmsButton != null)
+			{
+				actionButtonsContainer.removeChild(saveAllAlarmsButton);
+				saveAllAlarmsButton.dispose();
+				saveAllAlarmsButton = null;
+			}
+			
+			if (actionButtonsContainer != null)
+			{
+				actionButtonsContainer.dispose();
+				actionButtonsContainer = null;
+			}
+			
+			if (positionHelper != null)
+			{
+				positionHelper.dispose();
+				positionHelper = null;
+			}
+			
+			if (alarmControlsList != null && alarmControlsList.length > 0)
+			{
+				for (var i:int = 0; i < alarmControlsList.length; i++) 
+				{
+					var control:AlarmManagerAccessory = alarmControlsList[i];
+					if (control != null)
+					{
+						control.dispose();
+						control = null;
+					}
+				}
+			}
+			
+			super.dispose();
 		}
 	}
 }

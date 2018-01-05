@@ -11,6 +11,7 @@ package display.settings.share
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
+	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -146,6 +147,7 @@ package display.settings.share
 			}
 			
 			dsServer.labelField = "label";
+			dsServer.popUpContentManager = new DropDownPopUpContentManager();
 			dsServer.dataProvider = dsServerList;
 			dsServer.selectedIndex = selectedServerIndex;
 			dsServer.addEventListener(Event.CHANGE, onServerChanged);

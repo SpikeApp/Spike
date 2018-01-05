@@ -206,6 +206,17 @@ package utils
 			return int(_totalMilliseconds / MILLISECONDS_IN_HOUR) % 24;
 		}
 		
+		public function get hoursFormatted() : String
+		{
+			var hours:int = int(_totalMilliseconds / MILLISECONDS_IN_HOUR) % 24;
+			var hoursOutput:String;
+			
+			if (hours >= 10) hoursOutput = String(hours);
+			else hoursOutput = "0" + hours;
+			
+			return hoursOutput;
+		}
+		
 		/**
 		 * Gets the number of whole minutes (excluding entire hours)
 		 * 
@@ -216,6 +227,17 @@ package utils
 		public function get minutes() : int
 		{
 			return int(_totalMilliseconds / MILLISECONDS_IN_MINUTE) % 60; 
+		}
+		
+		public function get minutesFormatted() : String
+		{
+			var minutes:int = int(_totalMilliseconds / MILLISECONDS_IN_MINUTE) % 60;
+			var minutesOutput:String;
+			
+			if (minutes >= 10) minutesOutput = String(minutes);
+			else minutesOutput = "0" + minutes;
+			
+			return minutesOutput;
 		}
 		
 		/**

@@ -2,19 +2,18 @@ package data
 {
 	public class AlarmNavigatorData 
 	{
-		public static const BATTERY_LOW:String = "batteryLow";
-		public static const CALIBRATION:String = "calibration";
-		public static const MISSED_READING:String = "missedReading";
-		public static const PHONE_MUTED:String = "phoneMuted";
-		public static const URGENT_LOW:String = "urgentLow";
-		public static const LOW:String = "low";
-		public static const HIGH:String = "high";
-		public static const URGENT_HIGH:String = "urgentHigh";
+		/* Constants */
+		public static const ALARM_TYPE_CALIBRATION:String = "calibration";
+		public static const ALARM_TYPE_GLUCOSE:String = "glucose";
+		public static const ALARM_TYPE_MISSED_READING:String = "missedReading";
+		public static const ALARM_TYPE_PHONE_MUTED:String = "phoneMuted";
+		public static const ALARM_TYPE_TRANSMITTER_LOW_BATTERY:String = "transmitterLowBattery";
 		
+		/* Properties */
 		private static var instance:AlarmNavigatorData;
-		
-		private var _selectedAlarm:String;
-		private var _selectedAlarmTitle:String;
+		private var _alarmID:Number;
+		private var _alarmTitle:String;
+		private var _alarmType:String;
 		
 		public static function getInstance():AlarmNavigatorData 
 		{
@@ -37,26 +36,35 @@ package data
 		/**
 		 * Getters & Setters
 		 */
-		public function get selectedAlarm():String
+		public function get alarmID():Number
 		{
-			return _selectedAlarm;
+			return _alarmID;
 		}
 		
-		public function set selectedAlarm(value:String):void
+		public function set alarmID(value:Number):void
 		{
-			_selectedAlarm = value;
+			_alarmID = value;
 		}
 
-		public function get selectedAlarmTitle():String
+		public function get alarmTitle():String
 		{
-			return _selectedAlarmTitle;
+			return _alarmTitle;
 		}
 
-		public function set selectedAlarmTitle(value:String):void
+		public function set alarmTitle(value:String):void
 		{
-			_selectedAlarmTitle = value;
+			_alarmTitle = value;
 		}
 
+		public function get alarmType():String
+		{
+			return _alarmType;
+		}
+
+		public function set alarmType(value:String):void
+		{
+			_alarmType = value;
+		}
 	}
 }
 

@@ -8,6 +8,7 @@ package display.settings.chart
 	
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
+	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -71,13 +72,8 @@ package display.settings.chart
 			dateFormatLabelsList.length = 0;
 			dateFormatLabelsList = null;
 			dateFormatPicker.labelField = "label";
+			dateFormatPicker.popUpContentManager = new DropDownPopUpContentManager();
 			dateFormatPicker.dataProvider = dateFormatList;
-			dateFormatPicker.itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				return itemRenderer;
-			}
 			
 			/* Set Date Settings Item Renderer */
 			itemRendererFactory = function():IListItemRenderer
