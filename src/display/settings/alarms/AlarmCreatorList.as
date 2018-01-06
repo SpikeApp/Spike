@@ -1,5 +1,7 @@
 package display.settings.alarms
 {
+	import mx.utils.ObjectUtil;
+	
 	import data.AlarmNavigatorData;
 	
 	import databaseclasses.AlertType;
@@ -31,6 +33,7 @@ package display.settings.alarms
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
@@ -290,16 +293,32 @@ package display.settings.alarms
 			};
 		}
 		
-		private function refreshAlertTypeList():void
+		private function refreshAlertTypeList(newAlertName:String):void
 		{
-			var alertTypesData:Array = Database.getAlertTypesList();
-			var newAlertName:String = (alertTypesData[alertTypesData.length - 1] as AlertType).alarmName;
+			alertTypeList.removeEventListener(Event.CHANGE, onAlertListChange);
 			
-			if (newAlertName != "null" && newAlertName != null)
+			var alertTypeDataProvider:ArrayCollection = new ArrayCollection();
+			alertTypeDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"new_alert_label") } );
+			
+			var alertTypesData:Array = Database.getAlertTypesList();
+			var numAlertTypes:uint = alertTypesData.length;
+			for (var i:int = 0; i < numAlertTypes; i++) 
 			{
-				alertTypeList.dataProvider.push({ label: newAlertName });
-				alertTypeList.selectedIndex = alertTypeList.dataProvider.length - 1;
+				var alertName:String = (alertTypesData[i] as AlertType).alarmName;
+				
+				if (alertName != "null" && alertName != "No Alert")
+				{
+					alertTypeDataProvider.push( { label: alertName } );
+					
+					if (alertName == newAlertName)
+						selectedAlertTypeIndex = alertTypeDataProvider.length - 1;
+				}
 			}
+			
+			alertTypeList.dataProvider = null;
+			alertTypeList.dataProvider = alertTypeDataProvider;
+			alertTypeList.selectedIndex = selectedAlertTypeIndex;
+			alertTypeList.addEventListener(Event.CHANGE, onAlertListChange);
 		}
 		
 		private function setupCalloutPosition():void
@@ -344,7 +363,9 @@ package display.settings.alarms
 		
 		private function onAlertCreatorClose(e:Event):void
 		{
-			refreshAlertTypeList();
+			if (e.data != null)
+				refreshAlertTypeList(e.data.newAlertName);
+			
 			alertCreatorCallout.close(true);
 		}
 		
@@ -380,7 +401,12 @@ package display.settings.alarms
 					alarmData.value = 5;
 			}
 			else
-				alarmData.value = valueStepper.value;
+			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
+					alarmData.value = Math.round(BgReading.mmolToMgdl(valueStepper.value));
+				else
+					alarmData.value = valueStepper.value;
+			}
 				
 			/* Alert Type */
 			alarmData.alertType = alertTypeList.selectedItem.label;

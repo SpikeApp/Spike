@@ -525,6 +525,8 @@ package databaseclasses
 				//check if this item is already in that list, if not add it
 				var calibrationItem:Calibration;
 				var itemfound:Boolean = false;
+				var dataSortFieldForReturnValue:SortField;
+				var dataSortForBGReadings:Sort;
 				var calibcntr:int;
 				if (calibration != null) {
 					for (calibcntr = 0; calibcntr< calibrations.length; calibcntr++) {
@@ -537,11 +539,11 @@ package databaseclasses
 				
 				if (!itemfound && calibration != null) {
 					calibrations.addItemAt(calibration, 0);
-					var dataSortFieldForReturnValue:SortField = new SortField();
+					dataSortFieldForReturnValue = new SortField();
 					dataSortFieldForReturnValue.name = "timestamp";
 					dataSortFieldForReturnValue.numeric = true;
 					dataSortFieldForReturnValue.descending = true;//ie from large to small
-					var dataSortForBGReadings:Sort = new Sort();
+					dataSortForBGReadings = new Sort();
 					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
 					calibrations.sort = dataSortForBGReadings;
 					calibrations.refresh();
@@ -598,11 +600,11 @@ package databaseclasses
 						}
 						if (!itemfound) {
 							latest3Calibrations.addItemAt(calibration, 0);
-							var dataSortFieldForReturnValue:SortField = new SortField();
+							dataSortFieldForReturnValue = new SortField();
 							dataSortFieldForReturnValue.name = "timestamp";
 							dataSortFieldForReturnValue.numeric = true;
 							dataSortFieldForReturnValue.descending = true;//ie from large to small
-							var dataSortForBGReadings:Sort = new Sort();
+							dataSortForBGReadings = new Sort();
 							dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
 							latest3Calibrations.sort = dataSortForBGReadings;
 							latest3Calibrations.refresh();

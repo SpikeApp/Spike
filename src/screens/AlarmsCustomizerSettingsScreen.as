@@ -57,6 +57,7 @@ package screens
 			title = _options.alarmTitle;
 			
 			alarmCustomizer = new AlarmCustomizerList(_options.alarmID, _options.alarmType);
+			alarmCustomizer.addEventListener(Event.COMPLETE, onSkipSaveSettings);
 			screenRenderer.addChild(alarmCustomizer);
 		}
 		

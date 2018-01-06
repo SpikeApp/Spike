@@ -140,7 +140,7 @@ package services
 			var titleText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_notification_title");
 			var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_background");
 			if (BackgroundFetch.appIsInForeground())
-				var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_foreground");
+				bodyText = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_foreground");
 			Notifications.service.cancel(ID_FOR_DEVICE_NOT_PAIRED);
 			Notifications.service.notify(
 				new NotificationBuilder()

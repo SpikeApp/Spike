@@ -772,11 +772,11 @@ package databaseclasses
 						if (debugMode)
 							trace("Retrieved LogInfo from db During Startup = ");
 						for each ( var o:Object in tempObject) {
-							var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGRETRIEVED_EVENT);
-							event.data = o.log;
+							var event1:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGRETRIEVED_EVENT);
+							event1.data = o.log;
 							if (debugMode)
 								trace(o.log as String);
-							instance.dispatchEvent(event);
+							instance.dispatchEvent(event1);
 						}
 						if (debugMode)
 							trace("End of retrieved LogInfo from db During Stratup.");
@@ -786,9 +786,9 @@ package databaseclasses
 					//no need to dispatch anything, there are no loggings
 				}
 				
-				var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGRETRIEVED_EVENT);
-				event.data = END_OF_RESULT;
-				instance.dispatchEvent(event);
+				var event2:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGRETRIEVED_EVENT);
+				event2.data = END_OF_RESULT;
+				instance.dispatchEvent(event2);
 			}
 			
 			function loggingRetrievalFailed(see:SQLErrorEvent):void {
@@ -1912,8 +1912,8 @@ package databaseclasses
 				if (tempObject != null) {
 					if (tempObject is Array) {
 						for each ( var o:Object in tempObject) {
-							var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
-							event.data = new BgReading(
+							var event1:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
+							event1.data = new BgReading(
 								o.timestamp,
 								(o.sensorid as String) == "-" ? null:getSensor(o.sensorid),
 								(o.calibrationid as String) == "-" ? null:getCalibration(o.calibrationid),
@@ -1935,16 +1935,16 @@ package databaseclasses
 								(o.noise as String) == "-" ? null:o.noise,
 								o.lastmodifiedtimestamp,
 								o.bgreadingid);
-							instance.dispatchEvent(event);
+							instance.dispatchEvent(event1);
 						}
 					}
 				} else {
 					//no need to dispatch anything, there are no bgreadings
 				}
 				
-				var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
-				event.data = END_OF_RESULT;
-				instance.dispatchEvent(event);
+				var event2:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
+				event2.data = END_OF_RESULT;
+				instance.dispatchEvent(event2);
 			}
 			
 			function bgreadingRetrievalFailed(see:SQLErrorEvent):void {

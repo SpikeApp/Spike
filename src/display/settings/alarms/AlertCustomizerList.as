@@ -318,6 +318,12 @@ package display.settings.alarms
 					else
 					{
 						//Create and save alert to the database
+						var sound:String;
+						if (soundList.selectedItem.soundFile == "no_sound" || soundList.selectedItem.soundFile == "default")
+							sound = soundList.selectedItem.soundFile;
+						else
+							sound = soundList.selectedItem.label;
+						
 						var newAlertType:AlertType = new AlertType
 						(
 							alertTypeUniqueID,
@@ -328,7 +334,7 @@ package display.settings.alarms
 							enableSnoozeInNotificationValue,
 							alertEnabledSwitchStateValue,
 							false,
-							soundList.selectedItem.soundFile,
+							sound,
 							snoozeMinutesValue,
 							repeatInMinutes
 						);
@@ -373,7 +379,7 @@ package display.settings.alarms
 		private function onSave(e:Event):void
 		{	
 			if(save())
-				dispatchEventWith(Event.COMPLETE);
+				dispatchEventWith(Event.COMPLETE, false, { newAlertName: alertNameValue });
 		}
 		
 		private function onCancel(e:Event):void

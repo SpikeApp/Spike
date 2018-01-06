@@ -55,6 +55,9 @@ package ui
 				throw new IllegalOperationError("AlarmSnoozer class is not meant to be instantiated!");
 		}
 		
+		/**
+		 * Functionality
+		 */
 		public static function displaySnoozer(title:String, labels:Array, selectedIndex:int):void
 		{
 			//Update internal variables
@@ -164,12 +167,12 @@ package ui
 			snoozeCallout = new Callout();
 			snoozeCallout.content = mainContainer;
 			snoozeCallout.origin = positionHelper;
-			snoozeCallout.width = 250;
+			snoozeCallout.minWidth = 240;
 		}
 		
 		private static function createCloseTimer():void
 		{
-			closeTimer = new Timer( 1 * 60 * 1000, 1);
+			closeTimer = new Timer( 4 * 60 * 1000, 1); //4 minutes
 			closeTimer.addEventListener(TimerEvent.TIMER, closeCallout);
 			closeTimer.start();
 		}
@@ -212,6 +215,5 @@ package ui
 				
 			return _instance;
 		}
-
 	}
 }

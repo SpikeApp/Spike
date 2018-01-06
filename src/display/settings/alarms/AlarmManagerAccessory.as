@@ -11,6 +11,8 @@ package display.settings.alarms
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
+	import utils.DeviceInfo;
+	
 	public class AlarmManagerAccessory extends Sprite
 	{	
 		/* Constants */
@@ -37,7 +39,10 @@ package display.settings.alarms
 		{
 			/* Layout Container */
 			var rendererLayout:HorizontalLayout = new HorizontalLayout();
-			rendererLayout.gap = -15;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
+				rendererLayout.gap = -15;
+			else
+				rendererLayout.gap = -8;
 			
 			renderer = new LayoutGroup();
 			renderer.layout = rendererLayout;

@@ -94,6 +94,9 @@ package services
 				return;//should never be null actually
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
+					var lastBgRading:BgReading;
+					var transmitterServiceEvent:TransmitterServiceEvent;
+					var value:ByteArray;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeBeaconPacket but lastPacketTime < 60 seconds ago, ignoring");
 					} else {
@@ -117,19 +120,19 @@ package services
 							&&
 							transmitterDataBeaconPacket.TxID != "00000") {
 							myTrace("storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID);
-							var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
+							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
 							transmitterServiceEvent.data = new Object();
 							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID;
 							_instance.dispatchEvent(transmitterServiceEvent);
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID.toUpperCase());
-							var value:ByteArray = new ByteArray();
+							value = new ByteArray();
 							value.writeByte(0x02);
 							value.writeByte(0xF0);
 							BluetoothService.writeG4Characteristic(value);
 						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 							&&
 							transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
-							var value:ByteArray = new ByteArray();
+							value = new ByteArray();
 							value.endian = Endian.LITTLE_ENDIAN;
 							value.writeByte(0x06);
 							value.writeByte(0x01);
@@ -137,7 +140,7 @@ package services
 							myTrace("calling BluetoothService.ackCharacteristicUpdate");
 							BluetoothService.writeG4Characteristic(value);
 						} else {
-							var value:ByteArray = new ByteArray();
+							value = new ByteArray();
 							value.writeByte(0x02);
 							value.writeByte(0xF0);
 							BluetoothService.writeG4Characteristic(value);
@@ -153,19 +156,19 @@ package services
 							&&
 							transmitterDataXBridgeDataPacket.TxID != "00000") {
 							myTrace("storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID);
-							var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
+							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
 							transmitterServiceEvent.data = new Object();
 							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID;
 							_instance.dispatchEvent(transmitterServiceEvent);
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataXBridgeDataPacket.TxID.toUpperCase());
-							var value:ByteArray = new ByteArray();
+							value = new ByteArray();
 							value.writeByte(0x02);
 							value.writeByte(0xF0);
 							BluetoothService.writeG4Characteristic(value);
 						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 							&&
 							transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
-							var value:ByteArray = new ByteArray();
+							value = new ByteArray();
 							value.endian = Endian.LITTLE_ENDIAN;
 							value.writeByte(0x06);
 							value.writeByte(0x01);
@@ -173,7 +176,7 @@ package services
 							myTrace("calling BluetoothService.ackCharacteristicUpdate");
 							BluetoothService.writeG4Characteristic(value);
 						} else {
-							var value:ByteArray = new ByteArray();
+							value = new ByteArray();
 							value.writeByte(0x02);
 							value.writeByte(0xF0);
 							BluetoothService.writeG4Characteristic(value);
@@ -191,7 +194,7 @@ package services
 								.saveToDatabaseSynchronous();
 							
 							//dispatch the event that there's new data
-							var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 							_instance.dispatchEvent(transmitterServiceEvent);
 						} else {
 							//TODO inform that bgreading is received but sensor not started ?
@@ -257,7 +260,7 @@ package services
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderBatteryPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket");
-					var lastBgRading:BgReading = BgReading.lastNoSensor();
+					lastBgRading = BgReading.lastNoSensor();
 					if (lastBgRading != null) {
 						if (lastBgRading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
 							myTrace("in transmitterDataReceived,  is TransmitterDataBlueReaderBatteryPacket, but lastbgReading less than 255 seconds old, ignoring");
@@ -266,7 +269,7 @@ package services
 					}
 					BluetoothService.writeBlueReaderCharacteristic(Utilities.UniqueId.hexStringToByteArray("6C"));
 				} else if (be.data is TransmitterDataBluKonPacket) {
-					var lastBgRading:BgReading = BgReading.lastNoSensor();
+					lastBgRading = BgReading.lastNoSensor();
 					if (lastBgRading != null) {
 						if (lastBgRading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
 							myTrace("in transmitterDataReceived,  is TransmitterDataBluConPacket, but lastbgReading less than 255 seconds old, ignoring");

@@ -2,11 +2,13 @@ package display.settings.share
 {
 	import flash.system.System;
 	
+	import databaseclasses.BlueToothDevice;
 	import databaseclasses.CommonSettings;
 	
 	import display.LayoutFactory;
 	
 	import feathers.controls.Button;
+	import feathers.controls.Label;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
@@ -37,6 +39,7 @@ package display.settings.share
 		private var dsLogin:Button;
 		private var dsServer:PickerList;
 		private var dsToggle:ToggleSwitch;
+		private var dsSerial:TextInput;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -45,6 +48,7 @@ package display.settings.share
 		private var selectedPassword:String;
 		private var selectedServerCode:String;
 		private var selectedServerIndex:int;
+		private var selectedDexcomShareSerialNumber:String;
 		
 		public function DexcomSettingsList()
 		{
@@ -59,6 +63,9 @@ package display.settings.share
 			setupContent();	
 		}
 		
+		/**
+		 * Functionality
+		 */
 		private function setupProperties():void
 		{
 			//Set Properties
@@ -79,7 +86,84 @@ package display.settings.share
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true")
 				selectedServerCode = "us";
 			else
-				selectedServerCode = "non-us"
+				selectedServerCode = "non-us";
+			
+			if (!BlueToothDevice.isDexcomG5())
+				selectedDexcomShareSerialNumber = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER);
+			else
+				selectedDexcomShareSerialNumber = "";
+		}
+		
+		private function setupContent():void
+		{
+			//On/Off Toggle
+			dsToggle = LayoutFactory.createToggleSwitch(isDexcomEnabled);
+			dsToggle.addEventListener( Event.CHANGE, onDexcomShareOnOff );
+			
+			//Username
+			dsUsername = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
+			dsUsername.text = selectedUsername;
+			dsUsername.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
+			dsUsername.addEventListener(Event.CHANGE, onTextInputChanged);
+			
+			//Password
+			dsPassword = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
+			dsPassword.text = selectedPassword;
+			dsPassword.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
+			dsPassword.addEventListener(Event.CHANGE, onTextInputChanged);
+			
+			//Serial
+			if (!BlueToothDevice.isDexcomG5())
+			{
+				dsSerial = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
+				dsSerial.text = selectedDexcomShareSerialNumber;
+				dsSerial.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
+				dsSerial.addEventListener(Event.CHANGE, onTextInputChanged);
+			}
+			
+			/* Server */
+			dsServer = LayoutFactory.createPickerList();
+			
+			//Temp Data Objects
+			var serversLabelsList:Array = ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_name_list').split(",");
+			var serversCodeList:Array = ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_code_list').split(",");
+			var dsServerList:ArrayCollection = new ArrayCollection();
+			var dataLength:int = serversLabelsList.length;
+			for (var i:int = 0; i < dataLength; i++) 
+			{
+				dsServerList.push({ label: serversLabelsList[i], code: serversCodeList[i] });
+				if (selectedServerCode == serversCodeList[i])
+					selectedServerIndex = i;
+			}
+			
+			dsServer.labelField = "label";
+			dsServer.popUpContentManager = new DropDownPopUpContentManager();
+			dsServer.dataProvider = dsServerList;
+			dsServer.selectedIndex = selectedServerIndex;
+			dsServer.listFactory = function():List
+			{
+				var list:List = new List();
+				list.minWidth = 120;
+				
+				return list;
+			};
+			dsServer.addEventListener(Event.CHANGE, onServerChanged);
+			
+			//Login
+			dsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
+			dsLogin.addEventListener( Event.TRIGGERED, onDexcomShareLogin );
+			
+			//Set Item Renderer
+			itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				itemRenderer.accessoryField = "accessory";
+				return itemRenderer;
+			};
+			
+			//Define Dexcom Share Settings Data
+			reloadDexcomShareSettings(isDexcomEnabled);
 		}
 		
 		public function save():void
@@ -101,6 +185,10 @@ package display.settings.share
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != selectedPassword)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, selectedPassword);
 			
+			//Serial
+			if (!BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER) != selectedDexcomShareSerialNumber)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER, selectedDexcomShareSerialNumber);
+			
 			//Server
 			var dexcomServerValue:String;
 			
@@ -113,106 +201,21 @@ package display.settings.share
 			needsSave = false;
 		}
 		
-		private function setupContent():void
-		{
-			//On/Off Toggle
-			dsToggle = LayoutFactory.createToggleSwitch(isDexcomEnabled);
-			dsToggle.addEventListener( Event.CHANGE, onDexcomShareOnOff );
-			
-			//Username
-			dsUsername = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
-			dsUsername.text = selectedUsername;
-			dsUsername.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
-			dsUsername.addEventListener(Event.CHANGE, onTextInputChanged);
-			
-			//Password
-			dsPassword = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
-			dsPassword.text = selectedPassword;
-			dsPassword.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
-			dsPassword.addEventListener(Event.CHANGE, onTextInputChanged);
-			
-			/* Server */
-			dsServer = LayoutFactory.createPickerList();
-			
-			//Temp Data Objects
-			var serversLabelsList:Array = ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_name_list').split(",");
-			var serversCodeList:Array = ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_code_list').split(",");
-			var dsServerList:ArrayCollection = new ArrayCollection();
-			var dataLength:int = serversLabelsList.length;
-			for (var i:int = 0; i < dataLength; i++) 
-			{
-				dsServerList.push({ label: serversLabelsList[i], code: serversCodeList[i] });
-				if (selectedServerCode == serversCodeList[i])
-					selectedServerIndex = i;
-			}
-			
-			dsServer.labelField = "label";
-			dsServer.popUpContentManager = new DropDownPopUpContentManager();
-			dsServer.dataProvider = dsServerList;
-			dsServer.selectedIndex = selectedServerIndex;
-			dsServer.addEventListener(Event.CHANGE, onServerChanged);
-			
-			//Login
-			dsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
-			dsLogin.addEventListener( Event.TRIGGERED, onDexcomShareLogin );
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
-			
-			//Define Dexcom Share Settings Data
-			reloadDexcomShareSettings(isDexcomEnabled);
-		}
-		
-		private function onTextInputChanged(e:Event):void
-		{
-			//Update internal values
-			selectedUsername = dsUsername.text;
-			selectedPassword = dsPassword.text;
-			
-			needsSave = true;
-		}
-		
-		private function onServerChanged(e:Event):void
-		{
-			selectedServerCode = dsServer.selectedItem.code;
-			
-			needsSave = true;
-		}
-		
-		private function onTextInputEnter(event:Event):void
-		{
-			//Clear focus to dismiss the keyboard
-			dsUsername.clearFocus();
-			dsPassword.clearFocus();
-		}
-		
-		private function onDexcomShareOnOff(event:Event):void
-		{
-			isDexcomEnabled = dsToggle.isSelected;
-			
-			reloadDexcomShareSettings(isDexcomEnabled);
-			
-			needsSave = true;
-		}
-		
 		private function reloadDexcomShareSettings(fullDisplay:Boolean):void
 		{
 			if(fullDisplay)
 			{
-				dataProvider = new ArrayCollection(
-					[
-						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','enabled_label'), accessory: dsToggle },
-						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_username_label'), accessory: dsUsername },
-						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_password_label'), accessory: dsPassword },
-						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_label'), accessory: dsServer },
-						{ label: "", accessory: dsLogin }
-					]);
+				var listDataProviderItems:Array = [];
+				
+				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','enabled_label'), accessory: dsToggle });
+				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_username_label'), accessory: dsUsername });
+				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_password_label'), accessory: dsPassword });
+				if (!BlueToothDevice.isDexcomG5())
+					listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','serial_label'), accessory: dsSerial });
+				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_label'), accessory: dsServer });
+				listDataProviderItems.push({ label: "", accessory: dsLogin });
+				
+				dataProvider = new ArrayCollection(listDataProviderItems);
 			}
 			else
 			{
@@ -232,6 +235,46 @@ package display.settings.share
 			DexcomShareService.testCredentials();
 		}
 		
+		/**
+		 * Event Listeners
+		 */
+		private function onTextInputChanged(e:Event):void
+		{
+			//Update internal values
+			selectedUsername = dsUsername.text;
+			selectedPassword = dsPassword.text;
+			selectedDexcomShareSerialNumber = dsSerial.text;
+			
+			needsSave = true;
+		}
+		
+		private function onServerChanged(e:Event):void
+		{
+			selectedServerCode = dsServer.selectedItem.code;
+			
+			needsSave = true;
+		}
+		
+		private function onTextInputEnter(event:Event):void
+		{
+			//Clear focus to dismiss the keyboard
+			dsUsername.clearFocus();
+			dsPassword.clearFocus();
+			dsSerial.clearFocus();
+		}
+		
+		private function onDexcomShareOnOff(event:Event):void
+		{
+			isDexcomEnabled = dsToggle.isSelected;
+			
+			reloadDexcomShareSettings(isDexcomEnabled);
+			
+			needsSave = true;
+		}
+		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
 			if(dsUsername != null)
@@ -264,6 +307,13 @@ package display.settings.share
 				dsToggle.removeEventListener( Event.CHANGE, onDexcomShareOnOff );
 				dsToggle.dispose();
 				dsToggle = null;
+			}
+			if(dsSerial != null)
+			{
+				dsSerial.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
+				dsSerial.removeEventListener(Event.CHANGE, onTextInputChanged);
+				dsSerial.dispose();
+				dsSerial = null;
 			}
 			
 			System.pauseForGCIfCollectionImminent(0);

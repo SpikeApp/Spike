@@ -97,9 +97,9 @@ package display.settings.general
 			var settingsData:ArrayCollection = new ArrayCollection(
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','unit'), accessory: glucoseUnitsPicker },
+					{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','urgent_high_threshold'), accessory: glucoseUrgentHighStepper },
 					{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','high_threshold'), accessory: glucoseHighStepper },
 					{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','low_threshold'), accessory: glucoseLowStepper },
-					{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','urgent_high_threshold'), accessory: glucoseUrgentHighStepper },
 					{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','urgent_low_threshold'), accessory: glucoseUrgentLowStepper }
 				]);
 			dataProvider = settingsData;
@@ -141,27 +141,14 @@ package display.settings.general
 			/* Set Change Event Handlers */
 			if(!initiated)
 			{
-				addEventHandlers();
+				glucoseUnitsPicker.addEventListener(Event.CHANGE, onUnitsChanged);
+				glucoseUrgentHighStepper.addEventListener(Event.CHANGE, onUrgentHighChanged);
+				glucoseHighStepper.addEventListener(Event.CHANGE, onHighChanged);
+				glucoseLowStepper.addEventListener(Event.CHANGE, onLowChanged);
+				glucoseUrgentLowStepper.addEventListener(Event.CHANGE, onUrgentLowChanged);
+				
 				initiated = true;
 			}
-		}
-		
-		private function addEventHandlers():void
-		{
-			glucoseUnitsPicker.addEventListener(Event.CHANGE, onUnitsChanged);
-			glucoseUrgentHighStepper.addEventListener(Event.CHANGE, onSettingsChanged);
-			glucoseHighStepper.addEventListener(Event.CHANGE, onSettingsChanged);
-			glucoseLowStepper.addEventListener(Event.CHANGE, onSettingsChanged);
-			glucoseUrgentLowStepper.addEventListener(Event.CHANGE, onSettingsChanged);
-		}
-		
-		private function removeEventHandlers():void
-		{
-			glucoseUnitsPicker.removeEventListener(Event.CHANGE, onUnitsChanged);
-			glucoseUrgentHighStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
-			glucoseHighStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
-			glucoseLowStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
-			glucoseUrgentLowStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
 		}
 		
 		private function convertSettpers():void
@@ -264,16 +251,15 @@ package display.settings.general
 		{
 			if (selectedUnit == "mg/dl" && glucoseUnitsPicker.selectedIndex == 1)
 			{
+				trace("MMOL");
 				needsSave = true;
 				selectedUnit = "mmol/L";
 				convertSettpers();
 				
-				removeEventHandlers();
+				glucoseUrgentHighStepper.value = (BgReading.mgdlToMmol(glucoseUrgentHighValue) * 10) / 10;
 				glucoseHighStepper.value = (BgReading.mgdlToMmol(glucoseHighValue)  * 10) / 10;
 				glucoseLowStepper.value = (BgReading.mgdlToMmol(glucoseLowValue)  * 10) / 10;
-				glucoseUrgentHighStepper.value = (BgReading.mgdlToMmol(glucoseUrgentHighValue) * 10) / 10;
 				glucoseUrgentLowStepper.value = (BgReading.mgdlToMmol(glucoseUrgentLowValue) * 10) / 10;
-				addEventHandlers();
 			}
 			else if (selectedUnit == "mmol/L" && glucoseUnitsPicker.selectedIndex == 0)
 			{
@@ -281,12 +267,10 @@ package display.settings.general
 				selectedUnit = "mg/dl";
 				convertSettpers();
 				
-				removeEventHandlers();
+				glucoseUrgentHighStepper.value = glucoseUrgentHighValue;
 				glucoseHighStepper.value = glucoseHighValue;
 				glucoseLowStepper.value = glucoseLowValue;
-				glucoseUrgentHighStepper.value = glucoseUrgentHighValue;
 				glucoseUrgentLowStepper.value = glucoseUrgentLowValue;
-				addEventHandlers();
 			}
 		}
 		
@@ -294,17 +278,122 @@ package display.settings.general
 		{
 			if (selectedUnit == "mg/dl")
 			{
-				glucoseUrgentLowValue = glucoseUrgentLowStepper.value;
-				glucoseLowValue = glucoseLowStepper.value;
+				//Update internal variables
 				glucoseUrgentHighValue = glucoseUrgentHighStepper.value;
+				glucoseHighValue = glucoseHighStepper.value;
+				glucoseLowValue = glucoseLowStepper.value;
+				glucoseUrgentLowValue = glucoseUrgentLowStepper.value;
+			}
+			else if (selectedUnit == "mmol/L")
+			{
+				glucoseUrgentHighValue = Math.round(BgReading.mmolToMgdl(glucoseUrgentHighStepper.value));
+				glucoseHighValue = Math.round(BgReading.mmolToMgdl(glucoseHighStepper.value));
+				glucoseLowValue = Math.round(BgReading.mmolToMgdl(glucoseLowStepper.value));
+				glucoseUrgentLowValue = Math.round(BgReading.mmolToMgdl(glucoseUrgentLowStepper.value));
+			}
+			
+			needsSave = true;
+		}
+		
+		private function onUrgentHighChanged(e:Event):void
+		{
+			if (selectedUnit == "mg/dl")
+			{
+				//Avoid overlap
+				if (glucoseUrgentHighStepper.value <= glucoseHighStepper.value)
+					glucoseHighStepper.value = glucoseUrgentHighStepper.value - 1;
+				
+				//Update internal variables
+				glucoseUrgentHighValue = glucoseUrgentHighStepper.value;
+			}
+			else if (selectedUnit == "mmol/L")
+			{
+				//Avoid overlap
+				if (glucoseUrgentHighStepper.value <= glucoseHighStepper.value)
+					glucoseHighStepper.value = glucoseUrgentHighStepper.value - 0.1;
+				
+				glucoseUrgentHighValue = Math.round(BgReading.mmolToMgdl(glucoseUrgentHighStepper.value));
+			}
+			
+			needsSave = true;
+		}
+		
+		private function onHighChanged(e:Event):void
+		{
+			if (selectedUnit == "mg/dl")
+			{
+				//Avoid overlap
+				if (glucoseHighStepper.value <= glucoseLowStepper.value)
+					glucoseLowStepper.value = glucoseHighStepper.value - 1;
+				
+				if (glucoseHighStepper.value >= glucoseUrgentHighStepper.value)
+					glucoseUrgentHighStepper.value = glucoseHighStepper.value + 1;
+				
+				//Update internal variables
 				glucoseHighValue = glucoseHighStepper.value;
 			}
 			else if (selectedUnit == "mmol/L")
 			{
-				glucoseUrgentLowValue = Math.round(BgReading.mmolToMgdl(glucoseUrgentLowStepper.value));
-				glucoseLowValue = Math.round(BgReading.mmolToMgdl(glucoseLowStepper.value));
-				glucoseUrgentHighValue = Math.round(BgReading.mmolToMgdl(glucoseUrgentHighStepper.value));
+				//Avoid overlap
+				if (glucoseHighStepper.value <= glucoseLowStepper.value)
+					glucoseLowStepper.value = glucoseHighStepper.value - 0.1;
+				
+				if (glucoseHighStepper.value >= glucoseUrgentHighStepper.value)
+					glucoseUrgentHighStepper.value = glucoseHighStepper.value + 0.1;
+				
 				glucoseHighValue = Math.round(BgReading.mmolToMgdl(glucoseHighStepper.value));
+			}
+			
+			needsSave = true;
+		}
+		
+		private function onLowChanged(e:Event):void
+		{
+			if (selectedUnit == "mg/dl")
+			{
+				//Avoid overlap
+				if (glucoseLowStepper.value <= glucoseUrgentLowStepper.value)
+					glucoseUrgentLowStepper.value = glucoseLowStepper.value - 1;
+				
+				if (glucoseLowStepper.value >= glucoseHighStepper.value)
+					glucoseHighStepper.value = glucoseLowStepper.value + 1;
+				
+				//Update internal variables
+				glucoseLowValue = glucoseLowStepper.value;
+			}
+			else if (selectedUnit == "mmol/L")
+			{
+				//Avoid overlap
+				if (glucoseLowStepper.value <= glucoseUrgentLowStepper.value)
+					glucoseUrgentLowStepper.value = glucoseLowStepper.value - 0.1;
+				
+				if (glucoseLowStepper.value >= glucoseHighStepper.value)
+					glucoseHighStepper.value = glucoseLowStepper.value + 0.1;
+				
+				glucoseLowValue = Math.round(BgReading.mmolToMgdl(glucoseLowStepper.value));
+			}
+			
+			needsSave = true;
+		}
+		
+		private function onUrgentLowChanged(e:Event):void
+		{
+			if (selectedUnit == "mg/dl")
+			{
+				//Avoid overlap
+				if (glucoseUrgentLowStepper.value >= glucoseLowStepper.value)
+					glucoseLowStepper.value = glucoseUrgentLowStepper.value + 1;
+				
+				//Update internal variables
+				glucoseUrgentLowValue = glucoseUrgentLowStepper.value;
+			}
+			else if (selectedUnit == "mmol/L")
+			{
+				//Avoid overlap
+				if (glucoseUrgentLowStepper.value >= glucoseLowStepper.value)
+					glucoseLowStepper.value = glucoseUrgentLowStepper.value + 0.1;
+				
+				glucoseUrgentLowValue = Math.round(BgReading.mmolToMgdl(glucoseUrgentLowStepper.value));
 			}
 			
 			needsSave = true;

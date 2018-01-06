@@ -9,6 +9,7 @@ package services
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
 	import mx.collections.ArrayCollection;
@@ -47,6 +48,7 @@ package services
 	public class AlarmService extends EventDispatcher
 	{
 		[ResourceBundle("alarmservice")]
+		[ResourceBundle("alertsettingsscreen")]
 		
 		private static var initialStart:Boolean = true;
 		private static var _instance:AlarmService = new AlarmService(); 
@@ -224,7 +226,7 @@ package services
 			checkMuted(null);
 		}
 		
-		private static function checkMuted(event:BlueToothServiceEvent):void {
+		private static function checkMuted(event:flash.events.Event):void {
 				if ((new Date()).valueOf() - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
 					myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
 					BackgroundFetch.checkMuted();
@@ -529,7 +531,7 @@ package services
 				AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert"), snoozeValueStrings, index);
 			}
 			
-			function calibrationRequestSnoozePicker_closedHandler(event:Event): void {
+			function calibrationRequestSnoozePicker_closedHandler(event:starling.events.Event): void {
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, calibrationRequestSnoozePicker_closedHandler);
 				BackgroundFetch.stopPlayingSound();
 				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
@@ -537,7 +539,7 @@ package services
 				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
-			function batteryLevelSnoozePicker_closedHandler(event:Event): void {
+			function batteryLevelSnoozePicker_closedHandler(event:starling.events.Event): void {
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, batteryLevelSnoozePicker_closedHandler);
 				BackgroundFetch.stopPlayingSound();
 				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
@@ -545,7 +547,7 @@ package services
 				_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
-			function phoneMutedSnoozePicker_closedHandler(event:Event): void 
+			function phoneMutedSnoozePicker_closedHandler(event:starling.events.Event): void 
 			{
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, phoneMutedSnoozePicker_closedHandler);
 				BackgroundFetch.stopPlayingSound();
@@ -554,7 +556,7 @@ package services
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
-			function missedReadingSnoozePicker_canceledHandler(event:Event):void {
+			function missedReadingSnoozePicker_canceledHandler(event:starling.events.Event):void {
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CANCELLED, missedReadingSnoozePicker_canceledHandler);
 				BackgroundFetch.stopPlayingSound();
 				missedReadingSnoozePickerOpen = false;
@@ -579,7 +581,7 @@ package services
 				}
 			}
 			
-			function missedReadingSnoozePicker_closedHandler(event:Event): void {
+			function missedReadingSnoozePicker_closedHandler(event:starling.events.Event): void {
 				missedReadingSnoozePickerOpen = false;
 				myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, missedReadingSnoozePicker_closedHandler);
@@ -604,7 +606,7 @@ package services
 				}
 			}
 			
-			function lowSnoozePicker_closedHandler(event:Event): void 
+			function lowSnoozePicker_closedHandler(event:starling.events.Event): void 
 			{
 				myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, lowSnoozePicker_closedHandler);
@@ -613,7 +615,7 @@ package services
 				_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
-			function highSnoozePicker_closedHandler(event:Event): void {
+			function highSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, highSnoozePicker_closedHandler);
 				BackgroundFetch.stopPlayingSound();
@@ -621,7 +623,7 @@ package services
 				_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
-			function veryHighSnoozePicker_closedHandler(event:Event): void {
+			function veryHighSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, veryHighSnoozePicker_closedHandler);
 				BackgroundFetch.stopPlayingSound();
@@ -629,7 +631,7 @@ package services
 				_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
-			function veryLowSnoozePicker_closedHandler(event:Event): void {
+			function veryLowSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in veryLowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, veryLowSnoozePicker_closedHandler);
 				BackgroundFetch.stopPlayingSound();
@@ -637,7 +639,7 @@ package services
 				_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
-			function snoozePickerChangedOrCanceledHandler(event:Event): void 
+			function snoozePickerChangedOrCanceledHandler(event:starling.events.Event): void 
 			{
 				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
 				BackgroundFetch.stopPlayingSound();
@@ -655,7 +657,7 @@ package services
 		/**
 		 * if be == null, then check was triggered by  checkAlarmsAfterPerformFetch
 		 */
-		private static function checkAlarms(be:TransmitterServiceEvent):void {
+		private static function checkAlarms(be:flash.events.Event):void {
 			myTrace("in checkAlarms");
 			var now:Date = new Date();
 			lastAlarmCheckTimeStamp = now.valueOf();
@@ -755,9 +757,10 @@ package services
 			lastCheckMuteTimeStamp = (new Date()).valueOf();
 		}
 		
-		private static function fireAlert(alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
-			var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
-			var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
+		private static function fireAlert(alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void 
+		{
+			var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","alert_sounds_names");
+			var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","alert_sounds_files");
 			var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
 			var soundsAsStoredInAssetsSplitted:Array = soundsAsStoredInAssets.split(',');
 			var notificationBuilder:NotificationBuilder;
@@ -776,29 +779,38 @@ package services
 			if (alertType.repeatInMinutes > 0)
 				notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
 			
-			if (alertType.sound == "no_sound" && enableVibration) {
+			if (alertType.sound == "no_sound" && enableVibration) 
+			{
 				soundToSet = "../assets/sounds/silence-1sec.mp3";
-			} else 	if (alertType.sound == "no_sound" && !enableVibration) {
+			} 
+			else if (alertType.sound == "no_sound" && !enableVibration) 
+			{
 				soundToSet = "";
-			} else {
-				if (alertType.sound == "default") {
+			} 
+			else 
+			{
+				if (alertType.sound == "default") 
+				{
 					//it's the default sound, nothing to do
-				} else {
-					for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
+				} 
+				else 
+				{
+					for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) 
+					{
 						newSound = soundsAsDisplayedSplitted[cntr];
 						if (newSound == alertType.sound) {
-							soundToSet = soundsAsStoredInAssetsSplitted[cntr];
+							soundToSet = "../assets/sounds/" + soundsAsStoredInAssetsSplitted[cntr];
 							break;
 						}
 					}
 				}
 			}
 
-			if (delay != 0) {
+			if (delay != 0)
 				notificationBuilder.setDelay(delay);
-			}
 
-			if (delay == 0) {
+			if (delay == 0) 
+			{
 				if (ModelLocator.phoneMuted) {
 					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
 						//play the sound through backend ane, 
@@ -810,17 +822,27 @@ package services
 						
 						//make sure the phone vibrates depending on the setting
 						//could also be done through BackgroundFetch.vibrate(); 
-						if (enableVibration) {
-							notificationBuilder.setSound("../assets/sounds/silence-1sec.mp3");
-						} else {
-							notificationBuilder.setSound("");
+						if (enableVibration)
+						{
+							if (alertType.sound != "default")
+								notificationBuilder.setSound("../assets/sounds/silence-1sec.mp3");
 						}
-					} else {
+						else
+						{
+							if (alertType.sound != "default")
+								notificationBuilder.setSound("");
+						}
+					} 
+					else 
+					{
 						//phone is muted
 						//play sound through notification, as a result it will actually not be played because notification sounds are not played when phone is muted
-						notificationBuilder.setSound(soundToSet);
+						if (alertType.sound != "default")
+							notificationBuilder.setSound(soundToSet);
 					}
-				} else {
+				} 
+				else 
+				{
 					//play the sound through backend ane, 
 					//this will ensure that sound will be played, 
 					// - no matter if it's in foreground or not, 
@@ -830,21 +852,32 @@ package services
 
 					//make sure the phone vibrates depending on the setting
 					//could also be done through BackgroundFetch.vibrate(); 
-					if (enableVibration) {
-						notificationBuilder.setSound("../assets/sounds/silence-1sec.mp3");
-					} else {
-						notificationBuilder.setSound("");
+					if (enableVibration) 
+					{
+						if (alertType.sound != "default")
+							notificationBuilder.setSound("../assets/sounds/silence-1sec.mp3");
+					}
+					else
+					{
+						if (alertType.sound != "default")
+							notificationBuilder.setSound("");
 					}
 				}
-			} else {
+			} 
+			else 
+			{
 				//delay != means missed reading alert, will be played in the future, sound can't be played now so it must be done via the notification
-				notificationBuilder.setSound(soundToSet);
+				if (alertType.sound != "default")
+					notificationBuilder.setSound(soundToSet);
 			}
+			
 			Notifications.service.notify(notificationBuilder.build());
 		}
 		
-		private static function deepSleepServiceTimerHandler(event:DeepSleepServiceEvent):void {
-			if (((new Date()).valueOf() - lastMissedReadingAlertCheckTimeStamp)/1000 > 5 * 60 + 30) {
+		private static function deepSleepServiceTimerHandler(event:flash.events.Event):void 
+		{
+			if (((new Date()).valueOf() - lastMissedReadingAlertCheckTimeStamp)/1000 > 5 * 60 + 30) 
+			{
 				myTrace("in deepSleepServiceTimerHandler, calling checkMissedReadingAlert");
 				checkMissedReadingAlert(new Date(), true);
 			}
@@ -1139,7 +1172,7 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_HIGH_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text")
-							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"),
+							 	+ " " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_HIGH_CATEGORY
@@ -1190,7 +1223,7 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_HIGH_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text")
-							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"),
+							 	+ " " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY
@@ -1242,7 +1275,7 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_LOW_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text")
-							  + "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
+							  + " " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_LOW_CATEGORY
@@ -1293,7 +1326,7 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_LOW_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text")
-							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
+							 	+ " " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY

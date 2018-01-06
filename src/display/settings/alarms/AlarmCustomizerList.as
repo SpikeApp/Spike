@@ -4,6 +4,7 @@ package display.settings.alarms
 	
 	import data.AlarmNavigatorData;
 	
+	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	
 	import display.LayoutFactory;
@@ -40,6 +41,7 @@ package display.settings.alarms
 	{
 		/* Constants */
 		private const TIME_1_MINUTE:int = 1000 * 60;
+		private const TIME_1_DAY:int = (1000 * 60 * 60 * 23) + (1000 * 60 * 59); //23h, 59m
 		private const UNIT_MGDL:String = "mg/dl";
 		private const UNIT_MMOL:String = "mmol/L";
 		
@@ -182,8 +184,9 @@ package display.settings.alarms
 			saveAllAlarmsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"save_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.saveTexture);
 			saveAllAlarmsButton.gap = 5;
 			saveAllAlarmsButton.addEventListener(Event.TRIGGERED, onSaveAllAlarms);
-			if (alarmData.length > 0)
-				actionButtonsContainer.addChild(saveAllAlarmsButton);
+			if (alarmData.length == 0)
+				saveAllAlarmsButton.isEnabled = false;
+			actionButtonsContainer.addChild(saveAllAlarmsButton);
 			
 			/* List Content */
 			var listData:ListCollection = new ListCollection();
@@ -197,7 +200,12 @@ package display.settings.alarms
 				//Define alarm value
 				var valueOutput:String = String(alarmData[i].value);
 				if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE)
+				{
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
+						valueOutput = String(Math.round(((BgReading.mgdlToMmol((Number(alarmData[i].value)))) * 10)) / 10);
+						
 					valueOutput += glucoseUnit;
+				}
 				else if (alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION)
 					valueOutput += "h";
 				else if (alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING)
@@ -208,7 +216,7 @@ package display.settings.alarms
 				
 				//Create alarm controls, define event listeners and save them for disposal
 				var alarmControls:AlarmManagerAccessory = new AlarmManagerAccessory();
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
 					alarmControls.scale = 0.8;
 				alarmControls.addEventListener(AlarmManagerAccessory.EDIT, onEditAlarm);
 				alarmControls.addEventListener(AlarmManagerAccessory.DELETE, onDeleteAlarm);
@@ -233,7 +241,7 @@ package display.settings.alarms
 			{
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+				//if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
 					item.fontStyles = new TextFormat("Roboto", 10, 0xEEEEEE, "left", "top");
 				item.accessoryField = "accessory";
 				item.accessoryOffsetX = 18;
@@ -288,6 +296,20 @@ package display.settings.alarms
 						(
 							{ startTime: currentAlarmSettings.startTimeOutput, value: currentAlarmSettings.value, alertType: currentAlarmSettings.alertType }
 						)
+						
+						//Check if there's only one alarm. If so, we might need to push a NO ALERT filler at the end.
+						if (alarmData.length == 1)
+						{
+							if (currentAlarmEndTimeStamp < TIME_1_DAY)
+							{
+								//We need to add a NO ALERT filler at the end
+								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TIME_1_MINUTE);
+								finalAlarmData.push
+								(
+									{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
+								)
+							}
+						}
 					}
 					else
 					{
@@ -315,7 +337,7 @@ package display.settings.alarms
 						if (i == dataLength - 1)
 						{
 							//We're in the final alarm. Check if we need to add a NO ALERT filler to the end to complete the entire 24h span
-							if (Number(currentAlarmSettings.endHour) < 23 && Number(currentAlarmSettings.endMinutes) < 59)
+							if (currentAlarmEndTimeStamp < TIME_1_DAY)
 							{
 								//Complete the 24h timespan with a NO ALERT filler that starts 1 minute later
 								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TIME_1_MINUTE);
@@ -348,6 +370,9 @@ package display.settings.alarms
 			
 			//Save settings to database
 			CommonSettings.setCommonSetting(alarmID, finalAlarmSettings);
+			
+			//Pop screen
+			dispatchEventWith(Event.COMPLETE);
 		}
 		
 		private function setupCalloutPosition():void
