@@ -8,11 +8,10 @@ package services
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
-	import Utilities.Trace;
-	
 	import events.DeepSleepServiceEvent;
-	import events.DialogServiceEvent;
 	import events.IosXdripReaderEvent;
+	
+	import utilities.Trace;
 
 	/**
 	 * deepsleep timer will start a timer that expires every 10 seconds, indefinitely<br>

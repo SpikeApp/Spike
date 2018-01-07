@@ -14,10 +14,10 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
-	import Utilities.BgGraphBuilder;
-	import Utilities.DateTimeUtilities;
-	import Utilities.FromtimeAndValueArrayCollection;
-	import Utilities.Trace;
+	import utilities.BgGraphBuilder;
+	import utilities.DateTimeUtilities;
+	import utilities.FromtimeAndValueArrayCollection;
+	import utilities.Trace;
 	
 	import databaseclasses.AlertType;
 	import databaseclasses.BgReading;
@@ -38,11 +38,11 @@ package services
 	
 	import model.ModelLocator;
 	
-	import screens.Screens;
+	import ui.screens.Screens;
 	
 	import starling.events.Event;
 	
-	import ui.AlarmSnoozer;
+	import ui.popups.AlarmSnoozer;
 	import ui.AppInterface;
 	
 	public class AlarmService extends EventDispatcher

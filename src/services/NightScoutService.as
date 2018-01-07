@@ -15,8 +15,8 @@ package services
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import Utilities.Trace;
-	import Utilities.UniqueId;
+	import utilities.Trace;
+	import utilities.UniqueId;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;
@@ -34,7 +34,7 @@ package services
 	
 	import model.ModelLocator;
 	
-	import utils.AlertManager;
+	import ui.popups.AlertManager;
 	
 	public class NightScoutService extends EventDispatcher
 	{
@@ -270,7 +270,7 @@ package services
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN) == "false" && BackgroundFetch.appIsInForeground()) {
+			if (BackgroundFetch.appIsInForeground()) {
 				var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
 				errorMessage += "\n" + event.data.information;
 				
@@ -287,7 +287,6 @@ package services
 				);
 				
 				myTrace("nightscout_test_result_nok");
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN, "true");
 			}
 		}
 		
@@ -358,15 +357,15 @@ package services
 						newReading["unfiltered"] = Math.round(bgReading.usedRaw() * 1000);
 						newReading["rssi"] = 100;
 						newReading["noise"] = bgReading.noiseValue();
-						newReading["xDrip_filtered_calculated_value"] = bgReading.filteredCalculatedValue;
-						newReading["xDrip_raw"] = bgReading.rawData;
-						newReading["xDrip_filtered"] = bgReading.filteredData;
-						newReading["xDrip_calculated_value"] = bgReading.calculatedValue;
-						newReading["xDrip_age_adjusted_raw_value"] = bgReading.ageAdjustedRawValue;
-						newReading["xDrip_calculated_current_slope"] = BgReading.currentSlope();
-						newReading["xDrip_hide_slope"] = bgReading.hideSlope;
+						//newReading["xDrip_filtered_calculated_value"] = bgReading.filteredCalculatedValue;
+						//newReading["xDrip_raw"] = bgReading.rawData;
+						//newReading["xDrip_filtered"] = bgReading.filteredData;
+						//newReading["xDrip_calculated_value"] = bgReading.calculatedValue;
+						//newReading["xDrip_age_adjusted_raw_value"] = bgReading.ageAdjustedRawValue;
+						//newReading["xDrip_calculated_current_slope"] = BgReading.currentSlope();
+						//newReading["xDrip_hide_slope"] = bgReading.hideSlope;
 						newReading["sysTime"] = formatter.format(bgReading.timestamp);
-						newReading["_id"] = bgReading.uniqueId;
+						//newReading["_id"] = bgReading.uniqueId;
 						listOfReadingsAsArray[arrayCntr] = newReading;
 					}
 				} else {

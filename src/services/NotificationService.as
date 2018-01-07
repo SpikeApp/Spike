@@ -32,13 +32,7 @@ package services
 	import flash.desktop.SystemIdleMode;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.TimerEvent;
 	import flash.utils.Timer;
-	
-	import spark.components.TabbedViewNavigator;
-	
-	import Utilities.BgGraphBuilder;
-	import Utilities.Trace;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Calibration;
@@ -54,6 +48,9 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
+	
+	import utilities.BgGraphBuilder;
+	import utilities.Trace;
 	
 	/**
 	 * This service<br>
@@ -366,7 +363,7 @@ package services
 									valueToShow += " " + lastBgReading.slopeArrow();
 								}
 							}
-							valueToShow += " (" + BgGraphBuilder.unitizedDeltaString(true, true) + ")";
+							valueToShow += " " + BgGraphBuilder.unitizedDeltaString(true, true);
 						}
 					} else {
 						valueToShow = "---"

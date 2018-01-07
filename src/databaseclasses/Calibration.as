@@ -25,8 +25,8 @@ package databaseclasses
 	import spark.collections.Sort;
 	import spark.collections.SortField;
 	
-	import Utilities.Trace;
-	import Utilities.UniqueId;
+	import utilities.Trace;
+	import utilities.UniqueId;
 	
 	public class Calibration extends SuperDatabaseClass
 	{
@@ -388,7 +388,7 @@ package databaseclasses
 				new Number(0),//firstscale
 				new Number(0),//secondscale
 				(new Date()).valueOf(),
-				Utilities.UniqueId.createEventId()
+				utilities.UniqueId.createEventId()
 			);
 			calculateWLS(calibration1).saveToDatabaseSynchronous();
 			
@@ -419,7 +419,7 @@ package databaseclasses
 				new Number(0),//firstscale
 				new Number(0),//secondscale
 				(new Date()).valueOf(),
-				Utilities.UniqueId.createEventId()
+				utilities.UniqueId.createEventId()
 			);
 			calculateWLS(calibration2).saveToDatabaseSynchronous();
 			
@@ -487,7 +487,7 @@ package databaseclasses
 						new Number(0),//firstscale
 						new Number(0),//second scale
 						(new Date()).valueOf(),//lastmodifiedtimestamp
-						Utilities.UniqueId.createEventId()//eventid
+						utilities.UniqueId.createEventId()//eventid
 					));
 					calculateWLS(calibration);
 					bgReading.calibration = calibration;

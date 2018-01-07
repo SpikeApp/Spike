@@ -32,7 +32,7 @@ package databaseclasses
 	import spark.collections.Sort;
 	import spark.collections.SortField;
 	
-	import Utilities.Trace;
+	import utilities.Trace;
 	
 	import events.DatabaseEvent;
 	import events.TransmitterServiceEvent;
@@ -40,6 +40,8 @@ package databaseclasses
 	import model.ModelLocator;
 	
 	import services.TransmitterService;
+	
+	[ResourceBundle("alertsettingsscreen")]
 	
 	public class Database extends EventDispatcher
 	{
@@ -612,7 +614,7 @@ package databaseclasses
 					var noAlert:AlertType = new AlertType(null, Number.NaN, noAlertName, false, false, false, false, false, "no_sound", 10, 0);
 					insertAlertTypeSychronous(noAlert);
 				}
-				var silentAlertName:String = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert");
+				var silentAlertName:String = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","silent_alert");
 				if (getAlertType(silentAlertName) == null) {
 					var silentAlert:AlertType = new AlertType(null, Number.NaN, silentAlertName, false, false, true, true, false, "no_sound", 30, 0);
 					insertAlertTypeSychronous(silentAlert);

@@ -23,8 +23,8 @@ package services
 	
 	import ui.AppInterface;
 	
-	import utils.AlertManager;
-	import utils.Constants;
+	import ui.popups.AlertManager;
+	import utilities.Constants;
 	
 	[ResourceBundle("tutorialservice")]
 	[ResourceBundle("globaltranslations")]
@@ -172,7 +172,7 @@ package services
 			
 			fifthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','fifth_step_message'), calloutLocationHelper, null, false);
 			
-			Starling.juggler.delayCall( closeCallout, 7, fifthStepCallout );
+			Starling.juggler.delayCall( closeCallout, 9, fifthStepCallout );
 		}
 		
 		public static function sixthStep():void
@@ -186,7 +186,7 @@ package services
 			sixthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','sixth_step_message'), calloutLocationHelper, null, false);
 			sixthStepCallout.textRendererFactory = calloutTextRenderer;
 			
-			Starling.juggler.delayCall( closeCallout, 16, sixthStepCallout );
+			Starling.juggler.delayCall( closeCallout, 18, sixthStepCallout );
 		}
 		
 		public static function seventhStep():void
@@ -198,6 +198,7 @@ package services
 			calloutLocationHelper.y = Constants.stageHeight / 2;
 			
 			NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+			Constants.noLockEnabled = true;
 			
 			seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
 			seventhStepCallout.textRendererFactory = calloutTextRenderer;

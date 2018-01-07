@@ -17,11 +17,6 @@
  */
 package services
 {
-	import com.distriqt.extension.dialog.Dialog;
-	import com.distriqt.extension.dialog.DialogView;
-	import com.distriqt.extension.dialog.builders.AlertBuilder;
-	import com.distriqt.extension.dialog.events.DialogViewEvent;
-	import com.distriqt.extension.dialog.objects.DialogAction;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
@@ -30,8 +25,6 @@ package services
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
-	import Utilities.Trace;
-	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Sensor;
@@ -39,6 +32,10 @@ package services
 	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.TransmitterServiceEvent;
+	
+	import feathers.controls.Alert;
+	import feathers.controls.TextInput;
+	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
 	import model.TransmitterDataBluKonPacket;
@@ -49,6 +46,13 @@ package services
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
 	
+	import starling.events.Event;
+	
+	import ui.popups.AlertManager;
+	import ui.screens.display.LayoutFactory;
+	
+	import utilities.Trace;
+	
 	/**
 	 * transmitter service handles all transmitterdata received from BlueToothService<br>
 	 * It will handle TransmitterData .. packets (see children of TransmitterData class), create bgreadings ..<br>
@@ -58,6 +62,7 @@ package services
 	public class TransmitterService extends EventDispatcher
 	{
 		[ResourceBundle("transmitterservice")]
+		[ResourceBundle("globaltranslations")]
 		
 		private static var _instance:TransmitterService = new TransmitterService();
 		
@@ -71,6 +76,11 @@ package services
 		 * timestamp of last received packet, in ms 
 		 */
 		private static var lastPacketTime:Number = 0;
+
+		/**
+		 * Popup alert transmitter ID textinput field 
+		 */
+		private static var transmitterIDTextInput:TextInput;
 		
 		public function TransmitterService()
 		{
@@ -267,7 +277,7 @@ package services
 							return;
 						}
 					}
-					BluetoothService.writeBlueReaderCharacteristic(Utilities.UniqueId.hexStringToByteArray("6C"));
+					BluetoothService.writeBlueReaderCharacteristic(utilities.UniqueId.hexStringToByteArray("6C"));
 				} else if (be.data is TransmitterDataBluKonPacket) {
 					lastBgRading = BgReading.lastNoSensor();
 					if (lastBgRading != null) {
@@ -300,38 +310,51 @@ package services
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			if (event != null) {//not sure why checking, this would mean NotificationService received a null object, shouldn't happen
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
-				if (notificationEvent.id == NotificationService.ID_FOR_ENTER_TRANSMITTER_ID) {
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
-						.addTextField(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID), "00000")
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-						.build()
+				if (notificationEvent.id == NotificationService.ID_FOR_ENTER_TRANSMITTER_ID) 
+				{
+					transmitterIDTextInput = LayoutFactory.createTextInput(false, false, 180, HorizontalAlign.RIGHT);
+					transmitterIDTextInput.maxChars = 5;
+					transmitterIDTextInput.paddingRight = 10;
+					var transmitterIDPopup:Alert = AlertManager.showActionAlert
+					(
+						ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_alert_title"),
+						"",
+						58,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","cancel_button_label").toUpperCase() },
+							{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","ok_alert_button_label"), triggered: transmitterIdEntered }
+						],
+						HorizontalAlign.JUSTIFY,
+						transmitterIDTextInput
 					);
-					alert.addEventListener(DialogViewEvent.CLOSED, transmitterIdEntered);
-					DialogService.addDialog(alert, 58);
+					transmitterIDPopup.gap = 0;
+					transmitterIDPopup.headerProperties.maxHeight = 30;
+					transmitterIDPopup.buttonGroupProperties.paddingTop = -10;
+					transmitterIDTextInput.setFocus();
 				}
 			}		
 		}
 		
-		private static function transmitterIdEntered(event:DialogViewEvent):void {
-			if (event.index == 1) {
-				return;
-			}
-			if ((event.values[0] as String).length != 5) {
-				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"),
-					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars"));
-			} else {
+		private static function transmitterIdEntered(event:Event):void 
+		{
+			if (transmitterIDTextInput.text.length != 5) 
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"),
+					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars")
+				);
+			} 
+			else 
+			{
 				var value:ByteArray = new ByteArray();
 				value.endian = Endian.LITTLE_ENDIAN;
 				value.writeByte(0x06);
 				value.writeByte(0x01);
-				value.writeInt(BluetoothService.encodeTxID(event.values[0] as String));
+				value.writeInt(BluetoothService.encodeTxID(transmitterIDTextInput.text));
 				myTrace("calling BluetoothService.ackCharacteristicUpdate");
 				BluetoothService.writeG4Characteristic(value);
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, (event.values[0] as String).toUpperCase());
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDTextInput.text.toUpperCase());
 			}
 		}
 		

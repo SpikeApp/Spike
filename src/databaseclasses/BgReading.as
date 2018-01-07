@@ -22,8 +22,8 @@ package databaseclasses
 {
 	import mx.collections.ArrayCollection;
 	
-	import Utilities.BgGraphBuilder;
-	import Utilities.Trace;
+	import utilities.BgGraphBuilder;
+	import utilities.Trace;
 	
 	import model.ModelLocator;
 	

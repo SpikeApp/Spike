@@ -1,8 +1,6 @@
 package ui
 {
-	import data.AlarmNavigatorData;
-	
-	import display.menu.MenuList;
+	import ui.screens.data.AlarmNavigatorData;
 	
 	import events.ScreenEvent;
 	
@@ -14,28 +12,30 @@ package ui
 	import feathers.motion.Slide;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeWithIcons;
 	
-	import screens.AboutSettingsScreen;
-	import screens.AlarmsCustomizerSettingsScreen;
-	import screens.AlarmsSettingsScreen;
-	import screens.AlertTypesListScreen;
-	import screens.ChartScreen;
-	import screens.ChartSettingsScreen;
-	import screens.DisclaimerScreen;
-	import screens.FullScreenGlucoseScreen;
-	import screens.GeneralSettingsScreen;
-	import screens.LoggingTracingSettingsScreen;
-	import screens.MainSettingsScreen;
-	import screens.Screens;
-	import screens.SensorScreen;
-	import screens.SensorStartScreen;
-	import screens.ShareSettingsScreen;
-	import screens.SpeechSettingsScreen;
-	import screens.TransmitterScreen;
-	import screens.TransmitterSettingsScreen;
-	
 	import starling.animation.Transitions;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	
+	import ui.screens.AboutSettingsScreen;
+	import ui.screens.AlarmsCustomizerSettingsScreen;
+	import ui.screens.AlarmsSettingsScreen;
+	import ui.screens.AlertTypesListScreen;
+	import ui.screens.ChartScreen;
+	import ui.screens.ChartSettingsScreen;
+	import ui.screens.DisclaimerScreen;
+	import ui.screens.FullScreenGlucoseScreen;
+	import ui.screens.GeneralSettingsScreen;
+	import ui.screens.LoggingTracingSettingsScreen;
+	import ui.screens.MainSettingsScreen;
+	import ui.screens.NightscoutViewScreen;
+	import ui.screens.Screens;
+	import ui.screens.SensorScreen;
+	import ui.screens.SensorStartScreen;
+	import ui.screens.ShareSettingsScreen;
+	import ui.screens.SpeechSettingsScreen;
+	import ui.screens.TransmitterScreen;
+	import ui.screens.TransmitterSettingsScreen;
+	import ui.screens.display.menu.MenuList;
 	
 	public class AppInterface extends Sprite 
 	{
@@ -78,6 +78,13 @@ package ui
 			fullScreenGlucoseScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
 			fullScreenGlucoseScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.FULLSCREEN_GLUCOSE, fullScreenGlucoseScreenItem );
+			
+			/* Nightscout View Screen */
+			var nightscoutViewScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( NightscoutViewScreen );
+			nightscoutViewScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			nightscoutViewScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			nightscoutViewScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.NIGHTSCOUT_VIEW, nightscoutViewScreenItem );
 			
 			/* Sensor Screen */
 			var sensorScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( SensorScreen );

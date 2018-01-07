@@ -3,7 +3,7 @@ package G5Model
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
-	import Utilities.Trace;
+	import utilities.Trace;
 
 	public class AuthStatusRxMessage extends TransmitterMessage
 	{

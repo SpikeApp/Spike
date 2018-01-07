@@ -6,7 +6,7 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.net.URLRequestMethod;
 	
-	import Utilities.Trace;
+	import utilities.Trace;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;
@@ -19,12 +19,11 @@ package services
 	
 	import model.ModelLocator;
 	
-	import utils.AlertManager;
+	import ui.popups.AlertManager;
 
 	public class DexcomShareService extends EventDispatcher
 	{
 		[ResourceBundle("dexcomshareservice")]
-		[ResourceBundle("general")]
 		
 		private static const US_SHARE_BASE_URL:String = "https://share2.dexcom.com/ShareWebServices/Services/";
 		private static const NON_US_SHARE_BASE_URL:String = "https://shareous1.dexcom.com/ShareWebServices/Services/";

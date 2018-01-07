@@ -1,16 +1,17 @@
 package ui
 {
-	import com.adobe.touch3D.Touch3D;
-	import com.adobe.touch3D.Touch3DEvent;
+	//import com.adobe.touch3D.Touch3D;
+	//import com.adobe.touch3D.Touch3DEvent;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
+	import com.distriqt.extension.notifications.Notifications;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
 	
 	import spark.formatters.DateTimeFormatter;
-	
-	import Utilities.Trace;
 	
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.CommonSettings;
@@ -28,8 +29,6 @@ package ui
 	
 	import model.ModelLocator;
 	
-	import screens.Screens;
-	
 	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.NotificationService;
@@ -37,7 +36,10 @@ package ui
 	
 	import starling.events.Event;
 	
-	import utils.AlertManager;
+	import ui.popups.AlertManager;
+	import ui.screens.Screens;
+	
+	import utilities.Trace;
 	
 	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -47,9 +49,9 @@ package ui
 	{
 		private static var initialStart:Boolean = true;
 		private static var _instance:InterfaceController;
+		public static var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter;
 		public static var peripheralConnected:Boolean = false;
 		public static var peripheralConnectionStatusChangeTimestamp:Number;
-		public static var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter;
 		
 		public function InterfaceController() {}
 		
@@ -75,20 +77,17 @@ package ui
 			
 			function onInitResult(event:DatabaseEvent):void
 			{
-				trace("Interface Controller : Database initialized successfully!");
+				Trace.myTrace("interfaceController.as", "Database initialized successfully!");
 				//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
 				
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
 				
-				/*CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
-				CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);*/
-				
-				setup3DTouch();
+				//setup3DTouch();
 			}
 			
 			function onInitError(event:DatabaseEvent):void
 			{	
-				trace("Interface Controller : Error initializing database!");
+				Trace.myTrace("interfaceController.as", "Error initializing database!");
 			}
 		}
 		
@@ -148,18 +147,21 @@ package ui
 			}
 		}
 		
-		private static function setup3DTouch():void
+		/*private static function setup3DTouch():void
 		{
 			if(Capabilities.cpuArchitecture == "ARM") {
 				var touch:Touch3D = new Touch3D();
-				touch.init()
-				touch.addEventListener(Touch3DEvent.SHORTCUT_ITEM, itemStatus);
-				touch.removeShortcutItem("calibration");
-				touch.removeShortcutItem("startsensor");
-				touch.removeShortcutItem("stopsensor");
-				touch.addShortcutItem("calibration","Enter Calibration","","UIApplicationShortcutIconTypeAdd");
-				touch.addShortcutItem("startsensor","Start Sensor","","UIApplicationShortcutIconTypeConfirmation");
-				touch.addShortcutItem("stopsensor","Stop Sensor","","UIApplicationShortcutIconTypeProhibit");
+				if (touch.isSupported())
+				{
+					touch.init()
+					touch.addEventListener(Touch3DEvent.SHORTCUT_ITEM, itemStatus);
+					touch.removeShortcutItem("calibration");
+					touch.removeShortcutItem("startsensor");
+					touch.removeShortcutItem("stopsensor");
+					touch.addShortcutItem("calibration","Enter Calibration","","UIApplicationShortcutIconTypeAdd");
+					touch.addShortcutItem("startsensor","Start Sensor","","UIApplicationShortcutIconTypeConfirmation");
+					touch.addShortcutItem("stopsensor","Stop Sensor","","UIApplicationShortcutIconTypeProhibit");
+				}
 			}
 		}
 		
@@ -198,15 +200,15 @@ package ui
 			}
 		}
 		
-		private static function onStopSensorTriggered(e:Event):void
+		private static function onStopSensorTriggered(e:starling.events.Event):void
 		{
-			/* Stop the Sensor */
+			//Stop the Sensor 
 			Sensor.stopSensor();
 			NotificationService.updateBgNotification(null);
 			
-			/* Navigate to the Start Sensor screen */
+			//Navigate to the Start Sensor screen 
 			AppInterface.instance.navigator.pushScreen(Screens.SENSOR_START);
-		}
+		}*/
 		/**
 		 * Notification Event Handlers
 		 */
@@ -230,7 +232,7 @@ package ui
 			}
 		}
 		
-		private static function onLicenseAccepted (e:Event):void
+		private static function onLicenseAccepted (e:starling.events.Event):void
 		{
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LICENSE_INFO_ACCEPTED, "true");
 			
@@ -248,8 +250,31 @@ package ui
 		 */
 		private static function blueToothServiceInitiated(be:BlueToothServiceEvent):void 
 		{
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
+		}
+		
+		private static function deviceNotPaired(event:flash.events.Event):void 
+		{
+			if (BackgroundFetch.appIsInForeground())
+				return;
+			
+			if (BlueToothDevice.isBluKon())
+				return; //blukon keeps on trying to connect, there's always a request to pair, no need to give additional comments
+			
+			AlertManager.showSimpleAlert
+			(
+				ModelLocator.resourceManagerInstance.getString("transmitterscreen","device_not_paired_alert_title"),
+				ModelLocator.resourceManagerInstance.getString("transmitterscreen","device_not_paired_alert_message"),
+				240,
+				deviceNotPairedAlertClosed
+			);
+		}
+		
+		private static function deviceNotPairedAlertClosed(event:starling.events.Event):void 
+		{
+			Notifications.service.cancel(NotificationService.ID_FOR_DEVICE_NOT_PAIRED);
 		}
 		
 		private static function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void 
@@ -282,7 +307,7 @@ package ui
 				AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_alert_title"),
-					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_message") + (BlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString('homeview',"with_name") + " " + BlueToothDevice.name) + "\n\n" + ModelLocator.resourceManagerInstance.getString('homeview',"explain_expected_device_name"): ""),
+					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_message") + (BlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"with_name") + " " + BlueToothDevice.name) + "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"explain_expected_device_name"): ""),
 					Number.NaN,
 					null,
 					HorizontalAlign.CENTER

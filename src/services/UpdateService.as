@@ -9,8 +9,6 @@ package services
 	import flash.net.URLRequestMethod;
 	import flash.net.navigateToURL;
 	
-	import Utilities.Trace;
-	
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
@@ -18,13 +16,14 @@ package services
 	import events.SettingsServiceEvent;
 	
 	import feathers.controls.Alert;
-	import feathers.controls.ButtonGroup;
 	
 	import model.ModelLocator;
 	
 	import starling.events.Event;
 	
-	import utils.AlertManager;
+	import ui.popups.AlertManager;
+	
+	import utilities.Trace;
 	
 	[ResourceBundle('updateservice')]
 	
@@ -172,7 +171,7 @@ package services
 			var currentAppVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 			//var currentAppVersion:String = "0.5";
 			latestAppVersion = data.tag_name;
-			var updateAvailable:Boolean = ModelLocator.versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
+			var updateAvailable:Boolean = versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
 			
 			//Handle User Update
 			if(updateAvailable && latestAppVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE))
@@ -299,6 +298,24 @@ package services
 			}
 			if(canDoUpdate())
 				getUpdate();
+		}
+		
+		private static function versionAIsSmallerThanB(versionA:String, versionB:String):Boolean {
+			var versionaSplitted:Array = versionA.split(".");
+			var versionbSplitted:Array = versionB.split(".");
+			if (new Number(versionaSplitted[0]) < new Number(versionbSplitted[0]))
+				return true;
+			if (new Number(versionaSplitted[0]) > new Number(versionbSplitted[0]))
+				return false;
+			if (new Number(versionaSplitted[1]) < new Number(versionbSplitted[1]))
+				return true;
+			if (new Number(versionaSplitted[1]) > new Number(versionbSplitted[1]))
+				return false;
+			if (new Number(versionaSplitted[2]) < new Number(versionbSplitted[2]))
+				return true;
+			if (new Number(versionaSplitted[2]) > new Number(versionbSplitted[2]))
+				return false;
+			return false;
 		}
 	}
 }

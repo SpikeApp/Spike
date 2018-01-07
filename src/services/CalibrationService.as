@@ -9,7 +9,7 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
-	import Utilities.Trace;
+	import utilities.Trace;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;
@@ -17,7 +17,7 @@ package services
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Sensor;
 	
-	import display.LayoutFactory;
+	import ui.screens.display.LayoutFactory;
 	
 	import events.CalibrationServiceEvent;
 	import events.IosXdripReaderEvent;
@@ -30,7 +30,7 @@ package services
 	
 	import model.ModelLocator;
 	
-	import utils.AlertManager;
+	import ui.popups.AlertManager;
 	
 	/**
 	 * listens for bgreadings, at each bgreading user is asked to enter bg value<br>
@@ -39,7 +39,7 @@ package services
 	public class CalibrationService extends EventDispatcher
 	{
 		[ResourceBundle("calibrationservice")]
-		[ResourceBundle("general")]
+		[ResourceBundle("globaltranslations")]
 		
 		private static var _instance:CalibrationService = new CalibrationService();
 		private static var bgLevel1:Number;
@@ -156,7 +156,7 @@ package services
 				"",
 				MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS,
 				[
-					{ label: ModelLocator.resourceManagerInstance.getString('general','cancel').toUpperCase() },
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
 					{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: initialCalibrationValueEntered }
 				],
 				HorizontalAlign.JUSTIFY,
@@ -248,7 +248,7 @@ package services
 								"",
 								Number.NaN,
 								[
-									{ label: ModelLocator.resourceManagerInstance.getString('general','cancel').toUpperCase() },
+									{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
 									{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: initialCalibrationValueEntered }
 								],
 								HorizontalAlign.JUSTIFY,
@@ -337,7 +337,7 @@ package services
 					"",
 					60,
 					[
-						{ label: ModelLocator.resourceManagerInstance.getString('general','cancel').toUpperCase() },
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
 						{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationValueEntered }
 					],
 					HorizontalAlign.JUSTIFY,
@@ -401,8 +401,8 @@ package services
 						ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_with_override"),
 						60,
 						[
-							{ label: ModelLocator.resourceManagerInstance.getString('general','cancel').toUpperCase() },
-							{ label: ModelLocator.resourceManagerInstance.getString('general','ok'), triggered: onAcceptedCalibrateWithOverride }
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','ok_alert_button_label'), triggered: onAcceptedCalibrateWithOverride }
 						]
 					);
 					
@@ -415,7 +415,7 @@ package services
 							"",
 							Number.NaN,
 							[
-								{ label: ModelLocator.resourceManagerInstance.getString('general','cancel').toUpperCase() },
+								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
 								{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationDialogClosedWithOverride }
 							],
 							HorizontalAlign.JUSTIFY,
@@ -464,7 +464,7 @@ package services
 				else 
 				{
 					var alertButtonsList:Array = [];
-					alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString('general','cancel').toUpperCase() });
+					alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() });
 					alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationDialogClosedWithoutOverride });
 					if (addSnoozeOption)
 					{

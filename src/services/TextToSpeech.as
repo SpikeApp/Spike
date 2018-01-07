@@ -27,8 +27,8 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
-	import Utilities.BgGraphBuilder;
-	import Utilities.Trace;
+	import utilities.BgGraphBuilder;
+	import utilities.Trace;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;

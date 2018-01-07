@@ -17,7 +17,7 @@
  */
 package databaseclasses
 {
-	import Utilities.UniqueId;
+	import utilities.UniqueId;
 
 	/**
 	 * class that holds and does generic attributes and methods for all classes that will do google sync etc. <br>
@@ -51,7 +51,7 @@ package databaseclasses
 				_lastModifiedTimestamp = lastmodifiedtimestamp;
 				
 			if (uniqueId == null)
-				_uniqueId = Utilities.UniqueId.createEventId();
+				_uniqueId = utilities.UniqueId.createEventId();
 			else
 				_uniqueId = uniqueId;
 		}

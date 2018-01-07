@@ -2,8 +2,8 @@ package G5Model
 {
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
-	import Utilities.Trace;
-	import Utilities.UniqueId;
+	import utilities.Trace;
+	import utilities.UniqueId;
 
 	public class KeepAliveTxMessage extends TransmitterMessage
 	{

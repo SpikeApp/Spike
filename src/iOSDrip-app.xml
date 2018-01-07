@@ -211,7 +211,7 @@
 			<![CDATA[<key>UIViewControllerBasedStatusBarAppearance</key><false/>]]>
     		<![CDATA[<key>UIStatusBarStyle</key><string>UIStatusBarStyleLightContent</string>]]>
             <![CDATA[
-                <key>UIDeviceFamily</key>
+                  <key>UIDeviceFamily</key>
                 <array>
                     <string>1</string>
                     <string>2</string>
@@ -222,6 +222,7 @@
 				<array>
 					<string>bluetooth-central</string>
 					<string>audio</string>
+					<string>remote-notification</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>
@@ -238,6 +239,7 @@
       				<array>
       					<string>healthkit</string>
 					</array>
+				<key>ITSAppUsesNonExemptEncryption</key><false/>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
@@ -311,10 +313,8 @@
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
 		<extensionID>com.distriqt.Core</extensionID>
-		<extensionID>com.distriqt.Dialog</extensionID>
 		<extensionID>com.distriqt.Message</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
-		<extensionID>adobe.nativeExtension.3DiOS</extensionID>
     </extensions>
 </application>

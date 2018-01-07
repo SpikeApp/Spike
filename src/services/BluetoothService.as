@@ -25,11 +25,6 @@ package services
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.bluetoothle.objects.Characteristic;
 	import com.distriqt.extension.bluetoothle.objects.Peripheral;
-	import com.distriqt.extension.dialog.Dialog;
-	import com.distriqt.extension.dialog.DialogView;
-	import com.distriqt.extension.dialog.builders.AlertBuilder;
-	import com.distriqt.extension.dialog.events.DialogViewEvent;
-	import com.distriqt.extension.dialog.objects.DialogAction;
 	import com.distriqt.extension.message.Message;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
@@ -52,9 +47,6 @@ package services
 	import G5Model.SensorTxMessage;
 	import G5Model.TransmitterStatus;
 	
-	import Utilities.Trace;
-	import Utilities.UniqueId;
-	
 	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.CommonSettings;
@@ -65,6 +57,8 @@ package services
 	import events.BlueToothServiceEvent;
 	import events.SettingsServiceEvent;
 	
+	import feathers.controls.Alert;
+	
 	import model.ModelLocator;
 	import model.TransmitterDataBluKonPacket;
 	import model.TransmitterDataBlueReaderBatteryPacket;
@@ -73,6 +67,13 @@ package services
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
+	
+	import starling.events.Event;
+	
+	import ui.popups.AlertManager;
+	
+	import utilities.Trace;
+	import utilities.UniqueId;
 	
 	/**
 	 * all functionality related to bluetooth connectivity<br>
@@ -85,7 +86,7 @@ package services
 	public class BluetoothService extends EventDispatcher
 	{
 		[ResourceBundle("bluetoothservice")]
-		[ResourceBundle("settingsview")]
+		[ResourceBundle("globaltranslations")]
 		
 		private static var _instance:BluetoothService = new BluetoothService();
 		
@@ -426,7 +427,7 @@ package services
 			}
 		}
 		
-		private static function stopScanning(event:Event):void {
+		private static function stopScanning(event:flash.events.Event):void {
 			myTrace("in stopScanning");
 			if (BluetoothLE.service.centralManager.isScanning) {
 				myTrace("in stopScanning, is scanning, call stopScan");
@@ -597,7 +598,7 @@ package services
 			discoverServices();
 		}
 		
-		private static function discoverServices(event:Event = null):void {
+		private static function discoverServices(event:flash.events.Event = null):void {
 			waitingForServicesDiscovered = false;
 			if (activeBluetoothPeripheral == null)//rare case, user might have done forget xdrip while waiting for rettempt
 				return;
@@ -649,7 +650,7 @@ package services
 			}
 		}
 		
-		private static function central_peripheralDisconnectHandler(event:Event = null):void {
+		private static function central_peripheralDisconnectHandler(event:flash.events.Event = null):void {
 			myTrace('Disconnected from device or attempt to reconnect failed');
 			if (BlueToothDevice.isBluKon()) {
 				myTrace('it is a blukon');
@@ -674,7 +675,7 @@ package services
 			}
 		}
 		
-		private static function tryReconnect(event:Event = null):void {
+		private static function tryReconnect(event:flash.events.Event = null):void {
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				bluetoothStatusIsOn();
 			} else {
@@ -707,7 +708,7 @@ package services
 			}
 		}
 		
-		private static function discoverCharacteristics(event:Event = null):void {
+		private static function discoverCharacteristics(event:flash.events.Event = null):void {
 			if (activeBluetoothPeripheral == null)//rare case, user might have done forget xdrip while waiting to reattempt
 				return;
 			
@@ -955,7 +956,7 @@ package services
 			} else {
 				value.position = 0;
 				value.endian = Endian.LITTLE_ENDIAN;
-				myTrace("data packet received from transmitter : " + Utilities.UniqueId.bytesToHex(value));
+				myTrace("data packet received from transmitter : " + utilities.UniqueId.bytesToHex(value));
 				value.position = 0;
 				if (BlueToothDevice.isDexcomG5()) {
 					processG5TransmitterData(value, event.characteristic);
@@ -1219,7 +1220,7 @@ package services
 			}
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
-			var strRecCmd:String = Utilities.UniqueId.bytesToHex(buffer).toLowerCase();
+			var strRecCmd:String = utilities.UniqueId.bytesToHex(buffer).toLowerCase();
 			buffer.position = 0;
 			var blueToothServiceEvent:BlueToothServiceEvent  = null;
 			var gotLowBat:Boolean = false;
@@ -1539,7 +1540,7 @@ package services
 			if(m_blockNumber >= 43) {
 				blukonCurrentCommand = "010c0e00";
 				myTrace("in processBlukonTransmitterData, Send sleep cmd");
-				myTrace("in processBlukonTransmitterData, Full data that was recieved is " + Utilities.UniqueId.bytesToHex(m_full_data));
+				myTrace("in processBlukonTransmitterData, Full data that was recieved is " + utilities.UniqueId.bytesToHex(m_full_data));
 			} else {
 				blukonCurrentCommand = "";
 			}
@@ -1640,7 +1641,7 @@ package services
 		 * sends the command to  BC_desiredTransmitCharacteristic and also assigns blukonCurrentCommand to command
 		 */
 		private static function sendCommand(command:String):void {
-			if (!activeBluetoothPeripheral.writeValueForCharacteristic(BC_desiredTransmitCharacteristic, Utilities.UniqueId.hexStringToByteArray(command))) {
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(BC_desiredTransmitCharacteristic, utilities.UniqueId.hexStringToByteArray(command))) {
 				myTrace("send " + command + " failed");
 			} else {
 				myTrace("send " + command + " succesfull");
@@ -1650,7 +1651,7 @@ package services
 		public static function processBlueReaderTransmitterData(buffer:ByteArray):void {
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
-			myTrace("in processBlueReaderTransmitterData data packet received from transmitter : " + Utilities.UniqueId.bytesToHex(buffer));
+			myTrace("in processBlueReaderTransmitterData data packet received from transmitter : " + utilities.UniqueId.bytesToHex(buffer));
 
 			buffer.position = 0;
 			var bufferAsString:String = buffer.readUTFBytes(buffer.length);
@@ -1747,47 +1748,57 @@ package services
 			}
 		}
 		
-		public static function warnUnknownG4PacketType(packetType:int):void {
-			if (BackgroundFetch.appIsInBackground()) {
+		public static function warnUnknownG4PacketType(packetType:int):void 
+		{
+			if (BackgroundFetch.appIsInBackground())
 				return;
-			}
 			if ((new Date()).valueOf() - new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE)) < 30 * 60 * 1000)
 				return;
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE) ==  "true") {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE) ==  "true")
 				return;
-			}
-			if (listOfSeenInvalidPacketTypes.indexOf(packetType) > -1) {
+			if (listOfSeenInvalidPacketTypes.indexOf(packetType) > -1) 
+			{
 				unsupportedPacketType = packetType;
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle("xDrip Alert")
-					.setMessage(ModelLocator.resourceManagerInstance.getString('bluetoothservice', "unknownpackettypeinfo"))
-					.addOption(ModelLocator.resourceManagerInstance.getString('bluetoothservice', "sendemail"), DialogAction.STYLE_POSITIVE, 0)
-					.addOption(ModelLocator.resourceManagerInstance.getString('bluetoothservice', "notnow"), DialogAction.STYLE_POSITIVE, 2)
-					.addOption(ModelLocator.resourceManagerInstance.getString('bluetoothservice', "dontaskagain"), DialogAction.STYLE_POSITIVE, 3)
-					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-					.build()
-				);
-				alert.addEventListener(DialogViewEvent.CLOSED, sendemail);
-				DialogService.addDialog(alert);
+				
+				var alert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('bluetoothservice', "xdrip_alert_title"),
+					ModelLocator.resourceManagerInstance.getString('bluetoothservice', "unknownpackettypeinfo"),
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","cancel_button_label").toUpperCase() },
+						{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "dontaskagain") },
+						{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "notnow") },
+						{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "sendemail") }
+					]
+				)
+				alert.height = 320;
+				alert.buttonGroupProperties.gap = -5;
+				alert.width = 310;
+				alert.addEventListener( starling.events.Event.CLOSE, sendemail );
 			}
 		}
 		
-		private static function sendemail(ev:DialogViewEvent):void {
-			if (ev != null) {
-				if (ev.index == 1) {
-					return;
-				} else if (ev.index == 2) {
+		private static function sendemail(e:starling.events.Event, data:Object):void 
+		{
+			if (data != null)
+			{
+				if (data.label == ModelLocator.resourceManagerInstance.getString("globaltranslations","cancel_button_label").toUpperCase())
+					return
+				else if (data.label == ModelLocator.resourceManagerInstance.getString('bluetoothservice', "notnow"))
+				{
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE, (new Date()).valueOf().toString());
 					return;
-				} else if (ev.index == 3) {
+				}
+				else if (data.label == ModelLocator.resourceManagerInstance.getString('bluetoothservice', "dontaskagain"))
+				{
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE, "true");
 					return;
 				}
 			}
 			
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE, (new Date()).valueOf().toString());
-			var body:String = "Hi,\n\nRequest for support wxl. Unsupported packetType =  " + unsupportedPacketType + ".\n\nregards.";
+			var body:String = "Hi,\n\nRequest for support wxl. Unsupported packetType =  " + unsupportedPacketType + ".\n\nRegards.";
 			Message.service.sendMailWithOptions("Request for supported wxl", body, "xdrip@proximus.be","","",null,false);
 		}
 
@@ -1835,7 +1846,7 @@ package services
 		/**
 		 * to be called when performfetch is received, this will actually start the rescan 
 		 */
-		public static function startRescan(event:Event):void {
+		public static function startRescan(event:flash.events.Event):void {
 			if (!(BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				myTrace("In rescanAtPerformFetch but bluetooth is not on");
 				return;
@@ -1914,14 +1925,17 @@ package services
 			
 			myTrace("in isSensorReady, sensor status is: " + sensorStatusString);
 			
-			if (!ret) {
-				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","warning"),
+			if (!ret) 
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
 					ModelLocator.resourceManagerInstance.getString("bluetoothservice","cantusesensor") + " " + sensorStatusString,
-					60);
+					60
+				);
 			}
+			
 			return ret;
 		}
-		
-
 	}
 }

@@ -10,22 +10,18 @@ package
 	import flash.utils.clearInterval;
 	import flash.utils.setTimeout;
 	
-	import Utilities.Trace;
-	
 	import events.IosXdripReaderEvent;
 	
 	import feathers.utils.ScreenDensityScaleFactorManager;
-	
-	import screens.Screens;
-	
-	import services.DialogService;
 	
 	import starling.core.Starling;
 	import starling.events.Event;
 	
 	import ui.AppInterface;
+	import ui.screens.Screens;
 	
-	import utils.Constants;
+	import utilities.Constants;
+	import utilities.Trace;
 	
 	[SWF(frameRate="60", backgroundColor="#20222a")]
 	public class iOSDrip extends Sprite 
@@ -67,7 +63,6 @@ package
 		private function initStarling():void 
 		{
 			NativeApplication.nativeApplication.executeInBackground = true;
-			DialogService.init(this.stage);
 			
 			
 			/* Initialize and start the Starling instance */

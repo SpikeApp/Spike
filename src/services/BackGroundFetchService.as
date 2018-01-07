@@ -5,7 +5,7 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.net.URLVariables;
 	
-	import Utilities.Trace;
+	import utilities.Trace;
 	import events.BackGroundFetchServiceEvent;
 	
 	/**

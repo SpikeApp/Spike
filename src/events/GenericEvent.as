@@ -5,7 +5,7 @@ package events
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import model.ModelLocator;
+	
 
 	public class GenericEvent extends Event
 	{
@@ -27,7 +27,7 @@ package events
 		public function getTimeStampAsString(): String {
 			if (dateFormatter == null) {
 				dateFormatter = new DateTimeFormatter();
-				dateFormatter.dateTimePattern = ModelLocator.resourceManagerInstance.getString('general','datetimepatternforlogginginfo');
+				dateFormatter.dateTimePattern = "MM dd HH:mm:ss";
 				dateFormatter.useUTC = false;
 				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 			}

@@ -27,7 +27,7 @@
 	  */
 	 public class CommonSettings extends EventDispatcher
 	 {
-		 [ResourceBundle("settingsview")]
+		 [ResourceBundle("alertsettingsscreen")]
 		 
 		 private static var _instance:CommonSettings = new CommonSettings();
 
@@ -356,7 +356,7 @@
 			 }
 			 if (commonSettingId == COMMON_SETTING_LOW_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_LOW_ALERT, newString);
@@ -364,7 +364,7 @@
 			 }
 			 if (commonSettingId == COMMON_SETTING_VERY_LOW_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_VERY_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_VERY_LOW_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_VERY_LOW_ALERT, newString);
@@ -372,7 +372,7 @@
 			 }
 			 if (commonSettingId == COMMON_SETTING_VERY_HIGH_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_VERY_HIGH_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_VERY_HIGH_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_VERY_HIGH_ALERT, newString);
@@ -380,7 +380,7 @@
 			 }
 			 if (commonSettingId == COMMON_SETTING_HIGH_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_HIGH_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_HIGH_ALERT, newString);
@@ -388,7 +388,7 @@
 			 }
 			 if (commonSettingId == COMMON_SETTING_MISSED_READING_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_MISSED_READING_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_MISSED_READING_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_MISSED_READING_ALERT, newString);
@@ -396,19 +396,19 @@
 			 }
 			 if (commonSettingId == COMMON_SETTING_PHONE_MUTED_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
 				 }
 				 if ((commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String).indexOf('SilentToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","silent_alert")
 					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
 						 .replace('SilentToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
 				 }
 				 if ((commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String).indexOf('SilentPhoneMutedToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","silent_alert")
 					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
 						 .replace('SilentPhoneMutedToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
@@ -416,19 +416,19 @@
 			 }
 			 if (commonSettingId == COMMON_SETTING_BATTERY_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
 				 }
 				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('SilentToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","silent_alert")
 					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
 						 .replace('SilentToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
 				 }
 				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('SilentPhoneMutedToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","silent_alert")
 					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
 						 .replace('SilentPhoneMutedToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
@@ -436,13 +436,13 @@
 			 }
 			 if (commonSettingId == COMMON_SETTING_CALIBRATION_REQUEST_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_CALIBRATION_REQUEST_ALERT, newString);
 				 }
 				 if ((commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String).indexOf('SilentToBeReplaced') > -1) {
-					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","silent_alert")
 					 newString = (commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String)
 						 .replace('SilentToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_CALIBRATION_REQUEST_ALERT, newString);
