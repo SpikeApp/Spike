@@ -259,7 +259,8 @@ package ui.screens.display.settings.share
 			//Clear focus to dismiss the keyboard
 			dsUsername.clearFocus();
 			dsPassword.clearFocus();
-			dsSerial.clearFocus();
+			if (dsSerial != null)
+				dsSerial.clearFocus();
 		}
 		
 		private function onDexcomShareOnOff(event:Event):void

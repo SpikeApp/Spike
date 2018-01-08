@@ -1745,6 +1745,9 @@ package ui.chart
 			//Deativate DummyMode
 			dummyModeActive = false;
 			
+			//Get previous chart width for later use in case of less than 24H data
+			var previousChartWidth:Number = mainChart.width;
+			
 			//Redraw main chart and scroller chart
 			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, numAddedReadings);
 			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, numAddedReadings);
@@ -1754,7 +1757,25 @@ package ui.chart
 			{
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
 				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
-				//displayLatestBGValue = true;
+			}
+			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_24_HOURS)
+			{
+				mainChart.x -= mainChart.width - previousChartWidth;
+				selectedGlucoseMarkerIndex += 1;
+			}
+			
+			//Adjust Pcker Position
+			if (!displayLatestBGValue && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_24_HOURS && mainChart.x <= 0)
+				handPicker.x += (mainChart.width - previousChartWidth) * scrollMultiplier;
+			
+			//Define scroll multiplier for scroller vs main graph
+			if (mainChart.x > 0)
+				scrollMultiplier = Math.abs(mainChart.width - (mainChartGlucoseMarkerRadius * 2))/handPicker.x
+			else
+			{
+				var calculatedScrollMultiplier:Number = Math.abs(mainChart.x)/handPicker.x;
+				if (!isNaN(calculatedScrollMultiplier))
+					scrollMultiplier = calculatedScrollMultiplier;
 			}
 			
 			//Restart Update timer
@@ -1935,19 +1956,6 @@ package ui.chart
 				//Update variables for next iteration
 				previousXCoordinate = previousXCoordinate + glucoseX;
 				previousGlucoseMarker = glucoseMarker;
-			}
-			
-			//Define scroll multiplier for scroller vs main graph
-			if (handPicker != null && chartType == MAIN_CHART)
-			{
-				if (mainChart.x > 0)
-					scrollMultiplier = Math.abs(mainChart.width - (glucoseMarkerRadius * 2))/handPicker.x
-				else
-				{
-					var calculatedScrollMultiplier:Number = Math.abs(mainChart.x)/handPicker.x;
-					if (!isNaN(calculatedScrollMultiplier))
-						scrollMultiplier = calculatedScrollMultiplier;
-				}
 			}
 			
 			if(chartType == MAIN_CHART)

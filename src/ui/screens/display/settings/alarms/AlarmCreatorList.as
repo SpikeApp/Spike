@@ -191,8 +191,12 @@ package ui.screens.display.settings.alarms
 		private function setupContent():void
 		{
 			/* Time Selectors */
+			nowDate = new Date();
+			
 			startTime = new DateTimeSpinner();
 			startTime.editingMode = DateTimeMode.TIME;
+			startTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 0);
+			startTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 58);
 			startTime.value = startDate;
 			startTime.height = 35;
 			startTime.pivotX = 3;
@@ -200,6 +204,8 @@ package ui.screens.display.settings.alarms
 			
 			endTime = new DateTimeSpinner();
 			endTime.editingMode = DateTimeMode.TIME;
+			endTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 1);
+			endTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 59);
 			endTime.value = endDate;
 			endTime.height = 35;
 			endTime.pivotX = 3;

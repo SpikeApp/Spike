@@ -19,6 +19,7 @@ package ui.screens.display.settings.alarms
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.data.ListCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
@@ -146,6 +147,7 @@ package ui.screens.display.settings.alarms
 			alertName = LayoutFactory.createTextInput(false, false, 120, HorizontalAlign.RIGHT);
 			alertName.text = alertNameValue;
 			alertName.addEventListener(Event.CHANGE, onSettingsChanged);
+			alertName.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			
 			enableSnoozeInNotification = LayoutFactory.createCheckMark(enableSnoozeInNotificationValue);
 			enableSnoozeInNotification.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -414,6 +416,12 @@ package ui.screens.display.settings.alarms
 		{
 			BackgroundFetch.stopPlayingSound();
 		}
+		
+		private function onTextInputEnter(event:Event):void
+		{
+			//Clear focus to dismiss the keyboard
+			alertName.clearFocus();
+		}
 		/**
 		 * Utility
 		 */
@@ -449,6 +457,8 @@ package ui.screens.display.settings.alarms
 			}
 			if (alertName != null)
 			{
+				alertName.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
+				alertName.removeEventListener(Event.CHANGE, onSettingsChanged);
 				alertName.dispose();
 				alertName = null;
 			}

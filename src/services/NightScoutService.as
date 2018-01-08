@@ -183,6 +183,11 @@ package services
 						_nightScoutEventsUrl = "https://" + _nightScoutEventsUrl;
 					}
 					
+					_nightScoutTreatmentsUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
+					if (_nightScoutTreatmentsUrl.indexOf('http') == -1) {
+						_nightScoutTreatmentsUrl = "https://" + _nightScoutTreatmentsUrl;
+					}
+					
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"false");
 				}
 				
@@ -219,7 +224,7 @@ package services
 				testEvent["_id"] = testUniqueId;
 				testEvent["eventType"] = "Exercise";
 				testEvent["duration"] = 20;
-				testEvent["notes"] = "to test nightscout url";
+				testEvent["notes"] = "Authentication Test";
 				var nightScoutTreatmentsUrl:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 				if (nightScoutTreatmentsUrl.indexOf('http') == -1) {
 					nightScoutTreatmentsUrl = "https://" + nightScoutTreatmentsUrl;
@@ -248,8 +253,7 @@ package services
 			
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"true");
 			myTrace("nightscout_test_result_ok");
-			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
-			createAndLoadURLRequest(nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
+			createAndLoadURLRequest(_nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
 			
 			myTrace(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"));
 			

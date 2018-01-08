@@ -1,7 +1,7 @@
 package ui
 {
-	//import com.adobe.touch3D.Touch3D;
-	//import com.adobe.touch3D.Touch3DEvent;
+	import com.adobe.touch3D.Touch3D;
+	import com.adobe.touch3D.Touch3DEvent;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.notifications.Notifications;
@@ -39,6 +39,7 @@ package ui
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	
+	import utilities.DeviceInfo;
 	import utilities.Trace;
 	
 	[ResourceBundle("transmitterscreen")]
@@ -82,7 +83,7 @@ package ui
 				
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
 				
-				//setup3DTouch();
+				setup3DTouch();
 			}
 			
 			function onInitError(event:DatabaseEvent):void
@@ -147,11 +148,11 @@ package ui
 			}
 		}
 		
-		/*private static function setup3DTouch():void
+		private static function setup3DTouch():void
 		{
 			if(Capabilities.cpuArchitecture == "ARM") {
 				var touch:Touch3D = new Touch3D();
-				if (touch.isSupported())
+				if (touch.isSupported() || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
 				{
 					touch.init()
 					touch.addEventListener(Touch3DEvent.SHORTCUT_ITEM, itemStatus);
@@ -176,8 +177,8 @@ package ui
 					ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_message'),
 					60,
 					[
-						{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','cancel_alert_button_label') },
-						{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_alert_button_label'), triggered: onStopSensorTriggered }
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','stop_alert_button_label'), triggered: onStopSensorTriggered }
 					]
 				);
 			}
@@ -192,8 +193,8 @@ package ui
 						ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_active_alert_message'),
 						60,
 						[
-							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','cancel_alert_button_label') },
-							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_alert_button_label'), triggered: onStopSensorTriggered }
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','stop_alert_button_label'), triggered: onStopSensorTriggered }
 						]
 					);
 				}
@@ -202,13 +203,13 @@ package ui
 		
 		private static function onStopSensorTriggered(e:starling.events.Event):void
 		{
-			//Stop the Sensor 
+			/* Stop the Sensor */
 			Sensor.stopSensor();
 			NotificationService.updateBgNotification(null);
 			
-			//Navigate to the Start Sensor screen 
+			/* Navigate to the Start Sensor screen */
 			AppInterface.instance.navigator.pushScreen(Screens.SENSOR_START);
-		}*/
+		}
 		/**
 		 * Notification Event Handlers
 		 */
