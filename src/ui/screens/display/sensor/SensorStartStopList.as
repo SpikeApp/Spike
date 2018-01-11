@@ -8,6 +8,7 @@ package ui.screens.display.sensor
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Sensor;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;
@@ -30,6 +31,7 @@ package ui.screens.display.sensor
 	import ui.screens.display.LayoutFactory;
 	
 	import utilities.Constants;
+	import utilities.DeviceInfo;
 	import utilities.TimeSpan;
 	
 	[ResourceBundle("sensorscreen")]
@@ -164,6 +166,7 @@ package ui.screens.display.sensor
 				actionButton.removeEventListeners(Event.TRIGGERED);
 			
 			actionButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_button_label'));
+			actionButton.pivotX = -11;
 			actionButton.addEventListener(Event.TRIGGERED, onStopSensor);
 		}
 		
@@ -173,6 +176,7 @@ package ui.screens.display.sensor
 				actionButton.removeEventListeners(Event.TRIGGERED);
 			
 			actionButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sensorscreen','start_button_label'));
+			actionButton.pivotX = -11;
 			actionButton.addEventListener(Event.TRIGGERED, onStartSensor);
 		}
 		
@@ -201,7 +205,7 @@ package ui.screens.display.sensor
 		 */
 		private function onStopSensor(e:Event):void
 		{
-			AlertManager.showActionAlert(
+			var alert:Alert = AlertManager.showActionAlert(
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_title'),
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_message'),
 				60,
@@ -210,6 +214,10 @@ package ui.screens.display.sensor
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','stop_alert_button_label'), triggered: onStopSensorTriggered }
 				]
 			);
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			{
+				alert.maxWidth = 270;
+			}
 		}
 		
 		private function onStopSensorTriggered(e:Event):void

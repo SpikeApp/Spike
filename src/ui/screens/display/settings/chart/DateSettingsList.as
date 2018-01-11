@@ -20,7 +20,7 @@ package ui.screens.display.settings.chart
 	
 	[ResourceBundle("chartsettingsscreen")]
 
-	public class ChartDateSettingsList extends List 
+	public class DateSettingsList extends List 
 	{
 		/* Display Objects */
 		private var dateFormatPicker:PickerList;
@@ -30,7 +30,7 @@ package ui.screens.display.settings.chart
 		private var dateFormatValue:String;
 		private var currentDateFormatIndex:int;
 		
-		public function ChartDateSettingsList()
+		public function DateSettingsList()
 		{
 			super();
 			
@@ -79,6 +79,7 @@ package ui.screens.display.settings.chart
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "text";
 				itemRenderer.accessoryField = "accessory";
+				itemRenderer.paddingRight = 0;
 				return itemRenderer;
 			};
 			

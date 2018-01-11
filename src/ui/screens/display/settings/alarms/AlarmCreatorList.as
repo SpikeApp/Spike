@@ -12,6 +12,7 @@ package ui.screens.display.settings.alarms
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.GroupedList;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.popups.DropDownPopUpContentManager;
@@ -29,6 +30,7 @@ package ui.screens.display.settings.alarms
 	
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.text.TextFormat;
 	
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.LayoutFactory;
@@ -245,6 +247,22 @@ package ui.screens.display.settings.alarms
 			alertTypeList.dataProvider = alertTypeDataProvider;
 			alertTypeList.prompt = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"select_alert_prompt");
 			alertTypeList.selectedIndex = selectedAlertTypeIndex;
+			alertTypeList.listFactory = function():List
+			{
+				var list:List = new List();
+				list.minWidth = 120;
+				
+				return list;
+			};
+			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			{
+				alertTypeList.buttonFactory = function():Button
+				{
+					var button:Button = new Button();
+					button.fontStyles = new TextFormat("Roboto", 10, 0xEEEEEE);
+					return button;
+				};
+			}
 			alertTypeList.addEventListener(Event.CHANGE, onAlertListChange);
 			
 			/* Action Buttons */
@@ -347,11 +365,11 @@ package ui.screens.display.settings.alarms
 				alertCreator.addEventListener(Event.COMPLETE, onAlertCreatorClose);
 				alertCreatorCallout = new Callout();
 				alertCreatorCallout.content = alertCreator;
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 					alertCreatorCallout.padding = 18;
 				else
 				{
-					if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
+					if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 						alertCreatorCallout.padding = 18;
 					
 					setupCalloutPosition();

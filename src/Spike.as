@@ -24,19 +24,19 @@ package
 	import utilities.Trace;
 	
 	[SWF(frameRate="60", backgroundColor="#20222a")]
-	public class iOSDrip extends Sprite 
+	public class Spike extends Sprite 
 	{
 		private var starling:Starling;
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
-		private static var _instance:iOSDrip;
+		private static var _instance:Spike;
 		
-		public static function get instance():iOSDrip
+		public static function get instance():Spike
 		{
 			return _instance;
 		}
 		
-		public function iOSDrip() 
+		public function Spike() 
 		{
 			stage.align = StageAlign.TOP_LEFT;
 			stage.scaleMode = StageScaleMode.NO_SCALE;

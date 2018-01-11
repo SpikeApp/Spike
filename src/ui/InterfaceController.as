@@ -10,6 +10,9 @@ package ui
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
+	import flash.text.TextField;
+	import flash.text.TextFormat;
+	import flash.text.TextFormatAlign;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -39,12 +42,14 @@ package ui
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	
+	import utilities.Constants;
 	import utilities.DeviceInfo;
 	import utilities.Trace;
 	
 	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("sensorscreen")]
+	[ResourceBundle("3dtouch")]
 
 	public class InterfaceController extends EventDispatcher
 	{
@@ -61,18 +66,39 @@ package ui
 			if(_instance == null)
 				_instance = new InterfaceController();
 			
-			if (initialStart) {
-				Trace.init();
-				Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
-				Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
-				Database.init();
-				initialStart = false;
-				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-				
-				dateFormatterForSensorStartTimeAndDate = new DateTimeFormatter();
-				dateFormatterForSensorStartTimeAndDate.dateTimePattern = "dd MMM HH:mm";
-				dateFormatterForSensorStartTimeAndDate.useUTC = false;
-				dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
+			if (initialStart) 
+			{
+				if (DeviceInfo.isDeviceCompatible())
+				{
+					Trace.init();
+					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
+					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
+					Database.init();
+					initialStart = false;
+					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+					
+					dateFormatterForSensorStartTimeAndDate = new DateTimeFormatter();
+					dateFormatterForSensorStartTimeAndDate.dateTimePattern = "dd MMM HH:mm";
+					dateFormatterForSensorStartTimeAndDate.useUTC = false;
+					dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
+				}
+				else
+				{
+					var txtFormat:TextFormat = new TextFormat();
+					txtFormat.size = 24;
+					txtFormat.font = "Roboto";
+					txtFormat.bold = true;
+					txtFormat.align = TextFormatAlign.CENTER;
+					
+					var incompatibilityMessage:TextField = new TextField();
+					incompatibilityMessage.defaultTextFormat = txtFormat;
+					incompatibilityMessage.textColor = 0xEEEEEE;
+					incompatibilityMessage.width = Constants.appStage.stageWidth;
+					incompatibilityMessage.y = (Constants.appStage.stageHeight - incompatibilityMessage.textHeight) / 2;
+					incompatibilityMessage.text = ModelLocator.resourceManagerInstance.getString('globaltranslations','incompatible_device_message');
+					incompatibilityMessage.selectable = false;
+					Constants.appStage.addChild(incompatibilityMessage);
+				}
 			}
 			
 			
@@ -150,18 +176,19 @@ package ui
 		
 		private static function setup3DTouch():void
 		{
-			if(Capabilities.cpuArchitecture == "ARM") {
+			if(Capabilities.cpuArchitecture == "ARM") 
+			{
 				var touch:Touch3D = new Touch3D();
 				if (touch.isSupported() || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
 				{
-					touch.init()
+					touch.init();
 					touch.addEventListener(Touch3DEvent.SHORTCUT_ITEM, itemStatus);
 					touch.removeShortcutItem("calibration");
 					touch.removeShortcutItem("startsensor");
 					touch.removeShortcutItem("stopsensor");
-					touch.addShortcutItem("calibration","Enter Calibration","","UIApplicationShortcutIconTypeAdd");
-					touch.addShortcutItem("startsensor","Start Sensor","","UIApplicationShortcutIconTypeConfirmation");
-					touch.addShortcutItem("stopsensor","Stop Sensor","","UIApplicationShortcutIconTypeProhibit");
+					touch.addShortcutItem("calibration", ModelLocator.resourceManagerInstance.getString('3dtouch','calibration_menu'), "", "UIApplicationShortcutIconTypeAdd");
+					touch.addShortcutItem("startsensor", ModelLocator.resourceManagerInstance.getString('3dtouch','start_sensor_menu'), "", "UIApplicationShortcutIconTypeConfirmation");
+					touch.addShortcutItem("stopsensor", ModelLocator.resourceManagerInstance.getString('3dtouch','stop_sensor_menu'), "", "UIApplicationShortcutIconTypeProhibit");
 				}
 			}
 		}

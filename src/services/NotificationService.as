@@ -45,6 +45,7 @@ package services
 	import events.CalibrationServiceEvent;
 	import events.IosXdripReaderEvent;
 	import events.NotificationServiceEvent;
+	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -160,7 +161,7 @@ package services
 				Notifications.service.notify(
 					new NotificationBuilder()
 					.setId(ID_FOR_PATCH_READ_ERROR_BLUKON)
-					.setAlert("Blukon Error")
+					.setAlert("BluKon Error")
 					.setTitle(titleText)
 					.setBody(bodyText)
 					.enableLights(true)
@@ -307,10 +308,31 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
-				iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
+				Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
-				
+				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			}
+			
+			function onSettingsChanged(event:SettingsServiceEvent):void
+			{
+				if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE)
+				{
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "false")
+					{
+						myTrace("in onSettingsChanged, app badge is off, clearing app badge from icon");
+						Notifications.service.setBadgeNumber( 0 );
+					}
+					else
+					{
+						if (Calibration.allForSensor().length >= 2) 
+						{
+							var lastBgReading:BgReading = BgReading.lastNoSensor();
+							myTrace("in onSettingsChanged, app badge is ON and Calibration.allForSensor().length >= 2, setting app badge");
+							Notifications.service.setBadgeNumber( int(Math.round(lastBgReading.calculatedValue)) );
+						}
+					}
+				}
 			}
 			
 			function appInForeGround(event:Event):void {
@@ -344,11 +366,12 @@ package services
 			myTrace("in updateBgNotification");
 			Notifications.service.cancel(ID_FOR_BG_VALUE);
 			
+			var lastBgReading:BgReading;
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground()) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
 				if (Calibration.allForSensor().length >= 2) {
-					var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+					lastBgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");
 					if (lastBgReading != null) {
@@ -369,19 +392,48 @@ package services
 						valueToShow = "---"
 					}
 					
-					Notifications.service.notify(
-						new NotificationBuilder()
-						.setCount(int(Math.round(lastBgReading.calculatedValue)))
-						.setId(NotificationService.ID_FOR_BG_VALUE)
-						.setAlert("Bg value")
-						.setTitle(valueToShow)
-						.setBody(" ")
-						.setSound("")
-						.enableVibration(false)
-						.enableLights(false)
-						.build())
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true")
+					{
+						myTrace("in updateBgNotification, setting app badge");
+						Notifications.service.notify(
+							new NotificationBuilder()
+							.setCount(int(Math.round(lastBgReading.calculatedValue)))
+							.setId(NotificationService.ID_FOR_BG_VALUE)
+							.setAlert("Bg value")
+							.setTitle(valueToShow)
+							.setBody(" ")
+							.setSound("")
+							.enableVibration(false)
+							.enableLights(false)
+							.build());
+					}
+					else
+					{
+						Notifications.service.notify(
+							new NotificationBuilder()
+							.setId(NotificationService.ID_FOR_BG_VALUE)
+							.setAlert("Bg value")
+							.setTitle(valueToShow)
+							.setBody(" ")
+							.setSound("")
+							.enableVibration(false)
+							.enableLights(false)
+							.build());
+					}
 				}
 			}
+			else if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
+			{	
+				//App badge
+				myTrace("in updateBgNotification app badge on, local notifications off and not in foreground");
+				if (Calibration.allForSensor().length >= 2) {
+					lastBgReading = BgReading.lastNoSensor(); 
+					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
+					
+					Notifications.service.setBadgeNumber( int(Math.round(lastBgReading.calculatedValue)) );
+				}
+			}
+			
 		}
 		
 		public static function notificationIdToText(id:int):String {

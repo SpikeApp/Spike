@@ -1,4 +1,4 @@
-package ui.screens.display.settings.general
+package ui.screens.display.settings.share
 {
 	import databaseclasses.LocalSettings;
 	

@@ -24,7 +24,7 @@ package ui.screens.display.settings.chart
 	
 	[ResourceBundle("chartsettingsscreen")]
 
-	public class ChartColorSettingsList extends List 
+	public class ColorSettingsList extends List 
 	{
 		/* Display Objects */
 		private var urgentHighColorPicker:ColorPicker;
@@ -52,7 +52,7 @@ package ui.screens.display.settings.chart
 		private var axisFontColorValue:uint;
 		private var pieChartFontColorValue:uint;
 		
-		public function ChartColorSettingsList(parentDisplayObject:PanelScreen)
+		public function ColorSettingsList(parentDisplayObject:PanelScreen)
 		{
 			super();
 			
@@ -89,6 +89,7 @@ package ui.screens.display.settings.chart
 			//Urgent High Color Picker
 			urgentHighColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
 			urgentHighColorPicker.name = "urgentHighColor";
+			urgentHighColorPicker.pivotX = 3;
 			urgentHighColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			urgentHighColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			urgentHighColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -97,6 +98,7 @@ package ui.screens.display.settings.chart
 			//High Color Picker
 			highColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
 			highColorPicker.name = "highColor";
+			highColorPicker.pivotX = 3;
 			highColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			highColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			highColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -105,6 +107,7 @@ package ui.screens.display.settings.chart
 			//In Range Color Picker
 			inRangeColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
 			inRangeColorPicker.name = "inRangeColor";
+			inRangeColorPicker.pivotX = 3;
 			inRangeColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			inRangeColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened)
 			inRangeColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -113,6 +116,7 @@ package ui.screens.display.settings.chart
 			//Low Color Picker
 			lowColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
 			lowColorPicker.name = "lowColor";
+			lowColorPicker.pivotX = 3;
 			lowColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			lowColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			lowColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -121,6 +125,7 @@ package ui.screens.display.settings.chart
 			//Urgent Low Color Picker
 			urgentLowColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			urgentLowColorPicker.name = "urgentLowColor";
+			urgentLowColorPicker.pivotX = 3;
 			urgentLowColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			urgentLowColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			urgentLowColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -129,6 +134,7 @@ package ui.screens.display.settings.chart
 			//Axis Color Picker
 			axisColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			axisColorPicker.name = "axisColor";
+			axisColorPicker.pivotX = 3;
 			axisColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			axisColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			axisColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -137,6 +143,7 @@ package ui.screens.display.settings.chart
 			//Chart Font Color Picker
 			chartFontColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			chartFontColorPicker.name = "chartFontColor";
+			chartFontColorPicker.pivotX = 3;
 			chartFontColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			chartFontColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			chartFontColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -145,6 +152,7 @@ package ui.screens.display.settings.chart
 			//Axis Font Color Picker
 			axisFontColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			axisFontColorPicker.name = "axisFontColor";
+			axisFontColorPicker.pivotX = 3;
 			axisFontColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			axisFontColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			axisFontColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -153,6 +161,7 @@ package ui.screens.display.settings.chart
 			//Pie Chart Font Color Picker
 			pieChartFontColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			pieChartFontColorPicker.name = "pieChartFontColor";
+			pieChartFontColorPicker.pivotX = 3;
 			pieChartFontColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			pieChartFontColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			pieChartFontColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -168,6 +177,7 @@ package ui.screens.display.settings.chart
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "text";
 				itemRenderer.accessoryField = "accessory";
+				itemRenderer.paddingRight = 0;
 				return itemRenderer;
 			};
 			

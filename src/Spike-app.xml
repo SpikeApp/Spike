@@ -8,7 +8,7 @@
 	See the GNU General Public License for more details. You should have received 
 	a copy of the GNU General Public License along with this program. If not, 
 	see <http://www.gnu.org/licenses/gpl.txt>. -->
-<application xmlns="http://ns.adobe.com/air/application/28.0">
+<application xmlns="http://ns.adobe.com/air/application/27.0">
 
 	<!-- Adobe AIR Application Descriptor File Template. Specifies parameters 
 		for identifying, installing, and launching AIR applications. xmlns - The 
@@ -23,18 +23,18 @@
 	<id>net.johandegraeve.iosxdripreader</id>
 
 	<!-- Used as the filename for the application. Required. -->
-	<filename>iOSDrip</filename>
+	<filename>Spike</filename>
 
 	<!-- The name that is displayed in the AIR application installer. May have 
 		multiple values for each language. See samples or xsd schema file. Optional. -->
-	<name>iOSDrip</name>
+	<name>Spike</name>
 
 	<!-- A string value of the format <0-999>.<0-999>.<0-999> that represents 
 		application version which can be used to check for application upgrade. Values 
 		can also be 1-part or 2-part. It is not necessary to have a 3-part value. 
 		An updated version of application must have a versionNumber value higher 
 		than the previous version. Required for namespace >= 2.5 . -->
-	<versionNumber>1.0</versionNumber>
+	<versionNumber>1.0.0</versionNumber>
 
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents 
 		the version of the application, as it should be shown to users. Optional. -->
@@ -55,7 +55,7 @@
 	<initialWindow>
 		<!-- The main SWF or HTML file of the application. Required. -->
 		<!-- Note: In Flash Builder, the SWF reference is set automatically. -->
-		<content>iOSDrip.swf</content>
+		<content>Spike.swf</content>
 
 		<!-- The title of the main window. Optional. -->
 		<!-- <title></title> -->

@@ -17,18 +17,18 @@ package ui.screens.display.settings.chart
 	
 	import utilities.Constants;
 	
-	[ResourceBundle("chartsettingsscreen")]
+	[ResourceBundle("globaltranslations")]
 
-	public class ChartDisplaySettingsList extends List 
+	public class GlucoseDistributionSettingsList extends List 
 	{
 		/* Display Objects */
-		private var enablePieChart:ToggleSwitch;
+		private var enableGlucoseDistribution:ToggleSwitch;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
 		private var pieChartEnabledValue:Boolean;
 		
-		public function ChartDisplaySettingsList()
+		public function GlucoseDistributionSettingsList()
 		{
 			super();
 			
@@ -54,7 +54,8 @@ package ui.screens.display.settings.chart
 		private function setupContent():void
 		{
 			/* Controls */
-			enablePieChart = LayoutFactory.createToggleSwitch();
+			enableGlucoseDistribution = LayoutFactory.createToggleSwitch();
+			enableGlucoseDistribution.pivotX = 5;
 			
 			/* Set Size Settings Item Renderer */
 			itemRendererFactory = function():IListItemRenderer
@@ -62,29 +63,30 @@ package ui.screens.display.settings.chart
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "text";
 				itemRenderer.accessoryField = "accessory";
+				itemRenderer.paddingRight = 0;
 				return itemRenderer;
 			};
 			
 			/* Set  Data */
 			dataProvider = new ArrayCollection(
 				[
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','enable_pie_chart'), accessory: enablePieChart }
+					{ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: enableGlucoseDistribution }
 				]);
 		}
 		
 		private function setupInitialState():void
 		{
 			//Retrieve data from database
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_PIE_CHART) == "true")
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_GLUCOSE_DISTRIBUTION) == "true")
 				pieChartEnabledValue = true;
 			else
 				pieChartEnabledValue = false;
 			
 			//Set control state
-			enablePieChart.isSelected = pieChartEnabledValue;
+			enableGlucoseDistribution.isSelected = pieChartEnabledValue;
 				
 			//Add event listeners
-			enablePieChart.addEventListener(Event.CHANGE, onEnablePieChartChanged);
+			enableGlucoseDistribution.addEventListener(Event.CHANGE, onEnableGlucoseDistributionChanged);
 		}
 		
 		public function save():void
@@ -97,8 +99,8 @@ package ui.screens.display.settings.chart
 				valueToSave = "false";
 			
 			//Update Database
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_PIE_CHART) != valueToSave)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_PIE_CHART, valueToSave);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_GLUCOSE_DISTRIBUTION) != valueToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_GLUCOSE_DISTRIBUTION, valueToSave);
 			
 			needsSave = false;
 		}
@@ -106,10 +108,10 @@ package ui.screens.display.settings.chart
 		/**
 		 * Event Listeners
 		 */
-		private function onEnablePieChartChanged(e:Event):void
+		private function onEnableGlucoseDistributionChanged(e:Event):void
 		{
 			//Update internal variables
-			pieChartEnabledValue = enablePieChart.isSelected
+			pieChartEnabledValue = enableGlucoseDistribution.isSelected
 			needsSave = true;
 		}
 		
@@ -118,11 +120,11 @@ package ui.screens.display.settings.chart
 		 */
 		override public function dispose():void
 		{
-			if (enablePieChart != null)
+			if (enableGlucoseDistribution != null)
 			{
-				enablePieChart.removeEventListener(Event.CHANGE, onEnablePieChartChanged);
-				enablePieChart.dispose();
-				enablePieChart = null;
+				enableGlucoseDistribution.removeEventListener(Event.CHANGE, onEnableGlucoseDistributionChanged);
+				enableGlucoseDistribution.dispose();
+				enableGlucoseDistribution = null;
 			}
 			
 			super.dispose();

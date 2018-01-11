@@ -19,6 +19,8 @@ package ui.popups
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
+	import utilities.DeviceInfo;
+	
 	[ResourceBundle("globaltranslations")]
 
 	public class AlertManager
@@ -42,12 +44,16 @@ package ui.popups
 		public static function showSimpleAlert (alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
 		{
 			var alert:Alert = processAlert(alertTitle, alertMessage, timeoutDuration, eventHandlerFunct, null, textAlign, icon);
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				alert.maxWidth = 270;
 			return alert;
 		}
 		
 		public static function showActionAlert (alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, buttonGroup:Array = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
 		{
 			var alert:Alert = processAlert(alertTitle, alertMessage, timeoutDuration, null, buttonGroup, textAlign, icon);
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				alert.maxWidth = 270;
 			return alert;
 		}
 		
@@ -62,6 +68,8 @@ package ui.popups
 		private static function processAlert(alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, buttonGroup:Array = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
 		{
 			var alert:Alert = new Alert();
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				alert.maxWidth = 270;
 			
 			/* Define Alert Buttons */
 			var buttonCollection:ListCollection
@@ -142,6 +150,8 @@ package ui.popups
 					processAlertTimer(Number((alertQueue[0] as Object).timeout));
 				
 				activeAlert = Alert((alertQueue[0] as Object).alert);
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+					activeAlert.maxWidth = 270;
 				PopUpManager.addPopUp(activeAlert);
 				
 				/* Update Counter & Queue */

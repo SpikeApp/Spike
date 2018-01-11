@@ -599,7 +599,6 @@ package databaseclasses
 		}
 		
 		private static function createAlertTypeTable():void {
-			trace("createAlertTypeTable");
 			sqlStatement.clearParameters();
 			sqlStatement.text = CREATE_TABLE_ALERT_TYPES;
 			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);

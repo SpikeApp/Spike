@@ -66,7 +66,7 @@ package services
 		private static function createEventListeners():void
 		{
 			//Register event listener for app in foreground
-			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
 			
 			//Register event listener for changed settings
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);

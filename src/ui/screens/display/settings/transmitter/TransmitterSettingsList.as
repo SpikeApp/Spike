@@ -6,6 +6,7 @@ package ui.screens.display.settings.transmitter
 	import databaseclasses.CommonSettings;
 	
 	import feathers.controls.Alert;
+	import feathers.controls.Button;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
@@ -20,11 +21,13 @@ package ui.screens.display.settings.transmitter
 	import model.ModelLocator;
 	
 	import starling.events.Event;
+	import starling.text.TextFormat;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
 	import utilities.Constants;
+	import utilities.DeviceInfo;
 	
 	[ResourceBundle("transmittersettingsscreen")]
 	[ResourceBundle("transmitterscreen")]
@@ -109,6 +112,15 @@ package ui.screens.display.settings.transmitter
 			transmitterType.labelField = "label";
 			transmitterType.popUpContentManager = new DropDownPopUpContentManager();
 			transmitterType.dataProvider = transmitterTypeList;
+			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			{
+				transmitterType.buttonFactory = function():Button
+				{
+					var button:Button = new Button();
+					button.fontStyles = new TextFormat("Roboto", 10, 0xEEEEEE);
+					return button;
+				};
+			}
 			
 			if(transmitterTypeValue == "")
 			{
@@ -133,6 +145,8 @@ package ui.screens.display.settings.transmitter
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.accessoryField = "accessory";
+				itemRenderer.paddingRight = 0;
+				
 				return itemRenderer;
 			};
 			

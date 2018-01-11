@@ -3,10 +3,12 @@ package ui.screens.display.settings.speech
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.ToggleSwitch;
+	import feathers.controls.popups.VerticalCenteredPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -20,6 +22,7 @@ package ui.screens.display.settings.speech
 	import ui.screens.display.LayoutFactory;
 	
 	import utilities.Constants;
+	import utilities.DeviceInfo;
 	
 	[ResourceBundle("speechsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -102,6 +105,7 @@ package ui.screens.display.settings.speech
 			
 			/* Language Picker */
 			languagePicker = LayoutFactory.createPickerList();
+			languagePicker.pivotX = -3;
 			
 			//Temp Data Objects
 			var languagesLabelsList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistdescription').split(",");
@@ -124,6 +128,13 @@ package ui.screens.display.settings.speech
 			languagePicker.labelField = "label";
 			languagePicker.dataProvider = languagePickerList;
 			languagePicker.selectedIndex = selectedLanguageIndex;
+			var languagePopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_105 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_129 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
+			{
+				languagePopUp.marginRight = 10;
+				languagePopUp.marginLeft = 10;
+			}
+			languagePicker.popUpContentManager = languagePopUp;
 			languagePicker.addEventListener( Event.CHANGE, onSettingsChanged);
 			
 			//Set Item Renderer
@@ -231,7 +242,7 @@ package ui.screens.display.settings.speech
 				if (!initialInstructionsDisplayed)
 				{
 					//Display Initial Instructions
-					AlertManager.showActionAlert
+					var alert:Alert = AlertManager.showActionAlert
 					(
 						ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speech_settings_title'),
 						ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','initial_instructions'),
@@ -241,6 +252,8 @@ package ui.screens.display.settings.speech
 							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','ok_alert_button_label') }
 						]
 					);
+					if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+						alert.height = 320;
 					
 					initialInstructionsDisplayed = true;
 				}

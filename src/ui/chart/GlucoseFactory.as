@@ -20,7 +20,7 @@ package ui.chart
 		{
 			var glucoseUnit:String;
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
-				glucoseUnit = "mg/dl";
+				glucoseUnit = "mg/dL";
 			else
 				glucoseUnit = "mmol/L";
 			
@@ -28,7 +28,7 @@ package ui.chart
 			var glucoseValueFormatted:Number;
 			if (glucoseValue > 40 && glucoseValue < 600)
 			{
-				if (glucoseUnit == "mg/dl")
+				if (glucoseUnit == "mg/dL")
 				{
 					glucoseValueFormatted = Math.round(glucoseValue * 10) / 10;
 					glucoseOutput = String( glucoseValueFormatted );
@@ -45,7 +45,7 @@ package ui.chart
 			}
 			else
 			{
-				if (glucoseUnit == "mg/dl")
+				if (glucoseUnit == "mg/dL")
 					glucoseValueFormatted = Math.round(glucoseValue * 10) / 10;
 				else
 					glucoseValueFormatted = Math.round(BgReading.mgdlToMmol(glucoseValue) * 10) / 10;
@@ -95,19 +95,19 @@ package ui.chart
 		{
 			var glucoseUnit:String;
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
-				glucoseUnit = "mg/dl";
+				glucoseUnit = "mg/dL";
 			else
 				glucoseUnit = "mmol/L";
 			
 			var slopeOutput:String;
 			var glucoseDifference:Number;
 			
-			if (glucoseUnit == "mg/dl")
+			if (glucoseUnit == "mg/dL")
 				glucoseDifference = Math.round((glucoseValueFormatted - previousGlucoseValueFormatted) * 10) / 10;
 			else
 				glucoseDifference = Math.round(((Math.round(BgReading.mgdlToMmol(glucoseValue) * 100) / 100) - (Math.round(BgReading.mgdlToMmol(previousGlucoseValue) * 100) / 100)) * 100) / 100;
 				
-			if((glucoseUnit == "mg/dl" && Math.abs(glucoseDifference) > 100) || (glucoseUnit == "mmol/L" && Math.abs(glucoseDifference) > 5.5))
+			if((glucoseUnit == "mg/dL" && Math.abs(glucoseDifference) > 100) || (glucoseUnit == "mmol/L" && Math.abs(glucoseDifference) > 5.5))
 				slopeOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','slope_error');
 			else
 			{

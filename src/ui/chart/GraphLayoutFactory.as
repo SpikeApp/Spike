@@ -1,10 +1,7 @@
 package ui.chart
 {
     import feathers.controls.Label;
-    import feathers.controls.text.TextFieldTextRenderer;
-    import feathers.core.ITextRenderer;
     
-    import starling.core.Starling;
     import starling.display.Shape;
     import starling.text.TextFormat;
     
@@ -13,7 +10,8 @@ package ui.chart
 
 public class GraphLayoutFactory
     {
-        public function Axis():void{}
+	
+		public function GraphLayoutFactory():void{}
 
         public static function createVerticalLine(height:Number, thickness:int, color:uint):Shape
         {
@@ -80,23 +78,16 @@ public class GraphLayoutFactory
     
         public static function createChartStatusText(label:String, color:uint, textSize:int, direction:String, bold:Boolean = false, width:Number = NaN, height:Number = NaN):Label
         {
-            var legend:Label = new Label();
-			if(!isNaN(width))
-				legend.width = width;
-			if(!isNaN(height))
-				legend.height = height;
 			var textFormat:TextFormat = new TextFormat("Roboto", textSize, color, direction, "top");
 			textFormat.bold = bold;
+			
+            var legend:Label = new Label();
+			if(!isNaN(width)) legend.width = width;
+			if(!isNaN(height)) legend.height = height;
 			legend.fontStyles = textFormat;
 			legend.text = label;
 			legend.invalidate();
 			legend.validate();
-			legend.textRendererFactory = function():ITextRenderer
-			{
-				var textFieldRenderer:TextFieldTextRenderer = new TextFieldTextRenderer();
-				textFieldRenderer.pixelSnapping = true;
-				return textFieldRenderer;
-			};
 			
 			return legend;
         }
@@ -106,7 +97,7 @@ public class GraphLayoutFactory
 			/* Calculate Font Size */
 			var fontSize:Number;
 			var deviceType:String = DeviceInfo.getDeviceType();
-			if (deviceType == DeviceInfo.IPHONE_5_5S_5C_SE)
+			if (deviceType == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				fontSize = 9.5;
 			else 
 				fontSize = 11;

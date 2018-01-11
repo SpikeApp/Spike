@@ -2,8 +2,6 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import events.ScreenEvent;
-	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.events.FeathersEventType;
@@ -21,7 +19,6 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.general.GlucoseSettingsList;
-	import ui.screens.display.settings.general.NotificationSettingsList;
 	import ui.screens.display.settings.general.UpdateSettingsList;
 	
 	import utilities.Constants;
@@ -32,10 +29,8 @@ package ui.screens
 	{
 		/* Display Objects */
 		private var glucoseSettings:GlucoseSettingsList;
-		private var notificationSettings:NotificationSettingsList;
 		private var updatesSettingsList:UpdateSettingsList;
 		private var glucoseLabel:Label;
-		private var notificationsLabel:Label;
 		private var updateLabel:Label;
 		
 		public function GeneralSettingsScreen() 
@@ -81,14 +76,6 @@ package ui.screens
 			glucoseSettings = new GlucoseSettingsList();
 			screenRenderer.addChild(glucoseSettings);
 			
-			//Notifications Section Label
-			notificationsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','bg_notifications'), true);
-			screenRenderer.addChild(notificationsLabel);
-			
-			//Notification Settings
-			notificationSettings = new NotificationSettingsList();
-			screenRenderer.addChild(notificationSettings);
-			
 			//Update Section Label
 			updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
 			screenRenderer.addChild(updateLabel);
@@ -125,8 +112,6 @@ package ui.screens
 			//Save Settings
 			if (glucoseSettings.needsSave)
 				glucoseSettings.save();
-			if (notificationSettings.needsSave)
-				notificationSettings.save();
 			if (updatesSettingsList.needsSave)
 				updatesSettingsList.save();
 			
@@ -154,12 +139,6 @@ package ui.screens
 				glucoseSettings = null;
 			}
 			
-			if (notificationSettings != null)
-			{
-				notificationSettings.dispose();
-				notificationSettings = null;
-			}
-			
 			if (updatesSettingsList != null)
 			{
 				updatesSettingsList.dispose();
@@ -170,12 +149,6 @@ package ui.screens
 			{
 				glucoseLabel.dispose();
 				glucoseLabel = null;
-			}
-			
-			if (notificationsLabel != null)
-			{
-				notificationsLabel.dispose();
-				notificationsLabel = null;
 			}
 			
 			if (updateLabel != null)

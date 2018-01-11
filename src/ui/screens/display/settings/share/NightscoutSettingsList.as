@@ -22,6 +22,7 @@ package ui.screens.display.settings.share
 	import ui.screens.display.LayoutFactory;
 	
 	import utilities.Constants;
+	import utilities.DeviceInfo;
 	
 	[ResourceBundle("sharesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -80,18 +81,23 @@ package ui.screens.display.settings.share
 			
 			//URL
 			nsURL = LayoutFactory.createTextInput(false, false, 220, HorizontalAlign.RIGHT);
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				nsURL.width = 190;
 			nsURL.text = selectedURL;
 			nsURL.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			nsURL.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//API Secret
 			nsAPISecret = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				nsAPISecret.width = 120;
 			nsAPISecret.text = selectedAPISecret;
 			nsAPISecret.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			nsAPISecret.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Login
 			nsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
+			nsLogin.pivotX = -3;
 			nsLogin.addEventListener(Event.TRIGGERED, onNightscoutLogin);
 			
 			//Set Item Renderer

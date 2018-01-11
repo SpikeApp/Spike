@@ -80,7 +80,7 @@ package ui.screens.display.settings.alarms
 			/* Controls */
 			addAlertButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"add_alert_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.addAlertTexture);
 			addAlertButton.gap = 5;
-			addAlertButton.pivotX = -15;
+			addAlertButton.pivotX = -12;
 			addAlertButton.addEventListener(Event.TRIGGERED, onAddAlert);
 			
 			/* Data */
@@ -94,6 +94,7 @@ package ui.screens.display.settings.alarms
 				if (alertType.alarmName != "null" && alertType.alarmName != "No Alert")
 				{
 					var alertControls:AlertManagerAccessory = new AlertManagerAccessory();
+					alertControls.pivotX = 2;
 					alertControls.addEventListener(AlertManagerAccessory.DELETE, onDeleteAlert);
 					alertControls.addEventListener(AlertManagerAccessory.EDIT, onEditAlert);
 					alertTypesButtonsList.push(alertControls);
@@ -133,11 +134,11 @@ package ui.screens.display.settings.alarms
 			alertCreatorCallout = new Callout();
 			alertCreatorCallout.content = alertCreatorList;
 			
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S)
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				alertCreatorCallout.padding = 18;
 			else
 			{
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 					alertCreatorCallout.padding = 18;
 				
 				setupCalloutPosition();

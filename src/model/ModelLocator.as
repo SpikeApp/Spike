@@ -30,12 +30,11 @@ package model
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
-	import spark.components.Image;
 	import spark.components.ViewNavigator;
-	import spark.core.ContentCache;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
+	import databaseclasses.LocalSettings;
 	import databaseclasses.Sensor;
 	
 	import distriqtkey.DistriqtKey;
@@ -217,6 +216,8 @@ package model
 								UpdateService.init();
 							}
 							
+							updateApplicationVersion();
+							
 							//test blockNumberForNowGlucoseData
 							/*var bufferasstring:String = "8BDE03423F07115203C8A0";
 							var bufferasbytearray:ByteArray = Utilities.UniqueId.hexStringToByteArray(bufferasstring);
@@ -234,6 +235,13 @@ package model
 						}
 					}
 			}
+		}
+		
+		private static function updateApplicationVersion():void 
+		{
+			var currentAppVersion:String = BackgroundFetch.getAppVersion();
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) != currentAppVersion)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, currentAppVersion); 
 		}
 		
 		private static function coreEvent(event:Event):void {

@@ -14,10 +14,10 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.settings.chart.ChartColorSettingsList;
-	import ui.screens.display.settings.chart.ChartDateSettingsList;
-	import ui.screens.display.settings.chart.ChartDisplaySettingsList;
-	import ui.screens.display.settings.chart.ChartSizeSettingsList;
+	import ui.screens.display.settings.chart.ColorSettingsList;
+	import ui.screens.display.settings.chart.DateSettingsList;
+	import ui.screens.display.settings.chart.GlucoseDistributionSettingsList;
+	import ui.screens.display.settings.chart.SizeSettingsList;
 	
 	import utilities.Constants;
 	
@@ -26,14 +26,14 @@ package ui.screens
 	public class ChartSettingsScreen extends BaseSubScreen
 	{
 		/* Display Objects */
-		private var chartDateSettings:ChartDateSettingsList;
-		private var chartColorSettings:ChartColorSettingsList;
-		private var chartSizeSettings:ChartSizeSettingsList;
-		private var chartDisplaySettings:ChartDisplaySettingsList;
+		private var chartDateSettings:DateSettingsList;
+		private var chartColorSettings:ColorSettingsList;
+		private var chartSizeSettings:SizeSettingsList;
+		private var chartGlucoseDistributionSettings:GlucoseDistributionSettingsList;
 		private var chartDateFormatLabel:Label;
 		private var chartColorLabel:Label;
 		private var chartSizeLabel:Label;
-		private var chartDisplayLabel:Label;
+		private var chartGlucoseDistributionLabel:Label;
 		
 		public function ChartSettingsScreen() 
 		{
@@ -74,7 +74,7 @@ package ui.screens
 			screenRenderer.addChild(chartDateFormatLabel);
 			
 			//Display Settings
-			chartDateSettings = new ChartDateSettingsList();
+			chartDateSettings = new DateSettingsList();
 			screenRenderer.addChild(chartDateSettings);
 			
 			//Colors Section Label
@@ -82,7 +82,7 @@ package ui.screens
 			screenRenderer.addChild(chartColorLabel);
 			
 			//Colors Settings
-			chartColorSettings = new ChartColorSettingsList(this);
+			chartColorSettings = new ColorSettingsList(this);
 			screenRenderer.addChild(chartColorSettings);
 			
 			//Size Section Label
@@ -90,16 +90,16 @@ package ui.screens
 			screenRenderer.addChild(chartSizeLabel);
 			
 			//Size Settings
-			chartSizeSettings = new ChartSizeSettingsList();
+			chartSizeSettings = new SizeSettingsList();
 			screenRenderer.addChild(chartSizeSettings);
 			
 			//Display Section Label
-			chartDisplayLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','display_settings_title'), true);
-			screenRenderer.addChild(chartDisplayLabel);
+			chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title'), true);
+			screenRenderer.addChild(chartGlucoseDistributionLabel);
 			
 			//Display Settings
-			chartDisplaySettings = new ChartDisplaySettingsList();
-			screenRenderer.addChild(chartDisplaySettings);
+			chartGlucoseDistributionSettings = new GlucoseDistributionSettingsList();
+			screenRenderer.addChild(chartGlucoseDistributionSettings);
 		}
 		
 		private function adjustMainMenu():void
@@ -117,8 +117,8 @@ package ui.screens
 				chartColorSettings.save();
 			if (chartSizeSettings.needsSave)
 				chartSizeSettings.save();
-			if (chartDisplaySettings.needsSave)
-				chartDisplaySettings.save();
+			if (chartGlucoseDistributionSettings.needsSave)
+				chartGlucoseDistributionSettings.save();
 			if (chartDateSettings.needsSave)
 				chartDateSettings.save();
 			
@@ -152,10 +152,10 @@ package ui.screens
 				chartSizeSettings = null;
 			}
 			
-			if (chartDisplaySettings != null)
+			if (chartGlucoseDistributionSettings != null)
 			{
-				chartDisplaySettings.dispose();
-				chartDisplaySettings = null;
+				chartGlucoseDistributionSettings.dispose();
+				chartGlucoseDistributionSettings = null;
 			}
 			
 			if (chartDateFormatLabel != null)
@@ -176,10 +176,10 @@ package ui.screens
 				chartSizeLabel = null;
 			}
 			
-			if (chartDisplayLabel != null)
+			if (chartGlucoseDistributionLabel != null)
 			{
-				chartDisplayLabel.dispose();
-				chartDisplayLabel = null;
+				chartGlucoseDistributionLabel.dispose();
+				chartGlucoseDistributionLabel = null;
 			}
 			
 			super.dispose();

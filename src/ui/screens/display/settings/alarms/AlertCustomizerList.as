@@ -14,8 +14,11 @@ package ui.screens.display.settings.alarms
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
+	import feathers.controls.popups.VerticalCenteredPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.controls.text.TextFieldTextRenderer;
+	import feathers.core.ITextRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.data.ListCollection;
@@ -33,6 +36,8 @@ package ui.screens.display.settings.alarms
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	
+	import utilities.DeviceInfo;
 	
 	[ResourceBundle("alertsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -163,6 +168,13 @@ package ui.screens.display.settings.alarms
 			enableVibration.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			soundList = LayoutFactory.createPickerList();
+			var soundListPopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_105 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_129 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
+			{
+				soundListPopUp.marginRight = 10;
+				soundListPopUp.marginLeft = 10;
+			}
+			soundList.popUpContentManager = soundListPopUp;
 			soundList.pivotX = -3;
 			soundList.addEventListener(Event.CLOSE, onSoundListClose);
 			
@@ -242,7 +254,7 @@ package ui.screens.display.settings.alarms
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"enabled"), accessory: alertEnabled },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"name_label"), accessory: alertName },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"snooze_notification_label"), accessory: enableSnoozeInNotification },
-					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_label"), accessory: snoozeMinutes },
+					{ label: DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_label") : ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_iphone_x_label"), accessory: snoozeMinutes },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"repeat_label"), accessory: enableRepeat },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"sound_label"), accessory: soundList },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"vibration_label"), accessory: enableVibration },
@@ -255,6 +267,11 @@ package ui.screens.display.settings.alarms
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
 				item.accessoryField = "accessory";
+				item.paddingRight = 0;
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+					item.paddingRight = -2;
+				item.accessoryOffsetX = -10;
+					
 				return item;
 			};
 			

@@ -63,7 +63,7 @@ package ui.screens.display.settings.about
 			appNameLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','app_name_description'), HorizontalAlign.RIGHT);
 			appVersionLabel = LayoutFactory.createLabel(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION), HorizontalAlign.RIGHT);
 			deviceRequirementsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','device_description_label'));
-			deviceRequirementsLabel.width = 160;
+			deviceRequirementsLabel.width = 170;
 			deviceRequirementsLabel.wordWrap = true;
 			deviceRequirementsLabel.fontStyles.horizontalAlign = HorizontalAlign.RIGHT;
 			deviceRequirementsLabel.paddingTop = deviceRequirementsLabel.paddingBottom = 10;

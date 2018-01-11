@@ -39,7 +39,7 @@ package ui.screens.display.settings.alarms
 		/* Constants */
 		private const TIME_1_MINUTE:int = 1000 * 60;
 		private const TIME_1_DAY:int = (1000 * 60 * 60 * 23) + (1000 * 60 * 59); //23h, 59m
-		private const UNIT_MGDL:String = "mg/dl";
+		private const UNIT_MGDL:String = "mg/dL";
 		private const UNIT_MMOL:String = "mmol/L";
 		
 		/* Display Objects */
@@ -194,8 +194,13 @@ package ui.screens.display.settings.alarms
 				
 				//Create alarm controls, define event listeners and save them for disposal
 				var alarmControls:AlarmManagerAccessory = new AlarmManagerAccessory();
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
 					alarmControls.scale = 0.8;
+				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+					alarmControls.scale = 0.9;
+				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+					alarmControls.scale = 0.7;
+				alarmControls.pivotX = -8;
 				alarmControls.addEventListener(AlarmManagerAccessory.EDIT, onEditAlarm);
 				alarmControls.addEventListener(AlarmManagerAccessory.DELETE, onDeleteAlarm);
 				alarmControlsList.push(alarmControls);
@@ -219,10 +224,15 @@ package ui.screens.display.settings.alarms
 			{
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
-				//if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_4_4S || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE)
-					item.fontStyles = new TextFormat("Roboto", 10, 0xEEEEEE, "left", "top");
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
+					item.fontStyles = new TextFormat("Roboto", 11, 0xEEEEEE, "left", "top");
+				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+					item.fontStyles = new TextFormat("Roboto", 12, 0xEEEEEE, "left", "top");
+				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+					item.fontStyles = new TextFormat("Roboto", 9, 0xEEEEEE, "left", "top");
 				item.accessoryField = "accessory";
-				item.accessoryOffsetX = 18;
+				item.accessoryOffsetX = -8;
+				item.paddingRight = -10;
 				return item;
 			};
 		}

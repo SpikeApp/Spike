@@ -23,6 +23,7 @@ package  ui.chart
 	import starling.events.TouchPhase;
 	import starling.textures.Texture;
 	
+	import utilities.Constants;
 	import utilities.DeviceInfo;
 
 	public class ColorPicker extends Sprite
@@ -97,14 +98,7 @@ package  ui.chart
 			if(_parent != null)
 				_parent.addChild(palette);
 			else
-			{
-				trace("aqui");
 				addChild(palette);
-			}
-				
-			
-			//Event Listener
-			Starling.current.stage.addEventListener(TouchEvent.TOUCH, onStageTouch);
 		}
 		
 		private function onStageTouch (e:TouchEvent):void
@@ -118,7 +112,7 @@ package  ui.chart
 					var paletteGlobalPosition:Point = palette.localToGlobal(new Point(0, 0));
 					var paletteGlobalRectangle:Rectangle = new Rectangle(paletteGlobalPosition.x, paletteGlobalPosition.y, palette.width, palette.height);
 					if (!paletteGlobalRectangle.containsPoint(new Point(touch.globalX, touch.globalY)))
-						palette.visible = false;
+						hidePalette();//palette.visible = false;
 				}
 				
 			}
@@ -182,6 +176,16 @@ package  ui.chart
 		
 		public function showPalette():void 
 		{			
+			//Event Listener
+			Starling.current.stage.addEventListener(TouchEvent.TOUCH, onStageTouch);
+			
+			//Determine location of palette
+			var buttonGlobalPosition:Point = this.localToGlobal(new Point(0, 0));
+			if (buttonGlobalPosition.y + palette.height < Constants.stageHeight - 35)
+				this.vAlign = VerticalAlign.BOTTOM;
+			else
+				this.vAlign = VerticalAlign.TOP;
+			
 			setPositionPallete();
 			tween = new Tween(palette, 0.2);
 			palette.alpha = 0;
@@ -199,6 +203,9 @@ package  ui.chart
 		
 		public function hidePalette():void 
 		{
+			//Event Listener
+			Starling.current.stage.removeEventListener(TouchEvent.TOUCH, onStageTouch);
+			
 			tween = new Tween(palette, 0.2);
 			palette.alpha = 1;
 			palette.visible=true;

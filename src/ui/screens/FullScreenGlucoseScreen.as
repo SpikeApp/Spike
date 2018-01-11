@@ -366,7 +366,7 @@ package ui.screens
 		{
 			var deviceType:String = DeviceInfo.getDeviceType();
 			
-			if(deviceType == DeviceInfo.IPHONE_4_4S || deviceType == DeviceInfo.IPHONE_5_5S_5C_SE)
+			if(deviceType == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || deviceType == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 			{
 				if(latestGlucoseOutput.length == 2) glucoseFontSize = 260;	
 				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 175;
@@ -389,7 +389,7 @@ package ui.screens
 				else if(latestGlucoseOutput.length == 5) glucoseFontSize = 135;
 				
 			}
-			else if(deviceType == DeviceInfo.IPHONE_X || deviceType == DeviceInfo.TABLET)
+			else if(deviceType == DeviceInfo.IPHONE_X)
 			{
 				if(latestGlucoseOutput.length == 2) glucoseFontSize = 230;	
 				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 155;

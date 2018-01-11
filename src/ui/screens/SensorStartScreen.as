@@ -8,8 +8,6 @@ package ui.screens
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Sensor;
 	
-	import ui.screens.display.LayoutFactory;
-	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.DateTimeSpinner;
@@ -32,9 +30,11 @@ package ui.screens
 	import starling.events.Event;
 	
 	import ui.AppInterface;
-	
 	import ui.popups.AlertManager;
+	import ui.screens.display.LayoutFactory;
+	
 	import utilities.Constants;
+	import utilities.DeviceInfo;
 	
 	[ResourceBundle("sensorscreen")]
 
@@ -87,10 +87,15 @@ package ui.screens
 		{
 			initialAlertShowed = true;
 			
-			AlertManager.showSimpleAlert(
+			var alert:Alert = AlertManager.showSimpleAlert(
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_alert_title'),
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_alert_message')
 			);
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			{
+				alert.maxWidth = 270;
+				alert.height = 320;
+			}
 		}
 		
 		private function setupContent():void
@@ -196,6 +201,11 @@ package ui.screens
 				onBackButtonTriggered
 			);
 			alert.height = 425;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			{
+				alert.maxWidth = 270;
+				alert.height = 490;
+			}
 		}	
 		
 		/**

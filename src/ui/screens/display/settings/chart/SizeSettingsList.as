@@ -17,10 +17,11 @@ package ui.screens.display.settings.chart
 	import ui.screens.display.LayoutFactory;
 	
 	import utilities.Constants;
+	import utilities.DeviceInfo;
 	
 	[ResourceBundle("chartsettingsscreen")]
 
-	public class ChartSizeSettingsList extends List 
+	public class SizeSettingsList extends List 
 	{
 		/* Display Objects */
 		private var glucoseMarkerRadius:NumericStepper;
@@ -35,7 +36,7 @@ package ui.screens.display.settings.chart
 		private var timeAgoFontSizeValue:Number;
 		private var axisFontSizeValue:Number;
 		
-		public function ChartSizeSettingsList()
+		public function SizeSettingsList()
 		{
 			super();
 			
@@ -70,6 +71,9 @@ package ui.screens.display.settings.chart
 			glucoseDisplayFontSize.value = 50;
 			glucoseDisplayFontSize.step = 50;
 			glucoseDisplayFontSize.width = glucoseMarkerRadius.width;
+			glucoseDisplayFontSize.pivotX = 10;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				glucoseDisplayFontSize.width = 100;
 			
 			timeAgoDisplayFontSize = new Slider();
 			timeAgoDisplayFontSize.minimum = 0;
@@ -77,6 +81,9 @@ package ui.screens.display.settings.chart
 			timeAgoDisplayFontSize.value = 50;
 			timeAgoDisplayFontSize.step = 50;
 			timeAgoDisplayFontSize.width = glucoseMarkerRadius.width;
+			timeAgoDisplayFontSize.pivotX = 10;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				timeAgoDisplayFontSize.width = 100;
 			
 			axisFontSize = new Slider();
 			axisFontSize.minimum = 0;
@@ -84,6 +91,9 @@ package ui.screens.display.settings.chart
 			axisFontSize.value = 50;
 			axisFontSize.step = 50;
 			axisFontSize.width = glucoseMarkerRadius.width;
+			axisFontSize.pivotX = 10;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				axisFontSize.width = 100;
 			
 			//Set Size Settings Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -91,6 +101,7 @@ package ui.screens.display.settings.chart
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "text";
 				itemRenderer.accessoryField = "accessory";
+				itemRenderer.paddingRight = 0;
 				return itemRenderer;
 			};
 			

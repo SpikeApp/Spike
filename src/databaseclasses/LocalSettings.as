@@ -99,6 +99,7 @@ package databaseclasses
 		public static const LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED:int = 27;
 		public static const LOCAL_SETTING_OVERRIDE_MUTE:int = 28;
 		public static const LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK:int = 29;
+		public static const LOCAL_SETTING_ALWAYS_ON_APP_BADGE:int = 30;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -130,7 +131,8 @@ package databaseclasses
 			"false",//LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE
 			"false",//LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED
 			"false",//LOCAL_SETTING_OVERRIDE_MUTE
-			"true"//LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK
+			"true",//LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK
+			"true"//LOCAL_SETTING_ALWAYS_ON_APP_BADGE
 		];
 		
 		public function LocalSettings() {

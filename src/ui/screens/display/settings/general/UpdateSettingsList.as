@@ -16,6 +16,7 @@ package ui.screens.display.settings.general
 	import ui.screens.display.LayoutFactory;
 	
 	import utilities.Constants;
+	import utilities.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
 
@@ -59,6 +60,8 @@ package ui.screens.display.settings.general
 		{
 			///Notifications On/Off Toggle
 			updatesToggle = LayoutFactory.createToggleSwitch(false);
+			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				updatesToggle.pivotX = -8;
 			
 			//Define Notifications Settings Data
 			dataProvider = new ArrayCollection(

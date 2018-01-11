@@ -40,7 +40,7 @@ package services
 		
 		public static function init():void {
 			startDeepSleepTimer();
-			iOSDrip.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
+			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
 		}
 		
 		private static function startDeepSleepTimer():void {

@@ -19,6 +19,7 @@ package ui.screens.display.settings.general
 	import ui.screens.display.LayoutFactory;
 	
 	import utilities.Constants;
+	import utilities.DeviceInfo;
 	
 	[ResourceBundle("generalsettingsscreen")]
 
@@ -78,18 +79,28 @@ package ui.screens.display.settings.general
 			glucoseUnitsPicker.labelField = "label";
 			glucoseUnitsPicker.popUpContentManager = new DropDownPopUpContentManager();
 			glucoseUnitsPicker.dataProvider = glucoseUnits;
+			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				glucoseUnitsPicker.pivotX = 38;
 			
 			//Glucose Urgent High Value
 			glucoseUrgentHighStepper = new NumericStepper();
+			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				glucoseUrgentHighStepper.pivotX = 28;
 			
 			//Glucose High Value
 			glucoseHighStepper = new NumericStepper();
+			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				glucoseHighStepper.pivotX = 28;
 			
 			//Glucose Low Value
 			glucoseLowStepper = new NumericStepper();
+			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				glucoseLowStepper.pivotX = 28;
 			
 			//Glucose Urgent Low Value
 			glucoseUrgentLowStepper = new NumericStepper();
+			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				glucoseUrgentLowStepper.pivotX = 28;
 			
 			//Define Glucose Settings Data
 			var settingsData:ArrayCollection = new ArrayCollection(
@@ -106,6 +117,9 @@ package ui.screens.display.settings.general
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
+				itemRenderer.paddingRight = 0;
+				if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+					itemRenderer.paddingRight = -40;
 				return itemRenderer;
 			};
 		}
@@ -116,7 +130,7 @@ package ui.screens.display.settings.general
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
 			{
 				glucoseUnitsPicker.selectedIndex = 0;
-				selectedUnit = "mg/dl";
+				selectedUnit = "mg/dL";
 			}
 			else 
 			{
@@ -139,19 +153,33 @@ package ui.screens.display.settings.general
 			/* Set Change Event Handlers */
 			if(!initiated)
 			{
-				glucoseUnitsPicker.addEventListener(Event.CHANGE, onUnitsChanged);
-				glucoseUrgentHighStepper.addEventListener(Event.CHANGE, onUrgentHighChanged);
-				glucoseHighStepper.addEventListener(Event.CHANGE, onHighChanged);
-				glucoseLowStepper.addEventListener(Event.CHANGE, onLowChanged);
-				glucoseUrgentLowStepper.addEventListener(Event.CHANGE, onUrgentLowChanged);
+				enableEventListeners();
 				
 				initiated = true;
 			}
 		}
 		
+		private function enableEventListeners():void
+		{
+			glucoseUnitsPicker.addEventListener(Event.CHANGE, onUnitsChanged);
+			glucoseUrgentHighStepper.addEventListener(Event.CHANGE, onUrgentHighChanged);
+			glucoseHighStepper.addEventListener(Event.CHANGE, onHighChanged);
+			glucoseLowStepper.addEventListener(Event.CHANGE, onLowChanged);
+			glucoseUrgentLowStepper.addEventListener(Event.CHANGE, onUrgentLowChanged);
+		}
+		
+		private function disableEventListeners():void
+		{
+			glucoseUnitsPicker.removeEventListener(Event.CHANGE, onUnitsChanged);
+			glucoseUrgentHighStepper.removeEventListener(Event.CHANGE, onUrgentHighChanged);
+			glucoseHighStepper.removeEventListener(Event.CHANGE, onHighChanged);
+			glucoseLowStepper.removeEventListener(Event.CHANGE, onLowChanged);
+			glucoseUrgentLowStepper.removeEventListener(Event.CHANGE, onUrgentLowChanged);
+		}
+		
 		private function convertSettpers():void
 		{
-			if (selectedUnit == "mg/dl")
+			if (selectedUnit == "mg/dL")
 			{
 				//Glucose Urgent High Value
 				glucoseUrgentHighStepper.minimum = 100;
@@ -206,7 +234,7 @@ package ui.screens.display.settings.general
 				glucoseUrgentHighStepper.value = Math.round(((BgReading.mgdlToMmol((glucoseUrgentHighValue))) * 10)) / 10;
 				glucoseUrgentLowStepper.value = Math.round(((BgReading.mgdlToMmol((glucoseUrgentLowValue))) * 10)) / 10;
 			}
-			else if (selectedUnit == "mg/dl")
+			else if (selectedUnit == "mg/dL")
 			{
 				glucoseHighStepper.value = glucoseHighValue;
 				glucoseLowStepper.value = glucoseLowValue;
@@ -247,34 +275,79 @@ package ui.screens.display.settings.general
 		 */
 		private function onUnitsChanged(e:Event = null):void
 		{
-			if (selectedUnit == "mg/dl" && glucoseUnitsPicker.selectedIndex == 1)
+			if (selectedUnit == "mg/dL" && glucoseUnitsPicker.selectedIndex == 1)
 			{
-				trace("MMOL");
 				needsSave = true;
 				selectedUnit = "mmol/L";
+				
+				disableEventListeners();
+				
 				convertSettpers();
 				
 				glucoseUrgentHighStepper.value = (BgReading.mgdlToMmol(glucoseUrgentHighValue) * 10) / 10;
+				
 				glucoseHighStepper.value = (BgReading.mgdlToMmol(glucoseHighValue)  * 10) / 10;
+				if (glucoseHighStepper.value >= glucoseUrgentHighStepper.value)
+				{
+					glucoseHighStepper.value = glucoseUrgentHighStepper.value - 0.1;
+					glucoseHighValue = Math.round(BgReading.mmolToMgdl(glucoseHighStepper.value));
+				}
+					
 				glucoseLowStepper.value = (BgReading.mgdlToMmol(glucoseLowValue)  * 10) / 10;
+				if (glucoseLowStepper.value >= glucoseHighStepper.value)
+				{
+					glucoseLowStepper.value = glucoseHighStepper.value - 0.1;
+					glucoseLowValue = Math.round(BgReading.mmolToMgdl(glucoseLowStepper.value));
+				}
+				
 				glucoseUrgentLowStepper.value = (BgReading.mgdlToMmol(glucoseUrgentLowValue) * 10) / 10;
+				if (glucoseUrgentLowStepper.value >= glucoseLowStepper.value)
+				{
+					glucoseUrgentLowStepper.value = glucoseLowStepper.value - 0.1;
+					glucoseUrgentLowValue = Math.round(BgReading.mmolToMgdl(glucoseUrgentLowStepper.value));
+				}
+				
+				enableEventListeners();
 			}
 			else if (selectedUnit == "mmol/L" && glucoseUnitsPicker.selectedIndex == 0)
 			{
 				needsSave = true;
-				selectedUnit = "mg/dl";
+				selectedUnit = "mg/dL";
+				
+				disableEventListeners();
+				
 				convertSettpers();
 				
 				glucoseUrgentHighStepper.value = glucoseUrgentHighValue;
+				
 				glucoseHighStepper.value = glucoseHighValue;
+				if (glucoseHighStepper.value >= glucoseUrgentHighStepper.value)
+				{
+					glucoseHighStepper.value = glucoseUrgentHighStepper.value - 1;
+					glucoseHighValue = glucoseHighStepper.value;
+				}
+				
 				glucoseLowStepper.value = glucoseLowValue;
+				if (glucoseLowStepper.value >= glucoseHighStepper.value)
+				{
+					glucoseLowStepper.value = glucoseHighStepper.value - 1;
+					glucoseLowValue = glucoseLowStepper.value;
+				}
+				
 				glucoseUrgentLowStepper.value = glucoseUrgentLowValue;
+				if (glucoseUrgentLowStepper.value >= glucoseLowStepper.value)
+				{
+					glucoseUrgentLowStepper.value = glucoseLowStepper.value - 1;
+					glucoseUrgentLowValue = glucoseUrgentLowStepper.value;
+				}
+				
+				enableEventListeners();
 			}
 		}
 		
 		private function onSettingsChanged(e:Event):void
 		{
-			if (selectedUnit == "mg/dl")
+			if (selectedUnit == "mg/dL")
 			{
 				//Update internal variables
 				glucoseUrgentHighValue = glucoseUrgentHighStepper.value;
@@ -295,7 +368,7 @@ package ui.screens.display.settings.general
 		
 		private function onUrgentHighChanged(e:Event):void
 		{
-			if (selectedUnit == "mg/dl")
+			if (selectedUnit == "mg/dL")
 			{
 				//Avoid overlap
 				if (glucoseUrgentHighStepper.value <= glucoseHighStepper.value)
@@ -318,7 +391,7 @@ package ui.screens.display.settings.general
 		
 		private function onHighChanged(e:Event):void
 		{
-			if (selectedUnit == "mg/dl")
+			if (selectedUnit == "mg/dL")
 			{
 				//Avoid overlap
 				if (glucoseHighStepper.value <= glucoseLowStepper.value)
@@ -347,7 +420,7 @@ package ui.screens.display.settings.general
 		
 		private function onLowChanged(e:Event):void
 		{
-			if (selectedUnit == "mg/dl")
+			if (selectedUnit == "mg/dL")
 			{
 				//Avoid overlap
 				if (glucoseLowStepper.value <= glucoseUrgentLowStepper.value)
@@ -376,7 +449,7 @@ package ui.screens.display.settings.general
 		
 		private function onUrgentLowChanged(e:Event):void
 		{
-			if (selectedUnit == "mg/dl")
+			if (selectedUnit == "mg/dL")
 			{
 				//Avoid overlap
 				if (glucoseUrgentLowStepper.value >= glucoseLowStepper.value)

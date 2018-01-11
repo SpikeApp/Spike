@@ -60,6 +60,7 @@ package ui.screens.display.transmitter
 	import utilities.Trace;
 	
 	[ResourceBundle("transmitterscreen")]
+	[ResourceBundle("globaltranslations")]
 
 	public class TransmitterStatusList extends GroupedList 
 	{
@@ -157,8 +158,10 @@ package ui.screens.display.transmitter
 				
 				/* Transmitter Runtime */
 				transmitterRuntimeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME);
+				if (transmitterRuntimeValue == "unknown")
+					transmitterRuntimeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 				sensorRxTimestamp = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP));
-				if (sensorRxTimestamp > 0)
+				if (sensorRxTimestamp > 0 && transmitterRuntimeValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
 				{
 					transmitterRuntimeValue += " / " + String(int((sensorRxTimestamp / 86400) *10) / 10);
 				}
@@ -214,7 +217,7 @@ package ui.screens.display.transmitter
 				
 				if (lastG5BatteryUpdateTimestamp == "0" || lastG5BatteryUpdateTimestamp == "")
 				{
-					lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('transmitterscreen','not_available');
+					lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 					
 					nowDate = new Date();
 					timestampForRefresh = nowDate.setFullYear(nowDate.getFullYear() - 1);
@@ -226,7 +229,7 @@ package ui.screens.display.transmitter
 					
 					if (nowDate.fullYear - lastUpdateDate.fullYear > 1)
 					{
-						lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('transmitterscreen','not_available');
+						lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 						
 						timestampForRefresh = nowDate.setFullYear(nowDate.getFullYear() - 1);
 					}

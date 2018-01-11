@@ -106,12 +106,14 @@ package ui.screens.display
 			return label;
 		}
 		
-		public static function createLabel(labelText:String, horizontalAlign:String = HorizontalAlign.LEFT, verticalAlign:String = VerticalAlign.TOP, fontSize:Number = 14, isBold:Boolean = false):Label
+		public static function createLabel(labelText:String, horizontalAlign:String = HorizontalAlign.LEFT, verticalAlign:String = VerticalAlign.TOP, fontSize:Number = 14, isBold:Boolean = false, fontColor:Number = Number.NaN):Label
 		{
 			var label:Label = new Label();
 			label.text = labelText;
-			var txtFormat:TextFormat = new TextFormat("Roboto", fontSize, 0xEEEEEE,HorizontalAlign.LEFT, verticalAlign);
+			var txtFormat:TextFormat = new TextFormat("Roboto", fontSize, 0xEEEEEE,horizontalAlign, verticalAlign);
 			txtFormat.bold = isBold;
+			if (!isNaN(fontColor))
+				txtFormat.color = fontColor;
 			label.fontStyles = txtFormat;
 			
 			return label;
