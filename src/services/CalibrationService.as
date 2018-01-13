@@ -20,7 +20,7 @@ package services
 	import ui.screens.display.LayoutFactory;
 	
 	import events.CalibrationServiceEvent;
-	import events.IosXdripReaderEvent;
+	import events.SpikeEvent;
 	import events.NotificationServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -71,7 +71,7 @@ package services
 			timeStampOfFirstBgLevel = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
-			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 			myTrace("finished init");
 		}
 		

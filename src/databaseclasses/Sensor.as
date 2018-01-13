@@ -20,7 +20,7 @@
  */
 package databaseclasses
 {
-	import services.NotificationService;
+	
 
 	public class Sensor extends SuperDatabaseClass
 	{

@@ -43,7 +43,7 @@ package services
 	
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
-	import events.IosXdripReaderEvent;
+	import events.SpikeEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -308,7 +308,7 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
-				Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
+				Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);

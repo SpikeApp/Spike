@@ -13,7 +13,7 @@ package ui.chart
     import databaseclasses.CommonSettings;
     
     import events.CalibrationServiceEvent;
-    import events.IosXdripReaderEvent;
+    import events.SpikeEvent;
     
     import feathers.controls.DragGesture;
     import feathers.controls.Label;
@@ -195,7 +195,7 @@ package ui.chart
 			//Event Listeners
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
-			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
         }
 		
 		/**
@@ -1743,7 +1743,7 @@ package ui.chart
 				calculateDisplayLabels();
 		}
 		
-		private function onAppInForeground (e:IosXdripReaderEvent):void
+		private function onAppInForeground (e:SpikeEvent):void
 		{
 			calculateDisplayLabels();
 		}
@@ -1897,7 +1897,7 @@ package ui.chart
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived);
 			handPicker.removeEventListener(TouchEvent.TOUCH, onHandPickerTouch);
-			Spike.instance.removeEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeground);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			
 			/* Update Timer */
 			statusUpdateTimer.stop();

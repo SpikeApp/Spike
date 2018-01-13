@@ -10,7 +10,7 @@ package
 	import flash.utils.clearInterval;
 	import flash.utils.setTimeout;
 	
-	import events.IosXdripReaderEvent;
+	import events.SpikeEvent;
 	
 	import feathers.utils.ScreenDensityScaleFactorManager;
 	
@@ -114,8 +114,8 @@ package
 			}
 			
 			//Notify Services
-			myTrace("dispatching event IosXdripReaderEvent.APP_IN_FOREGROUND");
-			instance.dispatchEvent(new IosXdripReaderEvent(IosXdripReaderEvent.APP_IN_FOREGROUND));
+			myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
+			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
@@ -130,8 +130,8 @@ package
 			starling.stop( true );
 			
 			//Notify Services
-			myTrace("dispatching event IosXdripReaderEvent.APP_IN_BACKGROUND");
-			instance.dispatchEvent(new IosXdripReaderEvent(IosXdripReaderEvent.APP_IN_BACKGROUND));
+			myTrace("dispatching event SpikeEvent.APP_IN_BACKGROUND");
+			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
 		}
 		
 		/**
@@ -139,7 +139,7 @@ package
 		 */
 		
 		private static function myTrace(log:String):void {
-			Trace.myTrace("iOSDrip.as", log);
+			Trace.myTrace("Spike.as", log);
 		}
 		
 	}

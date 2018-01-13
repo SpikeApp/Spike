@@ -5,7 +5,7 @@ package ui.screens
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	
-	import events.IosXdripReaderEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import feathers.controls.Check;
@@ -86,8 +86,8 @@ package ui.screens
 			
 			//Event listeners
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
-			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackground, false, 0, true);
-			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground, false, 0, true);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived, false, 0, true);
 			
 			//Scroll Policies
@@ -278,12 +278,12 @@ package ui.screens
 				newReadingsList.push(BgReading.lastNoSensor());
 		}
 		
-		private function onAppInBackground (e:IosXdripReaderEvent):void
+		private function onAppInBackground (e:SpikeEvent):void
 		{
 			appInBackground = true;
 		}
 		
-		private function onAppInForeground (e:IosXdripReaderEvent):void
+		private function onAppInForeground (e:SpikeEvent):void
 		{
 			if (appInBackground)
 			{
@@ -422,8 +422,8 @@ package ui.screens
 		override public function dispose():void
 		{
 			/* Event Listeners */
-			Spike.instance.removeEventListener(IosXdripReaderEvent.APP_IN_BACKGROUND, onAppInBackground);
-			Spike.instance.removeEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onAppInForeground);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			

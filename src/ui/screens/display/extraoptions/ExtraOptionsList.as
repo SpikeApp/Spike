@@ -11,7 +11,7 @@ package ui.screens.display.extraoptions
 	
 	import databaseclasses.CommonSettings;
 	
-	import events.IosXdripReaderEvent;
+	import events.SpikeEvent;
 	
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
@@ -117,7 +117,7 @@ package ui.screens.display.extraoptions
 			
 			//Event Listeners
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreationComplete);
-			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated, false, 0, true);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated, false, 0, true);
 		}
 		
 		private function setupContent():void
@@ -368,7 +368,7 @@ package ui.screens.display.extraoptions
 		override public function dispose():void
 		{
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreationComplete);
-			Spike.instance.removeEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
 			removeEventListener( starling.events.Event.CHANGE, onMenuChanged );
 			
 			if (fullScreenIconTexture != null)

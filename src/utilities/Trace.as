@@ -62,7 +62,7 @@ package utilities
 			var nowMilliSecondsAsString:String = (new Date()).milliseconds.toString();
 			while (nowMilliSecondsAsString.length < 3)
 				nowMilliSecondsAsString = "0" + nowMilliSecondsAsString
-			var traceText:String = dateFormatter.format(new Date()) + "." + nowMilliSecondsAsString + " xdripreadertrace " + tag + " : " + log;
+			var traceText:String = dateFormatter.format(new Date()) + "." + nowMilliSecondsAsString + " spikereadertrace " + tag + " : " + log;
 			if (debugMode)
 				trace(traceText);
 			
@@ -75,7 +75,7 @@ package utilities
 			} else {
 				if (filePath == "")
 					getSaveStream();
-				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" xdripreadertrace ", " "));			
+				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" spikereadertrace ", " "));			
 			}
 		}
 		
@@ -92,7 +92,7 @@ package utilities
 				dateFormatter.dateTimePattern = "yyyy-MM-dd-HH-mm-ss";
 				dateFormatter.useUTC = false;
 				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
-				fileName = "xdrip-" + dateFormatter.format(new Date()) + ".log";
+				fileName = "spike-" + dateFormatter.format(new Date()) + ".log";
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, fileName);
 				filePath = File.applicationStorageDirectory.resolvePath(fileName).nativePath;
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, filePath);

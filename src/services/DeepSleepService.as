@@ -9,7 +9,7 @@ package services
 	import flash.utils.Timer;
 	
 	import events.DeepSleepServiceEvent;
-	import events.IosXdripReaderEvent;
+	import events.SpikeEvent;
 	
 	import utilities.Trace;
 
@@ -40,7 +40,7 @@ package services
 		
 		public static function init():void {
 			startDeepSleepTimer();
-			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
 		}
 		
 		private static function startDeepSleepTimer():void {

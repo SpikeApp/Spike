@@ -12,7 +12,7 @@ package services
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
-	import events.IosXdripReaderEvent;
+	import events.SpikeEvent;
 	import events.SettingsServiceEvent;
 	
 	import feathers.controls.Alert;
@@ -66,7 +66,7 @@ package services
 		private static function createEventListeners():void
 		{
 			//Register event listener for app in foreground
-			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
 			
 			//Register event listener for changed settings
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);

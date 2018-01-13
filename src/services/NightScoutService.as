@@ -26,7 +26,7 @@ package services
 	
 	import events.BackGroundFetchServiceEvent;
 	import events.CalibrationServiceEvent;
-	import events.IosXdripReaderEvent;
+	import events.SpikeEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -135,7 +135,7 @@ package services
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
-			Spike.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 				&&
@@ -500,10 +500,10 @@ package services
 					var newVisualCalibration:Object = new Object();
 					newVisualCalibration["eventType"] = "BG Check";	
 					newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
-					newVisualCalibration["enteredBy"] = "xDrip iOS";	
+					newVisualCalibration["enteredBy"] = "Spike App";	
 					newVisualCalibration["glucose"] = calibration.bg;
 					newVisualCalibration["glucoseType"] = "Finger";
-					newVisualCalibration["notes"] = "Sensor Calibration";
+					newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("nightscoutservice","sensor_calibration");
 					newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
 					
 					//Push visual calibration to list for further processing
