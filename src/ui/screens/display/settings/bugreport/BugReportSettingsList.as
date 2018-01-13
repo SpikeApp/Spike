@@ -1,0 +1,438 @@
+package ui.screens.display.settings.bugreport
+{
+	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
+	import flash.events.Event;
+	import flash.filesystem.File;
+	import flash.filesystem.FileMode;
+	import flash.filesystem.FileStream;
+	import flash.net.URLLoader;
+	import flash.net.URLVariables;
+	import flash.utils.ByteArray;
+	
+	import databaseclasses.LocalSettings;
+	
+	import feathers.controls.Alert;
+	import feathers.controls.Button;
+	import feathers.controls.List;
+	import feathers.controls.TextArea;
+	import feathers.controls.TextInput;
+	import feathers.controls.ToggleSwitch;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.data.ArrayCollection;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
+	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
+	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
+	
+	import model.ModelLocator;
+	
+	import network.DataSender;
+	
+	import starling.events.Event;
+	import starling.text.TextFormat;
+	
+	import ui.popups.AlertManager;
+	import ui.screens.display.LayoutFactory;
+	
+	import utilities.Constants;
+	import utilities.DataValidator;
+	import utilities.TimeSpan;
+
+	[ResourceBundle("bugreportsettingsscreen")]
+	[ResourceBundle("globaltranslations")]
+	
+	public class BugReportSettingsList extends List 
+	{
+		/* Display Objects */
+		private var traceToggle:ToggleSwitch;
+		private var nameField:TextInput;
+		private var emailField:TextInput;
+		private var messageField:TextArea;
+		private var sendEmail:Button;
+		
+		/* Properties */
+		private var isTraceEnabled:Boolean;
+		
+		public function BugReportSettingsList()
+		{
+			super();
+		}
+		
+		override protected function initialize():void 
+		{
+			super.initialize();
+			
+			setupProperties();
+			setupInitialContent();
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
+			//Set Properties
+			clipContent = false;
+			isSelectable = false;
+			autoHideBackground = true;
+			hasElasticEdges = false;
+			paddingBottom = 5;
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
+		private function setupInitialContent():void
+		{
+			/* Get data from database */
+			isTraceEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "true";
+		}
+		
+		private function setupContent():void
+		{
+			//On/Off Toggle
+			traceToggle = LayoutFactory.createToggleSwitch(isTraceEnabled);
+			traceToggle.pivotX = 6;
+			traceToggle.addEventListener( starling.events.Event.CHANGE, onTraceOnOff );
+			
+			//Name Field
+			nameField = LayoutFactory.createTextInput(false, false, 155, HorizontalAlign.RIGHT);
+			nameField.pivotX = 6;
+			
+			//Email Field
+			emailField = LayoutFactory.createTextInput(false, false, 155, HorizontalAlign.RIGHT);
+			emailField.pivotX = 6;
+			
+			//Text Area
+			messageField = new TextArea();
+			messageField.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.RIGHT, VerticalAlign.TOP);
+			messageField.paddingTop = 3;
+			messageField.pivotX = 6;
+			messageField.width = 155;
+			messageField.height = 150;
+			
+			//Send Email
+			sendEmail = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_button_title'), false, MaterialDeepGreyAmberMobileThemeIcons.sendTexture);
+			sendEmail.pivotX = 3;
+			sendEmail.addEventListener(starling.events.Event.TRIGGERED, onSendEmail);
+			
+			//Set Item Renderer
+			itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				itemRenderer.accessoryField = "accessory";
+				itemRenderer.paddingBottom = itemRenderer.paddingTop = 10;
+				itemRenderer.paddingRight = 0;
+				itemRenderer.labelFunction = function( item:Object ):String
+				{
+					if (item.label == ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','message_label'))
+						itemRenderer.verticalAlign = VerticalAlign.TOP;
+					
+					return item.label;
+				};
+				
+				return itemRenderer;
+			};
+			
+			(layout as VerticalLayout).hasVariableItemDimensions = true;
+			
+			//Define Trace Settings Data
+			reloadTraceSettings(isTraceEnabled);
+		}
+		
+		private function reloadTraceSettings(fullDisplay:Boolean):void
+		{
+			if(fullDisplay)
+			{
+				dataProvider = new ArrayCollection(
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: traceToggle },
+						{ label: ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','name_label'), accessory: nameField },
+						{ label: ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_label'), accessory: emailField },
+						{ label: ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','message_label'), accessory: messageField },
+						{ label: "", accessory: sendEmail },
+					]);
+			}
+			else
+			{
+				dataProvider = new ArrayCollection(
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: traceToggle },
+					]);
+			}
+		}
+		
+		private function resetLogFile():void
+		{
+			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
+			if (fileName != "")
+			{
+				var file:File = File.applicationStorageDirectory.resolvePath(fileName);
+				if (file.exists)
+					file.deleteFileAsync();
+			}
+			BackgroundFetch.resetWriteStringToFilePath();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, "");
+		}
+		
+		/**
+		 * Event Handlers
+		 */
+		private function onTraceOnOff(event:starling.events.Event):void
+		{	
+			isTraceEnabled = traceToggle.isSelected;
+			
+			var valueToSave:String;
+			if(isTraceEnabled) valueToSave = "true";
+			else valueToSave = "false";
+			
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED, valueToSave);
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, valueToSave);
+			
+			reloadTraceSettings(isTraceEnabled);
+			
+			if (!isTraceEnabled)
+			{
+				resetLogFile();
+				nameField.text = "";
+				emailField.text = "";
+				messageField.text = "";
+			}
+		}
+		
+		private function onSendEmail():void
+		{
+			//Validation
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','no_network_connection')
+					);
+				
+				return;
+			}
+			else if (nameField.text == "")
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','name_required')
+				);
+				
+				return;
+			}
+			else if (emailField.text == "")
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_required')
+				);
+				
+				return;
+			}
+			else if (!DataValidator.validateEmail(emailField.text))
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_invalid')
+				);
+				
+				return;
+			}
+			else if (messageField.text == "")
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','message_required')
+				);
+				
+				return;
+			}
+			
+			//Temporarly disable send button
+			sendEmail.label = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','stand_by_button_label');
+			sendEmail.isEnabled = false;
+			
+			//Get the trace log
+			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
+			if (fileName != "")
+			{
+				var file:File = File.applicationStorageDirectory.resolvePath(fileName);
+				if (file.exists && file.size > 0)
+				{
+					//Check if log is at least 15min old
+					var traceLogAgeInMinutes:Number = TimeSpan.fromDates(file.creationDate, new Date()).totalMinutes;
+					
+					if (true)//(traceLogAgeInMinutes >= 15)
+					{
+						//Get the trace log
+						var fileStream:FileStream = new FileStream();
+						fileStream.open(file, FileMode.READ);
+						
+						//Read trace log raw bytes into memory
+						var fileData:ByteArray = new ByteArray();
+						fileStream.readBytes(fileData);
+						fileStream.close();
+						
+						//Create URL Request Address
+						var emailBody:String = "";
+						emailBody += "<p><b>Name:</b> " + nameField.text + "</br>";
+						emailBody += "<b>Email:</b> " + emailField.text + "</br>";
+						emailBody += "<b>Message:</b> " + messageField.text;
+						
+						var vars:URLVariables = new URLVariables();
+						vars.fileName = fileName;
+						vars.mimeType = "text/plain";
+						vars.emailSubject = "Bug Report";
+						vars.emailBody = emailBody;
+						vars.userEmail = emailField.text;
+						vars.mode = DataSender.MODE_EMAIL_SUPPORT;
+						
+						//Send data
+						DataSender.sendData
+						(
+							DataSender.TRANSMISSION_URL_WITH_ATTACHMENT,
+							onLoadCompleteHandler,
+							vars,
+							fileData
+						);
+						
+						//Reset trace log state
+						resetLogFile();
+					}
+					else
+					{
+						var message:String = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','trace_file_too_recent_prefix') + " ";
+						if (Math.floor(traceLogAgeInMinutes) == 1)
+							message += Math.floor(traceLogAgeInMinutes) + " " + ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','minute');
+						else
+							message += Math.floor(traceLogAgeInMinutes) + " " + ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','minutes');
+						message += "\n\n";
+						message += ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','trace_file_too_recent_suffix')
+						
+						var alert:Alert = AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							message
+						);
+						alert.height = 330;
+						
+						//Enable send button
+						sendEmail.label = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_button_title');
+						sendEmail.isEnabled = true;
+					}
+				}
+				else
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','trace_file_non_existent')
+					);
+					
+					//Enable send button
+					sendEmail.label = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_button_title');
+					sendEmail.isEnabled = true;
+				}
+			}
+			else
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','trace_file_non_existent')
+				);
+				
+				//Enable send button
+				sendEmail.label = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_button_title');
+				sendEmail.isEnabled = true;
+			}
+		}
+		
+		private function onLoadCompleteHandler(event:flash.events.Event):void 
+		{ 
+			var loader:URLLoader = URLLoader(event.target);
+			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
+			
+			var response:Object = loader.data;
+			
+			if (response.success == "true")
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','bug_report_sent_successfully'),
+					Number.NaN,
+					null,
+					HorizontalAlign.CENTER
+				);
+				
+				//Update internal variables and controls
+				isTraceEnabled = false;
+				traceToggle.isSelected = false;
+			}
+			else
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','bug_report_error') + " " + response.statuscode
+				);
+			}
+			
+			//Enable send button
+			sendEmail.label = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_button_title');
+			sendEmail.isEnabled = true;
+		} 
+		
+		/**
+		 * Utilty
+		 */
+		override public function dispose():void
+		{
+			if(traceToggle != null)
+			{
+				traceToggle.removeEventListener( starling.events.Event.CHANGE, onTraceOnOff );
+				traceToggle.dispose();
+				traceToggle = null;
+			}
+			
+			if (nameField != null)
+			{
+				nameField.dispose();
+				nameField = null;
+			}
+			
+			if (emailField != null)
+			{
+				emailField.dispose();
+				emailField = null;
+			}
+			
+			if (messageField != null)
+			{
+				messageField.dispose();
+				messageField = null;
+			}
+			
+			if(sendEmail != null)
+			{
+				sendEmail.removeEventListener(starling.events.Event.TRIGGERED, onSendEmail);
+				sendEmail.dispose();
+				sendEmail = null;
+			}
+			
+			super.dispose();
+		}
+	}
+}

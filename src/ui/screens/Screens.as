@@ -9,6 +9,7 @@ package ui.screens
 		public static const SENSOR_START:String = "sensorStart";
 		public static const TRANSMITTER:String = "transmitter";
 		public static const SETTINGS_ABOUT:String = "aboutSettings";
+		public static const SETTINGS_BUG_REPORT:String = "bugReportSettings";
 		public static const SETTINGS_MAIN:String = "mainSettings";
 		public static const SETTINGS_GENERAL:String = "generalSettings";
 		public static const SETTINGS_CHART:String = "chartSettings";
@@ -17,7 +18,6 @@ package ui.screens
 		public static const SETTINGS_ALERT_TYPES_LIST:String = "alertTypesList";
 		public static const SETTINGS_SPEECH:String = "speechSettings";
 		public static const SETTINGS_SHARE:String = "shareSettings";
-		public static const SETTINGS_LOGGING_TRACING:String = "loggingTracingSettings";
 		public static const SETTINGS_TRANSMITTER:String = "transmitterSettings";
 		public static const DISCLAIMER:String = "disclaimer";
 	}

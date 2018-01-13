@@ -14,22 +14,19 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.settings.loggingtracing.LoggingSettingsList;
-	import ui.screens.display.settings.loggingtracing.TracingSettingsList;
+	import ui.screens.display.settings.bugreport.BugReportSettingsList;
 	
 	import utilities.Constants;
 	
-	[ResourceBundle("logtracesettingsscreen")]
+	[ResourceBundle("bugreportsettingsscreen")]
 
-	public class LoggingTracingSettingsScreen extends BaseSubScreen
+	public class BugReportSettingsScreen extends BaseSubScreen
 	{
 		/* Display Objects */
-		private var loggingSettings:LoggingSettingsList;
-		private var tracingSettings:TracingSettingsList;
-		private var tracingLabel:Label;
-		private var loggingLabel:Label;
+		private var bugReportSettings:BugReportSettingsList;
+		private var bugReportLabel:Label;
 		
-		public function LoggingTracingSettingsScreen() 
+		public function BugReportSettingsScreen() 
 		{
 			super();
 			
@@ -50,7 +47,7 @@ package ui.screens
 		private function setupHeader():void
 		{
 			/* Set Header Title */
-			title = ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','screen_title');
+			title = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','screen_title');
 			
 			/* Set Header Icon */
 			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.bugReportTexture);
@@ -64,20 +61,12 @@ package ui.screens
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
 			//Tracing Section Label
-			tracingLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','trace_section_title'));
-			screenRenderer.addChild(tracingLabel);
+			bugReportLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','trace_section_title'));
+			screenRenderer.addChild(bugReportLabel);
 			
 			//Tracing Settings
-			tracingSettings = new TracingSettingsList();
-			screenRenderer.addChild(tracingSettings);
-			
-			//Logging Section Label
-			loggingLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('logtracesettingsscreen','nslog_section_title'), true);
-			screenRenderer.addChild(loggingLabel);
-			
-			//Loging Settings
-			loggingSettings = new LoggingSettingsList();
-			screenRenderer.addChild(loggingSettings);
+			bugReportSettings = new BugReportSettingsList();
+			screenRenderer.addChild(bugReportSettings);
 		}
 		
 		private function adjustMainMenu():void
@@ -89,13 +78,7 @@ package ui.screens
 		 * Event Handlers
 		 */
 		override protected function onBackButtonTriggered(event:Event):void
-		{
-			//Save Settings
-			if (tracingSettings.needsSave)
-				tracingSettings.save();
-			if (loggingSettings.needsSave)
-				loggingSettings.save();
-			
+		{	
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
 			
@@ -108,28 +91,16 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
-			if (loggingSettings != null)
+			if (bugReportSettings != null)
 			{
-				loggingSettings.dispose();
-				loggingSettings = null;
+				bugReportSettings.dispose();
+				bugReportSettings = null;
 			}
 			
-			if (tracingSettings != null)
+			if (bugReportLabel != null)
 			{
-				tracingSettings.dispose();
-				tracingSettings = null;
-			}
-			
-			if (tracingLabel != null)
-			{
-				tracingLabel.dispose();
-				tracingLabel = null;
-			}
-			
-			if (loggingLabel != null)
-			{
-				loggingLabel.dispose();
-				loggingLabel = null;
+				bugReportLabel.dispose();
+				bugReportLabel = null;
 			}
 			
 			super.dispose();

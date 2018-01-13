@@ -9,6 +9,7 @@ package ui.screens.display.settings.about
 	import feathers.controls.renderers.IGroupedListItemRenderer;
 	import feathers.data.HierarchicalCollection;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayoutData;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
@@ -66,7 +67,6 @@ package ui.screens.display.settings.about
 			deviceRequirementsLabel.width = 170;
 			deviceRequirementsLabel.wordWrap = true;
 			deviceRequirementsLabel.fontStyles.horizontalAlign = HorizontalAlign.RIGHT;
-			deviceRequirementsLabel.paddingTop = deviceRequirementsLabel.paddingBottom = 10;
 			deviceRequirementsLabel.validate();
 			osRequirementsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','os_description'), HorizontalAlign.RIGHT);
 			hardwareRequerimentsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','hardware_description'), HorizontalAlign.RIGHT);
@@ -94,12 +94,23 @@ package ui.screens.display.settings.about
 			
 			/* Set Content Renderer */
 			this.itemRendererFactory = function ():IGroupedListItemRenderer {
-				const item:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
-				item.labelField = "label";
-				item.iconField = "icon";
-				item.accessoryField = "accessory";
-				item.gap = 8;
-				return item;
+				const itemRenderer:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
+				itemRenderer.labelField = "label";
+				itemRenderer.iconField = "icon";
+				itemRenderer.accessoryField = "accessory";
+				itemRenderer.gap = 8;
+				itemRenderer.labelFunction = function( item:Object ):String
+				{
+					if (item.label == ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','device_label'))
+					{
+						itemRenderer.verticalAlign = VerticalAlign.TOP;
+						itemRenderer.paddingBottom = itemRenderer.paddingTop = 15;
+					}
+					
+					return item.label;
+				};
+				
+				return itemRenderer;
 			};
 		}
 		

@@ -281,45 +281,10 @@
 	<!-- </android> -->
 	<!-- End of the schema for adding the android specific tags in AndroidManifest.xml 
 		file -->
-
-	<android>
-		<manifestAdditions>
-		<![CDATA[
-			<manifest android:installLocation="auto">
-				<uses-permission android:name="android.permission.INTERNET"/>
-				<uses-permission android:name="android.permission.VIBRATE"/>
-				<uses-permission android:name="android.permission.BLUETOOTH"/>
-				<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-				<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-				<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-				<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-				<uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
-				<application android:enabled="true">
-					<!-- NOTIFICATIONS -->
-					<receiver android:name="com.distriqt.extension.notifications.notifications.receivers.NotificationReceiver">
-						<intent-filter>
-							<action android:name="air.net.johandegraeve.iosxdripreader.NOTIFICATION_SELECTED" />
-							<action android:name="air.net.johandegraeve.iosxdripreader.NOTIFICATION_DELETED" />
-							<action android:name="air.net.johandegraeve.iosxdripreader.NOTIFICATION_ACTION" />
-							<action android:name="air.net.johandegraeve.iosxdripreader.NOTIFICATION_DELAYED" />
-							<data android:scheme="dtn" />
-						</intent-filter>
-						<intent-filter>
-							<action android:name="android.intent.action.BOOT_COMPLETED" />
-						</intent-filter>
-					</receiver>
-					<activity android:name="com.distriqt.extension.message.activities.SendMailActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"></activity>
-					<activity android:name="com.distriqt.extension.message.activities.ShareActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"></activity>
-				</application>
-            </manifest>
-		]]>
-		</manifestAdditions>
-	</android>
 	<extensions>
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
 		<extensionID>com.distriqt.Core</extensionID>
-		<extensionID>com.distriqt.Message</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
 		<extensionID>adobe.nativeExtension.3DiOS</extensionID>

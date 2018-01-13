@@ -25,7 +25,7 @@ package ui
 	import ui.screens.DisclaimerScreen;
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
-	import ui.screens.LoggingTracingSettingsScreen;
+	import ui.screens.BugReportSettingsScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
 	import ui.screens.Screens;
@@ -155,9 +155,9 @@ package ui
 			navigator.addScreen( Screens.SETTINGS_SHARE, shareSettingsScreenItem );
 			
 			/* Logging/Tracing Settings Screen */
-			var loggingTracingSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( LoggingTracingSettingsScreen );
+			var loggingTracingSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BugReportSettingsScreen );
 			loggingTracingSettingsScreenItem.addPopEvent(Event.COMPLETE);
-			navigator.addScreen( Screens.SETTINGS_LOGGING_TRACING, loggingTracingSettingsScreenItem );
+			navigator.addScreen( Screens.SETTINGS_BUG_REPORT, loggingTracingSettingsScreenItem );
 			
 			/* About Settings Screen */
 			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutSettingsScreen );

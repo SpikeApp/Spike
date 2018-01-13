@@ -25,7 +25,6 @@ package services
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.bluetoothle.objects.Characteristic;
 	import com.distriqt.extension.bluetoothle.objects.Peripheral;
-	import com.distriqt.extension.message.Message;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
@@ -71,6 +70,7 @@ package services
 	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
+	import ui.popups.G4WixelSender;
 	
 	import utilities.Trace;
 	import utilities.UniqueId;
@@ -1798,8 +1798,8 @@ package services
 			}
 			
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE, (new Date()).valueOf().toString());
-			var body:String = "Hi,\n\nRequest for support wxl. Unsupported packetType =  " + unsupportedPacketType + ".\n\nRegards.";
-			Message.service.sendMailWithOptions("Request for supported wxl", body, "xdrip@proximus.be","","",null,false);
+			
+			G4WixelSender.displayWixelSender();
 		}
 
 		

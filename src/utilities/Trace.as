@@ -1,7 +1,5 @@
 package utilities
 {
-	import com.distriqt.extension.message.Message;
-	import com.distriqt.extension.message.MessageAttachment;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.filesystem.File;
@@ -81,32 +79,13 @@ package utilities
 			}
 		}
 		
-		public static function sendTraceFile():void {
-			///will send the current file via e-mail
-			///after sending deletes the current file,removes the current name
-			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
-			if (fileName != "") {
-				var f:File = File.applicationStorageDirectory.resolvePath(fileName);
-				var attachment:MessageAttachment = new MessageAttachment(f.nativePath, "", "", "");
-				var body:String = "Hi,\n\nFind attached trace file " + fileName + "\n\nregards.";
-				Message.service.sendMailWithOptions("Trace file", body, "xdrip@proximus.be","","",[attachment],false);
-				f.deleteFileAsync();
-				BackgroundFetch.resetWriteStringToFilePath();
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");
-				fileName = "";
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, "");
-				filePath = "";
-			} else {
-				
-			}
-		}
-		
 		/**
 		 * Get a FileStream for writing the the log. 
 		 * @return A FileStream instance we can read or write with. Don't forget to close it!
 		 * also stores the new filename in the settings
 		 */
-		private static function getSaveStream():void {
+		private static function getSaveStream():void 
+		{
 			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
 			if (fileName == "") {
 				var dateFormatter:DateTimeFormatter = new DateTimeFormatter();
@@ -119,6 +98,7 @@ package utilities
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, filePath);
 				BackgroundFetch.writeStringToFile(filePath, "New file created with name " + fileName);
 				BackgroundFetch.writeStringToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
+				BackgroundFetch.writeStringToFile(filePath, "Device Info = " + Capabilities.os);
 				BackgroundFetch.writeStringToFile(filePath, "BackgroundFetch ANE version = " + BackgroundFetch.getANEVersion());
 				var additionalInfoToWrite:String = "";
 				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
@@ -138,7 +118,7 @@ package utilities
 				additionalInfoToWrite += "Phone Muted alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) + "\n";
 				additionalInfoToWrite += "Missed Reading alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) + "\n";
 				additionalInfoToWrite += "Calibration Request alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) + "\n";
-				//zzz
+				
 				BackgroundFetch.writeStringToFile(filePath, additionalInfoToWrite);
 			} else {
 				filePath = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME);

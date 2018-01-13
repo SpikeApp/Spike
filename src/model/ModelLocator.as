@@ -17,7 +17,6 @@
  */
 package model
 {
-	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
@@ -189,7 +188,6 @@ package model
 							AppInterface.instance.init();
 							
 							Database.getBlueToothDevice();
-							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
 							BluetoothService.init();
 
