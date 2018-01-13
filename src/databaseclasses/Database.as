@@ -52,8 +52,8 @@ package databaseclasses
 		
 		private static var aConn:SQLConnection;
 		private static var sqlStatement:SQLStatement;
-		private static var sampleDatabaseFileName:String = "xdripreader-sample.db";;
-		private static const dbFileName:String = "xdripreader.db";
+		private static var sampleDatabaseFileName:String = "spike-sample.db";;
+		private static const dbFileName:String = "spike.db";
 		private static var dbFile:File  ;
 		private static var xmlFileName:String;
 		private static var databaseWasCopiedFromSampleFile:Boolean = true;
