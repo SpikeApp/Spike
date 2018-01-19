@@ -1,4 +1,4 @@
-package ui.screens.display.settings.bugreport
+package ui.screens.display.bugreport
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
@@ -30,7 +30,7 @@ package ui.screens.display.settings.bugreport
 	
 	import model.ModelLocator;
 	
-	import network.DataSender;
+	import network.EmailSender;
 	
 	import starling.events.Event;
 	import starling.text.TextFormat;
@@ -38,9 +38,10 @@ package ui.screens.display.settings.bugreport
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.DataValidator;
-	import utilities.TimeSpan;
+	import utils.Constants;
+	import utils.DataValidator;
+	import utils.DeviceInfo;
+	import utils.TimeSpan;
 
 	[ResourceBundle("bugreportsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -93,17 +94,36 @@ package ui.screens.display.settings.bugreport
 		
 		private function setupContent():void
 		{
+			//Calculate fields dimensions
+			var fieldWidth:int;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				fieldWidth = 165;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+				fieldWidth = 200;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				fieldWidth = 155;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+				fieldWidth = 400;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_105)
+				fieldWidth = 450;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_129)
+				fieldWidth = 550;
+			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
+				fieldWidth = 300;
+			else
+				fieldWidth = 200;
+			
 			//On/Off Toggle
 			traceToggle = LayoutFactory.createToggleSwitch(isTraceEnabled);
 			traceToggle.pivotX = 6;
 			traceToggle.addEventListener( starling.events.Event.CHANGE, onTraceOnOff );
 			
 			//Name Field
-			nameField = LayoutFactory.createTextInput(false, false, 155, HorizontalAlign.RIGHT);
+			nameField = LayoutFactory.createTextInput(false, false, fieldWidth, HorizontalAlign.RIGHT);
 			nameField.pivotX = 6;
 			
 			//Email Field
-			emailField = LayoutFactory.createTextInput(false, false, 155, HorizontalAlign.RIGHT);
+			emailField = LayoutFactory.createTextInput(false, false, fieldWidth, HorizontalAlign.RIGHT);
 			emailField.pivotX = 6;
 			
 			//Text Area
@@ -111,7 +131,7 @@ package ui.screens.display.settings.bugreport
 			messageField.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.RIGHT, VerticalAlign.TOP);
 			messageField.paddingTop = 3;
 			messageField.pivotX = 6;
-			messageField.width = 155;
+			messageField.width = fieldWidth;
 			messageField.height = 150;
 			
 			//Send Email
@@ -296,12 +316,12 @@ package ui.screens.display.settings.bugreport
 						vars.emailSubject = "Bug Report";
 						vars.emailBody = emailBody;
 						vars.userEmail = emailField.text;
-						vars.mode = DataSender.MODE_EMAIL_SUPPORT;
+						vars.mode = EmailSender.MODE_EMAIL_SUPPORT;
 						
 						//Send data
-						DataSender.sendData
+						EmailSender.sendData
 						(
-							DataSender.TRANSMISSION_URL_WITH_ATTACHMENT,
+							EmailSender.TRANSMISSION_URL_WITH_ATTACHMENT,
 							onLoadCompleteHandler,
 							vars,
 							fileData

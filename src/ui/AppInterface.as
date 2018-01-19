@@ -25,7 +25,7 @@ package ui
 	import ui.screens.DisclaimerScreen;
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
-	import ui.screens.BugReportSettingsScreen;
+	import ui.screens.BugReportScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
 	import ui.screens.Screens;
@@ -155,9 +155,11 @@ package ui
 			navigator.addScreen( Screens.SETTINGS_SHARE, shareSettingsScreenItem );
 			
 			/* Logging/Tracing Settings Screen */
-			var loggingTracingSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BugReportSettingsScreen );
-			loggingTracingSettingsScreenItem.addPopEvent(Event.COMPLETE);
-			navigator.addScreen( Screens.SETTINGS_BUG_REPORT, loggingTracingSettingsScreenItem );
+			var bugReportScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BugReportScreen );
+			bugReportScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			bugReportScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			bugReportScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_BUG_REPORT, bugReportScreenItem );
 			
 			/* About Settings Screen */
 			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutSettingsScreen );

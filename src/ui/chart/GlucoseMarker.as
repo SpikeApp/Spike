@@ -8,7 +8,7 @@ package ui.chart
 	import starling.display.Canvas;
 	import starling.display.Sprite;
 	
-	import utilities.TimeSpan;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("chartscreen")]
 

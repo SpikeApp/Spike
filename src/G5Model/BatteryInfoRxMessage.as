@@ -3,7 +3,7 @@ package G5Model
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
-	import utilities.Trace;
+	import utils.Trace;
 
 	public class BatteryInfoRxMessage extends TransmitterMessage
 	{

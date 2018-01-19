@@ -33,9 +33,9 @@ package ui.screens
 	
 	import ui.AppInterface;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
-	import utilities.TimeSpan;
+	import utils.Constants;
+	import utils.DeviceInfo;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("fullscreenglucosescreen")]
 

@@ -6,7 +6,7 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.net.URLRequestMethod;
 	
-	import utilities.Trace;
+	import utils.Trace;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;

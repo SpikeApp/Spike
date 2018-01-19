@@ -18,7 +18,7 @@ package ui.screens
 	
 	import ui.AppInterface;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("sensorscreen")]
 	

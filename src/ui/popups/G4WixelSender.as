@@ -22,7 +22,7 @@ package ui.popups
 	
 	import model.ModelLocator;
 	
-	import network.DataSender;
+	import network.EmailSender;
 	
 	import starling.core.Starling;
 	import starling.display.Sprite;
@@ -30,7 +30,7 @@ package ui.popups
 	
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
+	import utils.Constants;
 
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("wixelsender")]
@@ -155,12 +155,12 @@ package ui.popups
 				vars.emailSubject = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_subject");
 				vars.emailBody = emailBody;
 				vars.userEmail = emailField.text;
-				vars.mode = DataSender.MODE_EMAIL_USER;
+				vars.mode = EmailSender.MODE_EMAIL_USER;
 				
 				//Send data
-				DataSender.sendData
+				EmailSender.sendData
 				(
-					DataSender.TRANSMISSION_URL_WITH_ATTACHMENT,
+					EmailSender.TRANSMISSION_URL_WITH_ATTACHMENT,
 					onLoadCompleteHandler,
 					vars,
 					fileData

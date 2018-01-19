@@ -15,14 +15,14 @@ package ui.screens.display.settings.share
 	
 	import model.ModelLocator;
 	
-	import services.NightScoutService;
+	import services.NightscoutServiceEnhanced;
 	
 	import starling.events.Event;
 	
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("sharesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -115,24 +115,39 @@ package ui.screens.display.settings.share
 		
 		public function save():void
 		{
-			//Nightscout
-			var nsEnabledValue:String;
-			
-			if (isNSEnabled) nsEnabledValue = "true";
-			else nsEnabledValue = "false";
-			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) != nsEnabledValue)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON, nsEnabledValue);
-			
-			//API Secret
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != selectedAPISecret)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET, selectedAPISecret);
-			
-			//URL
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != selectedURL)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME, selectedURL);
-			
-			needsSave = false;
+			if (needsSave)
+			{
+				var needsCredentialRechek:Boolean = false;
+				
+				//Nightscout
+				var nsEnabledValue:String;
+				
+				if (isNSEnabled) nsEnabledValue = "true";
+				else nsEnabledValue = "false";
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) != nsEnabledValue)
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON, nsEnabledValue);
+				
+				//API Secret
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != selectedAPISecret)
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET, selectedAPISecret);
+					needsCredentialRechek = true;
+				}
+				
+				//URL
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != selectedURL)
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME, selectedURL);
+					needsCredentialRechek = true;
+				}
+				
+				//Credentials Recheck
+				if (needsCredentialRechek)
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED, "false");
+				
+				needsSave = false;
+			}
 		}
 		
 		private function onSettingsChanged():void
@@ -183,11 +198,15 @@ package ui.screens.display.settings.share
 		
 		private function onNightscoutLogin(event:Event):void
 		{
+			//Workaround so the NightscoutService doesn't test credentials twice
+			NightscoutServiceEnhanced.ignoreSettingsChanged = true;
+			
 			//Save values to database
 			save();
 			
 			//Test Credentials
-			NightScoutService.testNightScoutUrlAndSecret(true);
+			NightscoutServiceEnhanced.testNightscoutCredentials(true);
+			NightscoutServiceEnhanced.ignoreSettingsChanged = false;
 		}
 		
 		override public function dispose():void

@@ -17,7 +17,7 @@ package ui.screens.display.settings.main
 	import ui.AppInterface;
 	import ui.screens.Screens;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("mainsettingsscreen")]
 
@@ -31,7 +31,6 @@ package ui.screens.display.settings.main
 		private var alarmsIconImage:Image;
 		private var speechIconImage:Image;
 		private var shareIconImage:Image;
-		private var bugReportIconImage:Image;
 		private var appInfoIconImage:Image;
 		
 		public function SettingsList()
@@ -69,7 +68,6 @@ package ui.screens.display.settings.main
 			alarmsIconImage = new Image(chevronIconTexture);
 			speechIconImage = new Image(chevronIconTexture);
 			shareIconImage = new Image(chevronIconTexture);
-			bugReportIconImage = new Image(chevronIconTexture);
 			appInfoIconImage = new Image(chevronIconTexture);
 			
 			/* Data */
@@ -81,7 +79,6 @@ package ui.screens.display.settings.main
 					{ screen: Screens.SETTINGS_ALARMS, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','alarms_settings_title'), accessory: alarmsIconImage },
 					{ screen: Screens.SETTINGS_SPEECH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','speech_settings_title'), accessory: speechIconImage },
 					{ screen: Screens.SETTINGS_SHARE, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','share_settings_title'), accessory: shareIconImage },
-					{ screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','bug_report_settings_title'), accessory: bugReportIconImage },
 					{ screen: Screens.SETTINGS_ABOUT, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','about_settings_title'), accessory: appInfoIconImage }
 				]);
 			
@@ -148,11 +145,6 @@ package ui.screens.display.settings.main
 			{
 				shareIconImage.dispose();
 				shareIconImage = null;
-			}
-			if(bugReportIconImage != null)
-			{
-				bugReportIconImage.dispose();
-				bugReportIconImage = null;
 			}
 			if(appInfoIconImage != null)
 			{

@@ -5,7 +5,7 @@ package ui.chart
     import starling.display.Shape;
     import starling.text.TextFormat;
     
-    import utilities.DeviceInfo;
+    import utils.DeviceInfo;
 
 
 public class GraphLayoutFactory

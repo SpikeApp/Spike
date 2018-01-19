@@ -11,7 +11,7 @@ package services
 	import events.DeepSleepServiceEvent;
 	import events.SpikeEvent;
 	
-	import utilities.Trace;
+	import utils.Trace;
 
 	/**
 	 * deepsleep timer will start a timer that expires every 10 seconds, indefinitely<br>

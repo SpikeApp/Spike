@@ -15,8 +15,8 @@ package ui.screens.display.settings.general
 	
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
 

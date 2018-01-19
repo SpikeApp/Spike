@@ -1,5 +1,7 @@
 package services
 {
+	import com.distriqt.extension.networkinfo.NetworkInfo;
+	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
@@ -12,8 +14,8 @@ package services
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
-	import events.SpikeEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	
 	import feathers.controls.Alert;
 	
@@ -23,7 +25,7 @@ package services
 	
 	import ui.popups.AlertManager;
 	
-	import utilities.Trace;
+	import utils.Trace;
 	
 	[ResourceBundle('updateservice')]
 	
@@ -35,11 +37,6 @@ package services
 		//Variables 
 		private static var updateURL:String = "";
 		private static var latestAppVersion:String = "";
-		
-		//Constants
-		private static const IGNORE_UPDATE_BUTTON:int = 0;
-		private static const GO_TO_GITHUB_BUTTON:int = 1;
-		private static const REMIND_LATER_BUTTON:int = 2;
 		
 		private static var awaitingLoadResponse:Boolean = false;
 		
@@ -62,7 +59,9 @@ package services
 			return _instance;
 		}
 		
-		//Functionality Functions
+		/**
+		 * Functionality
+		 */
 		private static function createEventListeners():void
 		{
 			//Register event listener for app in foreground
@@ -75,8 +74,15 @@ package services
 		private static function getUpdate():void
 		{
 			myTrace("in getUpdate");
+			
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				myTrace("No internet connection. Aborting");
+				return;
+			}
+			
 			//Create and configure loader and url request
-			var request:URLRequest = new URLRequest(CommonSettings.GITHUB_REPO_API_URL);
+			var request:URLRequest = new URLRequest(CommonSettings.APP_UPDATE_API_URL);
 			request.method = URLRequestMethod.GET;
 			var loader:URLLoader = new URLLoader(); 
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
@@ -91,11 +97,10 @@ package services
 			}
 			catch (error:Error) 
 			{
-				myTrace("in getUpdate, Unable to load GitHub repo API: " + error.getStackTrace().toString());
+				myTrace("in getUpdate, Unable to load Spike Update API: " + error.getStackTrace().toString());
 			}
 		}
 		
-		//Utility functions
 		private static function checkDaysBetweenLastUpdateCheck(previousUpdateStamp:Number, currentStamp:Number):Number
 		{
 			var oneDay:Number = 1000 * 60 * 60 * 24;
@@ -129,12 +134,28 @@ package services
 			return false;
 		}
 		
-		private static function myTrace(log:String):void 
+		private static function versionAIsSmallerThanB(versionA:String, versionB:String):Boolean 
 		{
-			Trace.myTrace("UpdateService.as", log);
+			var versionaSplitted:Array = versionA.split(".");
+			var versionbSplitted:Array = versionB.split(".");
+			if (new Number(versionaSplitted[0]) < new Number(versionbSplitted[0]))
+				return true;
+			if (new Number(versionaSplitted[0]) > new Number(versionbSplitted[0]))
+				return false;
+			if (new Number(versionaSplitted[1]) < new Number(versionbSplitted[1]))
+				return true;
+			if (new Number(versionaSplitted[1]) > new Number(versionbSplitted[1]))
+				return false;
+			if (new Number(versionaSplitted[2]) < new Number(versionbSplitted[2]))
+				return true;
+			if (new Number(versionaSplitted[2]) > new Number(versionbSplitted[2]))
+				return false;
+			return false;
 		}
 		
-		//Event Listeners
+		/**
+		 * Event Listeners
+		 */
 		protected static function onLoadSuccess(event:flash.events.Event):void
 		{
 			if (awaitingLoadResponse) {
@@ -155,105 +176,50 @@ package services
 				return;
 			}
 			var data:Object = JSON.parse(loader.data as String);
-			if (!data.tag_name) {
-				myTrace("in onLoadSuccess, no data.tag_name");
+			if (!data.version) {
+				myTrace("in onLoadSuccess, no data.version");
 				return;
 			}
-			if (!data.assets) {
-				myTrace("in onLoadSuccess, no data.assets");
+			if (!data.changelog) {
+				myTrace("in onLoadSuccess, no data.changelog");
 				return;
 			}
-			if (!data.html_url) {
-				myTrace("in onLoadSuccess, no data.html_url");
+			if (!data.url) {
+				myTrace("in onLoadSuccess, no data.url");
 				return;
 			}
 			
 			var currentAppVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 			//var currentAppVersion:String = "0.5";
-			latestAppVersion = data.tag_name;
+			latestAppVersion = data.version;
 			var updateAvailable:Boolean = versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
 			
 			//Handle User Update
 			if(updateAvailable && latestAppVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE))
 			{
-				//We are here because the lastest GitHub version is higher than the one installed and the user hasn't chosen to ignore this new version
-				//Check if assets are available for download
-				var assets:Array = data.assets as Array;
-				if(assets.length > 0)
-				{
-					//Assets are available
-					//Define variables
-					//var userGroup:int = int("2");
-					var userGroup:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_USER_GROUP);
-					var userUpdateAvailable:Boolean = false;
+				//We are here because the lastest Spike version is higher than the one installed and the user hasn't chosen to ignore this new version
+				updateURL = data.url;
+				
+				//Here's the right time to set last update check
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, (new Date()).valueOf().toString());
 					
-					//Check if there is an update available for the current user's group
-					for(var i:int = 0; i < (data.assets as Array).length; i++)
-					{
-						//Get asset name and type
-						var fileName:String = (data.assets as Array)[i].name;
-						var fileType:String = (data.assets as Array)[i].content_type;
-						
-						if (fileType == "application/x-itunes-ipa")
-						{
-							//Asset is an ipa, let's check what group it belongs
-							if(fileName.indexOf("group") >= 0)
-							{
-								//Get group
-								var firstIndex:int = fileName.indexOf("group") + 5;
-								var lastIndex:int = fileName.indexOf(".ipa");
-								var ipaGroup:String = fileName.slice(firstIndex, lastIndex);
-								
-								//Does the ipa group match the user group?
-								if(userGroup == ipaGroup)
-								{
-									userUpdateAvailable = true;
-									updateURL = data.html_url;
-									break;
-								}
-							}
-							else
-							{
-								//No group associated. This is the main ipa
-								if(userGroup == "0" || userGroup == "")
-								{
-									//The user has no group associated so and update is available
-									userUpdateAvailable = true;
-									updateURL = data.html_url;
-									break;
-								}
-							}
-						}
-					}
-					
-					//here's the right time to set last update check
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, (new Date()).valueOf().toString());
-					
-					//If there's an update available to the user, display a notification
-					if(userUpdateAvailable)
-					{
-						//Warn User
-						var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + "."; 
-						
-						var alert:Alert = AlertManager.showActionAlert(
-							ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"),
-							message,
-							Number.NaN,
-							[
-								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update"), triggered: onIgnoreUpdate },
-								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_goto_github"), triggered: onGoToGithub },
-								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later") }
-							]
-						);
-						alert.buttonGroupProperties.gap = 0;
-						alert.buttonGroupProperties.paddingLeft = 14;
-					}
-					else
-					{
-						//App update is available but no ipa for user's group is ready for download
-						updateURL = "";
-					}
-				}
+				//Warn User
+				var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + ".\n\n"; 
+				message += ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_changelog") + ":\n" + data.changelog;		
+				
+				var alert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"),
+					message,
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update"), triggered: onIgnoreUpdate },
+						{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later") },
+						{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_download"), triggered: onDownload }	
+					]
+				);
+				alert.buttonGroupProperties.gap = 0;
+				alert.buttonGroupProperties.paddingLeft = 14;
 			}
 		}
 		
@@ -263,7 +229,7 @@ package services
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE, latestAppVersion as String);
 		}
 		
-		private static function onGoToGithub(e:starling.events.Event):void
+		private static function onDownload(e:starling.events.Event):void
 		{
 			//Go to github release page
 			if (updateURL != "")
@@ -296,26 +262,18 @@ package services
 				myTrace("in onApplicationActivated, LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK = true, not doing update check at app startup");
 				return;
 			}
-			if(canDoUpdate())
-				getUpdate();
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
+				if(canDoUpdate())
+					getUpdate();
 		}
 		
-		private static function versionAIsSmallerThanB(versionA:String, versionB:String):Boolean {
-			var versionaSplitted:Array = versionA.split(".");
-			var versionbSplitted:Array = versionB.split(".");
-			if (new Number(versionaSplitted[0]) < new Number(versionbSplitted[0]))
-				return true;
-			if (new Number(versionaSplitted[0]) > new Number(versionbSplitted[0]))
-				return false;
-			if (new Number(versionaSplitted[1]) < new Number(versionbSplitted[1]))
-				return true;
-			if (new Number(versionaSplitted[1]) > new Number(versionbSplitted[1]))
-				return false;
-			if (new Number(versionaSplitted[2]) < new Number(versionbSplitted[2]))
-				return true;
-			if (new Number(versionaSplitted[2]) > new Number(versionbSplitted[2]))
-				return false;
-			return false;
+		/**
+		 * Utility
+		 */
+		private static function myTrace(log:String):void 
+		{
+			Trace.myTrace("UpdateService.as", log);
 		}
 	}
 }

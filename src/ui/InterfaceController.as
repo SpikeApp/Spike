@@ -42,9 +42,9 @@ package ui
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
-	import utilities.Trace;
+	import utils.Constants;
+	import utils.DeviceInfo;
+	import utils.Trace;
 	
 	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globaltranslations")]

@@ -14,7 +14,7 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.settings.alarms.AlarmsList;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("alarmsettingsscreen")]
 

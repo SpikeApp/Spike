@@ -4,28 +4,37 @@ package ui.screens.display.settings.share
 	import databaseclasses.CommonSettings;
 	
 	import feathers.controls.Button;
+	import feathers.controls.Callout;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
+	import feathers.controls.ScrollContainer;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import services.DexcomShareService;
+	import services.DexcomShareServiceEnhanced;
 	
+	import starling.core.Starling;
+	import starling.display.Sprite;
 	import starling.events.Event;
 	
+	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.dexcomshare.DexcomShareFollowersList;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("sharesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -39,6 +48,12 @@ package ui.screens.display.settings.share
 		private var dsServer:PickerList;
 		private var dsToggle:ToggleSwitch;
 		private var dsSerial:TextInput;
+		private var actionsContainer:LayoutGroup;
+		private var manageFollowers:Button;
+		private var positionHelper:Sprite;
+		private var followerManager:DexcomShareFollowersList;
+		private var followerManagerCallout:Callout;
+		private var followerManagerContainer:ScrollContainer;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -155,10 +170,23 @@ package ui.screens.display.settings.share
 			};
 			dsServer.addEventListener(Event.CHANGE, onServerChanged);
 			
+			//Actions Container
+			var actionsLayout:HorizontalLayout = new HorizontalLayout();
+			actionsLayout.gap = 5;
+			
+			actionsContainer = new LayoutGroup();
+			actionsContainer.layout = actionsLayout;
+			actionsContainer.pivotX = -3;
+			
+			//Invite Follower
+			manageFollowers = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','manage_followers_button_label'));
+			manageFollowers.addEventListener( Event.TRIGGERED, onManageFollowers );
+			actionsContainer.addChild(manageFollowers);
+			
 			//Login
 			dsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
-			dsLogin.pivotX = -3;
 			dsLogin.addEventListener( Event.TRIGGERED, onDexcomShareLogin );
+			actionsContainer.addChild(dsLogin);
 			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -220,26 +248,28 @@ package ui.screens.display.settings.share
 				if (!BlueToothDevice.isDexcomG5())
 					listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','serial_label'), accessory: dsSerial });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_label'), accessory: dsServer });
-				listDataProviderItems.push({ label: "", accessory: dsLogin });
+				listDataProviderItems.push({ label: "", accessory: actionsContainer });
 				
 				dataProvider = new ArrayCollection(listDataProviderItems);
 			}
 			else
 			{
-				dataProvider = new ArrayCollection(
+				dataProvider = new ArrayCollection
+				(
 					[
 						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: dsToggle }
-					]);
+					]
+				);
 			}
 		}
 		
-		private function onDexcomShareLogin(event:Event):void
+		private function setupCalloutPosition():void
 		{
-			//Save values to database
-			save();
-			
-			//Test Credentials
-			DexcomShareService.testCredentials();
+			//Position helper for the callout
+			positionHelper = new Sprite();
+			positionHelper.x = Constants.stageWidth / 2;
+			positionHelper.y = 70;
+			Starling.current.stage.addChild(positionHelper);
 		}
 		
 		/**
@@ -281,6 +311,58 @@ package ui.screens.display.settings.share
 			needsSave = true;
 		}
 		
+		private function onDexcomShareLogin(event:Event):void
+		{
+			//Workaround for duplicate checking
+			DexcomShareServiceEnhanced.ignoreSettingsChanged = true;
+			
+			//Save values to database
+			save();
+			
+			//Test Credentials
+			DexcomShareServiceEnhanced.testDexcomShareCredentials(true);
+		}
+		
+		private function onManageFollowers(e:Event):void
+		{
+			if(DexcomShareServiceEnhanced.isAuthorized())
+			{
+				//SessionID exists, show followers
+				setupCalloutPosition();
+				
+				//Create Followers List
+				followerManager = new DexcomShareFollowersList();
+				followerManager.addEventListener(Event.CANCEL, onFollowerCancel);
+				followerManagerContainer = new ScrollContainer();
+				followerManagerContainer.addChild(followerManager);
+				
+				//Display Callout
+				followerManagerCallout = new Callout();
+				followerManagerCallout.content = followerManagerContainer;
+				followerManagerCallout.origin = positionHelper;
+				PopUpManager.addPopUp(followerManagerCallout, false, false);
+			}
+			else
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+					ModelLocator.resourceManagerInstance.getString("sharesettingsscreen","needs_dexcom_login"),
+					60,
+					null,
+					HorizontalAlign.CENTER
+				);
+			}
+		}
+
+		private function onFollowerCancel(e:Event):void
+		{
+			if (PopUpManager.isPopUp(followerManagerCallout))
+				PopUpManager.removePopUp(followerManagerCallout);
+			else
+				PopUpManager.removeAllPopUps();
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -298,12 +380,6 @@ package ui.screens.display.settings.share
 				dsPassword.removeEventListener(Event.CHANGE, onTextInputChanged);
 				dsPassword.dispose();
 				dsPassword = null;
-			}
-			if(dsLogin != null)
-			{
-				dsLogin.removeEventListener( Event.TRIGGERED, onDexcomShareLogin );
-				dsLogin.dispose();
-				dsLogin = null;
 			}
 			if(dsServer != null)
 			{
@@ -323,6 +399,51 @@ package ui.screens.display.settings.share
 				dsSerial.removeEventListener(Event.CHANGE, onTextInputChanged);
 				dsSerial.dispose();
 				dsSerial = null;
+			}
+			if(dsLogin != null)
+			{
+				actionsContainer.removeChild(dsLogin);
+				dsLogin.removeEventListener( Event.TRIGGERED, onDexcomShareLogin );
+				dsLogin.dispose();
+				dsLogin = null;
+			}
+			if(manageFollowers != null)
+			{
+				actionsContainer.removeChild(manageFollowers);
+				manageFollowers.removeEventListener( Event.TRIGGERED, onManageFollowers );
+				manageFollowers.dispose();
+				manageFollowers = null;
+			}
+			if (actionsContainer != null)
+			{
+				actionsContainer.dispose();
+				actionsContainer = null;
+			}
+			
+			if (positionHelper != null)
+			{
+				Starling.current.stage.removeChild(positionHelper);
+				positionHelper.dispose();
+				positionHelper = null;
+			}
+			
+			if (followerManager != null)
+			{
+				followerManagerContainer.removeChild(followerManager);
+				followerManager.dispose();
+				followerManager = null;
+			}
+			
+			if (followerManagerContainer != null)
+			{
+				followerManagerContainer.dispose();
+				followerManagerContainer = null;
+			}
+			
+			if (followerManagerCallout != null)
+			{
+				followerManagerCallout.dispose();
+				followerManagerCallout = null;
 			}
 			
 			super.dispose();

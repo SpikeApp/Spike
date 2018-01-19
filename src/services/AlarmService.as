@@ -14,10 +14,10 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
-	import utilities.BgGraphBuilder;
-	import utilities.DateTimeUtilities;
-	import utilities.FromtimeAndValueArrayCollection;
-	import utilities.Trace;
+	import utils.BgGraphBuilder;
+	import utils.DateTimeUtilities;
+	import utils.FromtimeAndValueArrayCollection;
+	import utils.Trace;
 	
 	import databaseclasses.AlertType;
 	import databaseclasses.BgReading;

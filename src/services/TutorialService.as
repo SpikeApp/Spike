@@ -24,7 +24,7 @@ package services
 	import ui.AppInterface;
 	
 	import ui.popups.AlertManager;
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("tutorialservice")]
 	[ResourceBundle("globaltranslations")]

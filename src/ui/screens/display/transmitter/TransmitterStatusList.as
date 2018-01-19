@@ -56,8 +56,8 @@ package ui.screens.display.transmitter
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.Trace;
+	import utils.Constants;
+	import utils.Trace;
 	
 	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -562,8 +562,11 @@ package ui.screens.display.transmitter
 		
 		private function onRefreshG5BatteyInfo(e:Event):void
 		{
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, String(timestampForRefresh));
-			lastG5BatteryUpdateLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen',"updating_message");
+			if (BlueToothDevice.known())
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, String(timestampForRefresh));
+				lastG5BatteryUpdateLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen',"updating_message");
+			}
 		}
 		
 		private function onTransmitterScan(e:Event):void

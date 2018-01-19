@@ -3,8 +3,8 @@ package G5Model
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
-	import utilities.Trace;
-	import utilities.UniqueId;
+	import utils.Trace;
+	import utils.UniqueId;
 
 	public class SensorTxMessage extends TransmitterMessage
 	{

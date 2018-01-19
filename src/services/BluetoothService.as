@@ -72,8 +72,8 @@ package services
 	import ui.popups.AlertManager;
 	import ui.popups.G4WixelSender;
 	
-	import utilities.Trace;
-	import utilities.UniqueId;
+	import utils.Trace;
+	import utils.UniqueId;
 	
 	/**
 	 * all functionality related to bluetooth connectivity<br>
@@ -956,7 +956,7 @@ package services
 			} else {
 				value.position = 0;
 				value.endian = Endian.LITTLE_ENDIAN;
-				myTrace("data packet received from transmitter : " + utilities.UniqueId.bytesToHex(value));
+				myTrace("data packet received from transmitter : " + utils.UniqueId.bytesToHex(value));
 				value.position = 0;
 				if (BlueToothDevice.isDexcomG5()) {
 					processG5TransmitterData(value, event.characteristic);
@@ -1220,7 +1220,7 @@ package services
 			}
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
-			var strRecCmd:String = utilities.UniqueId.bytesToHex(buffer).toLowerCase();
+			var strRecCmd:String = utils.UniqueId.bytesToHex(buffer).toLowerCase();
 			buffer.position = 0;
 			var blueToothServiceEvent:BlueToothServiceEvent  = null;
 			var gotLowBat:Boolean = false;
@@ -1540,7 +1540,7 @@ package services
 			if(m_blockNumber >= 43) {
 				blukonCurrentCommand = "010c0e00";
 				myTrace("in processBlukonTransmitterData, Send sleep cmd");
-				myTrace("in processBlukonTransmitterData, Full data that was recieved is " + utilities.UniqueId.bytesToHex(m_full_data));
+				myTrace("in processBlukonTransmitterData, Full data that was recieved is " + utils.UniqueId.bytesToHex(m_full_data));
 			} else {
 				blukonCurrentCommand = "";
 			}
@@ -1641,7 +1641,7 @@ package services
 		 * sends the command to  BC_desiredTransmitCharacteristic and also assigns blukonCurrentCommand to command
 		 */
 		private static function sendCommand(command:String):void {
-			if (!activeBluetoothPeripheral.writeValueForCharacteristic(BC_desiredTransmitCharacteristic, utilities.UniqueId.hexStringToByteArray(command))) {
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(BC_desiredTransmitCharacteristic, utils.UniqueId.hexStringToByteArray(command))) {
 				myTrace("send " + command + " failed");
 			} else {
 				myTrace("send " + command + " succesfull");
@@ -1651,7 +1651,7 @@ package services
 		public static function processBlueReaderTransmitterData(buffer:ByteArray):void {
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
-			myTrace("in processBlueReaderTransmitterData data packet received from transmitter : " + utilities.UniqueId.bytesToHex(buffer));
+			myTrace("in processBlueReaderTransmitterData data packet received from transmitter : " + utils.UniqueId.bytesToHex(buffer));
 
 			buffer.position = 0;
 			var bufferAsString:String = buffer.readUTFBytes(buffer.length);
@@ -1888,7 +1888,7 @@ package services
 		}
 		
 		private static function isSensorReady(sensorStatusByte:int):Boolean {
-			if (!ModelLocator.IS_PRODUCTION)
+			if (!ModelLocator.TEST_FLIGHT_MODE)
 				return true;
 			
 			var sensorStatusString:String = "";

@@ -33,8 +33,8 @@ package ui.screens
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("sensorscreen")]
 

@@ -2,7 +2,7 @@ package G5Model
 {
 	import flash.utils.ByteArray;
 	
-	import utilities.UniqueId;
+	import utils.UniqueId;
 
 	public class BatteryInfoTxMessage extends TransmitterMessage
 	{

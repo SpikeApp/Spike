@@ -20,8 +20,8 @@
  */
 package databaseclasses
 {
-	import utilities.FromtimeAndValue;
-	import utilities.FromtimeAndValueArrayCollection;
+	import utils.FromtimeAndValue;
+	import utils.FromtimeAndValueArrayCollection;
 
 	public class AlertType extends SuperDatabaseClass
 	{

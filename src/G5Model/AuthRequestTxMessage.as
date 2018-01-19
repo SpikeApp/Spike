@@ -3,7 +3,7 @@ package G5Model
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
-	import utilities.UniqueId;
+	import utils.UniqueId;
 
 	public class AuthRequestTxMessage extends TransmitterMessage
 	{

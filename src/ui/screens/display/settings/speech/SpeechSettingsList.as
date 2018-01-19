@@ -21,8 +21,8 @@ package ui.screens.display.settings.speech
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("speechsettingsscreen")]
 	[ResourceBundle("globaltranslations")]

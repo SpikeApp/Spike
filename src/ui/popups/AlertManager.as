@@ -19,7 +19,7 @@ package ui.popups
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
-	import utilities.DeviceInfo;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
 
@@ -105,6 +105,9 @@ package ui.popups
 			alert.addEventListener(Event.CLOSE, onAlertClosed );
 			
 			/* Display/Queue Alert */
+			if (PopUpManager.popUpCount == 0)
+				activeAlertsCount = 0;
+			
 			if (activeAlertsCount == 0) //If no alerts are being currently displayed, let's display this one */
 			{
 				//Update internal variables

@@ -22,8 +22,8 @@ package databaseclasses
 {
 	import mx.collections.ArrayCollection;
 	
-	import utilities.BgGraphBuilder;
-	import utilities.Trace;
+	import utils.BgGraphBuilder;
+	import utils.Trace;
 	
 	import model.ModelLocator;
 	
@@ -809,22 +809,22 @@ package databaseclasses
 		public function getSlopeOrdinal():int {
 			var slope_by_minute:Number = calculatedValueSlope * 60000;
 			var ordinal:int = 0;
-			if(!hideSlope) {
-				if (slope_by_minute <= (-3.5)) {
+			if(!hideSlope) 
+			{
+				if (slope_by_minute <= (-3.5))
 					ordinal = 7;
-				} else if (slope_by_minute <= (-2)) {
+				else if (slope_by_minute <= (-2))
 					ordinal = 6;
-				} else if (slope_by_minute <= (-1)) {
+				else if (slope_by_minute <= (-1))
 					ordinal = 5;
-				} else if (slope_by_minute <= (1)) {
+				else if (slope_by_minute <= (1))
 					ordinal = 4;
-				} else if (slope_by_minute <= (2)) {
+				else if (slope_by_minute <= (2))
 					ordinal = 3;
-				} else if (slope_by_minute <= (3.5)) {
+				else if (slope_by_minute <= (3.5))
 					ordinal = 2;
-				} else {
+				else
 					ordinal = 1;
-				}
 			}
 			return ordinal;
 		}

@@ -2,7 +2,6 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -10,23 +9,22 @@ package ui.screens
 	import model.ModelLocator;
 	
 	import starling.display.DisplayObject;
-	import starling.events.Event;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.settings.bugreport.BugReportSettingsList;
+	import ui.screens.display.bugreport.BugReportSettingsList;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("bugreportsettingsscreen")]
 
-	public class BugReportSettingsScreen extends BaseSubScreen
+	public class BugReportScreen extends BaseSubScreen
 	{
 		/* Display Objects */
 		private var bugReportSettings:BugReportSettingsList;
 		private var bugReportLabel:Label;
 		
-		public function BugReportSettingsScreen() 
+		public function BugReportScreen() 
 		{
 			super();
 			
@@ -57,33 +55,18 @@ package ui.screens
 		
 		private function setupContent():void
 		{
-			//Deactivate menu drag gesture 
-			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
-			
-			//Tracing Section Label
+			//Section Label
 			bugReportLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','trace_section_title'));
 			screenRenderer.addChild(bugReportLabel);
 			
-			//Tracing Settings
+			//Settings
 			bugReportSettings = new BugReportSettingsList();
 			screenRenderer.addChild(bugReportSettings);
 		}
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 3;
-		}
-		
-		/**
-		 * Event Handlers
-		 */
-		override protected function onBackButtonTriggered(event:Event):void
-		{	
-			//Activate menu drag gesture
-			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
-			
-			//Pop Screen
-			dispatchEventWith(Event.COMPLETE);
+			AppInterface.instance.menu.selectedIndex = 4;
 		}
 		
 		/**

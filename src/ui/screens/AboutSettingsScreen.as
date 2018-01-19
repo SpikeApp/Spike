@@ -14,7 +14,7 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.settings.about.AboutList;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("aboutsettingsscreen")]
 

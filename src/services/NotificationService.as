@@ -50,8 +50,8 @@ package services
 	
 	import model.ModelLocator;
 	
-	import utilities.BgGraphBuilder;
-	import utilities.Trace;
+	import utils.BgGraphBuilder;
+	import utils.Trace;
 	
 	/**
 	 * This service<br>

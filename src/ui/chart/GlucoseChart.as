@@ -32,8 +32,8 @@ package ui.chart
     
     import ui.AppInterface;
     
-    import utilities.DeviceInfo;
-    import utilities.TimeSpan;
+    import utils.DeviceInfo;
+    import utils.TimeSpan;
     
     public class GlucoseChart extends Sprite
     {

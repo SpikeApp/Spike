@@ -1,4 +1,4 @@
-package utilities
+package utils
 {
 	import flash.system.Capabilities;
 	

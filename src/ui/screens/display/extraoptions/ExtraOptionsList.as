@@ -33,8 +33,8 @@ package ui.screens.display.extraoptions
 	import ui.AppInterface;
 	import ui.screens.Screens;
 	
-	import utilities.Constants;
-	import utilities.Trace;
+	import utils.Constants;
+	import utils.Trace;
 	
 	[ResourceBundle("chartscreen")]
 

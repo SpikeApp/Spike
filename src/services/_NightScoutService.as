@@ -15,19 +15,17 @@ package services
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import utilities.Trace;
-	import utilities.UniqueId;
-	
 	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
+	import databaseclasses.Sensor;
 	
 	import events.BackGroundFetchServiceEvent;
 	import events.CalibrationServiceEvent;
-	import events.SpikeEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import feathers.layout.HorizontalAlign;
@@ -35,6 +33,9 @@ package services
 	import model.ModelLocator;
 	
 	import ui.popups.AlertManager;
+	
+	import utils.Trace;
+	import utils.UniqueId;
 	
 	public class NightScoutService extends EventDispatcher
 	{
@@ -190,8 +191,16 @@ package services
 					
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"false");
 				}
+				else if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true")
+				{
+					if (Sensor.getActiveSensor() != null)
+					{
+						myTrace("in settingChanged, new sensor started");
+						uploadNewSensorToNS()
+					}
+				}
 				
-				if (event.data == CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME || event.data == CommonSettings.COMMON_SETTING_API_SECRET) {
+				/*if (event.data == CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME || event.data == CommonSettings.COMMON_SETTING_API_SECRET) {
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 						&&
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
@@ -199,10 +208,47 @@ package services
 						!syncRunning
 						&& 
 						!DexcomShareService.DexcomShareSyncRunning()) {
-						//testNightScoutUrlAndSecret();
+							testNightScoutUrlAndSecret();
 					}
-				}
+				}*/
 			}
+		}
+		
+		private static function uploadNewSensorToNS():void
+		{
+			myTrace("in uploadNewSensorToNS, uploading start sensor event to nightscout");
+			
+			var formatter:DateTimeFormatter = new DateTimeFormatter();
+			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+			formatter.setStyle("locale", "en_US");
+			formatter.useUTC = false;
+			
+			var newSensor:Object = new Object();
+			newSensor["eventType"] = "Sensor Start";	
+			newSensor["created_at"] = formatter.format(Sensor.getActiveSensor().startedAt);
+			newSensor["enteredBy"] = "Spike App";	
+			
+			createAndLoadURLRequest(_nightScoutTreatmentsUrl, URLRequestMethod.POST, null, JSON.stringify(newSensor), sensorStartToNSUploadSuccess, sensorStartToNSUploadFailed);
+		}
+		
+		private static function sensorStartToNSUploadSuccess(event:Event):void {
+			myTrace("in sensorStartToNSUploadSuccess");
+			myTrace("upload to ns successfull");
+		}
+		
+		private static function sensorStartToNSUploadFailed(event:BackGroundFetchServiceEvent):void {
+			myTrace("in sensorStartToNSUploadFailed");
+			myTrace("upload to ns failed");
+			
+			var errorMessage:String;
+			if (event.data) {
+				if (event.data.information)
+					errorMessage = event.data.information;
+			} else {
+				errorMessage = "";
+			}
+			
+			myTrace("upload_sensor_start_to_nightscout_unsuccessfull" + errorMessage);
 		}
 		
 		public static function testNightScoutUrlAndSecret(externalCall:Boolean = false):void {
@@ -437,6 +483,7 @@ package services
 		
 		/**
 		 * creates URL request and loads it<br>
+		 * createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.PUT,null,JSON.stringify(testEvent), nightScoutUrlTestSuccess, nightScoutUrlTestError);
 		 */
 		private static function createAndLoadURLRequest(url:String, requestMethod:String, urlVariables:URLVariables, data:String, successFunction:Function, errorFunction:Function):void {
 			if (errorFunction != null) {
@@ -504,7 +551,6 @@ package services
 					newVisualCalibration["glucose"] = calibration.bg;
 					newVisualCalibration["glucoseType"] = "Finger";
 					newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("nightscoutservice","sensor_calibration");
-					newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
 					
 					//Push visual calibration to list for further processing
 					listOfVisualCalibrationsToUploadAsArray[arrayCntr] = newVisualCalibration;

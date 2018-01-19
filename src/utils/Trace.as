@@ -1,4 +1,4 @@
-package utilities
+package utils
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	

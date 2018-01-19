@@ -11,7 +11,7 @@ package ui.screens.display.settings.alarms
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
-	import utilities.DeviceInfo;
+	import utils.DeviceInfo;
 	
 	public class AlarmManagerAccessory extends Sprite
 	{	

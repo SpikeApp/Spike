@@ -19,7 +19,7 @@ package ui.screens
 	import ui.screens.display.settings.chart.GlucoseDistributionSettingsList;
 	import ui.screens.display.settings.chart.SizeSettingsList;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("chartsettingsscreen")]
 

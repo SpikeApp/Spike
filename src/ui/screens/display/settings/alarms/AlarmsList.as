@@ -24,7 +24,7 @@ package ui.screens.display.settings.alarms
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("alarmsettingsscreen")]
 

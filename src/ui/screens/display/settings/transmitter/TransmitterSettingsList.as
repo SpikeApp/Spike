@@ -26,8 +26,8 @@ package ui.screens.display.settings.transmitter
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("transmittersettingsscreen")]
 	[ResourceBundle("transmitterscreen")]

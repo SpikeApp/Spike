@@ -17,7 +17,7 @@ package ui.screens.display.settings.about
 	
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("aboutsettingsscreen")]
 

@@ -20,7 +20,7 @@ package ui.screens.display.settings.chart
 	import ui.chart.ColorPicker;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("chartsettingsscreen")]
 

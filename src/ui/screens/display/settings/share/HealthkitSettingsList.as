@@ -15,7 +15,7 @@ package ui.screens.display.settings.share
 	
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("sharesettingsscreen")]
 	[ResourceBundle("globaltranslations")]

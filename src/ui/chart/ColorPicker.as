@@ -23,8 +23,8 @@ package  ui.chart
 	import starling.events.TouchPhase;
 	import starling.textures.Texture;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
+	import utils.Constants;
+	import utils.DeviceInfo;
 
 	public class ColorPicker extends Sprite
 	{

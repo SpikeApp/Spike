@@ -17,7 +17,7 @@
  */
 package databaseclasses
 {
-	import utilities.Trace;
+	import utils.Trace;
 	
 	import services.BluetoothService;
 	

@@ -13,7 +13,7 @@ package ui.screens
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.settings.alarms.AlarmCustomizerList;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	public class AlarmsCustomizerSettingsScreen extends BaseSubScreen
 	{

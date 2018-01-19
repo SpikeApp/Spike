@@ -20,7 +20,7 @@ package ui.screens
 	import ui.screens.display.settings.share.NightscoutSettingsList;
 	import ui.screens.display.settings.share.NotificationSettingsList;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("sharesettingsscreen")]
 

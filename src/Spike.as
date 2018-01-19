@@ -20,8 +20,8 @@ package
 	import ui.AppInterface;
 	import ui.screens.Screens;
 	
-	import utilities.Constants;
-	import utilities.Trace;
+	import utils.Constants;
+	import utils.Trace;
 	
 	[SWF(frameRate="60", backgroundColor="#20222a")]
 	public class Spike extends Sprite 

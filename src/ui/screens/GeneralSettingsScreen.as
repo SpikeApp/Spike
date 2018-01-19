@@ -21,7 +21,7 @@ package ui.screens
 	import ui.screens.display.settings.general.GlucoseSettingsList;
 	import ui.screens.display.settings.general.UpdateSettingsList;
 	
-	import utilities.Constants;
+	import utils.Constants;
 
 	[ResourceBundle("generalsettingsscreen")]
 	
@@ -76,13 +76,16 @@ package ui.screens
 			glucoseSettings = new GlucoseSettingsList();
 			screenRenderer.addChild(glucoseSettings);
 			
-			//Update Section Label
-			updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
-			screenRenderer.addChild(updateLabel);
-			
-			//Update Settings
-			updatesSettingsList = new UpdateSettingsList();
-			screenRenderer.addChild(updatesSettingsList);
+			if (!ModelLocator.TEST_FLIGHT_MODE)
+			{
+				//Update Section Label
+				updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
+				screenRenderer.addChild(updateLabel);
+				
+				//Update Settings
+				updatesSettingsList = new UpdateSettingsList();
+				screenRenderer.addChild(updatesSettingsList);
+			}
 		}
 		
 		private function adjustMainMenu():void

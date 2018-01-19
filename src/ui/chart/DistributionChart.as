@@ -14,7 +14,7 @@ package ui.chart
 	import starling.events.Event;
 	import starling.textures.RenderTexture;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("chartscreen")]
 	

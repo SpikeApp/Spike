@@ -35,8 +35,8 @@ package ui.screens.display.settings.alarms
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.DeviceInfo;
-	import utilities.MathHelper;
+	import utils.DeviceInfo;
+	import utils.MathHelper;
 	
 	[ResourceBundle("alarmsettingsscreen")]
 	[ResourceBundle("globaltranslations")]

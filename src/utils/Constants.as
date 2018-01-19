@@ -1,4 +1,4 @@
-package utilities
+package utils
 {
 	import flash.display.Stage;
 	

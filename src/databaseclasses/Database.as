@@ -32,7 +32,7 @@ package databaseclasses
 	import spark.collections.Sort;
 	import spark.collections.SortField;
 	
-	import utilities.Trace;
+	import utils.Trace;
 	
 	import events.DatabaseEvent;
 	import events.TransmitterServiceEvent;

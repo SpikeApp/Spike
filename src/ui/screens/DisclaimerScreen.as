@@ -16,7 +16,7 @@ package ui.screens
 	
 	import ui.AppInterface;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("disclaimerscreen")]
 
@@ -102,7 +102,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 4;
+			AppInterface.instance.menu.selectedIndex = 5;
 		}
 		
 		/**

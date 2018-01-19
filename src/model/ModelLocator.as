@@ -46,9 +46,9 @@ package model
 	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
-	import services.DexcomShareService;
+	import services.DexcomShareServiceEnhanced;
 	import services.HealthKitService;
-	import services.NightScoutService;
+	import services.NightscoutServiceEnhanced;
 	import services.NotificationService;
 	import services.TextToSpeech;
 	import services.TransmitterService;
@@ -69,7 +69,7 @@ package model
 		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
 		public static const DEBUG_MODE:Boolean = true;
 
-		public static const IS_PRODUCTION:Boolean = false;
+		public static const TEST_FLIGHT_MODE:Boolean = false;
 		
 		public static function get instance():ModelLocator
 		{
@@ -205,16 +205,19 @@ package model
 							AlarmService.init();
 							HealthKitService.init();
 							
-							DexcomShareService.init();
-							NightScoutService.init();
+							//DexcomShareService.init();
+							//NightScoutService.init();
 							TextToSpeech.init();
 							DeepSleepService.init();
 							
-							if (!IS_PRODUCTION) {
+							if (!TEST_FLIGHT_MODE) {
 								UpdateService.init();
 							}
 							
 							updateApplicationVersion();
+							
+							NightscoutServiceEnhanced.init();
+							DexcomShareServiceEnhanced.init();
 							
 							//test blockNumberForNowGlucoseData
 							/*var bufferasstring:String = "8BDE03423F07115203C8A0";

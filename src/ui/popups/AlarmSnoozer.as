@@ -24,7 +24,7 @@ package ui.popups
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
 	
-	import utilities.Constants;
+	import utils.Constants;
 
 	[ResourceBundle("globaltranslations")]
 	

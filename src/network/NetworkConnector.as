@@ -1,0 +1,178 @@
+package network
+{
+	import flash.events.Event;
+	import flash.events.HTTPStatusEvent;
+	import flash.events.IOErrorEvent;
+	import flash.net.URLLoader;
+	import flash.net.URLLoaderDataFormat;
+	import flash.net.URLRequest;
+	import flash.net.URLRequestHeader;
+
+	public class NetworkConnector
+	{
+		public function NetworkConnector()
+		{
+		}
+		
+		/**
+		 * Functionality
+		 */
+		public static function createNSConnector(URL:String, apiSecret:String, method:String, parameters:String = null, mode:String = null, completeHandler:Function = null, errorHandler:Function = null):void
+		{
+			//Create the URL Request
+			var request:URLRequest = new URLRequest(URL);
+			request.useCache = false;
+			request.cacheResponse = false;
+			request.method = method;
+			if (parameters != null)
+			{
+				request.data = parameters;
+				request.contentType = "application/json";
+			}
+			
+			//Create Headers
+			var noChacheHeader:URLRequestHeader = new URLRequestHeader("pragma", "no-cache");
+			var apiSecretHeader:URLRequestHeader = new URLRequestHeader("api-secret", apiSecret);
+			request.requestHeaders.push(noChacheHeader);
+			request.requestHeaders.push(apiSecretHeader);
+			
+			//Create the URL Loader
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
+			urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
+			urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
+			
+			var finalCompleteHandler:Function;
+			var finalIOHandler:Function;
+			if (completeHandler != null)
+			{
+				finalCompleteHandler = completeHandler;
+				finalIOHandler = completeHandler;
+			}
+			else
+			{
+				finalCompleteHandler = localCompleteHandler;
+				finalIOHandler = localIOErrorHandler;
+			}
+				
+			urlLoader.addEventListener(Event.COMPLETE, finalCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, finalIOHandler, false, 0, true);
+			
+			//Perform connection
+			try 
+			{ 
+				urlLoader.load(request); 
+			}  
+			catch (error:Error) 
+			{
+				manageConnectionError(urlLoader, error, finalCompleteHandler, finalIOHandler, errorHandler, mode);
+			}
+		}
+		
+		public static function createDSConnector(URL:String, method:String, sessionID:String = null, parameters:String = null, mode:String = null, completeHandler:Function = null, errorHandler:Function = null):void
+		{
+			//Create the URL Request
+			var request:URLRequest = new URLRequest(sessionID == null ? URL : URL + "?sessionId=" + escape(sessionID));
+			request.useCache = false;
+			request.cacheResponse = false;
+			request.method = method;
+			if (parameters != null)
+				request.data = parameters;
+			request.contentType = "application/json";
+			
+			//Create Headers
+			var noChacheHeader:URLRequestHeader = new URLRequestHeader("pragma", "no-cache");
+			request.requestHeaders.push(noChacheHeader);
+			
+			//Create the URL Loader
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
+			urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
+			urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
+			
+			var finalCompleteHandler:Function;
+			var finalIOHandler:Function;
+			if (completeHandler != null)
+			{
+				finalCompleteHandler = completeHandler;
+				finalIOHandler = completeHandler;
+			}
+			else
+			{
+				finalCompleteHandler = localCompleteHandler;
+				finalIOHandler = localIOErrorHandler;
+			}
+			
+			urlLoader.addEventListener(Event.COMPLETE, finalCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, finalIOHandler, false, 0, true);
+			
+			//Perform connection
+			try 
+			{ 
+				urlLoader.load(request); 
+			}  
+			catch (error:Error) 
+			{
+				manageConnectionError(urlLoader, error, finalCompleteHandler, finalIOHandler, errorHandler, mode);
+			}
+		}
+		
+		private static function manageConnectionError(loader:URLLoader, error:Error, completeHandler:Function, ioHandler:Function, errorHandler:Function = null, mode:String = null):void
+		{
+			//Dispose Loader
+			loader.removeEventListener(Event.COMPLETE, completeHandler);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, ioHandler);
+			loader.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus);
+			loader.removeEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus);
+			loader = null;
+			
+			//Notify Caller
+			if (errorHandler != null)
+			{
+				if (mode != null)
+				{
+					errorHandler.call(null, error, mode);
+				}
+				else
+				{
+					errorHandler.call(null, error);
+				}
+			}
+		}
+		
+		private static function disposeLoader(loader:URLLoader):void
+		{
+			if (loader != null)
+			{
+				loader.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus);
+				loader.removeEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus);
+				loader.removeEventListener(Event.COMPLETE, localCompleteHandler);
+				loader.removeEventListener(IOErrorEvent.IO_ERROR, localIOErrorHandler);
+				loader = null;
+			}
+		}
+		
+		/**
+		 * Local Event Listeners
+		 */
+		private static function localHTTPStatus(e:Event):void
+		{
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			if (loader != null)
+			{
+				loader.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus);
+				loader.removeEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus);
+			}
+		}
+		
+		private static function localIOErrorHandler(e:IOErrorEvent):void
+		{
+			disposeLoader(e.currentTarget as URLLoader);
+		}
+		
+		private static function localCompleteHandler(e:Event):void
+		{
+			disposeLoader(e.currentTarget as URLLoader);
+		}
+	}
+}

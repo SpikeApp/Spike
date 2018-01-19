@@ -17,8 +17,6 @@ package ui.screens.display.settings.alarms
 	import feathers.controls.popups.VerticalCenteredPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
-	import feathers.controls.text.TextFieldTextRenderer;
-	import feathers.core.ITextRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.data.ListCollection;
@@ -37,7 +35,7 @@ package ui.screens.display.settings.alarms
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.DeviceInfo;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("alertsettingsscreen")]
 	[ResourceBundle("globaltranslations")]

@@ -9,7 +9,7 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
-	import utilities.Trace;
+	import utils.Trace;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;

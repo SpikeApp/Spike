@@ -10,7 +10,7 @@ package ui.chart
 	
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.DeviceInfo;
+	import utils.DeviceInfo;
 	
 	public class PieDistributionSection extends Sprite
 	{
@@ -72,20 +72,20 @@ package ui.chart
 			background.name = "background";
 			addChild(background);
 			
+			//Title Background
+			titleBackground = new Quad(width, height / 2, 0xEEEEEE);
+			titleBackground.alpha = 0.05;
+			addChild(titleBackground);
+			
 			//Title
 			title = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, titleFontSize, true, fontColor);
 			title.name = "title";
-			title.y = topPadding;
-			title.width = width;
 			title.text = "Title";
 			title.validate();
+			title.y = ((height / 2) - title.height) / 2;
+			title.width = width;
 			title.text = "";
 			addChild(title);
-			
-			//Title Background
-			titleBackground = new Quad(width, (topPadding * 2) + title.height, 0xEEEEEE);
-			titleBackground.alpha = 0.05;
-			addChild(titleBackground);
 			
 			//Message
 			var availableVerticalSpace:Number = height - titleBackground.height;

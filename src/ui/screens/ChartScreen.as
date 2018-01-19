@@ -30,8 +30,8 @@ package ui.screens
 	import ui.chart.GraphLayoutFactory;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("chartscreen")]
 

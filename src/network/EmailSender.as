@@ -12,14 +12,14 @@ package network
 	
 	import ui.popups.AlertManager;
 
-	public class DataSender
+	public class EmailSender
 	{
 		/* Constants */
 		public static const TRANSMISSION_URL_WITH_ATTACHMENT:String = "https://spike-app.com/sparkpost/transmission_with_attachment.php";
 		public static const MODE_EMAIL_SUPPORT:String = "emailToSupport";
 		public static const MODE_EMAIL_USER:String = "emailToUser";
 		
-		public function DataSender()
+		public function EmailSender()
 		{
 		}
 		

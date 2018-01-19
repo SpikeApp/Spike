@@ -8,13 +8,17 @@ package ui.screens.display.menu
 	import feathers.data.ListCollection;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import model.ModelLocator;
+	
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
 	
-	import utilities.Constants;
+	import utils.Constants;
+	
+	[ResourceBundle("mainmenu")]
 	
 	public class MenuList extends List 
 	{
@@ -23,6 +27,7 @@ package ui.screens.display.menu
 		private var sensorIconTexture:Texture;
 		private var transmitterIconTexture:Texture;
 		private var settingsIconTexture:Texture;
+		private var bugReportIconTexture:Texture;
 		private var disclaimerIconTexture:Texture;
 
 		public function MenuList() 
@@ -34,25 +39,39 @@ package ui.screens.display.menu
 		{
 			super.initialize();
 			
+			setupProperties();
+			setupContent();	
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
 			paddingTop = 20; //Status Bar Size
 			minWidth = Constants.stageWidth >> 2;
 			minWidth += 85;
 			hasElasticEdges = false;
 			clipContent = false;
-			
+		}
+		
+		private function setupContent():void
+		{
 			graphIconTexture = MaterialDeepGreyAmberMobileThemeIcons.timelineTexture;
 			sensorIconTexture = MaterialDeepGreyAmberMobileThemeIcons.sensorTexture;
 			transmitterIconTexture = MaterialDeepGreyAmberMobileThemeIcons.bluetoothTexture;
 			settingsIconTexture = MaterialDeepGreyAmberMobileThemeIcons.settingsTexture;
+			bugReportIconTexture = MaterialDeepGreyAmberMobileThemeIcons.bugReportTexture;
 			disclaimerIconTexture = MaterialDeepGreyAmberMobileThemeIcons.disclaimerTexture;
 			
 			dataProvider = new ListCollection(
 				[
-					{ screen: Screens.GLUCOSE_CHART, label: "Graph", icon: graphIconTexture },
-					{ screen: Screens.SENSOR_STATUS, label: "Sensor", icon: sensorIconTexture },
-					{ screen: Screens.TRANSMITTER, label: "Transmitter", icon: transmitterIconTexture },
-					{ screen: Screens.SETTINGS_MAIN, label: "Settings", icon: settingsIconTexture },
-					{ screen: Screens.DISCLAIMER, label: "Disclaimer", icon: disclaimerIconTexture }
+					{ screen: Screens.GLUCOSE_CHART, label: ModelLocator.resourceManagerInstance.getString('mainmenu','graph_menu_item'), icon: graphIconTexture },
+					{ screen: Screens.SENSOR_STATUS, label: ModelLocator.resourceManagerInstance.getString('mainmenu','sensor_menu_item'), icon: sensorIconTexture },
+					{ screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture },
+					{ screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture },
+					{ screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture },
+					{ screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture }
 				]);
 			selectedIndex = 0;
 			
@@ -67,6 +86,9 @@ package ui.screens.display.menu
 			addEventListener( Event.CHANGE, onMenuChanged );
 		}
 		
+		/**
+		 * Event Listeners
+		 */
 		private function onMenuChanged():void 
 		{
 			if(AppInterface.instance.drawers.isLeftDrawerOpen)
@@ -80,6 +102,9 @@ package ui.screens.display.menu
 			}
 		}	
 		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
 			removeEventListener( Event.CHANGE, onMenuChanged );
@@ -106,6 +131,12 @@ package ui.screens.display.menu
 			{
 				settingsIconTexture.dispose();
 				settingsIconTexture = null;
+			}
+			
+			if(bugReportIconTexture != null)
+			{
+				bugReportIconTexture.dispose();
+				bugReportIconTexture = null;
 			}
 			
 			if(disclaimerIconTexture != null)

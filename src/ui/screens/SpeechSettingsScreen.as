@@ -16,7 +16,7 @@ package ui.screens
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.speech.SpeechSettingsList;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("speechsettingsscreen")]
 

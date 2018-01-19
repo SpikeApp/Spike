@@ -51,7 +51,7 @@ package services
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Trace;
+	import utils.Trace;
 	
 	/**
 	 * transmitter service handles all transmitterdata received from BlueToothService<br>
@@ -277,7 +277,7 @@ package services
 							return;
 						}
 					}
-					BluetoothService.writeBlueReaderCharacteristic(utilities.UniqueId.hexStringToByteArray("6C"));
+					BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 				} else if (be.data is TransmitterDataBluKonPacket) {
 					lastBgRading = BgReading.lastNoSensor();
 					if (lastBgRading != null) {

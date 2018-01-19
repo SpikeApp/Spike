@@ -30,9 +30,9 @@ package ui.screens.display.sensor
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
-	import utilities.DeviceInfo;
-	import utilities.TimeSpan;
+	import utils.Constants;
+	import utils.DeviceInfo;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("sensorscreen")]
 	[ResourceBundle("globaltranslations")]

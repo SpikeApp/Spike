@@ -15,7 +15,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package utilities
+package utils
 {
 	import mx.collections.ArrayCollection;
 	

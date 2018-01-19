@@ -27,7 +27,7 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	
-	import utilities.Constants;
+	import utils.Constants;
 	
 	[ResourceBundle("nightscoutscreen")]
 	
