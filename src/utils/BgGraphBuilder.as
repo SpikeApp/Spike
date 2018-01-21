@@ -19,8 +19,8 @@ package utils
 {
 	import mx.collections.ArrayCollection;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
+	import database.BgReading;
+	import database.CommonSettings;
 	
 	import model.ModelLocator;
 	

@@ -2,8 +2,8 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
+	import database.BgReading;
+	import database.CommonSettings;
 	
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;

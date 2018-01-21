@@ -5,7 +5,7 @@ package ui.screens
 	import flash.media.StageWebView;
 	import flash.system.System;
 	
-	import databaseclasses.CommonSettings;
+	import database.CommonSettings;
 	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;

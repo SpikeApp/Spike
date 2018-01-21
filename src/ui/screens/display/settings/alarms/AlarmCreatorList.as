@@ -1,10 +1,10 @@
 package ui.screens.display.settings.alarms
 {
-	import databaseclasses.AlertType;
-	import databaseclasses.BgReading;
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.Database;
+	import database.AlertType;
+	import database.BgReading;
+	import database.BlueToothDevice;
+	import database.CommonSettings;
+	import database.Database;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;

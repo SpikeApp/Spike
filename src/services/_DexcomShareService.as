@@ -8,9 +8,9 @@ package services
 	
 	import utils.Trace;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.CommonSettings;
+	import database.BgReading;
+	import database.BlueToothDevice;
+	import database.CommonSettings;
 	
 	import events.BackGroundFetchServiceEvent;
 	import events.SettingsServiceEvent;

@@ -9,7 +9,7 @@ package ui.screens.display.extraoptions
 	import flash.media.StageWebView;
 	import flash.utils.Timer;
 	
-	import databaseclasses.CommonSettings;
+	import database.CommonSettings;
 	
 	import events.SpikeEvent;
 	

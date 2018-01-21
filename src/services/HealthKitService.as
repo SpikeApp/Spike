@@ -2,8 +2,8 @@ package services
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.LocalSettings;
+	import database.BgReading;
+	import database.LocalSettings;
 	
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;

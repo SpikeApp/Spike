@@ -1,8 +1,8 @@
 package ui.screens.display.settings.alarms
 {
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
+	import database.BlueToothDevice;
+	import database.CommonSettings;
+	import database.LocalSettings;
 	
 	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;

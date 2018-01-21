@@ -1,6 +1,6 @@
 package ui.screens.data
 {
-	import databaseclasses.AlertType;
+	import database.AlertType;
 
 	public class AlertNavigatorData 
 	{		

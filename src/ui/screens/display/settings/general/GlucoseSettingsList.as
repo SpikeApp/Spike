@@ -1,7 +1,7 @@
 package ui.screens.display.settings.general
 {
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
+	import database.BgReading;
+	import database.CommonSettings;
 	
 	import feathers.controls.List;
 	import feathers.controls.NumericStepper;

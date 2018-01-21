@@ -14,11 +14,11 @@ package services
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.Calibration;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.Sensor;
+	import database.BgReading;
+	import database.BlueToothDevice;
+	import database.Calibration;
+	import database.CommonSettings;
+	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
 	import events.SettingsServiceEvent;

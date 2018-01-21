@@ -2,8 +2,8 @@ package ui.chart
 {
 	import flash.errors.IllegalOperationError;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
+	import database.BgReading;
+	import database.CommonSettings;
 	
 	import model.ModelLocator;
 	

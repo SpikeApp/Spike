@@ -7,8 +7,8 @@ package ui.screens
 	import ui.chart.GlucoseFactory;
 	import ui.chart.GraphLayoutFactory;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
+	import database.BgReading;
+	import database.CommonSettings;
 	
 	import ui.screens.display.LayoutFactory;
 	

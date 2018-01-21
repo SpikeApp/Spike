@@ -1,6 +1,6 @@
 package ui.screens.display.treatments
 {
-	import databaseclasses.Calibration;
+	import database.Calibration;
 	
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;

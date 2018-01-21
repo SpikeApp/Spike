@@ -1,7 +1,7 @@
 package ui.chart
 {
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
+	import database.BgReading;
+	import database.CommonSettings;
 	
 	import model.ModelLocator;
 	
@@ -42,7 +42,6 @@ package ui.chart
 			process();
         }
 		
-		//public function process(x:Number, y:Number, index:int, bgReading:BgReading,         timestamp:Number, glucoseValue:Number, previousGlucoseValue:Number, previousGlucoseValueFormatted:Number, glucoseUnit:String):void
 		public function process():void
 		{
 			//Set properties

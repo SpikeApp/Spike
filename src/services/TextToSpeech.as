@@ -30,9 +30,9 @@ package services
 	import utils.BgGraphBuilder;
 	import utils.Trace;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
+	import database.BgReading;
+	import database.CommonSettings;
+	import database.LocalSettings;
 	
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;

@@ -34,10 +34,10 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.utils.Timer;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.Calibration;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
+	import database.BgReading;
+	import database.Calibration;
+	import database.CommonSettings;
+	import database.LocalSettings;
 	
 	import distriqtkey.DistriqtKey;
 	

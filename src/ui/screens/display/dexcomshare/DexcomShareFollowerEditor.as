@@ -6,6 +6,9 @@ package ui.screens.display.dexcomshare
 	
 	import spark.formatters.DateTimeFormatter;
 	
+	import database.BgReading;
+	import database.CommonSettings;
+	
 	import events.DexcomShareEvent;
 	
 	import feathers.controls.Button;
@@ -61,6 +64,7 @@ package ui.screens.display.dexcomshare
 		private var getFollowerInfoExtendedRetries:int = 0;
 		private var getFollowerAlarmsRetries:int = 0;
 		private var errorMessage:String;
+		private var isMmol:Boolean = false;
 		
 		/* Objects */
 		private var dateFormatterForInvite:DateTimeFormatter;
@@ -145,6 +149,10 @@ package ui.screens.display.dexcomshare
 			dateFormatterForInvite.dateTimePattern = "dd MMM";
 			dateFormatterForInvite.useUTC = false;
 			dateFormatterForInvite.setStyle("locale",Capabilities.language.substr(0,2));
+			
+			/* Glucose Unit */
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				isMmol = true;
 		}
 		
 		private function setupPreloader():void
@@ -213,17 +221,35 @@ package ui.screens.display.dexcomshare
 			managedByFollowerLabel.width = width - 20;
 			
 			urgentLowAlarmSwitch = LayoutFactory.createToggleSwitch(Boolean(followerAlarms.FixedLowAlert.IsEnabled));
-			urgentLowValue = LayoutFactory.createLabel(followerAlarms.FixedLowAlert.MaxValue, HorizontalAlign.RIGHT);
+			if (!isMmol)
+				urgentLowValue = LayoutFactory.createLabel(followerAlarms.FixedLowAlert.MaxValue, HorizontalAlign.RIGHT);
+			else
+			{
+				var urgentLowConvertedValue:Number = Math.round(((BgReading.mgdlToMmol((Number(followerAlarms.FixedLowAlert.MaxValue)))) * 10)) / 10;
+				urgentLowValue = LayoutFactory.createLabel(String(urgentLowConvertedValue), HorizontalAlign.RIGHT);
+			}
 			urgentLowSound = LayoutFactory.createLabel(convertDexcomAlarmToString(followerAlarms.FixedLowAlert.Sound), HorizontalAlign.RIGHT);
 			
 			lowAlarmSwitch = LayoutFactory.createToggleSwitch(Boolean(followerAlarms.LowAlert.IsEnabled));
-			lowAlarmValue = LayoutFactory.createLabel(followerAlarms.LowAlert.MaxValue, HorizontalAlign.RIGHT);
+			if (!isMmol)
+				lowAlarmValue = LayoutFactory.createLabel(followerAlarms.LowAlert.MaxValue, HorizontalAlign.RIGHT);
+			else
+			{
+				var lowConvertedValue:Number = Math.round(((BgReading.mgdlToMmol((Number(followerAlarms.LowAlert.MaxValue)))) * 10)) / 10;
+				lowAlarmValue = LayoutFactory.createLabel(String(lowConvertedValue), HorizontalAlign.RIGHT);
+			}
 			lowAlarmDelay = LayoutFactory.createLabel(convertDexcomDelayToString(followerAlarms.LowAlert.AlarmDelay), HorizontalAlign.RIGHT);
 			lowAlarmRepeat = LayoutFactory.createLabel(convertDexcomDelayToString(followerAlarms.LowAlert.RealarmDelay), HorizontalAlign.RIGHT);
 			lowSound = LayoutFactory.createLabel(convertDexcomAlarmToString(followerAlarms.LowAlert.Sound), HorizontalAlign.RIGHT);
 			
 			highAlarmSwitch = LayoutFactory.createToggleSwitch(Boolean(followerAlarms.HighAlert.IsEnabled));
-			highAlarmValue = LayoutFactory.createLabel(followerAlarms.HighAlert.MaxValue, HorizontalAlign.RIGHT);
+			if (!isMmol)
+				highAlarmValue = LayoutFactory.createLabel(followerAlarms.HighAlert.MaxValue, HorizontalAlign.RIGHT);
+			else
+			{
+				var highConvertedValue:Number = Math.round(((BgReading.mgdlToMmol((Number(followerAlarms.HighAlert.MaxValue)))) * 10)) / 10;
+				highAlarmValue = LayoutFactory.createLabel(String(highConvertedValue), HorizontalAlign.RIGHT);
+			}
 			highAlarmDelay = LayoutFactory.createLabel(convertDexcomDelayToString(followerAlarms.HighAlert.AlarmDelay), HorizontalAlign.RIGHT);
 			highAlarmRepeat = LayoutFactory.createLabel(convertDexcomDelayToString(followerAlarms.HighAlert.RealarmDelay), HorizontalAlign.RIGHT);
 			highSound = LayoutFactory.createLabel(convertDexcomAlarmToString(followerAlarms.HighAlert.Sound), HorizontalAlign.RIGHT);

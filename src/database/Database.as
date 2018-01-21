@@ -15,7 +15,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package databaseclasses
+package database
 {
 	import flash.data.SQLConnection;
 	import flash.data.SQLMode;
@@ -28,11 +28,10 @@ package databaseclasses
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
+	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
-	
-	import utils.Trace;
 	
 	import events.DatabaseEvent;
 	import events.TransmitterServiceEvent;
@@ -40,6 +39,8 @@ package databaseclasses
 	import model.ModelLocator;
 	
 	import services.TransmitterService;
+	
+	import utils.Trace;
 	
 	[ResourceBundle("alertsettingsscreen")]
 	
@@ -1902,7 +1903,9 @@ package databaseclasses
 				localSqlStatement.addEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
 				localSqlStatement.sqlConnection = aConn;
-				localSqlStatement.text =  "SELECT * from bgreading where timestamp < " + until + " AND timestamp > " + from;
+				//localSqlStatement.text =  "SELECT * from bgreading where timestamp >= " + String((new Date).valueOf() - (24 * 60 * 60 * 1000));
+				//localSqlStatement.text =  "SELECT * from bgreading where timestamp <= " + until + " AND timestamp >= " + from;
+				localSqlStatement.text =  "SELECT * FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until;
 				localSqlStatement.execute();
 			}
 			
@@ -1910,6 +1913,8 @@ package databaseclasses
 				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
 				var tempObject:Object = localSqlStatement.getResult().data;
+				trace("BG READINGS DA BD");
+				trace(ObjectUtil.toString(tempObject));
 				if (tempObject != null) {
 					if (tempObject is Array) {
 						for each ( var o:Object in tempObject) {

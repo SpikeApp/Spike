@@ -1,6 +1,6 @@
 package ui.screens.display.settings.share
 {
-	import databaseclasses.CommonSettings;
+	import database.CommonSettings;
 	
 	import feathers.controls.Button;
 	import feathers.controls.List;

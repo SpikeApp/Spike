@@ -9,19 +9,15 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
-	import utils.Trace;
-	
-	import databaseclasses.BgReading;
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.Calibration;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.Sensor;
-	
-	import ui.screens.display.LayoutFactory;
+	import database.BgReading;
+	import database.BlueToothDevice;
+	import database.Calibration;
+	import database.CommonSettings;
+	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
-	import events.SpikeEvent;
 	import events.NotificationServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import feathers.controls.Alert;
@@ -31,6 +27,9 @@ package services
 	import model.ModelLocator;
 	
 	import ui.popups.AlertManager;
+	import ui.screens.display.LayoutFactory;
+	
+	import utils.Trace;
 	
 	/**
 	 * listens for bgreadings, at each bgreading user is asked to enter bg value<br>
@@ -147,7 +146,6 @@ package services
 				calibrationValue = LayoutFactory.createTextInput(false, false, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT, true);
 				calibrationValue.maxChars = 4;
 			}
-			calibrationValue.paddingRight = 10;
 			
 			/* Create and Style Popup Window */
 			var calibrationPopup:Alert = AlertManager.showActionAlert
@@ -162,10 +160,13 @@ package services
 				HorizontalAlign.JUSTIFY,
 				calibrationValue
 			);
+			calibrationPopup.validate();
+			calibrationValue.width = calibrationPopup.width - 20;
 			calibrationPopup.gap = 0;
 			calibrationPopup.headerProperties.maxHeight = 30;
 			calibrationPopup.buttonGroupProperties.paddingTop = -10;
-			calibrationPopup.buttonGroupProperties.paddingRight = isNaN(bgLevel1) ? 30 : 43;
+			calibrationPopup.buttonGroupProperties.gap = 10;
+			calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 			calibrationValue.setFocus();
 		}
 		
@@ -239,7 +240,6 @@ package services
 							calibrationValue = LayoutFactory.createTextInput(false, false, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT, true);
 							calibrationValue.maxChars = 4;
 						}
-						calibrationValue.paddingRight = 10;
 						
 						/* Create and Style Popup Window */
 						var calibrationPopup:Alert = AlertManager.showActionAlert
@@ -254,10 +254,13 @@ package services
 								HorizontalAlign.JUSTIFY,
 								calibrationValue
 							);
+						calibrationPopup.validate();
+						calibrationValue.width = calibrationPopup.width - 20;
 						calibrationPopup.gap = 0;
 						calibrationPopup.headerProperties.maxHeight = 30;
 						calibrationPopup.buttonGroupProperties.paddingTop = -10;
-						calibrationPopup.buttonGroupProperties.paddingRight = isNaN(bgLevel1) ? 30 : 43;
+						calibrationPopup.buttonGroupProperties.gap = 10;
+						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 						calibrationValue.setFocus();
 					}
 				}
@@ -328,7 +331,6 @@ package services
 				calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.RIGHT, true);
 				calibrationValue.maxChars = 4;
 			}
-			calibrationValue.paddingRight = 10;
 			
 			/* Create and Style Popup Window */
 			var calibrationPopup:Alert = AlertManager.showActionAlert
@@ -343,10 +345,13 @@ package services
 					HorizontalAlign.JUSTIFY,
 					calibrationValue
 				);
+			calibrationPopup.validate();
+			calibrationValue.width = calibrationPopup.width - 20;
 			calibrationPopup.gap = 0;
 			calibrationPopup.headerProperties.maxHeight = 30;
 			calibrationPopup.buttonGroupProperties.paddingTop = -10;
-			calibrationPopup.buttonGroupProperties.paddingRight = 24;
+			calibrationPopup.buttonGroupProperties.gap = 10;
+			calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 			calibrationValue.setFocus();
 		}
 		
@@ -391,7 +396,6 @@ package services
 					calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.RIGHT, true);
 					calibrationValue.maxChars = 4;
 				}
-				calibrationValue.paddingRight = 10;
 				
 				if (((new Date()).valueOf() - (Calibration.latest(2).getItemAt(0) as Calibration).timestamp < (1000 * 60 * 60)) && override) 
 				{
@@ -421,10 +425,13 @@ package services
 							HorizontalAlign.JUSTIFY,
 							calibrationValue
 						);
+						calibrationPopup.validate();
+						calibrationValue.width = calibrationPopup.width - 20;
 						calibrationPopup.gap = 0;
 						calibrationPopup.headerProperties.maxHeight = 30;
 						calibrationPopup.buttonGroupProperties.paddingTop = -10;
-						calibrationPopup.buttonGroupProperties.paddingRight = 24;
+						calibrationPopup.buttonGroupProperties.gap = 10;
+						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 						calibrationValue.setFocus();
 					}
 					
@@ -481,10 +488,14 @@ package services
 						HorizontalAlign.JUSTIFY,
 						calibrationValue
 					);
+					
+					calibrationPopup.validate();
+					calibrationValue.width = calibrationPopup.width - 20;
 					calibrationPopup.gap = 0;
 					calibrationPopup.headerProperties.maxHeight = 30;
 					calibrationPopup.buttonGroupProperties.paddingTop = -10;
-					calibrationPopup.buttonGroupProperties.paddingRight = 24;
+					calibrationPopup.buttonGroupProperties.gap = 10;
+					calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 					calibrationValue.setFocus();
 					
 					function calibrationDialogClosedWithoutOverride():void 

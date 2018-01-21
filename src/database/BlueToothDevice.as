@@ -15,7 +15,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package databaseclasses
+package database
 {
 	import utils.Trace;
 	

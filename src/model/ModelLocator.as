@@ -31,10 +31,10 @@ package model
 	import spark.collections.SortField;
 	import spark.components.ViewNavigator;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.Database;
-	import databaseclasses.LocalSettings;
-	import databaseclasses.Sensor;
+	import database.BgReading;
+	import database.Database;
+	import database.LocalSettings;
+	import database.Sensor;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -145,7 +145,7 @@ package model
 			function getBgReadingsAndLogsFromDatabase():void {
 				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
-				Database.getBgReadings((new Date()).valueOf() - 24 * 3600 * 1000, _appStartTimestamp);
+				Database.getBgReadings(_appStartTimestamp - (24 * 60 * 60 * 1000), _appStartTimestamp); //24H
 			}
 
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {

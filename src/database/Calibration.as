@@ -18,7 +18,7 @@
  * see https://github.com/StephenBlackWasAlreadyTaken/xDrip-Experimental
  * 
  */
-package databaseclasses
+package database
 {
 	import mx.collections.ArrayCollection;
 	

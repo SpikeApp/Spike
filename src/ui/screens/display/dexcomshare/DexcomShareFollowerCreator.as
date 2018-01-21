@@ -2,6 +2,9 @@ package ui.screens.display.dexcomshare
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	
+	import database.BgReading;
+	import database.CommonSettings;
+	
 	import events.DexcomShareEvent;
 	
 	import feathers.controls.Button;
@@ -74,6 +77,7 @@ package ui.screens.display.dexcomshare
 		/* Data Variables */
 		private var scrollPosition:Number = 0;
 		private var errorMessage:String;
+		private var isMmol:Boolean = false;
 		
 		/* Logical variables */
 		private var isUrgentLowAlarmEnabled:Boolean = false;
@@ -119,6 +123,10 @@ package ui.screens.display.dexcomshare
 				height = 400;
 			else
 				height = 500;
+			
+			/* Glucose Unit */
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				isMmol = true;
 		}
 		
 		private function setupContent():void
@@ -143,19 +151,28 @@ package ui.screens.display.dexcomshare
 			
 			urgentLowSwitch = LayoutFactory.createToggleSwitch(false);
 			urgentLowSwitch.addEventListener(Event.CHANGE, onUrgentLowSwitchChanged);
-			urgentLowValue = LayoutFactory.createNumericStepper(40, 55, 55, 5);
+			if (!isMmol)
+				urgentLowValue = LayoutFactory.createNumericStepper(40, 55, 55, 5);
+			else
+				urgentLowValue = LayoutFactory.createNumericStepper(2.2, 3, 3, 0.2);
 			urgentLowSound = createAlarmSoundList("urgent low");
 			
 			lowSwitch = LayoutFactory.createToggleSwitch(false);
 			lowSwitch.addEventListener(Event.CHANGE, onLowSwitchChanged);
-			lowValue = LayoutFactory.createNumericStepper(60, 100, 70, 5);
+			if (!isMmol)
+				lowValue = LayoutFactory.createNumericStepper(60, 100, 70, 5);
+			else
+				lowValue = LayoutFactory.createNumericStepper(3.3, 5.5, 3.8, 0.2);
 			lowDelay = createDelay("low");
 			lowRepeat = createRepeat("low");
 			lowSound = createAlarmSoundList("low");
 			
 			highSwitch = LayoutFactory.createToggleSwitch(false);
 			highSwitch.addEventListener(Event.CHANGE, onHighSwitchChanged);
-			highValue = LayoutFactory.createNumericStepper(120, 400, 200, 10);
+			if (!isMmol)
+				highValue = LayoutFactory.createNumericStepper(120, 400, 200, 10);
+			else
+				highValue = LayoutFactory.createNumericStepper(6.6, 22.1, 11, 0.5);
 			highDelay = createDelay("high");
 			highRepeat = createRepeat("high");
 			highSound = createAlarmSoundList("high");
@@ -373,7 +390,10 @@ package ui.screens.display.dexcomshare
 				{
 					highAlarmDelay = String(highDelay.selectedItem.data);
 					highAlarmRepeat = String(highRepeat.selectedItem.data);
-					highAlarmValue = highValue.value;
+					if (!isMmol)
+						highAlarmValue = highValue.value;
+					else
+						highAlarmValue = (Math.round(BgReading.mmolToMgdl(highValue.value) / 10)  *  10);
 					highAlarmSound = String(highSound.selectedItem.data);
 				}
 				else 
@@ -394,7 +414,10 @@ package ui.screens.display.dexcomshare
 				{
 					lowAlarmDelay = String(lowDelay.selectedItem.data);
 					lowAlarmRepeat = String(lowRepeat.selectedItem.data);
-					lowAlarmValue = lowValue.value;
+					if (!isMmol)
+						lowAlarmValue = lowValue.value;
+					else
+						lowAlarmValue = (Math.round(BgReading.mmolToMgdl(lowValue.value) / 5)  *  5);
 					lowAlarmSound = String(lowSound.selectedItem.data);
 				}
 				else 
@@ -410,7 +433,10 @@ package ui.screens.display.dexcomshare
 				var urgentLowAlarmSound:String;
 				if (urgentLowSwitch.isEnabled)
 				{
-					urgentLowAlarmValue = urgentLowValue.value;
+					if (!isMmol)
+						urgentLowAlarmValue = urgentLowValue.value;
+					else
+						urgentLowAlarmValue = (Math.round(BgReading.mmolToMgdl(urgentLowValue.value) / 5)  *  5);
 					urgentLowAlarmSound = "UrgentLow.wav";
 				}
 				else 
@@ -666,6 +692,7 @@ package ui.screens.display.dexcomshare
 		private function createAlarmSoundList(alarm:String):PickerList
 		{
 			var alarmSoundsPopUp:VerticalCenteredPopUpContentManager  = new VerticalCenteredPopUpContentManager ();
+			alarmSoundsPopUp.margin = 20;
 			var alarmSounds:PickerList = LayoutFactory.createPickerList();
 			alarmSounds.popUpContentManager = alarmSoundsPopUp;
 			

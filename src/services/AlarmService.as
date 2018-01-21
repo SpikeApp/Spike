@@ -19,14 +19,14 @@ package services
 	import utils.FromtimeAndValueArrayCollection;
 	import utils.Trace;
 	
-	import databaseclasses.AlertType;
-	import databaseclasses.BgReading;
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.Calibration;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.Database;
-	import databaseclasses.LocalSettings;
-	import databaseclasses.Sensor;
+	import database.AlertType;
+	import database.BgReading;
+	import database.BlueToothDevice;
+	import database.Calibration;
+	import database.CommonSettings;
+	import database.Database;
+	import database.LocalSettings;
+	import database.Sensor;
 	
 	import events.BlueToothServiceEvent;
 	import events.DeepSleepServiceEvent;

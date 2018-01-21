@@ -2,8 +2,8 @@ package ui.screens.display.settings.transmitter
 {
 	import mx.utils.ObjectUtil;
 	
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.CommonSettings;
+	import database.BlueToothDevice;
+	import database.CommonSettings;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;

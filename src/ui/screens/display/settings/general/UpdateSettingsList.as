@@ -1,6 +1,6 @@
 package ui.screens.display.settings.general
 {
-	import databaseclasses.CommonSettings;
+	import database.CommonSettings;
 	
 	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;

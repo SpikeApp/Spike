@@ -25,9 +25,9 @@ package services
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.Sensor;
+	import database.BgReading;
+	import database.CommonSettings;
+	import database.Sensor;
 	
 	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;

@@ -8,9 +8,9 @@ package ui.chart
     import flash.system.System;
     import flash.utils.Timer;
     
-    import databaseclasses.BgReading;
-    import databaseclasses.Calibration;
-    import databaseclasses.CommonSettings;
+    import database.BgReading;
+    import database.Calibration;
+    import database.CommonSettings;
     
     import events.CalibrationServiceEvent;
     import events.SpikeEvent;
@@ -47,6 +47,7 @@ package ui.chart
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
 		private static const TIME_16_MINUTES:int = 16 * 60 * 1000;
 		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
+		private static const TIME_23_HOURS_57_MINUTES:int = TIME_24_HOURS - (3 * 60 * 1000);
 		public static const TIMELINE_1H:Number = 14;
 		public static const TIMELINE_3H:Number = 8;
         public static const TIMELINE_6H:Number = 4;
@@ -774,7 +775,7 @@ package ui.chart
 				firstTimestamp = Number.NaN;
 			
 			var i:int;
-			if(_dataSource.length >= 1 && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp >= TIME_24_HOURS)
+			if(_dataSource.length >= 1 && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp > TIME_24_HOURS)
 			{
 				//Array has more than 24h of data. Remove timestamps older than 24H
 				var itemsToRemove:int = 0;
@@ -808,10 +809,10 @@ package ui.chart
 						removedScrollerGlucoseMarker = null;
 						
 						//Data Source
-						_dataSource.shift();
+						//_dataSource.shift();
 					}
 					
-					if (_dataSource.length > 288) // >24H
+					/*if (_dataSource.length > 288) // >24H
 					{
 						var difference:int = _dataSource.length - 288;
 						for (i = 0; i < difference; i++) 
@@ -831,7 +832,7 @@ package ui.chart
 							removedScrollerGlucoseMarker.dispose();
 							removedScrollerGlucoseMarker = null;
 						}
-					}
+					}*/
 				}
 			}
 			
@@ -873,21 +874,37 @@ package ui.chart
 			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, numAddedReadings);
 			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, numAddedReadings);
 			
-			//Adjust Main Chart Position
+			//Recalculate first and last timestamp
+			
+			if(mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
+			{
+				firstTimestamp = Number(mainChartGlucoseMarkersList[0].timestamp);
+				latestTimestamp = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp);
+			}
+			
+			//Adjust Main Chart amd Picker Position
 			if (displayLatestBGValue)
 			{
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
 				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 			}
-			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_24_HOURS)
+			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_23_HOURS_57_MINUTES - (3 * 60 * 1000))
 			{
 				mainChart.x -= mainChart.width - previousChartWidth;
 				selectedGlucoseMarkerIndex += 1;
 			}
 			
 			//Adjust Pcker Position
-			if (!displayLatestBGValue && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_24_HOURS && mainChart.x <= 0)
+			if (!displayLatestBGValue && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_23_HOURS_57_MINUTES && mainChart.x <= 0)
+			{
 				handPicker.x += (mainChart.width - previousChartWidth) * scrollMultiplier;
+				if (handPicker.x > _graphWidth - handPicker.width)
+				{
+					handPicker.x = _graphWidth - handPicker.width;
+					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					displayLatestBGValue = true;
+				}
+			}
 			
 			//Define scroll multiplier for scroller vs main graph
 			if (mainChart.x > 0)
@@ -1987,6 +2004,8 @@ package ui.chart
         public function set dataSource(source:Array):void
         {
             _dataSource = source;
+			
+			trace("DIFERENÇA INICIAL EM HORAS", ((((source[source.length - 1] as BgReading).timestamp - (source[0] as BgReading).timestamp) / 1000) / 60) / 60);
 			
 			/* Activate Dummy Mode if there's no bgreadings in data source */
 			if (_dataSource == null || _dataSource.length == 0)

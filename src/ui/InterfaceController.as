@@ -16,11 +16,11 @@ package ui
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.Database;
-	import databaseclasses.LocalSettings;
-	import databaseclasses.Sensor;
+	import database.BlueToothDevice;
+	import database.CommonSettings;
+	import database.Database;
+	import database.LocalSettings;
+	import database.Sensor;
 	
 	import events.BlueToothServiceEvent;
 	import events.DatabaseEvent;

@@ -1,7 +1,7 @@
 package ui.screens.display.settings.about
 {
 	
-	import databaseclasses.LocalSettings;
+	import database.LocalSettings;
 	
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;

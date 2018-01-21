@@ -1,7 +1,7 @@
 package ui.screens.display.settings.speech
 {
-	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
+	import database.CommonSettings;
+	import database.LocalSettings;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.List;

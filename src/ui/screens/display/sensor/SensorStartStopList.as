@@ -4,9 +4,9 @@ package ui.screens.display.sensor
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.Sensor;
+	import database.BlueToothDevice;
+	import database.CommonSettings;
+	import database.Sensor;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;

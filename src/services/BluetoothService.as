@@ -46,10 +46,10 @@ package services
 	import G5Model.SensorTxMessage;
 	import G5Model.TransmitterStatus;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
+	import database.BgReading;
+	import database.BlueToothDevice;
+	import database.CommonSettings;
+	import database.LocalSettings;
 	
 	import distriqtkey.DistriqtKey;
 	

@@ -7,11 +7,11 @@ package utils
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.Calibration;
-	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
-	import databaseclasses.Sensor;
+	import database.BlueToothDevice;
+	import database.Calibration;
+	import database.CommonSettings;
+	import database.LocalSettings;
+	import database.Sensor;
 	
 	import events.SettingsServiceEvent;
 	
@@ -62,7 +62,7 @@ package utils
 			var nowMilliSecondsAsString:String = (new Date()).milliseconds.toString();
 			while (nowMilliSecondsAsString.length < 3)
 				nowMilliSecondsAsString = "0" + nowMilliSecondsAsString
-			var traceText:String = dateFormatter.format(new Date()) + "." + nowMilliSecondsAsString + " spikereadertrace " + tag + " : " + log;
+			var traceText:String = dateFormatter.format(new Date()) + "." + nowMilliSecondsAsString + " spiketrace " + tag + " : " + log;
 			if (debugMode)
 				trace(traceText);
 			
@@ -75,7 +75,7 @@ package utils
 			} else {
 				if (filePath == "")
 					getSaveStream();
-				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" spikereadertrace ", " "));			
+				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" spiketrace ", " "));			
 			}
 		}
 		

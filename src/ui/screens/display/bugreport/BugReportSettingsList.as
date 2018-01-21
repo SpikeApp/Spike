@@ -11,7 +11,7 @@ package ui.screens.display.bugreport
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import databaseclasses.LocalSettings;
+	import database.LocalSettings;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;

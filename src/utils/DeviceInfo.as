@@ -2,7 +2,7 @@ package utils
 {
 	import flash.system.Capabilities;
 	
-	import databaseclasses.CommonSettings;
+	import database.CommonSettings;
 	
 	import feathers.system.DeviceCapabilities;
 

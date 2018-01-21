@@ -1,6 +1,6 @@
 package ui.screens.display.settings.chart
 {
-	import databaseclasses.CommonSettings;
+	import database.CommonSettings;
 	
 	import feathers.controls.List;
 	import feathers.controls.NumericStepper;

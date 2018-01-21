@@ -5,8 +5,8 @@ package ui.screens
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.Sensor;
+	import database.BlueToothDevice;
+	import database.Sensor;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;

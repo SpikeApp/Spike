@@ -31,6 +31,7 @@ package ui.popups
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DataValidator;
 
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("wixelsender")]
@@ -39,11 +40,12 @@ package ui.popups
 	{
 		/* Display Objects */
 		private static var wixelSenderCallout:Callout;
+		private static var emailField:TextInput;
+		private static var emailLabel:Label;
+		private static var sendButton:Button;
 		
 		/* Properties */
 		private static var dataProvider:ArrayCollection;
-
-		private static var emailField:TextInput;
 		
 		public function G4WixelSender()
 		{
@@ -81,11 +83,11 @@ package ui.popups
 			mainContainer.layout = mainLayout;
 			
 			/* Title */
-			var emailLabel:Label = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('wixelsender',"user_email_label"), HorizontalAlign.CENTER);
+			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('wixelsender',"user_email_label"), HorizontalAlign.CENTER);
 			mainContainer.addChild(emailLabel);
 			
 			/* Email Input */
-			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.RIGHT);
+			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.CENTER);
 			mainContainer.addChild(emailField);
 			
 			/* Action Buttons */
@@ -102,7 +104,7 @@ package ui.popups
 			actionButtonsContainer.addChild(cancelButton);
 			
 			//Send Button
-			var sendButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('wixelsender',"send_alert_button_label"));
+			sendButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('wixelsender',"send_alert_button_label"));
 			sendButton.addEventListener(starling.events.Event.TRIGGERED, onClose);
 			actionButtonsContainer.addChild(sendButton);
 			
@@ -117,6 +119,8 @@ package ui.popups
 			wixelSenderCallout.content = mainContainer;
 			wixelSenderCallout.origin = positionHelper;
 			wixelSenderCallout.minWidth = 240;
+			
+			emailField.setFocus();
 		}
 		
 		private static function closeCallout():void
@@ -133,6 +137,25 @@ package ui.popups
 		 */
 		private static function onClose(e:starling.events.Event):void
 		{
+			//Validation
+			emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"user_email_label");
+			emailLabel.fontStyles.color = 0xEEEEEE;
+			
+			if (emailField.text == "")
+			{
+				emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_address_required");
+				emailLabel.fontStyles.color = 0xFF0000;
+				return;
+			}
+			else if (!DataValidator.validateEmail(emailField.text))
+			{
+				emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_address_invalid");
+				emailLabel.fontStyles.color = 0xFF0000;
+				return;
+			}
+			
+			sendButton.isEnabled = false;
+			
 			//Get the wixel zip file
 			var fileName:String = "xBridge2.zip";
 			var file:File = File.applicationDirectory.resolvePath("assets/files/" + fileName);
@@ -173,6 +196,8 @@ package ui.popups
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
 					ModelLocator.resourceManagerInstance.getString('wixelsender','wixel_file_not_found')
 				);
+				
+				sendButton.isEnabled = true;
 			}
 		}
 		
@@ -189,15 +214,15 @@ package ui.popups
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
 					ModelLocator.resourceManagerInstance.getString('wixelsender','wixel_file_sent_successfully'),
-					Number.NaN,
-					null,
-					HorizontalAlign.CENTER
+					Number.NaN
 				);
 				
 				closeCallout();
 			}
 			else
 			{
+				sendButton.isEnabled = true;
+				
 				AlertManager.showActionAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
@@ -220,5 +245,9 @@ package ui.popups
 		{
 			closeCallout();
 		}
+		
+		/**
+		 * Utility
+		 */
 	}
 }

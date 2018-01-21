@@ -15,8 +15,8 @@ package ui.screens.display.transmitter
 	
 	import G5Model.TransmitterStatus;
 	
-	import databaseclasses.BlueToothDevice;
-	import databaseclasses.CommonSettings;
+	import database.BlueToothDevice;
+	import database.CommonSettings;
 	
 	import events.BlueToothServiceEvent;
 	import events.SettingsServiceEvent;

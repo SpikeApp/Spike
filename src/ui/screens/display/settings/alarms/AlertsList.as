@@ -1,7 +1,7 @@
 package ui.screens.display.settings.alarms
 {
-	import databaseclasses.AlertType;
-	import databaseclasses.Database;
+	import database.AlertType;
+	import database.Database;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;

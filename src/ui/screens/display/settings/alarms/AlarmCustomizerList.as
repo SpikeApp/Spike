@@ -2,8 +2,8 @@ package ui.screens.display.settings.alarms
 {
 	import flash.utils.ByteArray;
 	
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
+	import database.BgReading;
+	import database.CommonSettings;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;

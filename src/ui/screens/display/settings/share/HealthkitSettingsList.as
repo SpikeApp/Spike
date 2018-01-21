@@ -1,6 +1,6 @@
 package ui.screens.display.settings.share
 {
-	import databaseclasses.LocalSettings;
+	import database.LocalSettings;
 	
 	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;

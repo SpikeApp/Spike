@@ -11,8 +11,8 @@ package services
 	import flash.net.URLRequestMethod;
 	import flash.net.navigateToURL;
 	
-	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
+	import database.CommonSettings;
+	import database.LocalSettings;
 	
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;

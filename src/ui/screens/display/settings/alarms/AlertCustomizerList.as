@@ -2,8 +2,8 @@ package ui.screens.display.settings.alarms
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
-	import databaseclasses.AlertType;
-	import databaseclasses.Database;
+	import database.AlertType;
+	import database.Database;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
