@@ -37,9 +37,11 @@ package events
 		
 		public var data:*;
 		
-		public function DatabaseEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+		public function DatabaseEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false, data:* = null)
 		{
 			super(type, bubbles, cancelable);
+			
+			this.data = data;
 		}
 	}
 }

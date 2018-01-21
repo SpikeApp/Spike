@@ -1903,21 +1903,26 @@ package database
 				localSqlStatement.addEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
 				localSqlStatement.sqlConnection = aConn;
-				//localSqlStatement.text =  "SELECT * from bgreading where timestamp >= " + String((new Date).valueOf() - (24 * 60 * 60 * 1000));
-				//localSqlStatement.text =  "SELECT * from bgreading where timestamp <= " + until + " AND timestamp >= " + from;
 				localSqlStatement.text =  "SELECT * FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until;
 				localSqlStatement.execute();
 			}
 			
-			function bgReadingsRetrieved(se:SQLEvent):void {
+			function bgReadingsRetrieved(se:SQLEvent):void 
+			{
 				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
+				
+				var readingsList:ArrayCollection = new ArrayCollection();
 				var tempObject:Object = localSqlStatement.getResult().data;
-				if (tempObject != null) {
-					if (tempObject is Array) {
-						for each ( var o:Object in tempObject) {
-							var event1:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
-							event1.data = new BgReading(
+				
+				if (tempObject != null) 
+				{
+					if (tempObject is Array) 
+					{
+						for each ( var o:Object in tempObject) 
+						{
+							var reading:BgReading = new BgReading
+							(
 								o.timestamp,
 								(o.sensorid as String) == "-" ? null:getSensor(o.sensorid),
 								(o.calibrationid as String) == "-" ? null:getCalibration(o.calibrationid),
@@ -1938,17 +1943,15 @@ package database
 								o.hideSlope == "1" ? true:false,
 								(o.noise as String) == "-" ? null:o.noise,
 								o.lastmodifiedtimestamp,
-								o.bgreadingid);
-							instance.dispatchEvent(event1);
+								o.bgreadingid
+							);
+							
+							readingsList.addItem(reading);
 						}
 					}
-				} else {
-					//no need to dispatch anything, there are no bgreadings
-				}
+				} 
 				
-				var event2:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
-				event2.data = END_OF_RESULT;
-				instance.dispatchEvent(event2);
+				instance.dispatchEvent(new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, false, false, readingsList));
 			}
 			
 			function bgreadingRetrievalFailed(see:SQLErrorEvent):void {

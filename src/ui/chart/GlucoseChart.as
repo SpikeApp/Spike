@@ -32,6 +32,7 @@ package ui.chart
     
     import ui.AppInterface;
     
+    import utils.Constants;
     import utils.DeviceInfo;
     import utils.TimeSpan;
     
@@ -780,7 +781,7 @@ package ui.chart
 				firstTimestamp = Number.NaN;
 			
 			var i:int;
-			if(_dataSource.length >= 1 && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp > TIME_24_HOURS)
+			if(_dataSource.length >= 1 && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp > TIME_24_HOURS + Constants.READING_OFFSET)
 			{
 				//Array has more than 24h of data. Remove timestamps older than 24H
 				var itemsToRemove:int = 0;
@@ -788,7 +789,7 @@ package ui.chart
 				{
 					var currentTimestamp:Number = Number((mainChartGlucoseMarkersList[i] as GlucoseMarker).timestamp);
 					
-					if (latestTimestamp - currentTimestamp >= TIME_24_HOURS)
+					if (latestTimestamp - currentTimestamp > TIME_24_HOURS + Constants.READING_OFFSET)
 						itemsToRemove += 1;
 					else
 						break;
@@ -814,10 +815,10 @@ package ui.chart
 						removedScrollerGlucoseMarker = null;
 						
 						//Data Source
-						//_dataSource.shift();
+						_dataSource.shift();
 					}
 					
-					/*if (_dataSource.length > 288) // >24H
+					if (_dataSource.length > 288) // >24H
 					{
 						var difference:int = _dataSource.length - 288;
 						for (i = 0; i < difference; i++) 
@@ -837,7 +838,7 @@ package ui.chart
 							removedScrollerGlucoseMarker.dispose();
 							removedScrollerGlucoseMarker = null;
 						}
-					}*/
+					}
 				}
 			}
 			
@@ -893,7 +894,7 @@ package ui.chart
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
 				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 			}
-			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_23_HOURS_57_MINUTES - (3 * 60 * 1000))
+			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_23_HOURS_57_MINUTES)
 			{
 				mainChart.x -= mainChart.width - previousChartWidth;
 				selectedGlucoseMarkerIndex += 1;

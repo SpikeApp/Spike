@@ -56,6 +56,8 @@ package model
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
+	
+	import utils.Constants;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 
@@ -145,11 +147,25 @@ package model
 			function getBgReadingsAndLogsFromDatabase():void {
 				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
-				Database.getBgReadings(_appStartTimestamp - (24 * 60 * 60 * 1000), _appStartTimestamp); //24H
+				Database.getBgReadings(_appStartTimestamp - (MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 60 * 60 * 1000) - Constants.READING_OFFSET, _appStartTimestamp); //24H
 			}
 
-			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
-				if (de.data != null)
+			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void 
+			{
+				_bgReadings = de.data as ArrayCollection;
+				
+				_bgReadings.refresh();
+				getLogsFromDatabase();
+				
+				if (_bgReadings.length < 2) 
+				{
+					if (Sensor.getActiveSensor() != null) {
+						//sensor is active but there's less than two bgreadings, this may happen exceptionally if was started previously but not used for exactly or more than  MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR days
+						Sensor.stopSensor();
+					}
+				}
+				
+				/*if (de.data != null)
 					if (de.data is BgReading) {
 						if ((de.data as BgReading).timestamp > ((new Date()).valueOf() - MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 60 * 60 * 1000)) {
 							_bgReadings.addItem(de.data);
@@ -165,7 +181,7 @@ package model
 								}
 							}
 						}
-					}
+					}*/
 			}
 
 			//get stored logs from the database
