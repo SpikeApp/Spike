@@ -1502,7 +1502,10 @@ package ui.chart
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var currentMarker:GlucoseMarker = sourceList[i];
-				currentMarker.alpha = 1;
+				if (currentMarker.bgReading != null && currentMarker.bgReading.sensor != null)
+					currentMarker.alpha = 1;
+				else
+					currentMarker.alpha = 0;
 			}
 		}
 		
