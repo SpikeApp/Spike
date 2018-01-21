@@ -423,7 +423,7 @@ package ui.chart
 					);
 				
 				//Draw line
-				if(_displayLine)
+				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null)
 				{
 					if(i == 0)
 						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -1062,7 +1062,7 @@ package ui.chart
 				}
 				
 				//Draw line
-				if(_displayLine)
+				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null)
 				{
 					if(i == 0)
 						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -1162,6 +1162,9 @@ package ui.chart
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var glucoseMarker:GlucoseMarker = sourceList[i];
+				if (glucoseMarker.bgReading == null || glucoseMarker.bgReading.sensor == null)
+					continue;
+				
 				var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 				
 				if(i == 0)
