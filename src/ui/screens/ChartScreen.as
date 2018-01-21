@@ -265,7 +265,7 @@ package ui.screens
 		 */
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
 		{
-			if(BgReading.lastNoSensor() == null)
+			if(BgReading.lastNoSensor() == null || BgReading.lastNoSensor().sensor == null)
 				return;
 			
 			if (!appInBackground && glucoseChart != null)

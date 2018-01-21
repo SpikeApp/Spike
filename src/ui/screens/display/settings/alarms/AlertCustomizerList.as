@@ -167,11 +167,7 @@ package ui.screens.display.settings.alarms
 			
 			soundList = LayoutFactory.createPickerList();
 			var soundListPopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_105 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_129 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
-			{
-				soundListPopUp.marginRight = 10;
-				soundListPopUp.marginLeft = 10;
-			}
+			soundListPopUp.margin = 20;
 			soundList.popUpContentManager = soundListPopUp;
 			soundList.pivotX = -3;
 			soundList.addEventListener(Event.CLOSE, onSoundListClose);

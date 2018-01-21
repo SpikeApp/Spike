@@ -458,6 +458,11 @@ package ui.chart
 					glucoseMarker.alpha = 0;
 				}
 				
+				//Hide markers without sensor
+				var glucoseReading:BgReading = _dataSource[i] as BgReading;
+				if (glucoseReading.sensor == null)
+					glucoseMarker.alpha = 0;
+				
 				//Set variables for next iteration
 				previousXCoordinate = glucoseMarker.x;
 				previousYCoordinate = glucoseMarker.y;
@@ -1091,6 +1096,12 @@ package ui.chart
 					//Hide glucose marker
 					glucoseMarker.alpha = 0;
 				}
+				
+				//Hide markers without sensor
+				var glucoseReading:BgReading = _dataSource[i] as BgReading;
+				if (glucoseReading.sensor == null)
+					glucoseMarker.alpha = 0;
+				
 				//Update variables for next iteration
 				previousXCoordinate = previousXCoordinate + glucoseX;
 				previousGlucoseMarker = glucoseMarker;
@@ -1674,81 +1685,84 @@ package ui.chart
 					//Check if the current marker is the one selected by the main chart's delimiter line
 					if ((i == 0 && currentMarkerGlobalX >= glucoseDelimiter.x) || (currentMarkerGlobalX >= glucoseDelimiter.x && previousMarkerGlobalX < glucoseDelimiter.x))
 					{
-						nowTimestamp = new Date().valueOf();
-						var latestTimestamp:Number = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).timestamp;
-						
-						//Display Glucose Value
-						if (!displayLatestBGValue)
+						if (currentMarker.bgReading != null && currentMarker.bgReading.sensor != null)
 						{
-							glucoseValueDisplay.text = currentMarker.glucoseOutput + " " + currentMarker.slopeArrow;
-							glucoseValueDisplay.fontStyles.color = currentMarker.color;
+							nowTimestamp = new Date().valueOf();
+							var latestTimestamp:Number = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).timestamp;
 							
-							if (mainChartGlucoseMarkersList.length > 1)
-							{	
-								if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
-								{
-									glucoseValueDisplay.text = "---";
-									glucoseValueDisplay.fontStyles.color = oldColor;	
-								}
-								else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
-									glucoseValueDisplay.fontStyles.color = oldColor;	
-							}
-						}
-						
-						//Display Slope
-						if (!displayLatestBGValue)
-						{
-							glucoseSlopeDisplay.text = currentMarker.slopeOutput;
-							glucoseSlopeDisplay.fontStyles.color = newColor;
-							
-							if (mainChartGlucoseMarkersList.length > 1)
-							{	
-								if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
-								{
-									glucoseSlopeDisplay.text = "";
-								}
-								else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
-								{
-									glucoseSlopeDisplay.fontStyles.color = oldColor;	
+							//Display Glucose Value
+							if (!displayLatestBGValue)
+							{
+								glucoseValueDisplay.text = currentMarker.glucoseOutput + " " + currentMarker.slopeArrow;
+								glucoseValueDisplay.fontStyles.color = currentMarker.color;
+								
+								if (mainChartGlucoseMarkersList.length > 1)
+								{	
+									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
+									{
+										glucoseValueDisplay.text = "---";
+										glucoseValueDisplay.fontStyles.color = oldColor;	
+									}
+									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
+										glucoseValueDisplay.fontStyles.color = oldColor;	
 								}
 							}
-						}
-						
-						//Display marker time
-						//if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin) //Display time of BGReading
-						if (!displayLatestBGValue) //Display time of BGReading
-						{
-							glucoseTimeAgoDisplay.text = retroOutput + " - " + currentMarker.timeFormatted;
-							glucoseTimeAgoDisplay.fontStyles.color = newColor;
 							
-							if (mainChartGlucoseMarkersList.length > 1)
-							{	
-								if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && !hitTestCurrent)
-								{
-									var currentTimelineDate:Date = new Date(currentTimelineTimestamp);
-									var currentTimelineHours:Number = currentTimelineDate.hours;
-									var currentTimelineMinutes:Number = currentTimelineDate.minutes;
-									var currentTimelineOutput:String;
-									
-									if (dateFormat.slice(0,2) == "24")
-										currentTimelineOutput = TimeSpan.formatHoursMinutes(currentTimelineHours, currentTimelineMinutes, TimeSpan.TIME_FORMAT_24H);
-									else
-										currentTimelineOutput = TimeSpan.formatHoursMinutes(currentTimelineHours, currentTimelineMinutes, TimeSpan.TIME_FORMAT_12H);
-									
-									glucoseTimeAgoDisplay.text = retroOutput + " - " + (currentTimelineOutput);
-									glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+							//Display Slope
+							if (!displayLatestBGValue)
+							{
+								glucoseSlopeDisplay.text = currentMarker.slopeOutput;
+								glucoseSlopeDisplay.fontStyles.color = newColor;
+								
+								if (mainChartGlucoseMarkersList.length > 1)
+								{	
+									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
+									{
+										glucoseSlopeDisplay.text = "";
+									}
+									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
+									{
+										glucoseSlopeDisplay.fontStyles.color = oldColor;	
+									}
 								}
 							}
+							
+							//Display marker time
+							//if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin) //Display time of BGReading
+							if (!displayLatestBGValue) //Display time of BGReading
+							{
+								glucoseTimeAgoDisplay.text = retroOutput + " - " + currentMarker.timeFormatted;
+								glucoseTimeAgoDisplay.fontStyles.color = newColor;
+								
+								if (mainChartGlucoseMarkersList.length > 1)
+								{	
+									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && !hitTestCurrent)
+									{
+										var currentTimelineDate:Date = new Date(currentTimelineTimestamp);
+										var currentTimelineHours:Number = currentTimelineDate.hours;
+										var currentTimelineMinutes:Number = currentTimelineDate.minutes;
+										var currentTimelineOutput:String;
+										
+										if (dateFormat.slice(0,2) == "24")
+											currentTimelineOutput = TimeSpan.formatHoursMinutes(currentTimelineHours, currentTimelineMinutes, TimeSpan.TIME_FORMAT_24H);
+										else
+											currentTimelineOutput = TimeSpan.formatHoursMinutes(currentTimelineHours, currentTimelineMinutes, TimeSpan.TIME_FORMAT_12H);
+										
+										glucoseTimeAgoDisplay.text = retroOutput + " - " + (currentTimelineOutput);
+										glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+									}
+								}
+							}
+							
+							//if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
+							if (handPicker.x < _graphWidth - handPicker.width)
+								selectedGlucoseMarkerIndex = currentMarker.index;
+							else
+								(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index;
+							
+							if (i == mainChartGlucoseMarkersList.length - 1)
+								displayLatestBGValue = true;
 						}
-						
-						//if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
-						if (handPicker.x < _graphWidth - handPicker.width)
-							selectedGlucoseMarkerIndex = currentMarker.index;
-						else
-							(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index;
-						
-						if (i == mainChartGlucoseMarkersList.length - 1)
-							displayLatestBGValue = true;
 						
 						//We found a mach so we can break the loop to save CPU cycles
 						break;

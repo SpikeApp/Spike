@@ -1913,8 +1913,6 @@ package database
 				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
 				var tempObject:Object = localSqlStatement.getResult().data;
-				trace("BG READINGS DA BD");
-				trace(ObjectUtil.toString(tempObject));
 				if (tempObject != null) {
 					if (tempObject is Array) {
 						for each ( var o:Object in tempObject) {

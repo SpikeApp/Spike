@@ -11,6 +11,7 @@ package utils
 	{
 		public static const IPAD_WIDTH:int = 512;
 		public static const IPAD_HEIGHT:int = 384;
+		public static const READING_OFFSET:int = 4.9 * 60 * 1000;
 		
 		private static var _scaleFactor:Number;
 		private static var _stageWidth:int;
