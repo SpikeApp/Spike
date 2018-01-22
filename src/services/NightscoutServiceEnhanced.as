@@ -150,7 +150,7 @@ package services
 			
 			for(var i:int = ModelLocator.bgReadings.length - 1 ; i >= 0; i--)
 			{
-				var glucoseReading:BgReading = ModelLocator.bgReadings.getItemAt(i) as BgReading;
+				var glucoseReading:BgReading = ModelLocator.bgReadings[i] as BgReading;
 				
 				if (glucoseReading.timestamp > lastGlucoseReadingsSyncTimeStamp) 
 					if (glucoseReading.calculatedValue != 0) 

@@ -128,7 +128,7 @@ package ui.screens
 			
 			//CHART
 			//Get glucose data;
-			chartData = ModelLocator.bgReadings.toArray();
+			chartData = ModelLocator.bgReadings.concat();
 			
 			//Create and setup glucose chart
 			//3h

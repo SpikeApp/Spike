@@ -167,9 +167,10 @@ package ui.screens.display.settings.alarms
 			
 			soundList = LayoutFactory.createPickerList();
 			var soundListPopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
-			soundListPopUp.margin = 20;
+			soundListPopUp.margin = 10;
 			soundList.popUpContentManager = soundListPopUp;
 			soundList.pivotX = -3;
+			soundList.maxWidth = 200;
 			soundList.addEventListener(Event.CLOSE, onSoundListClose);
 			
 			/* Action Buttons */

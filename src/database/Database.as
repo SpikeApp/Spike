@@ -1903,7 +1903,7 @@ package database
 				localSqlStatement.addEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
 				localSqlStatement.sqlConnection = aConn;
-				localSqlStatement.text =  "SELECT * FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until;
+				localSqlStatement.text =  "SELECT * FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until + " ORDER BY timestamp ASC";
 				localSqlStatement.execute();
 			}
 			
@@ -1912,7 +1912,7 @@ package database
 				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
 				
-				var readingsList:ArrayCollection = new ArrayCollection();
+				var readingsList:Array = [];
 				var tempObject:Object = localSqlStatement.getResult().data;
 				
 				if (tempObject != null) 
@@ -1946,7 +1946,7 @@ package database
 								o.bgreadingid
 							);
 							
-							readingsList.addItem(reading);
+							readingsList.push(reading);
 						}
 					}
 				} 

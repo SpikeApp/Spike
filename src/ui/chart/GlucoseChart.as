@@ -780,64 +780,53 @@ package ui.chart
 			else
 				firstTimestamp = Number.NaN;
 			
-			var i:int;
 			if(_dataSource.length >= 1 && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp > TIME_24_HOURS + Constants.READING_OFFSET)
 			{
 				//Array has more than 24h of data. Remove timestamps older than 24H
-				var itemsToRemove:int = 0;
-				for (i = 0; i < mainChartGlucoseMarkersList.length; i++) 
+				var removedMainGlucoseMarker:GlucoseMarker;
+				var removedScrollerGlucoseMarker:GlucoseMarker
+				var currentTimestamp:Number = Number((mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp);
+				
+				while (latestTimestamp - currentTimestamp > TIME_24_HOURS + Constants.READING_OFFSET) 
 				{
-					var currentTimestamp:Number = Number((mainChartGlucoseMarkersList[i] as GlucoseMarker).timestamp);
+					//Main Chart
+					removedMainGlucoseMarker = mainChartGlucoseMarkersList.shift() as GlucoseMarker;
+					mainChart.removeChild(removedMainGlucoseMarker);
+					removedMainGlucoseMarker.dispose();
+					removedMainGlucoseMarker = null;
 					
-					if (latestTimestamp - currentTimestamp > TIME_24_HOURS + Constants.READING_OFFSET)
-						itemsToRemove += 1;
-					else
-						break;
+					//Scroller Chart
+					removedScrollerGlucoseMarker = scrollChartGlucoseMarkersList.shift() as GlucoseMarker;
+					scrollerChart.removeChild(removedScrollerGlucoseMarker);
+					removedScrollerGlucoseMarker.dispose();
+					removedScrollerGlucoseMarker = null;
+					
+					//Data Source
+					_dataSource.shift();
+					
+					//Update loop
+					currentTimestamp = Number((mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp);
 				}
 				
-				if (itemsToRemove > 0) //There's items to remove
+				if (_dataSource.length > 288) // >24H
 				{
-					var removedMainGlucoseMarker:GlucoseMarker;
-					var removedScrollerGlucoseMarker:GlucoseMarker;
-					
-					for (i = 0; i < itemsToRemove; i++) 
+					var difference:int = _dataSource.length - 288;
+					for (var i:int = 0; i < difference; i++) 
 					{
+						//Data Source
+						_dataSource.shift();
+							
 						//Main Chart
 						removedMainGlucoseMarker = mainChartGlucoseMarkersList.shift() as GlucoseMarker;
 						mainChart.removeChild(removedMainGlucoseMarker);
 						removedMainGlucoseMarker.dispose();
 						removedMainGlucoseMarker = null;
-						
+							
 						//Scroller Chart
 						removedScrollerGlucoseMarker = scrollChartGlucoseMarkersList.shift() as GlucoseMarker;
 						scrollerChart.removeChild(removedScrollerGlucoseMarker);
 						removedScrollerGlucoseMarker.dispose();
 						removedScrollerGlucoseMarker = null;
-						
-						//Data Source
-						_dataSource.shift();
-					}
-					
-					if (_dataSource.length > 288) // >24H
-					{
-						var difference:int = _dataSource.length - 288;
-						for (i = 0; i < difference; i++) 
-						{
-							//Data Source
-							_dataSource.shift();
-							
-							//Main Chart
-							removedMainGlucoseMarker = mainChartGlucoseMarkersList.shift() as GlucoseMarker;
-							mainChart.removeChild(removedMainGlucoseMarker);
-							removedMainGlucoseMarker.dispose();
-							removedMainGlucoseMarker = null;
-							
-							//Scroller Chart
-							removedScrollerGlucoseMarker = scrollChartGlucoseMarkersList.shift() as GlucoseMarker;
-							scrollerChart.removeChild(removedScrollerGlucoseMarker);
-							removedScrollerGlucoseMarker.dispose();
-							removedScrollerGlucoseMarker = null;
-						}
 					}
 				}
 			}
@@ -2025,8 +2014,6 @@ package ui.chart
         public function set dataSource(source:Array):void
         {
             _dataSource = source;
-			
-			trace("DIFERENÇA INICIAL EM HORAS", ((((source[source.length - 1] as BgReading).timestamp - (source[0] as BgReading).timestamp) / 1000) / 60) / 60);
 			
 			/* Activate Dummy Mode if there's no bgreadings in data source */
 			if (_dataSource == null || _dataSource.length == 0)

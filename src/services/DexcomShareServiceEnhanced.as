@@ -312,7 +312,7 @@ package services
 			
 			for(var i:int = ModelLocator.bgReadings.length - 1 ; i >= 0; i--)
 			{
-				var glucoseReading:BgReading = ModelLocator.bgReadings.getItemAt(i) as BgReading;
+				var glucoseReading:BgReading = ModelLocator.bgReadings[i] as BgReading;
 				
 				if (glucoseReading.timestamp > lastGlucoseReadingsSyncTimeStamp && now - glucoseReading.timestamp < 24 * 3600 * 1000) 
 					if (glucoseReading.calculatedValue != 0) 

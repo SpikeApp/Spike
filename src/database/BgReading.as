@@ -337,7 +337,7 @@ package database
 				var cntr:int = ModelLocator.bgReadings.length - 1;
 				var itemsAdded:int = 0;
 				while (cntr > -1 && itemsAdded < number) {
-					var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
 					if (bgReading.sensor != null) {
 						if (bgReading.sensor.uniqueId == currentSensorId && bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
 							returnValue.addItem(bgReading);
@@ -366,7 +366,7 @@ package database
 				var cntr:int = ModelLocator.bgReadings.length - 1;
 				var itemsAdded:int = 0;
 				while (cntr > -1 && itemsAdded < number) {
-					var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
 					if (bgReading.sensor != null) {
 						if (bgReading.sensor.uniqueId == currentSensorId && bgReading.rawData != 0) {
 							returnValue.addItem(bgReading);
@@ -395,7 +395,7 @@ package database
 			var timestamp:Number = (new Date()).valueOf() - (60000 * 30);
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			var itemsAdded:int = 0;
-			var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+			var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
 			while (cntr > -1 && bgReading.timestamp > timestamp) {
 				if (bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
 					returnValue.addItem(bgReading);
@@ -403,7 +403,7 @@ package database
 				}
 				cntr--;
 				if (cntr > -1)
-					bgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+					bgReading = ModelLocator.bgReadings[cntr] as BgReading;
 			}
 			return returnValue;
 		}
@@ -421,7 +421,7 @@ package database
 			var returnValue:BgReading;
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			while (cntr > -1) {
-				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+				var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
 				if (bgReading.rawData != 0 && bgReading.calculatedValue != 0) {
 					returnValue = bgReading;
 					break;
