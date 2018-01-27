@@ -100,6 +100,8 @@ package database
 		public static const LOCAL_SETTING_OVERRIDE_MUTE:int = 28;
 		public static const LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK:int = 29;
 		public static const LOCAL_SETTING_ALWAYS_ON_APP_BADGE:int = 30;
+		public static const LOCAL_SETTING_REMOTE_ALERT_LAST_ID:int = 31;
+		public static const LOCAL_SETTING_REMOTE_ALERT_LAST_CHECK_TIMESTAMP:int = 32;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -132,7 +134,9 @@ package database
 			"false",//LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED
 			"false",//LOCAL_SETTING_OVERRIDE_MUTE
 			"true",//LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK
-			"true"//LOCAL_SETTING_ALWAYS_ON_APP_BADGE
+			"true",//LOCAL_SETTING_ALWAYS_ON_APP_BADGE
+			"0",//LOCAL_SETTING_REMOTE_ALERT_LAST_ID
+			"0"//LOCAL_SETTING_REMOTE_ALERT_LAST_CHECK_TIMESTAMP
 		];
 		
 		public function LocalSettings() {

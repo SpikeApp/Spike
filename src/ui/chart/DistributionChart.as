@@ -11,7 +11,6 @@ package ui.chart
 	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
-	import starling.events.Event;
 	import starling.textures.RenderTexture;
 	
 	import utils.Constants;
@@ -20,6 +19,10 @@ package ui.chart
 	
 	public class DistributionChart extends Sprite
 	{
+		//Constants
+		private static const TIME_24H:int = 24 * 60 * 60 * 1000;
+		private static const TIME_30SEC:int = 30 * 1000;
+		
 		//Variables and Objects
 		private var nGons:Array;
 		private var _dataSource:Array;
@@ -201,7 +204,7 @@ package ui.chart
 			statsContainer.addChild(numReadingsSection);
 		}
 		
-		public function drawChart(event:Event = null):void
+		public function drawChart():void
 		{
 			if (_dataSource != null && _dataSource.length > 0)
 				dummyModeActive = false;
@@ -222,6 +225,7 @@ package ui.chart
 			var percentageLowRounded:Number;
 			var lowAngle:Number
 			var dataLength:int = _dataSource.length;
+			var realReadingsNumber:int = 0;
 			var totalGlucose:Number = 0;
 			
 			/**
@@ -229,8 +233,12 @@ package ui.chart
 			 */
 			var glucoseValue:Number;
 			var i:int;
+			var nowTimestamp:Number = (new Date()).valueOf();
 			for (i = 0; i < dataLength; i++) 
 			{
+				if (nowTimestamp - _dataSource[i].timestamp > TIME_24H - TIME_30SEC)
+					continue;
+				
 				glucoseValue = Number(_dataSource[i].calculatedValue);
 				if(glucoseValue >= highTreshold)
 				{
@@ -245,6 +253,8 @@ package ui.chart
 					low += 1;
 				}
 				totalGlucose += glucoseValue;
+				
+				realReadingsNumber++;
 			}
 			
 			//Glucose Distribution Percentages
@@ -364,10 +374,10 @@ package ui.chart
 				A1C = 0;
 			
 			//Calculate readings percentage
-			var percentageReadings:Number = ((((dataLength * 100) / 288) * 10 + 0.5)  >> 0) / 10;
+			var percentageReadings:Number = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 			
 			//Populate Stats
-			numReadingsSection.message.text = !dummyModeActive ? dataLength + " (" + percentageReadings + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			numReadingsSection.message.text = !dummyModeActive ? realReadingsNumber + " (" + percentageReadings + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			avgGlucoseSection.message.text = !dummyModeActive ? averageGlucoseValueOutput + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			estA1CSection.message.text = !dummyModeActive ? A1C + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 		}

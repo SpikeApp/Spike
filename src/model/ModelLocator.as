@@ -20,7 +20,6 @@ package model
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
-	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
 	import mx.resources.IResourceManager;
@@ -47,6 +46,7 @@ package model
 	import services.HealthKitService;
 	import services.NightscoutServiceEnhanced;
 	import services.NotificationService;
+	import services.RemoteAlertService;
 	import services.TextToSpeech;
 	import services.TransmitterService;
 	import services.UpdateService;
@@ -188,6 +188,7 @@ package model
 					DexcomShareServiceEnhanced.init();
 					TextToSpeech.init();
 					DeepSleepService.init();
+					RemoteAlertService.init();
 							
 					if (!TEST_FLIGHT_MODE) 
 						UpdateService.init();

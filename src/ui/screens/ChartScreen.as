@@ -199,9 +199,10 @@ package ui.screens
 			timeRangeGroup.addEventListener( Event.CHANGE, onTimeRangeChange );
 		}
 		
-		public function redrawChart():void
+		private function redrawChart():void
 		{
-			var previousData:Array = glucoseChart.dataSource.concat();
+			//var previousData:Array = glucoseChart.dataSource.concat();
+			chartData = glucoseChart.dataSource;
 			
 			//Remove previous chart
 			removeChild(glucoseChart);
@@ -210,14 +211,15 @@ package ui.screens
 			
 			//Create new chart
 			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
-			glucoseChart.dataSource = previousData.concat();
+			//glucoseChart.dataSource = previousData.concat();
+			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
 			glucoseChart.y = glucoseChartTopPadding;
 			addChild(glucoseChart);
 			
-			previousData.length = 0;
-			previousData = null;
+			//previousData.length = 0;
+			//previousData = null;
 		}
 		
 		private function calculateChartHeight():Number
@@ -383,7 +385,8 @@ package ui.screens
 				var pieTopPadding:Number = Math.round((lastAvailableSpace * 0.3) / 2);
 				
 				//Pie Chart
-				pieChart = new DistributionChart(pieHeight, glucoseChart.dataSource);
+				//pieChart = new DistributionChart(pieHeight, glucoseChart.dataSource);
+				pieChart = new DistributionChart(pieHeight, chartData);
 				pieChart.y = Math.round(h24.y + h24.height + delimitterTopPadding + delimitter.height + pieTopPadding);
 				pieChart.x = 10;
 				addChild(pieChart);

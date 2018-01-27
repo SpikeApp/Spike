@@ -5,6 +5,7 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
+	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
@@ -88,7 +89,8 @@ package services
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
 			
 			//Make connection and define listener
-			loader.addEventListener(flash.events.Event.COMPLETE, onLoadSuccess);
+			loader.addEventListener(flash.events.Event.COMPLETE, onResponseReceived);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, onResponseReceived);
 			awaitingLoadResponse = true;
 			
 			try 
@@ -156,7 +158,7 @@ package services
 		/**
 		 * Event Listeners
 		 */
-		protected static function onLoadSuccess(event:flash.events.Event):void
+		protected static function onResponseReceived(event:flash.events.Event):void
 		{
 			if (awaitingLoadResponse) {
 				myTrace("in onLoadSuccess");
@@ -171,20 +173,27 @@ package services
 			}
 			//Parse response and validate presence if mandatory objects 
 			var loader:URLLoader = URLLoader(event.target);
-			if (!loader.data) {
+			if (loader.data == null) {
 				myTrace("in onLoadSuccess, no loader.data");
 				return;
 			}
+			
+			if (String(loader.data).indexOf("version") == -1)
+			{
+				myTrace("in onLoadSuccess, wrong response from server");
+				return;
+			}
+			
 			var data:Object = JSON.parse(loader.data as String);
-			if (!data.version) {
+			if (data.version == null) {
 				myTrace("in onLoadSuccess, no data.version");
 				return;
 			}
-			if (!data.changelog) {
+			if (!data.changelog == null) {
 				myTrace("in onLoadSuccess, no data.changelog");
 				return;
 			}
-			if (!data.url) {
+			if (!data.url == null) {
 				myTrace("in onLoadSuccess, no data.url");
 				return;
 			}

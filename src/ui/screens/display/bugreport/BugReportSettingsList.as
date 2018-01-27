@@ -195,7 +195,7 @@ package ui.screens.display.bugreport
 				if (file.exists)
 					file.deleteFileAsync();
 			}
-			BackgroundFetch.resetWriteStringToFilePath();
+			BackgroundFetch.resetTraceFilePath();
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, "");
 		}

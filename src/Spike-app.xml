@@ -132,7 +132,7 @@
 		<autoOrients>true</autoOrients>
 		<fullScreen>false</fullScreen>
 		<visible>true</visible>
-		<softKeyboardBehavior>none</softKeyboardBehavior>
+		<softKeyboardBehavior>pan</softKeyboardBehavior>
 	</initialWindow>
 
 	<!-- We recommend omitting the supportedProfiles element, -->
@@ -222,6 +222,7 @@
 				<array>
 					<string>bluetooth-central</string>
 					<string>audio</string>
+					<string>fetch</string>
 					<string>remote-notification</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
@@ -229,11 +230,11 @@
       					<key>NSAllowsArbitraryLoads</key><true/>
       				</dict>
       			<key>NSHealthUpdateUsageDescription</key>
-				<string>Store readings</string>
+				<string>Stores CGM Glucose Readings</string>
       			<key>NSHealthShareUsageDescription</key>
-				<string>Store readings</string>
+				<string>Stores CGM Glucose Readings</string>
 				<key>NSBluetoothPeripheralUsageDescription</key>
-				<string>Connect to CGM Transmitter</string>
+				<string>Connects to CGM Transmitters</string>
       				
       			<key>UIRequiredDeviceCapabilities</key>
       				<array>

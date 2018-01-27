@@ -2008,7 +2008,7 @@ package ui.chart
          */
         public function get dataSource():Array
         {
-            return _dataSource;
+			return _dataSource;
         }
 
         public function set dataSource(source:Array):void
