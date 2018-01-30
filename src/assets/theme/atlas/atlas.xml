@@ -69,84 +69,84 @@
   <SubTexture name='archive-icon' x='304' y='336' width='54.0' height='54.0'/>
   <SubTexture name='arrow-back-icon' x='304' y='392' width='54.0' height='54.0'/>
   <SubTexture name='arrow-drop-down-circle-icon' x='304' y='448' width='54.0' height='54.0'/>
-  <SubTexture name='sensor-icon' x='304' y='504' width='54.0' height='54.0'/>
-  <SubTexture name='settings-applications-icon' x='304' y='560' width='54.0' height='54.0'/>
-  <SubTexture name='settings-backup-restore-icon' x='304' y='616' width='54.0' height='54.0'/>
-  <SubTexture name='settings-bluetooth-icon' x='304' y='672' width='54.0' height='54.0'/>
-  <SubTexture name='settings-cell-icon' x='304' y='728' width='54.0' height='54.0'/>
-  <SubTexture name='settings-display-icon' x='304' y='784' width='54.0' height='54.0'/>
-  <SubTexture name='settings-ethernet-icon' x='304' y='840' width='54.0' height='54.0'/>
-  <SubTexture name='settings-icon' x='304' y='896' width='54.0' height='54.0'/>
-  <SubTexture name='settings-input-antenna-icon' x='304' y='952' width='54.0' height='54.0'/>
-  <SubTexture name='settings-input-component-icon' x='360' y='0' width='54.0' height='54.0'/>
-  <SubTexture name='settings-input-composite-icon' x='360' y='56' width='54.0' height='54.0'/>
-  <SubTexture name='settings-input-hdmi-icon' x='360' y='112' width='54.0' height='54.0'/>
-  <SubTexture name='settings-input-svideo-icon' x='360' y='168' width='54.0' height='54.0'/>
-  <SubTexture name='settings-overscan-icon' x='360' y='224' width='54.0' height='54.0'/>
-  <SubTexture name='settings-phone-icon' x='360' y='280' width='54.0' height='54.0'/>
-  <SubTexture name='settings-power-icon' x='360' y='336' width='54.0' height='54.0'/>
-  <SubTexture name='settings-remote-icon' x='360' y='392' width='54.0' height='54.0'/>
-  <SubTexture name='settings-voice-icon' x='360' y='448' width='54.0' height='54.0'/>
-  <SubTexture name='share-icon' x='360' y='504' width='54.0' height='54.0'/>
-  <SubTexture name='shop-icon' x='360' y='560' width='54.0' height='54.0'/>
-  <SubTexture name='shop-two-icon' x='360' y='616' width='54.0' height='54.0'/>
-  <SubTexture name='shopping-basket-icon' x='360' y='672' width='54.0' height='54.0'/>
-  <SubTexture name='shopping-cart-icon' x='360' y='728' width='54.0' height='54.0'/>
-  <SubTexture name='sort-icon' x='360' y='784' width='54.0' height='54.0'/>
-  <SubTexture name='speaker-notes-icon' x='360' y='840' width='54.0' height='54.0'/>
-  <SubTexture name='spell-check-icon' x='360' y='896' width='54.0' height='54.0'/>
-  <SubTexture name='star-rate-icon' x='360' y='952' width='54.0' height='54.0'/>
-  <SubTexture name='stars-icon' x='416' y='0' width='54.0' height='54.0'/>
-  <SubTexture name='store-icon' x='416' y='56' width='54.0' height='54.0'/>
-  <SubTexture name='subject-icon' x='416' y='112' width='54.0' height='54.0'/>
-  <SubTexture name='supervisor-account-icon' x='416' y='168' width='54.0' height='54.0'/>
-  <SubTexture name='swap-horizontal-icon' x='416' y='224' width='54.0' height='54.0'/>
-  <SubTexture name='swap-vertical-circle-icon' x='416' y='280' width='54.0' height='54.0'/>
-  <SubTexture name='swap-vertical-icon' x='416' y='336' width='54.0' height='54.0'/>
-  <SubTexture name='system-update-tv-icon' x='416' y='392' width='54.0' height='54.0'/>
-  <SubTexture name='tab-icon' x='416' y='448' width='54.0' height='54.0'/>
-  <SubTexture name='tab-unselected-icon' x='416' y='504' width='54.0' height='54.0'/>
-  <SubTexture name='text-format-icon' x='416' y='560' width='54.0' height='54.0'/>
-  <SubTexture name='theaters-icon' x='416' y='616' width='54.0' height='54.0'/>
-  <SubTexture name='thumb-down-icon' x='416' y='672' width='54.0' height='54.0'/>
-  <SubTexture name='thumb-up-icon' x='416' y='728' width='54.0' height='54.0'/>
-  <SubTexture name='thumbs-up-down-icon' x='416' y='784' width='54.0' height='54.0'/>
-  <SubTexture name='timeline-icon' x='416' y='840' width='54.0' height='54.0'/>
-  <SubTexture name='toc-icon' x='416' y='896' width='54.0' height='54.0'/>
-  <SubTexture name='today-icon' x='416' y='952' width='54.0' height='54.0'/>
-  <SubTexture name='track-changes-icon' x='472' y='0' width='54.0' height='54.0'/>
-  <SubTexture name='translate-icon' x='472' y='56' width='54.0' height='54.0'/>
-  <SubTexture name='tree-disclosure-closed-icon' x='472' y='112' width='54.0' height='54.0'/>
-  <SubTexture name='tree-disclosure-open-icon' x='472' y='168' width='54.0' height='54.0'/>
-  <SubTexture name='trending-down-icon' x='472' y='224' width='54.0' height='54.0'/>
-  <SubTexture name='trending-neutral-icon' x='472' y='280' width='54.0' height='54.0'/>
-  <SubTexture name='trending-up-icon' x='472' y='336' width='54.0' height='54.0'/>
-  <SubTexture name='turned-in-icon' x='472' y='392' width='54.0' height='54.0'/>
-  <SubTexture name='turned-in-not-icon' x='472' y='448' width='54.0' height='54.0'/>
-  <SubTexture name='undo-icon' x='472' y='504' width='54.0' height='54.0'/>
-  <SubTexture name='unfold-less-icon' x='472' y='560' width='54.0' height='54.0'/>
-  <SubTexture name='unfold-more-icon' x='472' y='616' width='54.0' height='54.0'/>
-  <SubTexture name='verified-user-icon' x='472' y='672' width='54.0' height='54.0'/>
-  <SubTexture name='videocam-icon' x='472' y='728' width='54.0' height='54.0'/>
-  <SubTexture name='view-agenda-icon' x='472' y='784' width='54.0' height='54.0'/>
-  <SubTexture name='view-array-icon' x='472' y='840' width='54.0' height='54.0'/>
-  <SubTexture name='view-carousel-icon' x='472' y='896' width='54.0' height='54.0'/>
-  <SubTexture name='view-column-icon' x='472' y='952' width='54.0' height='54.0'/>
-  <SubTexture name='view-day-icon' x='528' y='0' width='54.0' height='54.0'/>
-  <SubTexture name='view-headline-icon' x='528' y='56' width='54.0' height='54.0'/>
-  <SubTexture name='view-list-icon' x='528' y='112' width='54.0' height='54.0'/>
-  <SubTexture name='view-module-icon' x='528' y='168' width='54.0' height='54.0'/>
-  <SubTexture name='view-quilt-icon' x='528' y='224' width='54.0' height='54.0'/>
-  <SubTexture name='view-stream-icon' x='528' y='280' width='54.0' height='54.0'/>
-  <SubTexture name='view-week-icon' x='528' y='336' width='54.0' height='54.0'/>
-  <SubTexture name='visibility-icon' x='528' y='392' width='54.0' height='54.0'/>
-  <SubTexture name='visibility-off-icon' x='528' y='448' width='54.0' height='54.0'/>
-  <SubTexture name='volume-down-icon' x='528' y='504' width='54.0' height='54.0'/>
-  <SubTexture name='volume-up-icon' x='528' y='560' width='54.0' height='54.0'/>
-  <SubTexture name='wallet-gift-card-icon' x='528' y='616' width='54.0' height='54.0'/>
-  <SubTexture name='wallet-membership-icon' x='528' y='672' width='54.0' height='54.0'/>
-  <SubTexture name='wallet-travel-icon' x='528' y='728' width='54.0' height='54.0'/>
-  <SubTexture name='warning-icon' x='528' y='784' width='54.0' height='54.0'/>
+  <SubTexture name='settings-applications-icon' x='304' y='504' width='54.0' height='54.0'/>
+  <SubTexture name='settings-backup-restore-icon' x='304' y='560' width='54.0' height='54.0'/>
+  <SubTexture name='settings-bluetooth-icon' x='304' y='616' width='54.0' height='54.0'/>
+  <SubTexture name='settings-cell-icon' x='304' y='672' width='54.0' height='54.0'/>
+  <SubTexture name='settings-display-icon' x='304' y='728' width='54.0' height='54.0'/>
+  <SubTexture name='settings-ethernet-icon' x='304' y='784' width='54.0' height='54.0'/>
+  <SubTexture name='settings-icon' x='304' y='840' width='54.0' height='54.0'/>
+  <SubTexture name='settings-input-antenna-icon' x='304' y='896' width='54.0' height='54.0'/>
+  <SubTexture name='settings-input-component-icon' x='304' y='952' width='54.0' height='54.0'/>
+  <SubTexture name='settings-input-composite-icon' x='360' y='0' width='54.0' height='54.0'/>
+  <SubTexture name='settings-input-hdmi-icon' x='360' y='56' width='54.0' height='54.0'/>
+  <SubTexture name='settings-input-svideo-icon' x='360' y='112' width='54.0' height='54.0'/>
+  <SubTexture name='settings-overscan-icon' x='360' y='168' width='54.0' height='54.0'/>
+  <SubTexture name='settings-phone-icon' x='360' y='224' width='54.0' height='54.0'/>
+  <SubTexture name='settings-power-icon' x='360' y='280' width='54.0' height='54.0'/>
+  <SubTexture name='settings-remote-icon' x='360' y='336' width='54.0' height='54.0'/>
+  <SubTexture name='settings-voice-icon' x='360' y='392' width='54.0' height='54.0'/>
+  <SubTexture name='share-icon' x='360' y='448' width='54.0' height='54.0'/>
+  <SubTexture name='shop-icon' x='360' y='504' width='54.0' height='54.0'/>
+  <SubTexture name='shop-two-icon' x='360' y='560' width='54.0' height='54.0'/>
+  <SubTexture name='shopping-basket-icon' x='360' y='616' width='54.0' height='54.0'/>
+  <SubTexture name='shopping-cart-icon' x='360' y='672' width='54.0' height='54.0'/>
+  <SubTexture name='sort-icon' x='360' y='728' width='54.0' height='54.0'/>
+  <SubTexture name='speaker-notes-icon' x='360' y='784' width='54.0' height='54.0'/>
+  <SubTexture name='spell-check-icon' x='360' y='840' width='54.0' height='54.0'/>
+  <SubTexture name='star-rate-icon' x='360' y='896' width='54.0' height='54.0'/>
+  <SubTexture name='stars-icon' x='360' y='952' width='54.0' height='54.0'/>
+  <SubTexture name='store-icon' x='416' y='0' width='54.0' height='54.0'/>
+  <SubTexture name='subject-icon' x='416' y='56' width='54.0' height='54.0'/>
+  <SubTexture name='supervisor-account-icon' x='416' y='112' width='54.0' height='54.0'/>
+  <SubTexture name='swap-horizontal-icon' x='416' y='168' width='54.0' height='54.0'/>
+  <SubTexture name='swap-vertical-circle-icon' x='416' y='224' width='54.0' height='54.0'/>
+  <SubTexture name='swap-vertical-icon' x='416' y='280' width='54.0' height='54.0'/>
+  <SubTexture name='system-update-tv-icon' x='416' y='336' width='54.0' height='54.0'/>
+  <SubTexture name='tab-icon' x='416' y='392' width='54.0' height='54.0'/>
+  <SubTexture name='tab-unselected-icon' x='416' y='448' width='54.0' height='54.0'/>
+  <SubTexture name='text-format-icon' x='416' y='504' width='54.0' height='54.0'/>
+  <SubTexture name='theaters-icon' x='416' y='560' width='54.0' height='54.0'/>
+  <SubTexture name='thumb-down-icon' x='416' y='616' width='54.0' height='54.0'/>
+  <SubTexture name='thumb-up-icon' x='416' y='672' width='54.0' height='54.0'/>
+  <SubTexture name='thumbs-up-down-icon' x='416' y='728' width='54.0' height='54.0'/>
+  <SubTexture name='timeline-icon' x='416' y='784' width='54.0' height='54.0'/>
+  <SubTexture name='toc-icon' x='416' y='840' width='54.0' height='54.0'/>
+  <SubTexture name='today-icon' x='416' y='896' width='54.0' height='54.0'/>
+  <SubTexture name='track-changes-icon' x='416' y='952' width='54.0' height='54.0'/>
+  <SubTexture name='translate-icon' x='472' y='0' width='54.0' height='54.0'/>
+  <SubTexture name='tree-disclosure-closed-icon' x='472' y='56' width='54.0' height='54.0'/>
+  <SubTexture name='tree-disclosure-open-icon' x='472' y='112' width='54.0' height='54.0'/>
+  <SubTexture name='trending-down-icon' x='472' y='168' width='54.0' height='54.0'/>
+  <SubTexture name='trending-neutral-icon' x='472' y='224' width='54.0' height='54.0'/>
+  <SubTexture name='trending-up-icon' x='472' y='280' width='54.0' height='54.0'/>
+  <SubTexture name='turned-in-icon' x='472' y='336' width='54.0' height='54.0'/>
+  <SubTexture name='turned-in-not-icon' x='472' y='392' width='54.0' height='54.0'/>
+  <SubTexture name='undo-icon' x='472' y='448' width='54.0' height='54.0'/>
+  <SubTexture name='unfold-less-icon' x='472' y='504' width='54.0' height='54.0'/>
+  <SubTexture name='unfold-more-icon' x='472' y='560' width='54.0' height='54.0'/>
+  <SubTexture name='verified-user-icon' x='472' y='616' width='54.0' height='54.0'/>
+  <SubTexture name='videocam-icon' x='472' y='672' width='54.0' height='54.0'/>
+  <SubTexture name='view-agenda-icon' x='472' y='728' width='54.0' height='54.0'/>
+  <SubTexture name='view-array-icon' x='472' y='784' width='54.0' height='54.0'/>
+  <SubTexture name='view-carousel-icon' x='472' y='840' width='54.0' height='54.0'/>
+  <SubTexture name='view-column-icon' x='472' y='896' width='54.0' height='54.0'/>
+  <SubTexture name='view-day-icon' x='472' y='952' width='54.0' height='54.0'/>
+  <SubTexture name='view-headline-icon' x='528' y='0' width='54.0' height='54.0'/>
+  <SubTexture name='view-list-icon' x='528' y='56' width='54.0' height='54.0'/>
+  <SubTexture name='view-module-icon' x='528' y='112' width='54.0' height='54.0'/>
+  <SubTexture name='view-quilt-icon' x='528' y='168' width='54.0' height='54.0'/>
+  <SubTexture name='view-stream-icon' x='528' y='224' width='54.0' height='54.0'/>
+  <SubTexture name='view-week-icon' x='528' y='280' width='54.0' height='54.0'/>
+  <SubTexture name='visibility-icon' x='528' y='336' width='54.0' height='54.0'/>
+  <SubTexture name='visibility-off-icon' x='528' y='392' width='54.0' height='54.0'/>
+  <SubTexture name='volume-down-icon' x='528' y='448' width='54.0' height='54.0'/>
+  <SubTexture name='volume-up-icon' x='528' y='504' width='54.0' height='54.0'/>
+  <SubTexture name='wallet-gift-card-icon' x='528' y='560' width='54.0' height='54.0'/>
+  <SubTexture name='wallet-membership-icon' x='528' y='616' width='54.0' height='54.0'/>
+  <SubTexture name='wallet-travel-icon' x='528' y='672' width='54.0' height='54.0'/>
+  <SubTexture name='warning-icon' x='528' y='728' width='54.0' height='54.0'/>
+  <SubTexture name='watch-icon' x='528' y='784' width='54.0' height='54.0'/>
   <SubTexture name='whats-hot-icon' x='528' y='840' width='54.0' height='54.0'/>
   <SubTexture name='3d-rotation-icon' x='528' y='896' width='54.0' height='54.0'/>
   <SubTexture name='cached-icon' x='528' y='952' width='54.0' height='54.0'/>
@@ -292,14 +292,15 @@
   <SubTexture name='search-icon' x='976' y='728' width='54.0' height='54.0'/>
   <SubTexture name='select-all-icon' x='976' y='784' width='54.0' height='54.0'/>
   <SubTexture name='send-icon' x='976' y='840' width='54.0' height='54.0'/>
-  <SubTexture name='seek-slider-thumb-down' x='976' y='896' width='50.0' height='50.0'/>
-  <SubTexture name='slider-thumb-up' x='976' y='948' width='50.0' height='50.0'/>
-  <SubTexture name='seek-slider-thumb-up' x='1032' y='0' width='50.0' height='50.0'/>
-  <SubTexture name='slider-thumb-disabled' x='1084' y='0' width='50.0' height='50.0'/>
-  <SubTexture name='slider-thumb-down' x='1136' y='0' width='50.0' height='50.0'/>
-  <SubTexture name='toggle-switch-thumb-on' x='1188' y='0' width='48.0' height='50.0'/>
-  <SubTexture name='toggle-switch-thumb-disabled' x='1238' y='0' width='48.0' height='50.0'/>
-  <SubTexture name='toggle-switch-thumb-off' x='1288' y='0' width='48.0' height='50.0'/>
+  <SubTexture name='sensor-icon' x='976' y='896' width='54.0' height='54.0'/>
+  <SubTexture name='seek-slider-thumb-down' x='976' y='952' width='50.0' height='50.0'/>
+  <SubTexture name='slider-thumb-up' x='1032' y='0' width='50.0' height='50.0'/>
+  <SubTexture name='seek-slider-thumb-up' x='1084' y='0' width='50.0' height='50.0'/>
+  <SubTexture name='slider-thumb-disabled' x='1136' y='0' width='50.0' height='50.0'/>
+  <SubTexture name='slider-thumb-down' x='1188' y='0' width='50.0' height='50.0'/>
+  <SubTexture name='toggle-switch-thumb-on' x='1240' y='0' width='48.0' height='50.0'/>
+  <SubTexture name='toggle-switch-thumb-disabled' x='1290' y='0' width='48.0' height='50.0'/>
+  <SubTexture name='toggle-switch-thumb-off' x='1340' y='0' width='48.0' height='50.0'/>
   <SubTexture name='search-input-icon-up' x='148' y='618' width='39.0' height='60.0'/>
   <SubTexture name='search-input-icon-focused' x='148' y='700' width='39.0' height='60.0'/>
   <SubTexture name='list-item-selected' x='1032' y='52' width='20.0' height='100.0'/>
@@ -313,21 +314,21 @@
   <SubTexture name='list-drop-down-item-up' x='1032' y='868' width='20.0' height='100.0'/>
   <SubTexture name='list-item-down' x='1054' y='52' width='20.0' height='100.0'/>
   <SubTexture name='toggle-switch-track-on' x='0' y='996' width='70.0' height='28.0'/>
-  <SubTexture name='toggle-switch-track-off' x='1338' y='0' width='70.0' height='28.0'/>
-  <SubTexture name='toggle-switch-track-disabled' x='1410' y='0' width='70.0' height='28.0'/>
-  <SubTexture name='picker-list-list-background' x='1482' y='0' width='39.0' height='50.0'/>
-  <SubTexture name='check-up-icon' x='1523' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='radio-selected-up-icon' x='1565' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='radio-disabled-icon' x='1607' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='radio-up-icon' x='1649' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='radio-selected-disabled-icon' x='1691' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='radio-down-icon' x='1733' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='check-down-icon' x='1775' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='check-selected-disabled-icon' x='1817' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='check-selected-down-icon' x='1859' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='check-selected-up-icon' x='1901' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='radio-selected-down-icon' x='1943' y='0' width='40.0' height='40.0'/>
-  <SubTexture name='check-disabled-icon' x='1985' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='toggle-switch-track-off' x='1390' y='0' width='70.0' height='28.0'/>
+  <SubTexture name='toggle-switch-track-disabled' x='1462' y='0' width='70.0' height='28.0'/>
+  <SubTexture name='picker-list-list-background' x='1534' y='0' width='39.0' height='50.0'/>
+  <SubTexture name='check-up-icon' x='1575' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='radio-selected-up-icon' x='1617' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='radio-disabled-icon' x='1659' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='radio-up-icon' x='1701' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='radio-selected-disabled-icon' x='1743' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='radio-down-icon' x='1785' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='check-down-icon' x='1827' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='check-selected-disabled-icon' x='1869' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='check-selected-down-icon' x='1911' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='check-selected-up-icon' x='1953' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='radio-selected-down-icon' x='1995' y='0' width='40.0' height='40.0'/>
+  <SubTexture name='check-disabled-icon' x='1076' y='52' width='40.0' height='40.0'/>
   <SubTexture name='background-header-shadow' x='1054' y='154' width='10.0' height='157.0'/>
   <SubTexture name='play-filled-icon' x='153' y='90' width='36.0' height='36.0'/>
   <SubTexture name='play-outline-icon' x='153' y='128' width='36.0' height='36.0'/>
@@ -352,9 +353,9 @@
   <SubTexture name='picker-list-button-icon' x='148' y='762' width='25.0' height='14.0'/>
   <SubTexture name='battery-bad-icon' x='174' y='898' width='12.0' height='24.0'/>
   <SubTexture name='battery-unknown-icon' x='174' y='930' width='12.0' height='24.0'/>
-  <SubTexture name='battery-ok-icon' x='976' y='1000' width='12.0' height='24.0'/>
-  <SubTexture name='battery-alert-icon' x='990' y='1000' width='12.0' height='24.0'/>
-  <SubTexture name='scroll-bar-vertical' x='2027' y='0' width='6.0' height='46.0'/>
+  <SubTexture name='battery-ok-icon' x='1032' y='970' width='12.0' height='24.0'/>
+  <SubTexture name='battery-alert-icon' x='1032' y='996' width='12.0' height='24.0'/>
+  <SubTexture name='scroll-bar-vertical' x='2037' y='0' width='6.0' height='46.0'/>
   <SubTexture name='scroll-bar-horizontal' x='102' y='1018' width='46.0' height='6.0'/>
   <SubTexture name='background-header' x='90' y='980' width='10.0' height='10.0'/>
   <SubTexture name='background-plain' x='175' y='680' width='10.0' height='10.0'/>

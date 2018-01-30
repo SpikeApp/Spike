@@ -1,7 +1,5 @@
 package ui
 {
-	import ui.screens.data.AlarmNavigatorData;
-	
 	import events.ScreenEvent;
 	
 	import feathers.controls.Drawers;
@@ -20,12 +18,12 @@ package ui
 	import ui.screens.AlarmsCustomizerSettingsScreen;
 	import ui.screens.AlarmsSettingsScreen;
 	import ui.screens.AlertTypesListScreen;
+	import ui.screens.BugReportScreen;
 	import ui.screens.ChartScreen;
 	import ui.screens.ChartSettingsScreen;
 	import ui.screens.DisclaimerScreen;
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
-	import ui.screens.BugReportScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
 	import ui.screens.Screens;
@@ -35,6 +33,8 @@ package ui
 	import ui.screens.SpeechSettingsScreen;
 	import ui.screens.TransmitterScreen;
 	import ui.screens.TransmitterSettingsScreen;
+	import ui.screens.WatchSettingsScreen;
+	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.menu.MenuList;
 	
 	public class AppInterface extends Sprite 
@@ -154,17 +154,22 @@ package ui
 			shareSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_SHARE, shareSettingsScreenItem );
 			
-			/* Logging/Tracing Settings Screen */
-			var bugReportScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BugReportScreen );
-			bugReportScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
-			bugReportScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
-			bugReportScreenItem.addPopEvent(Event.COMPLETE);
-			navigator.addScreen( Screens.SETTINGS_BUG_REPORT, bugReportScreenItem );
+			/* About Settings Screen */
+			var watchSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( WatchSettingsScreen );
+			watchSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_APPLE_WATCH, watchSettingsScreenItem );
 			
 			/* About Settings Screen */
 			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutSettingsScreen );
 			aboutSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_ABOUT, aboutSettingsScreenItem );
+			
+			/* Bug Report Screen */
+			var bugReportScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BugReportScreen );
+			bugReportScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			bugReportScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			bugReportScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_BUG_REPORT, bugReportScreenItem );
 			
 			/* Disclaimer Screen */
 			var disclaimerScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( DisclaimerScreen );

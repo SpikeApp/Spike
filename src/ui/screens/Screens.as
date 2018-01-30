@@ -19,6 +19,7 @@ package ui.screens
 		public static const SETTINGS_SPEECH:String = "speechSettings";
 		public static const SETTINGS_SHARE:String = "shareSettings";
 		public static const SETTINGS_TRANSMITTER:String = "transmitterSettings";
+		public static const SETTINGS_APPLE_WATCH:String = "appleWatchSettings";
 		public static const DISCLAIMER:String = "disclaimer";
 	}
 }

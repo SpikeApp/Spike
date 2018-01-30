@@ -153,10 +153,12 @@ package services
 				var glucoseReading:BgReading = ModelLocator.bgReadings[i] as BgReading;
 				
 				if (glucoseReading.timestamp > lastGlucoseReadingsSyncTimeStamp) 
+				{
 					if (glucoseReading.calculatedValue != 0) 
 						activeGlucoseReadings.push(createGlucoseReading(glucoseReading));
-					else 
-						break;
+				}
+				else 
+					break;
 			}
 			
 			Trace.myTrace("NightscoutServiceEnhanced.as", "Number of initial readings to upload: " + activeGlucoseReadings.length);

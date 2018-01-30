@@ -189,11 +189,11 @@ package services
 				myTrace("in onLoadSuccess, no data.version");
 				return;
 			}
-			if (!data.changelog == null) {
+			if (data.changelog == null) {
 				myTrace("in onLoadSuccess, no data.changelog");
 				return;
 			}
-			if (!data.url == null) {
+			if (data.url == null) {
 				myTrace("in onLoadSuccess, no data.url");
 				return;
 			}

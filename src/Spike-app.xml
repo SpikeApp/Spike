@@ -20,7 +20,7 @@
 	<!-- A universally unique application identifier. Must be unique across 
 		all AIR applications. Using a reverse DNS-style name as the id is recommended. 
 		(Eg. com.example.ExampleApplication.) Required. -->
-	<id>net.johandegraeve.iosxdripreader</id>
+	<id>com.spike-app.spike</id>
 
 	<!-- Used as the filename for the application. Required. -->
 	<filename>Spike</filename>
@@ -206,18 +206,19 @@
 
 	<!-- iOS specific capabilities -->
 	<iPhone>
+		<assetsCar>Assets.car</assetsCar>
 		<!-- A list of plist key/value pairs to be added to the application Info.plist -->
 		<InfoAdditions>
 			<![CDATA[<key>UIViewControllerBasedStatusBarAppearance</key><false/>]]>
     		<![CDATA[<key>UIStatusBarStyle</key><string>UIStatusBarStyleLightContent</string>]]>
             <![CDATA[
-                  <key>UIDeviceFamily</key>
+                <key>UIDeviceFamily</key>
                 <array>
                     <string>1</string>
                     <string>2</string>
                 </array>
                 <key>MinimumOSVersion</key>
-                <string>8.1.4</string>
+                <string>8.1</string>
                 <key>UIBackgroundModes</key>
 				<array>
 					<string>bluetooth-central</string>
@@ -241,17 +242,19 @@
       					<string>healthkit</string>
 					</array>
 				<key>ITSAppUsesNonExemptEncryption</key><false/>
+				<key>NSCalendarsUsageDescription</key>
+				<string>Access to calendar is required.</string>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
 		<Entitlements> <![CDATA[
 		<key>application-identifier</key>
-		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
+		<string>AGW6KV7M2W.com.spike-app.spike</string>
 		<key>com.apple.developer.healthkit</key>
 		<true/>
 		<key>keychain-access-groups</key>
 		<array>
-		<string>8DKSZ5HNLB.*</string>
+		<string>AGW6KV7M2W.*</string>
 		</array>
 		
 		
@@ -283,11 +286,14 @@
 	<!-- End of the schema for adding the android specific tags in AndroidManifest.xml 
 		file -->
 	<extensions>
-		<extensionID>com.distriqt.BluetoothLE</extensionID>
-		<extensionID>com.distriqt.Notifications</extensionID>
-		<extensionID>com.distriqt.Core</extensionID>
-		<extensionID>com.distriqt.NetworkInfo</extensionID>
-		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
 		<extensionID>adobe.nativeExtension.3DiOS</extensionID>
+		<extensionID>com.distriqt.BluetoothLE</extensionID>
+		<extensionID>com.distriqt.Calendar</extensionID>
+		<extensionID>com.distriqt.Core</extensionID>
+		<extensionID>com.distriqt.Exceptions</extensionID>
+		<extensionID>com.distriqt.Memory</extensionID>
+		<extensionID>com.distriqt.NetworkInfo</extensionID>
+		<extensionID>com.distriqt.Notifications</extensionID>
+		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
     </extensions>
 </application>

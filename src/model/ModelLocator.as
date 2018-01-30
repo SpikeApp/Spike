@@ -50,6 +50,7 @@ package model
 	import services.TextToSpeech;
 	import services.TransmitterService;
 	import services.UpdateService;
+	import services.WatchService;
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
@@ -166,6 +167,7 @@ package model
 					//Start rendering interface now that all data is available
 					AppInterface.instance.init();
 							
+					DeepSleepService.init();
 					Database.getBlueToothDevice();
 					TransmitterService.init();
 					BluetoothService.init();
@@ -180,20 +182,20 @@ package model
 					//set AVAudioSession to AVAudioSessionCategoryPlayback with optoin AVAudioSessionCategoryOptionMixWithOthers
 					//this ensures that texttospeech and playsound work also in background
 					BackgroundFetch.setAvAudioSessionCategory(true);
-							
+					
+					WatchService.init();
 					AlarmService.init();
 					HealthKitService.init();
-							
 					NightscoutServiceEnhanced.init();
 					DexcomShareServiceEnhanced.init();
 					TextToSpeech.init();
-					DeepSleepService.init();
+					
 					RemoteAlertService.init();
 							
 					if (!TEST_FLIGHT_MODE) 
 						UpdateService.init();
 							
-					updateApplicationVersion();		
+					updateApplicationVersion();	
 				}
 			}
 		}

@@ -46,7 +46,6 @@ package services
 		/* Constants */
 		private static const US_SHARE_URL:String = "https://share2.dexcom.com/ShareWebServices/Services/";
 		private static const INTERNATIONAL_SHARE_URL:String = "https://shareous1.dexcom.com/ShareWebServices/Services/";
-		//private static const APPLICATION_ID:String = "d8665ade-9673-4e27-9ff6-92db4ce13d13";
 		private static const APPLICATION_ID:String = "13A907FB-AC7E-4F90-B4EC-2F2B8BE1C607";
 		private static const MODE_GLUCOSE_READING:String = "glucoseReading";
 		private static const MODE_TEST_CREDENTIALS:String = "testCredentials";
@@ -315,10 +314,12 @@ package services
 				var glucoseReading:BgReading = ModelLocator.bgReadings[i] as BgReading;
 				
 				if (glucoseReading.timestamp > lastGlucoseReadingsSyncTimeStamp && now - glucoseReading.timestamp < 24 * 3600 * 1000) 
+				{
 					if (glucoseReading.calculatedValue != 0) 
 						activeGlucoseReadings.push(createGlucoseReading(glucoseReading));
-					else
-						break;
+				}
+				else
+					break;
 			}
 			
 			if (activeGlucoseReadings.length > 0)
