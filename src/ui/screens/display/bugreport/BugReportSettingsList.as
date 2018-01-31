@@ -308,7 +308,7 @@ package ui.screens.display.bugreport
 						var emailBody:String = "";
 						emailBody += "<p><b>Name:</b> " + nameField.text + "</br>";
 						emailBody += "<b>Email:</b> " + emailField.text + "</br>";
-						emailBody += "<b>Message:</b> " + messageField.text;
+						emailBody += "<b>Message:</b> " + messageField.text + "</p>";
 						
 						var vars:URLVariables = new URLVariables();
 						vars.fileName = fileName;
@@ -385,6 +385,7 @@ package ui.screens.display.bugreport
 			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
 			
 			var response:Object = loader.data;
+			loader = null;
 			
 			if (response.success == "true")
 			{

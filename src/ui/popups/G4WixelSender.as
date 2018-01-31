@@ -207,6 +207,7 @@ package ui.popups
 			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
 			
 			var response:Object = loader.data;
+			loader = null;
 			
 			if (response.success == "true")
 			{

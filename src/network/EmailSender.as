@@ -16,6 +16,7 @@ package network
 	{
 		/* Constants */
 		public static const TRANSMISSION_URL_WITH_ATTACHMENT:String = "https://spike-app.com/sparkpost/transmission_with_attachment.php";
+		public static const TRANSMISSION_URL_NO_ATTACHMENT:String = "https://spike-app.com/sparkpost/transmission.php";
 		public static const MODE_EMAIL_SUPPORT:String = "emailToSupport";
 		public static const MODE_EMAIL_USER:String = "emailToUser";
 		

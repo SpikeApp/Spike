@@ -25,7 +25,7 @@ package services
 	public class WatchService
 	{
 		/* Constants */
-		private static const TIME_5_MINUTES:int = (5 * 60 * 1000) + 6000;
+		private static const TIME_5_MINUTES:int = (5 * 60 * 1000) + 7000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		
