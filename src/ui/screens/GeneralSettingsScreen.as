@@ -58,7 +58,7 @@ package ui.screens
 			title = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','general_settings_title');
 			
 			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.settingsApplicationsTexture);
+			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.generalSettingsTexture);
 			iconContainer = new <DisplayObject>[icon];
 			headerProperties.rightItems = iconContainer;
 		}

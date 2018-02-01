@@ -212,7 +212,7 @@ package ui.screens.display.bugreport
 			else valueToSave = "false";
 			
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED, valueToSave);
-			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, valueToSave);
+			//LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, valueToSave);
 			
 			reloadTraceSettings(isTraceEnabled);
 			

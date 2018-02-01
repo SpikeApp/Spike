@@ -33,6 +33,7 @@ package ui.screens.display.settings.main
 		private var shareIconImage:Image;
 		private var watchIconImage:Image;
 		private var appInfoIconImage:Image;
+		private var integrationIconImage:Image;
 		
 		public function SettingsList()
 		{
@@ -69,6 +70,7 @@ package ui.screens.display.settings.main
 			alarmsIconImage = new Image(chevronIconTexture);
 			speechIconImage = new Image(chevronIconTexture);
 			shareIconImage = new Image(chevronIconTexture);
+			integrationIconImage = new Image(chevronIconTexture);
 			watchIconImage = new Image(chevronIconTexture);
 			appInfoIconImage = new Image(chevronIconTexture);
 			
@@ -81,6 +83,7 @@ package ui.screens.display.settings.main
 					{ screen: Screens.SETTINGS_ALARMS, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','alarms_settings_title'), accessory: alarmsIconImage },
 					{ screen: Screens.SETTINGS_SPEECH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','speech_settings_title'), accessory: speechIconImage },
 					{ screen: Screens.SETTINGS_SHARE, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','share_settings_title'), accessory: shareIconImage },
+					{ screen: Screens.SETTINGS_INTEGRATION, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','integration_settings_title'), accessory: integrationIconImage },
 					{ screen: Screens.SETTINGS_APPLE_WATCH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','watch_settings_title'), accessory: watchIconImage },
 					{ screen: Screens.SETTINGS_ABOUT, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','about_settings_title'), accessory: appInfoIconImage }
 				]);
@@ -148,6 +151,11 @@ package ui.screens.display.settings.main
 			{
 				shareIconImage.dispose();
 				shareIconImage = null;
+			}
+			if(integrationIconImage != null)
+			{
+				integrationIconImage.dispose();
+				integrationIconImage = null;
 			}
 			if(watchIconImage != null)
 			{

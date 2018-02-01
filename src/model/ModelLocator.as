@@ -44,6 +44,7 @@ package model
 	import services.DeepSleepService;
 	import services.DexcomShareServiceEnhanced;
 	import services.HealthKitService;
+	import services.LoopService;
 	import services.NightscoutServiceEnhanced;
 	import services.NotificationService;
 	import services.RemoteAlertService;
@@ -185,11 +186,11 @@ package model
 					
 					WatchService.init();
 					AlarmService.init();
+					LoopService.init();
 					HealthKitService.init();
 					NightscoutServiceEnhanced.init();
 					DexcomShareServiceEnhanced.init();
 					TextToSpeech.init();
-					
 					RemoteAlertService.init();
 							
 					if (!TEST_FLIGHT_MODE) 

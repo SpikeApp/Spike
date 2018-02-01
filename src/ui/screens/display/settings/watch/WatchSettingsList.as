@@ -433,6 +433,12 @@ package ui.screens.display.settings.watch
 				instructionsTitleLabel = null;
 			}
 			
+			if (instructionsDescriptionLabel != null)
+			{
+				instructionsDescriptionLabel.dispose();
+				instructionsDescriptionLabel = null;
+			}
+			
 			if (displayNameToggle != null)
 			{
 				displayNameToggle.removeEventListener(Event.CHANGE, onSettingsChanged);

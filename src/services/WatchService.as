@@ -269,16 +269,31 @@ package services
 			processQueue();
 		}
 		
-		private static function onSettingsChanged(event:SettingsServiceEvent):void
+		private static function onSettingsChanged(e:SettingsServiceEvent):void
 		{
-			getInitialProperties();
+			if (e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_ON || 
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_NAME_ON || 
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_NAME ||
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_SELECTED_CALENDAR_ID ||
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_TREND ||
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA ||
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS ||
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY
+			)
+				getInitialProperties();
+			else
+				return;
+				
 			if (Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED && watchComplicationEnabled && calendarID != "")
 			{
 				if (!serviceActive)
 					activateService();
 			}
 			else
-				deactivateService();
+			{
+				if (serviceActive)
+					deactivateService();
+			}
 		}
 	}
 }

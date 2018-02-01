@@ -269,7 +269,7 @@ package ui
 				if (response.success == "true")
 					Trace.myTrace("interfaceController.as", "Crash report sent successfully!");
 				else
-					Trace.myTrace("interfaceController.as", "Error sending crash report! Error: " + response.statuscode);
+					Trace.myTrace("interfaceController.as", "Error sending crash report! Error code: " + response.statuscode);
 			} 
 		}
 		

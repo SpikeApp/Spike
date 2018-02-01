@@ -24,6 +24,7 @@ package ui
 	import ui.screens.DisclaimerScreen;
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
+	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
 	import ui.screens.Screens;
@@ -154,7 +155,12 @@ package ui
 			shareSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_SHARE, shareSettingsScreenItem );
 			
-			/* About Settings Screen */
+			/* Integration Settings Screen */
+			var integrationSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( IntegrationSettingsScreen );
+			integrationSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_INTEGRATION, integrationSettingsScreenItem );
+			
+			/* Watch Settings Screen */
 			var watchSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( WatchSettingsScreen );
 			watchSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_APPLE_WATCH, watchSettingsScreenItem );
