@@ -13,6 +13,7 @@ package ui.screens
 		public static const SETTINGS_MAIN:String = "mainSettings";
 		public static const SETTINGS_GENERAL:String = "generalSettings";
 		public static const SETTINGS_CHART:String = "chartSettings";
+		public static const SETTINGS_WIDGET:String = "widgetSettings";
 		public static const SETTINGS_ALARMS:String = "alarmsSettings";
 		public static const SETTINGS_ALARMS_CUSTOMIZER:String = "alarmsCustomizer";
 		public static const SETTINGS_ALERT_TYPES_LIST:String = "alertTypesList";

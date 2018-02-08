@@ -1,4 +1,4 @@
-package ui.screens.display.settings.chart
+package ui.screens.display.settings.general
 {
 	import database.CommonSettings;
 	
@@ -18,7 +18,7 @@ package ui.screens.display.settings.chart
 	
 	import utils.Constants;
 	
-	[ResourceBundle("chartsettingsscreen")]
+	[ResourceBundle("generalsettingsscreen")]
 
 	public class DateSettingsList extends List 
 	{
@@ -59,7 +59,7 @@ package ui.screens.display.settings.chart
 			dateFormatPicker = LayoutFactory.createPickerList();
 			
 			/* Set DateFormatPicker Data */
-			var dateFormatLabelsList:Array = ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_date_formats_desc').split(",");
+			var dateFormatLabelsList:Array = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','chart_date_formats_desc').split(",");
 			var dateFormatList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < dateFormatLabelsList.length; i++) 
 			{
@@ -86,7 +86,7 @@ package ui.screens.display.settings.chart
 			/* Set Date Settings Content */
 			dataProvider = new ArrayCollection(
 				[
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_date_format_label'), accessory: dateFormatPicker }
+					{ text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','chart_date_format_label'), accessory: dateFormatPicker }
 				]);
 		}
 		

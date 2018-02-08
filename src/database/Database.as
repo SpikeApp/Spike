@@ -28,7 +28,6 @@ package database
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
-	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;

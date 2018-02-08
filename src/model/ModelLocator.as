@@ -52,6 +52,7 @@ package model
 	import services.TransmitterService;
 	import services.UpdateService;
 	import services.WatchService;
+	import services.WidgetService;
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
@@ -184,6 +185,7 @@ package model
 					//this ensures that texttospeech and playsound work also in background
 					BackgroundFetch.setAvAudioSessionCategory(true);
 					
+					WidgetService.init();
 					WatchService.init();
 					AlarmService.init();
 					LoopService.init();
@@ -196,7 +198,7 @@ package model
 					if (!TEST_FLIGHT_MODE) 
 						UpdateService.init();
 							
-					updateApplicationVersion();	
+					updateApplicationVersion();
 				}
 			}
 		}

@@ -36,6 +36,7 @@ package ui.screens.display.settings.chart
 		private var chartFontColorPicker:ColorPicker;
 		private var axisFontColorPicker:ColorPicker;
 		private var pieChartFontColorPicker:ColorPicker;
+		private var oldDataColorPicker:ColorPicker;
 		private var _parent:PanelScreen
 		private var resetColors:Button;
 		
@@ -51,6 +52,7 @@ package ui.screens.display.settings.chart
 		private var chartFontColorValue:uint;
 		private var axisFontColorValue:uint;
 		private var pieChartFontColorValue:uint;
+		private var oldDataColorValue:uint;
 		
 		public function ColorSettingsList(parentDisplayObject:PanelScreen)
 		{
@@ -58,10 +60,9 @@ package ui.screens.display.settings.chart
 			
 			this._parent = parentDisplayObject;
 			
-			setupObjects();
 			setupProperties();
+			setupInitialContent();
 			setupContent();
-			stupInitialState();
 		}
 		
 		/**
@@ -69,8 +70,7 @@ package ui.screens.display.settings.chart
 		 */
 		private function setupObjects():void
 		{	
-			//Initialize Objects
-			colorPickers = [];
+			
 		}
 		
 		private function setupProperties():void
@@ -82,12 +82,30 @@ package ui.screens.display.settings.chart
 			hasElasticEdges = false;
 			paddingBottom = 5;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			//Initialize Objects
+			colorPickers = [];
+		}
+		
+		private function setupInitialContent():void
+		{
+			/* Get Colors From Database */
+			urgentHighColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_HIGH_COLOR));
+			highColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_HIGH_COLOR));
+			inRangeColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_IN_RANGE_COLOR));
+			lowColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR));
+			urgentLowColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR));
+			oldDataColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR));
+			axisColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_COLOR));
+			chartFontColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_FONT_COLOR));
+			axisFontColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_COLOR));
+			pieChartFontColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_PIE_CHART_FONT_COLOR));
 		}
 		
 		private function setupContent():void
 		{
 			//Urgent High Color Picker
-			urgentHighColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			urgentHighColorPicker = new ColorPicker(20, urgentHighColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
 			urgentHighColorPicker.name = "urgentHighColor";
 			urgentHighColorPicker.pivotX = 3;
 			urgentHighColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -96,7 +114,7 @@ package ui.screens.display.settings.chart
 			colorPickers.push(urgentHighColorPicker);
 			
 			//High Color Picker
-			highColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			highColorPicker = new ColorPicker(20, highColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
 			highColorPicker.name = "highColor";
 			highColorPicker.pivotX = 3;
 			highColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -105,7 +123,7 @@ package ui.screens.display.settings.chart
 			colorPickers.push(highColorPicker);
 			
 			//In Range Color Picker
-			inRangeColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			inRangeColorPicker = new ColorPicker(20, inRangeColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
 			inRangeColorPicker.name = "inRangeColor";
 			inRangeColorPicker.pivotX = 3;
 			inRangeColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -114,7 +132,7 @@ package ui.screens.display.settings.chart
 			colorPickers.push(inRangeColorPicker);
 			
 			//Low Color Picker
-			lowColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			lowColorPicker = new ColorPicker(20, lowColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
 			lowColorPicker.name = "lowColor";
 			lowColorPicker.pivotX = 3;
 			lowColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -123,7 +141,7 @@ package ui.screens.display.settings.chart
 			colorPickers.push(lowColorPicker);
 			
 			//Urgent Low Color Picker
-			urgentLowColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			urgentLowColorPicker = new ColorPicker(20, urgentLowColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			urgentLowColorPicker.name = "urgentLowColor";
 			urgentLowColorPicker.pivotX = 3;
 			urgentLowColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -131,8 +149,17 @@ package ui.screens.display.settings.chart
 			urgentLowColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 			colorPickers.push(urgentLowColorPicker);
 			
+			//Old Data Color Picker
+			oldDataColorPicker = new ColorPicker(20, oldDataColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			oldDataColorPicker.name = "oldDataColor";
+			oldDataColorPicker.pivotX = 3;
+			oldDataColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			oldDataColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			oldDataColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			colorPickers.push(oldDataColorPicker);
+			
 			//Axis Color Picker
-			axisColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			axisColorPicker = new ColorPicker(20, axisColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			axisColorPicker.name = "axisColor";
 			axisColorPicker.pivotX = 3;
 			axisColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -141,7 +168,7 @@ package ui.screens.display.settings.chart
 			colorPickers.push(axisColorPicker);
 			
 			//Chart Font Color Picker
-			chartFontColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			chartFontColorPicker = new ColorPicker(20, chartFontColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			chartFontColorPicker.name = "chartFontColor";
 			chartFontColorPicker.pivotX = 3;
 			chartFontColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -150,7 +177,7 @@ package ui.screens.display.settings.chart
 			colorPickers.push(chartFontColorPicker);
 			
 			//Axis Font Color Picker
-			axisFontColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			axisFontColorPicker = new ColorPicker(20, axisFontColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			axisFontColorPicker.name = "axisFontColor";
 			axisFontColorPicker.pivotX = 3;
 			axisFontColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -159,7 +186,7 @@ package ui.screens.display.settings.chart
 			colorPickers.push(axisFontColorPicker);
 			
 			//Pie Chart Font Color Picker
-			pieChartFontColorPicker = new ColorPicker(20, 0x20222a, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			pieChartFontColorPicker = new ColorPicker(20, pieChartFontColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			pieChartFontColorPicker.name = "pieChartFontColor";
 			pieChartFontColorPicker.pivotX = 3;
 			pieChartFontColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -189,37 +216,13 @@ package ui.screens.display.settings.chart
 					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','in_range_title'), accessory: inRangeColorPicker },
 					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','low_title'), accessory: lowColorPicker },
 					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker },
+					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','old_data_title'), accessory: oldDataColorPicker },
 					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_title'), accessory: axisColorPicker },
 					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_font_title'), accessory: chartFontColorPicker },
 					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_title'), accessory: axisFontColorPicker },
 					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_chart_font_title'), accessory: pieChartFontColorPicker },
 					{ text: "", accessory: resetColors },
 				]);
-		}
-		
-		private function stupInitialState():void
-		{
-			/* Get Colors From Database */
-			urgentHighColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_HIGH_COLOR));
-			highColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_HIGH_COLOR));
-			inRangeColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_IN_RANGE_COLOR));
-			lowColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR));
-			urgentLowColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR));
-			axisColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_COLOR));
-			chartFontColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_FONT_COLOR));
-			axisFontColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_COLOR));
-			pieChartFontColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_PIE_CHART_FONT_COLOR));
-			
-			/* Set Color In Color Pickers */
-			urgentHighColorPicker.setColor(urgentHighColorValue);
-			highColorPicker.setColor(highColorValue);
-			inRangeColorPicker.setColor(inRangeColorValue);
-			lowColorPicker.setColor(lowColorValue);
-			urgentLowColorPicker.setColor(urgentLowColorValue);
-			axisColorPicker.setColor(axisColorValue);
-			chartFontColorPicker.setColor(chartFontColorValue);
-			axisFontColorPicker.setColor(axisFontColorValue);
-			pieChartFontColorPicker.setColor(pieChartFontColorValue);
 		}
 		
 		public function save():void
@@ -238,6 +241,9 @@ package ui.screens.display.settings.chart
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR) != String(urgentLowColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR, String(urgentLowColorValue));
+			
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR) != String(oldDataColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR, String(oldDataColorValue));
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_COLOR) != String(axisColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_COLOR, String(axisColorValue));
@@ -278,6 +284,10 @@ package ui.screens.display.settings.chart
 			//Urgent Low Color Picker
 			urgentLowColorPicker.setColor(0xFF0000);
 			urgentLowColorValue = 0xFF0000;
+			
+			//Old Data Color Picker
+			oldDataColorPicker.setColor(0xABABAB);
+			oldDataColorValue = 0xABABAB;
 			
 			//Axis Color Picker
 			axisColorPicker.setColor(0xEEEEEE);
@@ -359,6 +369,14 @@ package ui.screens.display.settings.chart
 					needsSave = true;
 				}
 			}
+			else if(currentTargetName == "oldDataColor")
+			{
+				if(oldDataColorPicker.value != oldDataColorValue)
+				{
+					oldDataColorValue = oldDataColorPicker.value;
+					needsSave = true;
+				}
+			}
 			else if(currentTargetName == "axisColor")
 			{
 				if(axisColorPicker.value != axisColorValue)
@@ -412,6 +430,7 @@ package ui.screens.display.settings.chart
 				urgentHighColorPicker.dispose();
 				urgentHighColorPicker = null;
 			}
+			
 			if(highColorPicker != null)
 			{
 				highColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -420,6 +439,7 @@ package ui.screens.display.settings.chart
 				highColorPicker.dispose();
 				highColorPicker = null;
 			}
+			
 			if(inRangeColorPicker != null)
 			{
 				inRangeColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -428,6 +448,7 @@ package ui.screens.display.settings.chart
 				inRangeColorPicker.dispose();
 				inRangeColorPicker = null;
 			}
+			
 			if(lowColorPicker != null)
 			{
 				lowColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -436,6 +457,7 @@ package ui.screens.display.settings.chart
 				lowColorPicker.dispose();
 				lowColorPicker = null;
 			}
+			
 			if(urgentLowColorPicker != null)
 			{
 				urgentLowColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -444,6 +466,16 @@ package ui.screens.display.settings.chart
 				urgentLowColorPicker.dispose();
 				urgentLowColorPicker = null;
 			}
+			
+			if(oldDataColorPicker != null)
+			{
+				oldDataColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				oldDataColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				oldDataColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				oldDataColorPicker.dispose();
+				oldDataColorPicker = null;
+			}
+			
 			if(axisColorPicker != null)
 			{
 				axisColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -452,6 +484,7 @@ package ui.screens.display.settings.chart
 				axisColorPicker.dispose();
 				axisColorPicker = null;
 			}
+			
 			if(chartFontColorPicker != null)
 			{
 				chartFontColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -460,6 +493,7 @@ package ui.screens.display.settings.chart
 				chartFontColorPicker.dispose();
 				chartFontColorPicker = null;
 			}
+			
 			if(axisFontColorPicker != null)
 			{
 				axisFontColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -468,6 +502,7 @@ package ui.screens.display.settings.chart
 				axisFontColorPicker.dispose();
 				axisFontColorPicker = null;
 			}
+			
 			if(pieChartFontColorPicker != null)
 			{
 				pieChartFontColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
@@ -476,6 +511,7 @@ package ui.screens.display.settings.chart
 				pieChartFontColorPicker.dispose();
 				pieChartFontColorPicker = null;
 			}
+			
 			if(resetColors != null)
 			{
 				resetColors.removeEventListener(Event.TRIGGERED, onResetColor);

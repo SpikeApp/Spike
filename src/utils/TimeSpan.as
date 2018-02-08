@@ -72,7 +72,7 @@ package utils
 		/**
 		 * Formats hours plus minutes into a reabale hours plus minutes string. Supports 24H/12H TimeFormat
 		 */
-		public static function formatHoursMinutes (hours:Number, minutes:Number, timeFormat:String):String
+		public static function formatHoursMinutes (hours:Number, minutes:Number, timeFormat:String, specialWidgetOutput:Boolean = false, specialWidgetOutputUncondensed:Boolean = false):String
 		{
 			var hoursOutput:String = "";
 			var amPmOutput:String = "";
@@ -114,7 +114,28 @@ package utils
 			else
 				minutesOutput = minutes.toString();
 			
-			return hoursOutput + ":" + minutesOutput + amPmOutput;
+			var totalOutput:String;
+			if (!specialWidgetOutput)
+			{
+				if (!specialWidgetOutputUncondensed)
+					totalOutput = hoursOutput + ":" + minutesOutput + amPmOutput;
+				else
+				{
+					totalOutput = hoursOutput + ":" + minutesOutput;
+					if (amPmOutput != "")
+						totalOutput += "\n" + amPmOutput;
+				}
+			}
+			else
+			{
+				totalOutput = "";
+				totalOutput += hoursOutput + "\n";
+				totalOutput += minutesOutput;
+				if (amPmOutput != "")
+					totalOutput += "\n" + amPmOutput;
+			}
+			
+			return totalOutput;
 		}
 		
 		/**

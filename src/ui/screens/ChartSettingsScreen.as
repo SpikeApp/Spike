@@ -15,7 +15,7 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.chart.ColorSettingsList;
-	import ui.screens.display.settings.chart.DateSettingsList;
+	
 	import ui.screens.display.settings.chart.GlucoseDistributionSettingsList;
 	import ui.screens.display.settings.chart.SizeSettingsList;
 	
@@ -26,11 +26,9 @@ package ui.screens
 	public class ChartSettingsScreen extends BaseSubScreen
 	{
 		/* Display Objects */
-		private var chartDateSettings:DateSettingsList;
 		private var chartColorSettings:ColorSettingsList;
 		private var chartSizeSettings:SizeSettingsList;
 		private var chartGlucoseDistributionSettings:GlucoseDistributionSettingsList;
-		private var chartDateFormatLabel:Label;
 		private var chartColorLabel:Label;
 		private var chartSizeLabel:Label;
 		private var chartGlucoseDistributionLabel:Label;
@@ -69,21 +67,13 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
-			//Time Format Section Label
-			chartDateFormatLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_date_settings_title'), true);
-			screenRenderer.addChild(chartDateFormatLabel);
+			//24H Distribution Section Label
+			chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title'), true);
+			screenRenderer.addChild(chartGlucoseDistributionLabel);
 			
-			//Display Settings
-			chartDateSettings = new DateSettingsList();
-			screenRenderer.addChild(chartDateSettings);
-			
-			//Colors Section Label
-			chartColorLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_colors_settings_title'));
-			screenRenderer.addChild(chartColorLabel);
-			
-			//Colors Settings
-			chartColorSettings = new ColorSettingsList(this);
-			screenRenderer.addChild(chartColorSettings);
+			//24H Distribution Settings
+			chartGlucoseDistributionSettings = new GlucoseDistributionSettingsList();
+			screenRenderer.addChild(chartGlucoseDistributionSettings);
 			
 			//Size Section Label
 			chartSizeLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','size_settings_title'), true);
@@ -93,13 +83,13 @@ package ui.screens
 			chartSizeSettings = new SizeSettingsList();
 			screenRenderer.addChild(chartSizeSettings);
 			
-			//Display Section Label
-			chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title'), true);
-			screenRenderer.addChild(chartGlucoseDistributionLabel);
+			//Colors Section Label
+			chartColorLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_colors_settings_title'));
+			screenRenderer.addChild(chartColorLabel);
 			
-			//Display Settings
-			chartGlucoseDistributionSettings = new GlucoseDistributionSettingsList();
-			screenRenderer.addChild(chartGlucoseDistributionSettings);
+			//Colors Settings
+			chartColorSettings = new ColorSettingsList(this);
+			screenRenderer.addChild(chartColorSettings);
 		}
 		
 		private function adjustMainMenu():void
@@ -119,8 +109,6 @@ package ui.screens
 				chartSizeSettings.save();
 			if (chartGlucoseDistributionSettings.needsSave)
 				chartGlucoseDistributionSettings.save();
-			if (chartDateSettings.needsSave)
-				chartDateSettings.save();
 			
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
@@ -134,12 +122,6 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
-			if (chartDateSettings != null)
-			{
-				chartDateSettings.dispose();
-				chartDateSettings = null;
-			}
-			
 			if (chartColorSettings != null)
 			{
 				chartColorSettings.dispose();
@@ -156,12 +138,6 @@ package ui.screens
 			{
 				chartGlucoseDistributionSettings.dispose();
 				chartGlucoseDistributionSettings = null;
-			}
-			
-			if (chartDateFormatLabel != null)
-			{
-				chartDateFormatLabel.dispose();
-				chartDateFormatLabel = null;
 			}
 			
 			if (chartColorLabel != null)

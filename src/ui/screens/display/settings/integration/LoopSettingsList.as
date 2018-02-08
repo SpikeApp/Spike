@@ -88,12 +88,14 @@ package ui.screens.display.settings.integration
 			userNameTextInput.text = serverUsername;
 			userNameTextInput.addEventListener(FeathersEventType.ENTER, onEnterPressed);
 			userNameTextInput.addEventListener(Event.CHANGE, onUpdateSaveStatus);
+			userNameTextInput.addEventListener(FeathersEventType.FOCUS_OUT, onFocusOut);
 			
 			//Password TextInput
 			passwordTextInput = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
 			passwordTextInput.text = serverPassword;
 			passwordTextInput.addEventListener(FeathersEventType.ENTER, onEnterPressed);
 			passwordTextInput.addEventListener(Event.CHANGE, onUpdateSaveStatus);
+			passwordTextInput.addEventListener(FeathersEventType.FOCUS_OUT, onFocusOut);
 			
 			//Instructions Title Label
 			instructionsTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('loopsettingsscreen','instructions_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
@@ -148,9 +150,7 @@ package ui.screens.display.settings.integration
 		
 		public function save():void
 		{
-			needsSave = false;
-			
-			if (userNameTextInput.text == "" && passwordTextInput.text == "" && loopOfflineToggle.isSelected)
+			if (userNameTextInput.text == "" && passwordTextInput.text == "" && loopOfflineToggle.isSelected || !needsSave)
 				return
 			
 			//Feature On/Off
@@ -168,6 +168,8 @@ package ui.screens.display.settings.integration
 			//Password
 			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD) != passwordTextInput.text)
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD, passwordTextInput.text);
+			
+			needsSave = false;
 		}
 		
 		/**
@@ -192,6 +194,15 @@ package ui.screens.display.settings.integration
 		{
 			userNameTextInput.clearFocus();
 			passwordTextInput.clearFocus();
+			
+			if (needsSave)
+				save();
+		}
+		
+		private function onFocusOut(e:Event):void
+		{
+			if (needsSave)
+				save();
 		}
 		
 		/**
@@ -220,6 +231,8 @@ package ui.screens.display.settings.integration
 			
 			if (userNameTextInput != null)
 			{
+				userNameTextInput.removeEventListener(Event.CHANGE, onUpdateSaveStatus);
+				userNameTextInput.removeEventListener(FeathersEventType.FOCUS_OUT, onFocusOut);
 				userNameTextInput.removeEventListener(FeathersEventType.ENTER, onEnterPressed);
 				userNameTextInput.dispose();
 				userNameTextInput = null;
@@ -227,6 +240,8 @@ package ui.screens.display.settings.integration
 			
 			if (passwordTextInput != null)
 			{
+				passwordTextInput.removeEventListener(Event.CHANGE, onUpdateSaveStatus);
+				passwordTextInput.removeEventListener(FeathersEventType.FOCUS_OUT, onFocusOut);
 				passwordTextInput.removeEventListener(FeathersEventType.ENTER, onEnterPressed);
 				passwordTextInput.dispose();
 				passwordTextInput = null;

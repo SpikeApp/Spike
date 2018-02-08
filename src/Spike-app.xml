@@ -244,6 +244,17 @@
 				<key>ITSAppUsesNonExemptEncryption</key><false/>
 				<key>NSCalendarsUsageDescription</key>
 				<string>Access to calendar is required.</string>
+				<key>CFBundleURLTypes</key>
+				<array>
+					<dict>
+						<key>CFBundleURLName</key>
+						<string>com.spike-app.spike</string> <!-- Change this with your app id -->
+						<key>CFBundleURLSchemes</key>
+						<array>
+							<string>spikeapp</string>
+						</array>
+					</dict>
+				</array>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
@@ -252,11 +263,15 @@
 		<string>AGW6KV7M2W.com.spike-app.spike</string>
 		<key>com.apple.developer.healthkit</key>
 		<true/>
+		<key>com.apple.security.application-groups</key>
+		<array>
+			<string>group.com.spike-app.spike</string>
+		</array>
 		<key>keychain-access-groups</key>
 		<array>
 		<string>AGW6KV7M2W.*</string>
 		</array>
-		
+	
 		
 			 ]]></Entitlements>
 		<requestedDisplayResolution>high</requestedDisplayResolution>
@@ -290,7 +305,6 @@
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Calendar</extensionID>
 		<extensionID>com.distriqt.Core</extensionID>
-		<extensionID>com.distriqt.Exceptions</extensionID>
 		<extensionID>com.distriqt.Memory</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>

@@ -34,6 +34,7 @@ package ui.screens.display.settings.main
 		private var watchIconImage:Image;
 		private var appInfoIconImage:Image;
 		private var integrationIconImage:Image;
+		private var widgetIconImage:Image;
 		
 		public function SettingsList()
 		{
@@ -67,6 +68,7 @@ package ui.screens.display.settings.main
 			generalIconImage = new Image(chevronIconTexture);
 			transmitterIconImage = new Image(chevronIconTexture);
 			chartIconImage = new Image(chevronIconTexture);
+			widgetIconImage = new Image(chevronIconTexture);
 			alarmsIconImage = new Image(chevronIconTexture);
 			speechIconImage = new Image(chevronIconTexture);
 			shareIconImage = new Image(chevronIconTexture);
@@ -80,6 +82,7 @@ package ui.screens.display.settings.main
 					{ screen: Screens.SETTINGS_GENERAL, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','general_settings_title'), accessory: generalIconImage },
 					{ screen: Screens.SETTINGS_TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','transmitter_settings_title'), accessory: transmitterIconImage },
 					{ screen: Screens.SETTINGS_CHART, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','chart_settings_title'), accessory: chartIconImage },
+					{ screen: Screens.SETTINGS_WIDGET, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','widget_settings_title'), accessory: widgetIconImage },
 					{ screen: Screens.SETTINGS_ALARMS, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','alarms_settings_title'), accessory: alarmsIconImage },
 					{ screen: Screens.SETTINGS_SPEECH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','speech_settings_title'), accessory: speechIconImage },
 					{ screen: Screens.SETTINGS_SHARE, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','share_settings_title'), accessory: shareIconImage },
@@ -136,6 +139,11 @@ package ui.screens.display.settings.main
 			{
 				chartIconImage.dispose();
 				chartIconImage = null;
+			}
+			if(widgetIconImage != null)
+			{
+				widgetIconImage.dispose();
+				widgetIconImage = null;
 			}
 			if(alarmsIconImage != null)
 			{

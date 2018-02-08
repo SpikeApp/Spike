@@ -17,5 +17,17 @@ package utils
 			
 			return output;
 		}
+		
+		public static function formatNumberToStringWithPrefix(value:Number):String
+		{
+			var output:String = "";
+			
+			if (value >= 0)
+				output = "+" + value;
+			else
+				output = String(value);
+			
+			return output;
+		}
 	}
 }

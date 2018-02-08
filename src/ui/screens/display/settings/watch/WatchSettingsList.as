@@ -277,6 +277,9 @@ package ui.screens.display.settings.watch
 		
 		public function save():void
 		{
+			if (!needsSave)
+				return;
+			
 			//Feature On/Off
 			var complicationValueToSave:String;
 			if(watchComplicationEnabled) complicationValueToSave = "true";
@@ -395,11 +398,15 @@ package ui.screens.display.settings.watch
 			refreshContent();
 			
 			needsSave = true;
+			
+			save();
 		}
 		
 		private function onUpdateSaveStatus(e:Event):void
 		{
 			needsSave = true;
+			
+			save();
 		}
 		
 		private function onEnterPressed(e:Event):void

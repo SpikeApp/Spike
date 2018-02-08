@@ -18,6 +18,7 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.settings.general.DateSettingsList;
 	import ui.screens.display.settings.general.GlucoseSettingsList;
 	import ui.screens.display.settings.general.UpdateSettingsList;
 	
@@ -28,10 +29,13 @@ package ui.screens
 	public class GeneralSettingsScreen extends BaseSubScreen
 	{
 		/* Display Objects */
+		private var chartDateSettings:DateSettingsList;
+		private var chartDateFormatLabel:Label;
 		private var glucoseSettings:GlucoseSettingsList;
 		private var updatesSettingsList:UpdateSettingsList;
 		private var glucoseLabel:Label;
 		private var updateLabel:Label;
+		
 		
 		public function GeneralSettingsScreen() 
 		{
@@ -67,6 +71,14 @@ package ui.screens
 		{
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
+			
+			//Time Format Section Label
+			chartDateFormatLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','chart_date_settings_title'), true);
+			screenRenderer.addChild(chartDateFormatLabel);
+			
+			//Time Format Settings
+			chartDateSettings = new DateSettingsList();
+			screenRenderer.addChild(chartDateSettings);
 			
 			//Glucose Section Label
 			glucoseLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','glucose_settings_title'));
@@ -117,6 +129,8 @@ package ui.screens
 				glucoseSettings.save();
 			if (updatesSettingsList.needsSave)
 				updatesSettingsList.save();
+			if (chartDateSettings.needsSave)
+				chartDateSettings.save();
 			
 			//Advance tutorial
 			if (TutorialService.isActive && TutorialService.fourthStepActive)
@@ -158,6 +172,18 @@ package ui.screens
 			{
 				updateLabel.dispose();
 				updateLabel = null;
+			}
+			
+			if (chartDateSettings != null)
+			{
+				chartDateSettings.dispose();
+				chartDateSettings = null;
+			}
+			
+			if (chartDateFormatLabel != null)
+			{
+				chartDateFormatLabel.dispose();
+				chartDateFormatLabel = null;
 			}
 			
 			super.dispose();

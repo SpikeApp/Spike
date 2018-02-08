@@ -35,6 +35,7 @@ package ui
 	import ui.screens.TransmitterScreen;
 	import ui.screens.TransmitterSettingsScreen;
 	import ui.screens.WatchSettingsScreen;
+	import ui.screens.WidgetSettingsScreen;
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.menu.MenuList;
 	
@@ -127,6 +128,11 @@ package ui
 			var chartSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( ChartSettingsScreen );
 			chartSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_CHART, chartSettingsScreenItem );
+			
+			/* Widget Settings Screen */
+			var widgetSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( WidgetSettingsScreen );
+			widgetSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_WIDGET, widgetSettingsScreenItem );
 			
 			/* Alarms Settings Screen */
 			var alarmsSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AlarmsSettingsScreen );
