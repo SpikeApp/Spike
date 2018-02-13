@@ -127,7 +127,7 @@ package ui.screens
 			//Save Settings
 			if (glucoseSettings.needsSave)
 				glucoseSettings.save();
-			if (updatesSettingsList.needsSave)
+			if (updatesSettingsList != null && updatesSettingsList.needsSave)
 				updatesSettingsList.save();
 			if (chartDateSettings.needsSave)
 				chartDateSettings.save();

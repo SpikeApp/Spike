@@ -97,7 +97,7 @@ package ui.screens.display.sensor
 				var sensorDays:String;
 				var sensorHours:String;
 				
-				if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader()) 
+				if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL()) 
 				{
 					var sensorAgeInMinutes:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
 					

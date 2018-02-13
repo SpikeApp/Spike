@@ -15,17 +15,19 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.integration.LoopSettingsList;
+	import ui.screens.display.settings.integration.SiDiarySettingsList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("integrationsettingsscreen")]
-	[ResourceBundle("loopsettingsscreen")]
 
 	public class IntegrationSettingsScreen extends BaseSubScreen
 	{	
 		/* Display Objects */
 		private var loopSettings:LoopSettingsList;
 		private var loopLabel:Label;
+		private var siDiaryLabel:Label;
+		private var siDiarySettings:SiDiarySettingsList;
 		
 		public function IntegrationSettingsScreen() 
 		{
@@ -62,12 +64,20 @@ package ui.screens
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
 			//Loop Section Label
-			loopLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('loopsettingsscreen','section_label'));
+			loopLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','loop_section_label'));
 			screenRenderer.addChild(loopLabel);
 			
 			//Loop Settings
 			loopSettings = new LoopSettingsList();
 			screenRenderer.addChild(loopSettings);
+			
+			//SiDiary Section Label
+			siDiaryLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','sidiary_section_label'));
+			screenRenderer.addChild(siDiaryLabel);
+			
+			//SiDiary Settings
+			siDiarySettings = new SiDiarySettingsList();
+			screenRenderer.addChild(siDiarySettings);
 		}
 		
 		private function adjustMainMenu():void
@@ -106,6 +116,18 @@ package ui.screens
 			{
 				loopLabel.dispose();
 				loopLabel = null;
+			}
+			
+			if (siDiaryLabel != null)
+			{
+				siDiaryLabel.dispose();
+				siDiaryLabel = null;
+			}
+			
+			if (siDiarySettings != null)
+			{
+				siDiarySettings.dispose();
+				siDiarySettings = null;
 			}
 			
 			super.dispose();

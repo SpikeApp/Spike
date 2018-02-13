@@ -148,6 +148,10 @@ package database
 		public static function isLimitter():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "LIMITTER");
 		}
+		
+		public static function isTransmiter_PL():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "TRANSMITER PL");
+		}
 
 		/**
 		 * for type BlueReader, Limitter, BluKon, ie devices that transmit FSL sensor data<br>
@@ -155,7 +159,7 @@ package database
 		 *  
 		 */
 		public static function isTypeLimitter():Boolean {
-			return (isBlueReader() || isBluKon() || isLimitter());
+			return (isBlueReader() || isBluKon() || isLimitter() || isTransmiter_PL());
 		}
 		
 		/**
@@ -195,6 +199,8 @@ package database
 				return "BluKon";
 			if (isLimitter())
 				return "Limitter";
+			if (isTransmiter_PL())
+				return "Transmiter PL";
 			return "unknown";
 		}
 

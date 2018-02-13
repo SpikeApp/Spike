@@ -129,11 +129,7 @@ package ui.screens.display.settings.speech
 			languagePicker.dataProvider = languagePickerList;
 			languagePicker.selectedIndex = selectedLanguageIndex;
 			var languagePopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_105 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_129 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
-			{
-				languagePopUp.marginRight = 10;
-				languagePopUp.marginLeft = 10;
-			}
+			languagePopUp.margin = 10;
 			languagePicker.popUpContentManager = languagePopUp;
 			languagePicker.addEventListener( Event.CHANGE, onSettingsChanged);
 			

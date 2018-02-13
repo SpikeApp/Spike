@@ -684,7 +684,210 @@ package starling.display
 		////////////////////////////////////////
 		// Graphics command functions
 		////////////////////////////////////////
+
+
+		public function naturalCubicSplineTo( controlPoints:Array, closed:Boolean, steps:int = 4) : void
+		{
+			var i:int = 0;
+			var j:Number = 0;
+
+			var numPoints:int = controlPoints.length;
+			var xpoints:Vector.<Number> = new Vector.<Number>(numPoints, true);
+			var ypoints:Vector.<Number> = new Vector.<Number>(numPoints, true);
+
+			for ( i = 0; i < controlPoints.length; i++ )
+			{
+				xpoints[i] = controlPoints[ i ].x ;
+				ypoints[i] = controlPoints[ i ].y ;
+			}
+
+			var X:Vector.<Cubic>;
+			var Y:Vector.<Cubic>;
+
+			if ( closed )
+			{
+				X = calcClosedNaturalCubic(	numPoints-1, xpoints );
+				Y = calcClosedNaturalCubic(	numPoints-1, ypoints );
+			}
+			else
+			{
+				X = calcNaturalCubic(	numPoints - 1, xpoints );
+				Y = calcNaturalCubic(	numPoints - 1, ypoints );
+			}
+
+
+			/* very crude technique - just break each segment up into _steps lines */
+			var points:Vector.<Number> = new Vector.<Number>(2*steps, true);
+
+			var invSteps:Number = 1.0 / steps;
+			for ( i = 0; i < X.length; i++)
+			{
+				for ( j = 0; j < steps; j++)
+				{
+					var u:Number = j * invSteps;
+					var valueX:Number = X[i].eval(u);
+					var valueY:Number = Y[i].eval(u);
+					points[j*2  ] = valueX;
+					points[j*2+1] = valueY;
+				}
+				
+				drawPointsInternal(points);
+			}
+		}
 		
+		private function calcNaturalCubic( n:int, x:Vector.<Number> ) :Vector.<Cubic>
+		{
+			var i:int;
+			var gamma:Vector.<Number> = new Vector.<Number>( n + 1 );;
+			var delta:Vector.<Number> = new Vector.<Number>( n + 1 );
+			var D:Vector.<Number> = new Vector.<Number>( n+1 );
+			
+			gamma[0] = 1.0/2.0;
+			for ( i = 1; i < n; i++)
+			{
+				gamma[i] = 1 / (4 - gamma[i - 1]);
+			}
+			gamma[n] = 1 / (2 - gamma[n - 1]);
+			
+			delta[0] = 3 * (x[1] - x[0]) * gamma[0];
+			
+			
+			for ( i = 1; i < n; i++)
+			{
+				delta[i] = (3 * (x[i + 1] - x[i - 1]) - delta[i - 1]) * gamma[i];
+			}
+			delta[n] = (3 * (x[n] - x[n - 1]) - delta[n - 1]) * gamma[n];
+			
+			
+			D[n] = delta[n];
+			
+			for ( i = n - 1; i >= 0; i--)
+			{
+				
+				D[i] = delta[i] - gamma[i] * D[i + 1];
+				
+			}
+			
+			/* now compute the coefficients of the cubics */
+			var C:Vector.<Cubic> = new Vector.<Cubic>( n );
+			
+			for ( i = 0; i < n; i++)
+			{
+				C[i] = new Cubic(
+					x[i],
+					D[i],
+					3 * (x[i + 1] - x[i]) - 2 * D[i] - D[i + 1],
+					2 * (x[i] - x[i + 1]) + D[i] + D[i + 1]
+				);
+			}
+			return C;
+		}
+
+		protected function drawPointsInternal(points:Vector.<Number>) : void
+		{
+			var L:int = points.length;
+			if ( L > 0 )
+			{
+				var invHalfL:Number = 1.0/(0.5*L);
+				for ( var i:int = 0; i < L; i+=2 )
+				{
+					var x:Number = points[i];
+					var y:Number = points[i+1];
+
+					if ( i == 0 && (_penPosX != _penPosX) ) // Alledgedly the fastest way to do "isNaN(x)". All comparisons with NaN yields false
+					{
+						moveTo( x, y );
+					}
+					else
+					{
+						lineTo(x, y);
+					}
+				}
+			}
+		}
+		
+		private function calcClosedNaturalCubic( n:int, x:Vector.<Number>):Vector.<Cubic>
+		{
+			
+			var w:Vector.<Number> = new Vector.<Number>( n+1 );
+			var v:Vector.<Number> = new Vector.<Number>( n+1 );
+			var y:Vector.<Number> = new Vector.<Number>( n+1 );
+			var D:Vector.<Number> = new Vector.<Number>( n+1 );
+			var z:Number, F:Number, G:Number, H:Number;
+			var k:int;
+			
+			w[1] = v[1] = z = 1 / 4;
+			y[0] = z * 3 * (x[1] - x[n]);
+			H = 4;
+			F = 3 * (x[0] - x[n - 1]);
+			G = 1;
+			for ( k = 1; k < n; k++)
+			{
+				
+				v[k + 1] = z = 1 / (4 - v[k]);
+				w[k + 1] = -z * w[k];
+				y[k] = z * (3 * (x[k + 1] - x[k - 1]) - y[k - 1]);
+				H = H - G * w[k];
+				F = F - G * y[k - 1];
+				G = -v[k] * G;
+				
+			}
+			H = H - (G + 1) * (v[n] + w[n]);
+			y[n] = F - (G + 1) * y[n - 1];
+			
+			
+			D[n] = y[n] / H;
+			
+			/* This equation is WRONG! in my copy of Spath */
+			D[n - 1] = y[n - 1] - (v[n] + w[n]) * D[n];
+			for ( k = n - 2; k >= 0; k--)
+			{
+				D[k] = y[k] - v[k + 1] * D[k + 1] - w[k + 1] * D[n];
+			}
+			
+			
+			/* now compute the coefficients of the cubics */
+			var C:Vector.<Cubic> = new Vector.<Cubic>( n+1 );
+			for ( k = 0; k < n; k++)
+			{
+				C[k] = new Cubic(
+					x[k],
+					D[k],
+					3 * (x[k + 1] - x[k]) - 2 * D[k] - D[k + 1],
+					2 * (x[k] - x[k + 1]) + D[k] + D[k + 1]
+				);
+				
+			}
+			C[n] = new Cubic(
+				x[n],
+				D[n],
+				3 * (x[0] - x[n]) - 2 * D[n] - D[0],
+				2 * (x[n] - x[0]) + D[n] + D[0]
+			);
+			return C;
+		}
 		
     }
+}
+
+class Cubic
+{
+	/** this class represents a cubic polynomial */
+	private var a:Number,b:Number,c:Number,d:Number;         /* a + b*u + c*u^2 +d*u^3 */
+	
+	public function Cubic(a:Number, b:Number, c:Number, d:Number)
+	{
+		this.a = a;
+		this.b = b;
+		this.c = c;
+		this.d = d;
+	}
+	
+	/** evaluate cubic */
+	public function eval( u:Number ):Number
+	{
+		
+		return (((d * u) + c) * u + b) * u + a;
+		
+	}
 }

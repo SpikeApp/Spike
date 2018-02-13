@@ -122,6 +122,16 @@ package database
 		public static const LOCAL_SETTING_LOOP_SERVER_USERNAME:int = 42;
 		public static const LOCAL_SETTING_LOOP_SERVER_PASSWORD:int = 43;
 		
+		/**
+		 * Sidiary
+		 */
+		public static const LOCAL_SETTING_TIMESTAMP_SINCE_LAST_EXPORT_SIDIARY:int = 44;
+		
+		/**
+		 * Transmiter PL
+		 */
+		public static const LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES:int = 45;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -166,7 +176,9 @@ package database
 			"6",//LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY
 			"false",//LOCAL_SETTING_LOOP_SERVER_ON
 			"",//LOCAL_SETTING_LOOP_SERVER_USERNAME
-			""//LOCAL_SETTING_LOOP_SERVER_PASSWORD
+			"",//LOCAL_SETTING_LOOP_SERVER_PASSWORD
+			"0",//LOCAL_SETTING_TIMESTAMP_SINCE_LAST_EXPORT_SIDIARY
+			"0"//LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES
 		];
 		
 		public function LocalSettings() {

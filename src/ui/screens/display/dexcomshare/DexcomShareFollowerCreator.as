@@ -30,7 +30,7 @@ package ui.screens.display.dexcomshare
 	
 	import model.ModelLocator;
 	
-	import services.DexcomShareServiceEnhanced;
+	import services.DexcomShareService;
 	
 	import starling.events.Event;
 	
@@ -354,15 +354,15 @@ package ui.screens.display.dexcomshare
 			}
 			
 			//First we create the contact
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.CREATE_CONTACT, onContactCreated);
-			DexcomShareServiceEnhanced.createContact(followerName.text, followerEmail.text);
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.CREATE_CONTACT, onContactCreated);
+			DexcomShareService.createContact(followerName.text, followerEmail.text);
 		}
 		
 		private function onContactCreated(e:DexcomShareEvent):void
 		{
 			Trace.myTrace("DexcomShareFollowerCreator.as", "onContactCreated called!");
 			
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.CREATE_CONTACT, onContactCreated);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.CREATE_CONTACT, onContactCreated);
 			
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
@@ -509,8 +509,8 @@ package ui.screens.display.dexcomshare
 				newFollowerParameters.Permissions = graphViewCheck.isSelected ? 1 : 0;
 				newFollowerParameters.DisplayName = userDisplayName.text;
 				
-				DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.INVITE_FOLLOWER, onFollowerInvited);
-				DexcomShareServiceEnhanced.inviteFollower(contactID, JSON.stringify(newFollowerParameters));
+				DexcomShareService.instance.addEventListener(DexcomShareEvent.INVITE_FOLLOWER, onFollowerInvited);
+				DexcomShareService.inviteFollower(contactID, JSON.stringify(newFollowerParameters));
 			}
 			else
 			{
@@ -545,7 +545,7 @@ package ui.screens.display.dexcomshare
 		{
 			Trace.myTrace("DexcomShareFollowerCreator.as", "onFollowerInvited called.");
 			
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.INVITE_FOLLOWER, onFollowerInvited);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.INVITE_FOLLOWER, onFollowerInvited);
 			
 			var response:String = String(e.data);
 			

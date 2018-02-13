@@ -17,6 +17,8 @@
  */
 package events
 {
+	import flash.events.Event;
+
 	[Event(name="ResultEvent",type="events.BlueToothServiceEvent")]
 	[Event(name="ErrorEvent",type="events.BlueToothServiceEvent")]
 	[Event(name="BluetoothStatusChangedEvent",type="events.BlueToothServiceEvent")]
@@ -33,7 +35,7 @@ package events
 	 * result received from transmitter, etc.. <br>
 	 * to get info about connectivity status, new transmitter data ... create listeners for the events<br>
 	 */
-	public class BlueToothServiceEvent extends GenericEvent
+	public class BlueToothServiceEvent extends Event
 	{
 		/**
 		 * generic event to inform about the result of an event, specifically for case where a dispatcher has been supplied by the client 

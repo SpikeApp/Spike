@@ -29,7 +29,7 @@ package ui.screens.display.dexcomshare
 	
 	import model.ModelLocator;
 	
-	import services.DexcomShareServiceEnhanced;
+	import services.DexcomShareService;
 	
 	import starling.core.Starling;
 	import starling.events.Event;
@@ -376,8 +376,8 @@ package ui.screens.display.dexcomshare
 			Trace.myTrace("DexcomShareFollowerEditor.as", "getExtendedFollowerInfo called!");
 			
 			//Connect to Dexcom servers
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.GET_FOLLOWER_INFO, onGetFollowerInfoResponse);
-			DexcomShareServiceEnhanced.getFollowerInfo(initialContactID);
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.GET_FOLLOWER_INFO, onGetFollowerInfoResponse);
+			DexcomShareService.getFollowerInfo(initialContactID);
 		}
 		
 		private function getFollowerAlarms():void
@@ -385,8 +385,8 @@ package ui.screens.display.dexcomshare
 			Trace.myTrace("DexcomShareFollowerEditor.as", "getFollowerAlarms called!");
 			
 			//Connect to Dexcom servers
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.GET_FOLLOWER_ALARMS, onGetFollowerAlarmsResponse);
-			DexcomShareServiceEnhanced.getFollowerAlarms(initialSubscriptionID);
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.GET_FOLLOWER_ALARMS, onGetFollowerAlarmsResponse);
+			DexcomShareService.getFollowerAlarms(initialSubscriptionID);
 		}
 		
 		private function changeFollowerName():void
@@ -394,8 +394,8 @@ package ui.screens.display.dexcomshare
 			Trace.myTrace("DexcomShareFollowerEditor.as", "changeFollowerName called!");
 			
 			//Connect to Dexcom servers
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.CHANGE_FOLLOWER_NAME, onChangeFollowerNameResponse);
-			DexcomShareServiceEnhanced.changeFollowerName(initialContactID, followerName.text);
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.CHANGE_FOLLOWER_NAME, onChangeFollowerNameResponse);
+			DexcomShareService.changeFollowerName(initialContactID, followerName.text);
 		}
 		
 		private function enableFollowerSharing():void
@@ -403,8 +403,8 @@ package ui.screens.display.dexcomshare
 			Trace.myTrace("DexcomShareFollowerEditor.as", "enableFollowerSharing called!");
 			
 			//Connect to Dexcom servers
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.ENABLE_FOLLOWER_SHARING, onEnableFollowerSharingResponse);
-			DexcomShareServiceEnhanced.enableFollowerSharing(initialSubscriptionID);
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.ENABLE_FOLLOWER_SHARING, onEnableFollowerSharingResponse);
+			DexcomShareService.enableFollowerSharing(initialSubscriptionID);
 		}
 		
 		private function disableFollowerSharing():void
@@ -412,8 +412,8 @@ package ui.screens.display.dexcomshare
 			Trace.myTrace("DexcomShareFollowerEditor.as", "disableFollowerSharing called!");
 			
 			//Connect to Dexcom servers
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.DISABLE_FOLLOWER_SHARING, onDisableFollowerSharingResponse);
-			DexcomShareServiceEnhanced.disableFollowerSharing(initialSubscriptionID);
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.DISABLE_FOLLOWER_SHARING, onDisableFollowerSharingResponse);
+			DexcomShareService.disableFollowerSharing(initialSubscriptionID);
 		}
 		
 		private function changeFollowerPermissions():void
@@ -426,8 +426,8 @@ package ui.screens.display.dexcomshare
 			else permissions = 0;
 			
 			//Connect to Dexcom servers
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.CHANGE_FOLLOWER_PERMISSIONS, onChangFollowerPermissionsResponse);
-			DexcomShareServiceEnhanced.changeFollowerPermissions(initialSubscriptionID, permissions);
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.CHANGE_FOLLOWER_PERMISSIONS, onChangFollowerPermissionsResponse);
+			DexcomShareService.changeFollowerPermissions(initialSubscriptionID, permissions);
 		}
 		
 		/**
@@ -437,7 +437,7 @@ package ui.screens.display.dexcomshare
 		{
 			Trace.myTrace("DexcomShareFollowerEditor.as", "onGetFollowerInfoResponse called!");
 			
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.GET_FOLLOWER_INFO, onGetFollowerInfoResponse);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.GET_FOLLOWER_INFO, onGetFollowerInfoResponse);
 			
 			var response:String = String(e.data);
 			
@@ -487,7 +487,7 @@ package ui.screens.display.dexcomshare
 		{
 			Trace.myTrace("DexcomShareFollowerEditor.as", "onGetFollowerAlarmsResponse called!");
 			
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.GET_FOLLOWER_ALARMS, onGetFollowerAlarmsResponse);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.GET_FOLLOWER_ALARMS, onGetFollowerAlarmsResponse);
 			
 			var response:String = String(e.data);
 			if (response != null)
@@ -535,7 +535,7 @@ package ui.screens.display.dexcomshare
 		{
 			Trace.myTrace("DexcomShareFollowerEditor.as", "onChangeFollowerNameResponse called!");
 			
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.CHANGE_FOLLOWER_NAME, onChangeFollowerNameResponse);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.CHANGE_FOLLOWER_NAME, onChangeFollowerNameResponse);
 			
 			var response:String = String(e.data);
 			
@@ -585,7 +585,7 @@ package ui.screens.display.dexcomshare
 		{
 			Trace.myTrace("DexcomShareFollowerEditor.as", "onEnableFollowerSharingResponse called!");
 			
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.ENABLE_FOLLOWER_SHARING, onEnableFollowerSharingResponse);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.ENABLE_FOLLOWER_SHARING, onEnableFollowerSharingResponse);
 			
 			var response:String = String(e.data);
 			
@@ -635,7 +635,7 @@ package ui.screens.display.dexcomshare
 		{
 			Trace.myTrace("DexcomShareFollowerEditor.as", "onDisableFollowerSharingResponse called!");
 			
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.DISABLE_FOLLOWER_SHARING, onDisableFollowerSharingResponse);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.DISABLE_FOLLOWER_SHARING, onDisableFollowerSharingResponse);
 			
 			var response:String = String(e.data);
 			
@@ -685,7 +685,7 @@ package ui.screens.display.dexcomshare
 		{
 			Trace.myTrace("DexcomShareFollowerEditor.as", "onChangFollowerPermissionsResponse called!");
 			
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.CHANGE_FOLLOWER_PERMISSIONS, onChangFollowerPermissionsResponse);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.CHANGE_FOLLOWER_PERMISSIONS, onChangFollowerPermissionsResponse);
 			
 			var response:String = String(e.data);
 			

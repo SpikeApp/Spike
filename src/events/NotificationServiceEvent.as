@@ -1,10 +1,11 @@
 package events
 {
-	public class NotificationServiceEvent extends GenericEvent
+	import flash.events.Event;
+
+	public class NotificationServiceEvent extends Event
 	{
 		[Event(name="NotificationEvent",type="events.NotificationServiceEvent")]
 		[Event(name="NotificationServiceInitiatedEvent",type="events.NotificationServiceEvent")]
-		[Event(name="LogInfo",type="events.NotificationServiceEvent")]
 		
 		/**
 		 * event to inform about a notifiation event.<br>
@@ -19,10 +20,6 @@ package events
 		 * event to inform that the notificationservice is initiated successfully, ie authorised by user.<br>
 		 */
 		public static const NOTIFICATION_SERVICE_INITIATED_EVENT:String = "NotificationServiceInitiatedEvent";
-		/**
-		 * logging info, mainly for debugging purposes 
-		 */
-		public static const LOG_INFO:String="LogInfo";
 
 		public var data:*;
 		

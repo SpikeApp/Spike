@@ -67,6 +67,7 @@ package ui.screens.display
 			{
 				inputField.restrict = "0-9.";
 				inputField.textEditorProperties.softKeyboardType = SoftKeyboardType.PUNCTUATION;
+				
 			}
 			
 			return inputField;

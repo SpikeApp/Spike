@@ -1,0 +1,2 @@
+Fixed a bug in the Apple Watch settings screen.
+Improved layout of "Add Alarm" popup on larger screens.

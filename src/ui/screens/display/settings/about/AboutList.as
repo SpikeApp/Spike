@@ -1,8 +1,12 @@
 package ui.screens.display.settings.about
 {
 	
+	import flash.net.URLRequest;
+	import flash.net.navigateToURL;
+	
 	import database.LocalSettings;
 	
+	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
@@ -12,8 +16,11 @@ package ui.screens.display.settings.about
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayoutData;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
+	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
+	
+	import starling.events.Event;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -29,6 +36,8 @@ package ui.screens.display.settings.about
 		private var deviceRequirementsLabel:Label;
 		private var osRequirementsLabel:Label
 		private var hardwareRequerimentsLabel:Label;
+		private var facebookGroupButton:Button;
+		private var websiteButton:Button;
 		
 		public function AboutList()
 		{
@@ -70,6 +79,14 @@ package ui.screens.display.settings.about
 			deviceRequirementsLabel.validate();
 			osRequirementsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','os_description'), HorizontalAlign.RIGHT);
 			hardwareRequerimentsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','hardware_description'), HorizontalAlign.RIGHT);
+			facebookGroupButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','go_button'), false, MaterialDeepGreyAmberMobileThemeIcons.facebookButtonTexture);
+			facebookGroupButton.gap = 2;
+			facebookGroupButton.pivotX = -4;
+			facebookGroupButton.addEventListener(Event.TRIGGERED, onNavigateToFacebook);
+			websiteButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','go_button'), false, MaterialDeepGreyAmberMobileThemeIcons.spikeButtonTexture);
+			websiteButton.gap = 2;
+			websiteButton.pivotX = -4;
+			websiteButton.addEventListener(Event.TRIGGERED, onNavigateToWebsite);
 			
 			/* Set Screen Content */
 			dataProvider = new HierarchicalCollection(
@@ -87,6 +104,13 @@ package ui.screens.display.settings.about
 							{ label: ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','device_label'), accessory: deviceRequirementsLabel },
 							{ label: ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','hardware_label'), accessory: hardwareRequerimentsLabel },
 							{ label: ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','os_label'), accessory: osRequirementsLabel }
+						]
+					},
+					{
+						header  : { label: ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','support_section_title') },
+						children: [
+							{ label: ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','facebook_group_label'), accessory: facebookGroupButton },
+							{ label: ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','website_label'), accessory: websiteButton }
 						]
 					}
 				]
@@ -112,6 +136,19 @@ package ui.screens.display.settings.about
 				
 				return itemRenderer;
 			};
+		}
+		
+		/**
+		 * Event Handlers
+		 */
+		private function onNavigateToFacebook(e:Event):void
+		{
+			navigateToURL(new URLRequest("https://www.facebook.com/groups/spikeapp/"));
+		}
+		
+		private function onNavigateToWebsite(e:Event):void
+		{
+			navigateToURL(new URLRequest("https://spike-app.com"));
 		}
 		
 		/**
@@ -147,6 +184,20 @@ package ui.screens.display.settings.about
 			{
 				hardwareRequerimentsLabel.dispose();
 				hardwareRequerimentsLabel = null;
+			}
+			
+			if (facebookGroupButton != null)
+			{
+				facebookGroupButton.addEventListener(Event.TRIGGERED, onNavigateToFacebook);
+				facebookGroupButton.dispose();
+				facebookGroupButton = null;
+			}
+			
+			if (websiteButton != null)
+			{
+				websiteButton.addEventListener(Event.TRIGGERED, onNavigateToWebsite);
+				websiteButton.dispose();
+				websiteButton = null;
 			}
 
 			super.dispose();

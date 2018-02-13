@@ -51,7 +51,6 @@ package services
 		public static function init():void
 		{
 			Trace.myTrace("WidgetService.as", "Service started!");
-			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "true");
 			
 			BackgroundFetch.initUserDefaults();
 			
@@ -223,16 +222,16 @@ package services
 			if (Calibration.allForSensor().length < 2 || currentReading == null || currentReading.calculatedValue == 0)
 				return;
 			
-			activeGlucoseReadingsList.push( { value: currentReading.calculatedValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
-			processChartGlucoseValues();
-			
-			//Save data to User Defaults
 			var latestGlucoseValue:Number = Number(BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
 			if (isNaN(latestGlucoseValue) || latestGlucoseValue < 40)
 				latestGlucoseValue = 38;
 			
+			activeGlucoseReadingsList.push( { value: latestGlucoseValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
+			processChartGlucoseValues();
+			
+			//Save data to User Defaults
 			BackgroundFetch.setUserDefaultsData("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + getLastUpdate(currentReading.timestamp) + ", " + getGlucoseTimeFormatted(currentReading.timestamp, false));
-			BackgroundFetch.setUserDefaultsData("latestGlucoseValue", String(latestGlucoseValue));
+			BackgroundFetch.setUserDefaultsData("latestGlucoseValue", BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
 			BackgroundFetch.setUserDefaultsData("latestGlucoseSlopeArrow", currentReading.slopeArrow());
 			BackgroundFetch.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
 			BackgroundFetch.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
@@ -254,7 +253,7 @@ package services
 			var glucoseDate:Date = new Date(timestamp);
 			var timeFormatted:String;
 			
-			if (dateFormat.slice(0,2) == "24")
+			if (dateFormat == null || dateFormat.slice(0,2) == "24")
 			{
 				if (formatForChartLabel)
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H, widgetHistory == TIME_2_HOURS);

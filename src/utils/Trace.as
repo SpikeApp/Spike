@@ -1,15 +1,20 @@
 package utils
 {
+	
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.filesystem.File;
 	import flash.system.Capabilities;
 	
+	import mx.collections.ArrayCollection;
+	
 	import spark.formatters.DateTimeFormatter;
 	
+	import database.AlertType;
 	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	import database.Database;
 	import database.LocalSettings;
 	import database.Sensor;
 	
@@ -55,7 +60,7 @@ package utils
 		public static function myTrace(tag:String, log:String, dontWriteToFile:Boolean = false):void {
 			if (dateFormatter == null) {
 				dateFormatter = new DateTimeFormatter();
-				dateFormatter.dateTimePattern = "dd-MM-yyyy HH:mm:ss";
+				dateFormatter.dateTimePattern = "yyyy-MM-dd HH:mm:ss";
 				dateFormatter.useUTC = false;
 				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 			}
@@ -75,7 +80,7 @@ package utils
 			} else {
 				if (filePath == "")
 					getSaveStream();
-				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" spiketrace ", " "));			
+				BackgroundFetch.writeTraceToFile(filePath, traceText.replace(" spiketrace ", " "));			
 			}
 		}
 		
@@ -84,24 +89,24 @@ package utils
 		 * @return A FileStream instance we can read or write with. Don't forget to close it!
 		 * also stores the new filename in the settings
 		 */
-		private static function getSaveStream():void 
-		{
+		private static function getSaveStream():void {
 			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
 			if (fileName == "") {
 				var dateFormatter:DateTimeFormatter = new DateTimeFormatter();
 				dateFormatter.dateTimePattern = "yyyy-MM-dd-HH-mm-ss";
 				dateFormatter.useUTC = false;
 				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
-				fileName = "spike-" + dateFormatter.format(new Date()) + ".log";
+				fileName = "Spike-" + dateFormatter.format(new Date()) + ".log";
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, fileName);
 				filePath = File.applicationStorageDirectory.resolvePath(fileName).nativePath;
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, filePath);
-				BackgroundFetch.writeStringToFile(filePath, "New file created with name " + fileName);
-				BackgroundFetch.writeStringToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
-				BackgroundFetch.writeStringToFile(filePath, "Device Info = " + Capabilities.os);
-				BackgroundFetch.writeStringToFile(filePath, "BackgroundFetch ANE version = " + BackgroundFetch.getANEVersion());
+				BackgroundFetch.writeTraceToFile(filePath, "New file created with name " + fileName);
+				BackgroundFetch.writeTraceToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
+				BackgroundFetch.writeTraceToFile(filePath, "BackgroundFetch ANE version = " + BackgroundFetch.getANEVersion());
+				BackgroundFetch.writeTraceToFile(filePath, "Device Info = " + Capabilities.os);
 				var additionalInfoToWrite:String = "";
 				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
+				additionalInfoToWrite += "Transmitterid = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) + ".\n";
 				additionalInfoToWrite += "Sensor " + (Sensor.getActiveSensor() == null ? "not":"") + " started ";
 				additionalInfoToWrite += (Sensor.getActiveSensor() == null ? ".\n": dateFormatter.format(new Date(Sensor.getActiveSensor().startedAt)) + ".\n" + "\n");
 				if (Sensor.getActiveSensor() != null) {
@@ -110,6 +115,8 @@ package utils
 						additionalInfoToWrite += "Last calibration = " + dateFormatter.format(new Date(Calibration.last().timestamp))  + ".\n";
 					}
 				}
+				additionalInfoToWrite += "\nReadings in notification = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) + "\n";
+				additionalInfoToWrite += "\nHealthkit on  = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) + "\n";
 				additionalInfoToWrite += "Battery alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT) + "\n";
 				additionalInfoToWrite += "Low alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT) + "\n";
 				additionalInfoToWrite += "Very Low alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT) + "\n";
@@ -118,8 +125,24 @@ package utils
 				additionalInfoToWrite += "Phone Muted alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) + "\n";
 				additionalInfoToWrite += "Missed Reading alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) + "\n";
 				additionalInfoToWrite += "Calibration Request alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) + "\n";
+				additionalInfoToWrite += "\nOverride Mute = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) + "\n\n";
+				additionalInfoToWrite += "\nList of Alert Types : \n";
+				var listOfAlarmname:ArrayCollection = Database.getAllAlertTypes();
+				for (var i:int = 0;i < listOfAlarmname.length;i++) {
+					var alertType:AlertType = listOfAlarmname.getItemAt(i) as database.AlertType;
+					var texttoadd:String = "Alert type name = " + alertType.alarmName;
+					texttoadd += ",\n   enabled = " + alertType.enabled;
+					texttoadd += ",\n   default snooze = " + alertType.defaultSnoozePeriodInMinutes;
+					texttoadd += ",\n   vibration = " + alertType.enableVibration;
+					texttoadd += ",\n   override mute = " + alertType.overrideSilentMode;
+					texttoadd += ",\n   repeat = " + (alertType.repeatInMinutes > 0 ? "true" : "false");
+					texttoadd += ",\n   snooze from notification = " + alertType.snoozeFromNotification;
+					texttoadd += ",\n   sound = " + alertType.sound;
+					texttoadd += "\n";
+					additionalInfoToWrite += texttoadd;
+				}
 				
-				BackgroundFetch.writeStringToFile(filePath, additionalInfoToWrite);
+				BackgroundFetch.writeTraceToFile(filePath, additionalInfoToWrite);
 			} else {
 				filePath = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME);
 			}

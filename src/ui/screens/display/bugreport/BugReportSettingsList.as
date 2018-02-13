@@ -22,6 +22,7 @@ package ui.screens.display.bugreport
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
@@ -120,14 +121,17 @@ package ui.screens.display.bugreport
 			
 			//Name Field
 			nameField = LayoutFactory.createTextInput(false, false, fieldWidth, HorizontalAlign.RIGHT);
+			nameField.addEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 			nameField.pivotX = 6;
 			
 			//Email Field
 			emailField = LayoutFactory.createTextInput(false, false, fieldWidth, HorizontalAlign.RIGHT);
+			emailField.addEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 			emailField.pivotX = 6;
 			
 			//Text Area
 			messageField = new TextArea();
+			messageField.addEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 			messageField.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.RIGHT, VerticalAlign.TOP);
 			messageField.paddingTop = 3;
 			messageField.pivotX = 6;
@@ -293,7 +297,7 @@ package ui.screens.display.bugreport
 					//Check if log is at least 15min old
 					var traceLogAgeInMinutes:Number = TimeSpan.fromDates(file.creationDate, new Date()).totalMinutes;
 					
-					if (true)//(traceLogAgeInMinutes >= 15)
+					if (traceLogAgeInMinutes >= 15)
 					{
 						//Get the trace log
 						var fileStream:FileStream = new FileStream();
@@ -416,6 +420,13 @@ package ui.screens.display.bugreport
 			sendEmail.isEnabled = true;
 		} 
 		
+		private function onKeyboardEnter(e:starling.events.Event):void
+		{
+			nameField.clearFocus();
+			emailField.clearFocus();
+			messageField.clearFocus();
+		}
+		
 		/**
 		 * Utilty
 		 */
@@ -430,18 +441,21 @@ package ui.screens.display.bugreport
 			
 			if (nameField != null)
 			{
+				nameField.removeEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 				nameField.dispose();
 				nameField = null;
 			}
 			
 			if (emailField != null)
 			{
+				emailField.removeEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 				emailField.dispose();
 				emailField = null;
 			}
 			
 			if (messageField != null)
 			{
+				messageField.removeEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 				messageField.dispose();
 				messageField = null;
 			}

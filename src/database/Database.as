@@ -1975,6 +1975,62 @@ package database
 			}
 		}
 		
+		/**
+		 * Gets glucose readings from database without further processing. Returns them in raw format (Object).
+		 * The columns parameter represents the columns that should be included in the query. This is done to avoid eturning columns that are not needed for Spike when processing the data.
+		 */
+		public static function getBgReadingsData(from:Number, until:Number, columns:String):void {
+			var localSqlStatement:SQLStatement = new SQLStatement();
+			var localdispatcher:EventDispatcher = new EventDispatcher();
+			
+			localdispatcher.addEventListener(SQLEvent.RESULT,onOpenResult);
+			localdispatcher.addEventListener(SQLErrorEvent.ERROR,onOpenError);
+			
+			if (openSQLConnection(localdispatcher))
+				onOpenResult(null);
+			
+			function onOpenResult(se:SQLEvent):void {
+				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
+				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
+				localSqlStatement.addEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
+				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
+				localSqlStatement.sqlConnection = aConn;
+				localSqlStatement.text =  "SELECT " + columns + " FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until + " ORDER BY timestamp ASC";
+				localSqlStatement.execute();
+			}
+			
+			function bgReadingsRetrieved(se:SQLEvent):void 
+			{
+				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
+				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
+				
+				instance.dispatchEvent(new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, false, false, localSqlStatement.getResult().data));
+				
+				localSqlStatement = null;
+			}
+			
+			function bgreadingRetrievalFailed(see:SQLErrorEvent):void {
+				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
+				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
+				dispatchInformation("failed_to_retrieve_bg_reading", see.error.message + " - " + see.error.details);
+				if (debugMode) trace("Database.as : Failed to retrieve bgreadings. Database 0032");
+				var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+				errorEvent.data = "Failed to retrieve bgreadings . Database:0032";
+				instance.dispatchEvent(errorEvent);
+				
+			}
+			
+			function onOpenError(see:SQLErrorEvent):void {
+				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
+				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
+				dispatchInformation("failed_to_retrieve_bg_reading_error_opening_database", see.error.message + " - " + see.error.details);
+				if (debugMode) trace("Database.as : Failed to open the database. Database 0033");
+				var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+				instance.dispatchEvent(event);
+				
+			}
+		}
+		
 		public static function updateCommonSetting(settingId:int,newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
 			if (newValue == null || newValue == "") newValue = "-";
 			try {

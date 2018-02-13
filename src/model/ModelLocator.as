@@ -25,8 +25,6 @@ package model
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
 	
-	import spark.components.ViewNavigator;
-	
 	import database.BgReading;
 	import database.Database;
 	import database.LocalSettings;
@@ -42,13 +40,13 @@ package model
 	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
-	import services.DexcomShareServiceEnhanced;
+	import services.DexcomShareService;
 	import services.HealthKitService;
 	import services.LoopService;
-	import services.NightscoutServiceEnhanced;
+	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
-	import services.TextToSpeech;
+	import services.TextToSpeechService;
 	import services.TransmitterService;
 	import services.UpdateService;
 	import services.WatchService;
@@ -71,6 +69,7 @@ package model
 		public static const DEBUG_MODE:Boolean = true;
 
 		public static const TEST_FLIGHT_MODE:Boolean = false;
+		public static const INTERNAL_TESTING:Boolean = true;
 		
 		public static function get instance():ModelLocator
 		{
@@ -107,8 +106,6 @@ package model
 			return _appStartTimestamp;
 		}
 		
-		public static var navigator:ViewNavigator;
-
 		private static var _phoneMuted:Boolean;
 
 		public static function get phoneMuted():Boolean
@@ -143,6 +140,8 @@ package model
 
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void 
 			{
+				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
+				
 				_bgReadings = de.data as Array;
 				
 				getLogsFromDatabase();
@@ -172,31 +171,23 @@ package model
 					DeepSleepService.init();
 					Database.getBlueToothDevice();
 					TransmitterService.init();
+					BackGroundFetchService.init();
 					BluetoothService.init();
-
 					NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 					NotificationService.init();
-							
 					CalibrationService.init();
 					NetworkInfo.init(DistriqtKey.distriqtKey);
-							
-					BackGroundFetchService.init();
-					//set AVAudioSession to AVAudioSessionCategoryPlayback with optoin AVAudioSessionCategoryOptionMixWithOthers
-					//this ensures that texttospeech and playsound work also in background
 					BackgroundFetch.setAvAudioSessionCategory(true);
-					
 					WidgetService.init();
 					WatchService.init();
 					AlarmService.init();
 					LoopService.init();
 					HealthKitService.init();
-					NightscoutServiceEnhanced.init();
-					DexcomShareServiceEnhanced.init();
-					TextToSpeech.init();
+					NightscoutService.init();
+					DexcomShareService.init();
+					TextToSpeechService.init();
 					RemoteAlertService.init();
-							
-					if (!TEST_FLIGHT_MODE) 
-						UpdateService.init();
+					if (!TEST_FLIGHT_MODE) UpdateService.init();
 							
 					updateApplicationVersion();
 				}

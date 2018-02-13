@@ -1,6 +1,8 @@
 package events
 {
-	public class SpikeEvent extends GenericEvent
+	import flash.events.Event;
+
+	public class SpikeEvent extends Event
 	{
 		[Event(name="AppInForeGroundEvent",type="events.SpikeEvent")]
 		[Event(name="AppInBackGroundEvent",type="events.SpikeEvent")]

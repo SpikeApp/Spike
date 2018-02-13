@@ -4,8 +4,6 @@ package ui.popups
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
-	import ui.screens.display.LayoutFactory;
-	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
 	import feathers.controls.Label;
@@ -24,7 +22,10 @@ package ui.popups
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
 	
+	import ui.screens.display.LayoutFactory;
+	
 	import utils.Constants;
+	import utils.Trace;
 
 	[ResourceBundle("globaltranslations")]
 	
@@ -177,7 +178,7 @@ package ui.popups
 			closeTimer.start();
 		}
 		
-		private static function closeCallout(e:TimerEvent = null):void
+		public static function closeCallout(e:TimerEvent = null):void
 		{
 			//Stop the timer
 			if (closeTimer != null && closeTimer.running)
@@ -187,7 +188,14 @@ package ui.popups
 			if (PopUpManager.isPopUp(snoozeCallout))
 				PopUpManager.removePopUp(snoozeCallout);
 			else
-				snoozeCallout.close();
+				if(snoozeCallout != null)
+					snoozeCallout.close();
+			
+			if (_instance != null)
+			{
+				_instance.removeEventListeners(CANCELLED);
+				_instance.removeEventListeners(CLOSED);
+			}
 		}
 		
 		/**

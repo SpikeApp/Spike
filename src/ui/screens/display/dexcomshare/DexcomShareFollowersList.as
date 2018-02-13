@@ -24,7 +24,7 @@ package ui.screens.display.dexcomshare
 	
 	import model.ModelLocator;
 	
-	import services.DexcomShareServiceEnhanced;
+	import services.DexcomShareService;
 	
 	import starling.core.Starling;
 	import starling.display.Sprite;
@@ -122,13 +122,13 @@ package ui.screens.display.dexcomshare
 				return;
 			}
 			
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.LIST_FOLLOWERS, onFollowersListReceived, false, 0, true);
-			DexcomShareServiceEnhanced.getFollowers();
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.LIST_FOLLOWERS, onFollowersListReceived, false, 0, true);
+			DexcomShareService.getFollowers();
 		}
 		
 		private function onFollowersListReceived(e:DexcomShareEvent):void
 		{
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.LIST_FOLLOWERS, onFollowersListReceived);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.LIST_FOLLOWERS, onFollowersListReceived);
 			
 			if (e.data == null)
 			{
@@ -143,7 +143,7 @@ package ui.screens.display.dexcomshare
 			
 			followersList = parseDexcomResponse(response) as Array;
 			
-			if (followersList != null && response.indexOf("ContactId") != -1)
+			if (response == "[]" || response.indexOf("ContactId") != -1)
 			{
 				Trace.myTrace("DexcomShareFollowerList.as", "Follower's list retrrieved successfully!");
 				
@@ -292,13 +292,13 @@ package ui.screens.display.dexcomshare
 			var contactID:String = follower.ContactId;
 			deletedContactID = follower.ContactId;
 			
-			DexcomShareServiceEnhanced.instance.addEventListener(DexcomShareEvent.DELETE_FOLLOWER, onDeleteFollowerResponse);
-			DexcomShareServiceEnhanced.deleteFollower(contactID);
+			DexcomShareService.instance.addEventListener(DexcomShareEvent.DELETE_FOLLOWER, onDeleteFollowerResponse);
+			DexcomShareService.deleteFollower(contactID);
 		}
 		
 		private function onDeleteFollowerResponse (e:DexcomShareEvent):void
 		{
-			DexcomShareServiceEnhanced.instance.removeEventListener(DexcomShareEvent.DELETE_FOLLOWER, onDeleteFollowerResponse);
+			DexcomShareService.instance.removeEventListener(DexcomShareEvent.DELETE_FOLLOWER, onDeleteFollowerResponse);
 			
 			if (e.data == null)
 			{

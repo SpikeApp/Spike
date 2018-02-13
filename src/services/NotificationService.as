@@ -106,7 +106,10 @@ package services
 		public static const ID_FOR_VERY_LOW_ALERT:int = 12;
 		public static const ID_FOR_VERY_HIGH_ALERT:int = 13;
 		public static const ID_FOR_PATCH_READ_ERROR_BLUKON:int = 14;
-		public static const ID_FOR_APP_UPDATE:int = 15;
+		public static const ID_FOR_APP_UPDATE:int = 15; //used ?
+		public static const ID_FOR_DEAD_G5_BATTERY_INFO:int = 16;
+		public static const ID_FOR_BAD_PLACED_G5_INFO:int = 17;
+		public static const ID_FOR_OTHER_G5_APP:int = 18;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
@@ -115,6 +118,7 @@ package services
 		public static const ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY:String = "CALIBRATION_REQUEST_CATEGORY";
 		public static const ID_FOR_ALERT_VERY_LOW_CATEGORY:String = "VERY_LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_VERY_HIGH_CATEGORY:String = "VERY_HIGH_ALERT_CATEGORY";
+		public static const ID_FOR_ALERT_MISSED_READING_CATEGORY:String = "MISSED_READING_ALERT_CATEGORY";
 
 		public static const ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER:String = "LOW_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "HIGH_ALERT_SNOOZE_IDENTIFIER";
@@ -123,6 +127,7 @@ package services
 		public static const ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER:String = "CALIBRATION_REQUEST_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER:String = "VERY_LOW_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "VERY_HIGH_ALERT_SNOOZE_IDENTIFIER";
+		public static const ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER:String = "MISSED_READING_ALERT_SNOOZE_IDENTIFIER";
 		
 		private static var timeStampSinceLastNotifForPatchReadError:Number = 0;
 		public static var testTextToSpeechTimer:Timer;
@@ -262,6 +267,17 @@ package services
 				)
 				.build()
 			);
+			service.categories.push(
+				new CategoryBuilder()
+				.setIdentifier(ID_FOR_ALERT_MISSED_READING_CATEGORY)
+				.addAction( 
+					new ActionBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setIdentifier(ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER)
+					.build()
+				)
+				.build()
+			);
 			
 			Notifications.service.setup(service);
 			
@@ -355,13 +371,6 @@ package services
 
 		}
 		
-		private static function dispatchInformation(information:String):void {
-			var notificationserviceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.LOG_INFO);
-			notificationserviceEvent.data = new Object();
-			notificationserviceEvent.data.information = information;
-			_instance.dispatchEvent(notificationserviceEvent);
-		}
-		
 		public static function updateBgNotification(be:Event = null):void {
 			myTrace("in updateBgNotification");
 			Notifications.service.cancel(ID_FOR_BG_VALUE);
@@ -397,7 +406,7 @@ package services
 						myTrace("in updateBgNotification, setting app badge");
 						Notifications.service.notify(
 							new NotificationBuilder()
-							.setCount(int(Math.round(lastBgReading.calculatedValue)))
+							.setCount(int(Math.round(Number(BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")))))
 							.setId(NotificationService.ID_FOR_BG_VALUE)
 							.setAlert("Bg value")
 							.setTitle(valueToShow)
@@ -430,38 +439,51 @@ package services
 					lastBgReading = BgReading.lastNoSensor(); 
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
 					
-					Notifications.service.setBadgeNumber( int(Math.round(lastBgReading.calculatedValue)) );
+					Notifications.service.setBadgeNumber( int(Math.round(Number(BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")))) );
 				}
 			}
 			
 		}
 		
-		public static function notificationIdToText(id:int):String {
+		public static function notificationIdToText(id:int):String 
+		{
 			var returnValue:String = "notification id unknown";
+			
 			if (id == ID_FOR_BG_VALUE)
 				returnValue = "ID_FOR_BG_VALUE";
-			if (id == ID_FOR_REQUEST_CALIBRATION)
+			else if (id == ID_FOR_REQUEST_CALIBRATION)
 				returnValue = "ID_FOR_REQUEST_CALIBRATION";
-			if (id == ID_FOR_ENTER_TRANSMITTER_ID)
+			else if (id == ID_FOR_ENTER_TRANSMITTER_ID)
 				returnValue = "ID_FOR_ENTER_TRANSMITTER_ID";
-			if (id == ID_FOR_DEVICE_NOT_PAIRED)
+			else if (id == ID_FOR_DEVICE_NOT_PAIRED)
 				returnValue = "ID_FOR_DEVICE_NOT_PAIRED";
-			if (id == ID_FOR_LOW_ALERT)
+			else if (id == ID_FOR_LOW_ALERT)
 				returnValue = "ID_FOR_LOW_ALERT";
-			if (id == ID_FOR_HIGH_ALERT)
+			else if (id == ID_FOR_HIGH_ALERT)
 				returnValue = "ID_FOR_HIGH_ALERT";
-			if (id == ID_FOR_MISSED_READING_ALERT)
+			else if (id == ID_FOR_MISSED_READING_ALERT)
 				returnValue = "ID_FOR_MISSED_READING_ALERT";
-			if (id == ID_FOR_PHONEMUTED_ALERT)
+			else if (id == ID_FOR_PHONEMUTED_ALERT)
 				returnValue = "ID_FOR_PHONEMUTED_ALERT";
-			if (id == ID_FOR_BATTERY_ALERT)
+			else if (id == ID_FOR_BATTERY_ALERT)
 				returnValue = "ID_FOR_BATTERY_ALERT";
-			if (id == ID_FOR_CALIBRATION_REQUEST_ALERT)
+			else if (id == ID_FOR_CALIBRATION_REQUEST_ALERT)
 				returnValue = "ID_FOR_CALIBRATION_REQUEST_ALERT";
-			if (id == ID_FOR_VERY_LOW_ALERT)
+			else if (id == ID_FOR_VERY_LOW_ALERT)
 				returnValue = "ID_FOR_VERY_LOW_ALERT";
-			if (id == ID_FOR_VERY_HIGH_ALERT)
+			else if (id == ID_FOR_VERY_HIGH_ALERT)
 				returnValue = "ID_FOR_VERY_HIGH_ALERT";
+			else if (id == ID_FOR_PATCH_READ_ERROR_BLUKON)
+				returnValue = "ID_FOR_PATCH_READ_ERROR_BLUKON";
+			else if (id == ID_FOR_APP_UPDATE)
+				returnValue = "ID_FOR_APP_UPDATE";
+			else if (id == ID_FOR_DEAD_G5_BATTERY_INFO)
+				returnValue = "ID_FOR_DEAD_G5_BATTERY_INFO";
+			else if (id == ID_FOR_BAD_PLACED_G5_INFO)
+				returnValue = "ID_FOR_BAD_PLACED_G5_INFO";
+			else if (id == ID_FOR_OTHER_G5_APP)
+				returnValue = "ID_FOR_OTHER_G5_APP";
+			
 			return returnValue;
 		}
 		

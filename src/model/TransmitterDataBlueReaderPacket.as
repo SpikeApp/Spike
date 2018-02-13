@@ -30,6 +30,9 @@ package model
 			return _bridgeBatteryLevel;
 		}
 		
+		/**
+		 * sensorAge in minutes 
+		 */
 		private var _sensorAge:Number;
 
 		public function get sensorAge():Number
@@ -38,9 +41,6 @@ package model
 		}
 		
 		
-		/**
-		 * sensorAge in minutes 
-		 */
 		public function TransmitterDataBlueReaderPacket(rawData:Number, sensorBatteryLevel:Number, bridgeBatteryLevel:Number, sensorAge:Number, timestamp:Number)
 		{
 			_bgValue = rawData;

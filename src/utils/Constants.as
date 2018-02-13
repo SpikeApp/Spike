@@ -9,6 +9,8 @@ package utils
 	
 	public class Constants 
 	{
+		public static var applicationStorageDirectory:String;
+		
 		public static const IPAD_WIDTH:int = 512;
 		public static const IPAD_HEIGHT:int = 384;
 		public static const READING_OFFSET:int = 0.5 * 60 * 1000;

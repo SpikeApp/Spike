@@ -5,11 +5,17 @@ package ui.screens.display.settings.watch
 	import com.distriqt.extension.calendar.events.AuthorisationEvent;
 	import com.distriqt.extension.calendar.objects.CalendarObject;
 	
+	import flash.events.Event;
+	import flash.net.URLLoader;
+	import flash.net.URLVariables;
+	
 	import database.LocalSettings;
 	
 	import feathers.controls.Button;
+	import feathers.controls.Callout;
 	import feathers.controls.Check;
 	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
@@ -21,9 +27,11 @@ package ui.screens.display.settings.watch
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.controls.text.HyperlinkTextFieldTextRenderer;
 	import feathers.core.ITextRenderer;
+	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -31,12 +39,17 @@ package ui.screens.display.settings.watch
 	
 	import model.ModelLocator;
 	
+	import network.EmailSender;
+	
+	import starling.core.Starling;
+	import starling.display.Sprite;
 	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DataValidator;
 	import utils.Trace;
 	
 	[ResourceBundle("globaltranslations")]
@@ -68,6 +81,16 @@ package ui.screens.display.settings.watch
 		private var displayDeltaEnabled:Boolean;
 		private var displayUnitsEnabled:Boolean;
 		private var glucoseHistoryValue:int;
+
+		private var sendEmail:Button;
+
+		private var emailLabel:Label;
+
+		private var emailField:TextInput;
+
+		private var sendButton:Button;
+
+		private var instructionsSenderCallout:Callout;
 
 		public function WatchSettingsList()
 		{
@@ -113,17 +136,16 @@ package ui.screens.display.settings.watch
 		{
 			//Complication On/Off Toggle
 			watchComplicationToggle = LayoutFactory.createToggleSwitch(watchComplicationEnabled);
-			watchComplicationToggle.addEventListener(Event.CHANGE, onSettingsChanged);
+			watchComplicationToggle.addEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 			
 			//Authorization Button
 			authorizeButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','authorize_button_label'), false, MaterialDeepGreyAmberMobileThemeIcons.permContactCalTexture);
-			authorizeButton.addEventListener(Event.TRIGGERED, onAuthorizeDevice);
+			authorizeButton.addEventListener(starling.events.Event.TRIGGERED, onAuthorizeDevice);
 			
 			//Calendar List
 			calendarPickerList = LayoutFactory.createPickerList();
 			calendarPickerList.labelField = "label";
 			calendarPickerList.pivotX = -3;
-			calendarPickerList.addEventListener(Event.CHANGE, onUpdateSaveStatus);
 			calendarPickerList.itemRendererFactory = function():IListItemRenderer
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
@@ -135,32 +157,34 @@ package ui.screens.display.settings.watch
 			if(isDeviceAuthorized)
 				populateCalendarList();
 			
+			calendarPickerList.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
+			
 			//Display Name Toggle
 			displayNameToggle = LayoutFactory.createToggleSwitch(displayNameEnabled);
-			displayNameToggle.addEventListener(Event.CHANGE, onSettingsChanged);
+			displayNameToggle.addEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 			
 			//Display Name TextInput
 			displayNameTextInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
 			displayNameTextInput.text = displayNameValue;
 			displayNameTextInput.addEventListener(FeathersEventType.ENTER, onEnterPressed);
-			displayNameTextInput.addEventListener(Event.CHANGE, onUpdateSaveStatus);
+			displayNameTextInput.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
 			//Display Trend
 			displayTrend = LayoutFactory.createCheckMark(displayTrendEnabled);
-			displayTrend.addEventListener(Event.CHANGE, onUpdateSaveStatus);
+			displayTrend.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
 			//Display Delta
 			displayDelta = LayoutFactory.createCheckMark(displayDeltaEnabled);
-			displayDelta.addEventListener(Event.CHANGE, onUpdateSaveStatus);
+			displayDelta.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
 			//Display Units
 			displayUnits = LayoutFactory.createCheckMark(displayUnitsEnabled);
-			displayUnits.addEventListener(Event.CHANGE, onUpdateSaveStatus);
+			displayUnits.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
 			//History
 			glucoseHistory = LayoutFactory.createNumericStepper(1, 36, glucoseHistoryValue);
 			glucoseHistory.pivotX = -12;
-			glucoseHistory.addEventListener(Event.CHANGE, onUpdateSaveStatus);
+			glucoseHistory.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
 			//Instructions Title Label
 			instructionsTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','instructions_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
@@ -182,6 +206,10 @@ package ui.screens.display.settings.watch
 					
 				return textRenderer;
 			};
+			
+			//Send Email Button
+			sendEmail = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','email_button_label'), false, MaterialDeepGreyAmberMobileThemeIcons.sendTexture);
+			sendEmail.addEventListener(starling.events.Event.TRIGGERED, onSendEmail);
 			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -221,6 +249,8 @@ package ui.screens.display.settings.watch
 			
 			content.push({ text: "", accessory: instructionsTitleLabel });
 			content.push({ text: "", accessory: instructionsDescriptionLabel });
+			content.push({ text: "", accessory: sendEmail });
+			
 			
 			dataProvider = new ArrayCollection(content);
 		}
@@ -345,7 +375,7 @@ package ui.screens.display.settings.watch
 		/**
 		 * Event Handlers
 		 */
-		private function onAuthorizeDevice(e:Event):void
+		private function onAuthorizeDevice(e:starling.events.Event):void
 		{
 			Trace.myTrace("WatchSettingsList.as", "onAuthorizeDevice called!");
 			
@@ -390,7 +420,7 @@ package ui.screens.display.settings.watch
 			}
 		}
 		
-		private function onSettingsChanged(e:Event):void
+		private function onSettingsChanged(e:starling.events.Event):void
 		{
 			watchComplicationEnabled = watchComplicationToggle.isSelected;
 			displayNameEnabled = displayNameToggle.isSelected;
@@ -402,16 +432,168 @@ package ui.screens.display.settings.watch
 			save();
 		}
 		
-		private function onUpdateSaveStatus(e:Event):void
+		private function onUpdateSaveStatus(e:starling.events.Event):void
 		{
 			needsSave = true;
 			
 			save();
 		}
 		
-		private function onEnterPressed(e:Event):void
+		private function onEnterPressed(e:starling.events.Event):void
 		{
 			displayNameTextInput.clearFocus();
+		}
+		
+		private function onSendEmail(e:starling.events.Event):void
+		{
+			/* Main Container */
+			var mainLayout:VerticalLayout = new VerticalLayout();
+			mainLayout.horizontalAlign = HorizontalAlign.CENTER;
+			mainLayout.gap = 10;
+			
+			var mainContainer:LayoutGroup = new LayoutGroup();
+			mainContainer.layout = mainLayout;
+			
+			/* Title */
+			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label"), HorizontalAlign.CENTER);
+			mainContainer.addChild(emailLabel);
+			
+			/* Email Input */
+			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.CENTER);
+			emailField.fontStyles.size = 12;
+			mainContainer.addChild(emailField);
+			
+			/* Action Buttons */
+			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
+			actionButtonsLayout.gap = 5;
+			
+			var actionButtonsContainer:LayoutGroup = new LayoutGroup();
+			actionButtonsContainer.layout = actionButtonsLayout;
+			mainContainer.addChild(actionButtonsContainer);
+			
+			//Cancel Button
+			var cancelButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label"));
+			cancelButton.addEventListener(starling.events.Event.TRIGGERED, onCancel);
+			actionButtonsContainer.addChild(cancelButton);
+			
+			//Send Button
+			sendButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"send_button_label_capitalized"));
+			sendButton.addEventListener(starling.events.Event.TRIGGERED, onClose);
+			actionButtonsContainer.addChild(sendButton);
+			
+			/* Callout Position Helper Creation */
+			var positionHelper:Sprite = new Sprite();
+			positionHelper.x = Constants.stageWidth / 2;
+			positionHelper.y = 70;
+			Starling.current.stage.addChild(positionHelper);
+			
+			/* Callout Creation */
+			instructionsSenderCallout = new Callout();
+			instructionsSenderCallout.content = mainContainer;
+			instructionsSenderCallout.origin = positionHelper;
+			instructionsSenderCallout.minWidth = 240;
+			
+			//Close the callout
+			if (PopUpManager.isPopUp(instructionsSenderCallout))
+				PopUpManager.removePopUp(instructionsSenderCallout, true);
+			
+			//Display callout
+			PopUpManager.addPopUp(instructionsSenderCallout, false, false);
+			
+			emailField.setFocus();
+		}
+		
+		private function onClose(e:starling.events.Event):void
+		{
+			//Validation
+			emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label");
+			emailLabel.fontStyles.color = 0xEEEEEE;
+			
+			if (emailField.text == "")
+			{
+				emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_address_required");
+				emailLabel.fontStyles.color = 0xFF0000;
+				return;
+			}
+			else if (!DataValidator.validateEmail(emailField.text))
+			{
+				emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_address_invalid");
+				emailLabel.fontStyles.color = 0xFF0000;
+				return;
+			}
+			
+			sendButton.isEnabled = false;
+			
+			//Create URL Request 
+			var vars:URLVariables = new URLVariables();
+			vars.mimeType = "text/html";
+			vars.emailSubject = ModelLocator.resourceManagerInstance.getString('watchsettingsscreen',"watch_instructions_subject");
+			vars.emailBody = ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','instructions_description_label') + "<p>Have a great day!</p><p>Spike App</p>";
+			vars.userName = "";
+			vars.userEmail = emailField.text.replace(" ", "");
+			
+			//Send Email
+			EmailSender.sendData
+				(
+					EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
+					onLoadCompleteHandler,
+					vars
+				);
+		}
+		
+		private function onLoadCompleteHandler(event:flash.events.Event):void 
+		{ 
+			var loader:URLLoader = URLLoader(event.target);
+			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
+			
+			var response:Object = loader.data;
+			loader = null;
+			
+			if (response.success == "true")
+			{
+				AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_sent_successfully'),
+						Number.NaN
+					);
+				
+				closeCallout();
+			}
+			else
+			{
+				sendButton.isEnabled = true;
+				
+				AlertManager.showActionAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_not_sent') + " " + response.statuscode,
+						Number.NaN,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },	
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','try_again_button_label'), triggered: onTryAgain },	
+						]
+					);
+				
+				function onTryAgain(e:starling.events.Event):void
+				{
+					Starling.juggler.delayCall(onSendEmail, 0.5, null);
+				}
+			}
+		}
+		
+		private function onCancel(e:starling.events.Event):void
+		{
+			closeCallout();
+		}
+		
+		private function closeCallout():void
+		{
+			//Close the callout
+			if (PopUpManager.isPopUp(instructionsSenderCallout))
+				PopUpManager.removePopUp(instructionsSenderCallout, true);
+			else
+				instructionsSenderCallout.close(true);
 		}
 		
 		/**
@@ -429,7 +611,7 @@ package ui.screens.display.settings.watch
 		{
 			if(watchComplicationToggle != null)
 			{
-				watchComplicationToggle.removeEventListener(Event.CHANGE, onSettingsChanged);
+				watchComplicationToggle.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 				watchComplicationToggle.dispose();
 				watchComplicationToggle = null;
 			}
@@ -448,7 +630,7 @@ package ui.screens.display.settings.watch
 			
 			if (displayNameToggle != null)
 			{
-				displayNameToggle.removeEventListener(Event.CHANGE, onSettingsChanged);
+				displayNameToggle.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 				displayNameToggle.dispose();
 				displayNameToggle = null;
 			}
@@ -462,44 +644,76 @@ package ui.screens.display.settings.watch
 			
 			if (calendarPickerList != null)
 			{
-				calendarPickerList.removeEventListener(Event.CHANGE, onUpdateSaveStatus);
+				calendarPickerList.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 				calendarPickerList.dispose();
 				calendarPickerList = null;
 			}
 			
 			if (displayTrend != null)
 			{
-				displayTrend.removeEventListener(Event.CHANGE, onUpdateSaveStatus);
+				displayTrend.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 				displayTrend.dispose();
 				displayTrend = null;
 			}
 			
 			if (displayDelta != null)
 			{
-				displayDelta.removeEventListener(Event.CHANGE, onUpdateSaveStatus);
+				displayDelta.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 				displayDelta.dispose();
 				displayDelta = null;
 			}
 			
 			if (displayUnits != null)
 			{
-				displayUnits.removeEventListener(Event.CHANGE, onUpdateSaveStatus);
+				displayUnits.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 				displayUnits.dispose();
 				displayUnits = null;
 			}
 			
 			if (glucoseHistory != null)
 			{
-				glucoseHistory.removeEventListener(Event.CHANGE, onUpdateSaveStatus);
+				glucoseHistory.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 				glucoseHistory.dispose();
 				glucoseHistory = null;
 			}
 			
 			if (authorizeButton != null)
 			{
-				authorizeButton.removeEventListener(Event.TRIGGERED, onAuthorizeDevice);
+				authorizeButton.removeEventListener(starling.events.Event.TRIGGERED, onAuthorizeDevice);
 				authorizeButton.dispose();
 				authorizeButton = null;
+			}
+			
+			if (sendEmail != null)
+			{
+				sendEmail.removeEventListener(starling.events.Event.TRIGGERED, onSendEmail);
+				sendEmail.dispose();
+				sendEmail = null;
+			}
+			
+			if (emailField != null)
+			{
+				emailField.dispose();
+				emailField = null;
+			}
+			
+			if (emailLabel != null)
+			{
+				emailLabel.dispose();
+				emailLabel = null;
+			}
+			
+			if (sendButton != null)
+			{
+				sendButton.removeEventListener(starling.events.Event.TRIGGERED, onClose);
+				sendButton.dispose();
+				sendButton = null;
+			}
+			
+			if (instructionsSenderCallout != null)
+			{
+				instructionsSenderCallout.dispose();
+				instructionsSenderCallout = null;
 			}
 			
 			super.dispose();

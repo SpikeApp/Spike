@@ -5,8 +5,6 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.utils.setInterval;
 	
-	import events.DeepSleepServiceEvent;
-	
 	import utils.Trace;
 
 	/**
@@ -39,11 +37,7 @@ package services
 		private static function playSound():void
 		{
 			if (!BackgroundFetch.isPlayingSound()) 
-				BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3");
-				//BackgroundFetch.playSound("../assets/sounds/shorthigh1.mp3");
-			
-			//for other services that need to do something at regular intervals
-			_instance.dispatchEvent(new DeepSleepServiceEvent(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT));
+				BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
 		}
 	}
 }

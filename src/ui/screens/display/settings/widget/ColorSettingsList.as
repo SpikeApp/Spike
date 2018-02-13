@@ -25,6 +25,7 @@ package ui.screens.display.settings.widget
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("widgetsettingsscreen")]
 
@@ -278,7 +279,7 @@ package ui.screens.display.settings.widget
 					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','glucose_marker_title'), accessory: glucoseMarkerColorPicker },
 					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','grid_lines'), accessory: gridLinesColorPicker },
 					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background'), accessory: backgroundColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity'), accessory: opacityContainer },
+					{ text: DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer },
 					{ text: "", accessory: resetColors },
 					{ text: "", accessory: copyColors }
 				]);

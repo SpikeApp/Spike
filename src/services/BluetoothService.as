@@ -25,6 +25,9 @@ package services
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.bluetoothle.objects.Characteristic;
 	import com.distriqt.extension.bluetoothle.objects.Peripheral;
+	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.notifications.builders.NotificationBuilder;
+	import com.distriqt.extension.notifications.events.NotificationEvent;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
@@ -54,6 +57,7 @@ package services
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
+	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	
 	import feathers.controls.Alert;
@@ -63,6 +67,7 @@ package services
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5Packet;
+	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
@@ -124,10 +129,11 @@ package services
 		public static const BlueReader_SERVICE:String = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 		public static const BlueReader_TX_Characteristic_UUID:String = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
 		public static const BlueReader_RX_Characteristic_UUID:String = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+		public static const uuids_BLUKON_Advertisement:String = "436A62C0-082E-4CE8-A08B-01D81F195B24";
 
 		private static const uuids_G4_Service:Vector.<String> = new <String>[HM_10_SERVICE_G4];
 		private static const uuids_G5_Service:Vector.<String> = new <String>["F8083532-849E-531C-C594-30F1F86A4EA5"];
-		private static const uuids_BLUKON_Service:Vector.<String> = new <String>["436A62C0-082E-4CE8-A08B-01D81F195B24"];
+		private static const uuids_BLUKON_Service:Vector.<String> = new <String>[uuids_BLUKON_Advertisement];
 		private static const uuids_BlueReader_Service:Vector.<String> = new <String>[BlueReader_SERVICE];
 		private static const uuids_Bluereader_Advertisement:Vector.<String> = new <String>[""];//00001530-1212-EFDE-1523-785FEABCD123", "7905F431-B5CE-4E99-A40F-4B1E122D00D0"];
 			
@@ -136,7 +142,14 @@ package services
 		private static const uuids_G5_Characteristics:Vector.<String> = new <String>[G5_Authentication_Characteristic_UUID, G5_Communication_Characteristic_UUID, G5_Control_Characteristic_UUID];
 		private static const uuids_BLUKON_Characteristics:Vector.<String> = new <String>[BC_desiredReceiveCharacteristicUUID, BC_desiredTransmitCharacteristicUUID];
 		private static const uuids_BlueReader_Characteristics:Vector.<String> = new <String>[BlueReader_TX_Characteristic_UUID, BlueReader_RX_Characteristic_UUID];
-			
+		
+		//Transmiter PL
+		private static const TRANSMITER_PL_SERVICE_UUID:String = "c97433f0-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const uuids_TRANSMITER_PL_Service:Vector.<String> = new <String>[TRANSMITER_PL_SERVICE_UUID];
+		private static const TRANSMITER_PL_RX_CHARACTERISTIC_UUID:String = "c97433f1-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const TRANSMITER_PL_TX_CHARACTERISTIC_UUID:String = "c97433f2-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const uuids_TRANSMITER_PL_Characteristics:Vector.<String> = new <String>[TRANSMITER_PL_RX_CHARACTERISTIC_UUID, TRANSMITER_PL_TX_CHARACTERISTIC_UUID]
+		
 		private static var connectionAttemptTimeStamp:Number;
 		private static const maxTimeBetweenConnectAttemptAndConnectSuccess:Number = 3;
 		private static var waitingForPeripheralCharacteristicsDiscovered:Boolean = false;
@@ -155,6 +168,8 @@ package services
 		private static var listOfSeenInvalidPacketTypes:Array = [49, 50, 51, 52, 53, 54, 55, 56, 57, 84];
 
 		private static var timeStampOfLastDeviceNotPairedForBlukon:Number = 0;
+		private static var timeStampSinceLastSensorAgeUpdate_Transmiter_PL:Number = 0;
+		private static var previousSensorAgeValue_Transmiter_PL:Number = 0;
 		/**
 		 * for blukon protocol
 		 */
@@ -170,16 +185,18 @@ package services
 		private static var blukonCurrentCommand:String="";
 		
 		private static var m_getNowGlucoseDataIndexCommand:Boolean = false;
-		private static var m_gotOneTimeUnknownCmd:Boolean = false;
 		private static var GET_SENSOR_AGE_DELAY_IN_SECONDS:int =  3 * 3600;
 		private static var BLUKON_GETSENSORAGE_TIMER:String = "blukon-getSensorAge-timer";
-		private static var m_getNowGlucoseDataCommand:Boolean = false;// to be sure we wait for a GlucoseData Block and not using another block
+		private static var m_getNowGlucoseDataCommand:Boolean = false; // to be sure we wait for a GlucoseData Block and not using another block
 		private static var m_timeLastBg:Number = 0;
 		private static var m_persistentTimeLastBg:Number;
 		private static var m_blockNumber:int = 0;
 		private static var m_full_data:ByteArray = new ByteArray();
 		private static var FSLSensorAGe:Number;
 		private static var unsupportedPacketType:int = 0;
+		private static var startedMonitoringAndRangingBeaconsInRegion:Boolean = false;
+		private static var awaitingAuthStatusRxMessage:Boolean = false; //used for G5, to detect situations where other app is connecting to G5
+		private static var timeStampOfLastInfoAboutOtherApp:Number = 0; //used for G5, to detect situations where other app is connecting to G5
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -231,6 +248,10 @@ package services
 		
 		private static var BlueReader_TX_Characteristic:Characteristic;
 		
+		private static var TRANSMITER_PL_Tx_characteristic:Characteristic;
+				
+		private static var TRANSMITER_PL_Rx_characteristic:Characteristic;
+		
 		//blukon global vars for backfill processing
 		private static var m_currentTrendIndex:int;
 		private static var m_currentBlockNumber:String = "";
@@ -258,10 +279,10 @@ package services
 			
 			peripheralConnected = false;
 			
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			
 			//blukon
-			m_gotOneTimeUnknownCmd = false;
 			m_getNowGlucoseDataCommand = false;
 			m_getNowGlucoseDataIndexCommand = false;
 			m_getOlderReading = false;
@@ -321,7 +342,21 @@ package services
 			}
 		}
 		
-		private static function settingChanged(event:SettingsServiceEvent):void {
+		private static function notificationReceived(event:NotificationServiceEvent):void {
+			if (event != null) {
+				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
+				if (notificationEvent.id == NotificationService.ID_FOR_OTHER_G5_APP) 
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
+						ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info")
+					);
+				}		
+			}
+		}
+		
+		private static function commonSettingChanged(event:SettingsServiceEvent):void  {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
 				if (G4ScanTimer != null) {
@@ -337,6 +372,7 @@ package services
 					}
 				} else {
 				}
+				
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
 				BlueToothDevice.forgetBlueToothDevice();
@@ -349,6 +385,12 @@ package services
 					}
 				} else {
 					myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID but transmitter id not known or alwaysscan is false");
+				}
+			} else if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) == "0") {
+					myTrace("in commonSettingChanged, setting timeStampSinceLastSensorAgeUpdate_Transmiter_PL and previousSensorAgeValue_Transmiter_PL to 0");
+					timeStampSinceLastSensorAgeUpdate_Transmiter_PL = 0;
+					previousSensorAgeValue_Transmiter_PL = 0;
 				}
 			}
 		}
@@ -409,7 +451,8 @@ package services
 				if (!BluetoothLE.service.centralManager.scanForPeripherals(
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Advertisement:
-					(BlueToothDevice.isBlueReader() ? uuids_Bluereader_Advertisement :uuids_G4_Service))))
+					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Service:
+					(BlueToothDevice.isBlueReader() ? uuids_Bluereader_Advertisement :uuids_G4_Service)))))
 				{
 					myTrace("failed to start scanning for peripherals");
 					return;
@@ -420,6 +463,9 @@ package services
 						G4ScanTimer = new Timer(MAX_SCAN_TIME_IN_SECONDS * 1000, 1);
 						G4ScanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
 						G4ScanTimer.start();
+					}
+					if (BlueToothDevice.isBluKon()) {
+						startMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
 					}
 				}
 			} else {
@@ -432,6 +478,10 @@ package services
 			if (BluetoothLE.service.centralManager.isScanning) {
 				myTrace("in stopScanning, is scanning, call stopScan");
 				BluetoothLE.service.centralManager.stopScan();
+				if (BlueToothDevice.isBluKon()) 
+				{
+					stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+				}
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
 		}
@@ -439,6 +489,10 @@ package services
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
 			myTrace("in central_peripheralDiscoveredHandler, stop scanning");
 			BluetoothLE.service.centralManager.stopScan();
+			
+			if (BlueToothDevice.isBluKon()) {
+				stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+			}
 
 			discoveryTimeStamp = (new Date()).valueOf();
 			if (awaitingConnect && !(BlueToothDevice.alwaysScan())) {
@@ -483,16 +537,7 @@ package services
 			}
 			
 			if (
-				(!(BlueToothDevice.alwaysScan()) &&
-					(
-						(event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 
-						|| (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1 
-						|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITIX") > -1
-						|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITTER") > -1
-						|| (event.peripheral.name as String).toUpperCase().indexOf("BLUEREADER") > -1
-						|| (event.peripheral.name as String).toUpperCase().indexOf("DINANTRONICS") > -1
-					)
-				) 
+				!(BlueToothDevice.alwaysScan())
 				||
 				(BlueToothDevice.isDexcomG5() &&
 					(
@@ -514,6 +559,7 @@ package services
 						//so we ignore it
 						myTrace("UUID of found peripheral does not match with name of the UUID stored in the database - will ignore this xdrip/xbridge/LimiTTer/Dexcom.");
 						//BluetoothLE.service.centralManager.stopScan();
+						startRescan(null);
 						return;
 					}
 				} else {
@@ -542,6 +588,9 @@ package services
 					//this may happen because for blukon, after disconnect, we start scanning and also try to reconnect
 					myTrace("in central_peripheralConnectHandler, blukon and scanning. Stop scanning");
 					BluetoothLE.service.centralManager.stopScan();
+					if (BlueToothDevice.isBluKon()) {
+						stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+					}
 				}
 			}
 			
@@ -622,8 +671,9 @@ package services
 				activeBluetoothPeripheral.discoverServices(
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Service:
+					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Service:
 					(BlueToothDevice.isBlueReader() ? uuids_BlueReader_Service:
-					uuids_G4_Service)));
+					uuids_G4_Service))));
 				if (!BlueToothDevice.isBluKon()) {
 					discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 					discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
@@ -652,6 +702,37 @@ package services
 		
 		private static function central_peripheralDisconnectHandler(event:flash.events.Event = null):void {
 			myTrace('Disconnected from device or attempt to reconnect failed');
+			
+			if (BlueToothDevice.isDexcomG5()) {
+				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+			}
+			if (BlueToothDevice.isDexcomG5() && awaitingAuthStatusRxMessage) {
+				myTrace('in central_peripheralDisconnectHandler, Dexcom G5 and awaitingAuthStatusRxMessage, seems another app is trying to connecto to the G5');
+				awaitingAuthStatusRxMessage = false;
+				if ((new Date()).valueOf() - timeStampOfLastInfoAboutOtherApp > 1 * 3600 * 1000) {//not repeating the warning every 5 minutes, only once per hour
+					myTrace('in central_peripheralDisconnectHandler, giving warning to the user');
+					timeStampOfLastInfoAboutOtherApp = (new Date()).valueOf();
+					if (BackgroundFetch.appIsInForeground()) 
+					{
+						AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
+							ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info")
+						);
+						
+						BackgroundFetch.vibrate();
+					} else {
+							var notificationBuilderG5OtherAppRunningInfo:NotificationBuilder = new NotificationBuilder()
+								.setId(NotificationService.ID_FOR_OTHER_G5_APP)
+									.setAlert(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
+										.setTitle(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
+											.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"))
+												.enableVibration(true)
+							Notifications.service.notify(notificationBuilderG5OtherAppRunningInfo.build());
+					}
+				}
+			}
+			
 			if (BlueToothDevice.isBluKon()) {
 				myTrace('it is a blukon');
 				myTrace('setting peripheralConnected = false');
@@ -699,6 +780,10 @@ package services
 			}
 			myTrace("Bluetooth peripheral services discovered.");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+			
+			if (BlueToothDevice.isDexcomG5()) {
+				awaitingAuthStatusRxMessage = false;	
+			}
 			
 			if (event.peripheral.services.length > 0)
 			{
@@ -761,6 +846,13 @@ package services
 						}
 						index++;
 					}
+				} else if (BlueToothDevice.isTransmiter_PL()) {
+					for each (o in activeBluetoothPeripheral.services) {
+						if (TRANSMITER_PL_SERVICE_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
+							break;
+						}
+						index++;
+					}
 				}
 				
 				waitingForPeripheralCharacteristicsDiscovered = true;
@@ -768,7 +860,8 @@ package services
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Characteristics : 
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Characteristics:
 					(BlueToothDevice.isBlueReader() ? uuids_BlueReader_Characteristics:
-					uuids_G4_Characteristics)));
+					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Characteristics:
+					uuids_G4_Characteristics))));
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
 				discoverServiceOrCharacteristicTimer.start();
@@ -801,9 +894,12 @@ package services
 			var BC_desiredTransmitCharacteristicIndex:int = 0;
 			var BlueReader_Rx_CharacteristicIndex:int = 0;
 			var BlueReader_Tx_CharacteristicIndex:int = 0;
+			var TRANSMITER_PL_Rx_CharacteristicIndex:int = 0;
+			var TRANSMITER_PL_Tx_CharacteristicIndex:int = 0;
 			
 			var o:Object;
 			if (BlueToothDevice.isDexcomG5()) {
+				awaitingAuthStatusRxMessage = false;
 				for each (o in activeBluetoothPeripheral.services) {
 					if (HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
@@ -891,6 +987,38 @@ package services
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
+			} else if (BlueToothDevice.isTransmiter_PL()) {
+				for each (o in activeBluetoothPeripheral.services) {
+					if (TRANSMITER_PL_SERVICE_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found service " + TRANSMITER_PL_SERVICE_UUID);
+						break;
+					}
+					servicesIndex++;
+				}
+				
+				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
+					if (TRANSMITER_PL_TX_CHARACTERISTIC_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + TRANSMITER_PL_TX_CHARACTERISTIC_UUID);
+						break;
+					}
+					TRANSMITER_PL_Tx_CharacteristicIndex++;
+				}
+				TRANSMITER_PL_Tx_characteristic = event.peripheral.services[servicesIndex].characteristics[TRANSMITER_PL_Tx_CharacteristicIndex];
+				
+				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
+					if (TRANSMITER_PL_RX_CHARACTERISTIC_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + TRANSMITER_PL_RX_CHARACTERISTIC_UUID);
+						break;
+					}
+					TRANSMITER_PL_Rx_CharacteristicIndex++;
+				}
+				TRANSMITER_PL_Rx_characteristic = event.peripheral.services[servicesIndex].characteristics[TRANSMITER_PL_Rx_CharacteristicIndex];
+				
+				myTrace("subscribing to TRANSMITER_PL_Rx_characteristic");
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(TRANSMITER_PL_Rx_characteristic))
+				{
+					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
+				}
 			} else if (BlueToothDevice.isBlueReader()) {
 				myTrace("in peripheral_discoverCharacteristicsHandler, handling bluereader, search for servicesIndex");
 				for each (o in activeBluetoothPeripheral.services) {
@@ -966,6 +1094,8 @@ package services
 					processG4TransmitterData(value);
 				} else if (BlueToothDevice.isBlueReader()) {
 					processBlueReaderTransmitterData(value);
+				} else if (BlueToothDevice.isTransmiter_PL()) {
+					processTRANSMITER_PLTransmitterData(value);
 				} else {
 					myTrace("in peripheral_characteristic_updatedHandler, device type not known");
 				}
@@ -976,6 +1106,9 @@ package services
 			myTrace("peripheral_characteristic_writeHandler " + getCharacteristicName(event.characteristic.uuid));
 			if (BlueToothDevice.isDexcomG4()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
+			}
+			if (BlueToothDevice.isDexcomG5() && event.characteristic.uuid.toUpperCase() == G5_Authentication_Characteristic_UUID.toUpperCase()) {
+				awaitingAuthStatusRxMessage = true;
 			}
 		}
 		
@@ -1076,6 +1209,7 @@ package services
 		
 		private static function processG5TransmitterData(buffer:ByteArray, characteristic:Characteristic):void {
 			myTrace("in processG5TransmitterData");
+			awaitingAuthStatusRxMessage = false;
 			buffer.endian = Endian.LITTLE_ENDIAN;
 			var code:int = buffer.readByte();
 			switch (code) {
@@ -1225,7 +1359,6 @@ package services
 			var blueToothServiceEvent:BlueToothServiceEvent  = null;
 			var gotLowBat:Boolean = false;
 			
-			////////code copied form xdripplus, commit e429b3db0bcd059cd8bb517bf15cabe705436ed2
 			var cmdFound:int = 0;
 			
 			//BluKon code by gregorybel
@@ -1246,29 +1379,8 @@ package services
 				
 				if (blukonCurrentCommand.indexOf("810a00") == 0) {//ACK sent
 					//ack received
-					
-					//This command will be asked only one time after first connect and never again
-					if (!m_gotOneTimeUnknownCmd) {
-						blukonCurrentCommand = "010d0b00";
-						myTrace("in processBLUKONTransmitterData, getUnknownCmd1: " + blukonCurrentCommand);
-					} else {
-						if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS)) > GET_SENSOR_AGE_DELAY_IN_SECONDS * 1000) {
-							// do something only once every 4 hours
-							blukonCurrentCommand = "010d0e0127";
-							myTrace("in processBLUKONTransmitterData, getSensorAge");
-						} else {
-							if (true) {
-								myTrace("in processBLUKONTransmitterData, getHistoricData (1)");
-								blukonCurrentCommand = "010d0f02002b";
-								m_blockNumber = 0;
-							} else {
-								blukonCurrentCommand = "010d0e0103"; 
-								m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
-								myTrace("in processBLUKONTransmitterData, getNowGlucoseDataIndexCommand");
-							}
-						}
-					}
-					
+					blukonCurrentCommand = "010d0b00";
+					myTrace("in processBLUKONTransmitterData, getUnknownCmd1: " + blukonCurrentCommand);
 				} else {
 					myTrace("in processBLUKONTransmitterData, Got sleep ack, resetting initialstate!");
 					blukonCurrentCommand = "";
@@ -1295,7 +1407,6 @@ package services
 					_instance.dispatchEvent(blueToothServiceEvent);
 				}
 
-				m_gotOneTimeUnknownCmd = false;
 				m_getNowGlucoseDataCommand = false;
 				m_getNowGlucoseDataIndexCommand = false;
 				blukonCurrentCommand = "";
@@ -1346,7 +1457,6 @@ package services
 					gotLowBat = true;
 				}
 				
-				//try asking each time m_gotOneTimeUnknownCmd = true;
 				if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS)) > GET_SENSOR_AGE_DELAY_IN_SECONDS * 1000) {
 					blukonCurrentCommand = "010d0e0127";
 					myTrace("in processBLUKONTransmitterData, getSensorAge");
@@ -1648,6 +1758,109 @@ package services
 			}
 		}
 		
+		public static function processTRANSMITER_PLTransmitterData(buffer:ByteArray):void {
+			buffer.endian = Endian.LITTLE_ENDIAN;
+			
+			buffer.position = 0;
+			var bufferAsString:String = buffer.readUTFBytes(buffer.length);
+			myTrace("in processTRANSMITER_PLTransmitterData buffer as string =  " + bufferAsString);
+			var bufferAsStringSplitted:Array = bufferAsString.split(/\s/);
+			if (bufferAsStringSplitted.length > 1) {
+				if (bufferAsStringSplitted[0] == "000999") {
+					if (bufferAsStringSplitted[1] == "0001") {
+						myTrace("in processTRANSMITER_PLTransmitterData, error code 0001, to low voltage for nfc reading");
+						if (BackgroundFetch.appIsInForeground()) {
+							AlertManager.showSimpleAlert
+							(
+								"Error",
+								"Voltage is too low for NFC reading",
+								4 * 60 + 30
+							);
+						} 					
+					} else if (bufferAsStringSplitted[1] == "0002") {
+						myTrace("in processTRANSMITER_PLTransmitterData, error code 0002, please check position of device. Is it fixed on sensor ? ");
+						if (BackgroundFetch.appIsInForeground()) {
+							AlertManager.showSimpleAlert
+							(
+								"Error",
+								"Is your device correctly fixed to the sensor?",
+								4 * 60 + 30
+							);
+						} 					
+					} else {
+						myTrace("in processTRANSMITER_PLTransmitterData, Error code = " + bufferAsStringSplitted[1] + ", call the service man");
+						if (BackgroundFetch.appIsInForeground()) {
+							AlertManager.showSimpleAlert
+							(
+								"Error",
+								"Error Code: " + bufferAsStringSplitted[1] + ". Please contact seller's support",
+								4 * 60 + 30
+							);
+						} 					
+					}
+					return;
+				}
+			}
+			if (bufferAsStringSplitted.length < 4) {
+				myTrace("in processTRANSMITER_PLTransmitterData. Response has less than 4 elements, no further processing");
+				return;
+			}
+			var raw_data:Number = new Number(bufferAsStringSplitted[0]);
+			if (isNaN(raw_data)) {
+				myTrace("in processTRANSMITER_PLTransmitterData, data doesn't start with an Integer, no further processing");
+				return;
+			}
+			var bridge_battery_level:Number = new Number(bufferAsStringSplitted[2]);
+			
+			var sensorAge:Number = (new Number(bufferAsStringSplitted[3])) * 10;
+			//see https://github.com/JohanDegraeve/iosxdripreader/issues/42
+			if (previousSensorAgeValue_Transmiter_PL != 0) 
+			{
+				if (previousSensorAgeValue_Transmiter_PL <= sensorAge) 
+				{
+					myTrace("in processTRANSMITER_PLTransmitterData, previousSensorAgeValue_Transmiter_PL = " + previousSensorAgeValue_Transmiter_PL + ", sensorAge = " + sensorAge);
+					if ((new Date()).valueOf() - timeStampSinceLastSensorAgeUpdate_Transmiter_PL > 10 * 60 * 1000) 
+					{
+						myTrace("in processTRANSMITER_PLTransmitterData, timeStampSinceLastSensorAgeUpdate_Transmiter_PL = " + new Date(timeStampSinceLastSensorAgeUpdate_Transmiter_PL).toLocaleString());
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES, 
+								(new Number(new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES))) + 1).toString());
+						if (new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES)) >= 5) {
+						myTrace("in processTRANSMITER_PLTransmitterData, LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES = " + LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES);
+						if (BackgroundFetch.appIsInForeground()) 
+						{
+							AlertManager.showSimpleAlert
+							(
+								ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+								ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor")
+							);
+							
+							BackgroundFetch.vibrate();
+						} 
+						else 
+						{
+							var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+								.setId(NotificationService.ID_FOR_OTHER_G5_APP)
+								.setAlert(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
+								.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
+								.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor"))
+								.enableVibration(true)
+							Notifications.service.notify(notificationBuilder.build());
+							}						
+						}
+					}
+				} else {
+					timeStampSinceLastSensorAgeUpdate_Transmiter_PL = (new Date()).valueOf();
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES, "0");
+				}
+			}
+			previousSensorAgeValue_Transmiter_PL = sensorAge;
+			
+			myTrace("in processTRANSMITER_PLTransmitterData, dispatching transmitter data");
+			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+			blueToothServiceEvent.data = new TransmitterDataTransmiter_PLPacket(raw_data, bridge_battery_level, sensorAge, (new Date()).valueOf());
+			_instance.dispatchEvent(blueToothServiceEvent);
+		}
+		
 		public static function processBlueReaderTransmitterData(buffer:ByteArray):void {
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
@@ -1668,7 +1881,6 @@ package services
 			myTrace("in processBlueReaderTransmitterData, it's not a battery message, continue processing");
 			var bufferAsStringSplitted:Array = bufferAsString.split(/\s/);
 			var raw_data:Number = new Number(bufferAsStringSplitted[0]);
-			var filtered_data:Number = new Number(bufferAsStringSplitted[0]);
 
 			if (isNaN(raw_data)) {
 				myTrace("in processBlueReaderTransmitterData, data doesn't start with an Integer, no further processing");
@@ -1818,6 +2030,7 @@ package services
 			myTrace("in fullAuthenticateG5");
 			if (G5AuthenticationCharacteristic != null) {
 				sendAuthRequestTxMessage(G5AuthenticationCharacteristic);
+				awaitingAuthStatusRxMessage = true;
 			} else {
 				myTrace("fullAuthenticate: authCharacteristic is NULL!");
 			}
@@ -1843,12 +2056,9 @@ package services
 			}
 		}
 		
-		/**
-		 * to be called when performfetch is received, this will actually start the rescan 
-		 */
 		public static function startRescan(event:flash.events.Event):void {
 			if (!(BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
-				myTrace("In rescanAtPerformFetch but bluetooth is not on");
+				myTrace("In startRescan but bluetooth is not on");
 				return;
 			}
 			
@@ -1883,6 +2093,10 @@ package services
 				return "BlueReader_TX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == HM_RX_TX_G4.toUpperCase()) {
 				return "HM_RX_TX_G4";
+			} else if (uuid.toUpperCase() == TRANSMITER_PL_RX_CHARACTERISTIC_UUID.toUpperCase()) {
+				return "TRANSMITER_PL_RX_CHARACTERISTIC_UUID";
+			} else if (uuid.toUpperCase() == TRANSMITER_PL_TX_CHARACTERISTIC_UUID.toUpperCase()) {
+				return "TRANSMITER_PL_TX_CHARACTERISTIC_UUID";
 			} 
 			return uuid + ", unknown characteristic uuid";
 		}
@@ -1902,15 +2116,15 @@ package services
 					sensorStatusString = "starting";
 					ret = true;
 					break;
-				case 3:
+				case 3: // status for 14 days and 12 h of normal operation, abbott reader quits after 14 days
 					sensorStatusString = "ready";
 					ret = true;
 					break;
-				case 4:
+				case 4: // status of the following 12 h, sensor delivers last BG reading constantly
 					sensorStatusString = "expired";
-					ret = true;
+					ret = true; //Comment this line if expired sensors should not be permitted
 					break;
-				case 5:
+				case 5: // sensor stops operation after 15d after start
 					sensorStatusString = "shutdown";
 					//to use dead sensors for test
 					//ret = true
@@ -1936,6 +2150,20 @@ package services
 			}
 			
 			return ret;
+		}
+		
+		private static function startMonitoringAndRangingBeaconsInRegion(uuid:String):void {
+			if (!startedMonitoringAndRangingBeaconsInRegion) {
+				BackgroundFetch.startMonitoringAndRangingBeaconsInRegion(uuid);
+				startedMonitoringAndRangingBeaconsInRegion = true;
+			}
+		}
+		
+		private static function stopMonitoringAndRangingBeaconsInRegion(uuid:String):void {
+			if (startedMonitoringAndRangingBeaconsInRegion) {
+				BackgroundFetch.stopMonitoringAndRangingBeaconsInRegion(uuid);
+				startedMonitoringAndRangingBeaconsInRegion = false;
+			}
 		}
 	}
 }

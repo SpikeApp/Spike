@@ -169,7 +169,7 @@ package ui.popups
 				fileStream.readBytes(fileData);
 				fileStream.close();
 				
-				//Create URL Request AddressModelLocator.resourceManagerInstance.getString('wixelsender',"send_alert_button_label")
+				//Create URL Request Address
 				var emailBody:String = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_body");
 				
 				var vars:URLVariables = new URLVariables();
@@ -177,7 +177,7 @@ package ui.popups
 				vars.mimeType = "application/zip";
 				vars.emailSubject = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_subject");
 				vars.emailBody = emailBody;
-				vars.userEmail = emailField.text;
+				vars.userEmail = emailField.text.replace(" ", "");
 				vars.mode = EmailSender.MODE_EMAIL_USER;
 				
 				//Send data

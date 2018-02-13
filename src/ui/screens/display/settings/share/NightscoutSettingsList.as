@@ -15,7 +15,7 @@ package ui.screens.display.settings.share
 	
 	import model.ModelLocator;
 	
-	import services.NightscoutServiceEnhanced;
+	import services.NightscoutService;
 	
 	import starling.events.Event;
 	
@@ -199,14 +199,14 @@ package ui.screens.display.settings.share
 		private function onNightscoutLogin(event:Event):void
 		{
 			//Workaround so the NightscoutService doesn't test credentials twice
-			NightscoutServiceEnhanced.ignoreSettingsChanged = true;
+			NightscoutService.ignoreSettingsChanged = true;
 			
 			//Save values to database
 			save();
 			
 			//Test Credentials
-			NightscoutServiceEnhanced.testNightscoutCredentials(true);
-			NightscoutServiceEnhanced.ignoreSettingsChanged = false;
+			NightscoutService.testNightscoutCredentials(true);
+			NightscoutService.ignoreSettingsChanged = false;
 		}
 		
 		override public function dispose():void

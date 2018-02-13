@@ -23,7 +23,7 @@ package ui.screens.display.settings.share
 	
 	import model.ModelLocator;
 	
-	import services.DexcomShareServiceEnhanced;
+	import services.DexcomShareService;
 	
 	import starling.core.Starling;
 	import starling.display.Sprite;
@@ -103,7 +103,7 @@ package ui.screens.display.settings.share
 				selectedServerCode = "non-us";
 			
 			if (!BlueToothDevice.isDexcomG5())
-				selectedDexcomShareSerialNumber = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER);
+				selectedDexcomShareSerialNumber = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER).toUpperCase();
 			else
 				selectedDexcomShareSerialNumber = "";
 		}
@@ -221,8 +221,8 @@ package ui.screens.display.settings.share
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, selectedPassword);
 			
 			//Serial
-			if (!BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER) != selectedDexcomShareSerialNumber)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER, selectedDexcomShareSerialNumber);
+			if (!BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER) != selectedDexcomShareSerialNumber.toUpperCase())
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER, selectedDexcomShareSerialNumber.toUpperCase());
 			
 			//Server
 			var dexcomServerValue:String;
@@ -314,18 +314,18 @@ package ui.screens.display.settings.share
 		private function onDexcomShareLogin(event:Event):void
 		{
 			//Workaround for duplicate checking
-			DexcomShareServiceEnhanced.ignoreSettingsChanged = true;
+			DexcomShareService.ignoreSettingsChanged = true;
 			
 			//Save values to database
 			save();
 			
 			//Test Credentials
-			DexcomShareServiceEnhanced.testDexcomShareCredentials(true);
+			DexcomShareService.testDexcomShareCredentials(true);
 		}
 		
 		private function onManageFollowers(e:Event):void
 		{
-			if(DexcomShareServiceEnhanced.isAuthorized())
+			if(DexcomShareService.isAuthorized())
 			{
 				//SessionID exists, show followers
 				setupCalloutPosition();

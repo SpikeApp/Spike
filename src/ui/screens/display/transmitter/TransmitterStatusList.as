@@ -272,6 +272,19 @@ package ui.screens.display.transmitter
 				else
 					batteryLevelValue = String((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000);
 			}
+			else if (BlueToothDevice.isTransmiter_PL())
+			{
+				/* Transmitter Type */
+				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
+				
+				/* Battery Level */
+				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
+				
+				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					batteryLevelValue = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL) + " %");
+			}
 			else if (BlueToothDevice.isBluKon())
 			{
 				/* Transmitter Type */
@@ -352,7 +365,7 @@ package ui.screens.display.transmitter
 					resistanceIcon.name = "resistanceIcon";
 				}
 			}
-			else //Rest of the thansmitters
+			else //Rest of the transmitters
 			{
 				if(batteryLevelValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown') || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryUnknownTexture;

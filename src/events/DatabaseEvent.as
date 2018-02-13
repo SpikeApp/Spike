@@ -17,6 +17,8 @@
  */
 package events
 {
+	import flash.events.Event;
+
 	[Event(name="ResultEvent",type="events.DatabaseEvent")]
 	[Event(name="ErrorEvent",type="events.DatabaseEvent")]
 	[Event(name="LoggingInsertedEvent",type="events.DatabaseEvent")]
@@ -25,7 +27,7 @@ package events
 	[Event(name="BGReadingRetrievedEvent",type="events.DatabaseEvent")]
 	[Event(name="LogRetrievedEvent",type="events.DatabaseEvent")]
 	
-	public class DatabaseEvent extends GenericEvent
+	public class DatabaseEvent extends Event
 	{
 		public static const RESULT_EVENT:String = "ResultEvent";
 		public static const ERROR_EVENT:String = "ErrorEvent";

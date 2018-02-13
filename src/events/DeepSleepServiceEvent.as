@@ -1,7 +1,8 @@
 package events
 {
+	import flash.events.Event;
 	
-	public class DeepSleepServiceEvent extends GenericEvent
+	public class DeepSleepServiceEvent extends Event
 	{
 		[Event(name="DeepSleepServiceTimerEvent",type="events.DeepSleepServiceEvent")]
 		

@@ -21,7 +21,7 @@ package com.airhttp
     public class HttpServer
     {
 		/* Constants */
-		private static const MAX_CONNECTION_ATTEMPTS:uint = 5;
+		private static const MAX_CONNECTION_ATTEMPTS:uint = 20;
 		
         private var _serverSocket:ServerSocket;
         private var _controllers:Object = new Object();
@@ -72,7 +72,7 @@ package com.airhttp
 				{
 					Trace.myTrace("HttpServer.as", "Server error! Can't bind to port: " + port + ". Notifying user...");
 					
-					var message:String = ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_title').replace("{port}", port.toString()) + " " + error.message;
+					var message:String = ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_mesage').replace("{port}", port.toString()) + " " + error.message;
 					
 					AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_title'), message);
 				}

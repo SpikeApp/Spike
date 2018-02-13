@@ -23,6 +23,7 @@ package ui.screens.display.settings.alarms
 	import feathers.data.HierarchicalCollection;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.RelativePosition;
+	import feathers.layout.VerticalLayout;
 	import feathers.layout.VerticalLayoutData;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -108,6 +109,8 @@ package ui.screens.display.settings.alarms
 			hasElasticEdges = false;
 			layoutData = new VerticalLayoutData( 100 );
 			width = 300;
+			(layout as VerticalLayout).hasVariableItemDimensions = true;
+			(layout as VerticalLayout).useVirtualLayout = false;
 		}
 		
 		private function setupInitialState(glucoseUnit:String = null):void
@@ -200,7 +203,18 @@ package ui.screens.display.settings.alarms
 			startTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 0);
 			startTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 58);
 			startTime.value = startDate;
-			startTime.height = 35;
+			if(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
+				startTime.height = 160;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+				startTime.height = 150;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				startTime.height = 145;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				startTime.height = 140;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				startTime.height = 60;
+			startTime.paddingTop = 5;
+			startTime.paddingBottom = 5;
 			startTime.pivotX = 3;
 			startTime.addEventListener(Event.CHANGE, onStartTimeChange);
 			
@@ -209,7 +223,18 @@ package ui.screens.display.settings.alarms
 			endTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 1);
 			endTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 59);
 			endTime.value = endDate;
-			endTime.height = 35;
+			if(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
+				endTime.height = 160;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+				endTime.height = 150;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				endTime.height = 145;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				endTime.height = 140;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				endTime.height = 60;
+			endTime.paddingTop = 5;
+			endTime.paddingBottom = 5;
 			endTime.pivotX = 3;
 			endTime.addEventListener(Event.CHANGE, onEndTimeChange);
 			
@@ -285,7 +310,8 @@ package ui.screens.display.settings.alarms
 			var screenDataContent:Array = [];
 			
 			var infoSection:Object = {};
-			infoSection.header = { label: headerLabelValue };
+			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				infoSection.header = { label: headerLabelValue };
 			
 			var infoSectionChildren:Array = [];
 			
@@ -306,11 +332,13 @@ package ui.screens.display.settings.alarms
 				var itemRenderer:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.iconSourceField = "accessory";
-				itemRenderer.height = 50;
 				itemRenderer.paddingLeft = -5;
 				
 				return itemRenderer;
 			};
+			
+			(layout as VerticalLayout).hasVariableItemDimensions = true;
+			(layout as VerticalLayout).useVirtualLayout = false;
 		}
 		
 		private function refreshAlertTypeList(newAlertName:String):void

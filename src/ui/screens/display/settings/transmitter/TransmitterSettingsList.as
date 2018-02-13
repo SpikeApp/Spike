@@ -1,7 +1,5 @@
 package ui.screens.display.settings.transmitter
 {
-	import mx.utils.ObjectUtil;
-	
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
@@ -120,6 +118,14 @@ package ui.screens.display.settings.transmitter
 					button.fontStyles = new TextFormat("Roboto", 10, 0xEEEEEE);
 					return button;
 				};
+			}
+			transmitterType.itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				itemRenderer.paddingRight = 6;
+				itemRenderer.paddingLeft = 6;
+				return itemRenderer;
 			}
 			
 			if(transmitterTypeValue == "")
@@ -300,12 +306,12 @@ package ui.screens.display.settings.transmitter
 				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4') ||
 				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon')) &&
 				transmitterID.text == "")
-				{
-					warnUser = true;
-				}
-				else
-					warnUser = false;
-				}
+			{
+				warnUser = true;
+			}
+			else
+				warnUser = false;
+			}
 		
 		/**
 		 * Event Handlers
