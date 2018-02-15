@@ -1,2 +1,9 @@
+1.0.3
+Added more debug messages to Nightscout and Dexcom connectors to provide better support in case someone has problems with any of these services.
+The Today Widget was not coloring the main glucose label correctly while in mmol/L and the chart was not displaying values as it should (also while in mmol/L). Both issues have been fixed.
+Removed support for dynamic coloring of the line in the Today Widget (to reflect high, in range and low values) while in mmol/L. It doesn't work well because the coloring ranges in the line need to be whole numbers, doesn't work with decimals. So, for mmol/L, the line is now always a solid color. To make up for mmol/L users, they now have a setting inside Spike to customize the line color. Mg/dL users continue to have a dynamic line that changes color if the glucose values are high, in range or low.
+
+1.0.2
 Fixed a bug in the Apple Watch settings screen.
 Improved layout of "Add Alarm" popup on larger screens.
+Improved Offline Loop feature.

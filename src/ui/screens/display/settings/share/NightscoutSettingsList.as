@@ -152,9 +152,9 @@ package ui.screens.display.settings.share
 		
 		private function onSettingsChanged():void
 		{
-			selectedAPISecret = nsAPISecret.text;
+			selectedAPISecret = nsAPISecret.text.replace(" ", "");
 			nsURL.text = nsURL.text.replace(" ", "");
-			selectedURL = nsURL.text;
+			selectedURL = nsURL.text.replace(" ", "");
 			
 			needsSave = true;
 		}

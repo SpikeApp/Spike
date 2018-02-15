@@ -112,7 +112,6 @@ package services
 			while (queue.length > glucoseHistoryValue) 
 			{
 				var eventObject:EventObject = queue.shift();
-				trace("Deleting event: ", eventObject.notes);
 				deleteEvents(new Date(eventObject.startTimestamp), new Date(eventObject.endTimestamp), eventObject.calendarId, eventObject.notes);
 				eventObject = null;
 			}

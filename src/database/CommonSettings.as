@@ -284,6 +284,11 @@
 		  * Chart Settings
 		  */
 		 public static const COMMON_SETTING_CHART_OLD_DATA_COLOR:int = 99;
+		 
+		 /**
+		  * Widget 
+		  */
+		 public static const COMMON_SETTING_WIDGET_MAIN_LINE_COLOR:int = 100;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -385,7 +390,8 @@
 			 "16777215",//COMMON_SETTING_WIDGET_GRID_LINES_COLOR
 			 "16777215",//COMMON_SETTING_WIDGET_DISPLAY_LABELS_COLOR
 			 "11250603",//COMMON_SETTING_WIDGET_OLD_DATA_COLOR
-			 "11250603"//COMMON_SETTING_CHART_OLD_DATA_COLOR
+			 "11250603",//COMMON_SETTING_CHART_OLD_DATA_COLOR
+			 "16777215"//COMMON_SETTING_WIDGET_MAIN_LINE_COLOR
 		 ];
 
 		 public function CommonSettings()

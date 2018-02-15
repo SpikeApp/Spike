@@ -43,6 +43,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var latestGlucoseDelta:String = ""
     var latestGlucoseTime:String = ""
     var glucoseUnit:String = ""
+    var glucoseUnitInternal:String = ""
     var chartData:String = ""
     var externalDataEncoded:Data = Data()
     var urgenLowThreshold:String = ""
@@ -59,6 +60,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var axisColor:String = ""
     var axisFontColor:String = ""
     var gridLinesColor:String = ""
+    var mainLineColor:String = ""
     var backgroundColor:String = ""
     var backgroundOpacity:NSString = ""
     var displayLabelsColor:String = ""
@@ -186,6 +188,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             externalData["latestGlucoseDelta"] == nil ||
             externalData["latestGlucoseTime"] == nil ||
             externalData["glucoseUnit"] == nil ||
+            externalData["glucoseUnitInternal"] == nil ||
             externalData["chartData"] == nil ||
             externalData["urgenLowThreshold"] == nil ||
             externalData["lowThreshold"] == nil ||
@@ -201,6 +204,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             externalData["axisColor"] == nil ||
             externalData["axisFontColor"] == nil ||
             externalData["gridLinesColor"] == nil ||
+            externalData["mainLineColor"] == nil ||
             externalData["backgroundColor"] == nil ||
             externalData["backgroundOpacity"] == nil ||
             externalData["displayLabelsColor"] == nil ||
@@ -228,6 +232,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         latestGlucoseDelta = (externalData["latestGlucoseDelta"] as? String)!
         latestGlucoseTime = (externalData["latestGlucoseTime"] as? String)!
         glucoseUnit = (externalData["glucoseUnit"] as? String)!
+        glucoseUnitInternal = (externalData["glucoseUnitInternal"] as? String)!
         chartData = (externalData["chartData"] as? String)!
         externalDataEncoded = chartData.data(using: String.Encoding.utf8, allowLossyConversion: false)!
         urgenLowThreshold = (externalData["urgenLowThreshold"] as? String)!
@@ -244,6 +249,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         axisColor = (externalData["axisColor"] as? String)!
         axisFontColor = (externalData["axisFontColor"] as? String)!
         gridLinesColor = (externalData["gridLinesColor"] as? String)!
+        mainLineColor = (externalData["mainLineColor"] as? String)!
         backgroundColor = (externalData["backgroundColor"] as? String)!
         backgroundOpacity = (externalData["backgroundOpacity"] as? NSString)!
         displayLabelsColor = (externalData["displayLabelsColor"] as? String)!
@@ -258,6 +264,12 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         showGridLines = (externalData["showGridLines"] as? String)!
         lineThickness = (externalData["lineThickness"] as? NSString)!
         markerRadius = (externalData["markerRadius"] as? NSString)!
+        
+        print("urgenLowThreshold \(urgenLowThreshold)")
+        print("lowThreshold \(lowThreshold)")
+        print("highThreshold \(highThreshold)")
+        print("urgentHighThreshold \(urgentHighThreshold)")
+        print("glucoseUnitInternal \(glucoseUnitInternal)")
         
         return true
     }
@@ -283,37 +295,75 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             glucoseDisplay.font = glucoseDisplay.font.withSize(40)
         }
         
-        if getTotalMinutes(latestTimestamp: Int64(latestGlucoseTime)!) >= 6
+        if glucoseUnitInternal == "mgdl"
         {
-            glucoseDisplay.textColor = UIColor.colorFromHex(hexString: oldDataColor)
+            if getTotalMinutes(latestTimestamp: Int64(latestGlucoseTime)!) >= 6
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: oldDataColor)
+            }
+            else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+            }
+            else if latestGlucoseValue == "HIGH"
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+            }
+            else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentLowThresholdInteger = Int(urgenLowThreshold), latestGlucoseValueInteger <= urgentLowThresholdInteger
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+            }
+            else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentLowThresholdInteger = Int(urgenLowThreshold), let lowThresholdInteger = Int(lowThreshold), latestGlucoseValueInteger > urgentLowThresholdInteger && latestGlucoseValueInteger <= lowThresholdInteger
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: lowColor)
+            }
+            else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let lowThresholdInteger = Int(lowThreshold), let highThresholdInteger = Int(highThreshold), latestGlucoseValueInteger > lowThresholdInteger && latestGlucoseValueInteger < highThresholdInteger
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: inRangeColor)
+            }
+            else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let highThresholdInteger = Int(highThreshold), let urgentHighThresholdInteger = Int(urgentHighThreshold), latestGlucoseValueInteger >= highThresholdInteger && latestGlucoseValueInteger < urgentHighThresholdInteger
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: highColor)
+            }
+            else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentHighThresholdInteger = Int(urgentHighThreshold), latestGlucoseValueInteger >= urgentHighThresholdInteger
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+            }
         }
-        else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
+        else
         {
-            glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
-        }
-        else if latestGlucoseValue == "HIGH"
-        {
-            glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
-        }
-        else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentLowThresholdInteger = Int(urgenLowThreshold), latestGlucoseValueInteger <= urgentLowThresholdInteger
-        {
-            glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
-        }
-        else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentLowThresholdInteger = Int(urgenLowThreshold), let lowThresholdInteger = Int(lowThreshold), latestGlucoseValueInteger > urgentLowThresholdInteger && latestGlucoseValueInteger <= lowThresholdInteger
-        {
-            glucoseDisplay.textColor = UIColor.colorFromHex(hexString: lowColor)
-        }
-        else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let lowThresholdInteger = Int(lowThreshold), let highThresholdInteger = Int(highThreshold), latestGlucoseValueInteger > lowThresholdInteger && latestGlucoseValueInteger < highThresholdInteger
-        {
-            glucoseDisplay.textColor = UIColor.colorFromHex(hexString: inRangeColor)
-        }
-        else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let highThresholdInteger = Int(highThreshold), let urgentHighThresholdInteger = Int(urgentHighThreshold), latestGlucoseValueInteger >= highThresholdInteger && latestGlucoseValueInteger < urgentHighThresholdInteger
-        {
-            glucoseDisplay.textColor = UIColor.colorFromHex(hexString: highColor)
-        }
-        else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentHighThresholdInteger = Int(urgentHighThreshold), latestGlucoseValueInteger >= urgentHighThresholdInteger
-        {
-            glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+            if getTotalMinutes(latestTimestamp: Int64(latestGlucoseTime)!) >= 6
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: oldDataColor)
+            }
+            else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+            }
+            else if latestGlucoseValue == "HIGH"
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+            }
+            else if let latestGlucoseValueFloat = Float(latestGlucoseValue), let urgentLowThresholdFloat = Float(urgenLowThreshold), latestGlucoseValueFloat <= urgentLowThresholdFloat
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+            }
+            else if let latestGlucoseValueFloat = Float(latestGlucoseValue), let urgentLowThresholdFloat = Float(urgenLowThreshold), let lowThresholdFloat = Float(lowThreshold), latestGlucoseValueFloat > urgentLowThresholdFloat && latestGlucoseValueFloat <= lowThresholdFloat
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: lowColor)
+            }
+            else if let latestGlucoseValueFloat = Float(latestGlucoseValue), let lowThresholdFloat = Float(lowThreshold), let highThresholdFloat = Float(highThreshold), latestGlucoseValueFloat > lowThresholdFloat && latestGlucoseValueFloat < highThresholdFloat
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: inRangeColor)
+            }
+            else if let latestGlucoseValueFloat = Float(latestGlucoseValue), let highThresholdFloat = Float(highThreshold), let urgentHighThresholdFloat = Float(urgentHighThreshold), latestGlucoseValueFloat >= highThresholdFloat && latestGlucoseValueFloat < urgentHighThresholdFloat
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: highColor)
+            }
+            else if let latestGlucoseValueFloat = Float(latestGlucoseValue), let urgentHighThresholdFloat = Float(urgentHighThreshold), latestGlucoseValueFloat >= urgentHighThresholdFloat
+            {
+                glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+            }
         }
         
         timeDisplay.text = getTimeAgo(latestTimestamp: Int64(latestGlucoseTime)!, hourAgo: hourAgo, minAgo: minAgo, ago: ago, now: now)
@@ -356,6 +406,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             for (chartData) in externalDataJSON
             {
                 chartGlucoseValues.append(chartData.value)
+                print("chartData.value \(chartData.value)")
                 chartGlucoseTimes.append(chartData.time)
             }
         }
@@ -431,45 +482,56 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         data.itemCount = UInt(chartGlucoseValues.count)
         
         //Data Color Ranges
-        let urgentLowThresholdStart = 1
-        let urgentLowThresholdEnd = Int(urgenLowThreshold)! - 1
-        let lowThresholdStart = Int(urgenLowThreshold)! + 1
-        let lowThresholdEnd = Int(lowThreshold)! - lowThresholdStart
-        let inRangeThresholdStart = Int(lowThreshold)! + 1
-        let inRangeThresholdEnd = Int(highThreshold)! - inRangeThresholdStart - 1
-        let highThresholdStart = Int(highThreshold)!
-        let highThresholdEnd = Int(urgentHighThreshold)! - highThresholdStart - 1
-        let urgentHighThresholdStart = Int(urgentHighThreshold)!
-        let urgentHighThresholdEnd = 600 - urgentHighThresholdStart
+        if glucoseUnitInternal == "mgdl"
+        {
+            let urgentLowThresholdStart = 1
+            let urgentLowThresholdEnd = Int(urgenLowThreshold)! - 1
+            let lowThresholdStart = Int(urgenLowThreshold)! + 1
+            let lowThresholdEnd = Int(lowThreshold)! - lowThresholdStart
+            let inRangeThresholdStart = Int(lowThreshold)! + 1
+            let inRangeThresholdEnd = Int(highThreshold)! - inRangeThresholdStart - 1
+            let highThresholdStart = Int(highThreshold)!
+            let highThresholdEnd = Int(urgentHighThreshold)! - highThresholdStart - 1
+            let urgentHighThresholdStart = Int(urgentHighThreshold)!
+            let urgentHighThresholdEnd = 600 - urgentHighThresholdStart
+            
+            let urgentLowRange = NSMakeRange(urgentLowThresholdStart, urgentLowThresholdEnd)
+            //print("urgentLowRange.lowerBound +\(urgentLowRange.lowerBound)")
+            //print("urgentLowRange.upperBound +\(urgentLowRange.upperBound)")
+            
+            let lowRange = NSMakeRange(lowThresholdStart, lowThresholdEnd)
+            //print("lowRange.lowerBound +\(lowRange.lowerBound)")
+            //print("lowRange.upperBound +\(lowRange.upperBound)")
+            
+            let inRangeRange = NSMakeRange(inRangeThresholdStart, inRangeThresholdEnd)
+            //print("inRangeRange.lowerBound +\(inRangeRange.lowerBound)")
+            //print("inRangeRange.upperBound +\(inRangeRange.upperBound)")
+            
+            let highRange = NSMakeRange(highThresholdStart, highThresholdEnd)
+            //print("highRange.lowerBound +\(highRange.lowerBound)")
+            //print("highRange.upperBound +\(highRange.upperBound)")
+            
+            let urgentHighRange = NSMakeRange(urgentHighThresholdStart, urgentHighThresholdEnd)
+            //print("urgentHighRange.lowerBound +\(urgentHighRange.lowerBound)")
+            //print("urgentHighRange.upperBound +\(urgentHighRange.upperBound)")
+            
+            data.rangeColors = [
+                PNLineChartColorRange(range: urgentLowRange, color: UIColor.colorFromHex(hexString: urgenLowColor)),
+                PNLineChartColorRange(range: lowRange, color: UIColor.colorFromHex(hexString: lowColor)),
+                PNLineChartColorRange(range: inRangeRange, color: UIColor.colorFromHex(hexString: inRangeColor)),
+                PNLineChartColorRange(range: highRange, color: UIColor.colorFromHex(hexString: highColor)),
+                PNLineChartColorRange(range: urgentHighRange, color: UIColor.colorFromHex(hexString: urgentHighColor))
+            ]
+        }
         
-        let urgentLowRange = NSMakeRange(urgentLowThresholdStart, urgentLowThresholdEnd)
-        //print("urgentLowRange.lowerBound +\(urgentLowRange.lowerBound)")
-        //print("urgentLowRange.upperBound +\(urgentLowRange.upperBound)")
-        
-        let lowRange = NSMakeRange(lowThresholdStart, lowThresholdEnd)
-        //print("lowRange.lowerBound +\(lowRange.lowerBound)")
-        //print("lowRange.upperBound +\(lowRange.upperBound)")
-        
-        let inRangeRange = NSMakeRange(inRangeThresholdStart, inRangeThresholdEnd)
-        //print("inRangeRange.lowerBound +\(inRangeRange.lowerBound)")
-        //print("inRangeRange.upperBound +\(inRangeRange.upperBound)")
-        
-        let highRange = NSMakeRange(highThresholdStart, highThresholdEnd)
-        //print("highRange.lowerBound +\(highRange.lowerBound)")
-        //print("highRange.upperBound +\(highRange.upperBound)")
-        
-        let urgentHighRange = NSMakeRange(urgentHighThresholdStart, urgentHighThresholdEnd)
-        //print("urgentHighRange.lowerBound +\(urgentHighRange.lowerBound)")
-        //print("urgentHighRange.upperBound +\(urgentHighRange.upperBound)")
-        
-        data.rangeColors = [
-            PNLineChartColorRange(range: urgentLowRange, color: UIColor.colorFromHex(hexString: urgenLowColor)),
-            PNLineChartColorRange(range: lowRange, color: UIColor.colorFromHex(hexString: lowColor)),
-            PNLineChartColorRange(range: inRangeRange, color: UIColor.colorFromHex(hexString: inRangeColor)),
-            PNLineChartColorRange(range: highRange, color: UIColor.colorFromHex(hexString: highColor)),
-            PNLineChartColorRange(range: urgentHighRange, color: UIColor.colorFromHex(hexString: urgentHighColor))
-        ]
-        data.color = UIColor.colorFromHex(hexString: inRangeColor)
+        if glucoseUnitInternal == "mgdl"
+        {
+            data.color = UIColor.colorFromHex(hexString: inRangeColor)
+        }
+        else
+        {
+            data.color = UIColor.colorFromHex(hexString: mainLineColor)
+        }
             
         //Data Settings
         if showMarkers == "true"

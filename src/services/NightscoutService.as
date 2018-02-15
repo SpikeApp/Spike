@@ -12,6 +12,8 @@ package services
 	import flash.net.URLRequestMethod;
 	import flash.utils.Timer;
 	
+	import mx.utils.ObjectUtil;
+	
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BgReading;
@@ -572,11 +574,15 @@ package services
 						if (serviceActive)
 							deactivateService();
 					}
+					else
+					{
+						Trace.myTrace("NightscoutService.as", "Something when wrong! ResponseInfo: " + ObjectUtil.toString(responseInfo));
+					}
 				}
 			}
 			else
 			{
-				Trace.myTrace("NightscoutService.as", "Authentication failed! URL not found.");
+				Trace.myTrace("NightscoutService.as", "Authentication failed! URL not found. Response: " + response);
 				
 				//Alert user
 				if (externalAuthenticationCall)

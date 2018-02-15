@@ -41,6 +41,7 @@ package ui.screens.display.settings.widget
 		private var axisColorPicker:ColorPicker;
 		private var displayFontColorPicker:ColorPicker;
 		private var axisFontColorPicker:ColorPicker;
+		private var mainLineColorPicker:ColorPicker;
 		private var _parent:PanelScreen
 		private var resetColors:Button;
 		private var copyColors:Button;
@@ -60,6 +61,7 @@ package ui.screens.display.settings.widget
 		private var lowColorValue:uint;
 		private var urgentLowColorValue:uint;
 		private var axisColorValue:uint;
+		private var mainLineColorValue:uint;
 		private var displayLabelsColorValue:uint;
 		private var axisFontColorValue:uint;
 		private var glucoseMarkerColorValue:uint;
@@ -109,6 +111,7 @@ package ui.screens.display.settings.widget
 			axisColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_COLOR));
 			axisFontColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_FONT_COLOR));
 			gridLinesColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR));
+			mainLineColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MAIN_LINE_COLOR));
 			backgroundColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR));
 			backgroundOpacityValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_OPACITY));
 			oldDataColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR));
@@ -215,6 +218,18 @@ package ui.screens.display.settings.widget
 			gridLinesColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 			colorPickers.push(gridLinesColorPicker);
 			
+			//Main line Color Picker
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+			{
+				mainLineColorPicker = new ColorPicker(20, mainLineColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+				mainLineColorPicker.name = "mainLineColor";
+				mainLineColorPicker.pivotX = 3;
+				mainLineColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+				mainLineColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				mainLineColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				colorPickers.push(mainLineColorPicker);
+			}
+			
 			//Background Color Picker
 			backgroundColorPicker = new ColorPicker(20, backgroundColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			backgroundColorPicker.name = "backgroundColor";
@@ -265,24 +280,26 @@ package ui.screens.display.settings.widget
 			};
 			
 			//Set Colors Data
-			dataProvider = new ArrayCollection(
-				[
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','urgent_high_title'), accessory: urgentHighColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','high_title'), accessory: highColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','in_range_title'), accessory: inRangeColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','low_title'), accessory: lowColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','old_data_title'), accessory: oldDataColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','display_font_title'), accessory: displayFontColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','axis_title'), accessory: axisColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','axis_font_title'), accessory: axisFontColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','glucose_marker_title'), accessory: glucoseMarkerColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','grid_lines'), accessory: gridLinesColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background'), accessory: backgroundColorPicker },
-					{ text: DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer },
-					{ text: "", accessory: resetColors },
-					{ text: "", accessory: copyColors }
-				]);
+			var dataList:Array = [];
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','urgent_high_title'), accessory: urgentHighColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','high_title'), accessory: highColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','in_range_title'), accessory: inRangeColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','low_title'), accessory: lowColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','old_data_title'), accessory: oldDataColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','display_font_title'), accessory: displayFontColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','axis_title'), accessory: axisColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','axis_font_title'), accessory: axisFontColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','glucose_marker_title'), accessory: glucoseMarkerColorPicker });
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','main_line'), accessory: mainLineColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','grid_lines'), accessory: gridLinesColorPicker });
+			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background'), accessory: backgroundColorPicker });
+			dataList.push({ text: DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer });
+			dataList.push({ text: "", accessory: resetColors });
+			dataList.push({ text: "", accessory: copyColors });
+			
+			dataProvider = new ArrayCollection(dataList);
 		}
 		
 		public function save():void
@@ -322,6 +339,9 @@ package ui.screens.display.settings.widget
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR) != String(gridLinesColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR, String(gridLinesColorValue));
+			
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MAIN_LINE_COLOR) != String(mainLineColorValue && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true"))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MAIN_LINE_COLOR, String(mainLineColorValue));
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR) != String(backgroundColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR, String(backgroundColorValue));
@@ -387,9 +407,16 @@ package ui.screens.display.settings.widget
 			axisFontColorPicker.setColor(0xFFFFFF);
 			axisFontColorValue = 0xFFFFFF;
 			
-			//Gris Lines Color Picker
+			//Grid Lines Color Picker
 			gridLinesColorPicker.setColor(0xFFFFFF);
 			gridLinesColorValue = 0xFFFFFF;
+			
+			//Main Line Color Picker
+			if(mainLineColorPicker != null)
+			{
+				mainLineColorPicker.setColor(0xFFFFFF);
+				mainLineColorValue = 0xFFFFFF;
+			}
 			
 			//Background Color Picker
 			backgroundColorPicker.setColor(0x000000);
@@ -567,6 +594,15 @@ package ui.screens.display.settings.widget
 					save();
 				}
 			}
+			else if(currentTargetName == "mainLineColor")
+			{
+				if(mainLineColorPicker.value != mainLineColorValue)
+				{
+					mainLineColorValue = mainLineColorPicker.value;
+					needsSave = true;
+					save();
+				}
+			}
 			else if(currentTargetName == "backgroundColor")
 			{
 				if(backgroundColorPicker.value != backgroundColorValue)
@@ -687,6 +723,15 @@ package ui.screens.display.settings.widget
 				gridLinesColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				gridLinesColorPicker.dispose();
 				gridLinesColorPicker = null;
+			}
+			
+			if(mainLineColorPicker != null)
+			{
+				mainLineColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				mainLineColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				mainLineColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				mainLineColorPicker.dispose();
+				mainLineColorPicker = null;
 			}
 			
 			if(backgroundColorPicker != null)

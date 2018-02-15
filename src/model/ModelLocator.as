@@ -52,6 +52,8 @@ package model
 	import services.WatchService;
 	import services.WidgetService;
 	
+	import treatments.Insulin;
+	
 	import ui.AppInterface;
 	import ui.InterfaceController;
 	

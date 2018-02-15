@@ -7,6 +7,8 @@ package network
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
+	
+	import utils.Trace;
 
 	public class NetworkConnector
 	{
@@ -160,6 +162,8 @@ package network
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			if (loader != null)
 			{
+				Trace.myTrace("NetworkConnector.as", "localHTTPStatus called. Message: " + String(loader.data));
+				
 				loader.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus);
 				loader.removeEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus);
 			}
@@ -167,11 +171,17 @@ package network
 		
 		private static function localIOErrorHandler(e:IOErrorEvent):void
 		{
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			Trace.myTrace("NetworkConnector.as", "localIOErrorHandler called. Message: " + String(loader.data));
+			
 			disposeLoader(e.currentTarget as URLLoader);
 		}
 		
 		private static function localCompleteHandler(e:Event):void
 		{
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			Trace.myTrace("NetworkConnector.as", "localCompleteHandler called. Message: " + String(loader.data));
+			
 			disposeLoader(e.currentTarget as URLLoader);
 		}
 	}

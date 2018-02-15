@@ -25,8 +25,10 @@ package ui.screens.display.treatments
 		public static const CLOSE:String = "close";
 		
 		/* Display Objects */
-		private var iconTexture:Texture;
-		private var iconImage:Image;
+		private var calibrationTexture:Texture;
+		private var calibrationImage:Image;
+		private var bolusTexture:Texture;
+		private var bolusImage:Image;
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
@@ -55,8 +57,10 @@ package ui.screens.display.treatments
 			autoHideBackground = true;
 			hasElasticEdges = false;
 			
-			iconTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
-			iconImage = new Image(iconTexture);
+			calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
+			calibrationImage = new Image(calibrationTexture);
+			bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.accountChildTexture;
+			bolusImage = new Image(bolusTexture);
 		}
 		
 		private function setupContent():void
@@ -65,10 +69,21 @@ package ui.screens.display.treatments
 			if (Calibration.allForSensor().length > 1)
 				calibrationButtonEnabled = true;
 			
+			//if (ModelLocator.INTERNAL_TESTING == false)
+			//{
 			dataProvider = new ListCollection(
 				[
-					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: iconImage, selectable:calibrationButtonEnabled, id: 1 }
+					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable:calibrationButtonEnabled, id: 1 }
 				]);
+			/*}
+			else
+			{
+				dataProvider = new ListCollection(
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable:calibrationButtonEnabled, id: 1 },
+						{ label: "Bolus", icon: bolusImage, selectable:calibrationButtonEnabled, id: 2 }
+					]);
+			}*/
 			
 			//Calibration Item Renderer Factory
 			function calibrationItemFactory():IListItemRenderer
@@ -126,16 +141,16 @@ package ui.screens.display.treatments
 		{
 			removeEventListener( Event.CHANGE, onMenuChanged );
 			
-			if (iconTexture != null)
+			if (calibrationTexture != null)
 			{
-				iconTexture.dispose();
-				iconTexture = null;
+				calibrationTexture.dispose();
+				calibrationTexture = null;
 			}
 			
-			if (iconImage != null)
+			if (calibrationImage != null)
 			{
-				iconImage.dispose();
-				iconImage = null;
+				calibrationImage.dispose();
+				calibrationImage = null;
 			}
 			
 			super.dispose();

@@ -135,8 +135,16 @@ package services
 				if (now - timestamp <= widgetHistory)
 				{
 					var glucoseValue:Number = Number(BgGraphBuilder.unitizedString((startupGlucoseReadingsList[i] as BgReading).calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
-					if (isNaN(glucoseValue) || glucoseValue < 40)
-						glucoseValue = 38;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+					{
+						if (isNaN(glucoseValue) || glucoseValue < 40)
+							glucoseValue = 38;
+					}
+					else
+					{
+						if (isNaN(glucoseValue) || glucoseValue < 2.2)
+						glucoseValue = 2.2;
+					}
 					
 					activeGlucoseReadingsList.push( { value: glucoseValue, time: getGlucoseTimeFormatted(timestamp, true), timestamp: timestamp } );
 				}
@@ -170,10 +178,20 @@ package services
 			}
 			
 			//Threshold Values
-			BackgroundFetch.setUserDefaultsData("urgenLowThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
-			BackgroundFetch.setUserDefaultsData("lowThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
-			BackgroundFetch.setUserDefaultsData("highThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
-			BackgroundFetch.setUserDefaultsData("urgentHighThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+			{
+				BackgroundFetch.setUserDefaultsData("urgenLowThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
+				BackgroundFetch.setUserDefaultsData("lowThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+				BackgroundFetch.setUserDefaultsData("highThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+				BackgroundFetch.setUserDefaultsData("urgentHighThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+			}
+			else
+			{
+				BackgroundFetch.setUserDefaultsData("urgenLowThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK))))) * 10)) / 10));
+				BackgroundFetch.setUserDefaultsData("lowThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10));
+				BackgroundFetch.setUserDefaultsData("highThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10));
+				BackgroundFetch.setUserDefaultsData("urgentHighThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK))))) * 10)) / 10));
+			}
 				
 			//Colors
 			BackgroundFetch.setUserDefaultsData("urgenLowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_LOW_COLOR)).toString(16).toUpperCase());
@@ -187,11 +205,16 @@ package services
 			BackgroundFetch.setUserDefaultsData("axisColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_COLOR)).toString(16).toUpperCase());
 			BackgroundFetch.setUserDefaultsData("axisFontColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_FONT_COLOR)).toString(16).toUpperCase());
 			BackgroundFetch.setUserDefaultsData("gridLinesColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR)).toString(16).toUpperCase());
+			BackgroundFetch.setUserDefaultsData("mainLineColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MAIN_LINE_COLOR)).toString(16).toUpperCase());
 			BackgroundFetch.setUserDefaultsData("backgroundColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR)).toString(16).toUpperCase());
 			BackgroundFetch.setUserDefaultsData("backgroundOpacity", String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_OPACITY)) / 100));
 			
 			//Glucose Unit
 			BackgroundFetch.setUserDefaultsData("glucoseUnit", GlucoseHelper.getGlucoseUnit());
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+				BackgroundFetch.setUserDefaultsData("glucoseUnitInternal", "mgdl");
+			else
+				BackgroundFetch.setUserDefaultsData("glucoseUnitInternal", "mmol");
 			
 			//Translations
 			BackgroundFetch.setUserDefaultsData("minAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','minute_ago'));
@@ -223,8 +246,16 @@ package services
 				return;
 			
 			var latestGlucoseValue:Number = Number(BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
-			if (isNaN(latestGlucoseValue) || latestGlucoseValue < 40)
-				latestGlucoseValue = 38;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+			{
+				if (isNaN(latestGlucoseValue) || latestGlucoseValue < 40)
+					latestGlucoseValue = 38;
+			}
+			else
+			{
+				if (isNaN(latestGlucoseValue) || latestGlucoseValue < 2.2)
+					latestGlucoseValue = 2.2;
+			}
 			
 			activeGlucoseReadingsList.push( { value: latestGlucoseValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
 			processChartGlucoseValues();

@@ -70,11 +70,6 @@ package ui
 			if(_instance == null)
 				_instance = new InterfaceController();
 			
-			if (ModelLocator.INTERNAL_TESTING)
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "true");
-			else
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "false");
-			
 			if (initialStart) 
 			{
 				if (DeviceInfo.isDeviceCompatible())
@@ -115,6 +110,12 @@ package ui
 			{
 				Trace.myTrace("interfaceController.as", "Database initialized successfully!");
 				//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
+				
+				//NSLog
+				if (ModelLocator.INTERNAL_TESTING)
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "true");
+				else
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "false");
 				
 				Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);

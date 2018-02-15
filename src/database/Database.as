@@ -63,6 +63,8 @@ package database
 		private static var loggingTableExists:Boolean = false;
 		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
 		
+		private static const TREATMENTS_DEBUG:Boolean = true;
+		
 		/**
 		 * create table to store the bluetooth device name and address<br>
 		 * At most one row should be stored
@@ -160,6 +162,33 @@ package database
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL," +
 			"enabled BOOLEAN," + 
 			"overridesilentmode BOOLEAN)";
+		
+		private static const CREATE_TABLE_TREATMENTS:String = "CREATE TABLE IF NOT EXISTS treatments(" +
+			"id STRING PRIMARY KEY," +
+			"type STRING, " +
+			"insulin REAL, " +
+			"dia REAL, " +
+			"carbs REAL, " +
+			"glucose REAL, " +
+			"note STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
+			"id STRING PRIMARY KEY," +
+			"name STRING, " +
+			"dia REAL, " +
+			"type STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_PROFILE:String = "CREATE TABLE IF NOT EXISTS profiles(" +
+			"id STRING PRIMARY KEY," +
+			"name STRING, " +
+			"insulintocarbratios STRING, " +
+			"insulinsensitivityfactors STRING, " +
+			"carbsabsorptionrate REAL, " +
+			"basalrates STRING, " +
+			"targetglucoserates STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
 		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
@@ -618,7 +647,11 @@ package database
 					var silentAlert:AlertType = new AlertType(null, Number.NaN, silentAlertName, false, false, true, true, false, "no_sound", 30, 0);
 					insertAlertTypeSychronous(silentAlert);
 				}
-				finishedCreatingTables();
+				
+				if (TREATMENTS_DEBUG == false)
+					finishedCreatingTables();
+				else
+					createTreatmentsTable();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -626,6 +659,69 @@ package database
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				dispatchInformation('failed_to_create_bgreading_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createTreatmentsTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_TREATMENTS;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createInsulinsTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create insulins table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_insulins_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createInsulinsTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_INSULINS;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createProfilesTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create treatments table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_treatments_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createProfilesTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_PROFILE;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				finishedCreatingTables();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create profiles table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_profiles_table', see != null ? see.error.message:null);
 			}
 		}
 		
