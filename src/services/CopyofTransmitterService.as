@@ -64,6 +64,7 @@ package services
 	public class TransmitterService extends EventDispatcher
 	{
 		[ResourceBundle("transmitterservice")]
+		[ResourceBundle("globaltranslations")]
 		
 		private static var _instance:TransmitterService = new TransmitterService();
 		
@@ -80,6 +81,9 @@ package services
 		
 		private static var timeStampSinceLastG5BadlyPlacedBatteriesInfo:Number = 0;
 
+		/**
+		 * Popup alert transmitter ID textinput field 
+		 */
 		private static var transmitterIDTextInput:TextInput;
 		
 		public function TransmitterService()
@@ -100,16 +104,13 @@ package services
 		}
 		
 		private static function transmitterDataReceived(be:BlueToothServiceEvent):void {
-			
-			var value:ByteArray;
-			var transmitterServiceEvent:TransmitterServiceEvent;
-			var notificationBuilderG5BatteryInfo:NotificationBuilder;
-			var lastBgRading:BgReading;
-			
 			if (be.data == null)
 				return;//should never be null actually
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
+					var lastBgRading:BgReading;
+					var transmitterServiceEvent:TransmitterServiceEvent;
+					var value:ByteArray;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeBeaconPacket but lastPacketTime < 60 seconds ago, ignoring");
 					} else {
@@ -246,17 +247,24 @@ package services
 					if (Sensor.getActiveSensor() != null)
 						Sensor.getActiveSensor().latestBatteryLevel = transmitterDataG5Packet.transmitterBatteryVoltage;
 					
+					var notificationBuilderG5BatteryInfo:NotificationBuilder;
+					
 					//check special values filtered and unfiltered to detect dead battery
-					if (transmitterDataG5Packet.filteredData == 2096896) {
+					if (transmitterDataG5Packet.filteredData == 2096896) 
+					{
 						myTrace("in transmitterDataReceived, filteredData = 2096896, this indicates a dead G5 battery, no further processing");
-						if (BackgroundFetch.appIsInForeground()) {
+						if (BackgroundFetch.appIsInForeground()) 
+						{
 							AlertManager.showSimpleAlert
 							(
 								ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
 								ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info")
 							);
+							
 							BackgroundFetch.vibrate();
-						} else {
+						} 
+						else 
+						{
 							notificationBuilderG5BatteryInfo = new NotificationBuilder()
 								.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
@@ -265,28 +273,37 @@ package services
 								.enableVibration(true)
 							Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
 						}
-					} else if ((transmitterDataG5Packet.rawData == 0 || transmitterDataG5Packet.filteredData == 0) && transmitterDataG5Packet.timeStamp != 0) {
+					} 
+					else if ((transmitterDataG5Packet.rawData == 0 || transmitterDataG5Packet.filteredData == 0) && transmitterDataG5Packet.timeStamp != 0) 
+					{
 						myTrace("in transmitterDataReceived, rawdata = 0, this may be caused by refurbished G5 with badly placed batteries, or badly placed transmitter");
 						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000 && Sensor.getActiveSensor() != null) {
 							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
-							if (BackgroundFetch.appIsInForeground()) {
+							if (BackgroundFetch.appIsInForeground()) 
+							{
 								AlertManager.showSimpleAlert
 								(
 									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
 									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info")
 								);
+								
 								BackgroundFetch.vibrate();
-							} else {
+							} 
+							else 
+							{
 								notificationBuilderG5BatteryInfo = new NotificationBuilder()
 									.setId(NotificationService.ID_FOR_BAD_PLACED_G5_INFO)
 									.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
 									.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
 									.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"))
 									.enableVibration(true)
+								
 								Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
 							}
-						} 
-					} else {
+						}
+					}
+					else 
+					{
 						//create and save bgreading
 						BgReading.
 							create(transmitterDataG5Packet.rawData, transmitterDataG5Packet.filteredData)
@@ -296,6 +313,7 @@ package services
 						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 						_instance.dispatchEvent(transmitterServiceEvent);
 					}
+					
 				} else if (be.data is TransmitterDataTransmiter_PLPacket) {
 					var transmitterDataTransmiter_PLPacket:TransmitterDataTransmiter_PLPacket = be.data as TransmitterDataTransmiter_PLPacket;
 					if (!isNaN(transmitterDataTransmiter_PLPacket.bridgeBatteryLevel)) {
@@ -307,7 +325,7 @@ package services
 					BgReading.
 						create(transmitterDataTransmiter_PLPacket.bgValue, transmitterDataTransmiter_PLPacket.bgValue)
 						.saveToDatabaseSynchronous();
-					
+								
 					//dispatch the event that there's new data
 					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 					_instance.dispatchEvent(transmitterServiceEvent);
@@ -371,33 +389,38 @@ package services
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			if (event != null) {//not sure why checking, this would mean NotificationService received a null object, shouldn't happen
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
-				if (notificationEvent.id == NotificationService.ID_FOR_ENTER_TRANSMITTER_ID) {
+				if (notificationEvent.id == NotificationService.ID_FOR_ENTER_TRANSMITTER_ID) 
+				{
 					transmitterIDTextInput = LayoutFactory.createTextInput(false, false, 180, HorizontalAlign.RIGHT);
 					transmitterIDTextInput.maxChars = 5;
 					transmitterIDTextInput.paddingRight = 10;
 					var transmitterIDPopup:Alert = AlertManager.showActionAlert
-						(
-							ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_alert_title"),
-							"",
-							58,
-							[
-								{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","cancel_button_label").toUpperCase() },
-								{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","ok_alert_button_label"), triggered: transmitterIdEntered }
-							],
-							HorizontalAlign.JUSTIFY,
-							transmitterIDTextInput
-						);
+					(
+						ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_alert_title"),
+						"",
+						58,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","cancel_button_label").toUpperCase() },
+							{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","ok_alert_button_label"), triggered: transmitterIdEntered }
+						],
+						HorizontalAlign.JUSTIFY,
+						transmitterIDTextInput
+					);
 					transmitterIDPopup.gap = 0;
 					transmitterIDPopup.headerProperties.maxHeight = 30;
 					transmitterIDPopup.buttonGroupProperties.paddingTop = -10;
 					transmitterIDTextInput.setFocus();
-				} else if (notificationEvent.id == NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO) {
+				}
+				else if (notificationEvent.id == NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO) 
+				{
 					AlertManager.showSimpleAlert
 					(
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info")
 					);
-				} else if (notificationEvent.id == NotificationService.ID_FOR_BAD_PLACED_G5_INFO) {
+				}
+				else if (notificationEvent.id == NotificationService.ID_FOR_BAD_PLACED_G5_INFO) 
+				{
 					AlertManager.showSimpleAlert
 					(
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
@@ -407,7 +430,8 @@ package services
 			}		
 		}
 		
-		private static function transmitterIdEntered(event:Event):void {
+		private static function transmitterIdEntered(event:Event):void 
+		{
 			if (transmitterIDTextInput.text.length != 5) 
 			{
 				AlertManager.showSimpleAlert
@@ -415,7 +439,9 @@ package services
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"),
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars")
 				);
-			}  else {
+			} 
+			else 
+			{
 				var value:ByteArray = new ByteArray();
 				value.endian = Endian.LITTLE_ENDIAN;
 				value.writeByte(0x06);
