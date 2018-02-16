@@ -17,9 +17,9 @@
  */
 package database
 {
-	import utils.Trace;
-	
 	import services.BluetoothService;
+	
+	import utils.Trace;
 	
 	public class BlueToothDevice extends SuperDatabaseClass
 	{
@@ -148,11 +148,18 @@ package database
 		public static function isLimitter():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "LIMITTER");
 		}
-		
+
 		public static function isTransmiter_PL():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "TRANSMITER PL");
 		}
-
+		
+		/**
+		 * Follower mode, not really a bluetoothdevice but it comes in handy to put it here also
+		 */
+		public static function isFollower():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "FOLLOW"); 
+		}
+		
 		/**
 		 * for type BlueReader, Limitter, BluKon, ie devices that transmit FSL sensor data<br>
 		 * important for calibration
@@ -188,6 +195,9 @@ package database
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
 		}
 		
+		/**
+		 * possible values : G4, G5, BlueReader, BluKon, Limitter, Follow 
+		 */
 		public static function deviceType():String {
 			if (isDexcomG4()) 
 				return "G4";
@@ -199,6 +209,8 @@ package database
 				return "BluKon";
 			if (isLimitter())
 				return "Limitter";
+			if (isFollower())
+				return "Follow";
 			if (isTransmiter_PL())
 				return "Transmiter PL";
 			return "unknown";
