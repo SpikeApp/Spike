@@ -367,6 +367,8 @@ package services
 						}
 						if (notificationEvent.identifier == null) 
 						{
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, lowSnoozePicker_closedHandler);
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
 							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert"), snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER) 
@@ -404,6 +406,8 @@ package services
 						}
 						if (notificationEvent.identifier == null) 
 						{
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, highSnoozePicker_closedHandler);
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
 							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert"), snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER) 
@@ -441,6 +445,8 @@ package services
 						}
 						if (notificationEvent.identifier == null) 
 						{
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, veryLowSnoozePicker_closedHandler);
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
 							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert"), snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER) 
@@ -476,6 +482,8 @@ package services
 						}
 						if (notificationEvent.identifier == null) 
 						{
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, veryHighSnoozePicker_closedHandler);
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
 							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert"), snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER) 
@@ -509,6 +517,8 @@ package services
 					}
 					if (notificationEvent.identifier == null) 
 					{
+						AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, missedReadingSnoozePicker_closedHandler);
+						AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
 						AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert"), snoozeValueStrings, index);
 					}
 				} else if (notificationEvent.identifier == NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER) {
@@ -543,6 +553,8 @@ package services
 						}
 						if (notificationEvent.identifier == null) 
 						{
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, phoneMutedSnoozePicker_closedHandler);
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
 							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert"), snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER) 
@@ -580,6 +592,8 @@ package services
 						}
 						if (notificationEvent.identifier == null) 
 						{
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, batteryLevelSnoozePicker_closedHandler);
+							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
 							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert"), snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER) 

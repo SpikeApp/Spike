@@ -52,8 +52,6 @@ package model
 	import services.WatchService;
 	import services.WidgetService;
 	
-	import treatments.Insulin;
-	
 	import ui.AppInterface;
 	import ui.InterfaceController;
 	
@@ -71,7 +69,7 @@ package model
 		public static const DEBUG_MODE:Boolean = true;
 
 		public static const TEST_FLIGHT_MODE:Boolean = false;
-		public static const INTERNAL_TESTING:Boolean = true;
+		public static const INTERNAL_TESTING:Boolean = false;
 		
 		public static function get instance():ModelLocator
 		{

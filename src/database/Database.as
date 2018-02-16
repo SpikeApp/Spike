@@ -63,7 +63,7 @@ package database
 		private static var loggingTableExists:Boolean = false;
 		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
 		
-		private static const TREATMENTS_DEBUG:Boolean = true;
+		private static const TREATMENTS_DEBUG:Boolean = false;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>

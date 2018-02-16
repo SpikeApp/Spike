@@ -3,6 +3,7 @@ package ui.screens
 	public class Screens 
 	{
 		public static const GLUCOSE_CHART:String = "glucoseChart";
+		public static const GLUCOSE_MANAGEMENT:String = "glucoseManagement";
 		public static const FULLSCREEN_GLUCOSE:String = "fullScreenGlucose";
 		public static const NIGHTSCOUT_VIEW:String = "nightscoutView";
 		public static const SENSOR_STATUS:String = "sensorStatus";

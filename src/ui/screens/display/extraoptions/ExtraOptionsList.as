@@ -51,6 +51,8 @@ package ui.screens.display.extraoptions
 		private var noLockIconImage:Image;
 		private var nightscoutScreenIconTexture:Texture;
 		private var nightscoutScreenIconImage:Image;
+		private var glucoseScreenIconTexture:Texture;
+		private var glucoseScreenIconImage:Image;
 		private var selectedFontTxtFormat:TextFormat;
 		private var unselectedFontTxtFormat:TextFormat;
 		
@@ -122,6 +124,10 @@ package ui.screens.display.extraoptions
 		
 		private function setupContent():void
 		{
+			//Glucose Management  Icon 
+			glucoseScreenIconTexture = MaterialDeepGreyAmberMobileThemeIcons.readingsTexture;
+			glucoseScreenIconImage = new Image(glucoseScreenIconTexture);
+			
 			//Setup Fullscreen Icon 
 			fullScreenIconTexture = MaterialDeepGreyAmberMobileThemeIcons.fullscreenTexture;
 			fullScreenIconImage = new Image(fullScreenIconTexture);
@@ -159,6 +165,7 @@ package ui.screens.display.extraoptions
 		private function buildListLayout():void
 		{
 			var menuItems:Array = [];
+			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','manage_readings_button_title'), icon: glucoseScreenIconImage, id: menuItems.length, action: "manageGlucose" });
 			if (nightscoutEnabled) menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','nightscout_button_title'), icon: nightscoutScreenIconImage, id: menuItems.length, action: "nightscoutView" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','full_screen_button_title'), icon: fullScreenIconImage, id: menuItems.length, action: "showFullScreen" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_lock_button_title'), icon: noLockIconImage, id: menuItems.length, action: "enableNoLock" });
@@ -323,11 +330,17 @@ package ui.screens.display.extraoptions
 						timeoutTimer.stop();
 					timeoutTimer.start();
 				}
-				if ( itemAction == "nightscoutView" ) 
+				else if ( itemAction == "nightscoutView" ) 
 				{
 					dispatchEventWith(CLOSE); //Close Menu
 					
 					AppInterface.instance.navigator.pushScreen( Screens.NIGHTSCOUT_VIEW ); //Push Fullscreen Glucose Screen
+				}
+				else if ( itemAction == "manageGlucose" ) 
+				{
+					dispatchEventWith(CLOSE); //Close Menu
+					
+					AppInterface.instance.navigator.pushScreen( Screens.GLUCOSE_MANAGEMENT ); //Push Glucose Management
 				}
 			}
 		}
@@ -417,6 +430,18 @@ package ui.screens.display.extraoptions
 			{
 				nightscoutScreenIconImage.dispose();
 				nightscoutScreenIconImage = null;;
+			}
+			
+			if (glucoseScreenIconImage != null)
+			{
+				glucoseScreenIconImage.dispose();
+				glucoseScreenIconImage = null;;
+			}
+			
+			if (glucoseScreenIconTexture != null)
+			{
+				glucoseScreenIconTexture.dispose();
+				glucoseScreenIconTexture = null;;
 			}
 			
 			if (timeoutTimer != null)

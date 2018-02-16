@@ -8,6 +8,7 @@ package ui.screens.display.settings.alarms
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
+	import feathers.controls.Check;
 	import feathers.controls.DateTimeMode;
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.GroupedList;
@@ -54,6 +55,7 @@ package ui.screens.display.settings.alarms
 		public static const SAVE_ADD:String = "saveAdd";
 		
 		/* Display Objects */
+		private var allDayAlarmCheck:Check;
 		private var startTime:DateTimeSpinner;
 		private var endTime:DateTimeSpinner;
 		private var valueStepper:NumericStepper;
@@ -80,6 +82,7 @@ package ui.screens.display.settings.alarms
 		private var minimumStepperValue:Number;
 		private var maximumStepperValue:Number;
 		private var valueStepperStep:Number;
+		private var isAllDay:Boolean;
 		
 		public function AlarmCreatorList(alarmData:Object, mode:String)
 		{
@@ -151,6 +154,7 @@ package ui.screens.display.settings.alarms
 			if (mode == MODE_ADD)
 			{
 				headerLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"add_alarm_title");
+				isAllDay = false;
 				startDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, 10, 0, 0, 0);
 				endDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, 21, 00, 0, 0);
 				alertTypeValue = "";
@@ -186,6 +190,8 @@ package ui.screens.display.settings.alarms
 			else
 			{
 				headerLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"edit_alarm_title");
+				if (Number(alarmData.startHour) == 0 && Number(alarmData.startMinutes) == 0 && Number(alarmData.endHour) == 23 && Number(alarmData.endMinutes) == 59)
+					isAllDay = true;
 				startDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, Number(alarmData.startHour), Number(alarmData.startMinutes), 0, 0);
 				endDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, Number(alarmData.endHour), Number(alarmData.endMinutes), 0, 0);
 				alarmValue = Number(alarmData.value);
@@ -195,6 +201,11 @@ package ui.screens.display.settings.alarms
 		
 		private function setupContent():void
 		{
+			/* All Day Alarm */
+			allDayAlarmCheck = LayoutFactory.createCheckMark(isAllDay);
+			allDayAlarmCheck.addEventListener(Event.TRIGGERED, onAllDay);
+			allDayAlarmCheck.pivotX = 1;
+			
 			/* Time Selectors */
 			nowDate = new Date();
 			
@@ -203,19 +214,28 @@ package ui.screens.display.settings.alarms
 			startTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 0);
 			startTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 58);
 			startTime.value = startDate;
-			if(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
+			if(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6_6S_7_8 && DeviceInfo.getDeviceType() != DeviceInfo.IPAD_MINI_1_2_3_4)
 				startTime.height = 160;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
 				startTime.height = 150;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-				startTime.height = 145;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
 				startTime.height = 140;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+				startTime.height = 130;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				startTime.height = 100;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				startTime.height = 60;
 			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				startTime.height = 60;
 			startTime.paddingTop = 5;
 			startTime.paddingBottom = 5;
-			startTime.pivotX = 3;
+			startTime.pivotX = -1;
+			if (isAllDay)
+			{
+				startTime.touchable = false;
+				startTime.alpha = 0.6;
+			}
 			startTime.addEventListener(Event.CHANGE, onStartTimeChange);
 			
 			endTime = new DateTimeSpinner();
@@ -223,19 +243,28 @@ package ui.screens.display.settings.alarms
 			endTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 1);
 			endTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 59);
 			endTime.value = endDate;
-			if(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
+			if(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6_6S_7_8 && DeviceInfo.getDeviceType() != DeviceInfo.IPAD_MINI_1_2_3_4)
 				endTime.height = 160;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
 				endTime.height = 150;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-				endTime.height = 145;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
 				endTime.height = 140;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+				endTime.height = 130;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				endTime.height = 100;
+			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				endTime.height = 60;
 			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				endTime.height = 60;
 			endTime.paddingTop = 5;
 			endTime.paddingBottom = 5;
-			endTime.pivotX = 3;
+			endTime.pivotX = -1;
+			if (isAllDay)
+			{
+				endTime.touchable = false;
+				endTime.alpha = 0.6;
+			}
 			endTime.addEventListener(Event.CHANGE, onEndTimeChange);
 			
 			/* Value Control */
@@ -310,11 +339,12 @@ package ui.screens.display.settings.alarms
 			var screenDataContent:Array = [];
 			
 			var infoSection:Object = {};
-			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				infoSection.header = { label: headerLabelValue };
 			
 			var infoSectionChildren:Array = [];
 			
+			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"all_day_label"), accessory: allDayAlarmCheck });
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"start_time_label"), accessory: startTime });
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"end_time_label"), accessory: endTime });
 			if (!hideValue)
@@ -339,6 +369,51 @@ package ui.screens.display.settings.alarms
 			
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			(layout as VerticalLayout).useVirtualLayout = false;
+		}
+		
+		private function onAllDay(e:Event):void
+		{
+			//Define dates
+			var now:Date = new Date();
+			var startDate:Date;
+			var endDate:Date;
+			
+			//Remove event listeners
+			startTime.removeEventListener(Event.CHANGE, onStartTimeChange);
+			endTime.removeEventListener(Event.CHANGE, onEndTimeChange);
+			
+			if (!allDayAlarmCheck.isSelected)
+			{
+				//Define value
+				startDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, 0, 0, 0, 0);
+				endDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, 23, 59, 0, 0);
+				
+				//Disable time controls
+				startTime.touchable = false;
+				startTime.alpha = 0.6;
+				endTime.touchable = false;
+				endTime.alpha = 0.6;
+			}
+			else
+			{
+				//Define value
+				startDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, 10, 0, 0, 0);
+				endDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, 21, 00, 0, 0);
+				
+				//Enable time controls
+				startTime.touchable = true;
+				startTime.alpha = 1;
+				endTime.touchable = true;
+				endTime.alpha = 1;
+			}
+			
+			//Set Value
+			startTime.value = startDate;
+			endTime.value = endDate;
+			
+			//Enable event listeners
+			startTime.addEventListener(Event.CHANGE, onStartTimeChange);
+			endTime.addEventListener(Event.CHANGE, onEndTimeChange);
 		}
 		
 		private function refreshAlertTypeList(newAlertName:String):void
@@ -560,6 +635,13 @@ package ui.screens.display.settings.alarms
 				removeChild(positionHelper);
 				positionHelper.dispose();
 				positionHelper = null;
+			}
+			
+			if (allDayAlarmCheck != null)
+			{
+				allDayAlarmCheck.removeEventListener(Event.TRIGGERED, onAllDay);
+				allDayAlarmCheck.dispose();
+				allDayAlarmCheck = null;
 			}
 			
 			super.dispose();

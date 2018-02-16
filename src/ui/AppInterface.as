@@ -24,6 +24,7 @@ package ui
 	import ui.screens.DisclaimerScreen;
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
+	import ui.screens.GlucoseManagementScreen;
 	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
@@ -80,6 +81,13 @@ package ui
 			fullScreenGlucoseScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
 			fullScreenGlucoseScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.FULLSCREEN_GLUCOSE, fullScreenGlucoseScreenItem );
+			
+			/* Glucose Management Screen */
+			var glucoseManagementScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( GlucoseManagementScreen );
+			glucoseManagementScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			glucoseManagementScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			glucoseManagementScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.GLUCOSE_MANAGEMENT, glucoseManagementScreenItem );
 			
 			/* Nightscout View Screen */
 			var nightscoutViewScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( NightscoutViewScreen );

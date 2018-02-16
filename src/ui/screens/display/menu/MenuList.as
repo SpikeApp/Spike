@@ -17,6 +17,7 @@ package ui.screens.display.menu
 	import ui.screens.Screens;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("mainmenu")]
 	
@@ -48,7 +49,10 @@ package ui.screens.display.menu
 		 */
 		private function setupProperties():void
 		{
-			paddingTop = 20; //Status Bar Size
+			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
+				paddingTop = 20; //Statusbar Size
+			else
+				paddingTop = 35; //Statusbar Size
 			minWidth = Constants.stageWidth >> 2;
 			minWidth += 85;
 			hasElasticEdges = false;

@@ -9,6 +9,8 @@ package ui.screens.display.settings.watch
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.LocalSettings;
 	
 	import feathers.controls.Button;
@@ -130,6 +132,8 @@ package ui.screens.display.settings.watch
 			displayDeltaEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA) == "true";
 			displayUnitsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS) == "true";
 			glucoseHistoryValue = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY));
+			
+			Trace.myTrace("WatchSettingsList.as", "setupInitialState called! AuthorizationStatus = " + Calendar.service.authorisationStatus());
 		}
 		
 		private function setupContent():void
@@ -155,7 +159,12 @@ package ui.screens.display.settings.watch
 			}
 			
 			if(isDeviceAuthorized)
+			{
+				Trace.myTrace("WatchSettingsList.as", "Calendar access is Authorized!");
 				populateCalendarList();
+			}
+			else
+				Trace.myTrace("WatchSettingsList.as", "Calendar access not Authorized!");
 			
 			calendarPickerList.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
@@ -228,12 +237,15 @@ package ui.screens.display.settings.watch
 		
 		private function refreshContent():void
 		{
+			Trace.myTrace("WatchSettingsList.as", "refreshContent called!");
+			
 			var content:Array = [];
 			content.push({ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: watchComplicationToggle });
 			if (watchComplicationEnabled)
 			{
-				if (isDeviceAuthorized)
+				if (isDeviceAuthorized || Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED)
 				{
+					populateCalendarList();
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','calendar_label'), accessory: calendarPickerList });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_name_label'), accessory: displayNameToggle });
 					if (displayNameEnabled)
@@ -257,11 +269,14 @@ package ui.screens.display.settings.watch
 		
 		private function populateCalendarList():void
 		{
+			Trace.myTrace("WatchSettingsList.as", "populateCalendarList called!");
+			
 			var content:ArrayCollection = new ArrayCollection();
 			var selectedIndex:int = 0;
 			var calendarMatch:Boolean = false;
 			
 			var calendars:Array = Calendar.service.getCalendars();
+			Trace.myTrace("WatchSettingsList.as", "Available calendars in the phone: " + ObjectUtil.toString(calendars));
 			for each (var calendar:CalendarObject in calendars)
 			{
 				content.push({ label: calendar.name, id: calendar.id });

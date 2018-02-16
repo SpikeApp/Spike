@@ -28,6 +28,7 @@ package ui.screens
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("nightscoutscreen")]
 	
@@ -88,7 +89,10 @@ package ui.screens
 			//Create web view
 			webView = new StageWebView();
 			webView.stage = Constants.appStage; 
-			webView.viewPort = new Rectangle( 0, 140, Constants.appStage.stageWidth, Constants.appStage.stageHeight - 140 ); 
+			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
+				webView.viewPort = new Rectangle( 0, 140, Constants.appStage.stageWidth, Constants.appStage.stageHeight - 140 ); 
+			else
+				webView.viewPort = new Rectangle( 0, 155, Constants.appStage.stageWidth, Constants.appStage.stageHeight - 155 ); //Statusbar iPhone X
 			webView.addEventListener( ErrorEvent.ERROR, onLoadURLErrorTriggered );
 			webView.loadURL( nightscoutURL );
 		}

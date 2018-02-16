@@ -25,7 +25,6 @@ package ui.popups
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
-	import utils.Trace;
 
 	[ResourceBundle("globaltranslations")]
 	
@@ -190,12 +189,6 @@ package ui.popups
 			else
 				if(snoozeCallout != null)
 					snoozeCallout.close();
-			
-			if (_instance != null)
-			{
-				_instance.removeEventListeners(CANCELLED);
-				_instance.removeEventListeners(CLOSED);
-			}
 		}
 		
 		/**
@@ -203,8 +196,10 @@ package ui.popups
 		 */
 		private static function onClose(e:Event):void
 		{
-			closeCallout();
+			trace("VOU DISPACHAR EVENTO CLOSE COM INDEX: " + snoozePickerList.selectedIndex);
 			_instance.dispatchEventWith(CLOSED, false, { index: snoozePickerList.selectedIndex });
+			
+			closeCallout();
 		}
 		
 		private static function onCancel(e:Event):void
