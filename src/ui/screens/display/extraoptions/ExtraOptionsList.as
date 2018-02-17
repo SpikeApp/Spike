@@ -165,7 +165,7 @@ package ui.screens.display.extraoptions
 		private function buildListLayout():void
 		{
 			var menuItems:Array = [];
-			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','manage_readings_button_title'), icon: glucoseScreenIconImage, id: menuItems.length, action: "manageGlucose" });
+			//menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','manage_readings_button_title'), icon: glucoseScreenIconImage, id: menuItems.length, action: "manageGlucose" });
 			if (nightscoutEnabled) menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','nightscout_button_title'), icon: nightscoutScreenIconImage, id: menuItems.length, action: "nightscoutView" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','full_screen_button_title'), icon: fullScreenIconImage, id: menuItems.length, action: "showFullScreen" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_lock_button_title'), icon: noLockIconImage, id: menuItems.length, action: "enableNoLock" });

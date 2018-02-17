@@ -1,12 +1,13 @@
 package services
 {
-	import com.airhttp.HttpServer;
+	import network.httpserver.HttpServer;
 	
 	import flash.system.System;
 	
 	import database.LocalSettings;
 	
 	import events.SettingsServiceEvent;
+	import events.TransmitterServiceEvent;
 	
 	import utils.Trace;
 
@@ -71,6 +72,8 @@ package services
 			loopServer.registerController(authenticationController);			
 			loopServer.registerController(glucoseController);
 			loopServer.listen(1979);
+			
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
 
 			serviceActive = true;
 		}
@@ -91,6 +94,8 @@ package services
 				loopServer = null;
 			}
 			
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+			
 			serviceActive = false;
 			
 			//Invoke Garbage Collector
@@ -100,6 +105,16 @@ package services
 		/**
 		 * Event Handlers
 		 */
+		private static function onBgreadingReceived(e:TransmitterServiceEvent):void 
+		{
+			//Reenable Loop Server in case it goes down
+			if (serviceActive && !loopServer.serverSocket.listening)
+			{	
+				Trace.myTrace("LoopService.as", "Service is down... Reconnecting!");
+				deactivateService()
+				activateService();
+			}
+		}
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
 		{
 			if (e.data == LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON || 

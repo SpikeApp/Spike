@@ -272,7 +272,7 @@ package ui.screens.display.bugreport
 				
 				return;
 			}
-			else if (messageField.text == "")
+			else if (messageField.text == "" || messageField.text == " ")
 			{
 				AlertManager.showSimpleAlert
 				(

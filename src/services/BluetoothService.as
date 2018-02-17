@@ -809,36 +809,37 @@ package services
 				
 				//find the index of the service that has uuid = the one used by xdrip/xbridge or Dexcom
 				var index:int;
+				var o:Object;
 				if (BlueToothDevice.isDexcomG5()) {
-					for each (var o:Object in activeBluetoothPeripheral.services) {
+					for each (o in activeBluetoothPeripheral.services) {
 						if (HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (BlueToothDevice.isBluKon()) {
-					for each (var o:Object in activeBluetoothPeripheral.services) {
+					for each (o in activeBluetoothPeripheral.services) {
 						if (HM_10_SERVICE_BLUKON.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (BlueToothDevice.isDexcomG4()) {
-					for each (var o:Object in activeBluetoothPeripheral.services) {
+					for each (o in activeBluetoothPeripheral.services) {
 						if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (BlueToothDevice.isBlueReader()) {
-					for each (var o:Object in activeBluetoothPeripheral.services) {
+					for each (o in activeBluetoothPeripheral.services) {
 						if (BlueReader_SERVICE.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (BlueToothDevice.isTransmiter_PL()) {
-					for each (var o:Object in activeBluetoothPeripheral.services) {
+					for each (o in activeBluetoothPeripheral.services) {
 						if (TRANSMITER_PL_SERVICE_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
@@ -1205,11 +1206,12 @@ package services
 			var code:int = buffer.readByte();
 			switch (code) {
 				case 5:
+					var blueToothServiceEvent:BlueToothServiceEvent
 					authStatus = new AuthStatusRxMessage(buffer);
 					myTrace("AuthStatusRxMessage created = " + UniqueId.byteArrayToString(authStatus.byteSequence));
 					if (!authStatus.bonded) {
 						myTrace("not bonded, dispatching DEVICE_NOT_PAIRED event");
-						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.DEVICE_NOT_PAIRED);
+						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.DEVICE_NOT_PAIRED);
 						_instance.dispatchEvent(blueToothServiceEvent);
 					}
 					myTrace("Subscribing to G5ControlCharacteristic");
@@ -1257,7 +1259,7 @@ package services
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP, String(sensorRx.timestamp));
 					
 					timeStampOfLastG5Reading = (new Date()).valueOf();
-					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 					blueToothServiceEvent.data = new TransmitterDataG5Packet(sensorRx.unfiltered, sensorRx.filtered, sensor_battery_level, sensorRx.timestamp, sensorRx.transmitterStatus);
 					_instance.dispatchEvent(blueToothServiceEvent);
 					break;
@@ -1489,6 +1491,9 @@ package services
 				cmdFound = 1;
 				myTrace("in processBLUKONTransmitterData, gotNowDataIndex");
 				
+				var delayedTrendIndex:int;
+				var i:int;
+				var delayedBlockNumber:String;
 				// calculate time delta to last valid BG reading
 				var bgReadings:ArrayCollection = BgReading.latest(1);
 				if (bgReadings.length > 0) {
@@ -1518,7 +1523,7 @@ package services
 				}
 				else {
 					m_minutesBack = m_minutesDiffToLastReading;
-					var delayedTrendIndex:int = m_currentTrendIndex;
+					delayedTrendIndex = m_currentTrendIndex;
 					// ensure to have min 3 mins distance to last reading to avoid doible draws (even if they are distict)
 					if ( m_minutesBack > 17 ) {
 						m_minutesBack = 15;
@@ -1528,11 +1533,11 @@ package services
 						m_minutesBack = 5;
 					}
 					myTrace("in processBLUKONTransmitterData, read " + m_minutesBack + " mins old trend data");
-					for ( var i:int = 0 ; i < m_minutesBack ; i++ ) {
+					for ( i = 0 ; i < m_minutesBack ; i++ ) {
 						if ( --delayedTrendIndex < 0)
 							delayedTrendIndex = 15;
 					}
-					var delayedBlockNumber:String = blockNumberForNowGlucoseDataDelayed(delayedTrendIndex);
+					delayedBlockNumber = blockNumberForNowGlucoseDataDelayed(delayedTrendIndex);
 					blukonCurrentCommand = "010d0e010" + delayedBlockNumber;//getNowGlucoseData
 					myTrace("in processBLUKONTransmitterData, getNowGlucoseData backfilling");
 				}
@@ -1560,12 +1565,12 @@ package services
 						m_getOlderReading = false;
 					}
 					myTrace("in processBLUKONTransmitterData,bf: calculate next trend buffer with " + m_minutesBack + " min timestamp");
-					var delayedTrendIndex:int = m_currentTrendIndex;
-					for ( var i:int = 0 ; i < m_minutesBack ; i++ ) {
+					delayedTrendIndex = m_currentTrendIndex;
+					for ( i = 0 ; i < m_minutesBack ; i++ ) {
 						if ( --delayedTrendIndex < 0)
 							delayedTrendIndex = 15;
 					}
-					var delayedBlockNumber:String = blockNumberForNowGlucoseDataDelayed(delayedTrendIndex);
+					delayedBlockNumber = blockNumberForNowGlucoseDataDelayed(delayedTrendIndex);
 					blukonCurrentCommand = "010d0e010" + delayedBlockNumber;//getNowGlucoseData
 					myTrace("in processBLUKONTransmitterData, bf: read next block: " + blukonCurrentCommand);
 				}
@@ -1813,10 +1818,11 @@ package services
 
 			buffer.position = 0;
 			var bufferAsString:String = buffer.readUTFBytes(buffer.length);
+			var blueToothServiceEvent:BlueToothServiceEvent;
 			myTrace("in processBlueReaderTransmitterData buffer as string =  " + bufferAsString);
 			if (buffer.length >= 7) {
 				if (bufferAsString.toUpperCase().indexOf("BATTERY") > -1) {
-					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 					blueToothServiceEvent.data = new TransmitterDataBlueReaderBatteryPacket();
 					_instance.dispatchEvent(blueToothServiceEvent);
 					return;
@@ -1848,7 +1854,7 @@ package services
 				}
 			}
 			myTrace("in processBlueReaderTransmitterData, dispatching transmitter data");
-			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 			blueToothServiceEvent.data = new TransmitterDataBlueReaderPacket(raw_data, sensor_battery_level, bridge_battery_level, FSLSensorAGe, (new Date()).valueOf());
 			_instance.dispatchEvent(blueToothServiceEvent);
 			FSLSensorAGe = Number.NaN;
@@ -1860,7 +1866,8 @@ package services
 			var packetLength:int = buffer.readUnsignedByte();
 			var packetType:int = buffer.readUnsignedByte();//0 = data packet, 1 =  TXID packet, 0xF1 (241 if read as unsigned int) = Beacon packet
 			var txID:Number;
-			var xBridgeProtocolLevel:Number
+			var xBridgeProtocolLevel:Number;
+			var blueToothServiceEvent:BlueToothServiceEvent;
 			switch (packetType) {
 				case 0:
 					//data packet
@@ -1875,11 +1882,11 @@ package services
 						txID = buffer.readInt();
 						xBridgeProtocolLevel = buffer.readUnsignedByte();
 						
-						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 						blueToothServiceEvent.data = new TransmitterDataXBridgeDataPacket(rawData, filteredData, transmitterBatteryVoltage, bridgeBatteryPercentage, decodeTxID(txID));
 						_instance.dispatchEvent(blueToothServiceEvent);
 					} else {
-						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 						blueToothServiceEvent.data = new TransmitterDataXdripDataPacket(rawData, filteredData, transmitterBatteryVoltage);
 						_instance.dispatchEvent(blueToothServiceEvent);
 					}
@@ -1893,7 +1900,7 @@ package services
 					//Beacon packet
 					txID = buffer.readInt();
 					
-					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 					blueToothServiceEvent.data = new TransmitterDataXBridgeBeaconPacket(decodeTxID(txID));
 					_instance.dispatchEvent(blueToothServiceEvent);
 					

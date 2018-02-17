@@ -106,7 +106,7 @@ package
 				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART)
 				{
 					/**
-					 * ENABLE IN PRODUCTION
+					 * ENABLE IN PRODUCTION BUT FIRST IMPLEMENT A GETTIMER... ONLY RETURN TO HOME IF THE APP WAS IN BACKGROUND FOR MORE THAN 5 MIN
 					 */
 					//AppInterface.instance.menu.selectedIndex = 0;
 					//AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));

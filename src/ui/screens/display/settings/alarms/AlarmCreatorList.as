@@ -195,6 +195,8 @@ package ui.screens.display.settings.alarms
 				startDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, Number(alarmData.startHour), Number(alarmData.startMinutes), 0, 0);
 				endDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, Number(alarmData.endHour), Number(alarmData.endMinutes), 0, 0);
 				alarmValue = Number(alarmData.value);
+				if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
+					alarmValue = Math.round(((BgReading.mgdlToMmol((alarmValue))) * 10)) / 10;
 				alertTypeValue = alarmData.alertType;
 			}
 		}
@@ -523,6 +525,8 @@ package ui.screens.display.settings.alarms
 				else if (BlueToothDevice.isBluKon())
 					alarmData.value = 5;
 			}
+			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING && alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT)
+				alarmData.value = valueStepper.value
 			else
 			{
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")

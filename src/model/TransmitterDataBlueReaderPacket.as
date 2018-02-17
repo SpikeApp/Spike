@@ -15,16 +15,16 @@ package model
 		{
 			return _timeStamp;
 		}
-
+		
 		private var _sensorBatteryLevel:Number;
-
+		
 		public function get sensorBatteryLevel():Number
 		{
 			return _sensorBatteryLevel;
 		}
 		
 		private var _bridgeBatteryLevel:Number;
-
+		
 		public function get bridgeBatteryLevel():Number
 		{
 			return _bridgeBatteryLevel;
@@ -34,7 +34,7 @@ package model
 		 * sensorAge in minutes 
 		 */
 		private var _sensorAge:Number;
-
+		
 		public function get sensorAge():Number
 		{
 			return _sensorAge;

@@ -5,6 +5,7 @@ package ui.screens.display.readings
 	import database.AlertType;
 	import database.BgReading;
 	import database.CommonSettings;
+	import database.Database;
 	
 	import feathers.controls.Button;
 	import feathers.controls.List;
@@ -214,6 +215,7 @@ package ui.screens.display.readings
 			var id:int = (((e.currentTarget as Button).parent as DefaultListItemRenderer).data as Object).id;
 			
 			ModelLocator.bgReadings.removeAt(id);
+			Database.deleteBgReadingSynchronous(bgReading);
 			setupContent();
 		}
 		

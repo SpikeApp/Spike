@@ -89,7 +89,7 @@ package ui.screens.display.settings.transmitter
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
 			else if (transmitterTypeValue == "G4")
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
-			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader'))
+			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL")
 				transmitterIDisEnabled = false;
 		}
 		
@@ -188,7 +188,7 @@ package ui.screens.display.settings.transmitter
 				transmitterIDisEnabled = transmitterID.isEnabled = true;
 				transmitterID.prompt = "BLUXXXXX";
 			}
-			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') && transmitterID.text == "")
+			else if ((!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL") && transmitterID.text == "")
 			{
 				transmitterIDisEnabled = transmitterID.isEnabled = false;
 				transmitterID.prompt = "";

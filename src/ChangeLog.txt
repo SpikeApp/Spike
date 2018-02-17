@@ -1,6 +1,11 @@
 1.0.5
 Minor changes to the watch settings screen to try to mitigate a bug that happens sporadically and doesn't allow users to select a calendar. Might still need more fixes.
 Fixed iPhone X black bars at the top and bottom of the screen. Thank you to Josh Flynt for helping me test this in his iPhone X.
+Improvements in the Loop Offline feature to make it more reliable.
+Major fix for Transmiter PL users. It should work now. Thank you to Marek Macner for helping me test it!
+Made some overall improvements in bluetooth connections.
+Fix when editing a glucose alarm, it always showed 33.3 for mmol/L users. Also fix for missed readings alarm for mmol/L users, the time interval value was being incorrectly calculated. 
+Several overall small fixes and improvements.
 
 1.0.4
 Added more debug messages to Nightscout and Dexcom connectors to provide better support in case someone has problems with any of these services.
@@ -13,3 +18,6 @@ Added an option for "Entire Day" when creating/editing alarms.
 Fixed a bug in the Apple Watch settings screen.
 Improved layout of "Add Alarm" popup on larger screens.
 Improved Offline Loop feature.
+
+1.0.1
+Initial Beta Release
