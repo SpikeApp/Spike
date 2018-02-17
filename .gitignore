@@ -1,0 +1,11 @@
+/ane/
+/backups/
+/bin-debug/
+/certificate-provision/
+/dev-assets/
+/libs/
+/src/assets/theme/
+/src/distriqtkey/
+/widget/
+.actionScriptProperties
+.project
