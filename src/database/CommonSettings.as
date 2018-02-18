@@ -226,7 +226,7 @@
 		 public static const COMMON_SETTING_URGENT_HIGH_MARK:int = 59;
 		 
 		 /**
-		  * Chart Settings
+		  * Chart Settings #1
 		  */
 		 public static const COMMON_SETTING_CHART_URGENT_HIGH_COLOR:int = 60;
 		 public static const COMMON_SETTING_CHART_HIGH_COLOR:int = 61;
@@ -257,7 +257,7 @@
 		 public static const COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP:int = 78;
 		 
 		 /**
-		  * Widget 
+		  * Widget #1
 		  */
 		 public static const COMMON_SETTING_WIDGET_HISTORY_TIMESPAN:int = 79;
 		 public static const COMMON_SETTING_WIDGET_SMOOTH_LINE:int = 80;
@@ -281,14 +281,22 @@
 		 public static const COMMON_SETTING_WIDGET_OLD_DATA_COLOR:int = 98;
 		 
 		 /**
-		  * Chart Settings
+		  * Chart Settings #2
 		  */
 		 public static const COMMON_SETTING_CHART_OLD_DATA_COLOR:int = 99;
 		 
 		 /**
-		  * Widget 
+		  * Widget #2
 		  */
 		 public static const COMMON_SETTING_WIDGET_MAIN_LINE_COLOR:int = 100;
+		 
+		 /**
+		  * Chart Settings #3
+		  */
+		 public static const COMMON_SETTING_CHART_SCALE_MODE_DYNAMIC:int = 101;
+		 public static const COMMON_SETTING_CHART_MAX_VALUE:int = 102;
+		 public static const COMMON_SETTING_CHART_MIN_VALUE:int = 103;
+		 public static const COMMON_SETTING_CHART_RESIZE_ON_OUT_OF_BOUNDS:int = 104;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -391,7 +399,11 @@
 			 "16777215",//COMMON_SETTING_WIDGET_DISPLAY_LABELS_COLOR
 			 "11250603",//COMMON_SETTING_WIDGET_OLD_DATA_COLOR
 			 "11250603",//COMMON_SETTING_CHART_OLD_DATA_COLOR
-			 "16777215"//COMMON_SETTING_WIDGET_MAIN_LINE_COLOR
+			 "16777215",//COMMON_SETTING_WIDGET_MAIN_LINE_COLOR
+			 "true",//COMMON_SETTING_CHART_SCALE_MODE_DYNAMIC
+			 "600",//COMMON_SETTING_CHART_MAX_VALUE
+			 "40",//COMMON_SETTING_CHART_MIN_VALUE
+			 "true"//COMMON_SETTING_CHART_RESIZE_ON_OUT_OF_BOUNDS
 		 ];
 
 		 public function CommonSettings()

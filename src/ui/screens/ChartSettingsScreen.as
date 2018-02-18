@@ -15,8 +15,8 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.chart.ColorSettingsList;
-	
 	import ui.screens.display.settings.chart.GlucoseDistributionSettingsList;
+	import ui.screens.display.settings.chart.ModeSettingsList;
 	import ui.screens.display.settings.chart.SizeSettingsList;
 	
 	import utils.Constants;
@@ -32,6 +32,8 @@ package ui.screens
 		private var chartColorLabel:Label;
 		private var chartSizeLabel:Label;
 		private var chartGlucoseDistributionLabel:Label;
+		private var chartModeLabel:Label;
+		private var chartModeSettings:ModeSettingsList;
 		
 		public function ChartSettingsScreen() 
 		{
@@ -75,6 +77,14 @@ package ui.screens
 			chartGlucoseDistributionSettings = new GlucoseDistributionSettingsList();
 			screenRenderer.addChild(chartGlucoseDistributionSettings);
 			
+			//Mode Section Label
+			chartModeLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','resize_mode_settings_title'), true);
+			screenRenderer.addChild(chartModeLabel);
+			
+			//Mode Settings
+			chartModeSettings = new ModeSettingsList();
+			screenRenderer.addChild(chartModeSettings);
+			
 			//Size Section Label
 			chartSizeLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','size_settings_title'), true);
 			screenRenderer.addChild(chartSizeLabel);
@@ -103,6 +113,8 @@ package ui.screens
 		override protected function onBackButtonTriggered(event:Event):void
 		{
 			//Save Settings
+			if (chartModeSettings.needsSave)
+				chartModeSettings.save();
 			if (chartColorSettings.needsSave)
 				chartColorSettings.save();
 			if (chartSizeSettings.needsSave)
@@ -156,6 +168,18 @@ package ui.screens
 			{
 				chartGlucoseDistributionLabel.dispose();
 				chartGlucoseDistributionLabel = null;
+			}
+			
+			if (chartModeLabel != null)
+			{
+				chartModeLabel.dispose();
+				chartModeLabel = null;
+			}
+			
+			if (chartModeSettings != null)
+			{
+				chartModeSettings.dispose();
+				chartModeSettings = null;
 			}
 			
 			super.dispose();

@@ -141,6 +141,11 @@ package ui.chart
 		//Display Update Helpers
 		private var previousNumberOfMakers:int = 0;
 		private var currentNumberOfMakers:int = 0;
+		
+		private var fixedSize:Boolean = false;
+		private var maxAxisValue:Number = 90;
+		private var minAxisValue:Number = 0;
+		private var resizeOutOfBounds:Boolean = false;
 
         public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
         {
@@ -344,21 +349,37 @@ package ui.chart
 			//First we determine the maximum and minimum glucose values
 			var sortDataArray:Array = _dataSource.concat();
 			sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
+			var lowestValue:Number = sortDataArray[0].calculatedValue as Number;
+			var highestValue:Number = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
 			if (!dummyModeActive)
 			{
-				lowestGlucoseValue = sortDataArray[0].calculatedValue as Number;
-				if (lowestGlucoseValue < 40)
-					lowestGlucoseValue = 40;
-				
-				highestGlucoseValue = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
-				if (highestGlucoseValue > 600)
-					highestGlucoseValue = 600;
+				if (!fixedSize)
+				{
+					lowestGlucoseValue = lowestValue;
+					if (lowestGlucoseValue < 40)
+						lowestGlucoseValue = 40;
+					
+					highestGlucoseValue = highestValue;
+					if (highestGlucoseValue > 600)
+						highestGlucoseValue = 600;
+				}
+				else
+				{
+					lowestGlucoseValue = minAxisValue;
+					if (resizeOutOfBounds && lowestValue < minAxisValue)
+						lowestGlucoseValue = lowestValue;
+					
+					highestGlucoseValue = maxAxisValue;
+					if (resizeOutOfBounds && highestValue > maxAxisValue)
+						highestGlucoseValue = highestValue
+				}
 			}
 			else
 			{
 				lowestGlucoseValue = 40;
 				highestGlucoseValue = 300;
 			}
+			
 			//We find the difference so we can know how big the glucose pseudo graph is
 			var totalGlucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 			//Now we find a multiplier for the y axis so the glucose graph fits entirely with the chart height
@@ -424,7 +445,7 @@ package ui.chart
 					);
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null)
+				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null && glucoseMarker.y >= lowestGlucoseValue && glucoseMarker.y <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -459,6 +480,12 @@ package ui.chart
 					//Hide glucose marker
 					glucoseMarker.alpha = 0;
 				}
+				
+				//Hide glucose marker if it is out of bounds (fixed size chart);
+				if (glucoseMarker.y < lowestGlucoseValue || glucoseMarker.y > highestGlucoseValue)
+					glucoseMarker.alpha = 0;
+				else
+					glucoseMarker.alpha = 1;
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
@@ -955,14 +982,33 @@ package ui.chart
 			//First we determine the maximum and minimum glucose values
 			var previousHighestGlucoseValue:Number = highestGlucoseValue;
 			var previousLowestGlucoseValue:Number = lowestGlucoseValue;
+			
 			var sortDataArray:Array = _dataSource.concat();
 			sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
-			lowestGlucoseValue = sortDataArray[0].calculatedValue as Number;
-			if (lowestGlucoseValue < 40)
-				lowestGlucoseValue = 40;
-			highestGlucoseValue = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
-			if (highestGlucoseValue > 600)
-				highestGlucoseValue = 600;
+			
+			var lowestValue:Number = sortDataArray[0].calculatedValue as Number;
+			var highestValue:Number = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+			if (!fixedSize)
+			{
+				lowestGlucoseValue = lowestValue;
+				if (lowestGlucoseValue < 40)
+					lowestGlucoseValue = 40;
+					
+				highestGlucoseValue = highestValue;
+				if (highestGlucoseValue > 600)
+					highestGlucoseValue = 600;
+			}
+			else
+			{
+				lowestGlucoseValue = minAxisValue;
+				if (resizeOutOfBounds && lowestValue < minAxisValue)
+					lowestGlucoseValue = lowestValue;
+					
+				highestGlucoseValue = maxAxisValue;
+				if (resizeOutOfBounds && highestValue > maxAxisValue)
+					highestGlucoseValue = highestValue
+			}
+			
 			//We find the difference so we can know how big the glucose pseudo graph is
 			var totalGlucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 			//Now we find a multiplier for the y axis so the glucose graph fits entirely with the chart height
@@ -1052,7 +1098,7 @@ package ui.chart
 				}
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null)
+				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null && glucoseMarker.y >= lowestGlucoseValue && glucoseMarker.y <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -1088,10 +1134,17 @@ package ui.chart
 					glucoseMarker.alpha = 0;
 				}
 				
+				//Hide glucose marker if it is out of bounds (fixed size chart);
+				if (glucoseMarker.y < lowestGlucoseValue || glucoseMarker.y > highestGlucoseValue)
+					glucoseMarker.alpha = 0;
+				else
+					glucoseMarker.alpha = 1;
+				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
 				if (glucoseReading.sensor == null)
 					glucoseMarker.alpha = 0;
+				
 				
 				//Update variables for next iteration
 				previousXCoordinate = previousXCoordinate + glucoseX;
@@ -1801,10 +1854,23 @@ package ui.chart
 				var previousLowestGlucoseValue:Number = lowestGlucoseValue;
 				var previousHighestGlucoseValue:Number = highestGlucoseValue;
 				
-				if (latestCalibrationGlucose < lowestGlucoseValue)
-					lowestGlucoseValue = latestCalibrationGlucose;
-				else if (latestCalibrationGlucose > highestGlucoseValue)
-					highestGlucoseValue = latestCalibrationGlucose;
+				if (!fixedSize) //Dynamic Chart
+				{
+					if (latestCalibrationGlucose < lowestGlucoseValue)
+						lowestGlucoseValue = latestCalibrationGlucose;
+					else if (latestCalibrationGlucose > highestGlucoseValue)
+						highestGlucoseValue = latestCalibrationGlucose;
+				}
+				else //Fixed Sized Chart
+				{
+					lowestGlucoseValue = minAxisValue;
+					if (resizeOutOfBounds && latestCalibrationGlucose < minAxisValue)
+						lowestGlucoseValue = latestCalibrationGlucose;
+					
+					highestGlucoseValue = maxAxisValue;
+					if (resizeOutOfBounds && latestCalibrationGlucose > maxAxisValue)
+						highestGlucoseValue = latestCalibrationGlucose
+				}
 				
 				//Redraw YAxis if needed
 				if(highestGlucoseValue != previousHighestGlucoseValue || lowestGlucoseValue != previousLowestGlucoseValue)
@@ -1846,11 +1912,16 @@ package ui.chart
 							latestCalibrationGlucose,
 							latestMarker.glucoseValueFormatted
 						);
-					
 				}
 				
+				//Hide glucose marker if it is out of bounds (fixed size chart);
+				if (latestMarker.y < lowestGlucoseValue || latestMarker.y > highestGlucoseValue)
+					glucoseMarker.alpha = 0;
+				else
+					glucoseMarker.alpha = 1;
+				
 				//Redraw Line if needed
-				if(_displayLine)
+				if(_displayLine && latestMarker.y >= lowestGlucoseValue && latestMarker.y <= highestGlucoseValue)
 				{
 					//Dispose previous lines
 					destroyAllLines(false);
