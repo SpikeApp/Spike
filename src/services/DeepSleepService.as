@@ -3,126 +3,152 @@ package services
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.errors.IllegalOperationError;
-	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
+	import flash.utils.clearInterval;
+	import flash.utils.setInterval;
 	
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
-	import events.DeepSleepServiceEvent;
 	import events.SettingsServiceEvent;
-	import events.SpikeEvent;
 	
 	import utils.Trace;
 	
-	/**
-	 * deepsleep timer will start a timer that expires every 10 seconds, indefinitely<br>
-	 * at expiry a short sound of 1ms without anything in it will be played.<br>
-	 * to keep the app awake<br>
-	 * It also dispatches an event each time the timer expires, to notify other apps that need to do something at regular intervals
-	 */
 	public class DeepSleepService extends EventDispatcher
 	{
-		private static var deepSleepTimer:Timer;
+		/* Constants */
+		private static const STANDARD_MODE:int = 60 * 1000;
+		private static const MODERATE_MODE:int = 30 * 1000;
+		private static const AGGRESSIVE_MODE:int = 10 * 1000;
+		private static const VERY_AGGRESSIVE_MODE:int = 5 * 1000;
+		private static const AUTOMATIC_DEXCOM:int = 10 * 1000;
+		private static const AUTOMATIC_NON_DEXCOM:int = 5 * 1000;
 		
+		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
 		
-		/**
-		 * how often to play the 1ms sound, in ms 
-		 */
-		private static var deepSleepInterval:int = 5000;
+		/* Variables */
+		private static var deepSleepInterval:int;
+		private static var intervalID:int = -1;
 		private static var lastLogPlaySoundTimeStamp:Number = 0;
-		
-		public static function get instance():DeepSleepService
-		{
-			return _instance;
-		}
 		
 		public function DeepSleepService()
 		{
 			//Don't allow class to be instantiated
-			if (_instance != null) {
+			if (_instance != null) 
+			{
 				throw new IllegalOperationError("DeepSleepService class is not meant to be instantiated!");
 			}
 		}
 		
-		public static function init():void {
+		public static function init():void 
+		{
+			Trace.myTrace("DeepSleepService.as", "Service started!");
+			
+			//Actions
 			setDeepSleepInterval();
-			startDeepSleepTimer();
-			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
+			startDeepSleepInterval();
+			
+			//Event Listeners
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
 		}
 		
-		private static function onCommonSettingsChanged(event:SettingsServiceEvent):void {
-			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
-				setDeepSleepInterval();
+		/**
+		 * Functionality
+		 */
+		private static function setDeepSleepInterval():void 
+		{	
+			//Define new timeout
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true")
+			{
+				//Spike manages suspension
+				Trace.myTrace("DeepSleepService.as", "Interval managed by Spike");
+				if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isDexcomG5()) 
+				{
+					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_DEXCOM");
+					deepSleepInterval = AUTOMATIC_DEXCOM;
+				}
+				else
+				{
+					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_NON_DEXCOM");
+					deepSleepInterval = AUTOMATIC_NON_DEXCOM;
+				}
+			}
+			else
+			{
+				//User manages suspension
+				Trace.myTrace("DeepSleepService.as", "Interval managed by user");
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE) == "0")
+				{
+					Trace.myTrace("DeepSleepService.as", "Setting interval to STANDARD_MODE");
+					deepSleepInterval = STANDARD_MODE;
+				}
+				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE) == "1")
+				{
+					Trace.myTrace("DeepSleepService.as", "Setting interval to MODERATE_MODE");
+					deepSleepInterval = MODERATE_MODE;
+				}
+				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE) == "2")
+				{
+					Trace.myTrace("DeepSleepService.as", "Setting interval to AGGRESSIVE_MODE");
+					deepSleepInterval = AGGRESSIVE_MODE;
+				}
+				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE) == "3")
+				{
+					Trace.myTrace("DeepSleepService.as", "Setting interval to VERY_AGGRESSIVE_MODE");
+					deepSleepInterval = VERY_AGGRESSIVE_MODE;
+				}
+			}
+		}
+		
+		private static function startDeepSleepInterval():void 
+		{
+			Trace.myTrace("DeepSleepService.as", "Starting deep sleep interval!");
+			
+			//Clear any previous intervals
+			clearInterval( intervalID );
+			
+			//Start new interval
+			intervalID = setInterval( playSound, deepSleepInterval);
+		}
+		
+		private static function playSound():void 
+		{
+			if (!BackgroundFetch.isPlayingSound()) 
+			{
+				var now:Number = new Date().valueOf();
+				if (now - lastLogPlaySoundTimeStamp > 1 * 60 * 1000) 
+				{
+					Trace.myTrace("DeepSleepService.as", "Playing deep sleep sound...");
+					lastLogPlaySoundTimeStamp = now;
+				}
+				BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
 			}
 		}
 		
 		/**
-		 * sets  deepSleepInterval, dependent on type of peripheral
+		 * Event Listeners
 		 */
-		private static function setDeepSleepInterval():void {
-			if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isDexcomG5()) {
-				//for dexcom G4 and G5 it is sufficient to wake up every 10 seconds
-				if (deepSleepInterval != 10000) {
-					deepSleepInterval = 10000;
-					if (deepSleepTimer != null) {
-						if (deepSleepTimer.running) {
-							deepSleepTimer.stop();
-							startDeepSleepTimer();
-						}
-					}
-				}
-			} else {
-				//for follower it must be every 5 seconds, also for blucon it is better
-				if (deepSleepInterval != 5000) {
-					deepSleepInterval = 5000;
-					if (deepSleepTimer != null) {
-						if (deepSleepTimer.running) {
-							deepSleepTimer.stop();
-							startDeepSleepTimer();
-						}
-					}
-				}
-			}
-		}
-		
-		private static function startDeepSleepTimer():void {
-			deepSleepTimer = new Timer(deepSleepInterval,0);
-			deepSleepTimer.addEventListener(TimerEvent.TIMER, deepSleepTimerListener);
-			deepSleepTimer.start();
-		}
-		
-		private static function checkDeepSleepTimer(event:Event):void {
-			if (deepSleepTimer != null) {
-				if (deepSleepTimer.running) {
-					return;
-				} else {
-					deepSleepTimer = null;										
-				}
-			}
-			startDeepSleepTimer();
-		}
-		
-		private static function deepSleepTimerListener(event:Event):void {
-			if (BackgroundFetch.isPlayingSound()) {
-			} else {	
-				if ((new Date()).valueOf() - lastLogPlaySoundTimeStamp > 1 * 60 * 1000) {
-					myTrace("in deepSleepTimerListener, call playSound");
-					lastLogPlaySoundTimeStamp = (new Date()).valueOf();
-				}
-				BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3", 0);
-			}
-			//for other services that need to do something at regular intervals
-			_instance.dispatchEvent(new DeepSleepServiceEvent(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT));
-		}
-		
-		private static function myTrace(log:String):void 
+		private static function onCommonSettingsChanged(event:SettingsServiceEvent):void 
 		{
-			Trace.myTrace("DeepSleepService.as", log);
+			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE ||
+				event.data == CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON ||
+				event.data == CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE
+			) 
+			{
+				Trace.myTrace("DeepSleepService.as", "Settings changed. Defining new interval!");
+				setDeepSleepInterval();
+				startDeepSleepInterval();
+			}
+		}
+		
+		/**
+		 * Getters & Setters
+		 */
+		
+		public static function get instance():DeepSleepService
+		{
+			return _instance;
 		}
 	}
 }

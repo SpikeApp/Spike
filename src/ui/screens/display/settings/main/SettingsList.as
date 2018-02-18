@@ -35,6 +35,7 @@ package ui.screens.display.settings.main
 		private var appInfoIconImage:Image;
 		private var integrationIconImage:Image;
 		private var widgetIconImage:Image;
+		private var advancedIconImage:Image;
 		
 		public function SettingsList()
 		{
@@ -75,6 +76,7 @@ package ui.screens.display.settings.main
 			integrationIconImage = new Image(chevronIconTexture);
 			watchIconImage = new Image(chevronIconTexture);
 			appInfoIconImage = new Image(chevronIconTexture);
+			advancedIconImage = new Image(chevronIconTexture);
 			
 			/* Data */
 			dataProvider = new ListCollection(
@@ -88,6 +90,7 @@ package ui.screens.display.settings.main
 					{ screen: Screens.SETTINGS_SHARE, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','share_settings_title'), accessory: shareIconImage },
 					{ screen: Screens.SETTINGS_INTEGRATION, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','integration_settings_title'), accessory: integrationIconImage },
 					{ screen: Screens.SETTINGS_APPLE_WATCH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','watch_settings_title'), accessory: watchIconImage },
+					{ screen: Screens.SETTINGS_ADVANCED, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','advanced_settings_title'), accessory: advancedIconImage },
 					{ screen: Screens.SETTINGS_ABOUT, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','about_settings_title'), accessory: appInfoIconImage }
 				]);
 			
@@ -174,6 +177,11 @@ package ui.screens.display.settings.main
 			{
 				appInfoIconImage.dispose();
 				appInfoIconImage = null;
+			}
+			if(advancedIconImage != null)
+			{
+				advancedIconImage.dispose();
+				advancedIconImage = null;
 			}
 			
 			super.dispose();

@@ -9,6 +9,7 @@ package ui.screens
 		public static const SENSOR_STATUS:String = "sensorStatus";
 		public static const SENSOR_START:String = "sensorStart";
 		public static const TRANSMITTER:String = "transmitter";
+		public static const SETTINGS_ADVANCED:String = "advancedSettings";
 		public static const SETTINGS_ABOUT:String = "aboutSettings";
 		public static const SETTINGS_BUG_REPORT:String = "bugReportSettings";
 		public static const SETTINGS_MAIN:String = "mainSettings";
