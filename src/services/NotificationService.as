@@ -43,9 +43,9 @@ package services
 	
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
-	import events.SpikeEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -345,7 +345,7 @@ package services
 						{
 							var lastBgReading:BgReading = BgReading.lastNoSensor();
 							myTrace("in onSettingsChanged, app badge is ON and Calibration.allForSensor().length >= 2, setting app badge");
-							Notifications.service.setBadgeNumber( int(Math.round(lastBgReading.calculatedValue)) );
+							Notifications.service.setBadgeNumber( getGlucoseBadge(lastBgReading) );
 						}
 					}
 				}
@@ -404,9 +404,10 @@ package services
 					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true")
 					{
 						myTrace("in updateBgNotification, setting app badge");
+						
 						Notifications.service.notify(
 							new NotificationBuilder()
-							.setCount(int(Math.round(Number(BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")))))
+							.setCount(getGlucoseBadge(lastBgReading))
 							.setId(NotificationService.ID_FOR_BG_VALUE)
 							.setAlert("Bg value")
 							.setTitle(valueToShow)
@@ -439,10 +440,41 @@ package services
 					lastBgReading = BgReading.lastNoSensor(); 
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
 					
-					Notifications.service.setBadgeNumber( int(Math.round(Number(BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")))) );
+					Notifications.service.setBadgeNumber( getGlucoseBadge(lastBgReading) );
 				}
 			}
 			
+		}
+		
+		private static function getGlucoseBadge(latestReading:BgReading):int
+		{
+			var badgeNumber:int;
+			var isMgDl:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true";
+			var preBadgeNumber:String = BgGraphBuilder.unitizedString(latestReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+			
+			if (preBadgeNumber == "HIGH")
+			{
+				if (isMgDl)
+					badgeNumber = 600;
+				else
+					badgeNumber = int(Math.round(BgReading.mgdlToMmol(600)));
+			}
+			else if (preBadgeNumber == "LOW" || preBadgeNumber == "??0" || preBadgeNumber == "?SN" || preBadgeNumber == "??2" || preBadgeNumber == "?NA" || preBadgeNumber == "?NC" || preBadgeNumber == "?CD" || preBadgeNumber == "?AD" || preBadgeNumber == "?RF" || preBadgeNumber == "???")
+			{
+				if (isMgDl)
+					badgeNumber = 38;
+				else
+					badgeNumber = int(Math.round(BgReading.mgdlToMmol(38)));
+			}
+			else
+			{
+				if (isMgDl)
+					badgeNumber = int(preBadgeNumber);
+				else
+					badgeNumber = int(Math.round(Number(preBadgeNumber)));
+			}
+				
+			return badgeNumber;
 		}
 		
 		public static function notificationIdToText(id:int):String 
