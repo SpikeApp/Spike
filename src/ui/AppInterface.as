@@ -15,6 +15,7 @@ package ui
 	import starling.events.Event;
 	
 	import ui.screens.AboutSettingsScreen;
+	import ui.screens.AdvancedSettingsScreen;
 	import ui.screens.AlarmsCustomizerSettingsScreen;
 	import ui.screens.AlarmsSettingsScreen;
 	import ui.screens.AlertTypesListScreen;
@@ -178,6 +179,11 @@ package ui
 			var watchSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( WatchSettingsScreen );
 			watchSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_APPLE_WATCH, watchSettingsScreenItem );
+			
+			/* Advanced Settings Screen */
+			var advancedSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AdvancedSettingsScreen );
+			advancedSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_ADVANCED, advancedSettingsScreenItem );
 			
 			/* About Settings Screen */
 			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutSettingsScreen );

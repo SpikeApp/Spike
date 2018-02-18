@@ -197,12 +197,6 @@ package ui.chart
 			minAxisValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_MIN_VALUE));
 			resizeOutOfBounds = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RESIZE_ON_OUT_OF_BOUNDS) == "true";
 			
-			
-			trace("fixedSize", fixedSize);
-			trace("maxAxisValue", maxAxisValue);
-			trace("minAxisValue", minAxisValue);
-			trace("resizeOutOfBounds", resizeOutOfBounds);
-			
 			//Time Format
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 			
@@ -362,10 +356,12 @@ package ui.chart
 			//First we determine the maximum and minimum glucose values
 			var sortDataArray:Array = _dataSource.concat();
 			sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
-			var lowestValue:Number = sortDataArray[0].calculatedValue as Number;
-			var highestValue:Number = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+			var lowestValue:Number;
+			var highestValue:Number;;
 			if (!dummyModeActive)
 			{
+				lowestValue = sortDataArray[0].calculatedValue as Number;
+				highestValue = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
 				if (!fixedSize)
 				{
 					lowestGlucoseValue = lowestValue;
