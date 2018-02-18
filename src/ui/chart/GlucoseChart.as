@@ -142,10 +142,11 @@ package ui.chart
 		private var previousNumberOfMakers:int = 0;
 		private var currentNumberOfMakers:int = 0;
 		
+		//Chart Scale mode
 		private var fixedSize:Boolean = false;
-		private var maxAxisValue:Number = 90;
-		private var minAxisValue:Number = 0;
-		private var resizeOutOfBounds:Boolean = false;
+		private var maxAxisValue:Number = 600;
+		private var minAxisValue:Number = 40;
+		private var resizeOutOfBounds:Boolean = true;
 
         public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
         {
@@ -189,6 +190,18 @@ package ui.chart
 			userTimeAgoFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
 			userAxisFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE));
 			yAxisMargin += (legendTextSize * userAxisFontMultiplier) - legendTextSize;
+			
+			//Scale
+			fixedSize = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SCALE_MODE_DYNAMIC) == "false";
+			maxAxisValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_MAX_VALUE));
+			minAxisValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_MIN_VALUE));
+			resizeOutOfBounds = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RESIZE_ON_OUT_OF_BOUNDS) == "true";
+			
+			
+			trace("fixedSize", fixedSize);
+			trace("maxAxisValue", maxAxisValue);
+			trace("minAxisValue", minAxisValue);
+			trace("resizeOutOfBounds", resizeOutOfBounds);
 			
 			//Time Format
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
@@ -444,8 +457,14 @@ package ui.chart
 						}
 					);
 				
+				//Hide glucose marker if it is out of bounds (fixed size chart);
+				if (glucoseMarker.glucoseValue < lowestGlucoseValue || glucoseMarker.glucoseValue > highestGlucoseValue)
+					glucoseMarker.alpha = 0;
+				else
+					glucoseMarker.alpha = 1;
+				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null && glucoseMarker.y >= lowestGlucoseValue && glucoseMarker.y <= highestGlucoseValue)
+				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -480,12 +499,6 @@ package ui.chart
 					//Hide glucose marker
 					glucoseMarker.alpha = 0;
 				}
-				
-				//Hide glucose marker if it is out of bounds (fixed size chart);
-				if (glucoseMarker.y < lowestGlucoseValue || glucoseMarker.y > highestGlucoseValue)
-					glucoseMarker.alpha = 0;
-				else
-					glucoseMarker.alpha = 1;
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
@@ -1097,8 +1110,14 @@ package ui.chart
 					}
 				}
 				
+				//Hide glucose marker if it is out of bounds (fixed size chart);
+				if (glucoseMarker.glucoseValue < lowestGlucoseValue || glucoseMarker.glucoseValue > highestGlucoseValue)
+					glucoseMarker.alpha = 0;
+				else
+					glucoseMarker.alpha = 1;
+				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null && glucoseMarker.y >= lowestGlucoseValue && glucoseMarker.y <= highestGlucoseValue)
+				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -1133,12 +1152,6 @@ package ui.chart
 					//Hide glucose marker
 					glucoseMarker.alpha = 0;
 				}
-				
-				//Hide glucose marker if it is out of bounds (fixed size chart);
-				if (glucoseMarker.y < lowestGlucoseValue || glucoseMarker.y > highestGlucoseValue)
-					glucoseMarker.alpha = 0;
-				else
-					glucoseMarker.alpha = 1;
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
@@ -1915,13 +1928,13 @@ package ui.chart
 				}
 				
 				//Hide glucose marker if it is out of bounds (fixed size chart);
-				if (latestMarker.y < lowestGlucoseValue || latestMarker.y > highestGlucoseValue)
+				if (latestMarker.glucoseValue < lowestGlucoseValue || latestMarker.glucoseValue > highestGlucoseValue)
 					glucoseMarker.alpha = 0;
 				else
 					glucoseMarker.alpha = 1;
 				
 				//Redraw Line if needed
-				if(_displayLine && latestMarker.y >= lowestGlucoseValue && latestMarker.y <= highestGlucoseValue)
+				if(_displayLine && latestMarker.glucoseValue >= lowestGlucoseValue && latestMarker.glucoseValue <= highestGlucoseValue)
 				{
 					//Dispose previous lines
 					destroyAllLines(false);

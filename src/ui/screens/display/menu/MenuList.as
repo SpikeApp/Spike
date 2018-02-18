@@ -52,7 +52,7 @@ package ui.screens.display.menu
 			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
 				paddingTop = 20; //Statusbar Size
 			else
-				paddingTop = 45; //Statusbar Size
+				paddingTop = 50; //Statusbar Size
 			minWidth = Constants.stageWidth >> 2;
 			minWidth += 85;
 			hasElasticEdges = false;
