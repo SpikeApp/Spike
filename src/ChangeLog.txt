@@ -1,3 +1,14 @@
+1.0.6
+FIX: Stability improvements for BluCon users.
+FIX: Several fixes and stability improvements for the selected few users that were experiencing missed readings (gaps). Hopefully this time around Spike is more stable for you.
+FIX: App badge now displays glucose value even when the user is LOW or HIGH.
+FIX: More layout fixes for iPhone X. Nightscout view also displays correctly now. Will adjust the layout of the chart screen in the next update. Thank you to Nate Travers for helping me test this in his iPhone X. You rock!
+FEATURE: New advanced settings screen. All advanced users should check it out, especially those that were experiencing missed readings. Go to Settings -> Advanced.
+FEATURE: Main chart can now be dynamic or fixed size. Configure settings in Settings -> Chart -> Scale.
+More to come, soon...
+
+Wishing everyone a great week ahead! 
+
 1.0.5
 Minor changes to the watch settings screen to try to mitigate a bug that happens sporadically and doesn't allow users to select a calendar. Might still need more fixes.
 Fixed iPhone X black bars at the top and bottom of the screen. Thank you to Josh Flynt for helping me test this in his iPhone X.
