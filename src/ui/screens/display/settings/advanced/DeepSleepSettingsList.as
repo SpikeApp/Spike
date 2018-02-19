@@ -107,14 +107,14 @@ package ui.screens.display.settings.advanced
 			
 			//Instructions Title Label
 			instructionsTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','instructions_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
-			instructionsTitleLabel.width = width - 20;
+			instructionsTitleLabel.width = width;
 			
 			//Instructions Description Label
 			instructionsDescriptionLabel = new Label();
 			instructionsDescriptionLabel.text = ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','suspension_instructions');
-			instructionsDescriptionLabel.width = width - 20;
+			instructionsDescriptionLabel.width = width;
 			instructionsDescriptionLabel.wordWrap = true;
-			instructionsDescriptionLabel.paddingTop = 10;
+			instructionsDescriptionLabel.paddingTop = instructionsDescriptionLabel.paddingBottom = 10;
 			instructionsDescriptionLabel.isQuickHitAreaEnabled = false;
 			instructionsDescriptionLabel.textRendererFactory = function():ITextRenderer 
 			{
