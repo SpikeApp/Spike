@@ -1,18 +1,13 @@
 package ui.screens.display.help
 {
-	import database.CommonSettings;
-	
 	import feathers.controls.Button;
 	import feathers.controls.List;
-	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
-	
-	import services.TutorialService;
 	
 	import starling.events.Event;
 	
@@ -81,7 +76,6 @@ package ui.screens.display.help
 		 */
 		private function onShowTutorial(event:Event):void
 		{
-			//TutorialService.init();
 			dispatchEventWith(Event.COMPLETE);
 		}
 		
