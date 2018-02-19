@@ -301,8 +301,8 @@
 		 /**
 		  * Deep Sleep Timer
 		  */
-		 public static const COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON:int = 106;
-		 public static const COMMON_SETTING_DEEP_SLEEP_MODE:int = 107;
+		 public static const COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON:int = 105;
+		 public static const COMMON_SETTING_DEEP_SLEEP_MODE:int = 106;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
