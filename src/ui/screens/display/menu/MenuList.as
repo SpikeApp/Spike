@@ -30,6 +30,7 @@ package ui.screens.display.menu
 		private var settingsIconTexture:Texture;
 		private var bugReportIconTexture:Texture;
 		private var disclaimerIconTexture:Texture;
+		private var helpIconTexture:Texture;
 
 		public function MenuList() 
 		{
@@ -67,6 +68,7 @@ package ui.screens.display.menu
 			settingsIconTexture = MaterialDeepGreyAmberMobileThemeIcons.settingsTexture;
 			bugReportIconTexture = MaterialDeepGreyAmberMobileThemeIcons.bugReportTexture;
 			disclaimerIconTexture = MaterialDeepGreyAmberMobileThemeIcons.disclaimerTexture;
+			helpIconTexture = MaterialDeepGreyAmberMobileThemeIcons.spikeHelpTexture;
 			
 			dataProvider = new ListCollection(
 				[
@@ -74,6 +76,7 @@ package ui.screens.display.menu
 					{ screen: Screens.SENSOR_STATUS, label: ModelLocator.resourceManagerInstance.getString('mainmenu','sensor_menu_item'), icon: sensorIconTexture },
 					{ screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture },
 					{ screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture },
+					{ screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture },
 					{ screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture },
 					{ screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture }
 				]);
@@ -147,6 +150,12 @@ package ui.screens.display.menu
 			{
 				disclaimerIconTexture.dispose();
 				disclaimerIconTexture = null;
+			}
+			
+			if(helpIconTexture != null)
+			{
+				helpIconTexture.dispose();
+				helpIconTexture = null;
 			}
 			
 			super.dispose();

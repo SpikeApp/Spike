@@ -26,6 +26,7 @@ package ui
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
 	import ui.screens.GlucoseManagementScreen;
+	import ui.screens.HelpScreen;
 	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
@@ -189,6 +190,13 @@ package ui
 			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutSettingsScreen );
 			aboutSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_ABOUT, aboutSettingsScreenItem );
+			
+			/* Help Screen */
+			var helpScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( HelpScreen );
+			helpScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			helpScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			helpScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.HELP, helpScreenItem );
 			
 			/* Bug Report Screen */
 			var bugReportScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BugReportScreen );
