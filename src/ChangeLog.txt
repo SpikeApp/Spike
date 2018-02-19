@@ -1,3 +1,7 @@
+1.0.7
+Fix Advanced Settings not being correctly saved in database after restarting Spike.
+Added a new menu called Help that allows the user to trigger a visual guide on how to setup a transmitter and start a sensor. 
+
 1.0.6
 FIX: Stability improvements for BluCon users.
 FIX: Several fixes and stability improvements for the selected few users that were experiencing missed readings (gaps). Hopefully this time around Spike is more stable for you.
