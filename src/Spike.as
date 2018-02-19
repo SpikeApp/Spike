@@ -8,10 +8,12 @@ package
 	import flash.events.Event;
 	import flash.system.System;
 	import flash.utils.clearInterval;
+	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
 	import events.SpikeEvent;
 	
+	import feathers.motion.Fade;
 	import feathers.utils.ScreenDensityScaleFactorManager;
 	
 	import starling.core.Starling;
@@ -29,6 +31,8 @@ package
 		private var starling:Starling;
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
+		private var deactivationTimer:Number;
+		
 		private static var _instance:Spike;
 		
 		public static function get instance():Spike
@@ -63,7 +67,6 @@ package
 		private function initStarling():void 
 		{
 			NativeApplication.nativeApplication.executeInBackground = true;
-			
 			
 			/* Initialize and start the Starling instance */
 			starling = new Starling( AppInterface, stage, null, null, "auto", Context3DProfile.BASELINE_EXTENDED );
@@ -103,13 +106,11 @@ package
 			//Push Chart Screen
 			if(AppInterface.instance.navigator != null)
 			{
-				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART)
+				var nowTimer:Number = getTimer();
+				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART && nowTimer - deactivationTimer > 5 * 60 * 1000)
 				{
-					/**
-					 * ENABLE IN PRODUCTION BUT FIRST IMPLEMENT A GETTIMER... ONLY RETURN TO HOME IF THE APP WAS IN BACKGROUND FOR MORE THAN 5 MIN
-					 */
-					//AppInterface.instance.menu.selectedIndex = 0;
-					//AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
+					AppInterface.instance.menu.selectedIndex = 0;
+					AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
 				}
 			}
 			
@@ -132,6 +133,9 @@ package
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_BACKGROUND");
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
+			
+			//Update timer
+			deactivationTimer = getTimer();
 		}
 		
 		/**
@@ -140,8 +144,6 @@ package
 		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("Spike.as", log);
-		}
-		
-	}
-	
+		}	
+	}	
 }
