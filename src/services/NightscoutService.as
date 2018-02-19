@@ -235,7 +235,7 @@ package services
 			}
 			else
 			{
-				Trace.myTrace("NightscoutService.as", "Error uploading glucose reading.");
+				Trace.myTrace("NightscoutService.as", "Error uploading glucose reading. Server response: " + response);
 			}
 			
 			syncGlucoseReadingsActive = false;
