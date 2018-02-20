@@ -419,6 +419,10 @@ package ui.chart
 			var dataLength:int = _dataSource.length;
 			for(i = 0; i < dataLength; i++)
 			{
+				var reading:BgReading = _dataSource[i] as BgReading;
+				if (reading == null || reading.calculatedValue == 0 || reading.calibration == null || reading.sensor == null)
+					continue;
+				
 				//Get current glucose value
 				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
 				if(currentGlucoseValue < 40)
@@ -1044,6 +1048,10 @@ package ui.chart
 			var dataLength:int = _dataSource.length;
 			for(i = 0; i < dataLength; i++)
 			{
+				var reading:BgReading = _dataSource[i] as BgReading;
+				if (reading == null || reading.calculatedValue == 0 || reading.calibration == null || reading.sensor == null)
+					continue;
+				
 				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
 				if (currentGlucoseValue < 40)
 					currentGlucoseValue = 40;

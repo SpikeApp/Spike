@@ -2,7 +2,10 @@ package ui.screens
 {
 	import flash.system.System;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
+	import database.Calibration;
 	import database.CommonSettings;
 	
 	import events.SpikeEvent;
@@ -32,6 +35,7 @@ package ui.screens
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.Trace;
 	
 	[ResourceBundle("chartscreen")]
 
@@ -267,17 +271,28 @@ package ui.screens
 		 */
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
 		{
-			if(BgReading.lastNoSensor() == null || BgReading.lastNoSensor().sensor == null)
+			Trace.myTrace("ChartScreen.as", "on onBgReadingReceived!");
+			
+			var reading:BgReading = BgReading.lastNoSensor();
+			
+			if(reading == null || reading.sensor == null || reading.calibration == null || Calibration.allForSensor().length < 2)
+			{
+				Trace.myTrace("ChartScreen.as", "Bad Reading. Not adding it to the chart. Reading: " + ObjectUtil.toString(reading));
 				return;
+			}
 			
 			if (!appInBackground && glucoseChart != null)
 			{
-				glucoseChart.addGlucose([BgReading.lastNoSensor()]);
+				Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
+				glucoseChart.addGlucose([reading]);
 				if (displayPieChart)
 					pieChart.drawChart();
 			}
 			else
-				newReadingsList.push(BgReading.lastNoSensor());
+			{
+				Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
+				newReadingsList.push(reading);
+			}
 		}
 		
 		private function onAppInBackground (e:SpikeEvent):void
