@@ -306,7 +306,13 @@ package ui.chart
 			 * Initial variables
 			 */
 			if(!dummyModeActive)
-				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+			{
+				if (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != null && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != undefined)
+					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+				else
+					selectedGlucoseMarkerIndex = 0;
+			}
+				
 			
 			displayLatestBGValue = true;
 			
