@@ -37,6 +37,7 @@ package ui.screens
 			super.initialize();
 			
 			setupContent();
+			adjustMainMenu();
 		}
 		
 		/**
@@ -65,18 +66,14 @@ package ui.screens
 			screenRenderer.addChild(tutorialSection);
 		}
 		
+		private function adjustMainMenu():void
+		{
+			AppInterface.instance.menu.selectedIndex = 4;
+		}
+		
 		/**
 		 * Event Handlers
 		 */
-		override protected function onBackButtonTriggered(event:Event):void
-		{
-			//Activate menu drag gesture
-			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
-			
-			//Pop Screen
-			dispatchEventWith(Event.COMPLETE);
-		}
-		
 		private function onShowTutorial(e:Event):void
 		{
 			Starling.juggler.delayCall(TutorialService.init, 1);

@@ -102,7 +102,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 5;
+			AppInterface.instance.menu.selectedIndex = 6;
 		}
 		
 		/**
