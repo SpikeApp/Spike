@@ -7,6 +7,7 @@ package ui.screens.display.readings
 	import database.Database;
 	import database.LocalSettings;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.ImageLoader;
 	import feathers.controls.Label;
@@ -26,6 +27,7 @@ package ui.screens.display.readings
 	import starling.events.Event;
 	import starling.textures.RenderTexture;
 	
+	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.BgGraphBuilder;
@@ -124,7 +126,7 @@ package ui.screens.display.readings
 		private function setupContent():void
 		{
 			//Temporary content to display pior to rendering the entire readings list (this is done to avoid Spike's UI from freezing will data processes);
-			var standByLabel:Label = LayoutFactory.createLabel("Stand By", HorizontalAlign.CENTER);
+			var standByLabel:Label = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('glucosemanagementscreen','stand_by'), HorizontalAlign.CENTER);
 			standByLabel.width = width - 20;
 			
 			dataProvider = new ListCollection
@@ -258,10 +260,27 @@ package ui.screens.display.readings
 			var bgReading:BgReading = item.bgReading as BgReading;
 			var id:int = item.id;
 			
-			//Delete reading from Spike, database and list
-			ModelLocator.bgReadings.removeAt(id);
-			Database.deleteBgReadingSynchronous(bgReading);
-			dataProvider.removeItem(item);
+			var alert:Alert = AlertManager.showActionAlert
+			(
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','cant_be_undone'),
+				Number.NaN,
+				[
+					{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase")  },	
+					{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: deleteReading }	
+				],
+				HorizontalAlign.CENTER
+			);
+			alert.buttonGroupProperties.gap = 10;
+			alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+			
+			function deleteReading(e:Event):void
+			{
+				//Delete reading from Spike, database and list
+				ModelLocator.bgReadings.removeAt(id);
+				Database.deleteBgReadingSynchronous(bgReading);
+				dataProvider.removeItem(item);
+			}
 		}
 		
 		/**
