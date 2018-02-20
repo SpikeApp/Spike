@@ -1,6 +1,7 @@
 1.0.7
-Fix Advanced Settings not being correctly saved in database after restarting Spike.
-Added a new menu called Help that allows the user to trigger a visual guide on how to setup a transmitter and start a sensor. 
+FIX: Advanced Settings are now correctly saved in database after restarting Spike.
+FEATURE: Added menu section "Help" that allows the user to trigger a visual guide/tutorial on how to setup a transmitter and start a sensor.
+FEATURE: If Spike is in the background for more than 5 minutes, when the user returns to Spike it will automatically show the chart screen. 
 
 1.0.6
 FIX: Stability improvements for BluCon users.
