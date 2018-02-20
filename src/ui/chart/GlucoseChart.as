@@ -310,7 +310,12 @@ package ui.chart
 				if (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != null && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != undefined)
 					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 				else
-					selectedGlucoseMarkerIndex = 0;
+				{
+					if (mainChartGlucoseMarkersList != null)
+						selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList.length;
+					else
+						selectedGlucoseMarkerIndex = 0;
+				}
 			}
 				
 			
