@@ -716,7 +716,7 @@ package database
 			}
 			var adjust_for:Number = AGE_ADJUSTMENT_TIME - (timestamp - sensor.startedAt);
 			if (adjust_for <= 0 || BlueToothDevice.isTypeLimitter()) {
-				myTrace("in calculateAgeAdjustedRawValue, istypelimitter, not applying age adjustment");
+				myTrace("in calculateAgeAdjustedRawValue, istypelimitter or sensor more than one day old, not applying age adjustment");
 				_ageAdjustedRawValue = rawData;
 			} else {
 				_ageAdjustedRawValue = ((AGE_ADJUSTMENT_FACTOR * (adjust_for / AGE_ADJUSTMENT_TIME)) * rawData) + rawData;
