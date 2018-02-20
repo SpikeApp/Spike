@@ -4,19 +4,25 @@ package ui
 	import com.adobe.touch3D.Touch3DEvent;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
+	import com.distriqt.extension.exceptions.ExceptionReport;
+	import com.distriqt.extension.exceptions.Exceptions;
 	import com.distriqt.extension.memory.Memory;
 	import com.distriqt.extension.memory.MemoryInfo;
 	import com.distriqt.extension.memory.events.MemoryEvent;
+	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.net.URLLoader;
+	import flash.net.URLVariables;
 	import flash.system.Capabilities;
 	import flash.system.System;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
+	import flash.utils.ByteArray;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -36,11 +42,14 @@ package ui
 	
 	import model.ModelLocator;
 	
+	import network.EmailSender;
+	
 	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.NotificationService;
 	import services.TutorialService;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
@@ -54,6 +63,7 @@ package ui
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("sensorscreen")]
 	[ResourceBundle("3dtouch")]
+	[ResourceBundle("crashreport")]
 
 	public class InterfaceController extends EventDispatcher
 	{
@@ -120,6 +130,15 @@ package ui
 				Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
 				
+				//Exceptions Management
+				Exceptions.service.setUncaughtExceptionHandler();
+				
+				if (Exceptions.service.hasPendingException())
+				{
+					Trace.myTrace("interfaceController.as", "A crash has ocurred. Notifying user...");
+					Starling.juggler.delayCall(manageExceptions, 5);
+				}
+				
 				//Memory Management
 				if (Memory.isSupported)
 					Memory.service.addEventListener( MemoryEvent.LOW_MEMORY_WARNING, onLowMemory );
@@ -131,7 +150,7 @@ package ui
 					Trace.myTrace("interfaceController.as", "LOW MEMORY! Total Memory: " + info.totalMemory + " | Available Memory: " + info.availableMemory);
 					Trace.myTrace("interfaceController.as", "Calling garbage collector...");
 					
-					System.pauseForGCIfCollectionImminent(0);
+					//System.pauseForGCIfCollectionImminent(0);
 				}
 				
 				//3D Touch Management
@@ -198,6 +217,77 @@ package ui
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN,"true");
 				}
 			}
+		}
+		
+		private static function manageExceptions():void
+		{
+			AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('crashreport','alert_message'),
+					60,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','send_button_label'), triggered: sendCrashReport }
+					]
+				);
+			
+			function sendCrashReport(e:starling.events.Event):void
+			{
+				var report:ExceptionReport = Exceptions.service.getPendingException();
+				
+				if (report == null || report.name == null || report.reason == null || report.report == null || !NetworkInfo.service.isReachable())
+					return;
+				
+				var dateFormatterForCrash:DateTimeFormatter = new DateTimeFormatter();
+				dateFormatterForCrash.dateTimePattern = "dd MMM YY HH:mm";
+				dateFormatterForCrash.useUTC = false;
+				dateFormatterForCrash.setStyle("locale",Capabilities.language.substr(0,2));
+				
+				//Create URL Request Address
+				var crashLog:String = "";
+				crashLog += "Date: " + dateFormatterForCrash.format(new Date(report.timestamp)) + "\n";
+				crashLog += "Name: " + report.name + "\n";
+				crashLog += "Reason: " + report.reason + "\n";
+				crashLog += "Report: " + report.report;
+				
+				var fileName:String = "Crash.log";
+				var fileData:ByteArray = new ByteArray();
+				fileData.writeUTFBytes(crashLog);
+				
+				dateFormatterForCrash = null;
+				
+				var vars:URLVariables = new URLVariables();
+				vars.fileName = fileName;
+				vars.mimeType = "text/plain";
+				vars.emailSubject = "Crash Report";
+				vars.emailBody = "";
+				vars.userEmail = "miguel.kennedy@spike-app.com";
+				vars.mode = EmailSender.MODE_EMAIL_USER;
+				
+				//Send data
+				EmailSender.sendData
+					(
+						EmailSender.TRANSMISSION_URL_WITH_ATTACHMENT,
+						onLoadCompleteHandler,
+						vars,
+						fileData
+					);
+			}
+			
+			function onLoadCompleteHandler(event:flash.events.Event):void 
+			{ 
+				var loader:URLLoader = URLLoader(event.target);
+				loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
+				
+				var response:Object = loader.data;
+				loader = null;
+				
+				if (response.success == "true")
+					Trace.myTrace("interfaceController.as", "Crash report sent successfully!");
+				else
+					Trace.myTrace("interfaceController.as", "Error sending crash report! Error: " + response.statuscode);
+			} 
 		}
 		
 		private static function setup3DTouch():void
