@@ -6,9 +6,6 @@ package ui
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.exceptions.ExceptionReport;
 	import com.distriqt.extension.exceptions.Exceptions;
-	import com.distriqt.extension.memory.Memory;
-	import com.distriqt.extension.memory.MemoryInfo;
-	import com.distriqt.extension.memory.events.MemoryEvent;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
@@ -18,7 +15,6 @@ package ui
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
 	import flash.system.Capabilities;
-	import flash.system.System;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
@@ -137,20 +133,6 @@ package ui
 				{
 					Trace.myTrace("interfaceController.as", "A crash has ocurred. Notifying user...");
 					Starling.juggler.delayCall(manageExceptions, 5);
-				}
-				
-				//Memory Management
-				if (Memory.isSupported)
-					Memory.service.addEventListener( MemoryEvent.LOW_MEMORY_WARNING, onLowMemory );
-				
-				function onLowMemory( e:MemoryEvent ):void
-				{
-					var info:MemoryInfo = Memory.service.getMemoryInfo();
-					
-					Trace.myTrace("interfaceController.as", "LOW MEMORY! Total Memory: " + info.totalMemory + " | Available Memory: " + info.availableMemory);
-					Trace.myTrace("interfaceController.as", "Calling garbage collector...");
-					
-					//System.pauseForGCIfCollectionImminent(0);
 				}
 				
 				//3D Touch Management

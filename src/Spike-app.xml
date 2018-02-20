@@ -506,7 +506,7 @@
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Calendar</extensionID>
 		<extensionID>com.distriqt.Core</extensionID>
-		<extensionID>com.distriqt.Memory</extensionID>
+		<extensionID>com.distriqt.Exceptions</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
