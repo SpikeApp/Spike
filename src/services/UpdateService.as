@@ -184,7 +184,17 @@ package services
 				return;
 			}
 			
-			var data:Object = JSON.parse(loader.data as String);
+			try
+			{
+				var data:Object = JSON.parse(loader.data as String);
+			} 
+			catch(error:Error) 
+			{
+				myTrace("in onLoadSuccess, error parsing json... returning!");
+				return;
+			}
+			
+			
 			if (data.version == null) {
 				myTrace("in onLoadSuccess, no data.version");
 				return;
