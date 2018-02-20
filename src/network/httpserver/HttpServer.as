@@ -67,6 +67,10 @@ package network.httpserver
 					_timeoutID = setTimeout( listen, 5000, port );
 					
 					Trace.myTrace("HttpServer.as", "Server error! Retrying connection in 5 seconds. Reconnection attempt: " + _connectionRetries);
+					
+					_isConnected = false;
+					
+					return;
 				}
 				else
 				{
@@ -75,6 +79,10 @@ package network.httpserver
 					var message:String = ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_mesage').replace("{port}", port.toString()) + " " + error.message;
 					
 					AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_title'), message);
+					
+					_isConnected = false;
+					
+					return;
 				}
             }
 			
@@ -101,7 +109,10 @@ package network.httpserver
 						_controllers[i] = null;
 				}
 			} 
-			catch(error:Error){}
+			catch(error:Error)
+			{
+				Trace.myTrace("HttpServer.as", "Error closing server. Error: " + error.message);
+			}
 			
 			_controllers = null;
 			_serverSocket = null;
@@ -184,6 +195,8 @@ package network.httpserver
             }
             catch (error:Error)
             {
+				Trace.myTrace("HttpServer.as", "Error parsing request! Error: " + error.message);
+				
                 AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_title'), error.message, 30);
             }
         }
@@ -191,23 +204,33 @@ package network.httpserver
 		private function objectToURLVariables(parameters:Object, variables:String = null):URLVariables
 		{
 			var paramsToSend:URLVariables;
-			if (variables == null)
-				paramsToSend = new URLVariables();
-			else
-				paramsToSend = new URLVariables(variables);
 			
-			if (parameters != null)
+			try
 			{
-				for (var i:String in parameters)
+				if (variables == null)
+					paramsToSend = new URLVariables();
+				else
+					paramsToSend = new URLVariables(variables);
+				
+				if (parameters != null)
 				{
-					if (i != null)
+					for (var i:String in parameters)
 					{
-						if (parameters[i] is Array)
-							paramsToSend[i] = parameters[i];
-						else
-							paramsToSend[i] = parameters[i].toString();
+						if (i != null)
+						{
+							if (parameters[i] is Array)
+								paramsToSend[i] = parameters[i];
+							else
+								paramsToSend[i] = parameters[i].toString();
+						}
 					}
 				}
+			} 
+			catch(error:Error) 
+			{
+				Trace.myTrace("HttpServer.as", "Error creating parameters! Error: " + error.message);
+				
+				paramsToSend = new URLVariables();
 			}
 			
 			return paramsToSend;
@@ -217,6 +240,5 @@ package network.httpserver
 		{
 			return _serverSocket;
 		}
-
     }
 }

@@ -60,21 +60,28 @@ package services
 		{
 			Trace.myTrace("LoopService.as", "Service activated!");
 			
-			//Controllers
-			authenticationController = new LoopServiceController('/ShareWebServices/Services/General');
-			authenticationController.accountName = serverUsername;
-			authenticationController.password = serverPassword;
+			try
+			{
+				//Controllers
+				authenticationController = new LoopServiceController('/ShareWebServices/Services/General');
+				authenticationController.accountName = serverUsername;
+				authenticationController.password = serverPassword;
+				
+				glucoseController = new LoopServiceController('/ShareWebServices/Services/Publisher');
+				
+				//Server
+				loopServer = new HttpServer();
+				loopServer.registerController(authenticationController);			
+				loopServer.registerController(glucoseController);
+				loopServer.listen(1979);
+				
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+			} 
+			catch(error:Error) 
+			{
+				Trace.myTrace("LoopService.as", "Cannot activate service. Error: " + error.message);
+			}
 			
-			glucoseController = new LoopServiceController('/ShareWebServices/Services/Publisher');
-			
-			//Server
-			loopServer = new HttpServer();
-			loopServer.registerController(authenticationController);			
-			loopServer.registerController(glucoseController);
-			loopServer.listen(1979);
-			
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
-
 			serviceActive = true;
 		}
 		
@@ -97,9 +104,6 @@ package services
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
 			
 			serviceActive = false;
-			
-			//Invoke Garbage Collector
-			System.pauseForGCIfCollectionImminent(0);
 		}
 		
 		/**

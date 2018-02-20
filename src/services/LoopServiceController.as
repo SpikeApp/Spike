@@ -33,20 +33,27 @@ package services
 		{
 			Trace.myTrace("LoopServiceController.as", "LoginPublisherAccountByName called!");
 			
-			if (String(params.accountName) != accountName)
+			try
 			{
-				Trace.myTrace("LoopServiceController.as", "Invalid account name.");
-				return responseSuccess(getBadAccountResponse(params.accountName));
-			}
-			else if (String(params.password) != password)
+				if (String(params.accountName) != accountName)
+				{
+					Trace.myTrace("LoopServiceController.as", "Invalid account name.");
+					return responseSuccess(getBadAccountResponse(params.accountName));
+				}
+				else if (String(params.password) != password)
+				{
+					Trace.myTrace("LoopServiceController.as", "Invalid password.");
+					return responseSuccess(getBadPasswordResponse(params.password));
+				}
+			} 
+			catch(error:Error) 
 			{
-				Trace.myTrace("LoopServiceController.as", "Invalid password.");
-				return responseSuccess(getBadPasswordResponse(params.password));
+				Trace.myTrace("LoopServiceController.as", "Error trying to validate credentials. Error: " + error.message);
+				
+				return responseSuccess(SESSION_ID);
 			}
 			
 			Trace.myTrace("LoopServiceController.as", "Authentication successful!");
-			
-			params = null;
 			
 			return responseSuccess(SESSION_ID);
 		}
@@ -55,27 +62,41 @@ package services
 		{
 			Trace.myTrace("LoopServiceController.as", "ReadPublisherLatestGlucoseValues called!");
 			
-			var numReadings:int = 1;
-			if (params.maxCount != null)	
-				numReadings = int(params.maxCount);
-				
-			var dexcomReadingsList:ArrayCollection = BgReading.latest(numReadings);
-			var dexcomReadingsCollection:Array = [];
-				
-			for (var i:int = 0; i < dexcomReadingsList.length; i++) 
+			var response:String;
+			
+			try
 			{
-				var bgReading:BgReading = dexcomReadingsList.getItemAt(i) as BgReading;
-				dexcomReadingsCollection.push(createGlucoseReading(bgReading));
+				var numReadings:int = 1;
+				if (params.maxCount != null)	
+					numReadings = int(params.maxCount);
+				
+				var dexcomReadingsList:ArrayCollection = BgReading.latest(numReadings);
+				var dexcomReadingsCollection:Array = [];
+				
+				for (var i:int = 0; i < dexcomReadingsList.length; i++) 
+				{
+					var bgReading:BgReading = dexcomReadingsList.getItemAt(i) as BgReading;
+					if (bgReading == null || bgReading.calculatedValue == 0)
+						continue;
+					
+					dexcomReadingsCollection.push(createGlucoseReading(bgReading));
+				}
+				
+				response = JSON.stringify(dexcomReadingsCollection);
+				response = response.replace(/\\\\/gi, "\\");
+				
+				dexcomReadingsList = null;
+				dexcomReadingsCollection = null;
+				params = null;
+				
+				Trace.myTrace("LoopServiceController.as", "Returning glucose values for " + numReadings + " reading(s).");
+			} 
+			catch(error:Error) 
+			{
+				Trace.myTrace("LoopServiceController.as", "Error processing response. Returning and empty array. Error: " + error.message);
+				
+				response = "[]";
 			}
-			
-			var response:String = JSON.stringify(dexcomReadingsCollection);
-			response = response.replace(/\\\\/gi, "\\");
-			
-			dexcomReadingsList = null;
-			dexcomReadingsCollection = null;
-			params = null;
-			
-			Trace.myTrace("LoopServiceController.as", "Returning glucose values for " + numReadings + " reading(s).");
 			
 			return responseSuccess(response);
 		}
