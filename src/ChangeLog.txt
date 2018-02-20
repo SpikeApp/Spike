@@ -1,7 +1,17 @@
+1.0.8
+FIX: Calibration alarm now correctly saves the time interval when in mmol/L. 
+
 1.0.7
-FIX: Advanced Settings are now correctly saved in database after restarting Spike.
+FIX: Advanced Settings are now correctly saved in database after restarting Spike. After upgrading to this version, please set your advanced settings again.
+FIX: Upgraded the BlueTooth library to the latest version. Seems to be more stable for people on iOS 11.
+FIX: Added some safe guards to the Loop Offline code. If Spike receives a badly formed request, it should not crash.
+FIX: Several other small tweaks to try and mitigate a crash that some users are experiencing.
+FIX: Chart should not display readings before the initial 2 calibrations. Needs further testing.
+FEATURE: Glucose readings management: You can now see your last 24h of readings in a list and delete bad readings. This feature is accessible through the upper right menu of the chart screen, under "Readings". Use with caution! 
+FEATURE: Added an exception manager. If Spike crashes, when you restart it it should now show a popup asking you if you want to send the crash log to the developer team. This will help us further debug Spike.
 FEATURE: Added menu section "Help" that allows the user to trigger a visual guide/tutorial on how to setup a transmitter and start a sensor.
-FEATURE: If Spike is in the background for more than 5 minutes, when the user returns to Spike it will automatically show the chart screen. 
+FEATURE: If Spike is in the background for more than 5 minutes, when the user returns to Spike it will automatically show the chart screen.
+TWEAK: Removed third party library that manages low memory events. I'm not sure if this is library can cause crashes and is not really needed.
 
 1.0.6
 FIX: Stability improvements for BluCon users.
