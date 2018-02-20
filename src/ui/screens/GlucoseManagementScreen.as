@@ -3,6 +3,7 @@ package ui.screens
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
+	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -33,6 +34,7 @@ package ui.screens
 		{
 			super.initialize();
 			
+			addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionComplete);
 			setupContent();
 		}
 		
@@ -63,6 +65,11 @@ package ui.screens
 		/**
 		 * Event Handlers
 		 */
+		private function onTransitionComplete(e:Event):void
+		{
+			readingsSection.populateReadings();
+		}
+		
 		override protected function onBackButtonTriggered(event:Event):void
 		{
 			//Activate menu drag gesture

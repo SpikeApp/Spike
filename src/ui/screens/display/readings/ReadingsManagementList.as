@@ -1,39 +1,56 @@
 package ui.screens.display.readings
 {
-	import mx.utils.ObjectUtil;
+	import flash.utils.Dictionary;
 	
-	import database.AlertType;
 	import database.BgReading;
 	import database.CommonSettings;
 	import database.Database;
+	import database.LocalSettings;
 	
 	import feathers.controls.Button;
+	import feathers.controls.ImageLoader;
+	import feathers.controls.Label;
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
+	import feathers.data.ListCollection;
+	import feathers.layout.HorizontalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
+	import starling.display.Canvas;
 	import starling.display.Image;
 	import starling.events.Event;
-	import starling.text.TextFormat;
+	import starling.textures.RenderTexture;
 	
-	import ui.screens.display.settings.alarms.AlertManagerAccessory;
+	import ui.screens.display.LayoutFactory;
 	
 	import utils.BgGraphBuilder;
 	import utils.Constants;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("globaltranslations")]
 
 	public class ReadingsManagementList extends List 
 	{
 		/* Display Objects */
+		private var urgentHighCanvas:Canvas;
+		private var urgentHighTexture:RenderTexture;
+		private var highCanvas:Canvas;
+		private var highTexture:RenderTexture;
+		private var inRangeCanvas:Canvas;
+		private var inRangeTexture:RenderTexture;
+		private var lowCanvas:Canvas;
+		private var lowTexture:RenderTexture;
+		private var urgentLowCanvas:Canvas;
+		private var urgentLowTexture:RenderTexture;
 		
 		/* Objects */
 		private var accessoriesList:Array = [];
+		private var accessoryDictionary:Dictionary = new Dictionary( true );
 		
 		/* Properties */
 		private var urgentLowThreshold:Number;
@@ -45,6 +62,7 @@ package ui.screens.display.readings
 		private var highColor:uint;
 		private var urgentHighColor:uint;
 		private var urgentLowColor:uint;
+		private var dateFormat:String;
 		
 		public function ReadingsManagementList()
 		{
@@ -75,135 +93,159 @@ package ui.screens.display.readings
 		
 		private function setupInitialContent():void
 		{
+			//Get user's glucose thresholds
 			urgentLowThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
-			lowThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
-			highThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
-			urgentHighThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				urgentLowThreshold = Math.round(((BgReading.mgdlToMmol((urgentLowThreshold))) * 10)) / 10;
 			
+			lowThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				lowThreshold = Math.round(((BgReading.mgdlToMmol((lowThreshold))) * 10)) / 10;
+			
+			highThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				highThreshold = Math.round(((BgReading.mgdlToMmol((highThreshold))) * 10)) / 10;
+				
+			urgentHighThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				urgentHighThreshold = Math.round(((BgReading.mgdlToMmol((urgentHighThreshold))) * 10)) / 10;
+			
+			//Get user's glucose colors
 			urgentLowColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR));
 			lowColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR));
 			inRangeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_IN_RANGE_COLOR));
 			highColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_HIGH_COLOR));
 			urgentHighColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_HIGH_COLOR));
+			
+			//Get user's date format (24H/12H)
+			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 		}
 		
 		private function setupContent():void
 		{
-			///Notifications On/Off Toggle
+			//Temporary content to display pior to rendering the entire readings list (this is done to avoid Spike's UI from freezing will data processes);
+			var standByLabel:Label = LayoutFactory.createLabel("Stand By", HorizontalAlign.CENTER);
+			standByLabel.width = width - 20;
 			
+			dataProvider = new ListCollection
+			(
+				[
+					{ label: "", accessory: standByLabel }
+				]
+			);
 			
-			//Define Notifications Settings Data
+			itemRendererFactory = function():IListItemRenderer 
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.accessoryField = "accessory";
+				return item;
+			};
+		}
+		
+		public function populateReadings():void
+		{
+			//Icons
+			urgentHighCanvas = createReadingIcon(urgentHighColor);
+			urgentHighTexture = new RenderTexture(urgentHighCanvas.width, urgentHighCanvas.height);
+			urgentHighTexture.draw(urgentHighCanvas);
+			
+			highCanvas = createReadingIcon(highColor);
+			highTexture = new RenderTexture(highCanvas.width, highCanvas.height);
+			highTexture.draw(highCanvas);
+			
+			inRangeCanvas = createReadingIcon(inRangeColor);
+			inRangeTexture = new RenderTexture(inRangeCanvas.width, inRangeCanvas.height);
+			inRangeTexture.draw(inRangeCanvas);
+			
+			lowCanvas = createReadingIcon(lowColor);
+			lowTexture = new RenderTexture(lowCanvas.width, lowCanvas.height);
+			lowTexture.draw(lowCanvas);
+			
+			urgentLowCanvas = createReadingIcon(urgentLowColor);
+			urgentLowTexture = new RenderTexture(urgentLowCanvas.width, urgentLowCanvas.height);
+			urgentLowTexture.draw(urgentLowCanvas);
+			
+			// Data
 			var dataList:Array = [];
 			var readingsList:Array = ModelLocator.bgReadings;
 			
 			for(var i:int = readingsList.length - 1 ; i >= 0; i--)
 			{
+				//Glucose reading properties
 				var reading:BgReading = readingsList[i];
 				var glucoseValue:String = BgGraphBuilder.unitizedString(reading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-				var deleteButton:Button = new Button();
-				deleteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture);
-				deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
-				deleteButton.addEventListener(Event.TRIGGERED, onDeleteReading);
-				accessoriesList.push(deleteButton);
-				dataList.push({ label: glucoseValue, accessory: deleteButton, bgReading: reading, id: i });
+				var glucoseValueNumber:Number = Number(glucoseValue);
+				var glucoseTime:Date = new Date(reading.timestamp);
+				
+				//Row label
+				var timeFormatted:String;
+				if (dateFormat.slice(0,2) == "24")
+					timeFormatted = TimeSpan.formatHoursMinutes(glucoseTime.getHours(), glucoseTime.getMinutes(), TimeSpan.TIME_FORMAT_24H);
+				else
+					timeFormatted = TimeSpan.formatHoursMinutes(glucoseTime.getHours(), glucoseTime.getMinutes(), TimeSpan.TIME_FORMAT_12H);
+				var label:String = timeFormatted + "  -  " + glucoseValue;
+				
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "true");
+				
+				//Row icon (changes color depending of value of glucose reading
+				var icon:RenderTexture;
+				if (glucoseValueNumber >= urgentHighThreshold)
+					icon = urgentHighTexture;
+				else if (glucoseValueNumber >= highThreshold)
+					icon = highTexture;
+				else if (glucoseValueNumber > lowThreshold && glucoseValueNumber < highThreshold)
+					icon = inRangeTexture;
+				else if (glucoseValueNumber <= lowThreshold && glucoseValueNumber > urgentLowThreshold)
+					icon = lowTexture;
+				else
+					icon = urgentLowTexture;
+				
+				//Push row into list
+				dataList.push({ icon: icon, label: label, bgReading: reading, id: i });
 			}
 			
 			dataProvider = new ArrayCollection(dataList);
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
+			//Define Item Renderer
+			itemRendererFactory = function itemRendererFactory():IListItemRenderer
 			{
-				var item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.accessoryField = "accessory";
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.iconSourceField = "icon";
+				itemRenderer.iconLoaderFactory = function():ImageLoader
+				{
+					var loader:ImageLoader = new ImageLoader();
+					return loader;
+				}
+				itemRenderer.iconOffsetX = 10;
+				itemRenderer.labelField = "label";
+				itemRenderer.accessoryFunction = function(item:Object):Button
+				{
+					var deleteButton:Button = accessoryDictionary[ item ];
+					if(!deleteButton)
+					{
+						deleteButton = new Button();
+						deleteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture);
+						deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+						deleteButton.pivotX = -5;
+						deleteButton.addEventListener(Event.TRIGGERED, onDeleteReading);
+						accessoryDictionary[ item ] = deleteButton;
+					}
+					return deleteButton;
+				}
 				
-				return item;
-			};
-			
-			var urgentHighTextFormat:TextFormat = new TextFormat("Roboto", 14, urgentHighColor);
-			function urgentHighItemFactory():IListItemRenderer
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.iconField = "icon";
-				item.accessoryField = "accessory";
-				item.fontStyles = urgentHighTextFormat;
-				
-				return item;
+				return itemRenderer;
 			}
+		}
+		
+		private function createReadingIcon(readingColor:uint):Canvas
+		{
+			var icon:Canvas = new Canvas();
+			icon.beginFill(readingColor);
+			icon.drawCircle(8,8,8);
+			icon.endFill();
 			
-			var highTextFormat:TextFormat = new TextFormat("Roboto", 14, highColor);
-			function highItemFactory():IListItemRenderer
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.iconField = "icon";
-				item.accessoryField = "accessory";
-				item.fontStyles = highTextFormat;
-				
-				return item;
-			}
-			
-			var inRangeTextFormat:TextFormat = new TextFormat("Roboto", 14, inRangeColor);
-			inRangeTextFormat.bold = true;
-			function inRangeItemFactory():IListItemRenderer
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.iconField = "icon";
-				item.accessoryField = "accessory";
-				item.fontStyles = inRangeTextFormat;
-				
-				return item;
-			}
-			
-			var lowTextFormat:TextFormat = new TextFormat("Roboto", 14, lowColor);
-			function lowItemFactory():IListItemRenderer
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.iconField = "icon";
-				item.accessoryField = "accessory";
-				item.fontStyles = lowTextFormat;
-				
-				return item;
-			}
-			
-			var urgentLowTextFormat:TextFormat = new TextFormat("Roboto", 14, urgentLowColor);
-			function urgentLowItemFactory():IListItemRenderer
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.iconField = "icon";
-				item.accessoryField = "accessory";
-				item.fontStyles = urgentLowTextFormat;
-				
-				return item;
-			}
-			
-			setItemRendererFactoryWithID( "urgent-high-item", urgentHighItemFactory );
-			setItemRendererFactoryWithID( "high-item", highItemFactory );
-			setItemRendererFactoryWithID( "in-range-item", inRangeItemFactory );
-			setItemRendererFactoryWithID( "low-item", lowItemFactory );
-			setItemRendererFactoryWithID( "urgent-low-item", urgentLowItemFactory );
-			
-			factoryIDFunction = function( item:Object, index:int ):String
-			{
-				var glucoseValue:Number = Number(item.label);
-				
-				if (glucoseValue >= urgentHighThreshold)
-					return "urgent-high-item";
-				else if (glucoseValue >= highThreshold)
-					return "high-item";
-				else if (glucoseValue > lowThreshold && glucoseValue < highThreshold)
-					return "in-range-item";
-				else if (glucoseValue <= lowThreshold && glucoseValue > urgentLowThreshold)
-					return "low-item";
-				else
-					return "urgent-low-item";
-				
-				return "default-item";
-			};
+			return icon;
 		}
 		
 		/**
@@ -211,12 +253,15 @@ package ui.screens.display.readings
 		 */
 		private function onDeleteReading(e:Event):void
 		{
-			var bgReading:BgReading = (((e.currentTarget as Button).parent as DefaultListItemRenderer).data as Object).bgReading as BgReading;
-			var id:int = (((e.currentTarget as Button).parent as DefaultListItemRenderer).data as Object).id;
+			//Get list row properties
+			var item:Object = ((e.currentTarget as Button).parent as DefaultListItemRenderer).data as Object;
+			var bgReading:BgReading = item.bgReading as BgReading;
+			var id:int = item.id;
 			
+			//Delete reading from Spike, database and list
 			ModelLocator.bgReadings.removeAt(id);
 			Database.deleteBgReadingSynchronous(bgReading);
-			setupContent();
+			dataProvider.removeItem(item);
 		}
 		
 		/**
@@ -224,7 +269,77 @@ package ui.screens.display.readings
 		 */
 		override public function dispose():void
 		{
+			//Clear accessories
+			if (accessoryDictionary != null)
+			{
+				for each (var deleteButton:Button in accessoryDictionary) 
+				{
+					deleteButton.removeEventListener(Event.TRIGGERED, onDeleteReading);
+					deleteButton.dispose();
+					deleteButton = null;
+				}
+			}
+
+			//Clear icons
+			if (urgentHighCanvas != null)
+			{
+				urgentHighCanvas.dispose();
+				urgentHighCanvas = null;
+			}
 			
+			if (urgentHighTexture != null)
+			{
+				urgentHighTexture.dispose();
+				urgentHighTexture = null;
+			}
+			
+			if (highCanvas != null)
+			{
+				highCanvas.dispose();
+				highCanvas = null;
+			}
+			
+			if (highTexture != null)
+			{
+				highTexture.dispose();
+				highTexture = null;
+			}
+			
+			if (inRangeCanvas != null)
+			{
+				inRangeCanvas.dispose();
+				inRangeCanvas = null;
+			}
+			
+			if (inRangeTexture != null)
+			{
+				inRangeTexture.dispose();
+				inRangeTexture = null;
+			}
+			
+			if (lowCanvas != null)
+			{
+				lowCanvas.dispose();
+				lowCanvas = null;
+			}
+			
+			if (lowTexture != null)
+			{
+				lowTexture.dispose();
+				lowTexture = null;
+			}
+			
+			if (urgentLowCanvas != null)
+			{
+				urgentLowCanvas.dispose();
+				urgentLowCanvas = null;
+			}
+			
+			if (urgentLowTexture != null)
+			{
+				urgentLowTexture.dispose();
+				urgentLowTexture = null;
+			}
 			
 			super.dispose();
 		}
