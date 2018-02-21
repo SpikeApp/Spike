@@ -2,8 +2,6 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.Calibration;
 	import database.CommonSettings;
