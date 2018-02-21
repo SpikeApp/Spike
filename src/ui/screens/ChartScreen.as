@@ -275,9 +275,9 @@ package ui.screens
 			
 			var reading:BgReading = BgReading.lastNoSensor();
 			
-			if(reading == null || reading.sensor == null || reading.calibration == null || Calibration.allForSensor().length < 2)
+			if(reading == null || Calibration.allForSensor().length < 2)
 			{
-				Trace.myTrace("ChartScreen.as", "Bad Reading. Not adding it to the chart. Reading: " + ObjectUtil.toString(reading));
+				Trace.myTrace("ChartScreen.as", "Bad Reading or not enough calibrations. Not adding it to the chart.");
 				return;
 			}
 			

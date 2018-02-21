@@ -1,46 +1,46 @@
 package ui.chart
 { 
-    import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-    
-    import flash.events.Event;
-    import flash.events.TimerEvent;
-    import flash.geom.Point;
-    import flash.system.System;
-    import flash.utils.Timer;
-    
-    import database.BgReading;
-    import database.Calibration;
-    import database.CommonSettings;
-    
-    import events.CalibrationServiceEvent;
-    import events.SpikeEvent;
-    
-    import feathers.controls.DragGesture;
-    import feathers.controls.Label;
-    
-    import model.ModelLocator;
-    
-    import services.CalibrationService;
-    
-    import starling.display.Quad;
-    import starling.display.Shape;
-    import starling.display.Sprite;
-    import starling.events.Touch;
-    import starling.events.TouchEvent;
-    import starling.events.TouchPhase;
-    import starling.utils.Align;
-    
-    import ui.AppInterface;
-    
-    import utils.Constants;
-    import utils.DeviceInfo;
-    import utils.TimeSpan;
-    
-    public class GlucoseChart extends Sprite
-    {
-        //Constants
-        private static const MAIN_CHART:String = "mainChart";
-        private static const SCROLLER_CHART:String = "scrollerChart";
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
+	import flash.events.Event;
+	import flash.events.TimerEvent;
+	import flash.geom.Point;
+	import flash.system.System;
+	import flash.utils.Timer;
+	
+	import database.BgReading;
+	import database.Calibration;
+	import database.CommonSettings;
+	
+	import events.CalibrationServiceEvent;
+	import events.SpikeEvent;
+	
+	import feathers.controls.DragGesture;
+	import feathers.controls.Label;
+	
+	import model.ModelLocator;
+	
+	import services.CalibrationService;
+	
+	import starling.display.Quad;
+	import starling.display.Shape;
+	import starling.display.Sprite;
+	import starling.events.Touch;
+	import starling.events.TouchEvent;
+	import starling.events.TouchPhase;
+	import starling.utils.Align;
+	
+	import ui.AppInterface;
+	
+	import utils.Constants;
+	import utils.DeviceInfo;
+	import utils.TimeSpan;
+	
+	public class GlucoseChart extends Sprite
+	{
+		//Constants
+		private static const MAIN_CHART:String = "mainChart";
+		private static const SCROLLER_CHART:String = "scrollerChart";
 		private static const ONE_DAY_IN_MINUTES:Number = 24 * 60;
 		private static const NUM_MINUTES_MISSED_READING_GAP:int = 6;
 		private static const TIME_75_SECONDS:int = 75 * 1000;
@@ -51,50 +51,50 @@ package ui.chart
 		private static const TIME_23_HOURS_57_MINUTES:int = TIME_24_HOURS - (3 * 60 * 1000);
 		public static const TIMELINE_1H:Number = 14;
 		public static const TIMELINE_3H:Number = 8;
-        public static const TIMELINE_6H:Number = 4;
-        public static const TIMELINE_12H:Number = 2;
+		public static const TIMELINE_6H:Number = 4;
+		public static const TIMELINE_12H:Number = 2;
 		public static const TIMELINE_24H:Number = 1;
-        
-        //Data
-        private var _dataSource:Array;
-        private var mainChartGlucoseMarkersList:Array;
+		
+		//Data
+		private var _dataSource:Array;
+		private var mainChartGlucoseMarkersList:Array;
 		private var scrollChartGlucoseMarkersList:Array;
 		private var mainChartLineList:Array;
 		private var scrollerChartLineList:Array;
 		private var lastBGreadingTimeStamp:Number;
 		private var firstBGReadingTimeStamp:Number;
-        
-        //Visual Settings
-        private var _graphWidth:Number;
-        private var _graphHeight:Number;
+		
+		//Visual Settings
+		private var _graphWidth:Number;
+		private var _graphHeight:Number;
 		private var timelineRange:int;
-        private var _scrollerWidth:Number;
-        private var _scrollerHeight:Number;
-        private var lowestGlucoseValue:Number;
-        private var highestGlucoseValue:Number;
-        private var scaleYFactor:Number;
-        private var lineColor:uint = 0xEEEEEE;
-        private var chartFontColor:uint = 0xEEEEEE;
+		private var _scrollerWidth:Number;
+		private var _scrollerHeight:Number;
+		private var lowestGlucoseValue:Number;
+		private var highestGlucoseValue:Number;
+		private var scaleYFactor:Number;
+		private var lineColor:uint = 0xEEEEEE;
+		private var chartFontColor:uint = 0xEEEEEE;
 		private var axisFontColor:uint = 0xEEEEEE;
 		private var oldColor:uint = 0xABABAB;
 		private var newColor:uint = 0xEEEEEE;
-        private var highUrgentGlucoseMarkerColor:uint;
-        private var highGlucoseMarkerColor:uint;
+		private var highUrgentGlucoseMarkerColor:uint;
+		private var highGlucoseMarkerColor:uint;
 		private var inrangeGlucoseMarkerColor:uint;
-        private var lowGlucoseMarkerColor:uint;
-        private var lowUrgentGlucoseMarkerColor:uint;
-        private var dashLineWidth:int = 3;
-        private var dashLineGap:int = 1;
-        private var dashLineThickness:int = 1;
-        private var yAxisMargin:int = 40;
-        private var mainChartGlucoseMarkerRadius:int;
-        private var scrollerChartGlucoseMarkerRadius:int = 1;
-        private var lineThickness:int = 3;
-        private var legendMargin:int = 5;
-        private var legendSize:int = 10;
-        private var legendTextSize:int = 12;
-        private var graphDisplayTextSize:int = 20;
-        private var glucoseUnit:String = "mg/dL";
+		private var lowGlucoseMarkerColor:uint;
+		private var lowUrgentGlucoseMarkerColor:uint;
+		private var dashLineWidth:int = 3;
+		private var dashLineGap:int = 1;
+		private var dashLineThickness:int = 1;
+		private var yAxisMargin:int = 40;
+		private var mainChartGlucoseMarkerRadius:int;
+		private var scrollerChartGlucoseMarkerRadius:int = 1;
+		private var lineThickness:int = 3;
+		private var legendMargin:int = 5;
+		private var legendSize:int = 10;
+		private var legendTextSize:int = 12;
+		private var graphDisplayTextSize:int = 20;
+		private var glucoseUnit:String = "mg/dL";
 		private var handPickerStrokeThickness:int = 1;
 		private var chartTopPadding:int = 50;
 		private var scrollerTopPadding:int = 5;
@@ -109,35 +109,35 @@ package ui.chart
 		private var dummyModeActive:Boolean = false;
 		private var handPickerWidth:Number;
 		private var glucoseDisplayFont:Number;
-
-        //Display Objects
-        private var glucoseTimelineContainer:Sprite;
-        private var mainChart:Sprite;
-        private var glucoseDelimiter:Shape;
-        private var scrollerChart:Sprite;
-        private var handPicker:Sprite;
-        private var glucoseValueDisplay:Label;
-        private var glucoseSlopeDisplay:Label;
-        private var glucoseTimeAgoDisplay:Label;
+		
+		//Display Objects
+		private var glucoseTimelineContainer:Sprite;
+		private var mainChart:Sprite;
+		private var glucoseDelimiter:Shape;
+		private var scrollerChart:Sprite;
+		private var handPicker:Sprite;
+		private var glucoseValueDisplay:Label;
+		private var glucoseSlopeDisplay:Label;
+		private var glucoseTimeAgoDisplay:Label;
 		private var yAxisContainer:Sprite;
 		private var mainChartContainer:Sprite;
 		private var differenceInMinutesForAllTimestamps:Number;
 		
 		//Objects
 		private var statusUpdateTimer:Timer;
-        
-        //Glucose Thresholds
-        private var glucoseUrgentHigh:Number;
-        private var glucoseHigh:Number;
-        private var glucoseLow:Number;
-        private var glucoseUrgentLow:Number;
-
+		
+		//Glucose Thresholds
+		private var glucoseUrgentHigh:Number;
+		private var glucoseHigh:Number;
+		private var glucoseLow:Number;
+		private var glucoseUrgentLow:Number;
+		
 		//Movement
-        private var scrollMultiplier:Number;
-        private var mainChartXFactor:Number;
+		private var scrollMultiplier:Number;
+		private var mainChartXFactor:Number;
 		private var displayLatestBGValue:Boolean = true;
 		private var selectedGlucoseMarkerIndex:int;
-	
+		
 		//Display Update Helpers
 		private var previousNumberOfMakers:int = 0;
 		private var currentNumberOfMakers:int = 0;
@@ -147,16 +147,16 @@ package ui.chart
 		private var maxAxisValue:Number = 600;
 		private var minAxisValue:Number = 40;
 		private var resizeOutOfBounds:Boolean = true;
-
-        public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
-        {
-            //Set properties
+		
+		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
+		{
+			//Set properties
 			this.timelineRange = timelineRange;
-            this._graphWidth = chartWidth;
-            this._graphHeight = chartHeight;
-            this._scrollerWidth = scrollerWidth;
-            this._scrollerHeight = scrollerHeight;
-            this.mainChartGlucoseMarkersList = [];
+			this._graphWidth = chartWidth;
+			this._graphHeight = chartHeight;
+			this._scrollerWidth = scrollerWidth;
+			this._scrollerHeight = scrollerHeight;
+			this.mainChartGlucoseMarkersList = [];
 			this.scrollChartGlucoseMarkersList = [];
 			this.mainChartLineList = [];
 			this.scrollerChartLineList = [];
@@ -202,34 +202,34 @@ package ui.chart
 			
 			//Strings
 			retroOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','retro_title');
-
-            //Add timeline to display list
-            glucoseTimelineContainer = new Sprite();
-            addChild(glucoseTimelineContainer);
+			
+			//Add timeline to display list
+			glucoseTimelineContainer = new Sprite();
+			addChild(glucoseTimelineContainer);
 			
 			//Event Listeners
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
-        }
+		}
 		
 		/**
 		 * Functionality
 		 */
-        public function drawGraph():void
-        {	
+		public function drawGraph():void
+		{	
 			/**
-             * Main Chart
-             */
-            mainChart = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
-            mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
-            mainChartContainer = new Sprite();
-            mainChartContainer.addChild(mainChart);
-            
+			 * Main Chart
+			 */
+			mainChart = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
+			mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+			mainChartContainer = new Sprite();
+			mainChartContainer.addChild(mainChart);
+			
 			//Add main chart to the display list
-            glucoseTimelineContainer.addChild(mainChartContainer);
-            
-            //Mask (Only show markers before the delimiter)
+			glucoseTimelineContainer.addChild(mainChartContainer);
+			
+			//Mask (Only show markers before the delimiter)
 			var mainChartMask:Quad;
 			mainChartMask = new Quad(yAxisMargin, _graphHeight, fakeChartMaskColor);
 			mainChartMask.x = _graphWidth - mainChartMask.width;
@@ -240,17 +240,17 @@ package ui.chart
 			 */
 			createStatusTextDisplays();
 			
-            /**
-             * yAxis Line
-             */
-            yAxisContainer = drawYAxis();
-            addChild(yAxisContainer);
-    
-            /**
-             * Scroller
-             */
-            //Create scroller
-            scrollerChart = drawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius);
+			/**
+			 * yAxis Line
+			 */
+			yAxisContainer = drawYAxis();
+			addChild(yAxisContainer);
+			
+			/**
+			 * Scroller
+			 */
+			//Create scroller
+			scrollerChart = drawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius);
 			
 			if(!_displayLine)
 				scrollerChart.y = _graphHeight + scrollerTopPadding;
@@ -264,27 +264,27 @@ package ui.chart
 			//Add scroller and background to the display list
 			glucoseTimelineContainer.addChild(scrollerBackground);
 			glucoseTimelineContainer.addChild(scrollerChart);
-    
-            /**
-             * Hand Picker
-             */
-            //Create Hand Picker
-            handPicker = new Sprite();
-            var handPickerFill:Quad = new Quad(_graphWidth/timelineRange, _scrollerHeight, 0xFFFFFF);
-            handPicker.addChild(handPickerFill);
-            handPicker.x = _graphWidth - handPicker.width;
-            handPicker.y = scrollerChart.y;
-            handPicker.alpha = .2;
+			
+			/**
+			 * Hand Picker
+			 */
+			//Create Hand Picker
+			handPicker = new Sprite();
+			var handPickerFill:Quad = new Quad(_graphWidth/timelineRange, _scrollerHeight, 0xFFFFFF);
+			handPicker.addChild(handPickerFill);
+			handPicker.x = _graphWidth - handPicker.width;
+			handPicker.y = scrollerChart.y;
+			handPicker.alpha = .2;
 			handPickerWidth = handPicker.width;
 			
 			//Outline for hand picker
 			var handpickerOutline:Shape = GraphLayoutFactory.createOutline(handPicker.width, handPicker.height, handPickerStrokeThickness);
 			handPicker.addChild(handpickerOutline);
-            glucoseTimelineContainer.addChild(handPicker);
-            
+			glucoseTimelineContainer.addChild(handPicker);
+			
 			//Listen to touch events
 			if(timelineRange != TIMELINE_24H)
-            	handPicker.addEventListener(TouchEvent.TOUCH, onHandPickerTouch);
+				handPicker.addEventListener(TouchEvent.TOUCH, onHandPickerTouch);
 			
 			//Define scroll multiplier for scroller vs main graph
 			scrollMultiplier = Math.abs(mainChart.x)/handPicker.x;
@@ -309,7 +309,6 @@ package ui.chart
 			{
 				if (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != null && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != undefined)
 					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
-				else
 				{
 					if (mainChartGlucoseMarkersList != null)
 						selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList.length;
@@ -317,7 +316,6 @@ package ui.chart
 						selectedGlucoseMarkerIndex = 0;
 				}
 			}
-				
 			
 			displayLatestBGValue = true;
 			
@@ -325,7 +323,7 @@ package ui.chart
 			 * Calculate Display Labels
 			 */
 			calculateDisplayLabels();
-        }
+		}
 		
 		private function drawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):Sprite
 		{
@@ -430,10 +428,6 @@ package ui.chart
 			var dataLength:int = _dataSource.length;
 			for(i = 0; i < dataLength; i++)
 			{
-				var reading:BgReading = _dataSource[i] as BgReading;
-				if (reading == null || reading.calculatedValue == 0 || reading.calibration == null || reading.sensor == null)
-					continue;
-				
 				//Get current glucose value
 				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
 				if(currentGlucoseValue < 40)
@@ -867,13 +861,13 @@ package ui.chart
 					{
 						//Data Source
 						_dataSource.shift();
-							
+						
 						//Main Chart
 						removedMainGlucoseMarker = mainChartGlucoseMarkersList.shift() as GlucoseMarker;
 						mainChart.removeChild(removedMainGlucoseMarker);
 						removedMainGlucoseMarker.dispose();
 						removedMainGlucoseMarker = null;
-							
+						
 						//Scroller Chart
 						removedScrollerGlucoseMarker = scrollChartGlucoseMarkersList.shift() as GlucoseMarker;
 						scrollerChart.removeChild(removedScrollerGlucoseMarker);
@@ -933,16 +927,7 @@ package ui.chart
 			if (displayLatestBGValue)
 			{
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
-				
-				if (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != null && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != undefined)
-					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
-				else
-				{
-					if (mainChartGlucoseMarkersList != null)
-						selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList.length;
-					else
-						selectedGlucoseMarkerIndex = 0;
-				}	
+				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 			}
 			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_23_HOURS_57_MINUTES)
 			{
@@ -1026,7 +1011,7 @@ package ui.chart
 				lowestGlucoseValue = lowestValue;
 				if (lowestGlucoseValue < 40)
 					lowestGlucoseValue = 40;
-					
+				
 				highestGlucoseValue = highestValue;
 				if (highestGlucoseValue > 600)
 					highestGlucoseValue = 600;
@@ -1036,7 +1021,7 @@ package ui.chart
 				lowestGlucoseValue = minAxisValue;
 				if (resizeOutOfBounds && lowestValue < minAxisValue)
 					lowestGlucoseValue = lowestValue;
-					
+				
 				highestGlucoseValue = maxAxisValue;
 				if (resizeOutOfBounds && highestValue > maxAxisValue)
 					highestGlucoseValue = highestValue
@@ -1068,10 +1053,6 @@ package ui.chart
 			var dataLength:int = _dataSource.length;
 			for(i = 0; i < dataLength; i++)
 			{
-				var reading:BgReading = _dataSource[i] as BgReading;
-				if (reading == null || reading.calculatedValue == 0 || reading.calibration == null || reading.sensor == null)
-					continue;
-				
 				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
 				if (currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
@@ -1295,7 +1276,7 @@ package ui.chart
 				mainChart.addChild(line);
 			else if(chartType == SCROLLER_CHART)
 				scrollerChart.addChild(line);
-				
+			
 			//Save line references for later use
 			if(chartType == MAIN_CHART)
 				mainChartLineList.push(line);
@@ -1359,8 +1340,7 @@ package ui.chart
 						else
 							glucoseSlopeDisplay.fontStyles.color = oldColor;
 						
-						if (currentMarker.index != null && currentMarker.index != undefined)
-							selectedGlucoseMarkerIndex = currentMarker.index;
+						selectedGlucoseMarkerIndex = currentMarker.index;
 					}
 					else if (mainChartGlucoseMarkersList.length > 1) /* Extra Actions */
 					{
@@ -1407,8 +1387,7 @@ package ui.chart
 					glucoseSlopeDisplay.text = nextMarker.slopeOutput;
 					glucoseSlopeDisplay.fontStyles.color = newColor;
 					
-					if (nextMarker.index != null && nextMarker.index != undefined)
-						selectedGlucoseMarkerIndex = nextMarker.index;
+					selectedGlucoseMarkerIndex = nextMarker.index;
 				}
 				else
 				{
@@ -1502,8 +1481,8 @@ package ui.chart
 		}
 		
 		
-        
-        
+		
+		
 		
 		private function createStatusTextDisplays():void
 		{
@@ -1843,20 +1822,11 @@ package ui.chart
 								}
 							}
 							
+							//if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
 							if (handPicker.x < _graphWidth - handPicker.width)
-							{
-								if (currentMarker.index != null && currentMarker.index != undefined)
-									selectedGlucoseMarkerIndex = currentMarker.index;
-								else
-									selectedGlucoseMarkerIndex = i;
-							}
+								selectedGlucoseMarkerIndex = currentMarker.index;
 							else
-							{
-								if ((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index != null && (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index != undefined)
-									selectedGlucoseMarkerIndex = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index;
-								else
-									selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList.length;
-							}
+								(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index;
 							
 							if (i == mainChartGlucoseMarkersList.length - 1)
 								displayLatestBGValue = true;
@@ -2122,18 +2092,18 @@ package ui.chart
 			
 			System.pauseForGCIfCollectionImminent(0);
 		}
-
-        /**
-         * Getters & Setters
-         */
-        public function get dataSource():Array
-        {
+		
+		/**
+		 * Getters & Setters
+		 */
+		public function get dataSource():Array
+		{
 			return _dataSource;
-        }
-
-        public function set dataSource(source:Array):void
-        {
-            _dataSource = source;
+		}
+		
+		public function set dataSource(source:Array):void
+		{
+			_dataSource = source;
 			
 			/* Activate Dummy Mode if there's no bgreadings in data source */
 			if (_dataSource == null || _dataSource.length == 0)
@@ -2152,43 +2122,43 @@ package ui.chart
 				currentNumberOfMakers = _dataSource.length;
 				previousNumberOfMakers = currentNumberOfMakers;
 			}
-        }
-    
-        public function get scrollerWidth():Number {
-            return _scrollerWidth;
-        }
-    
-        public function set scrollerWidth(value:Number):void {
-            _scrollerWidth = value;
-        }
-    
-        public function get scrollerHeight():Number {
-            return _scrollerHeight;
-        }
-    
-        public function set scrollerHeight(value:Number):void {
-            _scrollerHeight = value;
-        }
-
-        public function get graphWidth():Number {
-            return _graphWidth;
-        }
-
-        public function set graphWidth(value:Number):void {
-            _graphWidth = value;
-        }
-
-        public function get graphHeight():Number {
-            return _graphHeight;
-        }
-
-        public function set graphHeight(value:Number):void {
-            _graphHeight = value;
-        }
-
+		}
+		
+		public function get scrollerWidth():Number {
+			return _scrollerWidth;
+		}
+		
+		public function set scrollerWidth(value:Number):void {
+			_scrollerWidth = value;
+		}
+		
+		public function get scrollerHeight():Number {
+			return _scrollerHeight;
+		}
+		
+		public function set scrollerHeight(value:Number):void {
+			_scrollerHeight = value;
+		}
+		
+		public function get graphWidth():Number {
+			return _graphWidth;
+		}
+		
+		public function set graphWidth(value:Number):void {
+			_graphWidth = value;
+		}
+		
+		public function get graphHeight():Number {
+			return _graphHeight;
+		}
+		
+		public function set graphHeight(value:Number):void {
+			_graphHeight = value;
+		}
+		
 		public function set displayLine(value:Boolean):void
 		{
 			_displayLine = value;
 		}
-    }
+	}
 }
