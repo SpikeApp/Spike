@@ -6,6 +6,8 @@ package services
 	import flash.text.engine.LineJustification;
 	import flash.text.engine.SpaceJustifier;
 	
+	import database.BlueToothDevice;
+	
 	import feathers.controls.Alert;
 	import feathers.controls.Callout;
 	import feathers.controls.TextCallout;
@@ -22,8 +24,8 @@ package services
 	import starling.events.EventDispatcher;
 	
 	import ui.AppInterface;
-	
 	import ui.popups.AlertManager;
+	
 	import utils.Constants;
 	
 	[ResourceBundle("tutorialservice")]
@@ -197,14 +199,20 @@ package services
 			calloutLocationHelper.x = 0;
 			calloutLocationHelper.y = Constants.stageHeight / 2;
 			
-			NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
-			Constants.noLockEnabled = true;
+			if (BlueToothDevice.isBluKon() || BlueToothDevice.isDexcomG5())
+			{
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				Constants.noLockEnabled = true;
+				seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
+				Starling.juggler.delayCall( closeCallout, 50, seventhStepCallout );
+			}
+			else
+			{
+				seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message_non_g5'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
+				Starling.juggler.delayCall( closeCallout, 15, seventhStepCallout );
+			}
 			
-			seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
 			seventhStepCallout.textRendererFactory = calloutTextRenderer;
-			
-			Starling.juggler.delayCall( closeCallout, 50, seventhStepCallout );
-			
 			AppInterface.instance.drawers.addEventListener(Event.OPEN, onMainMenuOpenedEightStep);
 		}
 		
@@ -242,7 +250,11 @@ package services
 			ninethStepActive = false;
 			tenthStepActive = true;
 			
-			tenthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','tenth_step_message'), target, new <String>[RelativePosition.TOP], false);
+			if (BlueToothDevice.isBluKon() || BlueToothDevice.isDexcomG5())
+				tenthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','tenth_step_message'), target, new <String>[RelativePosition.TOP], false);
+			else
+				tenthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','tenth_step_message_non_g5'), target, new <String>[RelativePosition.TOP], false);
+			
 			tenthStepCallout.textRendererFactory = calloutTextRenderer;
 			tenthStepCallout.addEventListener(Event.CLOSE, onTutorialFinished);
 			
