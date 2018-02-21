@@ -3,8 +3,11 @@ FIX: Calibration alarm now correctly saves the time interval when in mmol/L.
 FIX: Crash Report & Disclaimer screens had a small bug when opening.
 FIX: A rare code exception on the chart that prevented the chart from showing.
 FIX: Chart being in the future AKA DeLorean Syndrome :)
+TWEAK: Popups are now only rendered when Spike comes to the foreground. If popups need to be shown while Spike is in the background, they are now saved in a queue and displayed when the user opens Spike. Spike can't write pixels to the GPU while in the background otherwise it crashes (Starling framework limitation). This might fix freezes that some remaining users are still experiencing.
 TWEAK: Enhancements in internal tracing and G4 instructions strings.
 TWEAK: Better on screen tutorial messages for different transmitter types.
+
+Special thanks to Johan Degraeve for helping me debug and also for contributing to some of these fixes as well! 2 are better than 1!
 
 1.0.7
 FIX: Advanced Settings are now correctly saved in database after restarting Spike. After upgrading to this version, please set your advanced settings again.
