@@ -1,10 +1,14 @@
 package ui.popups
 {
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.errors.IllegalOperationError;
 	import flash.events.TimerEvent;
 	import flash.text.engine.LineJustification;
 	import flash.text.engine.SpaceJustifier;
 	import flash.utils.Timer;
+	
+	import events.SpikeEvent;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.ScrollBarDisplayMode;
@@ -20,6 +24,7 @@ package ui.popups
 	import starling.events.Event;
 	
 	import utils.DeviceInfo;
+	import utils.Trace;
 	
 	[ResourceBundle("globaltranslations")]
 
@@ -35,14 +40,21 @@ package ui.popups
 		{
 			//Don't allow class to be instantiated
 			if (_instance != null)
-				throw new IllegalOperationError("AlertManager class is not meant to be instantiated!");				
+				throw new IllegalOperationError("AlertManager class is not meant to be instantiated!");	
 		}
 		
 		/**
 		 * Public Methods
 		 */
-		public static function showSimpleAlert (alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
+		public static function init():void
 		{
+			Trace.myTrace("AlertManager.as", "Service started!");
+			
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
+		}
+		
+		public static function showSimpleAlert (alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
+		{	
 			var alert:Alert = processAlert(alertTitle, alertMessage, timeoutDuration, eventHandlerFunct, null, textAlign, icon);
 			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
 				alert.maxWidth = 270;
@@ -56,11 +68,6 @@ package ui.popups
 				alert.maxWidth = 270;
 			return alert;
 		}
-		
-		/*public static function showCustomAlert (alert:Alert, timeoutDuration:Number = Number.NaN):void
-		{
-			
-		}*/
 		
 		/**
 		 * Functionality
@@ -108,7 +115,7 @@ package ui.popups
 			if (PopUpManager.popUpCount == 0)
 				activeAlertsCount = 0;
 			
-			if (activeAlertsCount == 0) //If no alerts are being currently displayed, let's display this one */
+			if (activeAlertsCount == 0 && BackgroundFetch.appIsInForeground()) //If no alerts are being currently displayed and app is in foreground, let's display this one 
 			{
 				//Update internal variables
 				activeAlertsCount += 1;
@@ -121,7 +128,7 @@ package ui.popups
 				//Show alert
 				PopUpManager.addPopUp(alert);
 			}
-			else //There's currently one alert being displayed, let's add this one to the queue */
+			else //There's currently one alert being displayed or app is in background, let's add this one to the queue
 				alertQueue.push({ alert: alert, timeout: timeoutDuration});
 			
 			return alert; //Return the alert in case we need to do further customization to it outside this class
@@ -187,6 +194,11 @@ package ui.popups
 		}
 
 		private static function onAlertClosed(e:Event):void
+		{
+			processQueue();
+		}
+		
+		private static function onAppInForeground (e:SpikeEvent):void
 		{
 			processQueue();
 		}

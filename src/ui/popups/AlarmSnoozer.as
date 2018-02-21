@@ -1,5 +1,7 @@
 package ui.popups
 {	
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.errors.IllegalOperationError;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
@@ -90,6 +92,9 @@ package ui.popups
 		
 		private static function displayCallout():void
 		{
+			if (BackgroundFetch.appIsInBackground() || !BackgroundFetch.appIsInForeground())
+				return;
+			
 			//Close the callout
 			if (PopUpManager.isPopUp(snoozeCallout))
 				PopUpManager.removePopUp(snoozeCallout);

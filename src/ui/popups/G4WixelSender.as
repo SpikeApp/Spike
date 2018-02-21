@@ -1,5 +1,7 @@
 package ui.popups
 {	
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
 	import flash.filesystem.File;
@@ -64,6 +66,9 @@ package ui.popups
 		
 		private static function displayCallout():void
 		{
+			if (!BackgroundFetch.appIsInForeground() || BackgroundFetch.appIsInBackground())
+				return
+			
 			//Close the callout
 			if (PopUpManager.isPopUp(wixelSenderCallout))
 				PopUpManager.removePopUp(wixelSenderCallout, true);

@@ -54,6 +54,7 @@ package model
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
+	import ui.popups.AlertManager;
 	
 	import utils.Constants;
 
@@ -167,7 +168,7 @@ package model
 				{	
 					//Start rendering interface now that all data is available
 					AppInterface.instance.init();
-							
+					AlertManager.init();
 					DeepSleepService.init();
 					Database.getBlueToothDevice();
 					TransmitterService.init();
