@@ -1,5 +1,8 @@
 1.0.8
 FIX: Calibration alarm now correctly saves the time interval when in mmol/L. 
+FIX: Crash Report & Disclaimer screens had a small bug when opening.
+FIX: A rare code exception on the chart that prevented the chart from showing.
+FIX: Enhancements in internal tracing and G4 instructions strings.
 
 1.0.7
 FIX: Advanced Settings are now correctly saved in database after restarting Spike. After upgrading to this version, please set your advanced settings again.

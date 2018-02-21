@@ -933,7 +933,16 @@ package ui.chart
 			if (displayLatestBGValue)
 			{
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
-				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+				
+				if (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != null && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index != undefined)
+					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+				else
+				{
+					if (mainChartGlucoseMarkersList != null)
+						selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList.length;
+					else
+						selectedGlucoseMarkerIndex = 0;
+				}	
 			}
 			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_23_HOURS_57_MINUTES)
 			{
@@ -1350,7 +1359,8 @@ package ui.chart
 						else
 							glucoseSlopeDisplay.fontStyles.color = oldColor;
 						
-						selectedGlucoseMarkerIndex = currentMarker.index;
+						if (currentMarker.index != null && currentMarker.index != undefined)
+							selectedGlucoseMarkerIndex = currentMarker.index;
 					}
 					else if (mainChartGlucoseMarkersList.length > 1) /* Extra Actions */
 					{
@@ -1397,7 +1407,8 @@ package ui.chart
 					glucoseSlopeDisplay.text = nextMarker.slopeOutput;
 					glucoseSlopeDisplay.fontStyles.color = newColor;
 					
-					selectedGlucoseMarkerIndex = nextMarker.index;
+					if (nextMarker.index != null && nextMarker.index != undefined)
+						selectedGlucoseMarkerIndex = nextMarker.index;
 				}
 				else
 				{
@@ -1832,11 +1843,20 @@ package ui.chart
 								}
 							}
 							
-							//if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin)
 							if (handPicker.x < _graphWidth - handPicker.width)
-								selectedGlucoseMarkerIndex = currentMarker.index;
+							{
+								if (currentMarker.index != null && currentMarker.index != undefined)
+									selectedGlucoseMarkerIndex = currentMarker.index;
+								else
+									selectedGlucoseMarkerIndex = i;
+							}
 							else
-								(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index;
+							{
+								if ((mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index != null && (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index != undefined)
+									selectedGlucoseMarkerIndex = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).index;
+								else
+									selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList.length;
+							}
 							
 							if (i == mainChartGlucoseMarkersList.length - 1)
 								displayLatestBGValue = true;
