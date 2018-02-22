@@ -305,9 +305,24 @@ package services
 		}
 		
 		private static function checkMuted(event:flash.events.Event):void {
-				if ((new Date()).valueOf() - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
-					myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
-					BackgroundFetch.checkMuted();
+			var nowDate:Date = new Date();
+			var nowNumber:Number = nowDate.valueOf();
+				if ((nowNumber - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
+					||
+					isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
+					//alert not snoozed
+					if (nowNumber - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
+						//more than 4 min 45 seconds ago since last check
+						var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
+						var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", nowDate);
+						var alertType:AlertType = Database.getAlertType(alertName);
+						if (alertType.enabled) {
+							//alert enabled
+							myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
+							BackgroundFetch.checkMuted();
+						}
+					}
 				}
 		}
 		
