@@ -321,6 +321,8 @@ package services
 							//alert enabled
 							myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
 							BackgroundFetch.checkMuted();
+						} else {
+							lastCheckMuteTimeStamp = nowNumber;
 						}
 					}
 				}
