@@ -1,5 +1,7 @@
 package ui.screens.display.menu 
 {
+	import database.BlueToothDevice;
+	
 	import events.ScreenEvent;
 	
 	import feathers.controls.List;
@@ -70,16 +72,29 @@ package ui.screens.display.menu
 			disclaimerIconTexture = MaterialDeepGreyAmberMobileThemeIcons.disclaimerTexture;
 			helpIconTexture = MaterialDeepGreyAmberMobileThemeIcons.spikeHelpTexture;
 			
-			dataProvider = new ListCollection(
-				[
-					{ screen: Screens.GLUCOSE_CHART, label: ModelLocator.resourceManagerInstance.getString('mainmenu','graph_menu_item'), icon: graphIconTexture },
-					{ screen: Screens.SENSOR_STATUS, label: ModelLocator.resourceManagerInstance.getString('mainmenu','sensor_menu_item'), icon: sensorIconTexture },
-					{ screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture },
-					{ screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture },
-					{ screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture },
-					{ screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture },
-					{ screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture }
-				]);
+			refreshContent();
+			
+			addEventListener( Event.CHANGE, onMenuChanged );
+		}
+		
+		public function refreshContent():void
+		{
+			var menuItems:Array = [];
+			menuItems.push( { screen: Screens.GLUCOSE_CHART, label: ModelLocator.resourceManagerInstance.getString('mainmenu','graph_menu_item'), icon: graphIconTexture } );
+			if (!BlueToothDevice.isFollower())
+			{
+				menuItems.push( { screen: Screens.SENSOR_STATUS, label: ModelLocator.resourceManagerInstance.getString('mainmenu','sensor_menu_item'), icon: sensorIconTexture } );
+				menuItems.push( { screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture } );
+			}
+			menuItems.push( { screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture } );
+			if (!BlueToothDevice.isFollower())
+			{
+				menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture } );
+			}
+			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture } );
+			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture } );
+			
+			dataProvider = new ListCollection(menuItems);
 			selectedIndex = 0;
 			
 			itemRendererFactory = function():IListItemRenderer 
@@ -89,8 +104,6 @@ package ui.screens.display.menu
 				item.iconSourceField = "icon";
 				return item;
 			};
-			
-			addEventListener( Event.CHANGE, onMenuChanged );
 		}
 		
 		/**

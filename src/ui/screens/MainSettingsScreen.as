@@ -3,7 +3,7 @@ package ui.screens
 	
 	import flash.system.System;
 	
-	import ui.screens.display.settings.main.SettingsList;
+	import database.BlueToothDevice;
 	
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -18,6 +18,7 @@ package ui.screens
 	import starling.events.Event;
 	
 	import ui.AppInterface;
+	import ui.screens.display.settings.main.SettingsList;
 	
 	import utils.Constants;
 
@@ -66,7 +67,10 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 3;
+			if (!BlueToothDevice.isFollower())
+				AppInterface.instance.menu.selectedIndex = 3;
+			else
+				AppInterface.instance.menu.selectedIndex = 1;
 		}
 		
 		private function setupEventListeners():void
