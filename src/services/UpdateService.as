@@ -213,14 +213,14 @@ package services
 			latestAppVersion = data.version;
 			var updateAvailable:Boolean = versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
 			
+			//Here's the right time to set last update check
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, (new Date()).valueOf().toString());
+			
 			//Handle User Update
 			if(updateAvailable && latestAppVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE))
 			{
 				//We are here because the lastest Spike version is higher than the one installed and the user hasn't chosen to ignore this new version
 				updateURL = data.url;
-				
-				//Here's the right time to set last update check
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, (new Date()).valueOf().toString());
 					
 				//Warn User
 				var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + ".\n\n"; 
