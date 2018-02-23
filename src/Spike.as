@@ -114,6 +114,9 @@ package
 				}
 			}
 			
+			//Update Variables
+			Constants.appInForeground = true;
+			
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
@@ -126,6 +129,7 @@ package
 			
 			//Update Variables
 			Constants.noLockEnabled = false;
+			Constants.appInForeground = false;
 			
 			//Stop Starling 
 			starling.stop( true );

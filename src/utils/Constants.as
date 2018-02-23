@@ -20,6 +20,7 @@ package utils
 		private static var _stageHeight:int;
 		private static var _appStage:Stage;
 		private static var _noLockEnabled:Boolean;
+		public static var appInForeground:Boolean = true;
 		
 		/* Tutorial */
 		public static var mainMenuButton:Button;

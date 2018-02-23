@@ -1,10 +1,10 @@
 package ui.popups
 {	
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import flash.errors.IllegalOperationError;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
+	
+	import events.SpikeEvent;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
@@ -49,6 +49,8 @@ package ui.popups
 		private static var selectedSnoozeIndex:int = 0;
 		private static var snoozeLabels:Array;
 		private static var snoozeTitle:String = "";
+		private static var queuedAction:Function = null;
+		private static var isOpened:Boolean = false;
 		
 		public function AlarmSnoozer()
 		{
@@ -57,14 +59,19 @@ package ui.popups
 				throw new IllegalOperationError("AlarmSnoozer class is not meant to be instantiated!");
 		}
 		
+		public static function init():void
+		{
+			//Event Listenes
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onSpikeInForeground);
+		}
+		
 		/**
 		 * Functionality
 		 */
 		public static function displaySnoozer(title:String, labels:Array, selectedIndex:int):void
 		{
 			//Update internal variables
-			if (snoozeLabels == null)
-				snoozeLabels = labels;
+			if (snoozeLabels == null) snoozeLabels = labels;
 			selectedSnoozeIndex = selectedIndex;
 			snoozeTitle = title;
 			
@@ -87,13 +94,31 @@ package ui.popups
 			}
 			
 			/* Display Callout */
-			displayCallout();
+			if (Constants.appInForeground)
+				displayCallout();
+			else
+			{
+				//Queue the popup so it shows as soon as Spike is brought to the foreground.
+				queuedAction = displayCallout;
+				if (closeTimer != null && closeTimer.running)
+					closeTimer.stop();
+			}
 		}
 		
 		private static function displayCallout():void
 		{
-			if (BackgroundFetch.appIsInBackground() || !BackgroundFetch.appIsInForeground())
+			if (isOpened)
 				return;
+			
+			if (!Constants.appInForeground)
+			{
+				if (closeTimer != null && closeTimer.running)
+					closeTimer.stop();
+				
+				queuedAction = displayCallout;
+				
+				return;
+			}
 			
 			//Close the callout
 			if (PopUpManager.isPopUp(snoozeCallout))
@@ -110,6 +135,8 @@ package ui.popups
 				
 				closeTimer.start();
 			}
+			
+			isOpened = true;
 		}
 		
 		private static function createDisplayObjects():void
@@ -184,16 +211,26 @@ package ui.popups
 		
 		public static function closeCallout(e:TimerEvent = null):void
 		{
+			if (!isOpened)
+				return;
+			
 			//Stop the timer
 			if (closeTimer != null && closeTimer.running)
 				closeTimer.stop();
 			
+			if (!Constants.appInForeground)
+			{
+				queuedAction = closeCallout;
+				return;
+			}
+			
 			//Close the callout
 			if (PopUpManager.isPopUp(snoozeCallout))
 				PopUpManager.removePopUp(snoozeCallout);
-			else
-				if(snoozeCallout != null)
+			else if(snoozeCallout != null)
 					snoozeCallout.close();
+			
+			isOpened = false;
 		}
 		
 		/**
@@ -201,7 +238,6 @@ package ui.popups
 		 */
 		private static function onClose(e:Event):void
 		{
-			trace("VOU DISPACHAR EVENTO CLOSE COM INDEX: " + snoozePickerList.selectedIndex);
 			_instance.dispatchEventWith(CLOSED, false, { index: snoozePickerList.selectedIndex });
 			
 			closeCallout();
@@ -211,6 +247,15 @@ package ui.popups
 		{
 			closeCallout();
 			_instance.dispatchEventWith(CANCELLED);
+		}
+		
+		private static function onSpikeInForeground(e:SpikeEvent):void
+		{
+			if (queuedAction != null)
+			{
+				Starling.juggler.delayCall(queuedAction, 0.5);
+				queuedAction = null;
+			}
 		}
 
 		/**
