@@ -231,6 +231,9 @@ package ui.screens.display.settings.transmitter
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
 			
+			//Set collection mode to host
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE, "Host");
+			
 			//Refresh main menu. Menu items are different for hosts and followers
 			AppInterface.instance.menu.refreshContent();
 			
