@@ -1,13 +1,14 @@
 package services
 {
-	import network.httpserver.HttpServer;
-	
-	import flash.system.System;
+	import flash.events.Event;
 	
 	import database.LocalSettings;
 	
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
+	
+	import network.httpserver.HttpServer;
 	
 	import utils.Trace;
 
@@ -76,6 +77,7 @@ package services
 				loopServer.listen(1979);
 				
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			} 
 			catch(error:Error) 
 			{
@@ -102,6 +104,7 @@ package services
 			}
 			
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			
 			serviceActive = false;
 		}
@@ -109,7 +112,7 @@ package services
 		/**
 		 * Event Handlers
 		 */
-		private static function onBgreadingReceived(e:TransmitterServiceEvent):void 
+		private static function onBgreadingReceived(e:Event):void 
 		{
 			//Reenable Loop Server in case it goes down
 			if (serviceActive && !loopServer.serverSocket.listening)

@@ -4,6 +4,8 @@ package services
 	import com.distriqt.extension.calendar.Calendar;
 	import com.distriqt.extension.calendar.objects.EventObject;
 	
+	import flash.events.Event;
+	
 	import database.BgReading;
 	import database.Calibration;
 	import database.CommonSettings;
@@ -11,6 +13,7 @@ package services
 	
 	import distriqtkey.DistriqtKey;
 	
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -94,6 +97,7 @@ package services
 			
 			serviceActive = true;
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 			deleteAllEvents();
 			processLatestGlucose(true);
 		}
@@ -104,6 +108,7 @@ package services
 			
 			serviceActive = false;
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 			deleteAllEvents();
 		}
 		
@@ -256,7 +261,7 @@ package services
 		/**
 		 * Event Listeners
 		 */
-		protected static function onBloodGlucoseReceived(e:TransmitterServiceEvent):void
+		protected static function onBloodGlucoseReceived(e:Event):void
 		{
 			if (Calibration.allForSensor().length < 2 || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
 				return;

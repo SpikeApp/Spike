@@ -2,11 +2,14 @@ package services
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
+	import flash.events.Event;
+	
 	import database.BgReading;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -60,6 +63,7 @@ package services
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
@@ -236,7 +240,7 @@ package services
 			}
 		}
 		
-		private static function onBloodGlucoseReceived(e:TransmitterServiceEvent):void
+		private static function onBloodGlucoseReceived(e:Event):void
 		{
 			Trace.myTrace("WidgetService.as", "Sending new glucose reading to widget!");
 			
