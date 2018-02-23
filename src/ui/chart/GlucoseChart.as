@@ -8,8 +8,6 @@ package ui.chart
 	import flash.system.System;
 	import flash.utils.Timer;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -361,19 +359,6 @@ package ui.chart
 			}
 			else if (chartType == SCROLLER_CHART)
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
-			
-			/*
-			trace("firstBGReadingTimeStamp", firstBGReadingTimeStamp);
-			trace("lastBGreadingTimeStamp", lastBGreadingTimeStamp);
-			trace("differenceInMinutesForAllTimestamps", differenceInMinutesForAllTimestamps);
-			trace("ONE_DAY_IN_MINUTES", ONE_DAY_IN_MINUTES);
-			trace("timelineRange", timelineRange);
-			trace("chartWidth", chartWidth);
-			trace("totalTimestampDifference", totalTimestampDifference);
-			trace("mainChartXFactor", mainChartXFactor);
-			
-			trace("CALA");*/
-			
 			
 			/**
 			 * Calculation of Y Axis scale factor
@@ -985,7 +970,6 @@ package ui.chart
 		
 		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int):void
 		{
-			trace("redrawChart called");
 			/**
 			 * Calculation of X Axis scale factor
 			 */
@@ -1008,8 +992,6 @@ package ui.chart
 			}
 			else if (chartType == SCROLLER_CHART)
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
-			
-			trace("scaleXFactor", scaleXFactor);
 			
 			/* Update values for update timer */
 			firstBGReadingTimeStamp = firstTimeStamp;
@@ -1787,28 +1769,13 @@ package ui.chart
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
-									trace("_graphWidth", _graphWidth);
-									trace("yAxisMargin", yAxisMargin);
-									trace("mainChartGlucoseMarkerRadius * 2", mainChartGlucoseMarkerRadius * 2);
-									trace("mainChartXFactor", mainChartXFactor);
-									
-									/*trace("firstAvailableTimestamp", firstAvailableTimestamp);
-									trace("firstAvailableDate", new Date(firstAvailableTimestamp));
-									trace("previousMaker != null", previousMaker != null);
-									trace("currentTimelineTimestamp", currentTimelineTimestamp);
-									trace("previousMaker.timestamp", previousMaker.timestamp);
-									trace("currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES", currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES);
-									trace("!hitTestCurrent", !hitTestCurrent);*/
-									
 									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
 									{
-										trace("1");
 										glucoseValueDisplay.text = "---";
 										glucoseValueDisplay.fontStyles.color = oldColor;	
 									}
 									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
 									{
-										trace("2");
 										glucoseValueDisplay.fontStyles.color = oldColor;
 									}
 								}
