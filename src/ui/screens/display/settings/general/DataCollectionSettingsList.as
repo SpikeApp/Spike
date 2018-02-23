@@ -16,6 +16,7 @@ package ui.screens.display.settings.general
 	
 	import starling.events.Event;
 	
+	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
@@ -131,6 +132,9 @@ package ui.screens.display.settings.general
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != followNSURL)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL, followNSURL);
+			
+			//Refresh main menu. Menu items are different for hosts and followers
+			AppInterface.instance.menu.refreshContent();
 			
 			needsSave = false;
 		}
