@@ -87,7 +87,7 @@ package services
 		
 		public function NightscoutService()
 		{
-			throw new Error("NightscoutServiceEnhanced is not meant to be instantiated");
+			throw new Error("NightscoutService is not meant to be instantiated");
 		}
 		
 		public static function init():void

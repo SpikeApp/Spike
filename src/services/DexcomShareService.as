@@ -95,7 +95,7 @@ package services
 		public function DexcomShareService()
 		{
 			if (instance != null)
-				throw new Error("DexcomShareServiceEnhanced is not meant to be instantiated");
+				throw new Error("DexcomShareService is not meant to be instantiated");
 		}
 		
 		public static function init():void
