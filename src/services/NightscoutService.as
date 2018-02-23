@@ -154,7 +154,8 @@ package services
 			
 			if (BlueToothDevice.isFollower() && 
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT"
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT" &&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""
 			)
 			{
 				setupFollowerProperties();
@@ -988,15 +989,6 @@ package services
 		
 		private static function onSettingChanged(e:SettingsServiceEvent):void
 		{
-			/*if (BlueToothDevice.isFollower() && 
-			CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
-			CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT"
-			)
-			{
-			setupFollowerProperties();
-			activateFollower();
-			}*/
-			
 			if (ignoreSettingsChanged)
 			{
 				setupNightscoutProperties();
@@ -1033,6 +1025,25 @@ package services
 			{
 				Trace.myTrace("NightscoutService.as", "in onSettingChanged, uploading new sensor.");
 				getSensorStart();
+			}
+			else if 
+				(e.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE ||
+				 e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE ||
+				 e.data == CommonSettings.COMMON_SETTING_FOLLOWER_MODE ||
+				 e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL
+				)
+			{
+				if (BlueToothDevice.isFollower() && 
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT" &&
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""
+				)
+				{
+					setupFollowerProperties();
+					activateFollower();
+				}
+				else
+					deactivateFollower()
 			}
 		}
 		
