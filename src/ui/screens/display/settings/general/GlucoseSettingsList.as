@@ -182,45 +182,45 @@ package ui.screens.display.settings.general
 			if (selectedUnit == "mg/dL")
 			{
 				//Glucose Urgent High Value
-				glucoseUrgentHighStepper.minimum = 100;
+				glucoseUrgentHighStepper.minimum = 80;
 				glucoseUrgentHighStepper.maximum = 600;
 				glucoseUrgentHighStepper.step = 1;
 				
 				//Glucose High Value
-				glucoseHighStepper.minimum = 80;
+				glucoseHighStepper.minimum = 60;
 				glucoseHighStepper.maximum = 400;
 				glucoseHighStepper.step = 1;
 				
 				//Glucose Low Value
-				glucoseLowStepper.minimum = 55;
+				glucoseLowStepper.minimum = 45;
 				glucoseLowStepper.maximum = 200;
 				glucoseLowStepper.step = 1;
 				
 				//Glucose Urgent Low Value
-				glucoseUrgentLowStepper.minimum = 50;
-				glucoseUrgentLowStepper.maximum = 120;
+				glucoseUrgentLowStepper.minimum = 40;
+				glucoseUrgentLowStepper.maximum = 150;
 				glucoseUrgentLowStepper.step = 1;
 			}
 			else if (selectedUnit == "mmol/L")
 			{
 				//Glucose Urgent High Value
-				glucoseUrgentHighStepper.minimum = 5.5;
-				glucoseUrgentHighStepper.maximum = 33.5;
+				glucoseUrgentHighStepper.minimum = 4.4;
+				glucoseUrgentHighStepper.maximum = 33.3;
 				glucoseUrgentHighStepper.step = 0.1;
 				
 				//Glucose High Value
-				glucoseHighStepper.minimum = 4.4;
+				glucoseHighStepper.minimum = 3.3;
 				glucoseHighStepper.maximum = 22.3;
 				glucoseHighStepper.step = 0.1;
 				
 				//Glucose Low Value
-				glucoseLowStepper.minimum = 3;
+				glucoseLowStepper.minimum = 2.5;
 				glucoseLowStepper.maximum = 11.1;
 				glucoseLowStepper.step = 0.1;
 				
 				//Glucose Urgent Low Value
-				glucoseUrgentLowStepper.minimum = 2.7;
-				glucoseUrgentLowStepper.maximum = 6.7;
+				glucoseUrgentLowStepper.minimum = 2.2;
+				glucoseUrgentLowStepper.maximum = 8.3;
 				glucoseUrgentLowStepper.step = 0.1;
 			}
 		}

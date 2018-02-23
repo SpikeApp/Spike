@@ -126,7 +126,7 @@ package ui.screens.display.settings.alarms
 			{
 				valueLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"bg_value_label");
 				valueStepperStep = 1;
-				minimumStepperValue = 45;
+				minimumStepperValue = 40;
 				maximumStepperValue = 600;
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
 				{
