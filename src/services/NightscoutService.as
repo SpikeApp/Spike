@@ -333,7 +333,7 @@ package services
 			Trace.myTrace("NightscoutService.as", "Fetching new follower data in: " + timeSpan.minutes + "m " + timeSpan.seconds + "s");
 		}
 		
-		public static function getRemoteReadings():void
+		private static function getRemoteReadings():void
 		{
 			Trace.myTrace("NightscoutService.as", "getRemoteReadings called!");
 			
@@ -988,6 +988,15 @@ package services
 		
 		private static function onSettingChanged(e:SettingsServiceEvent):void
 		{
+			/*if (BlueToothDevice.isFollower() && 
+			CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
+			CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT"
+			)
+			{
+			setupFollowerProperties();
+			activateFollower();
+			}*/
+			
 			if (ignoreSettingsChanged)
 			{
 				setupNightscoutProperties();
