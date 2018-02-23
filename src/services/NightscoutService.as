@@ -454,7 +454,7 @@ package services
 									NSFollowReading.filtered, 
 									Number.NaN, //ageAdjustedRawValue
 									false, //calibrationFlag
-									NSFollowReading.sgv, //calculatedValue
+									NSFollowReading.sgv >= 40 ? NSFollowReading.sgv : 40, //calculatedValue
 									Number.NaN, //filteredCalculatedValue
 									Number.NaN, //CalculatedValueSlope
 									Number.NaN, //a
