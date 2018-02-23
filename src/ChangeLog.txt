@@ -3,6 +3,7 @@ Better handling of check mute status. It will check mute only if phone mute aler
 Lock screen notifications that show the glucose value every 5 minutes are now turned off by default for new Spike users.
 Better handling of the snooze alarm popup when Spike is in the background.
 Possibility to set lower/high ranges for alarms and glucose thresholds in settings
+Press and hold the PieChart for 1 second to activate/deactivate the "No Lock" feature.
 
 1.0.8
 FIX: Calibration alarm now correctly saves the time interval when in mmol/L. 
