@@ -388,17 +388,25 @@ package services
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");
 					if (lastBgReading != null) {
 						myTrace("in updateBgNotification lastbgreading != null");
-						if (lastBgReading.calculatedValue != 0) {
-							if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
-								valueToShow = "---"
-							} else {
-								valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-								myTrace("in updateBgNotification value to show calculated");
-								if (!lastBgReading.hideSlope) {
-									valueToShow += " " + lastBgReading.slopeArrow();
+						if ((new Date()).valueOf() - lastBgReading.timestamp < 4.5 * 60 * 1000) {
+							if (lastBgReading.calculatedValue != 0) {
+								if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+									valueToShow = "---"
+								} else {
+									valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+									myTrace("in updateBgNotification value to show calculated");
+									if (!lastBgReading.hideSlope) {
+										valueToShow += " " + lastBgReading.slopeArrow();
+									}
+									
+									valueToShow += " " + BgGraphBuilder.unitizedDeltaString(true, true);
 								}
+							} else {
+								//not giving notification if it's older than 4,5 minutes
+								//this can be the case for follower mode
+								myTrace("in updateBgNotification, timestamp of lastbgreading is older than 4.5 minutes");
+								return;
 							}
-							valueToShow += " " + BgGraphBuilder.unitizedDeltaString(true, true);
 						}
 					} else {
 						valueToShow = "---"
