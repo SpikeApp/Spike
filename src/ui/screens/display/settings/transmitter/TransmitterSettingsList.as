@@ -81,6 +81,7 @@ package ui.screens.display.settings.transmitter
 			if (!BlueToothDevice.needsTransmitterId())
 				transmitterIDValue = "";
 			transmitterTypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
+			trace("transmitterTypeValue", transmitterTypeValue);
 			
 			/* Ensure BluCon and Dexcom compatibility */
 			if (transmitterTypeValue == "BluKon")
@@ -128,7 +129,7 @@ package ui.screens.display.settings.transmitter
 				return itemRenderer;
 			}
 			
-			if(transmitterTypeValue == "")
+			if(transmitterTypeValue == "" || transmitterTypeValue == "Follow")
 			{
 				transmitterType.prompt = ModelLocator.resourceManagerInstance.getString('globaltranslations','picker_select');
 				transmitterType.selectedIndex = -1;

@@ -3,9 +3,11 @@ package ui.screens
 	import flash.system.System;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
+	import events.FollowerEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -20,6 +22,7 @@ package ui.screens
 	
 	import model.ModelLocator;
 	
+	import services.NightscoutService;
 	import services.TransmitterService;
 	
 	import starling.core.Starling;
@@ -91,6 +94,7 @@ package ui.screens
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground, false, 0, true);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived, false, 0, true);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower, false, 0, true);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -267,9 +271,28 @@ package ui.screens
 		/**
 		 * Event Handlers
 		 */
+		private function onBgReadingReceivedFollower(e:FollowerEvent):void
+		{
+			Trace.myTrace("ChartScreen.as", "on onBgReadingReceivedFollower!");
+			
+			if (!BlueToothDevice.isFollower())
+				Trace.myTrace("ChartScreen.as", "User is not a follower. Ignoring");
+				
+			var readings:Array = e.data;
+			if (readings != null && readings.length > 0)
+			{
+				glucoseChart.addGlucose(readings);
+				if (displayPieChart)
+					pieChart.drawChart()
+			}	
+		}
+		
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
 		{
 			Trace.myTrace("ChartScreen.as", "on onBgReadingReceived!");
+			
+			if (BlueToothDevice.isFollower())
+				Trace.myTrace("ChartScreen.as", "User is a follower. Ignoring");
 			
 			var reading:BgReading = BgReading.lastNoSensor();
 			

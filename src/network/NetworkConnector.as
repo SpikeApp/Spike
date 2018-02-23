@@ -34,9 +34,12 @@ package network
 			
 			//Create Headers
 			var noChacheHeader:URLRequestHeader = new URLRequestHeader("pragma", "no-cache");
-			var apiSecretHeader:URLRequestHeader = new URLRequestHeader("api-secret", apiSecret);
 			request.requestHeaders.push(noChacheHeader);
-			request.requestHeaders.push(apiSecretHeader);
+			if (apiSecret != null)
+			{
+				var apiSecretHeader:URLRequestHeader = new URLRequestHeader("api-secret", apiSecret);
+				request.requestHeaders.push(apiSecretHeader);
+			}
 			
 			//Create the URL Loader
 			var urlLoader:URLLoader = new URLLoader();
@@ -162,7 +165,9 @@ package network
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			if (loader != null)
 			{
-				Trace.myTrace("NetworkConnector.as", "localHTTPStatus called. Message: " + String(loader.data));
+				
+				if (loader.data != undefined)
+					Trace.myTrace("NetworkConnector.as", "localHTTPStatus called. Message: " + String(loader.data));
 				
 				loader.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus);
 				loader.removeEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus);

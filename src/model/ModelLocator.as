@@ -205,24 +205,32 @@ package model
 		/**
 		 * add bgreading also removes bgreadings older than MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR days but keep at least 5<br>
 		 */
-		public static function addBGReading(bgReading:BgReading):void 
+		public static function addBGReading(bgReading:BgReading, withRefresh:Boolean):void 
 		{
 			_bgReadings.push(bgReading);
 			
-			if (_bgReadings.length <= 5)
-				return;
-			
-			var firstBGReading:BgReading = _bgReadings[0] as BgReading;
-			var now:Number = (new Date()).valueOf();
-			while (now - firstBGReading.timestamp > MAX_TIME_FOR_BGREADINGS) 
+			if (withRefresh)
 			{
-				_bgReadings.removeAt(0);
-					
 				if (_bgReadings.length <= 5)
-					break;
+					return;
 				
-				firstBGReading = _bgReadings[0] as BgReading;
+				var firstBGReading:BgReading = _bgReadings[0] as BgReading;
+				var now:Number = (new Date()).valueOf();
+				while (now - firstBGReading.timestamp > MAX_TIME_FOR_BGREADINGS) 
+				{
+					_bgReadings.removeAt(0);
+						
+					if (_bgReadings.length <= 5)
+						break;
+					
+					firstBGReading = _bgReadings[0] as BgReading;
+				}
 			}
+		}
+		
+		public static function refreshBgReadings():void
+		{
+			_bgReadings.sortOn(["timestamp"], Array.NUMERIC);
 		}
 	}
 }

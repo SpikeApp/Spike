@@ -330,16 +330,16 @@ package database
 		 * <br>
 		 * could also be less than number, ie returnvalue could be arraycollection of size 0 
 		 */
-		public static function latest(number:int):ArrayCollection {
+		public static function latest(number:int, ignoreSensorId:Boolean = false):ArrayCollection {
 			var returnValue:ArrayCollection = new ArrayCollection();
 			var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
-			if (currentSensorId != "0") {
+			if (currentSensorId != "0" || ignoreSensorId) {
 				var cntr:int = ModelLocator.bgReadings.length - 1;
 				var itemsAdded:int = 0;
 				while (cntr > -1 && itemsAdded < number) {
 					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
-					if (bgReading.sensor != null) {
-						if (bgReading.sensor.uniqueId == currentSensorId && bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
+					if (bgReading.sensor != null || ignoreSensorId) {
+						if ((ignoreSensorId || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
 							returnValue.addItem(bgReading);
 							itemsAdded++;
 						}
@@ -423,6 +423,25 @@ package database
 			while (cntr > -1) {
 				var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
 				if (bgReading.rawData != 0 && bgReading.calculatedValue != 0) {
+					returnValue = bgReading;
+					break;
+				}
+				cntr--;
+			}
+			return returnValue;
+		}
+		
+		/**
+		 * - calculatedValule != 0<br>
+		 * - latest<br>
+		 * - null if there's none
+		 */
+		public static function lastWithCalculatedValue():BgReading {
+			var returnValue:BgReading;
+			var cntr:int = ModelLocator.bgReadings.length - 1;
+			while (cntr > -1) {
+				var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
+				if (bgReading.calculatedValue != 0) {
 					returnValue = bgReading;
 					break;
 				}
@@ -619,7 +638,7 @@ package database
 				null//bgreading id will be assigned by constructor
 			)).calculateAgeAdjustedRawValue();
 			
-			ModelLocator.addBGReading(bgReading);
+			ModelLocator.addBGReading(bgReading, true);
 
 			if (calibration == null) {
 				//No calibration yet
@@ -688,8 +707,8 @@ package database
 		/**
 		 * no database update ! 
 		 */
-		public function findSlope():void {
-			var last2:ArrayCollection = BgReading.latest(2);
+		public function findSlope(ignoreSensorId:Boolean = false):void {
+			var last2:ArrayCollection = BgReading.latest(2, ignoreSensorId);
 			
 			_hideSlope = true;
 			if (last2.length == 2) {
@@ -862,8 +881,11 @@ package database
 			}
 		}
 	
-		public static function currentSlope():Number {
-			var last_2:ArrayCollection = BgReading.latest(2);
+		/**
+		 * if  ignoreSensorId = true, then calculations takes into account only readings that have sensor id = current sensor id
+		 */
+		public static function currentSlope(ignoreSensorId:Boolean = false):Number {
+			var last_2:ArrayCollection = BgReading.latest(2, ignoreSensorId);
 			if (last_2.length == 2) {
 				var slopePair:Array = calculateSlope(last_2.getItemAt(0) as BgReading, last_2.getItemAt(1) as BgReading);
 				return slopePair[0] as Number;

@@ -6,11 +6,15 @@ package services
 	import com.hurlant.util.Hex;
 	
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.events.TimerEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequestMethod;
+	import flash.net.URLVariables;
 	import flash.utils.Timer;
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
 	
@@ -20,9 +24,11 @@ package services
 	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	import database.FollowerBgReading;
 	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
@@ -35,21 +41,30 @@ package services
 	
 	import ui.popups.AlertManager;
 	
+	import utils.MathHelper;
+	import utils.TimeSpan;
 	import utils.Trace;
 	import utils.UniqueId;
 	
 	[ResourceBundle("nightscoutservice")]
 	
-	public class NightscoutService
+	public class NightscoutService extends EventDispatcher
 	{
 		/* Constants */
 		private static const MODE_GLUCOSE_READING:String = "glucoseReading";
+		private static const MODE_GLUCOSE_READING_GET:String = "glucoseReadingGet";
 		private static const MODE_CALIBRATION:String = "calibration";
 		private static const MODE_VISUAL_CALIBRATION:String = "visualCalibration";
 		private static const MODE_SENSOR_START:String = "sensorStart";
 		private static const MODE_TEST_CREDENTIALS:String = "testCredentials";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
+		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
+		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
+		private static const TIME_5_MINUTES_10_SECONDS:int = (5 * 60 * 1000) + 10000;
+		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
+		private static const TIME_4_MINUTES_30_SECONDS:int = (4 * 60 * 1000) + 30000;
+		private static const TIME_10_SECONDS:int = 10000;
 		
 		/* Logical Variables */
 		private static var serviceStarted:Boolean = false;
@@ -85,9 +100,23 @@ package services
 		private static var activeVisualCalibrations:Array = [];
 		private static var activeSensorStarts:Array = [];
 		
+		/* Follower */
+		private static var nextFollowDownloadTime:Number = 0;
+		private static var timeOfFirstBgReadingToDowload:Number;
+		private static var lastFollowDownloadAttempt:Number;
+		private static var waitingForNSData:Boolean = false;
+		private static var nightscoutFollowURL:String = "";
+		private static var followerModeEnabled:Boolean = false;
+		private static var followerTimer:int = -1;
+		
+		private static var _instance:NightscoutService = new NightscoutService();
+
+		
+		
 		public function NightscoutService()
 		{
-			throw new Error("NightscoutServiceEnhanced is not meant to be instantiated");
+			if (_instance != null)
+				throw new Error("NightscoutServiceEnhanced is not meant to be instantiated");
 		}
 		
 		public static function init():void
@@ -121,6 +150,15 @@ package services
 					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true")
 			{
 				activateService();
+			}
+			
+			if (BlueToothDevice.isFollower() && 
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT"
+			)
+			{
+				setupFollowerProperties();
+				activateFollower();
 			}
 		}
 		
@@ -239,6 +277,227 @@ package services
 			}
 			
 			syncGlucoseReadingsActive = false;
+		}
+		
+		/**
+		 * FOLLOWER MODE
+		 */
+		private static function setupFollowerProperties():void
+		{
+			nightscoutFollowURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/entries.json?";
+			if (nightscoutFollowURL.indexOf('http') == -1) nightscoutFollowURL = "https://" + nightscoutFollowURL;
+		}
+		
+		private static function activateFollower():void
+		{
+			followerModeEnabled = true;
+			
+			clearTimeout(followerTimer);
+			
+			getRemoteReadings();
+		}
+		
+		private static function deactivateFollower():void
+		{
+			followerModeEnabled = false;
+			
+			clearTimeout(followerTimer);
+		}
+		
+		private static function calculateNextFollowDownloadTime():void 
+		{
+			var now:Number = (new Date()).valueOf();
+			var latestBGReading:BgReading = BgReading.lastNoSensor();
+			if (latestBGReading != null) 
+			{
+				nextFollowDownloadTime = latestBGReading.timestamp + TIME_5_MINUTES_10_SECONDS;
+				while (nextFollowDownloadTime < now) 
+				{
+					nextFollowDownloadTime += TIME_5_MINUTES;
+				}
+			}
+			else
+				nextFollowDownloadTime = now + TIME_5_MINUTES;		
+		}
+		
+		private static function setNextFollowerFetch(delay:int = 0):void
+		{
+			var now:Number = new Date().valueOf();
+			
+			calculateNextFollowDownloadTime();
+			var interval:Number = nextFollowDownloadTime + delay - now;
+			clearTimeout(followerTimer);
+			followerTimer = setTimeout(getRemoteReadings, interval);
+			
+			var timeSpan:TimeSpan = TimeSpan.fromMilliseconds(interval);
+			Trace.myTrace("NightscoutService.as", "Fetching new follower data in: " + timeSpan.minutes + "m " + timeSpan.seconds + "s");
+		}
+		
+		public static function getRemoteReadings():void
+		{
+			Trace.myTrace("NightscoutService.as", "getRemoteReadings called!");
+			
+			var now:Number = (new Date()).valueOf();
+			
+			if (!BlueToothDevice.isFollower())
+			{
+				Trace.myTrace("NightscoutService.as", "Spike is not in follower mode. Aborting!");
+				
+				deactivateFollower();
+				
+				return
+			}
+			
+			if (nightscoutFollowURL == "")
+			{
+				Trace.myTrace("NightscoutService.as", "Follower URL is not set. Aborting!");
+				
+				deactivateFollower();
+				
+				return;
+			}
+				
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will try again later!");
+				
+				setNextFollowerFetch(TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
+				
+				return;
+			}
+			
+			if (nextFollowDownloadTime < now) 
+			{
+				var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
+				if (latestBGReading == null) 
+					timeOfFirstBgReadingToDowload = now - TIME_1_DAY;
+				else
+					timeOfFirstBgReadingToDowload = latestBGReading.timestamp + 1; //We add 1ms to avoid overlaps
+				
+				var numberOfReadings:Number = ((now - timeOfFirstBgReadingToDowload) / TIME_1_HOUR * 12) + 1; //Add one more just to make sure we get all readings
+				var fetchDate:Date = new Date(timeOfFirstBgReadingToDowload);
+				var parameters:URLVariables = new URLVariables();
+				parameters["find[dateString][$gte]"] = fetchDate.fullYear + "-" + MathHelper.formatNumberToString(fetchDate.month + 1) + "-" + MathHelper.formatNumberToString(fetchDate.date);
+				parameters["count"] = Math.round(numberOfReadings);
+				
+				waitingForNSData = true;
+				lastFollowDownloadAttempt = (new Date()).valueOf();
+				
+				NetworkConnector.createNSConnector(nightscoutFollowURL + parameters.toString(), null, URLRequestMethod.GET, null, MODE_GLUCOSE_READING_GET, onDownloadGlucoseReadingsComplete, onConnectionFailed);
+			}
+			else
+			{
+				Trace.myTrace("NightscoutService.as", "Tried to make a fetch while in the past. Setting new fetch again.");
+				setNextFollowerFetch(TIME_10_SECONDS); 
+			}
+		}
+		
+		private static function onDownloadGlucoseReadingsComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onDownloadGlucoseReadingsComplete called!");
+			
+			var now:Number = (new Date()).valueOf();
+			
+			//Validate call
+			if (!waitingForNSData || (now - lastFollowDownloadAttempt > TIME_4_MINUTES_30_SECONDS)) 
+			{
+				Trace.myTrace("NightscoutService.as", "Not waiting for data or last download attempt was more than 4 minutes, 30 seconds ago. Ignoring!");
+				waitingForNSData = false;
+				return;
+			}
+			
+			waitingForNSData = false;
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate response
+			if (response.length == 0)
+			{
+				Trace.myTrace("NightscoutService.as", "Server's gave an empty response. Retrying in a few minutes.");
+				
+				setNextFollowerFetch();
+				
+				return;
+			}
+			
+			try 
+			{
+				var BgReadingsToSend:Array = [];
+				var NSResponseJSON:Object = JSON.parse(response);
+				if (NSResponseJSON is Array) 
+				{
+					var NSBgReadings:Array = NSResponseJSON as Array;
+					var newData:Boolean = false;
+					for(var arrayCounter:int = NSBgReadings.length - 1 ; arrayCounter >= 0; arrayCounter--)
+					{
+						var NSFollowReading:Object = NSBgReadings[arrayCounter];
+						if (NSFollowReading.date) 
+						{
+							var NSFollowReadingTime:Number = NSFollowReading.date;
+							if (NSFollowReadingTime >= timeOfFirstBgReadingToDowload) 
+							{
+								var bgReading:FollowerBgReading = new FollowerBgReading
+								(
+									NSFollowReadingTime, //timestamp
+									null, //sensor id, not known here as the reading comes from NS
+									null, //calibration object
+									NSFollowReading.unfiltered,  
+									NSFollowReading.filtered, 
+									Number.NaN, //ageAdjustedRawValue
+									false, //calibrationFlag
+									NSFollowReading.sgv, //calculatedValue
+									Number.NaN, //filteredCalculatedValue
+									Number.NaN, //CalculatedValueSlope
+									Number.NaN, //a
+									Number.NaN, //b
+									Number.NaN, //c
+									Number.NaN, //ra
+									Number.NaN, //cb
+									Number.NaN, //rc
+									Number.NaN, //rawCalculated
+									false, //hideSlope
+									"", //noise
+									NSFollowReadingTime, //lastmodifiedtimestamp
+									NSFollowReading._id //unique id
+								);  
+								bgReading.findSlope(true);
+								ModelLocator.addBGReading(bgReading, false);
+								BgReadingsToSend.push(bgReading);
+								newData = true;
+							} 
+							else
+								continue;
+						} 
+						else 
+						{
+							Trace.myTrace("NightscoutService.as", "Nightscout has returned a reading without date. Ignoring!");
+							
+							if (NSFollowReading._id)
+								Trace.myTrace("NightscoutService.as", "Reading ID: " + NSFollowReading._id);
+						}
+					}
+					
+					if (newData) 
+						_instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
+				} 
+				else 
+					Trace.myTrace("NightscoutService.as", "Nightscout response was not a JSON array. Ignoring! Response: " + response);
+			} 
+			catch (error:Error) 
+			{
+				Trace.myTrace("NightscoutService.as", "Error parsing Nightscout responde! Error: " + error.message + " Response: " + response);
+			}
+			
+			setNextFollowerFetch();
 		}
 		
 		/**
@@ -716,8 +975,14 @@ package services
 			}
 			else if (mode == MODE_TEST_CREDENTIALS)
 			{
-				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Can't make connection to the server. Error: " +  error.message);
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Can't make connection to the server to test credentials. Error: " +  error.message);
 				externalAuthenticationCall = false;
+			}
+			else if (mode == MODE_GLUCOSE_READING_GET)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Can't make connection to the server while trying to download glucose readings. Error: " +  error.message);
+				
+				setNextFollowerFetch(TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
 			}
 		}
 		
@@ -878,5 +1143,11 @@ package services
 			syncSensorStartActiveLastChange = (new Date()).valueOf();
 			_syncSensorStartActive = value;
 		}
+
+		public static function get instance():NightscoutService
+		{
+			return _instance;
+		}
+
 	}
 }

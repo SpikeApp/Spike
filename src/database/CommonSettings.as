@@ -303,6 +303,13 @@
 		  */
 		 public static const COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON:int = 105;
 		 public static const COMMON_SETTING_DEEP_SLEEP_MODE:int = 106;
+		 
+		 /**
+		  * Follower
+		  */
+		 public static const COMMON_SETTING_DATA_COLLECTION_MODE:int = 107;
+		 public static const COMMON_SETTING_DATA_COLLECTION_NS_URL:int = 108;
+		 public static const COMMON_SETTING_FOLLOWER_MODE:int = 109;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -411,7 +418,10 @@
 			 "40",//COMMON_SETTING_CHART_MIN_VALUE
 			 "true",//COMMON_SETTING_CHART_RESIZE_ON_OUT_OF_BOUNDS
 			 "false",//COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON
-			 "0"//COMMON_SETTING_DEEP_SLEEP_MODE
+			 "0",//COMMON_SETTING_DEEP_SLEEP_MODE
+			 "Host",//COMMON_SETTING_DATA_COLLECTION_MODE
+			 "",//COMMON_SETTING_DATA_COLLECTION_NS_URL
+			 "Nightscout"//COMMON_SETTING_FOLLOWER_MODE
 		 ];
 
 		 public function CommonSettings()
