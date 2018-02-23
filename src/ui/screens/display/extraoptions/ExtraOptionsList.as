@@ -311,7 +311,7 @@ package ui.screens.display.extraoptions
 						//Skin Label
 						(listTextRenderers[itemID] as DefaultListItemRenderer).fontStyles = unselectedFontTxtFormat;
 						
-						//Activate Keep Awake
+						//Deactivate Keep Awake
 						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
 						Trace.myTrace("ExtraOptionsList.as", "In onMenuChanged, setting systemIdleMode = SystemIdleMode.NORMAL");
 					}
