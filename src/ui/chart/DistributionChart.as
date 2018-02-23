@@ -1,6 +1,11 @@
 package ui.chart
 {	
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
+	import flash.desktop.NativeApplication;
+	import flash.desktop.SystemIdleMode;
 	import flash.system.System;
+	import flash.utils.getTimer;
 	
 	import database.BgReading;
 	import database.CommonSettings;
@@ -11,6 +16,10 @@ package ui.chart
 	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
+	import starling.events.Event;
+	import starling.events.Touch;
+	import starling.events.TouchEvent;
+	import starling.events.TouchPhase;
 	import starling.textures.RenderTexture;
 	
 	import utils.Constants;
@@ -31,6 +40,7 @@ package ui.chart
 		private var lowTreshold:Number;
 		private var averageGlucose:Number;
 		private var A1C:Number;
+		private var pieTimer:Number;
 		
 		//Display Variables
 		private var numSides:int = 200;
@@ -114,6 +124,7 @@ package ui.chart
 			pieContainer = new Sprite();
 			pieContainer.x = piePadding * 2;
 			pieContainer.y = piePadding;
+			pieContainer.addEventListener(TouchEvent.TOUCH, onPieTouch);
 			addChild(pieContainer);
 			statsContainer = new Sprite();
 			addChild(statsContainer);
@@ -403,6 +414,55 @@ package ui.chart
 				currentNGon = null;
 			}
 			nGons.length = 0;
+		}
+		
+		/**
+		 * Event Listeners
+		 */
+		private function onPieTouch (e:TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				pieTimer = getTimer();
+				addEventListener(Event.ENTER_FRAME, onPieHold);
+			}
+			
+			if(touch != null && touch.phase == TouchPhase.ENDED)
+			{
+				pieTimer = Number.NaN;
+				removeEventListener(Event.ENTER_FRAME, onPieHold);
+			}
+		}
+		
+		private function onPieHold(e:Event):void
+		{
+			if (isNaN(pieTimer))
+				return;
+			
+			if (getTimer() - pieTimer > 1000)
+			{
+				pieTimer = Number.NaN;
+				removeEventListener(Event.ENTER_FRAME, onPieHold);
+				
+				if (!Constants.noLockEnabled)
+				{
+					Constants.noLockEnabled = true;
+					
+					//Activate Keep Awake
+					NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				}
+				else if (Constants.noLockEnabled)
+				{
+					Constants.noLockEnabled = false;
+					
+					//Deactivate Keep Awake
+					NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
+				}
+				
+				//Vibrate Device
+				BackgroundFetch.vibrate();
+			}
 		}
 		
 		/**
