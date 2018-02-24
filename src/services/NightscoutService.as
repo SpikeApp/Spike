@@ -291,6 +291,8 @@ package services
 		
 		private static function activateFollower():void
 		{
+			Trace.myTrace("NightscoutService.as", "Follower mode activated!");
+			
 			followerModeEnabled = true;
 			
 			clearTimeout(followerTimer);
@@ -300,9 +302,16 @@ package services
 		
 		private static function deactivateFollower():void
 		{
-			followerModeEnabled = false;
+			Trace.myTrace("NightscoutService.as", "Follower mode deactivated!");
 			
 			clearTimeout(followerTimer);
+			
+			followerModeEnabled = false;
+			
+			nextFollowDownloadTime = 0;
+			
+			ModelLocator.bgReadings.length = 0;
+			
 		}
 		
 		private static function calculateNextFollowDownloadTime():void 
