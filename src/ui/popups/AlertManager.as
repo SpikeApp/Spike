@@ -1,7 +1,5 @@
 package ui.popups
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import flash.errors.IllegalOperationError;
 	import flash.events.TimerEvent;
 	import flash.text.engine.LineJustification;
@@ -20,9 +18,11 @@ package ui.popups
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	
+	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.Trace;
 	
@@ -115,7 +115,7 @@ package ui.popups
 			if (PopUpManager.popUpCount == 0)
 				activeAlertsCount = 0;
 			
-			if (activeAlertsCount == 0 && BackgroundFetch.appIsInForeground()) //If no alerts are being currently displayed and app is in foreground, let's display this one 
+			if (activeAlertsCount == 0 && Constants.appInForeground) //If no alerts are being currently displayed and app is in foreground, let's display this one 
 			{
 				//Update internal variables
 				activeAlertsCount += 1;
@@ -136,6 +136,9 @@ package ui.popups
 		
 		private static function processQueue():void
 		{
+			if (!Constants.appInForeground)
+				return;
+			
 			/* Clean Up */
 			if (activeAlert != null)
 			{
@@ -190,7 +193,8 @@ package ui.popups
 			timeoutTimer = null;
 			
 			/* Process Internal Queue */
-			processQueue();
+			if (Constants.appInForeground)
+				processQueue();
 		}
 
 		private static function onAlertClosed(e:Event):void
@@ -200,7 +204,7 @@ package ui.popups
 		
 		private static function onAppInForeground (e:SpikeEvent):void
 		{
-			processQueue();
+			Starling.juggler.delayCall(processQueue, 0.5);
 		}
 		
 		/**
