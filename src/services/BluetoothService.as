@@ -2038,7 +2038,7 @@ package services
 				return "BlueReader_RX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == BlueReader_TX_Characteristic_UUID.toUpperCase()) {
 				return "BlueReader_TX_Characteristic_UUID";
-			} else if (uuid.toUpperCase() == HM_RX_TX_G4.toUpperCase()) {
+			} else if (HM_RX_TX_G4.toUpperCase().indexOf(uuid.toUpperCase()) > -1) {
 				return "HM_RX_TX_G4";
 			} else if (uuid.toUpperCase() == TRANSMITER_PL_RX_CHARACTERISTIC_UUID.toUpperCase()) {
 				return "TRANSMITER_PL_RX_CHARACTERISTIC_UUID";
