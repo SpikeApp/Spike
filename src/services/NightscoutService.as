@@ -480,7 +480,7 @@ package services
 									NSFollowReading._id //unique id
 								);  
 								bgReading.findSlope(true);
-								ModelLocator.addBGReading(bgReading, false);
+								ModelLocator.addBGReading(bgReading);
 								BgReadingsToSend.push(bgReading);
 								newData = true;
 							} 

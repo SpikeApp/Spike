@@ -638,7 +638,7 @@ package database
 				null//bgreading id will be assigned by constructor
 			)).calculateAgeAdjustedRawValue();
 			
-			ModelLocator.addBGReading(bgReading, true);
+			ModelLocator.addBGReading(bgReading);
 
 			if (calibration == null) {
 				//No calibration yet
