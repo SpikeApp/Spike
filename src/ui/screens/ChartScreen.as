@@ -1,5 +1,7 @@
 package ui.screens
 {
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.system.System;
 	
 	import database.BgReading;
@@ -45,6 +47,7 @@ package ui.screens
 		//Objects
 		private var chartData:Array;
 		private var newReadingsList:Array = [];
+		private var newReadingsListFollower:Array = [];
 		
 		//Visual variables
 		private var glucoseChartTopPadding:int = 7;
@@ -281,9 +284,17 @@ package ui.screens
 			var readings:Array = e.data;
 			if (readings != null && readings.length > 0)
 			{
-				glucoseChart.addGlucose(readings);
-				if (displayPieChart)
-					pieChart.drawChart()
+				if (BackgroundFetch.appIsInForeground() && glucoseChart != null)
+				{
+					glucoseChart.addGlucose(readings);
+					if (displayPieChart)
+						pieChart.drawChart();
+				}
+				else
+				{
+					newReadingsListFollower = newReadingsListFollower.concat(readings);
+				}
+						
 			}	
 		}
 		
@@ -327,17 +338,36 @@ package ui.screens
 			{
 				appInBackground = false;
 				
-				if (newReadingsList != null && newReadingsList.length > 0)
+				if (!BlueToothDevice.isFollower())
 				{
-					glucoseChart.addGlucose(newReadingsList);
-					
-					if (displayPieChart)
-						pieChart.drawChart();
-					
-					newReadingsList.length = 0;
+					if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
+					{
+						glucoseChart.addGlucose(newReadingsList);
+						
+						if (displayPieChart && pieChart != null)
+							pieChart.drawChart();
+						
+						newReadingsList.length = 0;
+					}
+					else
+						if (glucoseChart != null)
+							glucoseChart.calculateDisplayLabels();
 				}
 				else
-					glucoseChart.calculateDisplayLabels();
+				{
+					if (newReadingsListFollower != null && newReadingsListFollower.length > 0 && glucoseChart != null)
+					{
+						glucoseChart.addGlucose(newReadingsListFollower);
+						
+						if (displayPieChart && pieChart != null)
+							pieChart.drawChart();
+						
+						newReadingsListFollower.length = 0;
+					}
+					else
+						if (glucoseChart != null)
+							glucoseChart.calculateDisplayLabels();
+				}
 			}
 		}
 		
