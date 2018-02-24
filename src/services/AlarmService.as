@@ -28,6 +28,7 @@ package services
 	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import feathers.motion.Fade;
@@ -185,9 +186,10 @@ package services
 		//each element in an array represents certain alarm 
 		/**
 		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
-		 * true means alert is active, repeat check is necessary (not necessarily repeat, that depends on the setting in the alert type)
+		 * true means alert is active, repeat check is necessary (not necessarily repeat, that depends on the setting in the alert type)<br>
+		 * also used to check if an alert is active when the notification is coming from back to foreground<br>
 		 */
-		private static var repeatAlertsArray:Array = [false,false,false,false,false,false,false,false,false];
+		private static var activeAlertsArray:Array = [false,false,false,false,false,false,false,false,false];
 		/**
 		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
 		 * last timestamp the alert was fired
@@ -266,7 +268,9 @@ package services
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
+
 			lastAlarmCheckTimeStamp = 0;
 			lastMissedReadingAlertCheckTimeStamp = 0;
 			lastCheckMuteTimeStamp = 0;
@@ -1381,7 +1385,7 @@ package services
 		}
 
 		
-		private static function settingChanged(event:SettingsServiceEvent):void {
+		private static function commonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
 				checkMissedReadingAlert();
 				//need to plan missed reading alert
@@ -1405,7 +1409,7 @@ package services
 		 * repeatCntr > 0 if this is a repeat
 		 */
 		private static function enableRepeatAlert(id:int, alertTypeName:String, alertText:String, bodyText:String, repeatCntr:int = 0):void {
-			repeatAlertsArray[id] = true;
+			activeAlertsArray[id] = true;
 			repeatAlertsAlertTypeNameArray[id] = alertTypeName;
 			repeatAlertsLastFireTimeStampArray[id] = (new Date()).valueOf();
 			repeatAlertsTexts[id] = alertText;
@@ -1418,7 +1422,7 @@ package services
 		 * id ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br
 		 */
 		private static function disableRepeatAlert(id:int):void {
-			repeatAlertsArray[id] = false;
+			activeAlertsArray[id] = false;
 			repeatAlertsAlertTypeNameArray[id] = "";
 			repeatAlertsLastFireTimeStampArray[id] = 0;
 			repeatAlertsTexts[id] = "";
@@ -1432,8 +1436,8 @@ package services
 		 */
 		private static function repeatAlerts():void {
 			//id ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br
-			for (var cntr:int = 0;cntr < repeatAlertsArray.length;cntr++) {
-				if (repeatAlertsArray[cntr] == true) {
+			for (var cntr:int = 0;cntr < activeAlertsArray.length;cntr++) {
+				if (activeAlertsArray[cntr] == true) {
 					if ((new Date()).valueOf() - repeatAlertsLastFireTimeStampArray[cntr] > 60 * 1000) {
 						var alertType:AlertType = Database.getAlertType(repeatAlertsAlertTypeNameArray[cntr]);
 						if (alertType.repeatInMinutes > 0) {
@@ -1463,6 +1467,30 @@ package services
 						}
 						
 					}
+				}
+			}
+		}
+		
+		private static function appInForeGround(event:flash.events.Event):void {
+			//check if there's active notification alert, 
+			for (var cntr:int = 0;cntr < activeAlertsArray.length;cntr++) {
+				if (activeAlertsArray[cntr] == true) {
+					if ((new Date()).valueOf() - repeatAlertsLastFireTimeStampArray[cntr] < 31 * 1000) {
+						myTrace("in appInForeGround, found active alert with id " + repeatAlertsNotificationIds[cntr]);
+						//user brings the app from back to foreground within 30 seconds after firing the alert
+						//Stop playing sound, this will not be done by calling notificationReceived
+						BackgroundFetch.stopPlayingSound();
+						
+						//simulating as if the app was opened by clicking a notification
+						var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
+						notificationServiceEvent.data = new NotificationEvent("notification:notification:selected", repeatAlertsNotificationIds[cntr], "", "inactive", false, null, (new Date()).valueOf(), false, false);
+						notificationReceived(notificationServiceEvent);
+
+						//user opened the app within 30 seconds after the alarm was raised, most likely the user opened the app with the aim to snooze the alert
+						//and the user will get the snooze popup, so there's no need to repeat the alert
+						disableRepeatAlert(cntr);
+					}
+					
 				}
 			}
 		}
