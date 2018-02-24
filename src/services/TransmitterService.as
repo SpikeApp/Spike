@@ -110,6 +110,7 @@ package services
 				return;//should never be null actually
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
+					myTrace("in transmitterDataReceived, received TransmitterDataXBridgeBeaconPacket");
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeBeaconPacket but lastPacketTime < 60 seconds ago, ignoring");
 					} else {
@@ -118,7 +119,7 @@ package services
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
 							&&
 							transmitterDataBeaconPacket.TxID == "00000") {
-							
+							myTrace("in transmitterDataReceived, no transmitter id stored in xbridge and no transmitter id set in app, requesting transmitter id to user");
 							Notifications.service.cancel(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID);
 							Notifications.service.notify(
 								new NotificationBuilder()
@@ -132,11 +133,7 @@ package services
 						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
 							&&
 							transmitterDataBeaconPacket.TxID != "00000") {
-							myTrace("storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID);
-							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
-							transmitterServiceEvent.data = new Object();
-							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID;
-							_instance.dispatchEvent(transmitterServiceEvent);
+							myTrace("storing transmitter id received from xbridge = " + transmitterDataBeaconPacket.TxID);
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID.toUpperCase());
 							value = new ByteArray();
 							value.writeByte(0x02);
@@ -169,10 +166,6 @@ package services
 							&&
 							transmitterDataXBridgeDataPacket.TxID != "00000") {
 							myTrace("storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID);
-							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
-							transmitterServiceEvent.data = new Object();
-							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID;
-							_instance.dispatchEvent(transmitterServiceEvent);
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataXBridgeDataPacket.TxID.toUpperCase());
 							value = new ByteArray();
 							value.writeByte(0x02);
