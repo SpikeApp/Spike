@@ -3,8 +3,7 @@ package services
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
-	
-	import mx.utils.ObjectUtil;
+	import flash.utils.Dictionary;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -38,6 +37,7 @@ package services
 		private static var displayTrendEnabled:Boolean = true;
 		private static var displayDeltaEnabled:Boolean = true;
 		private static var displayUnitsEnabled:Boolean = true;
+		private static var initialGraphDataSet:Boolean = false;
 		private static var dateFormat:String;
 		private static var historyTimespan:int;
 		private static var widgetHistory:int;
@@ -46,7 +46,7 @@ package services
 		/* Objects */
 		private static var months:Array;
 		private static var startupGlucoseReadingsList:Array;
-		private static var activeGlucoseReadingsList:Array = [];;
+		private static var activeGlucoseReadingsList:Array = [];
 		
 		public function WidgetService()
 		{
@@ -61,7 +61,8 @@ package services
 			
 			months = ModelLocator.resourceManagerInstance.getString('widgetservice','months').split(",");
 			
-			Starling.juggler.delayCall(setInitialGraphData, 3);
+			if (!BlueToothDevice.isFollower())
+				Starling.juggler.delayCall(setInitialGraphData, 3);
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
@@ -128,6 +129,7 @@ package services
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 			historyTimespan = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN));
 			widgetHistory = historyTimespan * TIME_1_HOUR;
+			activeGlucoseReadingsList = [];
 			
 			startupGlucoseReadingsList = ModelLocator.bgReadings.concat();
 			var now:Number = new Date().valueOf();
@@ -227,30 +229,58 @@ package services
 			BackgroundFetch.setUserDefaultsData("ago", ModelLocator.resourceManagerInstance.getString('widgetservice','ago'));
 			BackgroundFetch.setUserDefaultsData("now", ModelLocator.resourceManagerInstance.getString('widgetservice','now'));
 			BackgroundFetch.setUserDefaultsData("openSpike", ModelLocator.resourceManagerInstance.getString('widgetservice','open_spike'));
+			
+			initialGraphDataSet = true;
 		}
 		
 		private static function processChartGlucoseValues():void
 		{
-			var currentTimestamp:Number = activeGlucoseReadingsList[0].timestamp;
+			if (BlueToothDevice.isFollower())
+			{
+				activeGlucoseReadingsList = removeDuplicates(activeGlucoseReadingsList);
+				activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
+			}
+			
+			var currentTimestamp:Number
+			if (BlueToothDevice.isFollower())
+				currentTimestamp = (activeGlucoseReadingsList[0] as Object).timestamp;
+			else
+				currentTimestamp = activeGlucoseReadingsList[0].timestamp;
 			var now:Number = new Date().valueOf();
 			
-			trace(ObjectUtil.toString(activeGlucoseReadingsList));
-			trace("currentTimestamp", currentTimestamp);
-			
-			trace("activeGlucoseReadingsList", activeGlucoseReadingsList);
-			
-			if (!BlueToothDevice.isFollower())
+			while (now - currentTimestamp > widgetHistory) 
 			{
-				while (now - currentTimestamp > widgetHistory) 
-				{
-					activeGlucoseReadingsList.shift();
+				activeGlucoseReadingsList.shift();
+				if (activeGlucoseReadingsList.length > 0)
 					currentTimestamp = activeGlucoseReadingsList[0].timestamp;
-				}
+				else
+					break;
 			}
+		}
+		
+		private static function removeDuplicates(array:Array):Array
+		{
+			var dict:Dictionary = new Dictionary();
+			
+			for (var i:int = array.length-1; i>=0; --i)
+			{
+				var timestamp:String = String((array[i] as Object).timestamp);
+				if (!dict[timestamp])
+					dict[timestamp] = true;
+				else
+					array.splice(i,1);
+			}
+			
+			dict = null;
+			
+			return array;
 		}
 		
 		private static function onBloodGlucoseReceived(e:Event):void
 		{
+			if (!initialGraphDataSet) //Compatibility with follower mode because we get a new glucose event before Spike sends the initial chart data.
+				setInitialGraphData();
+			
 			Trace.myTrace("WidgetService.as", "Sending new glucose reading to widget!");
 			
 			var currentReading:BgReading;
@@ -261,8 +291,6 @@ package services
 			
 			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0)
 				return;
-			
-			trace("1");
 			
 			var latestGlucoseValue:Number = Number(BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
@@ -276,9 +304,6 @@ package services
 					latestGlucoseValue = 2.2;
 			}
 			
-			trace("value", latestGlucoseValue);
-			trace("time", getGlucoseTimeFormatted(currentReading.timestamp, true));
-			trace("timestamp", currentReading.timestamp);
 			activeGlucoseReadingsList.push( { value: latestGlucoseValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
 			processChartGlucoseValues();
 			
@@ -289,13 +314,6 @@ package services
 			BackgroundFetch.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
 			BackgroundFetch.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
 			BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
-			
-			trace("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + getLastUpdate(currentReading.timestamp) + ", " + getGlucoseTimeFormatted(currentReading.timestamp, false))
-			trace("latestGlucoseValue", BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
-			trace("latestGlucoseSlopeArrow", currentReading.slopeArrow());
-			trace("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))))
-			trace("latestGlucoseTime", String(currentReading.timestamp));
-			trace("chartData", JSON.stringify(activeGlucoseReadingsList));
 		}
 		
 		/**
