@@ -313,7 +313,7 @@ package services
 			repeatAlerts();
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
-				if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp)/1000 > 5 * 60)
+				if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp)/1000 > 10 * 60)
 					planApplicationStoppedAlert();
 			}
 		}
@@ -331,6 +331,8 @@ package services
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
 			{
+				Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
+				
 				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 					.setId(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT)
 					.setAlert(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
@@ -338,8 +340,8 @@ package services
 					.setBody(ModelLocator.resourceManagerInstance.getString("alarmservice","application_stopped_alert_body"))
 					.enableVibration(true)
 					.enableLights(true)
-					.setSound("../assets/sounds/Sci-Fi_Computer_Console_Alarm.caf")
-					.setDelay(320);
+					.setSound("../assets/sounds/Sci-Fi_Alarm_Loop_4.caf")
+					.setDelay(640);
 					
 				Notifications.service.notify(notificationBuilder.build());
 			}
