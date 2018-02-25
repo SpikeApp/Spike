@@ -32,6 +32,7 @@ package ui.screens.display.settings.alarms
 	{
 		/* Display Objects */
 		private var muteOverride:ToggleSwitch;
+		private var appInactive:ToggleSwitch;
 		private var chevronTexture:Texture;
 		private var alertTypesIconImage:Image;
 		private var batteryLowIconImage:Image;
@@ -45,6 +46,8 @@ package ui.screens.display.settings.alarms
 		
 		/* Properties */
 		private var muteOverrideValue:Boolean;
+
+		private var appInactiveValue:Boolean;
 		
 		public function AlarmsList()
 		{
@@ -76,6 +79,7 @@ package ui.screens.display.settings.alarms
 		private function setupInitialContent():void
 		{
 			muteOverrideValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true";
+			appInactiveValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true";
 		}
 		
 		private function setupContent():void
@@ -83,6 +87,8 @@ package ui.screens.display.settings.alarms
 			/* Controls & Icons */
 			muteOverride = LayoutFactory.createToggleSwitch(muteOverrideValue);
 			muteOverride.addEventListener(Event.CHANGE, onOverrideMute);
+			appInactive = LayoutFactory.createToggleSwitch(appInactiveValue);
+			appInactive.addEventListener(Event.CHANGE, onAppInactive);
 			chevronTexture = MaterialDeepGreyAmberMobileThemeIcons.chevronRightTexture;
 			alertTypesIconImage = new Image(chevronTexture);
 			batteryLowIconImage = new Image(chevronTexture);
@@ -97,6 +103,7 @@ package ui.screens.display.settings.alarms
 			/* Data */
 			var dataSectionsContainer:Array = [];
 			dataSectionsContainer.push({ screen: null, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"override_mute_label"), accessory: muteOverride, selectable:false });
+			dataSectionsContainer.push({ screen: null, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"app_inactive_label"), accessory: appInactive, selectable:false });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALERT_TYPES_LIST, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"alert_types_label"), accessory: alertTypesIconImage });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"urgent_high_label"), accessory: urgentHighIconImage, alarmID: CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"high_label"), accessory: highIconImage, alarmID: CommonSettings.COMMON_SETTING_HIGH_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
@@ -139,6 +146,14 @@ package ui.screens.display.settings.alarms
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE, "false");
 		}
 		
+		private function onAppInactive(e:Event):void
+		{
+			if (appInactive.isSelected)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT, "true");
+			else
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT, "false");
+		}
+		
 		private function onMenuChanged(e:Event):void 
 		{
 			if(selectedItem.screen != null)
@@ -166,8 +181,15 @@ package ui.screens.display.settings.alarms
 		{
 			if(muteOverride != null)
 			{
+				muteOverride.removeEventListener(Event.CHANGE, onOverrideMute);
 				muteOverride.dispose();
 				muteOverride = null;
+			}
+			if(appInactive != null)
+			{
+				appInactive.removeEventListener(Event.CHANGE, onAppInactive);
+				appInactive.dispose();
+				appInactive = null;
 			}
 			if (chevronTexture != null)
 			{

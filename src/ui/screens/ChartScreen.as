@@ -20,6 +20,7 @@ package ui.screens
 	
 	import model.ModelLocator;
 	
+	import services.AlarmService;
 	import services.TransmitterService;
 	
 	import starling.core.Starling;
@@ -291,6 +292,8 @@ package ui.screens
 				Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
 				newReadingsList.push(reading);
 			}
+			
+			AlarmService.cancelInactiveAlert();
 		}
 		
 		private function onAppInBackground (e:SpikeEvent):void

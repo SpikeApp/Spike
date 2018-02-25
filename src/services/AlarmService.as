@@ -50,6 +50,7 @@ package services
 	{
 		[ResourceBundle("alarmservice")]
 		[ResourceBundle("alertsettingsscreen")]
+		[ResourceBundle("globaltranslations")]
 		
 		private static var initialStart:Boolean = true;
 		private static var _instance:AlarmService = new AlarmService(); 
@@ -181,6 +182,7 @@ package services
 		private static var lastCheckMuteTimeStamp:Number;
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
 		private static var lastMissedReadingAlertCheckTimeStamp:Number;
+		private static var lastApplicationStoppedAlertCheckTimeStamp:Number;
 		
 		//for repeat of alarms every minute, this is only for non-snoozed alerts
 		//each element in an array represents certain alarm 
@@ -268,11 +270,13 @@ package services
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 
 			lastAlarmCheckTimeStamp = 0;
 			lastMissedReadingAlertCheckTimeStamp = 0;
+			lastApplicationStoppedAlertCheckTimeStamp = 0;
 			lastCheckMuteTimeStamp = 0;
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -287,6 +291,7 @@ package services
 			
 			//immediately check missedreading alerts
 			checkMuted(null);
+			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 		}
 		
 		private static function setTimer():void
@@ -306,6 +311,42 @@ package services
 			}
 			checkMuted(null);
 			repeatAlerts();
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
+				if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp)/1000 > 10 * 60)
+					planApplicationStoppedAlert();
+			}
+		}
+		
+		public static function cancelInactiveAlert():void
+		{
+			myTrace("in cancelInactiveAlert, canceling app inactive alert");
+			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
+			lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
+		}
+		
+		private static function planApplicationStoppedAlert():void {
+			myTrace("in planApplicationStoppedAlert, planning alert for the future");
+			lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
+			{
+				Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
+				
+				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+					.setId(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT)
+					.setAlert(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
+					.setTitle(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
+					.setBody(ModelLocator.resourceManagerInstance.getString("alarmservice","application_stopped_alert_body"))
+					.enableVibration(true)
+					.enableLights(true)
+					.setSound("../assets/sounds/Sci-Fi_Alarm_Loop_4.caf")
+					.setDelay(640);
+					
+				Notifications.service.notify(notificationBuilder.build());
+			}
+			else
+				myTrace("in planApplicationStoppedAlert, not planning an inactive alert... user has not set a transmitter yet.");
 		}
 		
 		private static function checkMuted(event:flash.events.Event):void {
@@ -1385,14 +1426,24 @@ package services
 		}
 
 		
-		private static function commonSettingChanged(event:SettingsServiceEvent):void {
-			if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
+		private static function onSettingChanged(event:SettingsServiceEvent):void {
+			if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) 
+			{
 				checkMissedReadingAlert();
 				//need to plan missed reading alert
 				//in case user has started, stopped a sensor
 				//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
-			} else if (event.data == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) {
+			} 
+			else if (event.data == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) 
+			{
 				checkCalibrationRequestAlert(new Date());
+			} 
+			else if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT || event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) 
+			{
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "") 
+					planApplicationStoppedAlert();
+				else 
+					cancelInactiveAlert();
 			}
 		}
 		
