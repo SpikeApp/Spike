@@ -95,13 +95,19 @@ package ui.popups
 			
 			/* Display Callout */
 			if (Constants.appInForeground)
-				displayCallout();
+			{
+				if (!isOpened)
+					displayCallout();
+			}
 			else
 			{
 				//Queue the popup so it shows as soon as Spike is brought to the foreground.
-				queuedAction = displayCallout;
-				if (closeTimer != null && closeTimer.running)
-					closeTimer.stop();
+				if (!isOpened)
+				{
+					queuedAction = displayCallout;
+					if (closeTimer != null && closeTimer.running)
+						closeTimer.stop();
+				}
 			}
 		}
 		
