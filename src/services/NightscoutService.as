@@ -298,6 +298,8 @@ package services
 			clearTimeout(followerTimer);
 			
 			getRemoteReadings();
+			
+			activateTimer();
 		}
 		
 		private static function deactivateFollower():void
@@ -308,10 +310,11 @@ package services
 			
 			followerModeEnabled = false;
 			
+			deactivateTimer();
+			
 			nextFollowDownloadTime = 0;
 			
 			ModelLocator.bgReadings.length = 0;
-			
 		}
 		
 		private static function calculateNextFollowDownloadTime():void 
@@ -376,9 +379,13 @@ package services
 				return;
 			}
 			
+			var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
+			
+			if (latestBGReading != null && !isNaN(latestBGReading.timestamp) && now - latestBGReading.timestamp < TIME_5_MINUTES)
+				return;
+			
 			if (nextFollowDownloadTime < now) 
 			{
-				var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
 				if (latestBGReading == null) 
 					timeOfFirstBgReadingToDowload = now - TIME_1_DAY;
 				else
@@ -904,14 +911,17 @@ package services
 		
 		private static function activateTimer():void
 		{
-			serviceTimer = new Timer(60 * 1000);
-			serviceTimer.addEventListener(TimerEvent.TIMER, onServiceTimer, false, 0, true);
-			serviceTimer.start();
+			if (serviceTimer == null || !serviceTimer.running)
+			{
+				serviceTimer = new Timer(60 * 1000);
+				serviceTimer.addEventListener(TimerEvent.TIMER, onServiceTimer, false, 0, true);
+				serviceTimer.start();
+			}
 		}
 		
 		private static function deactivateTimer():void
 		{
-			if (serviceTimer != null)
+			if (serviceTimer != null && !serviceActive && !followerModeEnabled)
 			{
 				serviceTimer.stop();;
 				serviceTimer.removeEventListener(TimerEvent.TIMER, onServiceTimer);
@@ -956,6 +966,8 @@ package services
 			if (activeVisualCalibrations.length > 0) syncVisualCalibrations();
 			
 			if (activeSensorStarts.length > 0) syncSensorStart();
+			
+			getRemoteReadings();
 		}
 		
 		/**
