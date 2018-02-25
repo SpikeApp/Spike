@@ -270,8 +270,8 @@ package services
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
-			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingChanged);
+			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 
 			lastAlarmCheckTimeStamp = 0;
@@ -1426,7 +1426,7 @@ package services
 		}
 
 		
-		private static function onSettingChanged(event:SettingsServiceEvent):void {
+		private static function onCommonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) 
 			{
 				checkMissedReadingAlert();
@@ -1438,7 +1438,54 @@ package services
 			{
 				checkCalibrationRequestAlert(new Date());
 			} 
-			else if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT || event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) 
+			else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) 
+			{
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "") 
+					planApplicationStoppedAlert();
+				else 
+					cancelInactiveAlert();
+			} 
+			if ((event.data >= CommonSettings.COMMON_SETTING_LOW_ALERT && event.data <= CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) 
+				||
+				(event.data >= CommonSettings.COMMON_SETTING_BATTERY_ALERT && event.data <= CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT)
+			   ) {
+				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
+					CommonSettings.getCommonSetting(event.data), false);
+				var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+				var alertType:AlertType = Database.getAlertType(alertName);
+				if (!alertType.enabled) {
+					switch (event.data as int) {
+						case CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT:
+							disableRepeatAlert(0);
+							break;
+						case CommonSettings.COMMON_SETTING_LOW_ALERT:
+							disableRepeatAlert(1);
+							break;
+						case CommonSettings.COMMON_SETTING_VERY_LOW_ALERT:
+							disableRepeatAlert(2);
+							break;
+						case CommonSettings.COMMON_SETTING_HIGH_ALERT:
+							disableRepeatAlert(3);
+							break;
+						case CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT:
+							disableRepeatAlert(4);
+							break;
+						case CommonSettings.COMMON_SETTING_MISSED_READING_ALERT:
+							disableRepeatAlert(5);
+							break;
+						case CommonSettings.COMMON_SETTING_BATTERY_ALERT:
+							disableRepeatAlert(6);
+							break;
+						case CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT:
+							disableRepeatAlert(7);
+							break;
+					}
+				}
+			}
+		}
+		
+		private static function onLocalSettingChanged(event:SettingsServiceEvent):void {
+			if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) 
 			{
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "") 
 					planApplicationStoppedAlert();
