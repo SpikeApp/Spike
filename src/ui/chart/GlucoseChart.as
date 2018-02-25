@@ -1934,9 +1934,9 @@ package ui.chart
 				
 				//Hide glucose marker if it is out of bounds (fixed size chart);
 				if (latestMarker.glucoseValue < lowestGlucoseValue || latestMarker.glucoseValue > highestGlucoseValue)
-					glucoseMarker.alpha = 0;
+					latestMarker.alpha = 0;
 				else
-					glucoseMarker.alpha = 1;
+					latestMarker.alpha = 1;
 				
 				//Redraw Line if needed
 				if(_displayLine && latestMarker.glucoseValue >= lowestGlucoseValue && latestMarker.glucoseValue <= highestGlucoseValue)
