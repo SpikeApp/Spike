@@ -7,6 +7,7 @@ package services
 	import flash.events.Event;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -178,7 +179,11 @@ package services
 		private static function processLatestGlucose(initialStart:Boolean = false):void
 		{
 			//Get glucose output
-			var currentReading:BgReading = BgReading.lastNoSensor();
+			var currentReading:BgReading;
+			if (!BlueToothDevice.isFollower())
+				currentReading = BgReading.lastNoSensor();
+			else
+				currentReading = BgReading.lastWithCalculatedValue();
 			var glucoseValue:String;
 			
 			//Initial Start Validation
@@ -263,7 +268,7 @@ package services
 		 */
 		protected static function onBloodGlucoseReceived(e:Event):void
 		{
-			if (Calibration.allForSensor().length < 2 || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
+			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
 				return;
 			
 			//Process Latest Glucose
