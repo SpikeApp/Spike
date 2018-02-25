@@ -1,11 +1,16 @@
 1.0.9
-Better handling of check mute status. It will check mute only if phone mute alert is on. Code will consume less CPU cycles as well and user should not have interruptions every 5 minutes when listening to audio if the mute switch is off in Spike's alarm settings (Johan Degraeve)
-Lock screen notifications that show the glucose value every 5 minutes are now turned off by default for new Spike users.
-Possibility to set lower/high ranges for alarms and glucose thresholds in settings
-Press and hold the PieChart for 1 second to activate/deactivate the "No Lock" feature.
-Better handling of all popups when Spike is in the background/foreground.
-If an alarm fires and the user opens Spike within 30 seconds, not via notification but by clicking the app icon, unlocking the phone or from the app switcher, the Snooze Alarm Popup will show. (Johan Degraeve)
-Calibration request popup should now appear even if the screen is locked or Spike is in the background.
+ENHANCEMENT: Better handling of check mute status. It will check mute only if phone mute alert is on. Code will consume less CPU cycles as well and user should not have interruptions every 5 minutes when listening to audio if the mute switch is off in Spike's alarm settings (Johan Degraeve)
+ENHANCEMENT: Lock screen notifications that show the glucose value every 5 minutes are now turned off by default for new Spike users. (Ability to set time intervals for these notifications is coming soon)
+ENHANCEMENT: user can now set lower/higher ranges for alarms and glucose thresholds in settings.
+ENHANCEMENT: Better handling of all popups when Spike is in the background/foreground.
+ENHANCEMENT: Users on mmol/L can now insert commas (,) in the calibration popup.
+FEATURE: Press and hold the PieChart for 1 second to activate/deactivate the "No Lock" feature. (Requested by Johan Degraeve)
+FEATURE: New "App Inactive" alert. Turned on by default for all users. Can be disabled in Settings -> Alarms. If Spike is inactive for more than 10 minutes it will fire an alert, even if Spike is closed or crashed. This can happen if iOS closed Spike in a cleaning process or the system ran low on memory, Bluetooth antenna is not being able to receive glucose readings from transmitters, etc. This should keep everyone safer, especially during the night.
+FIX: If an alarm fires and the user opens Spike within 30 seconds, not via notification but by clicking the app icon, unlocking the phone or from the app switcher, the Snooze Alarm Popup will now show. Users can still snooze their alarms from the lock screen notification if they choose so. (Johan Degraeve)
+FIX: Calibration request popup should now appear even if the screen is locked or Spike is in the background. Just bring Spike to the background and the popup will be there.
+NOTE: Nightscout follower mode is ready but requires more testing. It was supposed to be available in this update but it has been postponed for the next. Sorry about that!
+
+Happy Sunday everyone!
 
 1.0.8
 FIX: Calibration alarm now correctly saves the time interval when in mmol/L. 
