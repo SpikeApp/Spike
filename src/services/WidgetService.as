@@ -4,10 +4,12 @@ package services
 	
 	import flash.events.Event;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
-	import database.LocalSettings;
 	
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
@@ -44,7 +46,7 @@ package services
 		/* Objects */
 		private static var months:Array;
 		private static var startupGlucoseReadingsList:Array;
-		private static var activeGlucoseReadingsList:Array;
+		private static var activeGlucoseReadingsList:Array = [];;
 		
 		public function WidgetService()
 		{
@@ -128,7 +130,6 @@ package services
 			widgetHistory = historyTimespan * TIME_1_HOUR;
 			
 			startupGlucoseReadingsList = ModelLocator.bgReadings.concat();
-			activeGlucoseReadingsList = [];
 			var now:Number = new Date().valueOf();
 			var latestGlucoseReading:BgReading = startupGlucoseReadingsList[startupGlucoseReadingsList.length - 1];
 			
@@ -233,10 +234,18 @@ package services
 			var currentTimestamp:Number = activeGlucoseReadingsList[0].timestamp;
 			var now:Number = new Date().valueOf();
 			
-			while (now - currentTimestamp > widgetHistory) 
+			trace(ObjectUtil.toString(activeGlucoseReadingsList));
+			trace("currentTimestamp", currentTimestamp);
+			
+			trace("activeGlucoseReadingsList", activeGlucoseReadingsList);
+			
+			if (!BlueToothDevice.isFollower())
 			{
-				activeGlucoseReadingsList.shift();
-				currentTimestamp = activeGlucoseReadingsList[0].timestamp;
+				while (now - currentTimestamp > widgetHistory) 
+				{
+					activeGlucoseReadingsList.shift();
+					currentTimestamp = activeGlucoseReadingsList[0].timestamp;
+				}
 			}
 		}
 		
@@ -244,10 +253,16 @@ package services
 		{
 			Trace.myTrace("WidgetService.as", "Sending new glucose reading to widget!");
 			
-			var currentReading:BgReading = BgReading.lastNoSensor();
+			var currentReading:BgReading;
+			if (!BlueToothDevice.isFollower())
+				currentReading = BgReading.lastNoSensor();
+			else
+				currentReading = BgReading.lastWithCalculatedValue();
 			
-			if (Calibration.allForSensor().length < 2 || currentReading == null || currentReading.calculatedValue == 0)
+			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0)
 				return;
+			
+			trace("1");
 			
 			var latestGlucoseValue:Number = Number(BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
@@ -261,6 +276,9 @@ package services
 					latestGlucoseValue = 2.2;
 			}
 			
+			trace("value", latestGlucoseValue);
+			trace("time", getGlucoseTimeFormatted(currentReading.timestamp, true));
+			trace("timestamp", currentReading.timestamp);
 			activeGlucoseReadingsList.push( { value: latestGlucoseValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
 			processChartGlucoseValues();
 			
@@ -271,6 +289,13 @@ package services
 			BackgroundFetch.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
 			BackgroundFetch.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
 			BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
+			
+			trace("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + getLastUpdate(currentReading.timestamp) + ", " + getGlucoseTimeFormatted(currentReading.timestamp, false))
+			trace("latestGlucoseValue", BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
+			trace("latestGlucoseSlopeArrow", currentReading.slopeArrow());
+			trace("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))))
+			trace("latestGlucoseTime", String(currentReading.timestamp));
+			trace("chartData", JSON.stringify(activeGlucoseReadingsList));
 		}
 		
 		/**
