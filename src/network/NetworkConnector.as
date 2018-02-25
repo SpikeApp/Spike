@@ -162,7 +162,8 @@ package network
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			if (loader != null)
 			{
-				Trace.myTrace("NetworkConnector.as", "localHTTPStatus called. Message: " + String(loader.data));
+				if (String(loader.data) != "undefined")
+					Trace.myTrace("NetworkConnector.as", "localHTTPStatus called. Message: " + String(loader.data));
 				
 				loader.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus);
 				loader.removeEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus);
