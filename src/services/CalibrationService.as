@@ -225,8 +225,8 @@ package services
 						
 						initialCalibrationRequested = true;
 					} 
-					else 
-					{
+					//else 
+					//{
 						myTrace("opening dialog to request calibration");
 						
 						/* Create and Style Calibration Text Input */
@@ -262,7 +262,7 @@ package services
 						calibrationPopup.buttonGroupProperties.gap = 10;
 						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 						calibrationValue.setFocus();
-					}
+					//}
 				}
 			}
 		}
