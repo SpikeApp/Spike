@@ -110,6 +110,7 @@ package services
 		public static const ID_FOR_DEAD_G5_BATTERY_INFO:int = 16;
 		public static const ID_FOR_BAD_PLACED_G5_INFO:int = 17;
 		public static const ID_FOR_OTHER_G5_APP:int = 18;
+		public static const ID_FOR_APPLICATION_INACTIVE_ALERT:int = 19;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
@@ -515,6 +516,8 @@ package services
 				returnValue = "ID_FOR_BAD_PLACED_G5_INFO";
 			else if (id == ID_FOR_OTHER_G5_APP)
 				returnValue = "ID_FOR_OTHER_G5_APP";
+			else if (id == ID_FOR_APPLICATION_INACTIVE_ALERT)
+				returnValue = "ID_FOR_APPLICATION_INACTIVE_ALERT";
 			
 			return returnValue;
 		}
