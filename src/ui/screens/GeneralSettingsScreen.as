@@ -18,6 +18,7 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.settings.general.DataCollectionSettingsList;
 	import ui.screens.display.settings.general.DateSettingsList;
 	import ui.screens.display.settings.general.GlucoseSettingsList;
 	import ui.screens.display.settings.general.UpdateSettingsList;
@@ -35,6 +36,8 @@ package ui.screens
 		private var updatesSettingsList:UpdateSettingsList;
 		private var glucoseLabel:Label;
 		private var updateLabel:Label;
+		private var dataCollectionLabel:Label;
+		private var dataCollectionSettings:DataCollectionSettingsList;
 		
 		
 		public function GeneralSettingsScreen() 
@@ -71,6 +74,14 @@ package ui.screens
 		{
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
+			
+			//Data Collection Section Label
+			dataCollectionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','data_collection_title'), true);
+			screenRenderer.addChild(dataCollectionLabel);
+			
+			//Time Format Settings
+			dataCollectionSettings = new DataCollectionSettingsList();
+			screenRenderer.addChild(dataCollectionSettings);
 			
 			//Time Format Section Label
 			chartDateFormatLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','chart_date_settings_title'), true);
@@ -131,6 +142,8 @@ package ui.screens
 				updatesSettingsList.save();
 			if (chartDateSettings.needsSave)
 				chartDateSettings.save();
+			if (dataCollectionSettings.needsSave)
+				dataCollectionSettings.save();
 			
 			//Advance tutorial
 			if (TutorialService.isActive && TutorialService.fourthStepActive)
@@ -184,6 +197,19 @@ package ui.screens
 			{
 				chartDateFormatLabel.dispose();
 				chartDateFormatLabel = null;
+			}
+			
+			if (dataCollectionLabel != null)
+			{
+				dataCollectionLabel.dispose();
+				dataCollectionLabel = null;
+			}
+			
+			
+			if (dataCollectionSettings != null)
+			{
+				dataCollectionSettings.dispose();
+				dataCollectionSettings = null;
 			}
 			
 			super.dispose();

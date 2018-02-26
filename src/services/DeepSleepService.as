@@ -23,6 +23,7 @@ package services
 		private static const VERY_AGGRESSIVE_MODE:int = 5 * 1000;
 		private static const AUTOMATIC_DEXCOM:int = 10 * 1000;
 		private static const AUTOMATIC_NON_DEXCOM:int = 5 * 1000;
+		private static const AUTOMATIC_FOLLOWER:int = 30 * 1000;
 		
 		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
@@ -67,6 +68,11 @@ package services
 				{
 					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_DEXCOM");
 					deepSleepInterval = AUTOMATIC_DEXCOM;
+				}
+				else if (BlueToothDevice.isFollower())
+				{
+					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_FOLLOWER");
+					deepSleepInterval = AUTOMATIC_FOLLOWER;
 				}
 				else
 				{

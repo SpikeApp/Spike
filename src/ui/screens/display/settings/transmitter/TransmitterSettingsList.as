@@ -21,6 +21,7 @@ package ui.screens.display.settings.transmitter
 	import starling.events.Event;
 	import starling.text.TextFormat;
 	
+	import ui.AppInterface;
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
@@ -81,6 +82,7 @@ package ui.screens.display.settings.transmitter
 			if (!BlueToothDevice.needsTransmitterId())
 				transmitterIDValue = "";
 			transmitterTypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
+			trace("transmitterTypeValue", transmitterTypeValue);
 			
 			/* Ensure BluCon and Dexcom compatibility */
 			if (transmitterTypeValue == "BluKon")
@@ -128,7 +130,7 @@ package ui.screens.display.settings.transmitter
 				return itemRenderer;
 			}
 			
-			if(transmitterTypeValue == "")
+			if(transmitterTypeValue == "" || transmitterTypeValue == "Follow")
 			{
 				transmitterType.prompt = ModelLocator.resourceManagerInstance.getString('globaltranslations','picker_select');
 				transmitterType.selectedIndex = -1;
@@ -228,6 +230,12 @@ package ui.screens.display.settings.transmitter
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
+			
+			//Set collection mode to host
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE, "Host");
+			
+			//Refresh main menu. Menu items are different for hosts and followers
+			AppInterface.instance.menu.refreshContent();
 			
 			needsSave = false;
 		}

@@ -1,5 +1,6 @@
 package ui.screens.display.treatments
 {
+	import database.BlueToothDevice;
 	import database.Calibration;
 	
 	import feathers.controls.List;
@@ -66,7 +67,7 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			/* Content */
-			if (Calibration.allForSensor().length > 1)
+			if (Calibration.allForSensor().length > 1 && !BlueToothDevice.isFollower())
 				calibrationButtonEnabled = true;
 			
 			//if (ModelLocator.INTERNAL_TESTING == false)

@@ -205,17 +205,17 @@ package model
 			_bgReadings.push(bgReading);
 			
 			if (_bgReadings.length <= 5)
-				return;
-			
+					return;
+				
 			var firstBGReading:BgReading = _bgReadings[0] as BgReading;
 			var now:Number = (new Date()).valueOf();
 			while (now - firstBGReading.timestamp > MAX_TIME_FOR_BGREADINGS) 
 			{
 				_bgReadings.removeAt(0);
-					
+						
 				if (_bgReadings.length <= 5)
 					break;
-				
+					
 				firstBGReading = _bgReadings[0] as BgReading;
 			}
 		}

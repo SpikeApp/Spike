@@ -35,6 +35,7 @@ package services
 	import flash.utils.Timer;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -43,6 +44,7 @@ package services
 	
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
+	import events.FollowerEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
@@ -325,6 +327,7 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
+				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
 				Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
@@ -380,23 +383,31 @@ package services
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground()) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
-				if (Calibration.allForSensor().length >= 2) {
+				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");
 					if (lastBgReading != null) {
 						myTrace("in updateBgNotification lastbgreading != null");
-						if (lastBgReading.calculatedValue != 0) {
-							if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
-								valueToShow = "---"
-							} else {
-								valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-								myTrace("in updateBgNotification value to show calculated");
-								if (!lastBgReading.hideSlope) {
-									valueToShow += " " + lastBgReading.slopeArrow();
+						if ((new Date()).valueOf() - lastBgReading.timestamp < 4.5 * 60 * 1000) {
+							if (lastBgReading.calculatedValue != 0) {
+								if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+									valueToShow = "---"
+								} else {
+									valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+									myTrace("in updateBgNotification value to show calculated");
+									if (!lastBgReading.hideSlope) {
+										valueToShow += " " + lastBgReading.slopeArrow();
+									}
+									
+									valueToShow += " " + BgGraphBuilder.unitizedDeltaString(true, true);
 								}
+							} else {
+								//not giving notification if it's older than 4,5 minutes
+								//this can be the case for follower mode
+								myTrace("in updateBgNotification, timestamp of lastbgreading is older than 4.5 minutes");
+								return;
 							}
-							valueToShow += " " + BgGraphBuilder.unitizedDeltaString(true, true);
 						}
 					} else {
 						valueToShow = "---"

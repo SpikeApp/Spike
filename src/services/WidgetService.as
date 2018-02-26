@@ -2,11 +2,15 @@ package services
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
+	import flash.events.Event;
+	import flash.utils.Dictionary;
+	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
-	import database.LocalSettings;
 	
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -33,6 +37,7 @@ package services
 		private static var displayTrendEnabled:Boolean = true;
 		private static var displayDeltaEnabled:Boolean = true;
 		private static var displayUnitsEnabled:Boolean = true;
+		private static var initialGraphDataSet:Boolean = false;
 		private static var dateFormat:String;
 		private static var historyTimespan:int;
 		private static var widgetHistory:int;
@@ -41,7 +46,7 @@ package services
 		/* Objects */
 		private static var months:Array;
 		private static var startupGlucoseReadingsList:Array;
-		private static var activeGlucoseReadingsList:Array;
+		private static var activeGlucoseReadingsList:Array = [];
 		
 		public function WidgetService()
 		{
@@ -56,10 +61,12 @@ package services
 			
 			months = ModelLocator.resourceManagerInstance.getString('widgetservice','months').split(",");
 			
-			Starling.juggler.delayCall(setInitialGraphData, 3);
+			if (!BlueToothDevice.isFollower())
+				Starling.juggler.delayCall(setInitialGraphData, 3);
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
@@ -122,9 +129,9 @@ package services
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 			historyTimespan = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN));
 			widgetHistory = historyTimespan * TIME_1_HOUR;
+			activeGlucoseReadingsList = [];
 			
 			startupGlucoseReadingsList = ModelLocator.bgReadings.concat();
-			activeGlucoseReadingsList = [];
 			var now:Number = new Date().valueOf();
 			var latestGlucoseReading:BgReading = startupGlucoseReadingsList[startupGlucoseReadingsList.length - 1];
 			
@@ -222,27 +229,67 @@ package services
 			BackgroundFetch.setUserDefaultsData("ago", ModelLocator.resourceManagerInstance.getString('widgetservice','ago'));
 			BackgroundFetch.setUserDefaultsData("now", ModelLocator.resourceManagerInstance.getString('widgetservice','now'));
 			BackgroundFetch.setUserDefaultsData("openSpike", ModelLocator.resourceManagerInstance.getString('widgetservice','open_spike'));
+			
+			initialGraphDataSet = true;
 		}
 		
 		private static function processChartGlucoseValues():void
 		{
-			var currentTimestamp:Number = activeGlucoseReadingsList[0].timestamp;
+			if (BlueToothDevice.isFollower())
+			{
+				activeGlucoseReadingsList = removeDuplicates(activeGlucoseReadingsList);
+				activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
+			}
+			
+			var currentTimestamp:Number
+			if (BlueToothDevice.isFollower())
+				currentTimestamp = (activeGlucoseReadingsList[0] as Object).timestamp;
+			else
+				currentTimestamp = activeGlucoseReadingsList[0].timestamp;
 			var now:Number = new Date().valueOf();
 			
 			while (now - currentTimestamp > widgetHistory) 
 			{
 				activeGlucoseReadingsList.shift();
-				currentTimestamp = activeGlucoseReadingsList[0].timestamp;
+				if (activeGlucoseReadingsList.length > 0)
+					currentTimestamp = activeGlucoseReadingsList[0].timestamp;
+				else
+					break;
 			}
 		}
 		
-		private static function onBloodGlucoseReceived(e:TransmitterServiceEvent):void
+		private static function removeDuplicates(array:Array):Array
 		{
+			var dict:Dictionary = new Dictionary();
+			
+			for (var i:int = array.length-1; i>=0; --i)
+			{
+				var timestamp:String = String((array[i] as Object).timestamp);
+				if (!dict[timestamp])
+					dict[timestamp] = true;
+				else
+					array.splice(i,1);
+			}
+			
+			dict = null;
+			
+			return array;
+		}
+		
+		private static function onBloodGlucoseReceived(e:Event):void
+		{
+			if (!initialGraphDataSet) //Compatibility with follower mode because we get a new glucose event before Spike sends the initial chart data.
+				setInitialGraphData();
+			
 			Trace.myTrace("WidgetService.as", "Sending new glucose reading to widget!");
 			
-			var currentReading:BgReading = BgReading.lastNoSensor();
+			var currentReading:BgReading;
+			if (!BlueToothDevice.isFollower())
+				currentReading = BgReading.lastNoSensor();
+			else
+				currentReading = BgReading.lastWithCalculatedValue();
 			
-			if (Calibration.allForSensor().length < 2 || currentReading == null || currentReading.calculatedValue == 0)
+			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0)
 				return;
 			
 			var latestGlucoseValue:Number = Number(BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));

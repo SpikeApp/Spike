@@ -29,6 +29,7 @@ package services
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -70,6 +71,7 @@ package services
 				
 				//Register event listener for new blood glucose readings
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 				
 				//Set speech language
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);

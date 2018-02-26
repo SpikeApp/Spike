@@ -2,6 +2,8 @@ package ui.screens
 {
 	import flash.system.System;
 	
+	import database.BlueToothDevice;
+	
 	import feathers.controls.Label;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -66,7 +68,10 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 5;
+			if (!BlueToothDevice.isFollower())
+				AppInterface.instance.menu.selectedIndex = 5;
+			else
+				AppInterface.instance.menu.selectedIndex = 2;
 		}
 		
 		/**

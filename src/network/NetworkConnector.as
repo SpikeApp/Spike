@@ -34,9 +34,12 @@ package network
 			
 			//Create Headers
 			var noChacheHeader:URLRequestHeader = new URLRequestHeader("pragma", "no-cache");
-			var apiSecretHeader:URLRequestHeader = new URLRequestHeader("api-secret", apiSecret);
 			request.requestHeaders.push(noChacheHeader);
-			request.requestHeaders.push(apiSecretHeader);
+			if (apiSecret != null)
+			{
+				var apiSecretHeader:URLRequestHeader = new URLRequestHeader("api-secret", apiSecret);
+				request.requestHeaders.push(apiSecretHeader);
+			}
 			
 			//Create the URL Loader
 			var urlLoader:URLLoader = new URLLoader();
