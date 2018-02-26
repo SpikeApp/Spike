@@ -197,6 +197,14 @@ package services
 		private static var awaitingAuthStatusRxMessage:Boolean = false;//used for G5, to detect situations where other app is connecting to G5
 		private static var timeStampOfLastInfoAboutOtherApp:Number = 0;//used for G5, to detect situations where other app is connecting to G5
 
+		/**
+		 * If user has other app running that connects to the same G5 transmitter, this will not work<br>
+		 * The app is trying to detect this situation, to avoid complaints<br>
+		 * However the detection mechanism sometimes thinks there's another app trying to connect althought this is not the case<br>
+		 * Therefore the amount of notifications will be reduced, this setting counts the number
+		 */
+		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5 = 5;
+		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
 			if (value == _activeBluetoothPeripheral)
@@ -703,25 +711,31 @@ package services
 			if (BlueToothDevice.isDexcomG5() && awaitingAuthStatusRxMessage) {
 				myTrace('in central_peripheralDisconnectHandler, Dexcom G5 and awaitingAuthStatusRxMessage, seems another app is trying to connecto to the G5');
 				awaitingAuthStatusRxMessage = false;
-				if ((new Date()).valueOf() - timeStampOfLastInfoAboutOtherApp > 1 * 3600 * 1000) {//not repeating the warning every 5 minutes, only once per hour
-					myTrace('in central_peripheralDisconnectHandler, giving warning to the user');
-					timeStampOfLastInfoAboutOtherApp = (new Date()).valueOf();
-					if (BackgroundFetch.appIsInForeground()) {
-						AlertManager.showSimpleAlert
-						(
-							ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
-							ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info")
-						);
-						BackgroundFetch.vibrate();
-					} else {
-						var notificationBuilderG5OtherAppRunningInfo:NotificationBuilder = new NotificationBuilder()
-							.setId(NotificationService.ID_FOR_OTHER_G5_APP)
-							.setAlert(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
-							.setTitle(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
-							.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"))
-							.enableVibration(true)
-						Notifications.service.notify(notificationBuilderG5OtherAppRunningInfo.build());
+				if (new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP)) < MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5) {
+					if ((new Date()).valueOf() - timeStampOfLastInfoAboutOtherApp > 1 * 3600 * 1000) {//not repeating the warning every 5 minutes, only once per hour
+						myTrace('in central_peripheralDisconnectHandler, giving warning to the user');
+						timeStampOfLastInfoAboutOtherApp = (new Date()).valueOf();
+						if (BackgroundFetch.appIsInForeground()) {
+							AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
+									ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info")
+								);
+							BackgroundFetch.vibrate();
+						} else {
+							var notificationBuilderG5OtherAppRunningInfo:NotificationBuilder = new NotificationBuilder()
+								.setId(NotificationService.ID_FOR_OTHER_G5_APP)
+								.setAlert(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
+								.setTitle(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
+								.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"))
+								.enableVibration(true)
+							Notifications.service.notify(notificationBuilderG5OtherAppRunningInfo.build());
+						}
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP, (new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP)) + 1).toString());
+						myTrace("in central_peripheralDisconnectHandler, increased LocalSettings.LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP, new value = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP));
 					}
+				} else {
+					myTrace("in central_peripheralDisconnectHandler, maximum number of other app warnings reached, value = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP));
 				}
 			}
 			
