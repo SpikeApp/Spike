@@ -967,7 +967,7 @@ package services
 			
 			if (activeSensorStarts.length > 0) syncSensorStart();
 			
-			getRemoteReadings();
+			if (BlueToothDevice.isFollower()) getRemoteReadings();
 		}
 		
 		/**
