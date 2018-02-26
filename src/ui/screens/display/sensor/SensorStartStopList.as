@@ -2,9 +2,12 @@ package ui.screens.display.sensor
 {
 	import flash.system.Capabilities;
 	
+	import mx.collections.ArrayCollection;
+	
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BlueToothDevice;
+	import database.Calibration;
 	import database.CommonSettings;
 	import database.Sensor;
 	
@@ -12,15 +15,18 @@ package ui.screens.display.sensor
 	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
 	import feathers.controls.renderers.IGroupedListItemRenderer;
 	import feathers.data.HierarchicalCollection;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalLayoutData;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
+	import services.NightscoutService;
 	import services.NotificationService;
 	
 	import starling.events.Event;
@@ -43,11 +49,18 @@ package ui.screens.display.sensor
 		private var actionButton:Button;
 		private var sensorStartDateLabel:Label;
 		private var sensorAgeLabel:Label;
+		private var totalCalibrationsLabel:Label;
+		private var lastCalibrationDateLabel:Label;
+		private var deleteAllCalibrationsButton:Button;
+		private var deleteLastCalibrationButton:Button;
+		private var calibrationActionsContainer:LayoutGroup;
 		
 		/* Properties */
-		private var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter;
+		private var dateFormatter:DateTimeFormatter;
 		private var sensorStartDateValue:String;
 		private var sensorAgeValue:String;
+		private var lastCalibrationDateValue:String;
+		private var numberOfCalibrations:String;
 		
 		public function SensorStartStopList()
 		{
@@ -78,10 +91,10 @@ package ui.screens.display.sensor
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			/* Set Internal Variables/Objects */
-			dateFormatterForSensorStartTimeAndDate = new DateTimeFormatter();
-			dateFormatterForSensorStartTimeAndDate.dateTimePattern = ModelLocator.resourceManagerInstance.getString('sensorscreen','datetimepatternforstatusinfo');
-			dateFormatterForSensorStartTimeAndDate.useUTC = false;
-			dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
+			dateFormatter = new DateTimeFormatter();
+			dateFormatter.dateTimePattern = ModelLocator.resourceManagerInstance.getString('sensorscreen','datetimepatternforstatusinfo');
+			dateFormatter.useUTC = false;
+			dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 		}
 		
 		private function setupInitialState():void
@@ -91,7 +104,7 @@ package ui.screens.display.sensor
 			{
 				//Set sensor start time
 				var sensorStartDate:Date = new Date(Sensor.getActiveSensor().startedAt)
-				sensorStartDateValue =  dateFormatterForSensorStartTimeAndDate.format(sensorStartDate);
+				sensorStartDateValue =  dateFormatter.format(sensorStartDate);
 				
 				//Calculate Sensor Age
 				var sensorDays:String;
@@ -124,11 +137,26 @@ package ui.screens.display.sensor
 					
 					sensorAgeValue = sensorDays + "d" + sensorHours + "h";
 				}
+				
+				//Calculate number of calibrations
+				var allCalibrations:ArrayCollection = Calibration.allForSensor();
+				numberOfCalibrations = String(allCalibrations.length);
+				
+				//Calculate Last Calibration Time
+				if (allCalibrations.length > 0)
+				{
+					var lastCalibrationDate:Date = new Date(Calibration.last().timestamp);
+					lastCalibrationDateValue = dateFormatter.format(lastCalibrationDate);
+				}
+				else
+					lastCalibrationDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
 			}
 			else
 			{
 				sensorStartDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "not_started_label");
 				sensorAgeValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
+				numberOfCalibrations = "0";
+				lastCalibrationDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
 			}
 		}
 		
@@ -144,8 +172,32 @@ package ui.screens.display.sensor
 			//Create Sensor Start Date Label
 			sensorStartDateLabel = LayoutFactory.createLabel("", HorizontalAlign.RIGHT);
 			
-			//Create Sensor Age Lavel
+			//Create Sensor Age Label
 			sensorAgeLabel =  LayoutFactory.createLabel("", HorizontalAlign.RIGHT);
+			
+			//Create Total Calibrations Label
+			totalCalibrationsLabel =  LayoutFactory.createLabel("", HorizontalAlign.RIGHT);
+			
+			//Create Last Calibration Date Label
+			lastCalibrationDateLabel =  LayoutFactory.createLabel("", HorizontalAlign.RIGHT);
+			
+			//Delete all calibrations button
+			deleteAllCalibrationsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sensorscreen', "delete_all_calibrations_button_label"));
+			deleteAllCalibrationsButton.isEnabled = false;
+			deleteAllCalibrationsButton.addEventListener(Event.TRIGGERED, onDeleteAllCalibrations);
+			
+			//Delete last calibration button
+			deleteLastCalibrationButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sensorscreen', "delete_last_calibration_button_label"));
+			deleteLastCalibrationButton.isEnabled = false;
+			deleteLastCalibrationButton.addEventListener(Event.TRIGGERED, onDeleteLastCalibration);
+			
+			//Calibrations Actions Container
+			var calibrationsLayout:HorizontalLayout = new HorizontalLayout();
+			calibrationsLayout.gap = 5;
+			calibrationActionsContainer = new LayoutGroup();
+			calibrationActionsContainer.layout = calibrationsLayout;
+			calibrationActionsContainer.addChild(deleteAllCalibrationsButton);
+			calibrationActionsContainer.addChild(deleteLastCalibrationButton);
 			
 			/* Create Screen Data */
 			setDataProvider()
@@ -185,6 +237,8 @@ package ui.screens.display.sensor
 			/* Populate List Content */
 			sensorStartDateLabel.text = sensorStartDateValue;
 			sensorAgeLabel.text = sensorAgeValue;
+			totalCalibrationsLabel.text = numberOfCalibrations;
+			lastCalibrationDateLabel.text = lastCalibrationDateValue;
 			
 			dataProvider = new HierarchicalCollection(
 				[
@@ -194,6 +248,14 @@ package ui.screens.display.sensor
 							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_label'), accessory: sensorStartDateLabel },
 							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel },
 							{ label: "", accessory: actionButton },
+						]
+					},
+					{
+						header  : { label: ModelLocator.resourceManagerInstance.getString('sensorscreen','calibrations_section_label') },
+						children: [
+							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','total'), accessory: totalCalibrationsLabel },
+							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','last'), accessory: lastCalibrationDateLabel },
+							{ label: "", accessory: calibrationActionsContainer },
 						]
 					}
 				]
@@ -239,9 +301,72 @@ package ui.screens.display.sensor
 			AppInterface.instance.navigator.pushScreen( Screens.SENSOR_START );
 		}
 		
+		private function onDeleteAllCalibrations(e:Event):void
+		{
+			var alert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','cant_be_undone'),
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase") },
+						{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: deleteAllCalibrations }
+					],
+					HorizontalAlign.CENTER
+				);
+			alert.buttonGroupProperties.gap = 10;
+			alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+			
+			function deleteAllCalibrations(e:Event):void
+			{
+				var currentSensorTimestamp:Number = Sensor.getActiveSensor().startedAt;
+				Sensor.stopSensor();
+				NightscoutService.uploadSensorStart = false;
+				Sensor.startSensor(currentSensorTimestamp);
+				NightscoutService.uploadSensorStart = true;
+				setupInitialState();
+				setupContent();
+			}
+		}
+		
+		private function onDeleteLastCalibration(e:Event):void
+		{
+			var alert:Alert = AlertManager.showActionAlert
+			(
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','cant_be_undone'),
+				Number.NaN,
+				[
+					{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase") },
+					{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: deleteLastCalibration }
+				],
+				HorizontalAlign.CENTER
+			);
+			alert.buttonGroupProperties.gap = 10;
+			alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+			
+			function deleteLastCalibration(e:Event):void
+			{
+				Calibration.clearLastCalibration();
+				setupInitialState();
+				setupContent();
+			}
+		}
+		
 		/**
 		 * Utility
 		 */
+		override protected function draw():void
+		{
+			super.draw();
+			
+			if (Number(numberOfCalibrations) > 0 && deleteAllCalibrationsButton != null)
+				deleteAllCalibrationsButton.isEnabled = true;
+			
+			if (Number(numberOfCalibrations) > 2 && deleteLastCalibrationButton != null)
+				deleteLastCalibrationButton.isEnabled = true;
+		}
+		
 		override public function dispose():void
 		{
 			/* Dispose Controls */
@@ -257,6 +382,40 @@ package ui.screens.display.sensor
 			{
 				sensorStartDateLabel.dispose();
 				sensorStartDateLabel = null;
+			}
+			
+			if(totalCalibrationsLabel != null)
+			{
+				totalCalibrationsLabel.dispose();
+				totalCalibrationsLabel = null;
+			}
+			
+			if(lastCalibrationDateLabel != null)
+			{
+				lastCalibrationDateLabel.dispose();
+				lastCalibrationDateLabel = null;
+			}
+			
+			if(deleteAllCalibrationsButton != null)
+			{
+				deleteAllCalibrationsButton.removeEventListener(Event.TRIGGERED, onDeleteAllCalibrations);
+				calibrationActionsContainer.removeChild(deleteAllCalibrationsButton);
+				deleteAllCalibrationsButton.dispose();
+				deleteAllCalibrationsButton = null;
+			}
+			
+			if(deleteLastCalibrationButton != null)
+			{
+				deleteLastCalibrationButton.removeEventListener(Event.TRIGGERED, onDeleteLastCalibration);
+				calibrationActionsContainer.removeChild(deleteLastCalibrationButton);
+				deleteLastCalibrationButton.dispose();
+				deleteLastCalibrationButton = null;
+			}
+			
+			if(calibrationActionsContainer != null)
+			{
+				calibrationActionsContainer.dispose();
+				calibrationActionsContainer = null;
 			}
 			
 			super.dispose();
