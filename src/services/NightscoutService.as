@@ -79,6 +79,7 @@ package services
 		private static var syncSensorStartActiveLastChange:Number = (new Date()).valueOf();
 		private static var externalAuthenticationCall:Boolean = false;
 		public static var ignoreSettingsChanged:Boolean = false;
+		public static var uploadSensorStart:Boolean = true;
 		
 		/* Data Variables */
 		private static var apiSecret:String;
@@ -691,7 +692,7 @@ package services
 			var newSensor:Object = new Object();
 			newSensor["eventType"] = "Sensor Start";	
 			newSensor["created_at"] = formatter.format(Sensor.getActiveSensor().startedAt);
-			newSensor["enteredBy"] = "Spike App";
+			newSensor["enteredBy"] = "Spike";
 			
 			activeSensorStarts.push(newSensor);
 			
@@ -1040,7 +1041,7 @@ package services
 				setupNightscoutProperties();
 				testNightscoutCredentials();
 			}
-			else if (e.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" && Sensor.getActiveSensor() != null)
+			else if (e.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" && Sensor.getActiveSensor() != null && uploadSensorStart)
 			{
 				Trace.myTrace("NightscoutService.as", "in onSettingChanged, uploading new sensor.");
 				getSensorStart();
