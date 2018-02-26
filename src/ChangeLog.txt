@@ -1,3 +1,6 @@
+1.1.0
+ENHANCEMENT: Today widget line coloring transitions are now much more accurate. This only applies to mg/dL users. I want to give a special thanks to Farshid Ghods, the developer that made the original coloring code for the PNChart library, for putting up with me. We spent weeks emailing each other back and forth and testing the changes until we got it right. Thank you for your patience, Farshid!
+
 1.0.9
 ENHANCEMENT: Better handling of check mute status. It will check mute only if phone mute alert is on. Code will consume less CPU cycles as well and user should not have interruptions every 5 minutes when listening to audio if the mute switch is off in Spike's alarm settings (Johan Degraeve)
 ENHANCEMENT: Lock screen notifications that show the glucose value every 5 minutes are now turned off by default for new Spike users. (Ability to set time intervals for these notifications is coming soon)
