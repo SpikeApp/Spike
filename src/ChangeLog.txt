@@ -1,7 +1,7 @@
 1.0.9
 ENHANCEMENT: Better handling of check mute status. It will check mute only if phone mute alert is on. Code will consume less CPU cycles as well and user should not have interruptions every 5 minutes when listening to audio if the mute switch is off in Spike's alarm settings (Johan Degraeve)
 ENHANCEMENT: Lock screen notifications that show the glucose value every 5 minutes are now turned off by default for new Spike users. (Ability to set time intervals for these notifications is coming soon)
-ENHANCEMENT: user can now set lower/higher ranges for alarms and glucose thresholds in settings.
+ENHANCEMENT: User can now set lower/higher ranges for alarms and glucose thresholds in settings.
 ENHANCEMENT: Better handling of all popups when Spike is in the background/foreground.
 ENHANCEMENT: Users on mmol/L can now insert commas (,) in the calibration popup.
 ENHANCEMENT: Updated Apple Watch instructions with all known compatible watch faces. (Thank you Daniel Fernandez Garcia, Kamil Armacki & Phil Taylor)
@@ -10,7 +10,7 @@ FEATURE: New "App Inactive" alert. Turned on by default for all users. Can be di
 FIX: If an alarm fires and the user opens Spike within 30 seconds, not via notification but by clicking the app icon, unlocking the phone or from the app switcher, the Snooze Alarm Popup will now show. Users can still snooze their alarms from the lock screen notification if they choose so. (Johan Degraeve)
 FIX: Calibration request popup should now appear even if the screen is locked or Spike is in the background. Just bring Spike to the foreground and the popup will be there waiting for you.
 FIX: While an alarm is repeating, if the user deletes the alarm from the settings screen, the alarm now stops firing.
-FIX: Other overall fixes and code optimizations.
+FIX: Other overall fixes and code optimisations.
 NOTE: Nightscout follower mode is ready but requires more testing. It was supposed to be available in this update but it has been postponed for the next. It will be out soon!
 
 I wish everyone a good week ahead!
