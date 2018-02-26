@@ -9,6 +9,7 @@ package ui.chart
 	import flash.utils.Timer;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
@@ -469,7 +470,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -507,7 +508,7 @@ package ui.chart
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
-				if (glucoseReading.sensor == null)
+				if (glucoseReading.sensor == null && !BlueToothDevice.isFollower())
 					glucoseMarker.alpha = 0;
 				
 				//Set variables for next iteration
@@ -986,6 +987,8 @@ package ui.chart
 				
 				//scaleXFactor = 1/(totalTimestampDifference / (chartWidth * timelineRange));
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
+				if (BlueToothDevice.isFollower())
+					mainChartXFactor = scaleXFactor;
 			}
 			else if (chartType == SCROLLER_CHART)
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
@@ -1122,7 +1125,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.sensor != null && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -1160,7 +1163,7 @@ package ui.chart
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
-				if (glucoseReading.sensor == null)
+				if (glucoseReading.sensor == null && !BlueToothDevice.isFollower())
 					glucoseMarker.alpha = 0;
 				
 				
@@ -1223,7 +1226,7 @@ package ui.chart
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var glucoseMarker:GlucoseMarker = sourceList[i];
-				if (glucoseMarker.bgReading == null || glucoseMarker.bgReading.sensor == null)
+				if (glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !BlueToothDevice.isFollower()))
 					continue;
 				
 				var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
@@ -1566,7 +1569,7 @@ package ui.chart
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var currentMarker:GlucoseMarker = sourceList[i];
-				if (currentMarker.bgReading != null && currentMarker.bgReading.sensor != null)
+				if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || BlueToothDevice.isFollower()))
 					currentMarker.alpha = 1;
 				else
 					currentMarker.alpha = 0;
@@ -1753,7 +1756,7 @@ package ui.chart
 					//Check if the current marker is the one selected by the main chart's delimiter line
 					if ((i == 0 && currentMarkerGlobalX >= glucoseDelimiter.x) || (currentMarkerGlobalX >= glucoseDelimiter.x && previousMarkerGlobalX < glucoseDelimiter.x))
 					{
-						if (currentMarker.bgReading != null && currentMarker.bgReading.sensor != null)
+						if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || BlueToothDevice.isFollower()))
 						{
 							nowTimestamp = new Date().valueOf();
 							var latestTimestamp:Number = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).timestamp;
@@ -1772,7 +1775,9 @@ package ui.chart
 										glucoseValueDisplay.fontStyles.color = oldColor;	
 									}
 									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
-										glucoseValueDisplay.fontStyles.color = oldColor;	
+									{
+										glucoseValueDisplay.fontStyles.color = oldColor;
+									}
 								}
 							}
 							

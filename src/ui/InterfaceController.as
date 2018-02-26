@@ -132,7 +132,7 @@ package ui
 				if (Exceptions.service.hasPendingException())
 				{
 					Trace.myTrace("interfaceController.as", "A crash has ocurred. Notifying user...");
-					Starling.juggler.delayCall(manageExceptions, 5);
+					//Starling.juggler.delayCall(manageExceptions, 5);
 				}
 				
 				//3D Touch Management
@@ -150,6 +150,9 @@ package ui
 			/* Transmitter Info Alerts */
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) 
 			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE) == "Follower")
+					return;
+				
 				if (BlueToothDevice.alwaysScan()) 
 				{
 					if (BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 

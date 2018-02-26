@@ -1,11 +1,15 @@
 package ui.screens
 {
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.system.System;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
+	import events.FollowerEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -21,6 +25,7 @@ package ui.screens
 	import model.ModelLocator;
 	
 	import services.AlarmService;
+	import services.NightscoutService;
 	import services.TransmitterService;
 	
 	import starling.core.Starling;
@@ -43,6 +48,7 @@ package ui.screens
 		//Objects
 		private var chartData:Array;
 		private var newReadingsList:Array = [];
+		private var newReadingsListFollower:Array = [];
 		
 		//Visual variables
 		private var glucoseChartTopPadding:int = 7;
@@ -92,6 +98,7 @@ package ui.screens
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -268,9 +275,38 @@ package ui.screens
 		/**
 		 * Event Handlers
 		 */
+		private function onBgReadingReceivedFollower(e:FollowerEvent):void
+		{
+			Trace.myTrace("ChartScreen.as", "on onBgReadingReceivedFollower!");
+			
+			if (!BlueToothDevice.isFollower())
+				Trace.myTrace("ChartScreen.as", "User is not a follower. Ignoring");
+				
+			var readings:Array = e.data;
+			if (readings != null && readings.length > 0)
+			{
+				if (BackgroundFetch.appIsInForeground() && glucoseChart != null)
+				{
+					glucoseChart.addGlucose(readings);
+					if (displayPieChart)
+						pieChart.drawChart();
+				}
+				else
+				{
+					newReadingsListFollower = newReadingsListFollower.concat(readings);
+				}
+						
+			}	
+			
+			AlarmService.cancelInactiveAlert();
+		}
+		
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
 		{
 			Trace.myTrace("ChartScreen.as", "on onBgReadingReceived!");
+			
+			if (BlueToothDevice.isFollower())
+				Trace.myTrace("ChartScreen.as", "User is a follower. Ignoring");
 			
 			var reading:BgReading = BgReading.lastNoSensor();
 			
@@ -307,17 +343,36 @@ package ui.screens
 			{
 				appInBackground = false;
 				
-				if (newReadingsList != null && newReadingsList.length > 0)
+				if (!BlueToothDevice.isFollower())
 				{
-					glucoseChart.addGlucose(newReadingsList);
-					
-					if (displayPieChart)
-						pieChart.drawChart();
-					
-					newReadingsList.length = 0;
+					if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
+					{
+						glucoseChart.addGlucose(newReadingsList);
+						
+						if (displayPieChart && pieChart != null)
+							pieChart.drawChart();
+						
+						newReadingsList.length = 0;
+					}
+					else
+						if (glucoseChart != null)
+							glucoseChart.calculateDisplayLabels();
 				}
 				else
-					glucoseChart.calculateDisplayLabels();
+				{
+					if (newReadingsListFollower != null && newReadingsListFollower.length > 0 && glucoseChart != null)
+					{
+						glucoseChart.addGlucose(newReadingsListFollower);
+						
+						if (displayPieChart && pieChart != null)
+							pieChart.drawChart();
+						
+						newReadingsListFollower.length = 0;
+					}
+					else
+						if (glucoseChart != null)
+							glucoseChart.calculateDisplayLabels();
+				}
 			}
 		}
 		
@@ -444,6 +499,7 @@ package ui.screens
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			
 			/* Objects */

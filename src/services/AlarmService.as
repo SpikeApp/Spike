@@ -26,6 +26,7 @@ package services
 	import database.Sensor;
 	
 	import events.BlueToothServiceEvent;
+	import events.FollowerEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
@@ -264,6 +265,7 @@ package services
 			
 			lastCheckMuteTimeStamp = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
@@ -823,12 +825,12 @@ package services
 					}
 				}
 				checkMissedReadingAlert();
-				if (!alertActive) {
+				if (!alertActive && !BlueToothDevice.isFollower()) {
 					//to avoid that the arrival of a notification of a checkCalibrationRequestAlert stops the sounds of a previous low or high alert
 					checkCalibrationRequestAlert(now);
 				}
 			}
-			if (!alertActive) {
+			if (!alertActive && !BlueToothDevice.isFollower()) {
 				//to avoid that the arrival of a notification of a checkBatteryLowAlert stops the sounds of a previous low or high alert
 				checkBatteryLowAlert(now);
 			}
@@ -985,8 +987,8 @@ package services
 
 			lastMissedReadingAlertCheckTimeStamp = (new Date()).valueOf(); 	
 
-			if (Sensor.getActiveSensor() == null) {
-				myTrace("in checkMissedReadingAlert, but sensor is not active, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
+			if (Sensor.getActiveSensor() == null && !BlueToothDevice.isFollower()) {
+				myTrace("in checkMissedReadingAlert, but sensor is not active and not follower, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
 				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				return;
