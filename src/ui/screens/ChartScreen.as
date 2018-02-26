@@ -98,7 +98,7 @@ package ui.screens
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower, false, 0, true);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -297,6 +297,8 @@ package ui.screens
 				}
 						
 			}	
+			
+			AlarmService.cancelInactiveAlert();
 		}
 		
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
@@ -497,6 +499,7 @@ package ui.screens
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			
 			/* Objects */
