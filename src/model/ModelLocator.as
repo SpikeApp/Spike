@@ -28,7 +28,6 @@ package model
 	import database.BgReading;
 	import database.Database;
 	import database.LocalSettings;
-	import database.Sensor;
 	
 	import distriqtkey.DistriqtKey;
 	
