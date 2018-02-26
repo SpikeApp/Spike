@@ -132,7 +132,7 @@ package ui
 				if (Exceptions.service.hasPendingException())
 				{
 					Trace.myTrace("interfaceController.as", "A crash has ocurred. Notifying user...");
-					Starling.juggler.delayCall(manageExceptions, 5);
+					//Starling.juggler.delayCall(manageExceptions, 5);
 				}
 				
 				//3D Touch Management
