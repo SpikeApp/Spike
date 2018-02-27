@@ -144,6 +144,12 @@ package database
 		 */
 		public static const LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP:int = 47;
 		
+		/**
+		 * Always on notification interval.
+		 * This setting defines the interval (in readings) for the firing of the always on notifications
+		 */
+		public static const LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL:int = 48;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -192,7 +198,8 @@ package database
 			"0",//LOCAL_SETTING_TIMESTAMP_SINCE_LAST_EXPORT_SIDIARY
 			"0",//LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES
 			"true",//LOCAL_SETTING_APP_INACTIVE_ALERT
-			"0"//LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP
+			"0",//LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP
+			"3"//LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP
 		];
 		
 		public function LocalSettings() {

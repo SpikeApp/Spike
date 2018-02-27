@@ -134,6 +134,12 @@ package services
 		
 		private static var timeStampSinceLastNotifForPatchReadError:Number = 0;
 		public static var testTextToSpeechTimer:Timer;
+
+		/**
+		 * Always on notifications interval
+		 */
+		private static var alwaysOnNotificationsInterval:int = 3;
+		private static var receivedReadings:int = 0;
 		
 		public function NotificationService()
 		{
@@ -284,6 +290,8 @@ package services
 			
 			Notifications.service.setup(service);
 			
+			alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
+			
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
 			
@@ -353,6 +361,10 @@ package services
 						}
 					}
 				}
+				else if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL)
+				{
+					alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
+				}
 			}
 			
 			function appInForeGround(event:Event):void {
@@ -366,22 +378,17 @@ package services
 				notificationServiceEvent.data = event;
 				_instance.dispatchEvent(notificationServiceEvent);
 			}
-			
-			function listener(event:Event):void {
-				myTrace("in listener");
-				BackgroundFetch.say("Hello there, how are you. I'm fine thanks", "en-US");
-			}
-			
-
 		}
 		
 		public static function updateBgNotification(be:Event = null):void {
 			myTrace("in updateBgNotification");
 			Notifications.service.cancel(ID_FOR_BG_VALUE);
 			
+			receivedReadings++;
 			var lastBgReading:BgReading;
+			
 			//start with bgreading notification
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground()) {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
 				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
