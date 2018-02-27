@@ -203,7 +203,7 @@ package services
 		 * However the detection mechanism sometimes thinks there's another app trying to connect althought this is not the case<br>
 		 * Therefore the amount of notifications will be reduced, this setting counts the number
 		 */
-		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5 = 5;
+		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5:int = 5;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
