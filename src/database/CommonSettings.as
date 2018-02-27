@@ -310,6 +310,13 @@
 		 public static const COMMON_SETTING_DATA_COLLECTION_MODE:int = 107;
 		 public static const COMMON_SETTING_DATA_COLLECTION_NS_URL:int = 108;
 		 public static const COMMON_SETTING_FOLLOWER_MODE:int = 109;
+		 
+		 /**
+		 * Pie Chart Colors
+		 */
+		 public static const COMMON_SETTING_PIE_CHART_LOW_COLOR:int = 110;
+		 public static const COMMON_SETTING_PIE_CHART_IN_RANGE_COLOR:int = 111;
+		 public static const COMMON_SETTING_PIE_CHART_HIGH_COLOR:int = 112;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -421,7 +428,10 @@
 			 "0",//COMMON_SETTING_DEEP_SLEEP_MODE
 			 "Host",//COMMON_SETTING_DATA_COLLECTION_MODE
 			 "",//COMMON_SETTING_DATA_COLLECTION_NS_URL
-			 "Nightscout"//COMMON_SETTING_FOLLOWER_MODE
+			 "Nightscout",//COMMON_SETTING_FOLLOWER_MODE
+			 "16711680",//COMMON_SETTING_PIE_CHART_LOW_COLOR
+			 "65280",//COMMON_SETTING_PIE_CHART_IN_RANGE_COLOR
+			 "16776960"//COMMON_SETTING_PIE_CHART_HIGH_COLOR
 		 ];
 
 		 public function CommonSettings()
