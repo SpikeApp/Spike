@@ -52,6 +52,7 @@ package services
 	
 	import model.ModelLocator;
 	
+	import utils.BadgeBuilder;
 	import utils.BgGraphBuilder;
 	import utils.Trace;
 	
@@ -156,6 +157,7 @@ package services
 			Notifications.service.cancel(ID_FOR_DEVICE_NOT_PAIRED);
 			Notifications.service.notify(
 				new NotificationBuilder()
+				.setCount(BadgeBuilder.getAppBadge())
 				.setId(ID_FOR_DEVICE_NOT_PAIRED)
 				.setAlert("Device Not Paired")
 				.setTitle(titleText)
@@ -174,6 +176,7 @@ package services
 				timeStampSinceLastNotifForPatchReadError = (new Date()).valueOf();
 				Notifications.service.notify(
 					new NotificationBuilder()
+					.setCount(BadgeBuilder.getAppBadge())
 					.setId(ID_FOR_PATCH_READ_ERROR_BLUKON)
 					.setAlert("BluKon Error")
 					.setTitle(titleText)
@@ -357,7 +360,7 @@ package services
 						{
 							var lastBgReading:BgReading = BgReading.lastNoSensor();
 							myTrace("in onSettingsChanged, app badge is ON and Calibration.allForSensor().length >= 2, setting app badge");
-							Notifications.service.setBadgeNumber( getGlucoseBadge(lastBgReading) );
+							Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 						}
 					}
 				}
@@ -420,35 +423,17 @@ package services
 						valueToShow = "---"
 					}
 					
-					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true")
-					{
-						myTrace("in updateBgNotification, setting app badge");
-						
-						Notifications.service.notify(
-							new NotificationBuilder()
-							.setCount(getGlucoseBadge(lastBgReading))
-							.setId(NotificationService.ID_FOR_BG_VALUE)
-							.setAlert("Bg value")
-							.setTitle(valueToShow)
-							.setBody(" ")
-							.setSound("")
-							.enableVibration(false)
-							.enableLights(false)
-							.build());
-					}
-					else
-					{
-						Notifications.service.notify(
-							new NotificationBuilder()
-							.setId(NotificationService.ID_FOR_BG_VALUE)
-							.setAlert("Bg value")
-							.setTitle(valueToShow)
-							.setBody(" ")
-							.setSound("")
-							.enableVibration(false)
-							.enableLights(false)
-							.build());
-					}
+					Notifications.service.notify(
+						new NotificationBuilder()
+						.setCount(BadgeBuilder.getAppBadge())
+						.setId(NotificationService.ID_FOR_BG_VALUE)
+						.setAlert("Bg value")
+						.setTitle(valueToShow)
+						.setBody(" ")
+						.setSound("")
+						.enableVibration(false)
+						.enableLights(false)
+						.build());
 				}
 			}
 			else if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
@@ -459,41 +444,10 @@ package services
 					lastBgReading = BgReading.lastNoSensor(); 
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
 					
-					Notifications.service.setBadgeNumber( getGlucoseBadge(lastBgReading) );
+					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 				}
 			}
 			
-		}
-		
-		private static function getGlucoseBadge(latestReading:BgReading):int
-		{
-			var badgeNumber:int;
-			var isMgDl:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true";
-			var preBadgeNumber:String = BgGraphBuilder.unitizedString(latestReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-			
-			if (preBadgeNumber == "HIGH")
-			{
-				if (isMgDl)
-					badgeNumber = 600;
-				else
-					badgeNumber = int(Math.round(BgReading.mgdlToMmol(600)));
-			}
-			else if (preBadgeNumber == "LOW" || preBadgeNumber == "??0" || preBadgeNumber == "?SN" || preBadgeNumber == "??2" || preBadgeNumber == "?NA" || preBadgeNumber == "?NC" || preBadgeNumber == "?CD" || preBadgeNumber == "?AD" || preBadgeNumber == "?RF" || preBadgeNumber == "???")
-			{
-				if (isMgDl)
-					badgeNumber = 38;
-				else
-					badgeNumber = int(Math.round(BgReading.mgdlToMmol(38)));
-			}
-			else
-			{
-				if (isMgDl)
-					badgeNumber = int(preBadgeNumber);
-				else
-					badgeNumber = int(Math.round(Number(preBadgeNumber)));
-			}
-				
-			return badgeNumber;
 		}
 		
 		public static function notificationIdToText(id:int):String 

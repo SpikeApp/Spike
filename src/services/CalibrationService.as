@@ -29,6 +29,7 @@ package services
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.BadgeBuilder;
 	import utils.Trace;
 	
 	/**
@@ -215,6 +216,7 @@ package services
 						
 						Notifications.service.notify(
 							new NotificationBuilder()
+							.setCount(BadgeBuilder.getAppBadge())
 							.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
 							.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))

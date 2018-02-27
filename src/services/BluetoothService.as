@@ -78,6 +78,7 @@ package services
 	import ui.popups.AlertManager;
 	import ui.popups.G4WixelSender;
 	
+	import utils.BadgeBuilder;
 	import utils.Trace;
 	import utils.UniqueId;
 	
@@ -724,6 +725,7 @@ package services
 							BackgroundFetch.vibrate();
 						} else {
 							var notificationBuilderG5OtherAppRunningInfo:NotificationBuilder = new NotificationBuilder()
+								.setCount(BadgeBuilder.getAppBadge())
 								.setId(NotificationService.ID_FOR_OTHER_G5_APP)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
 								.setTitle(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))

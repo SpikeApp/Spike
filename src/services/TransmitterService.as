@@ -53,6 +53,7 @@ package services
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.BadgeBuilder;
 	import utils.Trace;
 	
 	/**
@@ -123,6 +124,7 @@ package services
 							Notifications.service.cancel(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID);
 							Notifications.service.notify(
 								new NotificationBuilder()
+								.setCount(BadgeBuilder.getAppBadge())
 								.setId(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
 								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
@@ -251,6 +253,7 @@ package services
 							BackgroundFetch.vibrate();
 						} else {
 							notificationBuilderG5BatteryInfo = new NotificationBuilder()
+								.setCount(BadgeBuilder.getAppBadge())
 								.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
 								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
@@ -271,6 +274,7 @@ package services
 								BackgroundFetch.vibrate();
 							} else {
 								notificationBuilderG5BatteryInfo = new NotificationBuilder()
+									.setCount(BadgeBuilder.getAppBadge())
 									.setId(NotificationService.ID_FOR_BAD_PLACED_G5_INFO)
 									.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
 									.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
