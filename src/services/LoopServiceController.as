@@ -1,12 +1,13 @@
 package services
 {
-	import network.httpserver.ActionController;
-	
 	import flash.net.URLVariables;
 	
 	import mx.collections.ArrayCollection;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
+	
+	import network.httpserver.ActionController;
 	
 	import utils.Trace;
 	
@@ -70,7 +71,7 @@ package services
 				if (params.maxCount != null)	
 					numReadings = int(params.maxCount);
 				
-				var dexcomReadingsList:ArrayCollection = BgReading.latest(numReadings);
+				var dexcomReadingsList:ArrayCollection = BgReading.latest(numReadings, BlueToothDevice.isFollower());
 				var dexcomReadingsCollection:Array = [];
 				
 				for (var i:int = 0; i < dexcomReadingsList.length; i++) 
