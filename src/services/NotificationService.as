@@ -342,31 +342,27 @@ package services
 				Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
-				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
+				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
 			}
 			
-			function onSettingsChanged(event:SettingsServiceEvent):void
+			function onLocalSettingsChanged(event:SettingsServiceEvent):void
 			{
 				if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE)
 				{
-					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "false")
-					{
-						myTrace("in onSettingsChanged, app badge is off, clearing app badge from icon");
-						Notifications.service.setBadgeNumber( 0 );
-					}
-					else
-					{
-						if (Calibration.allForSensor().length >= 2) 
-						{
-							var lastBgReading:BgReading = BgReading.lastNoSensor();
-							myTrace("in onSettingsChanged, app badge is ON and Calibration.allForSensor().length >= 2, setting app badge");
-							Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
-						}
-					}
+					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 				}
 				else if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL)
 				{
 					alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
+				}
+			}
+			
+			function onCommonSettingsChanged(event:SettingsServiceEvent):void
+			{
+				if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL)
+				{
+					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 				}
 			}
 			
@@ -440,14 +436,13 @@ package services
 			{	
 				//App badge
 				myTrace("in updateBgNotification app badge on, local notifications off and not in foreground");
-				if (Calibration.allForSensor().length >= 2) {
+				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
 					
 					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 				}
 			}
-			
 		}
 		
 		public static function notificationIdToText(id:int):String 
