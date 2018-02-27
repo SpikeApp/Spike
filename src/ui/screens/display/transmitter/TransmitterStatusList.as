@@ -7,7 +7,9 @@ package ui.screens.display.transmitter
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
+	import flash.events.TimerEvent;
 	import flash.system.Capabilities;
+	import flash.utils.Timer;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -89,6 +91,7 @@ package ui.screens.display.transmitter
 		private var lastG5BatteryUpdateLabel:Label;
 		private var batteryStatusG5Callout:TextCallout;
 		private var transmitterRuntimeLabel:Label;
+		private var screenRefreshLabel:Label;
 		
 		/* Properties */
 		private var transmitterNameValue:String;
@@ -107,6 +110,10 @@ package ui.screens.display.transmitter
 		private var nowDate:Date;
 		private var transmitterRuntimeValue:String;
 		private var sensorRxTimestamp:Number;
+		private var refreshSecondsElapsed:int = 4;
+
+		/* Objects */
+		private var refreshTimer:Timer;
 
 		public function TransmitterStatusList()
 		{
@@ -120,6 +127,7 @@ package ui.screens.display.transmitter
 			setupInitialState();
 			setupContent();
 			setupEventListeners();
+			setupRefreshTimer();
 		}
 		
 		/**
@@ -488,6 +496,17 @@ package ui.screens.display.transmitter
 				/* Add Actions Section to Display List */
 				screenDataContent.push(actionsSection);
 			}
+			
+			if(!BluetoothService.bluetoothPeripheralActive() && !BlueToothDevice.alwaysScan() && !InterfaceController.peripheralConnected)
+			{
+				screenRefreshLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('transmitterscreen','refresh_screen_label').replace("{sec}", 5), HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
+				
+				var refreshSection:Object = {};
+				refreshSection.children = [
+					{ label: "", accessory: screenRefreshLabel }
+				];
+				screenDataContent.push(refreshSection);
+			}
 				
 			/* Set Screen Content */
 			dataProvider = new HierarchicalCollection(screenDataContent);	
@@ -510,6 +529,19 @@ package ui.screens.display.transmitter
 		private function setupEventListeners():void
 		{
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged, false, 0, true);
+		}
+		
+		private function setupRefreshTimer():void
+		{
+			if(!BluetoothService.bluetoothPeripheralActive() && !BlueToothDevice.alwaysScan() && !InterfaceController.peripheralConnected)
+			{
+				if (refreshTimer != null)
+					disposeRefreshTimer();
+				
+				refreshTimer = new Timer(1000);
+				refreshTimer.addEventListener(TimerEvent.TIMER, onRefreshTimer);
+				refreshTimer.start();
+			}
 		}
 		
 		/**
@@ -598,6 +630,8 @@ package ui.screens.display.transmitter
 				
 				Trace.myTrace("TransmitterStatusList.as", "in onTransmitterScan, initial scan for device, setting systemIdleMode = SystemIdleMode.KEEP_AWAKE");
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				
+				setupRefreshTimer();
 			} 
 			else 
 			{
@@ -608,6 +642,8 @@ package ui.screens.display.transmitter
 				alert.height = 310;
 				
 				Trace.myTrace("TransmitterStatusList.as", "in onTransmitterScan, can't scan, bluetooth is off.");
+				
+				disposeRefreshTimer();
 			}
 		}
 		
@@ -623,6 +659,25 @@ package ui.screens.display.transmitter
 				null,
 				HorizontalAlign.CENTER
 			);
+			
+			disposeRefreshTimer();
+			setupContent();
+		}
+		
+		private function onRefreshTimer(event:TimerEvent):void
+		{
+			if (refreshSecondsElapsed <= 0)
+			{
+				refreshSecondsElapsed = 4;
+				setupContent();
+				if (InterfaceController.peripheralConnected)
+					disposeRefreshTimer();
+			}
+			else
+			{
+				screenRefreshLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen','refresh_screen_label').replace("{sec}", refreshSecondsElapsed);
+				refreshSecondsElapsed--;
+			}
 		}
 		
 		/**
@@ -634,6 +689,16 @@ package ui.screens.display.transmitter
 			var restOfString:String = str.substr(1, str.length); 
 			
 			return firstChar.toUpperCase()+restOfString.toLowerCase(); 
+		}
+		
+		private function disposeRefreshTimer():void
+		{
+			if (refreshTimer != null)
+			{
+				refreshTimer.stop();
+				refreshTimer.removeEventListener(TimerEvent.TIMER, onRefreshTimer);
+				refreshTimer = null;
+			}
 		}
 		
 		override public function dispose():void
@@ -752,6 +817,14 @@ package ui.screens.display.transmitter
 				refreshG5BatteryButton.dispose();
 				refreshG5BatteryButton = null;
 			}
+			
+			if (screenRefreshLabel != null)
+			{
+				screenRefreshLabel.dispose();
+				screenRefreshLabel = null;
+			}
+			
+			disposeRefreshTimer();
 			
 			super.dispose();
 		}
