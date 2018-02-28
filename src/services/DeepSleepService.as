@@ -4,6 +4,10 @@ package services
 	
 	import flash.errors.IllegalOperationError;
 	import flash.events.EventDispatcher;
+	import flash.media.Sound;
+	import flash.media.SoundChannel;
+	import flash.media.SoundTransform;
+	import flash.net.URLRequest;
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
 	
@@ -27,6 +31,10 @@ package services
 		
 		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
+		private static var soundPlayer:Sound;
+		private static var channel:SoundChannel;
+		private static var soundTransform:SoundTransform;
+		private static var soundFile:URLRequest;
 		
 		/* Variables */
 		private static var deepSleepInterval:int;
@@ -47,11 +55,18 @@ package services
 			Trace.myTrace("DeepSleepService.as", "Service started!");
 			
 			//Actions
+			createSoundProperties(); //Used for "Alternative Method"
 			setDeepSleepInterval();
 			startDeepSleepInterval();
 			
 			//Event Listeners
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
+		}
+		
+		private static function createSoundProperties():void
+		{
+			soundTransform = new SoundTransform(0.001);
+			soundFile = new URLRequest("../assets/sounds/1-millisecond-of-silence.mp3");
 		}
 		
 		/**
@@ -128,7 +143,16 @@ package services
 					Trace.myTrace("DeepSleepService.as", "Playing deep sleep sound...");
 					lastLogPlaySoundTimeStamp = now;
 				}
-				BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) == "true")
+				{
+					soundPlayer = null;
+					soundPlayer = new Sound(soundFile);
+					channel = soundPlayer.play();
+					channel.soundTransform = soundTransform;
+				}
+				else
+					BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
 			}
 		}
 		

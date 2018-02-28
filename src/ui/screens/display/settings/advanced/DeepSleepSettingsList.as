@@ -1,7 +1,10 @@
 package ui.screens.display.settings.advanced
 {
+	import mx.messaging.messages.CommandMessage;
+	
 	import database.CommonSettings;
 	
+	import feathers.controls.Check;
 	import feathers.controls.Label;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
@@ -34,11 +37,13 @@ package ui.screens.display.settings.advanced
 		private var suspensionModePicker:PickerList;
 		private var instructionsTitleLabel:Label;
 		private var instructionsDescriptionLabel:Label;
+		private var alternativeMethodCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
 		private var userManagesSuspension:Boolean;
 		private var suspensionMode:int;
+		private var alternativeModeActive:Boolean;
 		
 		public function DeepSleepSettingsList()
 		{
@@ -68,6 +73,7 @@ package ui.screens.display.settings.advanced
 			/* Get Values From Database */
 			userManagesSuspension = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) == "true";
 			suspensionMode = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE));
+			alternativeModeActive = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) == "true";
 		}
 		
 		private function setupContent():void
@@ -94,6 +100,10 @@ package ui.screens.display.settings.advanced
 			suspensionModePicker.dataProvider = suspensionModeList;
 			suspensionModePicker.selectedIndex = suspensionMode;
 			suspensionModePicker.addEventListener(Event.CHANGE, onSuspensionModeChanged);
+			
+			//Alternative method
+			alternativeMethodCheck = LayoutFactory.createCheckMark(alternativeModeActive);
+			alternativeMethodCheck.addEventListener(Event.CHANGE, onAlternativeMethodChanged);
 			
 			/* Set Item Renderer */
 			itemRendererFactory = function():IListItemRenderer
@@ -136,6 +146,7 @@ package ui.screens.display.settings.advanced
 			if (userManagesSuspension)
 			{
 				content.push( { text: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','mode_label'), accessory: suspensionModePicker } );
+				content.push( { text: "Alternative Method:", accessory: alternativeMethodCheck } );
 				content.push({ text: "", accessory: instructionsTitleLabel });
 				content.push({ text: "", accessory: instructionsDescriptionLabel });
 			}
@@ -158,6 +169,10 @@ package ui.screens.display.settings.advanced
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE) != suspensionModeValueToSave)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE, suspensionModeValueToSave);
 			
+			//Alternative method
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) != String(alternativeModeActive))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE, String(alternativeModeActive));
+			
 			needsSave = false;
 		}
 		
@@ -178,6 +193,12 @@ package ui.screens.display.settings.advanced
 			
 			//Refresh screen content
 			refreshContent();
+		}
+		
+		private function onAlternativeMethodChanged(e:Event):void
+		{
+			alternativeModeActive = alternativeMethodCheck.isSelected
+			needsSave = true;
 		}
 		
 		/**
@@ -204,6 +225,13 @@ package ui.screens.display.settings.advanced
 				manageSuspensionToggle.removeEventListener(Event.CHANGE, onSettingsChanged);
 				manageSuspensionToggle.dispose();
 				manageSuspensionToggle = null;
+			}
+			
+			if (alternativeMethodCheck != null)
+			{
+				alternativeMethodCheck.removeEventListener(Event.CHANGE, onAlternativeMethodChanged);
+				alternativeMethodCheck.dispose();
+				alternativeMethodCheck = null;
 			}
 			
 			super.dispose();

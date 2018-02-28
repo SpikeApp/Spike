@@ -317,6 +317,11 @@
 		 public static const COMMON_SETTING_PIE_CHART_LOW_COLOR:int = 110;
 		 public static const COMMON_SETTING_PIE_CHART_IN_RANGE_COLOR:int = 111;
 		 public static const COMMON_SETTING_PIE_CHART_HIGH_COLOR:int = 112;
+		 
+		 /**
+		  * Deep Sleep Timer #2
+		  */
+		 public static const COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE:int = 113;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -431,7 +436,8 @@
 			 "Nightscout",//COMMON_SETTING_FOLLOWER_MODE
 			 "16711680",//COMMON_SETTING_PIE_CHART_LOW_COLOR
 			 "65280",//COMMON_SETTING_PIE_CHART_IN_RANGE_COLOR
-			 "16776960"//COMMON_SETTING_PIE_CHART_HIGH_COLOR
+			 "16776960",//COMMON_SETTING_PIE_CHART_HIGH_COLOR
+			 "false"//COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE
 		 ];
 
 		 public function CommonSettings()
