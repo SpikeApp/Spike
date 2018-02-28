@@ -987,8 +987,7 @@ package ui.chart
 				
 				//scaleXFactor = 1/(totalTimestampDifference / (chartWidth * timelineRange));
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
-				if (BlueToothDevice.isFollower())
-					mainChartXFactor = scaleXFactor;
+				mainChartXFactor = scaleXFactor;
 			}
 			else if (chartType == SCROLLER_CHART)
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
