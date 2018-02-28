@@ -31,6 +31,7 @@ package services
 		/* Constants */
 		private static const TIME_5_MINUTES:int = (5 * 60 * 1000) + 7000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
+		private static const TIME_10_MINUTES:int = 10 * 60 * 1000;
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		
 		/* Objects */
@@ -49,6 +50,7 @@ package services
 		private static var displayDeltaEnabled:Boolean;
 		private static var displayUnitsEnabled:Boolean;
 		private static var glucoseHistoryValue:int;
+		private static var applyGapFix:Boolean;
 		
 		public function WatchService()
 		{
@@ -90,6 +92,7 @@ package services
 			displayDeltaEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA) == "true";
 			displayUnitsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS) == "true";
 			glucoseHistoryValue = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY));
+			applyGapFix = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) == "true";
 		}
 		
 		private static function activateService():void
@@ -176,6 +179,41 @@ package services
 			return calendarEvent;
 		}
 		
+		private static function adjustPreviousGlucose():void
+		{
+			if (queue.length < 2)
+				return;
+			
+			var previousEvent:EventObject = queue[queue.length - 2] as EventObject;
+			var startDate:Date = previousEvent.startDate
+			var events:Array = Calendar.service.getEvents( startDate, new Date() );
+			
+			for each (var event:EventObject in events)
+			{
+				if (event.notes == previousEvent.notes)
+				{
+					//Match found... Let's edit the start/end time of the event so it doesn't overlap the last one
+					var lastEvent:EventObject = queue[queue.length - 1] as EventObject;
+					var editedEvent:EventObject = new EventObject;
+					editedEvent.title = event.title;
+					editedEvent.notes = event.notes;
+					editedEvent.startDate = event.startDate;
+					editedEvent.endDate = new Date(event.startDate.valueOf() + TIME_5_MINUTES);
+					editedEvent.calendarId = calendarID;
+					
+					//Delete the Event
+					Calendar.service.removeEvent(event);
+					
+					//Add the new modified event that will replace the one we just deleted
+					Calendar.service.addEvent(editedEvent);
+					
+					queue[queue.length - 2] = editedEvent;
+					
+					break;
+				}
+			}
+		}
+		
 		private static function processLatestGlucose(initialStart:Boolean = false):void
 		{
 			//Get glucose output
@@ -225,9 +263,14 @@ package services
 			{
 				if (queue.length > 0)
 				{
-					var previousEvent:EventObject = getLastEvent(queue[queue.length - 1]);
-					if (previousEvent != null)
-						now = previousEvent.endTimestamp;
+					if (!applyGapFix)
+					{
+						var previousEvent:EventObject = getLastEvent(queue[queue.length - 1]);
+						if (previousEvent != null)
+							now = previousEvent.endTimestamp;
+						else
+							now = (new Date()).valueOf();
+					}
 					else
 						now = (new Date()).valueOf();
 				}
@@ -239,9 +282,19 @@ package services
 			
 			var future:Number;
 			if (currentReading != null && currentReading.calculatedValue != 0)
-				future = currentReading.timestamp + TIME_5_MINUTES;
+			{
+				if (!applyGapFix)
+					future = currentReading.timestamp + TIME_5_MINUTES;
+				else
+					future = currentReading.timestamp + TIME_10_MINUTES;
+			}
 			else
-				future = now + TIME_5_MINUTES;
+			{
+				if (!applyGapFix)
+					future = now + TIME_5_MINUTES;
+				else
+					future = now + TIME_10_MINUTES;
+			}
 			
 			//Title
 			var title:String = "";
@@ -261,6 +314,12 @@ package services
 			
 			//Add watch event to queue
 			queue.push(watchEvent);
+			
+			if (applyGapFix)
+			{
+				//Adjust previous glucose
+				adjustPreviousGlucose();
+			}
 		}
 		
 		/**
@@ -287,7 +346,8 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_TREND ||
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA ||
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS ||
-				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY ||
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON
 			)
 				getInitialProperties();
 			else

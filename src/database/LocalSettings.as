@@ -150,6 +150,11 @@ package database
 		 */
 		public static const LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL:int = 48;
 		
+		/**
+		 * Apple Watch#2
+		 */
+		public static const LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON:int = 49;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -199,7 +204,8 @@ package database
 			"0",//LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES
 			"true",//LOCAL_SETTING_APP_INACTIVE_ALERT
 			"0",//LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP
-			"3"//LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP
+			"3",//LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL
+			"false"//LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL
 		];
 		
 		public function LocalSettings() {

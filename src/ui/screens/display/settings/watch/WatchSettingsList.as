@@ -71,6 +71,12 @@ package ui.screens.display.settings.watch
 		private var displayUnits:Check;
 		private var glucoseHistory:NumericStepper;
 		private var authorizeButton:Button;
+		private var sendEmail:Button;
+		private var emailLabel:Label;
+		private var emailField:TextInput;
+		private var sendButton:Button;
+		private var instructionsSenderCallout:Callout;
+		private var gapFixCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -83,16 +89,7 @@ package ui.screens.display.settings.watch
 		private var displayDeltaEnabled:Boolean;
 		private var displayUnitsEnabled:Boolean;
 		private var glucoseHistoryValue:int;
-
-		private var sendEmail:Button;
-
-		private var emailLabel:Label;
-
-		private var emailField:TextInput;
-
-		private var sendButton:Button;
-
-		private var instructionsSenderCallout:Callout;
+		private var gapFixValue:Boolean;		
 
 		public function WatchSettingsList()
 		{
@@ -132,6 +129,7 @@ package ui.screens.display.settings.watch
 			displayDeltaEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA) == "true";
 			displayUnitsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS) == "true";
 			glucoseHistoryValue = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY));
+			gapFixValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) == "true";
 			
 			Trace.myTrace("WatchSettingsList.as", "setupInitialState called! AuthorizationStatus = " + Calendar.service.authorisationStatus());
 		}
@@ -168,6 +166,11 @@ package ui.screens.display.settings.watch
 			
 			calendarPickerList.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
+			//History
+			glucoseHistory = LayoutFactory.createNumericStepper(1, 36, glucoseHistoryValue);
+			glucoseHistory.pivotX = -12;
+			glucoseHistory.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
+			
 			//Display Name Toggle
 			displayNameToggle = LayoutFactory.createToggleSwitch(displayNameEnabled);
 			displayNameToggle.addEventListener(starling.events.Event.CHANGE, onSettingsChanged);
@@ -190,10 +193,9 @@ package ui.screens.display.settings.watch
 			displayUnits = LayoutFactory.createCheckMark(displayUnitsEnabled);
 			displayUnits.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
-			//History
-			glucoseHistory = LayoutFactory.createNumericStepper(1, 36, glucoseHistoryValue);
-			glucoseHistory.pivotX = -12;
-			glucoseHistory.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
+			//Gap Fix
+			gapFixCheck = LayoutFactory.createCheckMark(gapFixValue);
+			gapFixCheck.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
 			//Instructions Title Label
 			instructionsTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','instructions_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
@@ -243,17 +245,18 @@ package ui.screens.display.settings.watch
 			content.push({ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: watchComplicationToggle });
 			if (watchComplicationEnabled)
 			{
-				if (isDeviceAuthorized || Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED)
+				if (true)//(isDeviceAuthorized || Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED)
 				{
 					populateCalendarList();
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','calendar_label'), accessory: calendarPickerList });
+					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','glucose_history_label'), accessory: glucoseHistory });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_name_label'), accessory: displayNameToggle });
 					if (displayNameEnabled)
 						content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','your_name_label'), accessory: displayNameTextInput });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_trend_label'), accessory: displayTrend });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_delta_label'), accessory: displayDelta });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_units_label'), accessory: displayUnits });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','glucose_history_label'), accessory: glucoseHistory });
+					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','gap_fix_label'), accessory: gapFixCheck });
 				}
 				else
 					content.push({ text: "", accessory: authorizeButton });
@@ -354,6 +357,12 @@ package ui.screens.display.settings.watch
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_SELECTED_CALENDAR_ID, calendarIDValue);
 			}
 			
+			//History
+			var historyValueToSave:String = String(glucoseHistory.value);
+			
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY) != historyValueToSave)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY, historyValueToSave);
+			
 			//Trend
 			var trendValueToSave:String;
 			if (displayTrend.isSelected) trendValueToSave = "true";
@@ -378,11 +387,13 @@ package ui.screens.display.settings.watch
 			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS) != unitsValueToSave)
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS, unitsValueToSave);
 			
-			//History
-			var historyValueToSave:String = String(glucoseHistory.value);
+			//Gap Fix
+			var gapFixValueToSave:String;
+			if (gapFixCheck.isSelected) gapFixValueToSave = "true";
+			else gapFixValueToSave = "false";
 			
-			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY) != historyValueToSave)
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY, historyValueToSave);
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) != gapFixValueToSave)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON, gapFixValueToSave);
 			
 			needsSave = false;
 		}
@@ -729,6 +740,13 @@ package ui.screens.display.settings.watch
 			{
 				instructionsSenderCallout.dispose();
 				instructionsSenderCallout = null;
+			}
+			
+			if (gapFixCheck != null)
+			{
+				gapFixCheck.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
+				gapFixCheck.dispose();
+				gapFixCheck = null;
 			}
 			
 			super.dispose();
