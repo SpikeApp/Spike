@@ -435,7 +435,7 @@ package services
 						{
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, lowSnoozePicker_closedHandler);
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
-							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert"), snoozeValueStrings, index);
+							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert") + " (" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + ")", snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER) 
 						{
@@ -474,7 +474,7 @@ package services
 						{
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, highSnoozePicker_closedHandler);
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
-							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert"), snoozeValueStrings, index);
+							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert") + " (" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + ")", snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER) 
 						{
@@ -513,7 +513,7 @@ package services
 						{
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, veryLowSnoozePicker_closedHandler);
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
-							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert"), snoozeValueStrings, index);
+							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert") + " (" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + ")", snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER) 
 						{
@@ -550,7 +550,7 @@ package services
 						{
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, veryHighSnoozePicker_closedHandler);
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
-							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert"), snoozeValueStrings, index);
+							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert") + " (" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + ")", snoozeValueStrings, index);
 						} 
 						else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER) 
 						{
