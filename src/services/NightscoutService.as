@@ -224,9 +224,13 @@ package services
 			NetworkConnector.createNSConnector(nightscoutEventsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeGlucoseReadings), MODE_GLUCOSE_READING, onUploadGlucoseReadingsComplete, onConnectionFailed);
 		}
 		
-		private static function onBgreadingReceived(e:TransmitterServiceEvent):void 
+		private static function onBgreadingReceived(e:Event):void 
 		{
-			var latestGlucoseReading:BgReading = BgReading.lastNoSensor();
+			var latestGlucoseReading:BgReading;
+			if(!BlueToothDevice.isFollower())
+				latestGlucoseReading= BgReading.lastNoSensor();
+			else
+				latestGlucoseReading= BgReading.lastWithCalculatedValue();
 			
 			if(latestGlucoseReading == null)
 				return;
@@ -942,6 +946,7 @@ package services
 		private static function activateEventListeners():void
 		{
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
@@ -950,6 +955,7 @@ package services
 		private static function deactivateEventListeners():void
 		{
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
