@@ -285,7 +285,7 @@ package ui.screens
 			var readings:Array = e.data;
 			if (readings != null && readings.length > 0)
 			{
-				if (BackgroundFetch.appIsInForeground() && glucoseChart != null)
+				if (BackgroundFetch.appIsInForeground() && glucoseChart != null && Constants.appInForeground)
 				{
 					glucoseChart.addGlucose(readings);
 					if (displayPieChart)
@@ -294,11 +294,8 @@ package ui.screens
 				else
 				{
 					newReadingsListFollower = newReadingsListFollower.concat(readings);
-				}
-						
+				}		
 			}	
-			
-			AlarmService.cancelInactiveAlert();
 		}
 		
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
@@ -316,7 +313,7 @@ package ui.screens
 				return;
 			}
 			
-			if (!appInBackground && glucoseChart != null)
+			if (!appInBackground && glucoseChart != null && Constants.appInForeground)
 			{
 				Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
 				glucoseChart.addGlucose([reading]);
@@ -328,8 +325,6 @@ package ui.screens
 				Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
 				newReadingsList.push(reading);
 			}
-			
-			AlarmService.cancelInactiveAlert();
 		}
 		
 		private function onAppInBackground (e:SpikeEvent):void
