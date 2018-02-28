@@ -1,5 +1,6 @@
 1.1.0
 FEATURE: Nightscout follower mode! Now you can use Spike as master or as follower. To activate follower mode go to settings -> general -> data collection, switch to follower and input the Nightscout URL you want to follow. Done! Followers will have all Spike features like Apple Watch complication, Today Widget, Alarms, 24H Glucose Distribution, Offline Looping, etc. You can switch back and forth from master to follower mode and vice versa. A follower can even act as a proxy by getting data from a Nightscout URL and sharing it to another Nightscout URL or Dexcom Share. (Follower mode for Dexcom Share is coming soon!)
+FEATURE: Lock screen glucose notifications now with intervals. Set your desired interval in settings -> share. Default value is 3 (every 15 minutes).
 FEATURE: See number of calibrations and time of last calibration in the Sensor Screen. User can also delete last calibration or all calibrations (use wisely!).
 FEATURE: User can now select colors for the pie chart independently from the main chart. All current users that have custom colors for the pie chart, after upgrading to this release, will have the pie chart colors reset to defaults. Go to settings -> chart to change the colors to your liking.
 FEATURE: Alert of malfunctioning or expired sensors when using Transmiter PL. (Code ported from iOSxDripReader)
@@ -12,7 +13,7 @@ ENHANCEMENT: Alarm Snoozer popup now displays current glucose value.
 FIX: No more double popups on initial calibrations (after starting a new sensor). No more having to, sometimes, enter a third calibration for Spike to start showing glucose values in the chart.
 FIX: App badge does not disappear anymore when an alarm or any other notification is fired. 
 FIX: Several other small overall fixes and improvements.
-NOTE: Th
+NOTE: There seems to still be an issue that sometimes (rarely) the app may freeze and close. This is a very hard to track bug because it happens rarely and sporadically. As soon as I'm able to track the root cause of this, it will be fixed and will push a new update to TestFlight.
 
 1.0.9
 ENHANCEMENT: Better handling of check mute status. It will check mute only if phone mute alert is on. Code will consume less CPU cycles as well and user should not have interruptions every 5 minutes when listening to audio if the mute switch is off in Spike's alarm settings (Johan Degraeve)
