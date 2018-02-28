@@ -14,7 +14,7 @@ package ui
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
-	import ui.screens.AboutSettingsScreen;
+	import ui.screens.AboutScreen;
 	import ui.screens.AdvancedSettingsScreen;
 	import ui.screens.AlarmsCustomizerSettingsScreen;
 	import ui.screens.AlarmsSettingsScreen;
@@ -187,7 +187,7 @@ package ui
 			navigator.addScreen( Screens.SETTINGS_ADVANCED, advancedSettingsScreenItem );
 			
 			/* About Settings Screen */
-			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutSettingsScreen );
+			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutScreen );
 			aboutSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_ABOUT, aboutSettingsScreenItem );
 			

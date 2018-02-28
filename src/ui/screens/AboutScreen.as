@@ -18,12 +18,12 @@ package ui.screens
 	
 	[ResourceBundle("aboutsettingsscreen")]
 
-	public class AboutSettingsScreen extends BaseSubScreen
+	public class AboutScreen extends BaseSubScreen
 	{
 		/* Display Objects */
 		private var aboutSection:AboutList;
 		
-		public function AboutSettingsScreen() 
+		public function AboutScreen() 
 		{
 			super();
 			
