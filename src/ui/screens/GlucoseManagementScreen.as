@@ -47,7 +47,7 @@ package ui.screens
 			title = ModelLocator.resourceManagerInstance.getString('glucosemanagementscreen','screen_title');
 			
 			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.settingsCellTexture);
+			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.readingsTexture);
 			iconContainer = new <DisplayObject>[icon];
 			headerProperties.rightItems = iconContainer;
 		}
