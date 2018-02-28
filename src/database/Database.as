@@ -57,10 +57,7 @@ package database
 		private static var dbFile:File  ;
 		private static var xmlFileName:String;
 		private static var databaseWasCopiedFromSampleFile:Boolean = true;
-		private static const maxDaysToKeepLogfiles:int = 2;
-		public static const END_OF_RESULT:String = "END_OF_RESULT";
 		private static const debugMode:Boolean = true;
-		private static var loggingTableExists:Boolean = false;
 		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
 		
 		private static const TREATMENTS_DEBUG:Boolean = false;
@@ -73,12 +70,6 @@ package database
 			"bluetoothdevice_id STRING PRIMARY KEY, " + //unique id, used in all tables that will use Google Sync (note that for iOS no google sync will be done for this table because mac address is not visible in iOS. UDID is used as address but this is different for each install
 			"name STRING, " +
 			"address STRING, " +
-			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
-		
-		private static const CREATE_TABLE_LOGGING:String = "CREATE TABLE IF NOT EXISTS logging (" +
-			"logging_id STRING PRIMARY KEY, " +
-			"log STRING, " +
-			"logtimestamp TIMESTAMP NOT NULL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_CALIBRATION:String = "CREATE TABLE IF NOT EXISTS calibration (" +
@@ -192,8 +183,6 @@ package database
 		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
 		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
-		private static const INSERT_LOG:String = "INSERT into logging (logging_id, log, logtimestamp, lastmodifiedtimestamp) VALUES (:logging_id, :log, :logtimestamp, :lastmodifiedtimestamp)";
-		private static const DELETE_OLD_LOGS:String = "DELETE FROM logging where (logtimestamp < :logtimestamp)";
 		
 		/**
 		 * to update the bloothdevice, there's only one, no need to have a where clause
@@ -481,7 +470,7 @@ package database
 					if (result is Array) {
 						if ((result as Array).length == 1) {
 							//there's a bluetoothdevice already, no need to further check
-							createLoggingTable();
+							deleteBgReadingsAsynchronous(true);
 							return;
 						}
 					}
@@ -516,7 +505,7 @@ package database
 			function defaultBlueToothDeviceInserted(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,defaultBlueToothDeviceInserted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,defaultBlueToothDeviceInsetionFailed);
-				createLoggingTable();
+				deleteBgReadingsAsynchronous(true);
 			}
 			
 			function defaultBlueToothDeviceInsetionFailed(see:SQLErrorEvent):void {
@@ -524,54 +513,6 @@ package database
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,defaultBlueToothDeviceInsetionFailed);
 				if (debugMode) trace("Database.as : insertBlueToothDevice failed. Database 0014");
 				dispatchInformation("failed_to_insert_bluetoothdevice", see.error.message + " - " + see.error.details);
-			}
-		}
-		
-		private static function createLoggingTable():void {
-			sqlStatement.clearParameters();
-			sqlStatement.text = CREATE_TABLE_LOGGING;
-			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
-			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
-			sqlStatement.execute();
-			
-			function tableCreated(se:SQLEvent):void {
-				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
-				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				loggingTableExists = true;
-				deleteOldLogFiles();
-			}
-			
-			function tableCreationError(see:SQLErrorEvent):void {
-				if (debugMode) trace("Database.as : Failed to create Logging table. Database:0017");
-				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
-				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation("failed_to_create_logging_table", see.error.message + " - " + see.error.details);
-			}
-		}
-		
-		/**
-		 * asynchronous 
-		 */
-		private static function deleteOldLogFiles():void {
-			sqlStatement.clearParameters();
-			sqlStatement.text = DELETE_OLD_LOGS;
-			sqlStatement.parameters[":logtimestamp"] = (new Date()).valueOf() - maxDaysToKeepLogfiles * 24 * 60 * 60 * 1000;
-			
-			sqlStatement.addEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
-			sqlStatement.addEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
-			sqlStatement.execute();
-			
-			function oldLogFilesDeleted(se:SQLEvent):void {
-				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
-				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
-				deleteBgReadingsAsynchronous(true);
-			}
-			
-			function oldLogFileDeletionFailed(see:SQLErrorEvent):void {
-				if (debugMode) trace("Database.as : Failed to delete old logfiles. Database:0021");
-				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
-				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
-				dispatchInformation("failed_to_delete_old_logfiles", see.error.message + " - " + see.error.details);
 			}
 		}
 		
@@ -804,109 +745,6 @@ package database
 					conn.close();
 				}
 				dispatchInformation('error_while_updating_bluetooth_device', error.message + " - " + error.details);
-			}
-		}
-		
-		public static function insertLogging(logging_id:String, log:String, logTimeStamp:Number, lastModifiedTimeStamp:Number, dispatcher:EventDispatcher):void {
-			if (!loggingTableExists)
-				return;
-			var insertRequest:SQLStatement;
-			try {
-				var conn:SQLConnection = new SQLConnection();
-				conn.open(dbFile, SQLMode.UPDATE);
-				conn.begin();
-				insertRequest = new SQLStatement();
-				insertRequest.sqlConnection = conn;
-				insertRequest.text = INSERT_LOG;
-				insertRequest.parameters[":logging_id"] = logging_id;
-				insertRequest.parameters[":log"] = log;
-				insertRequest.parameters[":logtimestamp"] = logTimeStamp;
-				insertRequest.parameters[":lastmodifiedtimestamp"] = (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp);
-				insertRequest.execute();
-				conn.commit();
-				conn.close();
-			} catch (error:SQLError) {
-				if (conn.connected) {
-					conn.rollback();
-					conn.close();
-				}
-				dispatchInformation('failed_to_insert_logging_in_db', error.message + " - " + error.details + "\ninsertRequest.text = " + insertRequest.text);
-			}
-		}
-		
-		/**
-		 * will get the loggings and dispatch them one by one (ie one event per logging) in the data field of a LOGRETRIEVED_EVENT<br>
-		 * If the last string is sent, an additional event is set with data = "END_OF_RESULT"<br>
-		 * <br>
-		 * until = loggings with timestamp >= until will not be returned. until is timestamp in ms<br>
-		 */
-		public static function getLoggings(until:Number):void {
-			var localSqlStatement:SQLStatement = new SQLStatement();
-			var localdispatcher:EventDispatcher = new EventDispatcher();
-			
-			localdispatcher.addEventListener(SQLEvent.RESULT,onOpenResult);
-			localdispatcher.addEventListener(SQLErrorEvent.ERROR,onOpenError);
-			
-			if (openSQLConnection(localdispatcher))
-				onOpenResult(null);
-			
-			function onOpenResult(se:SQLEvent):void {
-				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
-				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
-				localSqlStatement.addEventListener(SQLEvent.RESULT,loggingsRetrieved);
-				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,loggingRetrievalFailed);
-				localSqlStatement.sqlConnection = aConn;
-				localSqlStatement.text = "SELECT * from logging where logtimestamp < " + until;
-				localSqlStatement.execute();
-			}
-			
-			function loggingsRetrieved(se:SQLEvent):void {
-				localSqlStatement.removeEventListener(SQLEvent.RESULT,loggingsRetrieved);
-				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,loggingRetrievalFailed);
-				var tempObject:Object = localSqlStatement.getResult().data;
-				if (tempObject != null) {
-					if (tempObject is Array) {
-						if (debugMode)
-							trace("Retrieved LogInfo from db During Startup = ");
-						for each ( var o:Object in tempObject) {
-							var event1:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGRETRIEVED_EVENT);
-							event1.data = o.log;
-							if (debugMode)
-								trace(o.log as String);
-							instance.dispatchEvent(event1);
-						}
-						if (debugMode)
-							trace("End of retrieved LogInfo from db During Stratup.");
-						
-					}
-				} else {
-					//no need to dispatch anything, there are no loggings
-				}
-				
-				var event2:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGRETRIEVED_EVENT);
-				event2.data = END_OF_RESULT;
-				instance.dispatchEvent(event2);
-			}
-			
-			function loggingRetrievalFailed(see:SQLErrorEvent):void {
-				localSqlStatement.removeEventListener(SQLEvent.RESULT,loggingsRetrieved);
-				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,loggingRetrievalFailed);
-				if (debugMode) trace("Database.as : Failed to retrieve loggings. Database 0022");
-				var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
-				errorEvent.data = "Failed to retrieve loggings . Database:0022";
-				instance.dispatchEvent(errorEvent);
-				
-			}
-			
-			function onOpenError(see:SQLErrorEvent):void {
-				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
-				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
-				if (debugMode) trace("Database.as : Failed to open the database. Database 0023");
-				dispatchInformation("failed_to_retrieve_logging_failed_to_open_the_database", see.error.message + " - " + see.error.details);
-				var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
-				errorEvent.data = "Database.as : Failed to open the database. Database 0023";
-				instance.dispatchEvent(errorEvent);
-				
 			}
 		}
 		
