@@ -53,6 +53,8 @@ package services
 		private static const MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS:int = 120;
 
 		private static var calibrationValue:TextInput;
+
+		private static var initialCalibrationActive:Boolean = false;
 		
 		
 		public static function get instance():CalibrationService {
@@ -80,7 +82,8 @@ package services
 			if (initialCalibrationRequested) {
 				myTrace("in appInForeGround, app has fired a notification for initialcalibration, but app was opened before notification was received - or appInForeGround is triggered faster than the notification event");
 				initialCalibrationRequested = false;
-				requestInitialCalibration();
+				if (!initialCalibrationActive)
+					requestInitialCalibration();
 				Notifications.service.cancel(NotificationService.ID_FOR_REQUEST_CALIBRATION);
 			}
 		}
@@ -89,7 +92,7 @@ package services
 			myTrace("in notificationReceived");
 			if (event != null) {//not sure why checking, this would mean NotificationService received a null object, shouldn't happen
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
-				if (notificationEvent.id == NotificationService.ID_FOR_REQUEST_CALIBRATION && initialCalibrationRequested) {
+				if (notificationEvent.id == NotificationService.ID_FOR_REQUEST_CALIBRATION && initialCalibrationRequested && !initialCalibrationActive) {
 					myTrace("in notificationReceived with ID_FOR_REQUEST_CALIBRATION && initialCalibrationRequested = true");
 					initialCalibrationRequested = false;
 					requestInitialCalibration();
@@ -227,9 +230,12 @@ package services
 						
 						initialCalibrationRequested = true;
 					} 
-					//else 
-					//{
+					
+					if (!initialCalibrationActive)
+					{
 						myTrace("opening dialog to request calibration");
+						
+						initialCalibrationActive = true;
 						
 						/* Create and Style Calibration Text Input */
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
@@ -264,7 +270,7 @@ package services
 						calibrationPopup.buttonGroupProperties.gap = 10;
 						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 						calibrationValue.setFocus();
-					//}
+					}
 				}
 			}
 		}
@@ -274,6 +280,9 @@ package services
 			myTrace("in intialCalibrationValueEntered");
 			
 			var asNumber:Number = Number(calibrationValue.text.replace(",","."));
+			
+			initialCalibrationActive = false;
+			
 			if (isNaN(asNumber)) 
 			{
 				myTrace("in intialCalibrationValueEntered, user gave non numeric value, opening alert and requesting new value");
