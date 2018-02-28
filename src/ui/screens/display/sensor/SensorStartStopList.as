@@ -196,6 +196,7 @@ package ui.screens.display.sensor
 			calibrationsLayout.gap = 5;
 			calibrationActionsContainer = new LayoutGroup();
 			calibrationActionsContainer.layout = calibrationsLayout;
+			calibrationActionsContainer.pivotX = -11;
 			calibrationActionsContainer.addChild(deleteAllCalibrationsButton);
 			calibrationActionsContainer.addChild(deleteLastCalibrationButton);
 			
