@@ -57,9 +57,6 @@ package ui.screens
 		
 		private function setupContent():void
 		{
-			//Deactivate menu drag gesture 
-			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
-			
 			//About Section
 			tutorialSection = new TutorialList();
 			tutorialSection.addEventListener(Event.COMPLETE, onShowTutorial);
