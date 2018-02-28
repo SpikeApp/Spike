@@ -72,7 +72,6 @@ package services
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
@@ -170,6 +169,8 @@ package services
 		private static var listOfSeenInvalidPacketTypes:Array = [49, 50, 51, 52, 53, 54, 55, 56, 57, 84];
 
 		private static var timeStampOfLastDeviceNotPairedForBlukon:Number = 0;
+		private static var timeStampSinceLastSensorAgeUpdate_Transmiter_PL:Number = 0;
+		private static var previousSensorAgeValue_Transmiter_PL:Number = 0;
 		/**
 		 * for blukon protocol
 		 */
@@ -287,7 +288,7 @@ package services
 			
 			peripheralConnected = false;
 			
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 
 			//blukon
@@ -363,7 +364,7 @@ package services
 			}
 		}
 		
-		private static function settingChanged(event:SettingsServiceEvent):void {
+		private static function commonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
 				if (G4ScanTimer != null) {
@@ -393,6 +394,12 @@ package services
 					}
 				} else {
 					myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID but transmitter id not known or alwaysscan is false");
+				}
+			} else if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) == "0") {
+					myTrace("in commonSettingChanged, setting timeStampSinceLastSensorAgeUpdate_Transmiter_PL and previousSensorAgeValue_Transmiter_PL to 0");
+					timeStampSinceLastSensorAgeUpdate_Transmiter_PL = 0;
+					previousSensorAgeValue_Transmiter_PL = 0;
 				}
 			}
 		}
@@ -1820,10 +1827,47 @@ package services
 				return;
 			}
 			var bridge_battery_level:Number = new Number(bufferAsStringSplitted[2]);
-			var SensorAge:Number = (new Number(bufferAsStringSplitted[3])) * 10;
+			
+			var sensorAge:Number = (new Number(bufferAsStringSplitted[3])) * 10;
+			//see https://github.com/JohanDegraeve/iosxdripreader/issues/42
+			if (previousSensorAgeValue_Transmiter_PL != 0) {
+				if (previousSensorAgeValue_Transmiter_PL <= sensorAge) {
+					myTrace("in processTRANSMITER_PLTransmitterData, previousSensorAgeValue_Transmiter_PL = " + previousSensorAgeValue_Transmiter_PL + ", sensorAge = " + sensorAge);
+					if ((new Date()).valueOf() - timeStampSinceLastSensorAgeUpdate_Transmiter_PL > 10 * 60 * 1000) {
+						myTrace("in processTRANSMITER_PLTransmitterData, timeStampSinceLastSensorAgeUpdate_Transmiter_PL = " + new Date(timeStampSinceLastSensorAgeUpdate_Transmiter_PL).toLocaleString());
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES, 
+							(new Number(new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES))) + 1).toString());
+						if (new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES)) >= 5) {
+							myTrace("in processTRANSMITER_PLTransmitterData, LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES = " + LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES);
+							if (BackgroundFetch.appIsInForeground()) 
+							{
+								AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+									ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor")
+								);
+								BackgroundFetch.vibrate();
+							} else {
+								var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+										.setId(NotificationService.ID_FOR_OTHER_G5_APP)
+										.setAlert(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
+										.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
+										.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor"))
+										.enableVibration(true)
+								Notifications.service.notify(notificationBuilder.build());
+							}
+						}
+					}
+				} else {
+					timeStampSinceLastSensorAgeUpdate_Transmiter_PL = (new Date()).valueOf();
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES, "0");
+				}
+			}
+			previousSensorAgeValue_Transmiter_PL = sensorAge;
+
 			myTrace("in processTRANSMITER_PLTransmitterData, dispatching transmitter data");
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-			blueToothServiceEvent.data = new TransmitterDataTransmiter_PLPacket(raw_data, bridge_battery_level, SensorAge, (new Date()).valueOf());
+			blueToothServiceEvent.data = new TransmitterDataTransmiter_PLPacket(raw_data, bridge_battery_level, sensorAge, (new Date()).valueOf());
 			_instance.dispatchEvent(blueToothServiceEvent);
 		}
 		
