@@ -1,5 +1,6 @@
 package ui.screens
 {
+	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.system.System;
 	import flash.utils.Timer;
@@ -8,6 +9,7 @@ package ui.screens
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
+	import events.FollowerEvent;
 	import events.TransmitterServiceEvent;
 	
 	import feathers.controls.Label;
@@ -22,6 +24,7 @@ package ui.screens
 	
 	import model.ModelLocator;
 	
+	import services.NightscoutService;
 	import services.TransmitterService;
 	
 	import starling.display.DisplayObject;
@@ -171,6 +174,7 @@ package ui.screens
 		private function setupEventListeners():void
 		{
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived, false, 0, true);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, 0, true);
 		}
 		
 		private function updateInfo():void
@@ -405,10 +409,14 @@ package ui.screens
 		/**
 		 * Event Listeners
 		 */
-		private function onBgReadingReceived(e:TransmitterServiceEvent):void
+		private function onBgReadingReceived(e:Event):void
 		{
 			//Get latest BGReading
-			var latestBgReading:BgReading = BgReading.lastNoSensor();
+			var latestBgReading:BgReading;
+			if (!BlueToothDevice.isFollower())
+				latestBgReading = BgReading.lastNoSensor();
+			else
+				latestBgReading = BgReading.lastWithCalculatedValue();
 			
 			//If the latest BGReading is null, stop execution
 			if (latestBgReading == null)
@@ -502,6 +510,7 @@ package ui.screens
 		override public function dispose():void
 		{
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 			
 			if(glucoseDisplay != null)
 			{
