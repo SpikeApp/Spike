@@ -166,10 +166,10 @@ package services
 		 */
 		private static var _calibrationRequestLatestSnoozeTimeInMs:Number = Number.NaN;
 		
-		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 1440, 10080];
+		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 105, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 1440, 10080];
 		private static var snoozeValueStrings:Array = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes",
-			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour 15 minutes", "1,5 hours", "2 hours", "2,5 hours", "3 hours", "4 hours",
-			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours", "1 day", "1 week"];
+			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour, 15 minutes", "1 hour, 30 minutes", "1 hour, 45 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "4 hours",
+			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours", "11 hours", "12 hours", "1 day", "1 week"];
 		
 		private static var lastAlarmCheckTimeStamp:Number;
 		private static var lastCheckMuteTimeStamp:Number;
@@ -289,6 +289,11 @@ package services
 			
 			checkMuted(null);
 			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
+			
+			soundsAsDisplayed = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","alert_sounds_names");
+			soundsAsStoredInAssets = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","alert_sounds_files");
+			soundsAsDisplayedSplitted = soundsAsDisplayed.split(',');
+			soundsAsStoredInAssetsSplitted = soundsAsStoredInAssets.split(',');
 			
 			/*soundsAsDisplayed = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
 			soundsAsStoredInAssets = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
@@ -716,7 +721,15 @@ package services
 			{
 				AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, snoozePickerClosedHandler);
 				AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, canceledHandler);
-				AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText) + " (" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + ")", snoozeValueStrings, index);
+				if (snoozeText == "low_alert_notification_alert_text" ||
+					snoozeText == "verylow_alert_notification_alert_text" ||
+					snoozeText == "high_alert_notification_alert_text" ||
+					snoozeText == "veryhigh_alert_notification_alert_text")
+				{
+					AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText) + " (" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + ")", snoozeValueStrings, index);
+				}
+				else
+					AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText), snoozeValueStrings, index);
 			} 
 			else if (notificationEvent.identifier == alertSnoozeIdentifier) {
 				snoozeValueSetter(alertType.defaultSnoozePeriodInMinutes);
@@ -929,13 +942,7 @@ package services
 		/**
 		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
 		 */
-		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, alertBody:String = " "):void {
-			
-			var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","alert_sounds_names");
-			var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","alert_sounds_files");
-			var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
-			var soundsAsStoredInAssetsSplitted:Array = soundsAsStoredInAssets.split(',');
-			
+		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, alertBody:String = " "):void {	
 			var notificationBuilder:NotificationBuilder;
 			var newSound:String;
 			var soundToSet:String = "";
