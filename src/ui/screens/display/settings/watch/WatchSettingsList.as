@@ -245,7 +245,7 @@ package ui.screens.display.settings.watch
 			content.push({ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: watchComplicationToggle });
 			if (watchComplicationEnabled)
 			{
-				if (true)//(isDeviceAuthorized || Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED)
+				if (isDeviceAuthorized || Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED)
 				{
 					populateCalendarList();
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','calendar_label'), accessory: calendarPickerList });
