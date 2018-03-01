@@ -4,13 +4,9 @@ package ui.screens
 	import flash.system.System;
 	import flash.utils.Timer;
 	
-	import ui.chart.GlucoseFactory;
-	import ui.chart.GraphLayoutFactory;
-	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
-	
-	import ui.screens.display.LayoutFactory;
 	
 	import events.TransmitterServiceEvent;
 	
@@ -32,6 +28,9 @@ package ui.screens
 	import starling.utils.Align;
 	
 	import ui.AppInterface;
+	import ui.chart.GlucoseFactory;
+	import ui.chart.GraphLayoutFactory;
+	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -126,7 +125,7 @@ package ui.screens
 			userTimeAgoFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
 		
 			//Latest 2 BgReadings
-			glucoseList = BgReading.latest(2).toArray().reverse();
+			glucoseList = BgReading.latest(2, BlueToothDevice.isFollower()).toArray().reverse();
 			
 			//Calculate Values
 			calculateValues();
