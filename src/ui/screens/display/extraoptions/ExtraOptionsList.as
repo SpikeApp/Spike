@@ -61,6 +61,10 @@ package ui.screens.display.extraoptions
 		private var listTextRenderers:Array;
 		private var timeoutTimer:Timer;
 		private var nightscoutEnabled:Boolean;
+
+		private var preSnoozeScreenIconTexture:Texture;
+
+		private var preSnoozeScreenIconImage:Image;
 		
 		public function ExtraOptionsList()
 		{
@@ -136,6 +140,10 @@ package ui.screens.display.extraoptions
 			nightscoutScreenIconTexture = MaterialDeepGreyAmberMobileThemeIcons.nightscoutTexture;
 			nightscoutScreenIconImage = new Image(nightscoutScreenIconTexture);
 			
+			//Pre-snooze
+			preSnoozeScreenIconTexture = MaterialDeepGreyAmberMobileThemeIcons.snoozeTexture;
+			preSnoozeScreenIconImage = new Image(preSnoozeScreenIconTexture);
+			
 			//Build Menu
 			buildListLayout();
 			
@@ -168,6 +176,7 @@ package ui.screens.display.extraoptions
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','manage_readings_button_title'), icon: glucoseScreenIconImage, id: menuItems.length, action: "manageGlucose" });
 			if (nightscoutEnabled) menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','nightscout_button_title'), icon: nightscoutScreenIconImage, id: menuItems.length, action: "nightscoutView" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','full_screen_button_title'), icon: fullScreenIconImage, id: menuItems.length, action: "showFullScreen" });
+			menuItems.push({ label: "Snooze", icon: preSnoozeScreenIconImage, id: menuItems.length, action: "preSnooze" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_lock_button_title'), icon: noLockIconImage, id: menuItems.length, action: "enableNoLock" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','speech_button_title'), icon: speechIconImage, id: menuItems.length, action: "enableSpeech" });
 			
@@ -342,6 +351,12 @@ package ui.screens.display.extraoptions
 					
 					AppInterface.instance.navigator.pushScreen( Screens.GLUCOSE_MANAGEMENT ); //Push Glucose Management
 				}
+				else if ( itemAction == "preSnooze" ) 
+				{
+					dispatchEventWith(CLOSE); //Close Menu
+					
+					
+				}
 			}
 		}
 		
@@ -442,6 +457,18 @@ package ui.screens.display.extraoptions
 			{
 				glucoseScreenIconTexture.dispose();
 				glucoseScreenIconTexture = null;;
+			}
+			
+			if (preSnoozeScreenIconImage != null)
+			{
+				preSnoozeScreenIconImage.dispose();
+				preSnoozeScreenIconImage = null;;
+			}
+			
+			if (preSnoozeScreenIconTexture != null)
+			{
+				preSnoozeScreenIconTexture.dispose();
+				preSnoozeScreenIconTexture = null;;
 			}
 			
 			if (timeoutTimer != null)
