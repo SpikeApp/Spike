@@ -722,7 +722,7 @@ package services
 				snoozeValueSetter(alertType.defaultSnoozePeriodInMinutes);
 			}
 			
-			function canceledHandler(event:flash.events.Event):void {
+			function canceledHandler(event:starling.events.Event):void {
 				BackgroundFetch.stopPlayingSound();
 				if (presnoozeResetFunction != null) {
 					presnoozeResetFunction();
