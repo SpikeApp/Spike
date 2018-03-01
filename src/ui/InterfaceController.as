@@ -297,34 +297,44 @@ package ui
 		private static function itemStatus(e:Touch3DEvent):void
 		{
 			if (e.itemValue == "calibration")
-				CalibrationService.calibrationOnRequest();
+				Starling.juggler.delayCall(CalibrationService.calibrationOnRequest, 0.4);
 			else if (e.itemValue == "stopsensor")
 			{
-				AlertManager.showActionAlert(
-					ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_message'),
-					60,
-					[
-						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
-						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','stop_alert_button_label'), triggered: onStopSensorTriggered }
-					]
-				);
-			}
-			else if (e.itemValue == "startsensor")
-			{
-				if (Sensor.getActiveSensor() == null)
-					AppInterface.instance.navigator.pushScreen(Screens.SENSOR_START);
-				else
+				Starling.juggler.delayCall(stopSensor, 0.4);
+				
+				function stopSensor():void
 				{
 					AlertManager.showActionAlert(
-						ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_active_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_active_alert_message'),
+						ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('sensorscreen','stop_sensor_alert_message'),
 						60,
 						[
 							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
 							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','stop_alert_button_label'), triggered: onStopSensorTriggered }
 						]
 					);
+				}
+			}
+			else if (e.itemValue == "startsensor")
+			{
+				Starling.juggler.delayCall(startSensor, 0.4);
+				
+				function startSensor():void
+				{
+					if (Sensor.getActiveSensor() == null)
+						AppInterface.instance.navigator.pushScreen(Screens.SENSOR_START);
+					else
+					{
+						AlertManager.showActionAlert(
+							ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_active_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_active_alert_message'),
+							60,
+							[
+								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','stop_alert_button_label'), triggered: onStopSensorTriggered }
+							]
+						);
+					}
 				}
 			}
 		}
