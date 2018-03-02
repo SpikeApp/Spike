@@ -61,9 +61,11 @@ package services
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
+		private static const TIME_5_MINUTES_30_SECONDS:int = (5 * 60 * 1000) + 30000;
 		private static const TIME_5_MINUTES_10_SECONDS:int = (5 * 60 * 1000) + 10000;
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		private static const TIME_4_MINUTES_30_SECONDS:int = (4 * 60 * 1000) + 30000;
+		private static const TIME_30_SECONDS:int = 30000;
 		private static const TIME_10_SECONDS:int = 10000;
 		
 		/* Logical Variables */
@@ -329,10 +331,19 @@ package services
 			var latestBGReading:BgReading = BgReading.lastNoSensor();
 			if (latestBGReading != null) 
 			{
-				nextFollowDownloadTime = latestBGReading.timestamp + TIME_5_MINUTES_10_SECONDS;
-				while (nextFollowDownloadTime < now) 
+				if (now - latestBGReading.timestamp >= TIME_5_MINUTES_30_SECONDS)
 				{
-					nextFollowDownloadTime += TIME_5_MINUTES;
+					//Some users are uploading values to nightscout with a bigger delay than it was supposed (>10 seconds)... 
+					//This will make Spike retry in 30sec so they don't see outdated values in the chart.
+					nextFollowDownloadTime = now + TIME_30_SECONDS; 
+				}
+				else
+				{
+					nextFollowDownloadTime = latestBGReading.timestamp + TIME_5_MINUTES_10_SECONDS;
+					while (nextFollowDownloadTime < now) 
+					{
+						nextFollowDownloadTime += TIME_5_MINUTES;
+					}
 				}
 			}
 			else
