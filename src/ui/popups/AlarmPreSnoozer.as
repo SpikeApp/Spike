@@ -114,6 +114,9 @@ package ui.popups
 			var alarmSelectorContainer:LayoutGroup = new LayoutGroup();
 			alarmSelectorContainer.layout = alarmSelectorLayout;*/
 			
+			if (mainContainer != null)
+				mainContainer.removeChildren();
+			
 			/* Main Container */
 			var mainLayout:VerticalLayout = new VerticalLayout();
 			mainLayout.horizontalAlign = HorizontalAlign.CENTER;
@@ -183,6 +186,7 @@ package ui.popups
 		{
 			var selectedAlarmIndex:int = alarmTypesPicker.selectedIndex;
 			mainContainer.removeChild(snoozeStatusLabel);
+			mainContainer.removeChild(snoozePickerList);
 			
 			if (selectedAlarmIndex == 0)
 			{
@@ -201,6 +205,7 @@ package ui.popups
 					actionButton.label = "PreSnooze";
 					actionButtonsContainer.addChild(actionButton);
 					actionButton.addEventListener(Event.TRIGGERED, onClose);
+					createSecondPhase();
 				}
 			}
 			else if (selectedAlarmIndex == 1)
@@ -327,7 +332,7 @@ package ui.popups
 			
 			snoozePickerList.dataProvider = dataProvider;
 			snoozePickerList.selectedIndex = selectedSnoozeIndex;
-			mainContainer.addChild(snoozePickerList);
+			mainContainer.addChildAt(snoozePickerList, 2);
 		}
 		
 		public static function closeCallout(e:TimerEvent = null):void
