@@ -50,7 +50,7 @@ package services
 		 */
 		private static var initialCalibrationRequested:Boolean;
 		
-		private static const MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS:int = 120;
+		private static const MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS:int = 240; //4 minutes
 
 		private static var calibrationValue:TextInput;
 
@@ -254,7 +254,7 @@ package services
 							(
 								isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"),
 								"",
-								Number.NaN,
+								MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS,
 								[
 									{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
 									{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: initialCalibrationValueEntered }
