@@ -107,6 +107,7 @@ package services
 		private static var lastFollowDownloadAttempt:Number;
 		private static var waitingForNSData:Boolean = false;
 		private static var nightscoutFollowURL:String = "";
+		private static var nightscoutFollowOffset:Number = 0;
 		private static var followerModeEnabled:Boolean = false;
 		private static var followerTimer:int = -1;
 		
@@ -290,6 +291,8 @@ package services
 		{
 			nightscoutFollowURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/entries/sgv.json?";
 			if (nightscoutFollowURL.indexOf('http') == -1) nightscoutFollowURL = "https://" + nightscoutFollowURL;
+			
+			nightscoutFollowOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
 		}
 		
 		private static function activateFollower():void
@@ -462,7 +465,9 @@ package services
 						var NSFollowReading:Object = NSBgReadings[arrayCounter];
 						if (NSFollowReading.date) 
 						{
-							var NSFollowReadingTime:Number = NSFollowReading.date;
+							var NSFollowReadingDate:Date = new Date(NSFollowReading.date);
+							NSFollowReadingDate.setMinutes(NSFollowReadingDate.minutes + nightscoutFollowOffset);
+							var NSFollowReadingTime:Number = NSFollowReadingDate.valueOf();
 							if (NSFollowReadingTime >= timeOfFirstBgReadingToDowload) 
 							{
 								var bgReading:FollowerBgReading = new FollowerBgReading
@@ -1070,6 +1075,15 @@ package services
 				}
 				else
 					deactivateFollower()
+			}
+			else if (e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET)
+			{
+				if (followerModeEnabled)
+				{
+					deactivateFollower();
+					setupFollowerProperties();
+					activateFollower();
+				}
 			}
 		}
 		

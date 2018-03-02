@@ -3,6 +3,7 @@ package ui.screens.display.settings.general
 	import database.CommonSettings;
 	
 	import feathers.controls.List;
+	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
@@ -28,11 +29,13 @@ package ui.screens.display.settings.general
 		/* Display Objects */
 		private var collectionModePicker:PickerList;
 		private var nightscoutURLInput:TextInput;
+		private var nightscoutOffsetStepper:NumericStepper;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
 		private var collectionMode:String;		
 		private var followNSURL:String;
+		private var nightscoutOffset:Number;
 		
 		public function DataCollectionSettingsList()
 		{
@@ -62,6 +65,7 @@ package ui.screens.display.settings.general
 			/* Get Values From Database */
 			collectionMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE);
 			followNSURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL);
+			nightscoutOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
 		}
 		
 		private function setupContent():void
@@ -95,6 +99,10 @@ package ui.screens.display.settings.general
 			nightscoutURLInput.text = followNSURL;
 			nightscoutURLInput.addEventListener(Event.CHANGE, onNSURLChanged);
 			
+			//Nightscout Offset Stepper
+			nightscoutOffsetStepper = LayoutFactory.createNumericStepper(-10000, 10000, nightscoutOffset, 5); 
+			nightscoutOffsetStepper.addEventListener(Event.CHANGE, onNSOffsetChanged);
+			
 			/* Set Item Renderer */
 			itemRendererFactory = function():IListItemRenderer
 			{
@@ -113,7 +121,10 @@ package ui.screens.display.settings.general
 			var data:Array = [];
 			data.push( { text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','mode_label'), accessory: collectionModePicker } );
 			if (collectionMode == "Follower")
+			{
 				data.push( { text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','follower_ns_url'), accessory: nightscoutURLInput } );
+				data.push( { text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','time_offset'), accessory: nightscoutOffsetStepper } );
+			}
 			
 			dataProvider = new ArrayCollection(data);
 		}
@@ -132,6 +143,9 @@ package ui.screens.display.settings.general
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != followNSURL)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL, followNSURL);
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET) != String(nightscoutOffset))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET, String(nightscoutOffset));
 			
 			//Refresh main menu. Menu items are different for hosts and followers
 			AppInterface.instance.menu.refreshContent();
@@ -162,6 +176,13 @@ package ui.screens.display.settings.general
 			needsSave = true;
 		}
 		
+		private function onNSOffsetChanged(e:Event):void
+		{
+			nightscoutOffset = nightscoutOffsetStepper.value;
+			
+			needsSave = true;
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -179,6 +200,13 @@ package ui.screens.display.settings.general
 				nightscoutURLInput.removeEventListener(Event.CHANGE, onNSURLChanged);
 				nightscoutURLInput.dispose();
 				nightscoutURLInput = null;
+			}
+			
+			if (nightscoutOffsetStepper != null)
+			{
+				nightscoutOffsetStepper.removeEventListener(Event.CHANGE, onNSOffsetChanged);
+				nightscoutOffsetStepper.dispose();
+				nightscoutOffsetStepper = null;
 			}
 			
 			super.dispose();
