@@ -617,8 +617,9 @@ package services
 			BackgroundFetch.stopPlayingSound();
 		}
 		
-		public static function openLowAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
-			myTrace("in openLowAlertSnoozePickerDialog");
+		//public static function openLowAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
+		public static function snoozeLowAlert(index:int):void {
+			/*myTrace("in openLowAlertSnoozePickerDialog");
 			if (preSnooze)
 				_lowAlertPreSnoozed = preSnooze;
 			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT),
@@ -628,11 +629,21 @@ package services
 				"snooze_text_low_alert",
 				NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER,
 				setLowAlertSnooze,
-				preSnooze ? resetLowAlertPreSnooze : null);
+				preSnooze ? resetLowAlertPreSnooze : null);*/
+			
+			myTrace("in snoozeLowAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
+			_lowAlertPreSnoozed = true;
+			Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+			resetLowAlertPreSnooze();
+			disableRepeatAlert(1);
+			BackgroundFetch.stopPlayingSound();
+			_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		public static function openVeryLowAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
-			myTrace("in openVeryLowAlertSnoozePickerDialog");
+		//public static function openVeryLowAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
+		public static function snoozeVeyLowAlert(index:int):void {
+			/*myTrace("in openVeryLowAlertSnoozePickerDialog");
 			if (preSnooze)
 				_veryLowAlertPreSnoozed = preSnooze;
 			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT),
@@ -642,11 +653,21 @@ package services
 				"snooze_text_very_low_alert",
 				NotificationService.ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER,
 				setVeryLowAlertSnooze,
-				preSnooze ? resetVeryLowAlertPreSnooze : null);
+				preSnooze ? resetVeryLowAlertPreSnooze : null);*/
+			
+			myTrace("in snoozeVeyLowAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
+			_veryLowAlertPreSnoozed = true;
+			Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
+			resetVeryLowAlertPreSnooze();
+			disableRepeatAlert(2);
+			BackgroundFetch.stopPlayingSound();
+			_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		public static function openHighAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
-			myTrace("in openHighAlertSnoozePickerDialog");
+		//public static function openHighAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
+		public static function snoozeHighAlert(index:int):void {
+			/*myTrace("in openHighAlertSnoozePickerDialog");
 			if (preSnooze)
 				_highAlertPreSnoozed = preSnooze;
 			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT),
@@ -656,12 +677,22 @@ package services
 				"snooze_text_high_alert",
 				NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER,
 				setHighAlertSnooze,
-				preSnooze ? resetHighAlertPreSnooze : null);
+				preSnooze ? resetHighAlertPreSnooze : null);*/
+			
+			myTrace("in snoozeHighAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
+			_highAlertPreSnoozed = true;
+			Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+			resetHighAlertPreSnooze();
+			disableRepeatAlert(3);
+			BackgroundFetch.stopPlayingSound();
+			_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		public static function openVeryHighAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
-			myTrace("in openVeryHighAlertSnoozePickerDialog");
-			if (preSnooze)
+		//public static function openVeryHighAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
+		public static function snoozeVeryHighAlert(index:int):void {
+			myTrace("in snoozeVeryHighAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
+			/*if (preSnooze)
 				_veryHighAlertPreSnoozed = preSnooze;
 			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT),
 				NotificationService.ID_FOR_VERY_HIGH_ALERT,
@@ -670,11 +701,20 @@ package services
 				"snooze_text_very_high_alert",
 				NotificationService.ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER,
 				setVeryHighAlertSnooze,
-				preSnooze ? resetVeryHighAlertPreSnooze : null);
+				preSnooze ? resetVeryHighAlertPreSnooze : null);*/
+			
+			_veryHighAlertPreSnoozed = true;
+			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
+			resetVeryHighAlertPreSnooze();
+			disableRepeatAlert(4);
+			BackgroundFetch.stopPlayingSound();
+			_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		public static function openMissedReadingAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
-			myTrace("in openMissedReadingAlertSnoozePickerDialog");
+		public static function snoozeMissedReadingAlert(index:int):void {
+		//public static function openMissedReadingAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
+			/*myTrace("in openMissedReadingAlertSnoozePickerDialog");
 			if (preSnooze)
 				_missedReadingAlertPreSnoozed = preSnooze;
 			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT),
@@ -684,11 +724,20 @@ package services
 				"snooze_text_missed_reading_alert",
 				NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER,
 				setMissedReadingAlertSnooze,
-				preSnooze ? resetMissedreadingAlertPreSnooze : null);
+				preSnooze ? resetMissedreadingAlertPreSnooze : null);*/
+			
+			_missedReadingAlertPreSnoozed = true;
+			Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+			resetMissedreadingAlertPreSnooze();
+			disableRepeatAlert(5);
+			BackgroundFetch.stopPlayingSound();
+			_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		public static function openPhoneMutedAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
-			myTrace("in openPhoneMutedAlertSnoozePickerDialog");
+		//public static function openPhoneMutedAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
+		public static function snoozePhoneMutedAlert(index:int):void {
+			/*myTrace("in openPhoneMutedAlertSnoozePickerDialog");
 			if (preSnooze)
 				_phoneMutedAlertPreSnoozed = preSnooze;
 			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT),
@@ -698,7 +747,15 @@ package services
 				"snooze_text_phone_muted_alert",
 				NotificationService.ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER,
 				setPhoneMutedAlertSnooze,
-				preSnooze ? resetPhoneMutedAlertPreSnooze : null);
+				preSnooze ? resetPhoneMutedAlertPreSnooze : null);*/
+			
+			_phoneMutedAlertPreSnoozed = true;
+			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
+			resetPhoneMutedAlertPreSnooze();
+			disableRepeatAlert(7);
+			BackgroundFetch.stopPlayingSound();
+			_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
 		private static function openSnoozePickerDialog(alertSetting:String, notificationId:int, notificationEvent:NotificationEvent, 

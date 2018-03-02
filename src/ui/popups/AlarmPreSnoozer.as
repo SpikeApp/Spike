@@ -204,8 +204,9 @@ package ui.popups
 				{
 					actionButton.label = "PreSnooze";
 					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, onClose);
+					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
 					createSecondPhase();
+					snoozeAction = AlarmService.snoozeVeryHighAlert
 				}
 			}
 			else if (selectedAlarmIndex == 1)
@@ -224,7 +225,9 @@ package ui.popups
 				{
 					actionButton.label = "PreSnooze";
 					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, onClose);
+					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeHighAlert;
 				}
 			}
 			else if (selectedAlarmIndex == 2)
@@ -243,7 +246,9 @@ package ui.popups
 				{
 					actionButton.label = "PreSnooze";
 					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, onClose);
+					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeLowAlert;
 				}
 			}
 			else if (selectedAlarmIndex == 3)
@@ -262,7 +267,9 @@ package ui.popups
 				{
 					actionButton.label = "PreSnooze";
 					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, onClose);
+					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeVeyLowAlert;
 				}
 			}
 			else if (selectedAlarmIndex == 4)
@@ -281,7 +288,9 @@ package ui.popups
 				{
 					actionButton.label = "PreSnooze";
 					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, onClose);
+					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeMissedReadingAlert;
 				}
 			}
 			else if (selectedAlarmIndex == 5)
@@ -300,7 +309,9 @@ package ui.popups
 				{
 					actionButton.label = "PreSnooze";
 					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, onClose);
+					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozePhoneMutedAlert;
 				}
 			}
 			
@@ -310,12 +321,22 @@ package ui.popups
 		
 		private static function snoozeAlarm(e:Event):void
 		{
-			
+			if (snoozeAction != null)
+			{
+				snoozeAction.call(null, snoozePickerList.selectedIndex);
+				snoozeAction = null;
+				closeCallout();
+			}
 		}
 		
 		private static function unSnoozeAlarm(e:Event):void
 		{
-			
+			if (unSnoozeAction != null)
+			{
+				unSnoozeAction.call();
+				unSnoozeAction = null;
+				closeCallout();
+			}
 		}
 		
 		private static function createSecondPhase():void
@@ -335,7 +356,7 @@ package ui.popups
 			mainContainer.addChildAt(snoozePickerList, 2);
 		}
 		
-		public static function closeCallout(e:TimerEvent = null):void
+		public static function closeCallout():void
 		{
 			if (!isOpened)
 				return;

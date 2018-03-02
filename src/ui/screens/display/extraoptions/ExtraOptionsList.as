@@ -358,7 +358,7 @@ package ui.screens.display.extraoptions
 				{	
 					dispatchEventWith(CLOSE); //Close Menu
 					
-					AlarmPreSnoozer.displaySnoozer("Pre-(Un)Snoozer", AlarmService.snoozeValueStrings);	
+					AlarmPreSnoozer.displaySnoozer("Pre/Un Snoozer", AlarmService.snoozeValueStrings);	
 				}
 			}
 		}
