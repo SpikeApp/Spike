@@ -1,5 +1,9 @@
 1.1.1
 FIX: When in follower mode, Spike will now correctly show glucose values in fullscreen.
+FIX: When in follower mode, Spike will now only consider glucose values fetched from Nightscout. Calibrations and any other treatment will not be rendered in the chart. This was causing false "LOW" values in the follower's chart when the master inserted calibrations.
+FIX: The authorize calendar access button in settings -> watch was not showing. Sorry about that!
+FIX: Notification ID for Transmitter PL when a dead or expired sensor is detected. (Johan Degraeve)
+FIX: Attempt to fix a small bug that sometimes can show the chart in the future.
 
 1.1.0
 FEATURE: Nightscout follower mode! Now you can use Spike as master or as follower. To activate follower mode go to settings -> general -> data collection, switch to follower and input the Nightscout URL you want to follow. Done! Followers will have all Spike features like Apple Watch complication, Today Widget, Alarms, 24H Glucose Distribution, Offline Looping, etc. You can switch back and forth from master to follower mode and vice versa. A follower can even act as a proxy by getting data from a Nightscout URL and sharing it to another Nightscout URL or Dexcom Share. (Follower mode for Dexcom Share is coming soon!)

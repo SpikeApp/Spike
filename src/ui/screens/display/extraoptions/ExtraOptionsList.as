@@ -25,12 +25,15 @@ package ui.screens.display.extraoptions
 	
 	import model.ModelLocator;
 	
+	import services.AlarmService;
+	
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.text.TextFormat;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
+	import ui.popups.AlarmPreSnoozer;
 	import ui.screens.Screens;
 	
 	import utils.Constants;
@@ -352,10 +355,10 @@ package ui.screens.display.extraoptions
 					AppInterface.instance.navigator.pushScreen( Screens.GLUCOSE_MANAGEMENT ); //Push Glucose Management
 				}
 				else if ( itemAction == "preSnooze" ) 
-				{
+				{	
 					dispatchEventWith(CLOSE); //Close Menu
 					
-					
+					AlarmPreSnoozer.displaySnoozer("Pre-(Un)Snoozer", AlarmService.snoozeValueStrings);	
 				}
 			}
 		}
