@@ -332,10 +332,10 @@ package services
 			myTrace("in planApplicationStoppedAlert, planning alert for the future");
 			lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
 			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
-			{
-				Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
-				
+			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "" && (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()))
+			{	
 				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 					.setCount(BadgeBuilder.getAppBadge())
 					.setId(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT)
