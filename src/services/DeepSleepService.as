@@ -16,6 +16,7 @@ package services
 	
 	import events.SettingsServiceEvent;
 	
+	import utils.Constants;
 	import utils.Trace;
 	
 	public class DeepSleepService extends EventDispatcher
@@ -135,7 +136,7 @@ package services
 		
 		private static function playSound():void 
 		{
-			if (!BackgroundFetch.isPlayingSound()) 
+			if (!BackgroundFetch.isPlayingSound() && !Constants.appInForeground && !BackgroundFetch.appIsInForeground()) //No need to play if the app is in the foregorund
 			{
 				var now:Number = new Date().valueOf();
 				if (now - lastLogPlaySoundTimeStamp > 1 * 60 * 1000) 
