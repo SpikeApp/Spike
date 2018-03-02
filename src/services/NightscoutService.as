@@ -505,8 +505,9 @@ package services
 									NSFollowReadingTime, //lastmodifiedtimestamp
 									NSFollowReading._id //unique id
 								);  
-								bgReading.findSlope(true);
+								
 								ModelLocator.addBGReading(bgReading);
+								bgReading.findSlope(true);
 								BgReadingsToSend.push(bgReading);
 								newData = true;
 							} 
@@ -523,7 +524,9 @@ package services
 					}
 					
 					if (newData) 
+					{
 						_instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
+					}
 				} 
 				else 
 					Trace.myTrace("NightscoutService.as", "Nightscout response was not a JSON array. Ignoring! Response: " + response);
