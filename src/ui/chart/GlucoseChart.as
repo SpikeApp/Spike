@@ -529,7 +529,7 @@ package ui.chart
 			//Creat dummy marker in case the current timestamp is bigger than the latest bgreading timestamp
 			if (!dummyModeActive)
 			{
-				if (lastBGreadingTimeStamp > Number(_dataSource[_dataSource.length - 1].timestamp) && chartType == MAIN_CHART)
+				if (lastBGreadingTimeStamp > Number(_dataSource[_dataSource.length - 1].timestamp) && lastBGreadingTimeStamp - Number(_dataSource[_dataSource.length - 1].timestamp) > (4.5 * 60 * 1000) && chartType == MAIN_CHART)
 				{
 					var dummy:Sprite = new Sprite();
 					dummy.x = (lastBGreadingTimeStamp - firstBGReadingTimeStamp) * scaleXFactor;
