@@ -1081,6 +1081,7 @@ package services
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""
 				)
 				{
+					deactivateFollower();
 					setupFollowerProperties();
 					activateFollower();
 				}
