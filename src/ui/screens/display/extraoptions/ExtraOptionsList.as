@@ -58,16 +58,14 @@ package ui.screens.display.extraoptions
 		private var glucoseScreenIconImage:Image;
 		private var selectedFontTxtFormat:TextFormat;
 		private var unselectedFontTxtFormat:TextFormat;
+		private var preSnoozeScreenIconTexture:Texture;
+		private var preSnoozeScreenIconImage:Image;
 		
 		/* Properties */
 		private var speechEnabled:Boolean;
 		private var listTextRenderers:Array;
 		private var timeoutTimer:Timer;
 		private var nightscoutEnabled:Boolean;
-
-		private var preSnoozeScreenIconTexture:Texture;
-
-		private var preSnoozeScreenIconImage:Image;
 		
 		public function ExtraOptionsList()
 		{
@@ -179,7 +177,7 @@ package ui.screens.display.extraoptions
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','manage_readings_button_title'), icon: glucoseScreenIconImage, id: menuItems.length, action: "manageGlucose" });
 			if (nightscoutEnabled) menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','nightscout_button_title'), icon: nightscoutScreenIconImage, id: menuItems.length, action: "nightscoutView" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','full_screen_button_title'), icon: fullScreenIconImage, id: menuItems.length, action: "showFullScreen" });
-			menuItems.push({ label: "Snooze", icon: preSnoozeScreenIconImage, id: menuItems.length, action: "preSnooze" });
+			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','snoozer_button_title'), icon: preSnoozeScreenIconImage, id: menuItems.length, action: "preSnooze" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_lock_button_title'), icon: noLockIconImage, id: menuItems.length, action: "enableNoLock" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','speech_button_title'), icon: speechIconImage, id: menuItems.length, action: "enableSpeech" });
 			
@@ -358,7 +356,7 @@ package ui.screens.display.extraoptions
 				{	
 					dispatchEventWith(CLOSE); //Close Menu
 					
-					AlarmPreSnoozer.displaySnoozer("Pre/Un Snoozer", AlarmService.snoozeValueStrings);	
+					AlarmPreSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString('chartscreen','snoozer_popup_title'), AlarmService.snoozeValueStrings);	
 				}
 			}
 		}
