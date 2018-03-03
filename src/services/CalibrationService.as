@@ -277,6 +277,9 @@ package services
 		
 		private static function initialCalibrationValueEntered():void 
 		{
+			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null)
+				return;
+			
 			myTrace("in intialCalibrationValueEntered");
 			
 			var asNumber:Number = Number(calibrationValue.text.replace(",","."));
@@ -448,6 +451,9 @@ package services
 					
 					function calibrationDialogClosedWithOverride():void 
 					{
+						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null)
+							return;
+						
 						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
 						if (isNaN(asNumber)) 
 						{
@@ -511,6 +517,9 @@ package services
 					
 					function calibrationDialogClosedWithoutOverride():void 
 					{
+						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null)
+							return;
+						
 						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
 						if (isNaN(asNumber)) 
 						{
@@ -552,6 +561,9 @@ package services
 		
 		private static function calibrationValueEntered():void 
 		{
+			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null)
+				return;
+			
 			var asNumber:Number = Number(calibrationValue.text.replace(",","."));
 			if (isNaN(asNumber)) 
 			{
