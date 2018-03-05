@@ -299,6 +299,8 @@ package ui.screens
 					newReadingsListFollower = newReadingsListFollower.concat(readings);
 				}		
 			}	
+			
+			AlarmService.cancelInactiveAlert();
 		}
 		
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
@@ -328,6 +330,8 @@ package ui.screens
 				Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
 				newReadingsList.push(reading);
 			}
+			
+			AlarmService.cancelInactiveAlert();
 		}
 		
 		private function onAppInBackground (e:SpikeEvent):void
@@ -345,7 +349,11 @@ package ui.screens
 			clearTimeout(queueTimeout);
 			
 			if(!BackgroundFetch.appIsInForeground())
+			{
+				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
+				
 				return;
+			}
 			
 			try
 			{
