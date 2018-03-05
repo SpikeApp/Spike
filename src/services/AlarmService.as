@@ -173,6 +173,7 @@ package services
 		
 		private static var lastAlarmCheckTimeStamp:Number;
 		private static var lastCheckMuteTimeStamp:Number;
+		private static var lastPhoneMutedAlertCheckTimeStamp:Number;
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
 		private static var lastMissedReadingAlertCheckTimeStamp:Number;
 		private static var lastApplicationStoppedAlertCheckTimeStamp:Number;
@@ -244,6 +245,9 @@ package services
 		private static var soundsAsDisplayedSplitted:Array;
 		private static var soundsAsStoredInAssetsSplitted:Array;
 		
+		private static var queuedAlertSound:String = "";
+		private static var lastQueuedAlertSoundTimeStamp:Number = 0;
+		
 		public static function get instance():AlarmService {
 			return _instance;
 		}
@@ -261,21 +265,18 @@ package services
 				initialStart = false;
 			
 			lastCheckMuteTimeStamp = new Number(0);
+			lastPhoneMutedAlertCheckTimeStamp = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, checkMuted);
-			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
-			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 			lastAlarmCheckTimeStamp = 0;
 			lastMissedReadingAlertCheckTimeStamp = 0;
 			lastApplicationStoppedAlertCheckTimeStamp = 0;
-			lastCheckMuteTimeStamp = 0;
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString("alarmservice","minutes"));
@@ -344,9 +345,8 @@ package services
 									//alert enabled
 									myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
 									BackgroundFetch.checkMuted();
-							} else {
-									lastCheckMuteTimeStamp = nowNumber;
 							}
+							lastCheckMuteTimeStamp = nowNumber;
 					}
 			}
 		}
@@ -936,8 +936,9 @@ package services
 			myTrace("in phoneMuted");
 			ModelLocator.phoneMuted = true;
 			var now:Date = new Date(); 
-			if (now.valueOf() - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
+			if (now.valueOf() - lastPhoneMutedAlertCheckTimeStamp > (4 * 60 + 45) * 1000) {
 				myTrace("in phoneMuted, checking phoneMute Alarm because it's been more than 4 minutes 45 seconds");
+				lastPhoneMutedAlertCheckTimeStamp = (new Date()).valueOf();
 				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
 				//var alertValue:Number = listOfAlerts.getValue(Number.NaN, "", now);
@@ -978,12 +979,20 @@ package services
 			} else {
 				myTrace("less than 4 minutes 45 seconds since last check, not checking phoneMuted alert now");
 			}
-			lastCheckMuteTimeStamp = now.valueOf();
 		}
 		
 		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
 			myTrace("in phoneNotMuted");
 			ModelLocator.phoneMuted = false;
+			
+			if ((new Date()).valueOf() - lastQueuedAlertSoundTimeStamp < 2 * 1000) {//it should normally be max 1 second
+				if (queuedAlertSound != "") {
+					myTrace("in phoneNotMuted, sound queued and fired alert time < 2 seconds ago");
+					BackgroundFetch.playSound(queuedAlertSound);
+				}
+			}
+			queuedAlertSound = "";
+			
 			//if not presnoozed then remove notification, even if there isn't any
 			if (!_phoneMutedAlertPreSnoozed) {
 				myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
@@ -992,8 +1001,6 @@ package services
 				_phoneMutedAlertSnoozePeriodInMinutes = 0;
 				disableRepeatAlert(7);
 			}
-			
-			lastCheckMuteTimeStamp = (new Date()).valueOf();
 		}
 		
 		/**
@@ -1038,10 +1045,18 @@ package services
 				{
 					BackgroundFetch.playSound("../assets/sounds/" + soundToSet);
 				}
+				else 
+				{
+					if (ModelLocator.phoneMuted) {
+						//Phone muted but user may have unmuted, so let's queue the sound and check muted
+						queueAlertSound("../assets/sounds/" + soundToSet);
+					}
+				}
 			} 
 			else 
 			{
-				BackgroundFetch.playSound("../assets/sounds/" + soundToSet);		
+				queueAlertSound("../assets/sounds/" + soundToSet);
+
 			}
 			
 			if (soundToSet == "default")
@@ -1065,6 +1080,16 @@ package services
 				alarmTimer.delay = 60000;
 				alarmTimer.start();
 			}
+		}
+		
+		private static function queueAlertSound(sound:String):void {
+			queuedAlertSound = sound;
+			lastQueuedAlertSoundTimeStamp = (new Date()).valueOf();
+			
+			//phone might be muted, but Modellocator.phonemuted may be false
+			//launch check now
+			//use backgroundfetch.checkmuted, bypasses all phone muted settings, user might have switched from non muted to muted just very recently
+			BackgroundFetch.checkMuted();
 		}
 		
 		public static function cancelInactiveAlert():void
