@@ -3,6 +3,7 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -277,14 +278,14 @@ package services
 		
 		private static function initialCalibrationValueEntered():void 
 		{
-			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null)
+			initialCalibrationActive = false;
+			
+			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
 				return;
 			
 			myTrace("in intialCalibrationValueEntered");
 			
 			var asNumber:Number = Number(calibrationValue.text.replace(",","."));
-			
-			initialCalibrationActive = false;
 			
 			if (isNaN(asNumber)) 
 			{
@@ -451,7 +452,7 @@ package services
 					
 					function calibrationDialogClosedWithOverride():void 
 					{
-						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null)
+						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
 							return;
 						
 						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
@@ -517,7 +518,7 @@ package services
 					
 					function calibrationDialogClosedWithoutOverride():void 
 					{
-						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null)
+						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
 							return;
 						
 						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
@@ -561,7 +562,7 @@ package services
 		
 		private static function calibrationValueEntered():void 
 		{
-			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null)
+			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
 				return;
 			
 			var asNumber:Number = Number(calibrationValue.text.replace(",","."));

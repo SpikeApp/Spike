@@ -66,7 +66,7 @@ package ui.popups
 		
 		private static function displayCallout():void
 		{
-			if (!BackgroundFetch.appIsInForeground() || BackgroundFetch.appIsInBackground())
+			if (!BackgroundFetch.appIsInForeground())
 				return
 			
 			//Close the callout

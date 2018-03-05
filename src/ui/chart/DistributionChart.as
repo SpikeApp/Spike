@@ -23,6 +23,7 @@ package ui.chart
 	import starling.textures.RenderTexture;
 	
 	import utils.Constants;
+	import utils.Trace;
 	
 	[ResourceBundle("chartscreen")]
 	
@@ -215,10 +216,13 @@ package ui.chart
 			statsContainer.addChild(numReadingsSection);
 		}
 		
-		public function drawChart():void
-		{
+		public function drawChart():Boolean
+		{	
 			if (_dataSource != null && _dataSource.length > 0)
 				dummyModeActive = false;
+			
+			if (!BackgroundFetch.appIsInForeground())
+				return false;
 			
 			/**
 			 * VARIABLES
@@ -391,29 +395,38 @@ package ui.chart
 			numReadingsSection.message.text = !dummyModeActive ? realReadingsNumber + " (" + percentageReadings + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			avgGlucoseSection.message.text = !dummyModeActive ? averageGlucoseValueOutput + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			estA1CSection.message.text = !dummyModeActive ? A1C + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			
+			return true;
 		}
 		
 		private function renderPieChart():void
 		{
-			pieContainer.removeChild(pieImage);
-			
-			disposeTextures();
-			
-			pieTexture = new RenderTexture(pieGraphicContainer.width + 3, pieGraphicContainer.height + 3);
-			pieTexture.draw(pieGraphicContainer, null, 1, 4);
-			pieImage = new Image(pieTexture);
-			pieContainer.addChild(pieImage);
-			
-			//Remove previous Ngons
-			var i:int;
-			for (i = 0; i < nGons.length; i++) 
+			try
 			{
-				var currentNGon:NGon = nGons[i];
-				pieContainer.removeChild(currentNGon);
-				currentNGon.dispose();
-				currentNGon = null;
+				pieContainer.removeChild(pieImage);
+				
+				disposeTextures();
+				
+				pieTexture = new RenderTexture(pieGraphicContainer.width + 3, pieGraphicContainer.height + 3);
+				pieTexture.draw(pieGraphicContainer, null, 1, 4);
+				pieImage = new Image(pieTexture);
+				pieContainer.addChild(pieImage);
+				
+				//Remove previous Ngons
+				var i:int;
+				for (i = 0; i < nGons.length; i++) 
+				{
+					var currentNGon:NGon = nGons[i];
+					pieContainer.removeChild(currentNGon);
+					currentNGon.dispose();
+					currentNGon = null;
+				}
+				nGons.length = 0;
+			} 
+			catch(error:Error) 
+			{
+				Trace.myTrace("DistributionChart.as", "Error drawing pie texture when app came to the foreground. Error: " + error.message);
 			}
-			nGons.length = 0;
 		}
 		
 		/**

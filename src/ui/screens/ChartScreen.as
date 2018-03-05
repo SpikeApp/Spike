@@ -3,6 +3,8 @@ package ui.screens
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.system.System;
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -65,6 +67,7 @@ package ui.screens
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
 		private var appInBackground:Boolean = false;
+		private var queueTimeout:int = -1;
 		
 		//Display Objects
 		private var glucoseChart:GlucoseChart;
@@ -334,40 +337,76 @@ package ui.screens
 		
 		private function onAppInForeground (e:SpikeEvent):void
 		{
-			if (appInBackground)
+			Starling.juggler.delayCall(processQueue, 0.2);
+		}
+		
+		private function processQueue():void
+		{
+			clearTimeout(queueTimeout);
+			
+			if(!BackgroundFetch.appIsInForeground())
+				return;
+			
+			try
 			{
-				appInBackground = false;
+				if (appInBackground)
+				{
+					var queueAddedToChart:Boolean = false;
+					var queueAddedToPie:Boolean = false;
+					
+					appInBackground = false;
+					
+					if (!BlueToothDevice.isFollower())
+					{
+						if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
+						{
+							if (glucoseChart.addGlucose(newReadingsList))
+								queueAddedToChart = true;
+							
+							if (displayPieChart && pieChart != null)
+							{
+								if (pieChart.drawChart())
+									queueAddedToPie = true;
+							}
+							else
+								queueAddedToPie = true;
+							
+							if (queueAddedToChart && queueAddedToPie)
+								newReadingsList.length = 0;
+						}
+						else
+							if (glucoseChart != null)
+								glucoseChart.calculateDisplayLabels();
+					}
+					else
+					{
+						if (newReadingsListFollower != null && newReadingsListFollower.length > 0 && glucoseChart != null)
+						{
+							if (glucoseChart.addGlucose(newReadingsListFollower))
+								queueAddedToChart = true;
+							
+							if (displayPieChart && pieChart != null)
+							{
+								if (pieChart.drawChart())
+									queueAddedToPie = true;
+							}
+							else
+								queueAddedToPie = true;
+							
+							if (queueAddedToChart && queueAddedToPie)
+								newReadingsListFollower.length = 0;
+						}	
+						else
+							if (glucoseChart != null)
+								glucoseChart.calculateDisplayLabels();
+					}
+				}
+			} 
+			catch(error:Error)
+			{
+				Trace.myTrace("ChartScreen.as", "Error adding queue to chart when app came to the foreground. Error: " + error.message);
 				
-				if (!BlueToothDevice.isFollower())
-				{
-					if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
-					{
-						glucoseChart.addGlucose(newReadingsList);
-						
-						if (displayPieChart && pieChart != null)
-							pieChart.drawChart();
-						
-						newReadingsList.length = 0;
-					}
-					else
-						if (glucoseChart != null)
-							glucoseChart.calculateDisplayLabels();
-				}
-				else
-				{
-					if (newReadingsListFollower != null && newReadingsListFollower.length > 0 && glucoseChart != null)
-					{
-						glucoseChart.addGlucose(newReadingsListFollower);
-						
-						if (displayPieChart && pieChart != null)
-							pieChart.drawChart();
-						
-						newReadingsListFollower.length = 0;
-					}
-					else
-						if (glucoseChart != null)
-							glucoseChart.calculateDisplayLabels();
-				}
+				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
 			}
 		}
 		

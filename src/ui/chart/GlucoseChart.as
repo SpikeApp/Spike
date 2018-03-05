@@ -814,10 +814,10 @@ package ui.chart
 			return yAxis;
 		}
 		
-		public function addGlucose(BGReadingsList:Array):void
+		public function addGlucose(BGReadingsList:Array):Boolean
 		{
-			if(BGReadingsList == null || BGReadingsList.length == 0)
-				return;
+			if(BGReadingsList == null || BGReadingsList.length == 0 || !BackgroundFetch.appIsInForeground())
+				return false;
 			
 			var latestTimestamp:Number = Number(BGReadingsList[BGReadingsList.length - 1].timestamp);
 			var firstTimestamp:Number;
@@ -966,6 +966,8 @@ package ui.chart
 			//Calculate Display Labels
 			currentNumberOfMakers = _dataSource.length;
 			calculateDisplayLabels();
+			
+			return true;
 		}
 		
 		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int):void
