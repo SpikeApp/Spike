@@ -156,7 +156,7 @@ package utils
 			}
 			
 			//Process entire CSV output
-			output = outputArray.join(" ");
+			output = outputArray.join("");
 			
 			//Clean up memory
 			readingsList.length = 0;

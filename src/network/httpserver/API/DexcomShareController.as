@@ -1,4 +1,4 @@
-package services
+package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
@@ -11,10 +11,9 @@ package services
 	
 	import utils.Trace;
 	
-	public class LoopServiceController extends ActionController
+	public class DexcomShareController extends ActionController
 	{
 		/* Constants */
-		private static const TIME_8_HOURS:int = 8 * 60 * 60 * 1000;
 		private static const TIME_5_SECONDS:int = 5000;
 		private static const SESSION_ID:String = "\"d89443d2-327c-4a6f-89e5-496bbb0317db\"";
 		
@@ -22,7 +21,7 @@ package services
 		public var accountName:String;
 		public var password:String;
 		
-		public function LoopServiceController(path:String)
+		public function DexcomShareController(path:String)
 		{
 			super(path);
 		}
@@ -32,7 +31,7 @@ package services
 		 */
 		public function LoginPublisherAccountByName(params:URLVariables):String
 		{
-			Trace.myTrace("LoopServiceController.as", "LoginPublisherAccountByName called!");
+			Trace.myTrace("DexcomShareController.as", "LoginPublisherAccountByName called!");
 			
 			try
 			{
@@ -49,19 +48,19 @@ package services
 			} 
 			catch(error:Error) 
 			{
-				Trace.myTrace("LoopServiceController.as", "Error trying to validate credentials. Error: " + error.message);
+				Trace.myTrace("DexcomShareController.as", "Error trying to validate credentials. Error: " + error.message);
 				
 				return responseSuccess(SESSION_ID);
 			}
 			
-			Trace.myTrace("LoopServiceController.as", "Authentication successful!");
+			Trace.myTrace("DexcomShareController.as", "Authentication successful!");
 			
 			return responseSuccess(SESSION_ID);
 		}
 		
 		public function ReadPublisherLatestGlucoseValues(params:URLVariables):String
 		{
-			Trace.myTrace("LoopServiceController.as", "ReadPublisherLatestGlucoseValues called!");
+			Trace.myTrace("DexcomShareController.as", "ReadPublisherLatestGlucoseValues called!");
 			
 			var response:String;
 			
@@ -90,11 +89,11 @@ package services
 				dexcomReadingsCollection = null;
 				params = null;
 				
-				Trace.myTrace("LoopServiceController.as", "Returning glucose values for " + numReadings + " reading(s).");
+				Trace.myTrace("DexcomShareController.as", "Returning glucose values for " + numReadings + " reading(s).");
 			} 
 			catch(error:Error) 
 			{
-				Trace.myTrace("LoopServiceController.as", "Error processing response. Returning and empty array. Error: " + error.message);
+				Trace.myTrace("DexcomShareController.as", "Error processing response. Returning and empty array. Error: " + error.message);
 				
 				response = "[]";
 			}

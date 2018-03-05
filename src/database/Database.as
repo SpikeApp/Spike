@@ -1965,6 +1965,42 @@ package database
 			}
 		}
 		
+		/**
+		 * Get readings for Spike's internal server synchronously
+		 * From: Starting timestamp.
+		 * Until: Ending timestamp.
+		 * Columns: Data columns to be retrieved from database.
+		 * MaxCount: Maximum of records returned from database (if applicable). 1 means all.
+		 */
+		public static function getBgReadingsDataSynchronous(from:Number, until:Number, columns:String, maxCount:int = 1):Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				if (maxCount == 1)
+					getRequest.text =  "SELECT " + columns + " FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until + " ORDER BY timestamp DESC";
+				else
+					getRequest.text =  "SELECT " + columns + " FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until +  " ORDER BY timestamp ASC LIMIT " + maxCount;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_bgreadings_for_spike_server', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_bgreadings_for_spike_server',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
 		public static function updateCommonSetting(settingId:int,newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
 			if (newValue == null || newValue == "") newValue = "-";
 			try {

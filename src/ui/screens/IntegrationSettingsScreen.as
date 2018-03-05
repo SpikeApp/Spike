@@ -4,6 +4,8 @@ package ui.screens
 	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -14,7 +16,7 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.settings.integration.LoopSettingsList;
+	import ui.screens.display.settings.integration.HTTPServerSettingsList;
 	import ui.screens.display.settings.integration.SiDiarySettingsList;
 	
 	import utils.Constants;
@@ -24,10 +26,12 @@ package ui.screens
 	public class IntegrationSettingsScreen extends BaseSubScreen
 	{	
 		/* Display Objects */
-		private var loopSettings:LoopSettingsList;
-		private var loopLabel:Label;
+		private var httpServerSettings:HTTPServerSettingsList;
+		private var httpServerSectionLabel:Label;
 		private var siDiaryLabel:Label;
 		private var siDiarySettings:SiDiarySettingsList;
+
+		private var httpServerSectionSubLabel:Label;
 		
 		public function IntegrationSettingsScreen() 
 		{
@@ -63,13 +67,17 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
-			//Loop Section Label
-			loopLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','loop_section_label'));
-			screenRenderer.addChild(loopLabel);
+			//HTTP Server Section Label
+			httpServerSectionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','server_section_label'));
+			screenRenderer.addChild(httpServerSectionLabel);
+			
+			//HTTP Server Section Sublabel
+			httpServerSectionSubLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','server_section_sublabel'), HorizontalAlign.LEFT, VerticalAlign.TOP, 11, true);
+			screenRenderer.addChild(httpServerSectionSubLabel);
 			
 			//Loop Settings
-			loopSettings = new LoopSettingsList();
-			screenRenderer.addChild(loopSettings);
+			httpServerSettings = new HTTPServerSettingsList();
+			screenRenderer.addChild(httpServerSettings);
 			
 			//SiDiary Section Label
 			siDiaryLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','sidiary_section_label'));
@@ -91,8 +99,8 @@ package ui.screens
 		override protected function onBackButtonTriggered(event:Event):void
 		{
 			//Save Settings
-			if (loopSettings.needsSave)
-				loopSettings.save();
+			if (httpServerSettings.needsSave)
+				httpServerSettings.save();
 			
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
@@ -106,16 +114,16 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
-			if (loopSettings != null)
+			if (httpServerSettings != null)
 			{
-				loopSettings.dispose();
-				loopSettings = null;
+				httpServerSettings.dispose();
+				httpServerSettings = null;
 			}
 			
-			if (loopLabel != null)
+			if (httpServerSectionLabel != null)
 			{
-				loopLabel.dispose();
-				loopLabel = null;
+				httpServerSectionLabel.dispose();
+				httpServerSectionLabel = null;
 			}
 			
 			if (siDiaryLabel != null)
