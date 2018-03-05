@@ -118,6 +118,7 @@ package ui.popups
 			
 			if (activeAlertsCount == 0 && Constants.appInForeground) //If no alerts are being currently displayed and app is in foreground, let's display this one 
 			{
+				trace("displaying")
 				//Update internal variables
 				activeAlertsCount += 1;
 				activeAlert = alert;
@@ -129,8 +130,11 @@ package ui.popups
 				//Show alert
 				PopUpManager.addPopUp(alert);
 			}
-			else //There's currently one alert being displayed or app is in background, let's add this one to the queue
+			else
+			{//There's currently one alert being displayed or app is in background, let's add this one to the queue
 				alertQueue.push({ alert: alert, timeout: timeoutDuration});
+				trace("queueing");
+			}
 			
 			return alert; //Return the alert in case we need to do further customization to it outside this class
 		}
@@ -143,26 +147,25 @@ package ui.popups
 			/* Clean Up */
 			if (activeAlert != null)
 			{
-				if (PopUpManager.isPopUp(activeAlert))
-					PopUpManager.removePopUp(activeAlert);
-				else
-					PopUpManager.removeAllPopUps();
-				
 				if (activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title")) == -1 &&
 					activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title")) == -1 &&
 					activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title")) == -1 &&
 					activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_alert_title")) == -1
 				)
 				{
+					if (PopUpManager.isPopUp(activeAlert))
+						PopUpManager.removePopUp(activeAlert);
+					else
+						PopUpManager.removeAllPopUps();
 					activeAlert.dispose();
 					activeAlert = null;
+					
+					/* Update Counter */
+					activeAlertsCount -= 1;
+					if (activeAlertsCount < 0)
+						activeAlertsCount = 0;
 				}
 			}
-			
-			/* Update Counter */
-			activeAlertsCount -= 1;
-			if (activeAlertsCount < 0)
-				activeAlertsCount = 0;
 			
 			if (alertQueue.length > 0)
 			{

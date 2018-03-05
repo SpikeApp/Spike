@@ -27,6 +27,8 @@ package services
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
+	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
@@ -493,7 +495,7 @@ package services
 					alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationDialogClosedWithoutOverride });
 					if (addSnoozeOption)
 					{
-						alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen").toUpperCase(), triggered: calibrationDialogClosedWithoutOverride });
+						alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen").toUpperCase(), triggered: calibrationDialogClosedWithSnooze });
 						calibrationValue.width = 210;
 					}
 					
@@ -554,7 +556,7 @@ package services
 					{
 						myTrace("in calibrationOnRequest, subfunction calibrationDialogClosedWithSnooze");
 						
-						snoozeFunction.call();
+						Starling.juggler.delayCall(snoozeFunction, 0.3);
 					}
 				}
 			}
