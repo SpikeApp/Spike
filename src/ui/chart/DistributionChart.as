@@ -12,7 +12,6 @@ package ui.chart
 	
 	import model.ModelLocator;
 	
-	import starling.display.Image;
 	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
@@ -20,10 +19,8 @@ package ui.chart
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
-	import starling.textures.RenderTexture;
 	
 	import utils.Constants;
-	import utils.Trace;
 	
 	[ResourceBundle("chartscreen")]
 	
@@ -63,8 +60,6 @@ package ui.chart
 		//Display Objects
 		private var pieContainer:Sprite;
 		private var statsContainer:Sprite;
-		private var pieTexture:RenderTexture;
-		private var pieImage:Image;
 		private var pieGraphicContainer:Sprite;
 		private var lowSection:PieDistributionSection;
 		private var inRangeSection:PieDistributionSection;
@@ -300,6 +295,9 @@ package ui.chart
 			 * GRAPH DRAWING
 			 */
 			
+			if (pieGraphicContainer != null)
+				pieContainer.removeChild(pieGraphicContainer);
+			
 			pieGraphicContainer = new Sprite();
 			
 			//LOW PORTION
@@ -364,7 +362,7 @@ package ui.chart
 			}
 			
 			/* Create Pie Texture & Image */
-			renderPieChart();
+			pieContainer.addChild(pieGraphicContainer);
 			
 			//Calculate Average Glucose & A1C
 			averageGlucose = (( (totalGlucose / dataLength) * 10 + 0.5)  >> 0) / 10;
@@ -397,36 +395,6 @@ package ui.chart
 			estA1CSection.message.text = !dummyModeActive ? A1C + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			
 			return true;
-		}
-		
-		private function renderPieChart():void
-		{
-			try
-			{
-				pieContainer.removeChild(pieImage);
-				
-				disposeTextures();
-				
-				pieTexture = new RenderTexture(pieGraphicContainer.width + 3, pieGraphicContainer.height + 3);
-				pieTexture.draw(pieGraphicContainer, null, 1, 4);
-				pieImage = new Image(pieTexture);
-				pieContainer.addChild(pieImage);
-				
-				//Remove previous Ngons
-				var i:int;
-				for (i = 0; i < nGons.length; i++) 
-				{
-					var currentNGon:NGon = nGons[i];
-					pieContainer.removeChild(currentNGon);
-					currentNGon.dispose();
-					currentNGon = null;
-				}
-				nGons.length = 0;
-			} 
-			catch(error:Error) 
-			{
-				Trace.myTrace("DistributionChart.as", "Error drawing pie texture when app came to the foreground. Error: " + error.message);
-			}
 		}
 		
 		/**
@@ -481,26 +449,6 @@ package ui.chart
 		/**
 		 * Utility
 		 */
-		private function disposeTextures():void
-		{
-			if (pieImage != null)
-			{
-				if (pieContainer != null)
-					pieContainer.removeChild(pieImage);
-				
-				pieImage.dispose();
-				pieImage = null;
-			}
-			
-			if (pieTexture != null)
-			{
-				pieTexture.dispose();
-				pieTexture = null;
-			}
-			
-			System.pauseForGCIfCollectionImminent(0);
-		}
-		
 		override public function dispose():void
 		{	
 			/* Dispose Display Objects */
@@ -567,7 +515,7 @@ package ui.chart
 				pieGraphicContainer = null;
 			}
 			
-			disposeTextures();
+			System.pauseForGCIfCollectionImminent(0);
 			
 			super.dispose();
 		}
