@@ -1,4 +1,4 @@
-package services
+package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
@@ -11,10 +11,9 @@ package services
 	
 	import utils.Trace;
 	
-	public class LoopServiceController extends ActionController
+	public class DexcomShareController extends ActionController
 	{
 		/* Constants */
-		private static const TIME_8_HOURS:int = 8 * 60 * 60 * 1000;
 		private static const TIME_5_SECONDS:int = 5000;
 		private static const SESSION_ID:String = "\"d89443d2-327c-4a6f-89e5-496bbb0317db\"";
 		
@@ -22,7 +21,7 @@ package services
 		public var accountName:String;
 		public var password:String;
 		
-		public function LoopServiceController(path:String)
+		public function DexcomShareController(path:String)
 		{
 			super(path);
 		}

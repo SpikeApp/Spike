@@ -176,9 +176,6 @@ package ui.screens.display.settings.integration
 		
 		public function save():void
 		{
-			if (userNameTextInput.text == "" && passwordTextInput.text == "" && loopOfflineToggle.isSelected || !needsSave)
-				return
-			
 			//Feature On/Off
 			var loopServiceValueToSave:String;
 			if(loopServiceEnabled) loopServiceValueToSave = "true";

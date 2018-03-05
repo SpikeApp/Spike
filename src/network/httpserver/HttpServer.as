@@ -21,7 +21,7 @@ package network.httpserver
     public class HttpServer
     {
 		/* Constants */
-		private static const MAX_CONNECTION_ATTEMPTS:uint = 20;
+		private static const MAX_CONNECTION_ATTEMPTS:uint = 50;
 		
         private var _serverSocket:ServerSocket;
         private var _controllers:Object = new Object();
@@ -144,7 +144,7 @@ package network.httpserver
          */
         private function socketDataHandler(event:ProgressEvent):void
         {
-            try
+			try
             {
                 var socket:Socket = event.target as Socket;
                 var bytes:ByteArray = new ByteArray();
@@ -152,9 +152,9 @@ package network.httpserver
                 // Get the request string and pull out the URL 
                 socket.readBytes(bytes);
                 var request:String          = "" + bytes;
-                var url:String              = request.substring(4, request.indexOf("HTTP/") - 1);
-                
-                // Parse out the controller name, action name and paramert list
+                var url:String              = request.substring(4, request.indexOf("HTTP/") - 1).replace(".json","");
+				
+				// Parse out the controller name, action name and paramert list
                 var url_pattern:RegExp      = /(.*)\/([^\?]*)\??(.*)$/;
                 var controller_key:String   = url.replace(url_pattern, "$1").replace(" ", "");
                 var action_key:String       = url.replace(url_pattern, "$2");
@@ -195,9 +195,11 @@ package network.httpserver
             }
             catch (error:Error)
             {
-				Trace.myTrace("HttpServer.as", "Error parsing request! Error: " + error.message);
-				
-                AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_title'), error.message, 30);
+				if (String(error.message).indexOf("favicon.ico") == -1)
+				{
+					Trace.myTrace("HttpServer.as", "Error parsing request! Error: " + error.message);
+                	AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_title'), error.message, 30);
+				}
             }
         }
 		
