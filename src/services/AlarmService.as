@@ -264,7 +264,12 @@ package services
 			lastCheckMuteTimeStamp = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
+			//listen to NOTIFICATION_EVENT. This even is received only if the app is in the foreground. The function notificationReceived will shows the snooze dialog
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+			//listen to NOTIFICATION_ACTION_EVENT. This even is received if the user selected an action, ie if an alert was snoozed
+			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_ACTION_EVENT, notificationReceived);
+			//not interested in NOTIFICATION_SELECTED_EVENT, because NOTIFICATION_SELECTED_EVENT is only received while the app is in the background and being braught to the
+			//foreground because the user selects a notification. But in that case, in function appInForeGround, the notificationReceived function will also be called.
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingChanged);
@@ -375,19 +380,19 @@ package services
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			myTrace("in notificationReceived");
 			if (BackgroundFetch.appIsInBackground()) {
-				//app is in background, which means the notification was received due to a specific app related user action, like clicking "snooze" or opening the notification
+				//app is in background, which means the notification was received because the user clicked the notification action, typically "snooze"
 				//  so stop the playing
 				BackgroundFetch.stopPlayingSound();
 			} else {
-				//alert was fired while the app was in the foreground, in this case the notificationReceived function is called by iOS itself, it's not due to a user action
-				//user can now snooze or cancel the alert, which will cause a stopPlayingSound
+				//notificationReceived was called by appInForeGround(), ie the user brings the app in the foreground and an alert is active
+				//or the app was already in the foreground and an notification was fired (ie firealert was called)
 			}
 			if (event != null) {
 				var listOfAlerts:FromtimeAndValueArrayCollection;
 				var alertName:String ;
 				var alertType:AlertType;
 				var index:int;
-				var now:Date;
+				var now:Date = new Date();
 				var cntr:int;
 				
 				//Display Home Screen
@@ -407,7 +412,6 @@ package services
 						disableRepeatAlert(1);
 					}
 					
-					now = new Date();
 					if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_lowAlertLatestSnoozeTimeInMs)) {
@@ -446,7 +450,6 @@ package services
 						//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(3);
 					}
-					now = new Date();
 					if ((now.valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_highAlertLatestSnoozeTimeInMs)) {
@@ -485,7 +488,6 @@ package services
 						//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(2);
 					}
-					now = new Date();
 					if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_veryLowAlertLatestSnoozeTimeInMs)) {
@@ -522,7 +524,6 @@ package services
 					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(4);
 					}
-					now = new Date();
 					if ((now.valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_veryHighAlertLatestSnoozeTimeInMs)) {
@@ -593,7 +594,6 @@ package services
 						//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(7);
 					}
-					now = new Date();
 					if ((now.valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
@@ -632,7 +632,6 @@ package services
 						//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(6);
 					}
-					now = new Date();
 					if ((now.valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_batteryLevelAlertLatestSnoozeTimeInMs)) {
@@ -671,7 +670,6 @@ package services
 						//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(0);
 					}
-					now = new Date();
 					if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {

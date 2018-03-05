@@ -334,9 +334,9 @@ package services
 			 * will obviously register and also add eventlisteners
 			 */
 			function register():void {
-				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
+				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationSelectedHandler);
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
-				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
+				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationActionHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
@@ -372,9 +372,23 @@ package services
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
 			}
 			
+			function notificationSelectedHandler(event:NotificationEvent):void {
+				myTrace("in notificationSelectedHandler at " + (new Date()).toLocaleTimeString());
+				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT);
+				notificationServiceEvent.data = event;
+				_instance.dispatchEvent(notificationServiceEvent);
+			}
+			
 			function notificationHandler(event:NotificationEvent):void {
-				myTrace("in Notificationservice notificationHandler at " + (new Date()).toLocaleTimeString());
+				myTrace("in notificationHandler at " + (new Date()).toLocaleTimeString());
 				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
+				notificationServiceEvent.data = event;
+				_instance.dispatchEvent(notificationServiceEvent);
+			}
+			
+			function notificationActionHandler(event:NotificationEvent):void {
+				myTrace("in notificationActionHandler at " + (new Date()).toLocaleTimeString());
+				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_ACTION_EVENT);
 				notificationServiceEvent.data = event;
 				_instance.dispatchEvent(notificationServiceEvent);
 			}
