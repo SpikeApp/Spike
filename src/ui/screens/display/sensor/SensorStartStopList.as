@@ -293,7 +293,8 @@ package ui.screens.display.sensor
 			activateStartButton();
 			sensorStartDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "not_started_label");
 			sensorAgeValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
-			setDataProvider();
+			setupInitialState();
+			setupContent();
 		}
 		
 		private function onStartSensor(e:Event):void
