@@ -6,11 +6,13 @@ FIX: The authorize calendar access button in settings -> watch was not showing. 
 FIX: Notification ID for Transmitter PL when a dead or expired sensor is detected. (Johan Degraeve)
 FIX: Attempt to fix a small bug that sometimes can show the chart in the future.
 FIX: 3DTouch menu shortcuts were not working correctly. All is fixed in this update.
-ENHANCEMENT: Some master apps send values to nightscout with a bigger delay than expected. If that happens, Spike follower will retry fetching the next value in 30 seconds to avoid outdated data being shown on the chart and today widget.
+FIX: Snoozing a calibration from the Calibration Popup or lockescreen notification now works as expected.
+FIX: Several fixes and code improvements to keep Spike more stable.
+ENHANCEMENT: Some master apps send values to nightscout with a bigger delay than expected. If that happens, Spike follower will retry fetching the next value in 30 seconds to avoid outdated data being shown on the chart and today widget. This should also fix an issue where Spike follower was not updating values after large gaps of data in the master's Nightscout site.
 ENHANCEMENT: When in follower mode, the user can now switch nightscout sites on demand without needing to restart Spike.
 ENHANCEMENT: User can now select a time offset (in minutes) when in Follower mode. If you're seeing glucose values always in the past or in the future due to being in different time zones, you can go to settings -> general -> collection mode and set a time offset to apply to all glucose values in the chart.
 ENHANCEMENT: Don't fire the inactive alert if user hasn't started a sensor and inserted the initial 2 calibrations.
-ENHANCEMENT: Don't try to avoid suspension if Spike is in the foreground. This should save a bit of battery.
+ENHANCEMENT: Don't try to avoid suspension if Spike is in the foreground. This should save some of battery.
 ENHANCEMENT: Initial calibrations popup now stays active for 4 minutes instead of the previous 2 minutes.
 ENHANCEMENT: Improved handling of initial calibration popup when invoked from the lock screen notification.
 
