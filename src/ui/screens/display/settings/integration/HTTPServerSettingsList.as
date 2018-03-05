@@ -42,9 +42,9 @@ package ui.screens.display.settings.integration
 	import utils.DataValidator;
 	
 	[ResourceBundle("globaltranslations")]
-	[ResourceBundle("loopsettingsscreen")]
+	[ResourceBundle("httpserversettingsscreen")]
 
-	public class LoopSettingsList extends List 
+	public class HTTPServerSettingsList extends List 
 	{
 		/* Display Objects */
 		private var loopOfflineToggle:ToggleSwitch;
@@ -57,14 +57,15 @@ package ui.screens.display.settings.integration
 		private var emailLabel:Label;
 		private var sendButton:Button;
 		private var instructionsSenderCallout:Callout;
+		private var dexcomCredentialsLabel:Label;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
-		private var loopServiceEnabled:Boolean;
+		private var httpServiceEnabled:Boolean;
 		private var serverUsername:String;
 		private var serverPassword:String;
 
-		public function LoopSettingsList()
+		public function HTTPServerSettingsList()
 		{
 			super();
 		}
@@ -93,16 +94,19 @@ package ui.screens.display.settings.integration
 		
 		private function setupInitialState():void
 		{
-			loopServiceEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON) == "true";
+			httpServiceEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON) == "true";
 			serverUsername = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_USERNAME);
 			serverPassword = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD);
 		}
 		
 		private function setupContent():void
 		{
-			//Loop Offline On/Off Toggle
-			loopOfflineToggle = LayoutFactory.createToggleSwitch(loopServiceEnabled);
+			//HTTP Server On/Off Toggle
+			loopOfflineToggle = LayoutFactory.createToggleSwitch(httpServiceEnabled);
 			loopOfflineToggle.addEventListener(starling.events.Event.CHANGE, onSettingsChanged);
+			
+			dexcomCredentialsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','dexcom_share_credentials_label'), HorizontalAlign.CENTER);
+			dexcomCredentialsLabel.width = width - 20;
 			
 			//UserneName TextInput
 			userNameTextInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
@@ -119,12 +123,12 @@ package ui.screens.display.settings.integration
 			passwordTextInput.addEventListener(FeathersEventType.FOCUS_OUT, onFocusOut);
 			
 			//Instructions Title Label
-			instructionsTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('loopsettingsscreen','instructions_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
+			instructionsTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','instructions_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
 			instructionsTitleLabel.width = width - 20;
 			
 			//Instructions Description Label
 			instructionsDescriptionLabel = new Label();
-			instructionsDescriptionLabel.text = ModelLocator.resourceManagerInstance.getString('loopsettingsscreen','instructions_description_label');
+			instructionsDescriptionLabel.text = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','instructions_description_label');
 			instructionsDescriptionLabel.width = width - 20;
 			instructionsDescriptionLabel.wordWrap = true;
 			instructionsDescriptionLabel.paddingTop = 10;
@@ -162,10 +166,11 @@ package ui.screens.display.settings.integration
 		{
 			var content:Array = [];
 			content.push({ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: loopOfflineToggle });
-			if (loopServiceEnabled)
+			if (httpServiceEnabled)
 			{
-				content.push({ text: ModelLocator.resourceManagerInstance.getString('loopsettingsscreen','username_label_title'), accessory: userNameTextInput });
-				content.push({ text: ModelLocator.resourceManagerInstance.getString('loopsettingsscreen','password_label_title'), accessory: passwordTextInput });
+				content.push({ text: "", accessory: dexcomCredentialsLabel });
+				content.push({ text: ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','username_label_title'), accessory: userNameTextInput });
+				content.push({ text: ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','password_label_title'), accessory: passwordTextInput });
 				content.push({ text: "", accessory: instructionsTitleLabel });
 				content.push({ text: "", accessory: instructionsDescriptionLabel });
 				content.push({ text: "", accessory: sendEmail });
@@ -177,12 +182,12 @@ package ui.screens.display.settings.integration
 		public function save():void
 		{
 			//Feature On/Off
-			var loopServiceValueToSave:String;
-			if(loopServiceEnabled) loopServiceValueToSave = "true";
-			else loopServiceValueToSave = "false";
+			var httpServiceValueToSave:String;
+			if(httpServiceEnabled) httpServiceValueToSave = "true";
+			else httpServiceValueToSave = "false";
 				
-			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON) != loopServiceValueToSave)
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON, loopServiceValueToSave);
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON) != httpServiceValueToSave)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON, httpServiceValueToSave);
 				
 			//Username
 			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_USERNAME) != userNameTextInput.text)
@@ -281,8 +286,8 @@ package ui.screens.display.settings.integration
 			//Create URL Request 
 			var vars:URLVariables = new URLVariables();
 			vars.mimeType = "text/html";
-			vars.emailSubject = ModelLocator.resourceManagerInstance.getString('loopsettingsscreen',"loop_instructions_subject");
-			vars.emailBody = ModelLocator.resourceManagerInstance.getString('loopsettingsscreen','instructions_description_label') + "<p>Have a great day!</p><p>Spike App</p>";
+			vars.emailSubject = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen',"email_instructions_subject");
+			vars.emailBody = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','instructions_description_label') + "<p>Have a great day!</p><p>Spike App</p>";
 			vars.userName = "";
 			vars.userEmail = emailField.text.replace(" ", "");
 			
@@ -352,7 +357,7 @@ package ui.screens.display.settings.integration
 
 		private function onSettingsChanged(e:starling.events.Event):void
 		{
-			loopServiceEnabled = loopOfflineToggle.isSelected;
+			httpServiceEnabled = loopOfflineToggle.isSelected;
 			
 			refreshContent();
 			
@@ -451,6 +456,12 @@ package ui.screens.display.settings.integration
 			{
 				instructionsSenderCallout.dispose();
 				instructionsSenderCallout = null;
+			}
+			
+			if (dexcomCredentialsLabel != null)
+			{
+				dexcomCredentialsLabel.dispose();
+				dexcomCredentialsLabel = null;
 			}
 			
 			super.dispose();

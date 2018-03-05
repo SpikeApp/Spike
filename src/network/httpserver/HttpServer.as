@@ -16,7 +16,7 @@ package network.httpserver
     
     import utils.Trace;
 	
-	[ResourceBundle("loopservice")]
+	[ResourceBundle("httpserverservice")]
 	
     public class HttpServer
     {
@@ -76,9 +76,9 @@ package network.httpserver
 				{
 					Trace.myTrace("HttpServer.as", "Server error! Can't bind to port: " + port + ". Notifying user...");
 					
-					var message:String = ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_mesage').replace("{port}", port.toString()) + " " + error.message;
+					var message:String = ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_mesage').replace("{port}", port.toString()) + " " + error.message;
 					
-					AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_title'), message);
+					AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_title'), message);
 					
 					_isConnected = false;
 					
@@ -163,6 +163,8 @@ package network.httpserver
 				
 				var parameters:URLVariables;
 				
+				trace("URL:", url);
+				
 				if (request.substring(0, 4).toUpperCase().indexOf("GET") != -1 ) 
 				{
 					//GET request
@@ -198,7 +200,7 @@ package network.httpserver
 				if (String(error.message).indexOf("favicon.ico") == -1)
 				{
 					Trace.myTrace("HttpServer.as", "Error parsing request! Error: " + error.message);
-                	AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('loopservice','error_alert_title'), error.message, 30);
+                	AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_title'), error.message, 30);
 				}
             }
         }

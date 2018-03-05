@@ -3,7 +3,6 @@ package network.httpserver.API
 	import flash.net.URLVariables;
 	
 	import mx.collections.ArrayCollection;
-	import mx.utils.ObjectUtil;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -14,6 +13,7 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
+	import utils.Trace;
 	import utils.UniqueId;
 	
 	public class NightscoutAPI1Controller extends ActionController
@@ -32,10 +32,12 @@ package network.httpserver.API
 		}
 		
 		/**
-		 * Functionality
+		 * End Points
 		 */
 		public function sgv(params:URLVariables):String
 		{
+			Trace.myTrace("NightscoutAPI1Controller.as", "sgv endpoint called!");
+			
 			var response:String = "[]";
 			
 			try
@@ -43,27 +45,6 @@ package network.httpserver.API
 				var numReadings:int = 1;
 				if (params.count != null)	
 					numReadings = int(params.count);
-				
-				/*
-				NOT IMPLEMENTED YET!!!
-				var startTime:Number = 0;
-				if (params["find[date][$gte]"] != null)
-				{
-					var startDate:String = params["find[date][$gte]"];
-					if (startDate.indexOf("-") != -1)
-						startTime = new Date(startDate).valueOf();
-					else 
-						startTime = new Date(Number(startDate)).valueOf();
-				}
-				var endTime:Number = new Date().valueOf();
-				if (params["find[date][$lte]"] != null)
-				{
-					var endDate:String = params["find[date][$lte]"];
-					if (endDate.indexOf("-") != -1)
-						endTime = new Date(endDate).valueOf();
-					else
-						endTime = new Date(Number(endDate)).valueOf();
-				}*/
 				
 				var readingsList:ArrayCollection = BgReading.latest(numReadings, BlueToothDevice.isFollower());
 				var readingsCollection:Array = [];
@@ -97,13 +78,18 @@ package network.httpserver.API
 				readingsCollection = null;
 				params = null;
 			} 
-			catch(error:Error) {}
+			catch(error:Error) 
+			{
+				Trace.myTrace("NightscoutAPI1Controller.as", "Error performing sgv endpoint call. Error: " + error.message);
+			}
 			
 			return responseSuccess(response);
 		}
 		
 		public function cal(params:URLVariables):String
 		{
+			Trace.myTrace("NightscoutAPI1Controller.as", "cal endpoint called.");
+			
 			var response:String = "[]";
 			
 			try
@@ -164,13 +150,18 @@ package network.httpserver.API
 				calibrationsCollection = null;
 				params = null;
 			} 
-			catch(error:Error) {}
+			catch(error:Error) 
+			{
+				Trace.myTrace("NightscoutAPI1Controller.as", "Error performing cal endpoint call. Error: " + error.message);
+			}
 			
 			return responseSuccess(response);
 		}
 		
 		public function entries(params:URLVariables):String
-		{
+		{	
+			Trace.myTrace("NightscoutAPI1Controller.as", "entries endpoint called!");
+			
 			var response:String = "";
 			
 			try
@@ -207,36 +198,111 @@ package network.httpserver.API
 						endTime = new Date(Number(endDate)).valueOf();
 				}
 				
-				var readingsList:Array = Database.getBgReadingsDataSynchronous(startTime, endTime, "timestamp, calculatedValue, calculatedValueSlope");
+				var loopLength:int;
+				var outputArray:Array = [];
+				var outputIndex:int = 0;
+				var i:int;
 				
-				/*
-				var readingsList:ArrayCollection = BgReading.latest(numReadings, BlueToothDevice.isFollower());
-				var loopLength:int = readingsList.length;
-				
-				for (var i:int = 0; i < loopLength; i++) 
+				if (!BlueToothDevice.isFollower())
 				{
-					var bgReading:BgReading = readingsList.getItemAt(i) as BgReading;
-					if (bgReading == null || bgReading.calculatedValue == 0 || bgReading.timestamp < startTime || bgReading.timestamp > endTime )
-						continue;
+					var readingsList:Array = Database.getBgReadingsDataSynchronous(startTime, endTime, "timestamp, calculatedValue, calculatedValueSlope, hideSlope", numReadings);
+					readingsList.reverse();
+					loopLength = readingsList.length;
 					
-					response += nsFormatter.format(bgReading.timestamp) + "\t" + bgReading.timestamp + "\t" + Math.round(bgReading.calculatedValue) + "\t" + bgReading.slopeName() + "\t" + (!BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower");
-					if (i < loopLength - 1)
-						response += "\n";
+					for (i = 0; i < loopLength; i++) 
+					{
+						var bgReading:Object = readingsList[i] as Object;
+						if (bgReading == null || bgReading.calculatedValue == 0 || bgReading.timestamp < startTime || bgReading.timestamp > endTime )
+							continue;
+						
+						outputArray[outputIndex] = nsFormatter.format(bgReading.timestamp) + "\t" + bgReading.timestamp + "\t" + Math.round(bgReading.calculatedValue) + "\t" + calculateSlopeName(Number(bgReading.calculatedValueSlope), bgReading.hideSlope == 1 ? true : false) + "\t" + BlueToothDevice.name;
+						outputIndex++;
+						if (i < loopLength - 1)
+						{
+							outputArray[outputIndex] = "\n";
+							outputIndex++;
+						}
+					}
+					
+					response = outputArray.join("");
+					
+					readingsList.length = 0;
+					readingsList = null;
+					
+				}
+				else
+				{
+					
+					var followerReadingsList:ArrayCollection = BgReading.latest(numReadings, true);
+					loopLength = followerReadingsList.length;
+					
+					for (i = 0; i < loopLength; i++) 
+					{
+						var followerReading:BgReading = followerReadingsList.getItemAt(i) as BgReading;
+						if (followerReading == null || followerReading.calculatedValue == 0 || followerReading.timestamp < startTime || followerReading.timestamp > endTime)
+							continue;
+						
+						outputArray[outputIndex] = nsFormatter.format(followerReading.timestamp) + "\t" + followerReading.timestamp + "\t" + Math.round(followerReading.calculatedValue) + "\t" + followerReading.slopeName() + "\t" + "SpikeFollower";
+						outputIndex++;
+						if (i < loopLength - 1)
+						{
+							outputArray[outputIndex] = "\n";
+							outputIndex++;
+						}
+					}
+		
+					response = outputArray.join("");
+					
+					followerReadingsList = null;
+					followerReadingsList = null;
 				}
 				
-				readingsList = null;
-				params = null;*/
+				outputArray.length = 0;
+				outputArray = null;
+				params = null;
 			} 
-			catch(error:Error) {}
+			catch(error:Error) 
+			{
+				Trace.myTrace("NightscoutAPI1Controller.as", "Error performing entries endpoint call. Error: " + error.message);
+			}
 			
 			return responseSuccess(response);
 		}
 		
 		public function status(params:URLVariables):String
 		{
-			var response:String = "<h1>STATUS OK</h1>";
+			Trace.myTrace("NightscoutAPI1Controller.as", "status endpoint called!");
 			
-			return responseSuccess(response);
+			return responseSuccess("<h1>STATUS OK</h1>");
+		}
+		
+		/**
+		 * Utility
+		 */
+		private function calculateSlopeName(calculatedValueSlope:Number, hideSlope:Boolean):String 
+		{
+			var slope_by_minute:Number = calculatedValueSlope * 60000;
+			var arrow:String = "NONE";
+			
+			if (slope_by_minute <= (-3.5))
+				arrow = "DoubleDown";
+			else if (slope_by_minute <= (-2))
+				arrow = "SingleDown";
+			else if (slope_by_minute <= (-1))
+				arrow = "FortyFiveDown";
+			else if (slope_by_minute <= (1))
+				arrow = "Flat";
+			else if (slope_by_minute <= (2))
+				arrow = "FortyFiveUp";
+			else if (slope_by_minute <= (3.5))
+				arrow = "SingleUp";
+			else if (slope_by_minute <= (40))
+				arrow = "DoubleUp";
+			
+			if(hideSlope)
+				arrow = "NOT COMPUTABLE";
+			
+			return arrow;
 		}
 	}
 }

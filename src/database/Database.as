@@ -1966,10 +1966,13 @@ package database
 		}
 		
 		/**
-		 * get readings for Spike's internal server<br>
-		 * synchronous<br>
+		 * Get readings for Spike's internal server synchronously
+		 * From: Starting timestamp.
+		 * Until: Ending timestamp.
+		 * Columns: Data columns to be retrieved from database.
+		 * MaxCount: Maximum of records returned from database (if applicable). 1 means all.
 		 */
-		public static function getBgReadingsDataSynchronous(from:Number, until:Number, columns:String):Array {
+		public static function getBgReadingsDataSynchronous(from:Number, until:Number, columns:String, maxCount:int = 1):Array {
 			var returnValue:Array = new Array();
 			try {
 				var conn:SQLConnection = new SQLConnection();
@@ -1977,7 +1980,10 @@ package database
 				conn.begin();
 				var getRequest:SQLStatement = new SQLStatement();
 				getRequest.sqlConnection = conn;
-				getRequest.text =  "SELECT " + columns + " FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until + " ORDER BY timestamp ASC";
+				if (maxCount == 1)
+					getRequest.text =  "SELECT " + columns + " FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until + " ORDER BY timestamp DESC";
+				else
+					getRequest.text =  "SELECT " + columns + " FROM bgreading WHERE timestamp BETWEEN " + from + " AND " + until +  " ORDER BY timestamp ASC LIMIT " + maxCount;
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();

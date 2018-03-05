@@ -31,7 +31,7 @@ package network.httpserver.API
 		 */
 		public function LoginPublisherAccountByName(params:URLVariables):String
 		{
-			Trace.myTrace("LoopServiceController.as", "LoginPublisherAccountByName called!");
+			Trace.myTrace("DexcomShareController.as", "LoginPublisherAccountByName called!");
 			
 			try
 			{
@@ -48,19 +48,19 @@ package network.httpserver.API
 			} 
 			catch(error:Error) 
 			{
-				Trace.myTrace("LoopServiceController.as", "Error trying to validate credentials. Error: " + error.message);
+				Trace.myTrace("DexcomShareController.as", "Error trying to validate credentials. Error: " + error.message);
 				
 				return responseSuccess(SESSION_ID);
 			}
 			
-			Trace.myTrace("LoopServiceController.as", "Authentication successful!");
+			Trace.myTrace("DexcomShareController.as", "Authentication successful!");
 			
 			return responseSuccess(SESSION_ID);
 		}
 		
 		public function ReadPublisherLatestGlucoseValues(params:URLVariables):String
 		{
-			Trace.myTrace("LoopServiceController.as", "ReadPublisherLatestGlucoseValues called!");
+			Trace.myTrace("DexcomShareController.as", "ReadPublisherLatestGlucoseValues called!");
 			
 			var response:String;
 			
@@ -89,11 +89,11 @@ package network.httpserver.API
 				dexcomReadingsCollection = null;
 				params = null;
 				
-				Trace.myTrace("LoopServiceController.as", "Returning glucose values for " + numReadings + " reading(s).");
+				Trace.myTrace("DexcomShareController.as", "Returning glucose values for " + numReadings + " reading(s).");
 			} 
 			catch(error:Error) 
 			{
-				Trace.myTrace("LoopServiceController.as", "Error processing response. Returning and empty array. Error: " + error.message);
+				Trace.myTrace("DexcomShareController.as", "Error processing response. Returning and empty array. Error: " + error.message);
 				
 				response = "[]";
 			}

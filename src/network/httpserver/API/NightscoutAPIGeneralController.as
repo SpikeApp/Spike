@@ -14,6 +14,7 @@ package network.httpserver.API
 	import network.httpserver.ActionController;
 	
 	import utils.BgGraphBuilder;
+	import utils.Trace;
 	
 	public class NightscoutAPIGeneralController extends ActionController
 	{
@@ -35,6 +36,8 @@ package network.httpserver.API
 		 */
 		public function pebble(params:URLVariables):String
 		{
+			Trace.myTrace("NightscoutAPIGeneralController.as", "pebble endpoint called!");
+			
 			var response:String = "{}";
 			
 			try
@@ -98,13 +101,18 @@ package network.httpserver.API
 				//Final Response
 				response = JSON.stringify(responseObject);
 			} 
-			catch(error:Error) {}
+			catch(error:Error) 
+			{
+				Trace.myTrace("NightscoutAPIGeneralController.as", "Error performing pebble endpoint call. Error: " + error.message);
+			}
 			
 			return responseSuccess(response);
 		}
 		
 		public function sgv(params:URLVariables):String
 		{
+			Trace.myTrace("NightscoutAPIGeneralController.as", "sgv endpoint called!");
+			
 			var response:String = "{}";
 			
 			try
@@ -158,7 +166,10 @@ package network.httpserver.API
 				readingsCollection = null;
 				params = null;
 			} 
-			catch(error:Error) {}
+			catch(error:Error) 
+			{
+				Trace.myTrace("NightscoutAPIGeneralController.as", "Error performing sgv endpoint call. Error: " + error.message);
+			}
 			
 			return responseSuccess(response);
 		}
