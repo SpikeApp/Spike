@@ -336,22 +336,22 @@ package services
 			var nowDate:Date = new Date();
 			var nowNumber:Number = nowDate.valueOf();
 			if ((nowNumber - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
-					||
-					isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
-					//alert not snoozed
-					if (nowNumber - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
-							//more than 4 min 45 seconds ago since last check
-							var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
-									CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
-							var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", nowDate);
-							var alertType:AlertType = Database.getAlertType(alertName);
-							if (alertType.enabled) {
-									//alert enabled
-									myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
-									BackgroundFetch.checkMuted();
-							}
-							lastCheckMuteTimeStamp = nowNumber;
+				||
+				isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
+				//alert not snoozed
+				if (nowNumber - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
+					//more than 4 min 45 seconds ago since last check
+					var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
+					var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", nowDate);
+					var alertType:AlertType = Database.getAlertType(alertName);
+					if (alertType.enabled) {
+						//alert enabled
+						myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
+						BackgroundFetch.checkMuted();
 					}
+					lastCheckMuteTimeStamp = nowNumber;
+				}
 			}
 		}
 		
@@ -983,7 +983,7 @@ package services
 			else 
 			{
 				queueAlertSound("../assets/sounds/" + soundToSet);
-
+				
 			}
 			
 			if (soundToSet == "default")
@@ -1537,14 +1537,14 @@ package services
 		
 		private static function localSettingChanged(event:SettingsServiceEvent):void {
 			/*if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT || event.data == CommonSettings.COMMON_SETTING_LANGUAGE) {
-				//if user changes language, alert needs to be replanned because notification text may have changed
-				Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
-				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
-					planApplicationStoppedAlert();
-					lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
-				} else {
-					lastApplicationStoppedAlertCheckTimeStamp = 0;
-				}
+			//if user changes language, alert needs to be replanned because notification text may have changed
+			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
+			planApplicationStoppedAlert();
+			lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
+			} else {
+			lastApplicationStoppedAlertCheckTimeStamp = 0;
+			}
 			}*/
 			
 			if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) 
@@ -1573,20 +1573,20 @@ package services
 					cancelInactiveAlert();
 			} 
 			/*else if (event.data == CommonSettings.COMMON_SETTING_LANGUAGE) {
-				var newSoundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
-				var newSoundsAsDisplayedSplitted:Array = newSoundsAsDisplayed.split(',');
-				var existingAlertTypes:ArrayCollection = Database.getAllAlertTypes();
-				for (var alertTypeCntr:int = 0; alertTypeCntr < existingAlertTypes.length; alertTypeCntr++) {
-					for(var soundCntr:int = 0; soundCntr < soundsAsDisplayedSplitted.length; soundCntr++) {
-						if ((StringUtil.trim(soundsAsDisplayedSplitted[soundCntr] as String)).toUpperCase() == StringUtil.trim((existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).sound).toUpperCase()) {
-							(existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).sound = newSoundsAsDisplayedSplitted[soundCntr] as String;
-							(existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).updateInDatabase();
-							break;
-						}
-					}
-				}
-				soundsAsDisplayed = newSoundsAsDisplayed;
-				soundsAsDisplayedSplitted = newSoundsAsDisplayedSplitted;
+			var newSoundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
+			var newSoundsAsDisplayedSplitted:Array = newSoundsAsDisplayed.split(',');
+			var existingAlertTypes:ArrayCollection = Database.getAllAlertTypes();
+			for (var alertTypeCntr:int = 0; alertTypeCntr < existingAlertTypes.length; alertTypeCntr++) {
+			for(var soundCntr:int = 0; soundCntr < soundsAsDisplayedSplitted.length; soundCntr++) {
+			if ((StringUtil.trim(soundsAsDisplayedSplitted[soundCntr] as String)).toUpperCase() == StringUtil.trim((existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).sound).toUpperCase()) {
+			(existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).sound = newSoundsAsDisplayedSplitted[soundCntr] as String;
+			(existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).updateInDatabase();
+			break;
+			}
+			}
+			}
+			soundsAsDisplayed = newSoundsAsDisplayed;
+			soundsAsDisplayedSplitted = newSoundsAsDisplayedSplitted;
 			}*/
 			if ((event.data >= CommonSettings.COMMON_SETTING_LOW_ALERT && event.data <= CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) 
 				||
