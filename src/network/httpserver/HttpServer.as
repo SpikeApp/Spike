@@ -195,7 +195,7 @@ package network.httpserver
             }
             catch (error:Error)
             {
-				if (String(error.message).indexOf("favicon.ico") == -1)
+				if (String(error.message).indexOf("favicon.ico") == -1 && String(error.message).indexOf("1069") == -1)
 				{
 					Trace.myTrace("HttpServer.as", "Error parsing request! Error: " + error.message);
                 	AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_title'), error.message, 30);
