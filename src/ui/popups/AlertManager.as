@@ -139,13 +139,13 @@ package ui.popups
 			return alert; //Return the alert in case we need to do further customization to it outside this class
 		}
 		
-		private static function processQueue():void
+		private static function processQueue(closeActivePopup:Boolean = true):void
 		{
 			if (!Constants.appInForeground)
 				return;
 			
 			/* Clean Up */
-			if (activeAlert != null)
+			if (activeAlert != null && closeActivePopup)
 			{
 				if (activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title")) == -1 &&
 					activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title")) == -1 &&
@@ -215,7 +215,7 @@ package ui.popups
 		
 		private static function onAppInForeground (e:SpikeEvent):void
 		{
-			Starling.juggler.delayCall(processQueue, 0.5);
+			Starling.juggler.delayCall(processQueue, 0.5, false);
 		}
 		
 		/**
