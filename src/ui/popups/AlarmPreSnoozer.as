@@ -211,6 +211,29 @@ package ui.popups
 			
 			if (selectedAlarmIndex == 0)
 			{
+				//All Alarm
+				if (AlarmService.veryHighAlertSnoozed() ||
+					AlarmService.highAlertSnoozed() ||
+					AlarmService.lowAlertSnoozed() ||
+					AlarmService.veryLowAlertSnoozed() ||
+					AlarmService.missedReadingAlertSnoozed() ||
+					AlarmService.phoneMutedAlertSnoozed() 
+					)
+				{
+					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label").toUpperCase();
+					actionButtonsContainer.addChild(actionButton);
+					actionButton.addEventListener(Event.TRIGGERED, unSnoozeAllAlarms);
+				}
+				else
+				{
+					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
+					actionButtonsContainer.addChild(actionButton);
+					actionButton.addEventListener(Event.TRIGGERED, snoozeAllAlarms);
+					createSecondPhase();
+				}
+			}
+			else if (selectedAlarmIndex == 1)
+			{
 				//Urgent High Alarm
 				if (AlarmService.veryHighAlertSnoozed())
 				{
@@ -230,7 +253,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeVeryHighAlert
 				}
 			}
-			else if (selectedAlarmIndex == 1)
+			else if (selectedAlarmIndex == 2)
 			{
 				//High Alarm
 				if (AlarmService.highAlertSnoozed())
@@ -251,7 +274,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeHighAlert;
 				}
 			}
-			else if (selectedAlarmIndex == 2)
+			else if (selectedAlarmIndex == 3)
 			{
 				//Low Alarm
 				if (AlarmService.lowAlertSnoozed())
@@ -272,7 +295,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeLowAlert;
 				}
 			}
-			else if (selectedAlarmIndex == 3)
+			else if (selectedAlarmIndex == 4)
 			{
 				//Urgent Low Alarm
 				if (AlarmService.veryLowAlertSnoozed())
@@ -293,7 +316,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeVeyLowAlert;
 				}
 			}
-			else if (selectedAlarmIndex == 4)
+			else if (selectedAlarmIndex == 5)
 			{
 				//Missed Readings
 				if (AlarmService.missedReadingAlertSnoozed())
@@ -314,7 +337,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeMissedReadingAlert;
 				}
 			}
-			else if (selectedAlarmIndex == 5)
+			else if (selectedAlarmIndex == 6)
 			{
 				//Muted
 				if (AlarmService.phoneMutedAlertSnoozed())
@@ -350,6 +373,18 @@ package ui.popups
 			}
 		}
 		
+		private static function snoozeAllAlarms(e:Event):void
+		{
+			AlarmService.snoozeVeryHighAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeHighAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeLowAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeVeyLowAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeMissedReadingAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozePhoneMutedAlert(snoozePickerList.selectedIndex);
+			
+			closeCallout();
+		}
+		
 		private static function unSnoozeAlarm(e:Event):void
 		{
 			if (unSnoozeAction != null)
@@ -358,6 +393,29 @@ package ui.popups
 				unSnoozeAction = null;
 				closeCallout();
 			}
+		}
+		
+		private static function unSnoozeAllAlarms(e:Event):void
+		{
+			if (AlarmService.veryHighAlertSnoozed())
+				AlarmService.resetVeryHighAlert();
+			
+			if (AlarmService.highAlertSnoozed())
+				AlarmService.resetHighAlert();
+				
+			if (AlarmService.lowAlertSnoozed())
+				AlarmService.resetLowAlert();
+				
+			if (AlarmService.veryLowAlertSnoozed())
+				AlarmService.resetVeryLowAlert();
+				
+			if (AlarmService.missedReadingAlertSnoozed())
+				AlarmService.resetMissedReadingAlert();
+				
+			if (AlarmService.phoneMutedAlertSnoozed())
+				AlarmService.resetPhoneMutedAlert();
+			
+			closeCallout();
 		}
 		
 		private static function onCancel(e:Event):void

@@ -1,22 +1,23 @@
 1.1.1
-FEATURE: Pre or un-snooze alarms. Going to a meeting, the movies, a social event? Don't want Spike to bother you with alarms? You can now pre-snooze your alarms by going to the three dots menu on the upper right corner of the home screen and clicking the Snoozer button. Left the event earlier than expected? You can un-snooze the alarms by clicking the same button. A lot of code was ported from iOSxDripReader and adapted to Spike so a big thanks to Johan Degraeve for this!  
+FEATURE: Pre-snooze or unsnooze alarms. Going to a meeting, the movies, a social event? Don't want Spike to bother you with alarms? You can now pre-snooze your alarms by going to the three dots menu on the upper right corner of the home screen and clicking the Snoozer button. Left the event earlier than expected? You can unsnooze the alarm by clicking the same button. A lot of code was ported from iOSxDripReader and adapted to Spike so a big thanks to Johan Degraeve for this!  
 FEATURE: Spike to Spike follower mode, no nightscout required. As long as the master's Spike is on the same network than the follower's Spike, you can follow the master connecting directly to it. Go to settings -> integration, internal HTTP server and follow the on-screen instruction.
 FEATURE: Full offline Pebble watch support! You can now connect your Pebble watch directly to Spike and have updated glucose values completely offline. Go to settings -> integration -> internal HTTP server and follow the on-screen instructions.
 FEATURE: Full offline Garmin watch support! You can now connect your Garmin watch directly to Spike and have updated glucose values completely offline. Go to settings -> integration -> internal HTTP server and follow the on-screen instructions.
 FEATURE: Full offline Nightguard support (and many other Nightscout apps)! By using the Nightguard app you can have a scrollable chart on your Apple Watch without an Internet connection or Nightscout site. Go to settings -> integration -> internal HTTP server and follow the on-screen instructions.
 FIX: When in follower mode, Spike will now correctly show glucose values in full screen.
-FIX: When in follower mode, Spike will now only consider glucose values fetched from Nightscout. Calibrations and any other treatment will not be rendered in the chart. This was causing false "LOW" values in the follower's chart when the master inserted calibrations and also triggering low glucose alarms.
+FIX: When in follower mode, Spike will now only consider glucose values fetched from Nightscout. Calibrations and any other treatment will not be fetched. This was causing false "LOW" values in the follower's chart when the master inserted calibrations and also triggering low glucose alarms.
 FIX: Slope arrow should now display correctly in follower mode!
 FIX: The authorize calendar access button in settings -> watch was not showing. Sorry about that!
-FIX: Notification ID for Transmitter PL when a dead or expired sensor is detected. (Johan Degraeve)
+FIX: Notification ID for Transmitter PL when a dead or expired sensor is detected is now fixed. (Johan Degraeve)
 FIX: Attempt to fix a small bug that sometimes can show the chart in the future.
 FIX: 3DTouch menu shortcuts were not working correctly. All is fixed in this update.
 FIX: Snoozing a calibration from the Calibration Popup or lockescreen notification now works as expected.
-FIX: Several fixes and code improvements to keep Spike more stable.
-ENHANCEMENT: Some master apps send values to nightscout with a bigger delay than expected. If that happens, Spike follower will retry fetching the next value in 30 seconds to avoid outdated data being shown on the chart and today widget. This should also fix an issue where Spike follower was not updating values after large gaps of data in the master's Nightscout site.
+FIX: First time an alarm fires, it now respects the mute status. (Johan Degraeve)
+FIX: Several general fixes and code improvements to keep Spike more stable.
+ENHANCEMENT: Some master apps send values to nightscout with a bigger delay than expected. If that happens, Spike follower will retry fetching the next batch of data in 30 seconds to avoid outdated data being shown in the chart and today widget. This should also fix an issue where Spike follower was not updating values after large gaps of data in the master's Nightscout site.
 ENHANCEMENT: When in follower mode, the user can now switch nightscout sites on demand without needing to restart Spike.
 ENHANCEMENT: User can now select a time offset (in minutes) when in Follower mode. If you're seeing glucose values always in the past or in the future due to being in different time zones, you can go to settings -> general -> collection mode and set a time offset to apply to all glucose values in the chart.
-ENHANCEMENT: Don't fire the inactive alert if user hasn't started a sensor and inserted the initial 2 calibrations.
+ENHANCEMENT: Don't fire the inactive alert if user hasn't started a sensor and inserted the initial 2 calibrations. 
 ENHANCEMENT: Don't try to avoid suspension if Spike is in the foreground. This should save some of battery.
 ENHANCEMENT: Initial calibrations popup now stays active for 4 minutes instead of the previous 2 minutes.
 ENHANCEMENT: Improved handling of initial calibration popup when invoked from the lock screen notification.

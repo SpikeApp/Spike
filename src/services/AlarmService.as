@@ -666,6 +666,7 @@ package services
 		}
 		
 		public static function snoozeMissedReadingAlert(index:int):void {
+			myTrace("in snoozeMissedReadingAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_missedReadingAlertPreSnoozed = true;
 			Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 			resetMissedreadingAlertPreSnooze();
@@ -676,6 +677,7 @@ package services
 		}
 		
 		public static function snoozePhoneMutedAlert(index:int):void {
+			myTrace("in snoozePhoneMutedAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_phoneMutedAlertPreSnoozed = true;
 			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 			resetPhoneMutedAlertPreSnooze();
