@@ -163,8 +163,6 @@ package network.httpserver
 				
 				var parameters:URLVariables;
 				
-				trace("URL:", url);
-				
 				if (request.substring(0, 4).toUpperCase().indexOf("GET") != -1 ) 
 				{
 					//GET request
