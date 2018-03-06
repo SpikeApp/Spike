@@ -15,12 +15,15 @@ package ui.screens.display.bugreport
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
+	import feathers.controls.Label;
 	import feathers.controls.List;
 	import feathers.controls.TextArea;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.controls.text.HyperlinkTextFieldTextRenderer;
+	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
@@ -55,9 +58,11 @@ package ui.screens.display.bugreport
 		private var emailField:TextInput;
 		private var messageField:TextArea;
 		private var sendEmail:Button;
+		private var warningTitleLabel:Label;
+		private var warningDescriptionLabel:Label;
 		
 		/* Properties */
-		private var isTraceEnabled:Boolean;
+		private var isTraceEnabled:Boolean
 		
 		public function BugReportSettingsList()
 		{
@@ -143,6 +148,27 @@ package ui.screens.display.bugreport
 			sendEmail.pivotX = 3;
 			sendEmail.addEventListener(starling.events.Event.TRIGGERED, onSendEmail);
 			
+			//Warning Title Label
+			warningTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','warning_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
+			warningTitleLabel.width = width;
+			
+			//Instructions Description Label
+			warningDescriptionLabel = new Label();
+			warningDescriptionLabel.text = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','warning_description');
+			warningDescriptionLabel.width = width - 20;
+			warningDescriptionLabel.wordWrap = true;
+			warningDescriptionLabel.paddingTop = 10;
+			warningDescriptionLabel.isQuickHitAreaEnabled = false;
+			warningDescriptionLabel.textRendererFactory = function():ITextRenderer 
+			{
+				var textRenderer:HyperlinkTextFieldTextRenderer = new HyperlinkTextFieldTextRenderer();
+				textRenderer.wordWrap = true;
+				textRenderer.isHTML = true;
+				textRenderer.pixelSnapping = true;
+				
+				return textRenderer;
+			};
+			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
 			{
@@ -179,6 +205,8 @@ package ui.screens.display.bugreport
 						{ label: ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','email_label'), accessory: emailField },
 						{ label: ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','message_label'), accessory: messageField },
 						{ label: "", accessory: sendEmail },
+						{ label: "", accessory: warningTitleLabel },
+						{ label: "", accessory: warningDescriptionLabel }
 					]);
 			}
 			else
@@ -186,6 +214,8 @@ package ui.screens.display.bugreport
 				dataProvider = new ArrayCollection(
 					[
 						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: traceToggle },
+						{ label: "", accessory: warningTitleLabel },
+						{ label: "", accessory: warningDescriptionLabel }
 					]);
 			}
 		}
@@ -465,6 +495,18 @@ package ui.screens.display.bugreport
 				sendEmail.removeEventListener(starling.events.Event.TRIGGERED, onSendEmail);
 				sendEmail.dispose();
 				sendEmail = null;
+			}
+			
+			if (warningTitleLabel != null)
+			{
+				warningTitleLabel.dispose();
+				warningTitleLabel = null;
+			}
+			
+			if (warningDescriptionLabel != null)
+			{
+				warningDescriptionLabel.dispose();
+				warningDescriptionLabel = null;
 			}
 			
 			super.dispose();
