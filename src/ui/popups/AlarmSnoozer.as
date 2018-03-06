@@ -150,7 +150,7 @@ package ui.popups
 			/* Main Container */
 			var mainLayout:VerticalLayout = new VerticalLayout();
 			mainLayout.horizontalAlign = HorizontalAlign.CENTER;
-			mainLayout.gap = 10;
+			mainLayout.gap = 15;
 			
 			var mainContainer:LayoutGroup = new LayoutGroup();
 			mainContainer.layout = mainLayout;
@@ -179,19 +179,19 @@ package ui.popups
 			
 			/* Action Buttons */
 			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
-			actionButtonsLayout.gap = 5;
+			actionButtonsLayout.gap = 10;
 			
 			var actionButtonsContainer:LayoutGroup = new LayoutGroup();
 			actionButtonsContainer.layout = actionButtonsLayout;
 			mainContainer.addChild(actionButtonsContainer);
 			
 			//Cancel Button
-			var cancelButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label"));
+			var cancelButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label").toUpperCase());
 			cancelButton.addEventListener(Event.TRIGGERED, onCancel);
 			actionButtonsContainer.addChild(cancelButton);
 			
 			//Ok Button
-			var okButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"ok_alert_button_label"));
+			var okButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"ok_alert_button_label").toUpperCase());
 			okButton.addEventListener(Event.TRIGGERED, onClose);
 			actionButtonsContainer.addChild(okButton);
 			

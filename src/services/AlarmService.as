@@ -621,20 +621,7 @@ package services
 			BackgroundFetch.stopPlayingSound();
 		}
 		
-		//public static function openLowAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
 		public static function snoozeLowAlert(index:int):void {
-			/*myTrace("in openLowAlertSnoozePickerDialog");
-			if (preSnooze)
-				_lowAlertPreSnoozed = preSnooze;
-			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT),
-				NotificationService.ID_FOR_LOW_ALERT,
-				null,
-				lowSnoozePicker_closedHandler,
-				"snooze_text_low_alert",
-				NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER,
-				setLowAlertSnooze,
-				preSnooze ? resetLowAlertPreSnooze : null);*/
-			
 			myTrace("in snoozeLowAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_lowAlertPreSnoozed = true;
 			Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
@@ -645,20 +632,7 @@ package services
 			_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		//public static function openVeryLowAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
 		public static function snoozeVeyLowAlert(index:int):void {
-			/*myTrace("in openVeryLowAlertSnoozePickerDialog");
-			if (preSnooze)
-				_veryLowAlertPreSnoozed = preSnooze;
-			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT),
-				NotificationService.ID_FOR_VERY_LOW_ALERT,
-				null,
-				veryLowSnoozePicker_closedHandler,
-				"snooze_text_very_low_alert",
-				NotificationService.ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER,
-				setVeryLowAlertSnooze,
-				preSnooze ? resetVeryLowAlertPreSnooze : null);*/
-			
 			myTrace("in snoozeVeyLowAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_veryLowAlertPreSnoozed = true;
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
@@ -669,20 +643,7 @@ package services
 			_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		//public static function openHighAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
 		public static function snoozeHighAlert(index:int):void {
-			/*myTrace("in openHighAlertSnoozePickerDialog");
-			if (preSnooze)
-				_highAlertPreSnoozed = preSnooze;
-			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT),
-				NotificationService.ID_FOR_HIGH_ALERT,
-				null,
-				highSnoozePicker_closedHandler,
-				"snooze_text_high_alert",
-				NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER,
-				setHighAlertSnooze,
-				preSnooze ? resetHighAlertPreSnooze : null);*/
-			
 			myTrace("in snoozeHighAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_highAlertPreSnoozed = true;
 			Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
@@ -693,20 +654,8 @@ package services
 			_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		//public static function openVeryHighAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
 		public static function snoozeVeryHighAlert(index:int):void {
 			myTrace("in snoozeVeryHighAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
-			/*if (preSnooze)
-				_veryHighAlertPreSnoozed = preSnooze;
-			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT),
-				NotificationService.ID_FOR_VERY_HIGH_ALERT,
-				null,
-				veryHighSnoozePicker_closedHandler,
-				"snooze_text_very_high_alert",
-				NotificationService.ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER,
-				setVeryHighAlertSnooze,
-				preSnooze ? resetVeryHighAlertPreSnooze : null);*/
-			
 			_veryHighAlertPreSnoozed = true;
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
 			resetVeryHighAlertPreSnooze();
@@ -717,19 +666,6 @@ package services
 		}
 		
 		public static function snoozeMissedReadingAlert(index:int):void {
-		//public static function openMissedReadingAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
-			/*myTrace("in openMissedReadingAlertSnoozePickerDialog");
-			if (preSnooze)
-				_missedReadingAlertPreSnoozed = preSnooze;
-			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT),
-				NotificationService.ID_FOR_MISSED_READING_ALERT,
-				null,
-				missedReadingSnoozePicker_closedHandler,
-				"snooze_text_missed_reading_alert",
-				NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER,
-				setMissedReadingAlertSnooze,
-				preSnooze ? resetMissedreadingAlertPreSnooze : null);*/
-			
 			_missedReadingAlertPreSnoozed = true;
 			Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 			resetMissedreadingAlertPreSnooze();
@@ -739,20 +675,7 @@ package services
 			_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
 		
-		//public static function openPhoneMutedAlertSnoozePickerDialog(preSnooze:Boolean = false):void {
 		public static function snoozePhoneMutedAlert(index:int):void {
-			/*myTrace("in openPhoneMutedAlertSnoozePickerDialog");
-			if (preSnooze)
-				_phoneMutedAlertPreSnoozed = preSnooze;
-			openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT),
-				NotificationService.ID_FOR_PHONEMUTED_ALERT,
-				null,
-				phoneMutedSnoozePicker_closedHandler,
-				"snooze_text_phone_muted_alert",
-				NotificationService.ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER,
-				setPhoneMutedAlertSnooze,
-				preSnooze ? resetPhoneMutedAlertPreSnooze : null);*/
-			
 			_phoneMutedAlertPreSnoozed = true;
 			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 			resetPhoneMutedAlertPreSnooze();
@@ -1867,23 +1790,71 @@ package services
 			return snoozeUntilAsString(_missedReadingAlertSnoozePeriodInMinutes, _missedReadingAlertLatestSnoozeTimeInMs);
 		}
 		
-		public static function veryLowAlertSnoozed():Boolean {
-			return !isNaN(_veryLowAlertLatestSnoozeTimeInMs);
+		public static function veryLowAlertSnoozed():Boolean 
+		{
+			var returnValue:Boolean = true;
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _veryLowAlertLatestSnoozeTimeInMs + _veryLowAlertSnoozePeriodInMinutes * 60 * 1000;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_veryLowAlertLatestSnoozeTimeInMs))
+				returnValue = false;
+			
+			return returnValue;
 		}
-		public static function lowAlertSnoozed():Boolean {
-			return !isNaN(_lowAlertLatestSnoozeTimeInMs);
+		public static function lowAlertSnoozed():Boolean 
+		{
+			var returnValue:Boolean = true;
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _lowAlertLatestSnoozeTimeInMs + _lowAlertSnoozePeriodInMinutes * 60 * 1000;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_lowAlertLatestSnoozeTimeInMs))
+				returnValue = false;
+			
+			return returnValue;
 		}
-		public static function highAlertSnoozed():Boolean {
-			return !isNaN(_highAlertLatestSnoozeTimeInMs);
+		public static function highAlertSnoozed():Boolean 
+		{
+			var returnValue:Boolean = true;
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _highAlertLatestSnoozeTimeInMs + _highAlertSnoozePeriodInMinutes * 60 * 1000;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_highAlertLatestSnoozeTimeInMs))
+				returnValue = false;
+			
+			return returnValue;
 		}
-		public static function veryHighAlertSnoozed():Boolean {
-			return !isNaN(_veryHighAlertLatestSnoozeTimeInMs);
+		public static function veryHighAlertSnoozed():Boolean 
+		{
+			var returnValue:Boolean = true;
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _veryHighAlertLatestSnoozeTimeInMs + _veryHighAlertSnoozePeriodInMinutes * 60 * 1000;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_veryHighAlertLatestSnoozeTimeInMs))
+				returnValue = false;
+			
+			return returnValue;
 		}
-		public static function missedReadingAlertSnoozed():Boolean {
-			return !isNaN(_missedReadingAlertLatestSnoozeTimeInMs);
+		public static function missedReadingAlertSnoozed():Boolean 
+		{
+			var returnValue:Boolean = true;
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _missedReadingAlertLatestSnoozeTimeInMs + _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_missedReadingAlertLatestSnoozeTimeInMs))
+				returnValue = false;
+			
+			return returnValue;
 		}
-		public static function phoneMutedAlertSnoozed():Boolean {
-			return !isNaN(_phoneMutedAlertLatestSnoozeTimeInMs);
+		public static function phoneMutedAlertSnoozed():Boolean 
+		{
+			var returnValue:Boolean = true;
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _phoneMutedAlertLatestSnoozeTimeInMs + _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_phoneMutedAlertLatestSnoozeTimeInMs))
+				returnValue = false;
+			
+			return returnValue;
 		}
 		
 		private static function resetVeryLowAlertPreSnooze():void {
