@@ -118,7 +118,6 @@ package ui.popups
 			
 			if (activeAlertsCount == 0 && Constants.appInForeground) //If no alerts are being currently displayed and app is in foreground, let's display this one 
 			{
-				trace("displaying")
 				//Update internal variables
 				activeAlertsCount += 1;
 				activeAlert = alert;
@@ -133,7 +132,6 @@ package ui.popups
 			else
 			{//There's currently one alert being displayed or app is in background, let's add this one to the queue
 				alertQueue.push({ alert: alert, timeout: timeoutDuration});
-				trace("queueing");
 			}
 			
 			return alert; //Return the alert in case we need to do further customization to it outside this class
