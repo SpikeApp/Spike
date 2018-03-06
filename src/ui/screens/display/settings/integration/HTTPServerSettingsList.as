@@ -58,6 +58,9 @@ package ui.screens.display.settings.integration
 		private var sendButton:Button;
 		private var instructionsSenderCallout:Callout;
 		private var dexcomCredentialsLabel:Label;
+		private var developersAPITitleLabel:Label;
+		private var developersAPIDescriptionLabel:Label;
+		private var actionsContainer:LayoutGroup;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -143,9 +146,39 @@ package ui.screens.display.settings.integration
 				return textRenderer;
 			};
 			
+			//Developer's API Title Label
+			developersAPITitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','developer_info_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
+			developersAPITitleLabel.width = width - 20;
+			
+			//Developer's API Description Label
+			developersAPIDescriptionLabel = new Label();
+			developersAPIDescriptionLabel.text = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','developer_info_description');
+			developersAPIDescriptionLabel.width = width - 20;
+			developersAPIDescriptionLabel.wordWrap = true;
+			developersAPIDescriptionLabel.paddingTop = 10;
+			developersAPIDescriptionLabel.isQuickHitAreaEnabled = false;
+			developersAPIDescriptionLabel.textRendererFactory = function():ITextRenderer 
+			{
+				var textRenderer:HyperlinkTextFieldTextRenderer = new HyperlinkTextFieldTextRenderer();
+				textRenderer.wordWrap = true;
+				textRenderer.isHTML = true;
+				textRenderer.pixelSnapping = true;
+				
+				return textRenderer;
+			};
+			
+			//Send Container
+			var actionsLayout:HorizontalLayout = new HorizontalLayout();
+			actionsLayout.horizontalAlign = HorizontalAlign.CENTER;
+			
+			actionsContainer = new LayoutGroup();
+			actionsContainer.layout = actionsLayout;
+			actionsContainer.width = width - 20;
+			
 			//Send Email Button
 			sendEmail = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','email_button_label'), false, MaterialDeepGreyAmberMobileThemeIcons.sendTexture);
 			sendEmail.addEventListener(starling.events.Event.TRIGGERED, onSendEmail);
+			actionsContainer.addChild(sendEmail);
 			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -173,7 +206,9 @@ package ui.screens.display.settings.integration
 				content.push({ text: ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','password_label_title'), accessory: passwordTextInput });
 				content.push({ text: "", accessory: instructionsTitleLabel });
 				content.push({ text: "", accessory: instructionsDescriptionLabel });
-				content.push({ text: "", accessory: sendEmail });
+				content.push({ text: "", accessory: actionsContainer });
+				content.push({ text: "", accessory: developersAPITitleLabel });
+				content.push({ text: "", accessory: developersAPIDescriptionLabel });
 			}
 			
 			dataProvider = new ArrayCollection(content);
@@ -447,9 +482,16 @@ package ui.screens.display.settings.integration
 			
 			if (sendButton != null)
 			{
+				actionsContainer.removeChild(sendButton)
 				sendButton.removeEventListener(starling.events.Event.TRIGGERED, onClose);
 				sendButton.dispose();
 				sendButton = null;
+			}
+			
+			if (actionsContainer != null)
+			{
+				actionsContainer.dispose();
+				actionsContainer = null;
 			}
 			
 			if (instructionsSenderCallout != null)
@@ -462,6 +504,18 @@ package ui.screens.display.settings.integration
 			{
 				dexcomCredentialsLabel.dispose();
 				dexcomCredentialsLabel = null;
+			}
+			
+			if (developersAPITitleLabel != null)
+			{
+				developersAPITitleLabel.dispose();
+				developersAPITitleLabel = null;
+			}
+			
+			if (developersAPIDescriptionLabel != null)
+			{
+				developersAPIDescriptionLabel.dispose();
+				developersAPIDescriptionLabel = null;
 			}
 			
 			super.dispose();
