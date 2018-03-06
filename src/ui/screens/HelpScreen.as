@@ -2,7 +2,6 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import feathers.controls.DragGesture;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -15,6 +14,7 @@ package ui.screens
 	import starling.events.Event;
 	
 	import ui.AppInterface;
+	import ui.screens.display.help.GeneralHelpList;
 	import ui.screens.display.help.TutorialList;
 	
 	import utils.Constants;
@@ -25,6 +25,7 @@ package ui.screens
 	{
 		/* Display Objects */
 		private var tutorialSection:TutorialList;
+		private var generalHelpSection:GeneralHelpList;
 		
 		public function HelpScreen() 
 		{
@@ -57,10 +58,14 @@ package ui.screens
 		
 		private function setupContent():void
 		{
-			//About Section
+			//Tutorial Section
 			tutorialSection = new TutorialList();
 			tutorialSection.addEventListener(Event.COMPLETE, onShowTutorial);
 			screenRenderer.addChild(tutorialSection);
+			
+			//General Help Section
+			generalHelpSection = new GeneralHelpList();
+			screenRenderer.addChild(generalHelpSection);
 		}
 		
 		private function adjustMainMenu():void
@@ -86,6 +91,12 @@ package ui.screens
 			{
 				tutorialSection.dispose();
 				tutorialSection = null;
+			}
+			
+			if (generalHelpSection != null)
+			{
+				generalHelpSection.dispose();
+				generalHelpSection = null;
 			}
 			
 			super.dispose();

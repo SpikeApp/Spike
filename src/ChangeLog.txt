@@ -21,6 +21,8 @@ ENHANCEMENT: Don't fire the inactive alert if user hasn't started a sensor and i
 ENHANCEMENT: Don't try to avoid suspension if Spike is in the foreground. This should save some of battery.
 ENHANCEMENT: Initial calibrations popup now stays active for 4 minutes instead of the previous 2 minutes.
 ENHANCEMENT: Improved handling of initial calibration popup when invoked from the lock screen notification.
+ENHANCEMENT: Added Spike's internal server supported endpoints in settings -> integration -> internal HTTP server so developers can integrate their apps with Spike.
+ENHANCEMENT: For people that might be experiencing missed readings, I've added recommendations to the help screen (main menu -> help).
 
 1.1.0
 FEATURE: Nightscout follower mode! Now you can use Spike as master or as follower. To activate follower mode go to settings -> general -> data collection, switch to follower and input the Nightscout URL you want to follow. Done! Followers will have all Spike features like Apple Watch complication, Today Widget, Alarms, 24H Glucose Distribution, Offline Looping, etc. You can switch back and forth from master to follower mode and vice versa. A follower can even act as a proxy by getting data from a Nightscout URL and sharing it to another Nightscout URL or Dexcom Share. (Follower mode for Dexcom Share is coming soon!)
