@@ -12,6 +12,8 @@ package network.httpserver.API
 	import database.CommonSettings;
 	import database.Database;
 	
+	import model.ModelLocator;
+	
 	import network.httpserver.ActionController;
 	
 	import utils.Trace;
@@ -19,6 +21,9 @@ package network.httpserver.API
 	
 	public class NightscoutAPI1Controller extends ActionController
 	{
+		/* Constants */
+		private static const TIME_24_HOURS_6_MINUTES:int = (24 * 60 * 60 * 1000) + 6000;
+		
 		/* Objects */
 		private var nsFormatter:DateTimeFormatter;
 		
@@ -47,35 +52,87 @@ package network.httpserver.API
 				if (params.count != null)	
 					numReadings = int(params.count);
 				
-				var readingsList:ArrayCollection = BgReading.latest(numReadings, BlueToothDevice.isFollower());
-				var readingsCollection:Array = [];
+				var now:Number = new Date().valueOf();
 				
-				for (var i:int = 0; i < readingsList.length; i++) 
+				var startTime:Number = now - TIME_24_HOURS_6_MINUTES;
+				var startDate:String;
+				if (params["find[date][$gte]"] != null)
 				{
-					var bgReading:BgReading = readingsList.getItemAt(i) as BgReading;
-					if (bgReading == null || bgReading.calculatedValue == 0)
-						continue;
-					
-					var bgObject:Object = {};
-					bgObject._id = bgReading.uniqueId;
-					bgObject.unfiltered = !BlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : Math.round(bgReading.calculatedValue) * 1000;
-					bgObject.device = !BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower";
-					bgObject.sysTime = nsFormatter.format(bgReading.timestamp);
-					bgObject.filtered = !BlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : Math.round(bgReading.calculatedValue) * 1000;
-					bgObject.type = "sgv";
-					bgObject.date = bgReading.timestamp;
-					bgObject.sgv = Math.round(bgReading.calculatedValue);
-					bgObject.rssi = 100;
-					bgObject.noise = 1;
-					bgObject.direction = bgReading.slopeName();
-					bgObject.dateString = nsFormatter.format(bgReading.timestamp);
-					
-					readingsCollection.push(bgObject);
+					startDate = params["find[date][$gte]"];
+					if (startDate.indexOf("-") != -1)
+						startTime = new Date(startDate).valueOf();
+					else 
+						startTime = new Date(Number(startDate)).valueOf();
+				}
+				if (params["find[date][$gt]"] != null)
+				{
+					startDate = params["find[date][$gt]"];
+					if (startDate.indexOf("-") != -1)
+						startTime = new Date(startDate).valueOf();
+					else 
+						startTime = new Date(Number(startDate)).valueOf();
+				}
+				
+				var readingsCollection:Array = [];
+				var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
+				
+				if (currentSensorId != "0" || BlueToothDevice.isFollower()) 
+				{
+					var cntr:int = ModelLocator.bgReadings.length - 1;
+					var itemParsed:int = 0;
+					while (cntr > -1 && itemParsed < numReadings) 
+					{
+						var bgReading:BgReading = ModelLocator.bgReadings[cntr];
+						
+						if (bgReading.timestamp < startTime)
+							break;
+						
+						if (bgReading.sensor != null || BlueToothDevice.isFollower()) 
+						{
+							if ((BlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
+							{
+								
+								
+								/*var bgObject:Object = {};
+								bgObject._id = bgReading.uniqueId;
+								bgObject.unfiltered = !BlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : glucoseValue * 1000;
+								bgObject.device = !BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower";
+								bgObject.sysTime = nsFormatter.format(bgReading.timestamp);
+								bgObject.filtered = !BlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : glucoseValue * 1000;
+								bgObject.type = "sgv";
+								bgObject.date = bgReading.timestamp;
+								bgObject.sgv = glucoseValue;
+								bgObject.rssi = 100;
+								bgObject.noise = 1;
+								bgObject.direction = bgReading.slopeName();
+								bgObject.dateString = bgObject.sysTime;*/
+								var glucoseValue:Number = Math.round(bgReading.calculatedValue);
+								var date:String = nsFormatter.format(bgReading.timestamp);
+								readingsCollection.push(
+									{
+										_id: bgReading.uniqueId,
+										unfiltered: !BlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : glucoseValue * 1000,
+										device: !BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower",
+										sysTime: date,
+										filtered: !BlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : glucoseValue * 1000,
+										type: "sgv",
+										date: bgReading.timestamp,
+										sgv: glucoseValue,
+										rssi: 100,
+										noise: 1,
+										direction: bgReading.slopeName(),
+										dateString: date
+									}
+								);
+								itemParsed++;
+							}
+						}
+						cntr--;
+					}
 				}
 				
 				response = JSON.stringify(readingsCollection);
 				
-				readingsList = null;
 				readingsCollection = null;
 				params = null;
 			} 
@@ -171,7 +228,9 @@ package network.httpserver.API
 				if (params.count != null)	
 					numReadings = int(params.count);
 				
-				var startTime:Number = 0;
+				var now:Number = new Date().valueOf();
+				
+				var startTime:Number = now - TIME_24_HOURS_6_MINUTES;
 				var startDate:String;
 				if (params["find[date][$gte]"] != null)
 				{
@@ -189,7 +248,7 @@ package network.httpserver.API
 					else 
 						startTime = new Date(Number(startDate)).valueOf();
 				}
-				var endTime:Number = new Date().valueOf();
+				var endTime:Number = now;
 				if (params["find[date][$lte]"] != null)
 				{
 					var endDate:String = params["find[date][$lte]"];
@@ -199,63 +258,56 @@ package network.httpserver.API
 						endTime = new Date(Number(endDate)).valueOf();
 				}
 				
-				var loopLength:int;
 				var outputArray:Array = [];
 				var outputIndex:int = 0;
-				var i:int;
 				
-				if (!BlueToothDevice.isFollower())
+				if (!BlueToothDevice.isFollower() && (numReadings > 289 && startTime < now - TIME_24_HOURS_6_MINUTES))
 				{
+					//Get from database
 					var readingsList:Array = Database.getBgReadingsDataSynchronous(startTime, endTime, "timestamp, calculatedValue, calculatedValueSlope, hideSlope", numReadings);
 					readingsList.reverse();
-					loopLength = readingsList.length;
+					var loopLength:int = readingsList.length;
 					
-					for (i = 0; i < loopLength; i++) 
+					for (var i:int = 0; i < loopLength; i++) 
 					{
 						var bgReading:Object = readingsList[i] as Object;
 						if (bgReading == null || bgReading.calculatedValue == 0 || bgReading.timestamp < startTime || bgReading.timestamp > endTime )
 							continue;
 						
-						outputArray[outputIndex] = nsFormatter.format(bgReading.timestamp) + "\t" + bgReading.timestamp + "\t" + Math.round(bgReading.calculatedValue) + "\t" + calculateSlopeName(Number(bgReading.calculatedValueSlope), bgReading.hideSlope == 1 ? true : false) + "\t" + BlueToothDevice.name;
+						outputArray[outputIndex] = nsFormatter.format(bgReading.timestamp) + "\t" + bgReading.timestamp + "\t" + Math.round(bgReading.calculatedValue) + "\t" + calculateSlopeName(Number(bgReading.calculatedValueSlope), bgReading.hideSlope == 1 ? true : false) + "\t" + BlueToothDevice.name + (i < loopLength - 1 ? "\n" : "");
 						outputIndex++;
-						if (i < loopLength - 1)
-						{
-							outputArray[outputIndex] = "\n";
-							outputIndex++;
-						}
 					}
 					
 					response = outputArray.join("");
 					
 					readingsList.length = 0;
 					readingsList = null;
-					
 				}
 				else
 				{
-					
-					var followerReadingsList:ArrayCollection = BgReading.latest(numReadings, true);
-					loopLength = followerReadingsList.length;
-					
-					for (i = 0; i < loopLength; i++) 
+					//Get from model locator
+					var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
+					if (currentSensorId != "0" || BlueToothDevice.isFollower()) 
 					{
-						var followerReading:BgReading = followerReadingsList.getItemAt(i) as BgReading;
-						if (followerReading == null || followerReading.calculatedValue == 0 || followerReading.timestamp < startTime || followerReading.timestamp > endTime)
-							continue;
-						
-						outputArray[outputIndex] = nsFormatter.format(followerReading.timestamp) + "\t" + followerReading.timestamp + "\t" + Math.round(followerReading.calculatedValue) + "\t" + followerReading.slopeName() + "\t" + "SpikeFollower";
-						outputIndex++;
-						if (i < loopLength - 1)
+						var cntr:int = ModelLocator.bgReadings.length - 1;
+						var itemParsed:int = 0;
+						while (cntr > -1 && itemParsed < numReadings) 
 						{
-							outputArray[outputIndex] = "\n";
-							outputIndex++;
+							var followerOrInternalReading:BgReading = ModelLocator.bgReadings[cntr];
+							
+							if (followerOrInternalReading.timestamp < startTime)
+								break;
+							
+							if ((followerOrInternalReading.sensor != null || BlueToothDevice.isFollower()) && ((BlueToothDevice.isFollower() || followerOrInternalReading.sensor.uniqueId == currentSensorId) && followerOrInternalReading.calculatedValue != 0 && followerOrInternalReading.rawData != 0)) 
+							{
+								outputArray[outputIndex] = (outputIndex > 0 ? "\n" : "") + nsFormatter.format(followerOrInternalReading.timestamp) + "\t" + followerOrInternalReading.timestamp + "\t" + Math.round(followerOrInternalReading.calculatedValue) + "\t" + followerOrInternalReading.slopeName() + "\t" + (!BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower");
+								outputIndex++;
+							}
+							cntr--;
 						}
 					}
-		
-					response = outputArray.join("");
 					
-					followerReadingsList = null;
-					followerReadingsList = null;
+					response = outputArray.join("");
 				}
 				
 				outputArray.length = 0;
