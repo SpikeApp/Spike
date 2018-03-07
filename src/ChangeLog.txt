@@ -1,5 +1,5 @@
 1.1.2
-ENHANCEMENT: Added mmol support for Nightguard offline. Normally I wouldn't release an update just for this but I know a lot of users want it so here it is! If you had previously tried to setup Spike and Nightscout in mmol before this update, be sure to close and reopen the Nightguard app on your iPhone and force touch Nightguard's Apple Watch app and click refresh after you install this update.
+ENHANCEMENT: Added mmol/L support for Nightguard offline. Normally I wouldn't release an update just for this but I know a lot of users want it so here it is! Also fixed the Nightguard chart's max/min values always displaying in mmol/L for mg/dL users. If you had previously tried to setup Spike and Nightscout in mmol/L before, be sure to close and reopen the Nightguard app on your iPhone and force touch Nightguard's Apple Watch app and click refresh after you install this update.
 ENHANCEMENT: Several optimisations in Spike's internal server to serve data to third party apps/services faster.
 
 Sorry for the back to back updates.
