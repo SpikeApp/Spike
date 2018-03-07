@@ -1,3 +1,11 @@
+1.1.2
+ENHANCEMENT: Added mmol support for Nightguard offline. Normally I wouldn't release an update just for this but I know a lot of users want it so here it is! If you had previously tried to setup Spike and Nightscout in mmol before this update, be sure to close and reopen the Nightguard app on your iPhone and force touch Nightguard's Apple Watch app and click refresh after you install this update.
+ENHANCEMENT: Several optimisations in Spike's internal server to serve data to third party apps/services faster.
+
+Sorry for the back to back updates.
+
+Have a great week!
+
 1.1.1
 FEATURE: Pre-snooze or unsnooze alarms. Going to a meeting, the movies, a social event? Don't want Spike to bother you with alarms? You can now pre-snooze your alarms by going to the three dots menu on the upper right corner of the home screen and clicking the Snoozer button. Left the event earlier than expected? You can unsnooze your alarms by clicking the same button. A lot of code was ported from iOSxDripReader and adapted to Spike so a big thanks to Johan Degraeve for this!  
 FEATURE: Spike to Spike follower mode, no Nightscout or internet required. As long as the Spike master is on the same network as Spike follower, you can follow the master by connecting directly to it. Go to settings -> integration, internal HTTP server and follow the on-screen instruction.
