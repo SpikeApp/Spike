@@ -936,6 +936,8 @@ package services
 		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
 		 */
 		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, alertBody:String = " "):void {	
+			cancelInactiveAlert(); //so it doesn't overlap with the alarm sound
+			
 			var notificationBuilder:NotificationBuilder;
 			var newSound:String;
 			var soundToSet:String = "";
