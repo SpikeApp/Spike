@@ -9,6 +9,7 @@ package network.httpserver.API
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;
+	import database.CommonSettings;
 	import database.Database;
 	
 	import network.httpserver.ActionController;
@@ -273,7 +274,108 @@ package network.httpserver.API
 		{
 			Trace.myTrace("NightscoutAPI1Controller.as", "status endpoint called!");
 			
-			return responseSuccess("<h1>STATUS OK</h1>");
+			var now:Number = new Date().valueOf();
+			
+			var statusObject:Object = {};
+			statusObject.status = "ok";
+			statusObject.name = "Nightscout";
+			statusObject.version = "0.10.3-dev-20171205";
+			statusObject.serverTime = nsFormatter.format(now);
+			statusObject.serverTimeEpoch = now;
+			statusObject.apiEnabled = true;
+			statusObject.careportalEnabled = false;
+			statusObject.boluscalcEnabled = false;
+			statusObject.head = "";
+			statusObject.settings = 
+			{
+				units: CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mg/dl" : "mmol",
+				timeFormat: CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? 24 : 12,
+				nightMode: false,
+				nightMode: false,
+				editMode: "on",
+				showRawbg: "always",
+				customTitle: "Spike's Nightscout",
+				theme: "colors",
+				alarmUrgentHigh: true,
+				alarmUrgentHighMins: [30, 45, 60, 90, 120],
+				alarmHigh: true,
+				alarmHighMins: [30, 45, 60, 90, 120],
+				alarmLow: true,
+				alarmLowMins: [15, 30, 45, 60, 90, 120],
+				alarmUrgentLow: true,
+				alarmUrgentLowMins: [5, 15, 30, 45, 60, 90, 120],
+				alarmUrgentMins: [30, 60, 90, 120],
+				alarmWarnMins: [30, 60, 90, 120],
+				alarmTimeagoWarn: true,
+				alarmTimeagoWarnMins: 15,
+				alarmTimeagoUrgent: true,
+				alarmTimeagoUrgentMins: "30",
+				language: "en",
+				scaleY: "log-dynamic",
+				showPlugins: "careportal iob cob bwp treatmentnotify basal pushover maker sage boluscalc rawbg upbat delta direction upbat rawbg",
+				showForecast: "ar2",
+				focusHours: 3,
+				heartbeat: "10",
+				baseURL: "http://127.0.0.1:1979",
+				authDefaultRoles: "readable",
+				thresholds: 
+				{
+					bgHigh: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)), 
+					bgTargetTop: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK)), 
+					bgTargetBottom: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK)), 
+					bgLow: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK)) 
+				},
+				DEFAULT_FEATURES: 
+				[
+					"bgnow",
+					"delta",
+					"direction",
+					"timeago",
+					"devicestatus",
+					"upbat",
+					"errorcodes",
+					"profile"
+				],
+				alarmTypes: 
+				[
+					"simple"
+				],
+				enable:
+				[
+					"careportal",
+					"iob",
+					"cob",
+					"bwp",
+					"treatmentnotify",
+					"basal",
+					"pushover",
+					"maker",
+					"sage",
+					"boluscalc",
+					"rawbg",
+					"upbat",
+					"pushover",
+					"treatmentnotify",
+					"bgnow",
+					"delta",
+					"direction",
+					"timeago",
+					"devicestatus",
+					"errorcodes",
+					"profile",
+					"simplealarms"
+				]
+			};
+			statusObject.extendedSettings =
+			{
+				timeago: { enableAlerts: true },
+				errorcodes: { urgent: "9 10", info: "1 2 3 4 5 6 7 8", warn: "1 2 3 4 5 6 7 8" },
+				sage: { enableAlerts: true, info: 336, warn: 504 },
+				basal: { render: "default" }
+			};
+			statusObject.authorized = null;
+			
+			return responseSuccess(JSON.stringify(statusObject));
 		}
 		
 		/**

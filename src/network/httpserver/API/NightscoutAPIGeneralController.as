@@ -58,7 +58,7 @@ package network.httpserver.API
 				responseObject.bgs =
 				[ 
 					{
-						sgv: String(Math.round(latestReading.calculatedValue)), 
+						sgv: BgGraphBuilder.unitizedString(latestReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
 						trend: latestReading.getSlopeOrdinal(), 
 						direction: latestReading.slopeName(), 
 						datetime: latestReading.timestamp,
