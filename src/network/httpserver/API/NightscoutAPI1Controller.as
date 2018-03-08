@@ -44,6 +44,11 @@ package network.httpserver.API
 		{
 			Trace.myTrace("NightscoutAPI1Controller.as", "sgv endpoint called!");
 			
+			return responseSuccess(getSGV(params));
+		}
+		
+		private function getSGV(params:URLVariables):String
+		{
 			var response:String = "[]";
 			
 			try
@@ -91,21 +96,6 @@ package network.httpserver.API
 						{
 							if ((BlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
 							{
-								
-								
-								/*var bgObject:Object = {};
-								bgObject._id = bgReading.uniqueId;
-								bgObject.unfiltered = !BlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : glucoseValue * 1000;
-								bgObject.device = !BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower";
-								bgObject.sysTime = nsFormatter.format(bgReading.timestamp);
-								bgObject.filtered = !BlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : glucoseValue * 1000;
-								bgObject.type = "sgv";
-								bgObject.date = bgReading.timestamp;
-								bgObject.sgv = glucoseValue;
-								bgObject.rssi = 100;
-								bgObject.noise = 1;
-								bgObject.direction = bgReading.slopeName();
-								bgObject.dateString = bgObject.sysTime;*/
 								var glucoseValue:Number = Math.round(bgReading.calculatedValue);
 								var date:String = nsFormatter.format(bgReading.timestamp);
 								readingsCollection.push(
@@ -141,7 +131,7 @@ package network.httpserver.API
 				Trace.myTrace("NightscoutAPI1Controller.as", "Error performing sgv endpoint call. Error: " + error.message);
 			}
 			
-			return responseSuccess(response);
+			return response;
 		}
 		
 		public function cal(params:URLVariables):String
@@ -219,6 +209,9 @@ package network.httpserver.API
 		public function entries(params:URLVariables):String
 		{	
 			Trace.myTrace("NightscoutAPI1Controller.as", "entries endpoint called!");
+			
+			if (params.extension != null && params.extension != undefined && params.extension == "json")
+				return responseSuccess(getSGV(params));
 			
 			var response:String = "";
 			
@@ -346,7 +339,7 @@ package network.httpserver.API
 				nightMode: false,
 				editMode: "on",
 				showRawbg: "always",
-				customTitle: "Spike's Nightscout",
+				customTitle: "Spike",
 				theme: "colors",
 				alarmUrgentHigh: true,
 				alarmUrgentHighMins: [30, 45, 60, 90, 120],
@@ -428,6 +421,13 @@ package network.httpserver.API
 			statusObject.authorized = null;
 			
 			return responseSuccess(JSON.stringify(statusObject));
+		}
+		
+		public function devicestatus(params:URLVariables):String
+		{
+			Trace.myTrace("NightscoutAPI1Controller.as", "devicestatus endpoint called!");
+			
+			return responseSuccess("[]");
 		}
 		
 		/**

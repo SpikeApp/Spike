@@ -182,6 +182,9 @@ package network.httpserver
 					parameters = objectToURLVariables(postJSONResponse, param_string);
 				}
 				
+				if (request.indexOf(".json") != -1)
+					parameters.extension = "json";
+				
 				var controller:ActionController = _controllers[controller_key];
                 
                 if (controller) 
