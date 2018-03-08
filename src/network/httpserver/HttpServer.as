@@ -1,5 +1,8 @@
 package network.httpserver
 {
+    import com.distriqt.extension.notifications.Notifications;
+    import com.distriqt.extension.notifications.builders.NotificationBuilder;
+    
     import flash.events.Event;
     import flash.events.ProgressEvent;
     import flash.events.ServerSocketConnectEvent;
@@ -12,8 +15,11 @@ package network.httpserver
     
     import model.ModelLocator;
     
+    import services.NotificationService;
+    
     import ui.popups.AlertManager;
     
+    import utils.BadgeBuilder;
     import utils.Trace;
 	
 	[ResourceBundle("httpserverservice")]
@@ -76,9 +82,23 @@ package network.httpserver
 				{
 					Trace.myTrace("HttpServer.as", "Server error! Can't bind to port: " + port + ". Notifying user...");
 					
-					var message:String = ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_mesage').replace("{port}", port.toString()) + " " + error.message;
+					//Alert
+					var message:String = ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_mesage').replace("{port}", port.toString());
 					
 					AlertManager.showSimpleAlert(ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_title'), message);
+					
+					//Notification
+					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+						.setCount(BadgeBuilder.getAppBadge())
+						.setId(NotificationService.ID_FOR_HTTP_SERVER_DOWN)
+						.setAlert(ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_title'))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_title'))
+						.setBody(message)
+						.enableVibration(true)
+						.enableLights(true)
+						.setSound("../assets/sounds/Sci-Fi_Alarm_Loop_4.caf");
+					
+					Notifications.service.notify(notificationBuilder.build());
 					
 					_isConnected = false;
 					
