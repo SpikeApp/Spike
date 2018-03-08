@@ -1,3 +1,13 @@
+1.1.3
+FEATURE: Spike will now play an alarm sound, vibrate and send a notification to the lock screen in case iOS closes the internal HTTP server if the user's device is low on memory. This servers as a safeguard, especially for offline loopers.
+FIX: Fixed a nasty bug introduced in version 1.1.1 that sometimes prevented the calibration on demand popup to appear and the user needed to restart Spike to make it work again... Sorry about that! :( This is the reason that granted this unexpected Spike update.
+FIX: The "http://" part was missing from Spike's URL in Nightguard instructions. Added it to this update to avoid user confusion.
+FIX: Other small fixes and improvements...
+ENHANCEMENT: Added more endpoints to Spike's internal HTTP server to make it compatible with a wider range of Nightscout apps/services.
+ENHANCEMENT: When the Alarm Snoozer popup appears, it will not automatically switch to the chart screen if the user is somewhere else inside the app. It's not very useful and can be quite disruptive if the user is tweaking some settings in Spike and didn't have the chance to save them before Spike switches screens. The user can now snooze an alarm from anywhere inside Spike.
+
+Sorry to bother you with this unexpected update but calibrations are an essential part to make Spike reliable for everyone so I needed to push this ASAP :/
+
 1.1.2
 ENHANCEMENT: Added mmol/L support for Nightguard offline. Normally I wouldn't release an update just for this but I know a lot of users want it so here it is! Also fixed the Nightguard chart's max/min values always displaying in mmol/L for mg/dL users. If you had previously tried to setup Spike and Nightscout in mmol/L before, be sure to close and reopen the Nightguard app on your iPhone and force touch Nightguard's Apple Watch app and click refresh after you install this update.
 ENHANCEMENT: Several optimisations in Spike's internal server to serve data to third party apps/services faster.
