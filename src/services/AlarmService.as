@@ -555,7 +555,7 @@ package services
 			
 			function calibrationRequestSnoozePicker_closedHandler(event:starling.events.Event): void {
 				BackgroundFetch.stopPlayingSound();
-				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(0);
 				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -563,7 +563,7 @@ package services
 			
 			function batteryLevelSnoozePicker_closedHandler(event:starling.events.Event): void {
 				BackgroundFetch.stopPlayingSound();
-				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(6);
 				_batteryLevelAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -571,7 +571,7 @@ package services
 			
 			function phoneMutedSnoozePicker_closedHandler(event:starling.events.Event): void {
 				BackgroundFetch.stopPlayingSound();
-				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(7);
 				_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -579,14 +579,14 @@ package services
 			
 			function missedReadingSnoozePicker_closedHandler(event:starling.events.Event): void {
 				BackgroundFetch.stopPlayingSound();
-				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(5);
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function lowSnoozePicker_closedHandler(event:starling.events.Event): void {
-				myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+				myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(1);
 				BackgroundFetch.stopPlayingSound();
 				_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -594,7 +594,7 @@ package services
 			}
 			
 			function highSnoozePicker_closedHandler(event:starling.events.Event): void {
-				myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+				myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(3);
 				BackgroundFetch.stopPlayingSound();
 				_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -602,7 +602,7 @@ package services
 			}
 			
 			function veryHighSnoozePicker_closedHandler(event:starling.events.Event): void {
-				myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+				myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(4);
 				BackgroundFetch.stopPlayingSound();
 				_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -759,7 +759,7 @@ package services
 		}
 		
 		private static function lowSnoozePicker_closedHandler(event:starling.events.Event): void {
-			myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+			myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(1);
 			BackgroundFetch.stopPlayingSound();
 			_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -767,7 +767,7 @@ package services
 		}
 		
 		private static function veryLowSnoozePicker_closedHandler(event:starling.events.Event): void {
-			myTrace("in veryLowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+			myTrace("in veryLowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(2);
 			BackgroundFetch.stopPlayingSound();
 			_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -775,7 +775,7 @@ package services
 		}
 		
 		private static function highSnoozePicker_closedHandler(event:starling.events.Event): void {
-			myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+			myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(3);
 			BackgroundFetch.stopPlayingSound();
 			_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -783,7 +783,7 @@ package services
 		}
 		
 		private static function veryHighSnoozePicker_closedHandler(event:starling.events.Event): void {
-			myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+			myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(4);
 			BackgroundFetch.stopPlayingSound();
 			_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -791,7 +791,7 @@ package services
 		}
 		
 		private static function missedReadingSnoozePicker_closedHandler(event:starling.events.Event): void {
-			myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+			myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(5);
 			BackgroundFetch.stopPlayingSound();
 			_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -799,7 +799,7 @@ package services
 		}
 		
 		private static function phoneMutedSnoozePicker_closedHandler(event:starling.events.Event): void {
-			myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index] + " minutes");
+			myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, phoneMutedSnoozePicker_closedHandler);
 			disableRepeatAlert(7);
 			BackgroundFetch.stopPlayingSound();
