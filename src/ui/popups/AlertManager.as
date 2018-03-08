@@ -27,7 +27,6 @@ package ui.popups
 	import utils.Trace;
 	
 	[ResourceBundle("globaltranslations")]
-	[ResourceBundle("calibrationservice")]
 
 	public class AlertManager
 	{
@@ -145,24 +144,17 @@ package ui.popups
 			/* Clean Up */
 			if (activeAlert != null && closeActivePopup)
 			{
-				if (activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title")) == -1 &&
-					activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title")) == -1 &&
-					activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title")) == -1 &&
-					activeAlert.title.indexOf(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_alert_title")) == -1
-				)
-				{
-					if (PopUpManager.isPopUp(activeAlert))
-						PopUpManager.removePopUp(activeAlert);
-					else
-						PopUpManager.removeAllPopUps();
-					activeAlert.dispose();
-					activeAlert = null;
+				if (PopUpManager.isPopUp(activeAlert))
+					PopUpManager.removePopUp(activeAlert);
+				else
+					PopUpManager.removeAllPopUps();
+				activeAlert.dispose();
+				activeAlert = null;
 					
-					/* Update Counter */
-					activeAlertsCount -= 1;
-					if (activeAlertsCount < 0)
-						activeAlertsCount = 0;
-				}
+				/* Update Counter */
+				activeAlertsCount -= 1;
+				if (activeAlertsCount < 0)
+					activeAlertsCount = 0;
 			}
 			
 			if (alertQueue.length > 0)
