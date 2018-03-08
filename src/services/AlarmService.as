@@ -373,13 +373,6 @@ package services
 				var now:Date = new Date();
 				var cntr:int;
 				
-				//Display Home Screen
-				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART)
-				{
-					AppInterface.instance.menu.selectedIndex = 0;
-					AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
-				}
-				
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
 				myTrace("in notificationReceived, event != null, id = " + NotificationService.notificationIdToText(notificationEvent.id));
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
