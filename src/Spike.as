@@ -104,7 +104,7 @@ package
 			starling.start();
 			
 			//Push Chart Screen
-			if(AppInterface.instance.navigator != null)
+			/*if(AppInterface.instance.navigator != null)
 			{
 				var nowTimer:Number = getTimer();
 				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART && nowTimer - deactivationTimer > 5 * 60 * 1000)
@@ -112,7 +112,7 @@ package
 					AppInterface.instance.menu.selectedIndex = 0;
 					AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
 				}
-			}
+			}*/
 			
 			//Update Variables
 			Constants.appInForeground = true;
