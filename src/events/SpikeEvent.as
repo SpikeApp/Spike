@@ -8,7 +8,7 @@ package events
 		[Event(name="AppInBackGroundEvent",type="events.SpikeEvent")]
 		
 		/**
-		 * event to inform that app has moved to foreground<br>
+		 * event to inform that app has moved to foreground/Background<br>
 		 */
 		public static const APP_IN_FOREGROUND:String = "AppInForeGroundEvent";
 		public static const APP_IN_BACKGROUND:String = "AppInBackGroundEvent";

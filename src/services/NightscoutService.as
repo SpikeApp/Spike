@@ -133,7 +133,7 @@ package services
 			formatter = new DateTimeFormatter();
 			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 			formatter.setStyle("locale", "en_US");
-			formatter.useUTC = true;
+			formatter.useUTC = false;
 			
 			//Event listener for settings changes
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);

@@ -23,21 +23,18 @@ package services
 	import database.LocalSettings;
 	import database.Sensor;
 	
+	import events.AlarmServiceEvent;
 	import events.FollowerEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
-	import feathers.motion.Fade;
-	
 	import model.ModelLocator;
 	
 	import starling.events.Event;
 	
-	import ui.AppInterface;
 	import ui.popups.AlarmSnoozer;
-	import ui.screens.Screens;
 	
 	import utils.BadgeBuilder;
 	import utils.BgGraphBuilder;
@@ -163,7 +160,7 @@ package services
 		 */
 		private static var _calibrationRequestLatestSnoozeTimeInMs:Number = Number.NaN;
 		
-		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 105, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 1440, 10080];
+		public static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 105, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 1440, 10080];
 		public static var snoozeValueStrings:Array = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes",
 			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour, 15 minutes", "1 hour, 30 minutes", "1 hour, 45 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "4 hours",
 			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours", "11 hours", "12 hours", "1 day", "1 week"];
@@ -507,6 +504,9 @@ package services
 							_batteryLevelAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 							myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, snoozing the notification for " + _batteryLevelAlertSnoozePeriodInMinutes + " minutes");
 							_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+							
+							//Notify Services (ex: IFTTT)
+							_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert"),time: _batteryLevelAlertSnoozePeriodInMinutes}));
 						}
 					} else {
 						myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
@@ -539,6 +539,9 @@ package services
 							_calibrationRequestSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 							myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, snoozing the notification for " + _calibrationRequestSnoozePeriodInMinutes + " minutes");
 							_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
+							
+							//Notify Services (ex: IFTTT)
+							_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.CALIBRATION_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"),time: _calibrationRequestSnoozePeriodInMinutes}));
 						}
 					} else {
 						myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
@@ -726,36 +729,54 @@ package services
 			_lowAlertSnoozePeriodInMinutes = periodInMinutes;
 			myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + " minutes");
 			_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			
+			//Notify Services (ex: IFTTT)
+			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.LOW_GLUCOSE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert"),time: _lowAlertSnoozePeriodInMinutes}));
 		}
 		
 		private static function setVeryLowAlertSnooze(periodInMinutes:int):void {
 			_veryLowAlertSnoozePeriodInMinutes = periodInMinutes;
 			myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, snoozing the notification for " + _veryLowAlertSnoozePeriodInMinutes + " minutes");
 			_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			
+			//Notify Services (ex: IFTTT)
+			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_LOW_GLUCOSE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert"), time: _veryLowAlertSnoozePeriodInMinutes}));
 		}
 		
 		private static function setHighAlertSnooze(periodInMinutes:int):void {
 			_highAlertSnoozePeriodInMinutes = periodInMinutes;
 			myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
 			_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			
+			//Notify Services (ex: IFTTT)
+			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert"),time: _highAlertSnoozePeriodInMinutes}));
 		}
 		
 		private static function setVeryHighAlertSnooze(periodInMinutes:int):void {
 			_veryHighAlertSnoozePeriodInMinutes = periodInMinutes;
 			myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, snoozing the notification for " + _veryHighAlertSnoozePeriodInMinutes + " minutes");
 			_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			
+			//Notify Services (ex: IFTTT)
+			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert"),time: _veryHighAlertSnoozePeriodInMinutes}));
 		}
 		
 		private static function setMissedReadingAlertSnooze(periodInMinutes:int):void {
 			_missedReadingAlertSnoozePeriodInMinutes = periodInMinutes;
 			myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes + " minutes");
 			_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			
+			//Notify Services (ex: IFTTT)
+			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.MISSED_READINGS_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert"),time: _missedReadingAlertSnoozePeriodInMinutes}));
 		}
 		
 		private static function setPhoneMutedAlertSnooze(periodInMinutes:int):void {
 			_phoneMutedAlertSnoozePeriodInMinutes = periodInMinutes;
 			myTrace("in notificationReceived with id = ID_FOR_PHONE_MUTED_ALERT, snoozing the notification for " + _phoneMutedAlertSnoozePeriodInMinutes + " minutes");
 			_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			
+			//Notify Services (ex: IFTTT)
+			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.PHONE_MUTED_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert"),time: _phoneMutedAlertSnoozePeriodInMinutes}));
 		}
 		
 		private static function lowSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -1004,6 +1025,24 @@ package services
 				alarmTimer.delay = 60000;
 				alarmTimer.start();
 			}
+			
+			//Notify services (ex: IFTTT)
+			if (notificationId == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.CALIBRATION_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_LOW_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.LOW_GLUCOSE_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_VERY_LOW_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_LOW_GLUCOSE_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_HIGH_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.HIGH_GLUCOSE_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_VERY_HIGH_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_MISSED_READING_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.MISSED_READINGS_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_BATTERY_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_PHONEMUTED_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.PHONE_MUTED_TRIGGERED));
 		}
 		
 		private static function queueAlertSound(sound:String):void {
