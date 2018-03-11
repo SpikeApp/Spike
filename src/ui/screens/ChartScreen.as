@@ -285,22 +285,29 @@ package ui.screens
 			if (!BlueToothDevice.isFollower())
 				Trace.myTrace("ChartScreen.as", "User is not a follower. Ignoring");
 				
-			var readings:Array = e.data;
-			if (readings != null && readings.length > 0)
+			try
 			{
-				if (BackgroundFetch.appIsInForeground() && glucoseChart != null && Constants.appInForeground)
+				var readings:Array = e.data;
+				if (readings != null && readings.length > 0)
 				{
-					glucoseChart.addGlucose(readings);
-					if (displayPieChart)
-						pieChart.drawChart();
-				}
-				else
-				{
-					newReadingsListFollower = newReadingsListFollower.concat(readings);
-				}		
-			}	
-			
-			AlarmService.cancelInactiveAlert();
+					if (BackgroundFetch.appIsInForeground() && glucoseChart != null && Constants.appInForeground)
+					{
+						glucoseChart.addGlucose(readings);
+						if (displayPieChart)
+							pieChart.drawChart();
+					}
+					else
+					{
+						newReadingsListFollower = newReadingsListFollower.concat(readings);
+					}		
+				}	
+				
+				AlarmService.cancelInactiveAlert();
+			} 
+			catch(error:Error) 
+			{
+				Trace.myTrace("ChartScreen.as", "Error adding glucose to chart. Error: " + error.message);
+			}
 		}
 		
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
@@ -310,28 +317,35 @@ package ui.screens
 			if (BlueToothDevice.isFollower())
 				Trace.myTrace("ChartScreen.as", "User is a follower. Ignoring");
 			
-			var reading:BgReading = BgReading.lastNoSensor();
-			
-			if(reading == null || Calibration.allForSensor().length < 2)
+			try
 			{
-				Trace.myTrace("ChartScreen.as", "Bad Reading or not enough calibrations. Not adding it to the chart.");
-				return;
-			}
-			
-			if (!appInBackground && glucoseChart != null && Constants.appInForeground)
+				var reading:BgReading = BgReading.lastNoSensor();
+				
+				if(reading == null || reading.calculatedValue == 0 || Calibration.allForSensor().length < 2)
+				{
+					Trace.myTrace("ChartScreen.as", "Bad Reading or not enough calibrations. Not adding it to the chart.");
+					return;
+				}
+				
+				if (!appInBackground && glucoseChart != null && Constants.appInForeground)
+				{
+					Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
+					glucoseChart.addGlucose([reading]);
+					if (displayPieChart)
+						pieChart.drawChart();
+				}
+				else
+				{
+					Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
+					newReadingsList.push(reading);
+				}
+				
+				AlarmService.cancelInactiveAlert();
+			} 
+			catch(error:Error) 
 			{
-				Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
-				glucoseChart.addGlucose([reading]);
-				if (displayPieChart)
-					pieChart.drawChart();
+				Trace.myTrace("ChartScreen.as", "Error adding readings to chart. Error: " + error.message)
 			}
-			else
-			{
-				Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
-				newReadingsList.push(reading);
-			}
-			
-			AlarmService.cancelInactiveAlert();
 		}
 		
 		private function onAppInBackground (e:SpikeEvent):void
@@ -404,9 +418,8 @@ package ui.screens
 							if (queueAddedToChart && queueAddedToPie)
 								newReadingsListFollower.length = 0;
 						}	
-						else
-							if (glucoseChart != null)
-								glucoseChart.calculateDisplayLabels();
+						else if (glucoseChart != null)
+							glucoseChart.calculateDisplayLabels();
 					}
 				}
 			} 

@@ -1,3 +1,7 @@
+1.1.4
+ENHANCEMENT: Improvements on how Spike's main chart handles unconventional data comming from the transmitter.
+ENHANCEMENT: More safeguards in Spike's internal server in case the user is using an app that sends requests are outside of Nightscout's API norms..
+
 1.1.3
 FEATURE: Spike will now play an alarm sound, vibrate and send a notification to the lock screen in case iOS closes the internal HTTP server if the user's device is low on memory. This servers as a safeguard, especially for offline loopers.
 FIX: Fixed a nasty bug introduced in version 1.1.1 that sometimes prevented the calibration on demand popup to appear and the user needed to restart Spike to make it work again... Sorry about that! :( This is the reason that granted this unexpected Spike update.

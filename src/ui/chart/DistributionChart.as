@@ -361,7 +361,7 @@ package ui.chart
 				pieGraphicContainer.addChild(outterNGon);
 			}
 			
-			/* Create Pie Texture & Image */
+			/* Add pie to display list */
 			pieContainer.addChild(pieGraphicContainer);
 			
 			//Calculate Average Glucose & A1C

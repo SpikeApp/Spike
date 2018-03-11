@@ -822,7 +822,7 @@ package ui.chart
 			var latestTimestamp:Number = Number(BGReadingsList[BGReadingsList.length - 1].timestamp);
 			var firstTimestamp:Number;
 			
-			if(_dataSource != null && _dataSource.length >= 1)
+			if(_dataSource != null && _dataSource.length >= 1 && mainChartGlucoseMarkersList[0].timestamp != null && !isNaN(mainChartGlucoseMarkersList[0].timestamp))
 				firstTimestamp = Number(mainChartGlucoseMarkersList[0].timestamp);
 			else
 				firstTimestamp = Number.NaN;
