@@ -1,10 +1,13 @@
 package ui.screens.display.settings.integration
 {
+	import database.BgReading;
+	import database.CommonSettings;
 	import database.LocalSettings;
 	
 	import feathers.controls.Check;
 	import feathers.controls.Label;
 	import feathers.controls.List;
+	import feathers.controls.NumericStepper;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
@@ -14,12 +17,15 @@ package ui.screens.display.settings.integration
 	import feathers.layout.VerticalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
 	import starling.events.Event;
 	
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
 	
+	[ResourceBundle("iftttsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
 	public class IFTTTSettingsList extends List 
@@ -45,6 +51,9 @@ package ui.screens.display.settings.integration
 		private var missedReadingsSnoozedCheck:Check;
 		private var phoneMutedSnoozedCheck:Check;
 		private var transmitterLowBatterySnoozedCheck:Check;
+		private var glucoseThresholdsSwitch:ToggleSwitch;
+		private var lowGlucoseThresholdStepper:NumericStepper;
+		private var highGlucoseThresholdStepper:NumericStepper;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -68,6 +77,9 @@ package ui.screens.display.settings.integration
 		private var isIFTTTPhoneMutedSnoozedEnabled:Boolean;
 		private var isIFTTTTransmitterLowBatterySnoozedEnabled:Boolean;
 		private var makerKeyValue:String;
+		private var isIFTTTGlucoseThresholdsEnabled:Boolean;
+		private var highGlucoseThresholdValue:Number;
+		private var lowGlucoseThresholdValue:Number;
 
 		public function IFTTTSettingsList()
 		{
@@ -118,13 +130,20 @@ package ui.screens.display.settings.integration
 			isIFTTTTransmitterLowBatterySnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TRANSMITTER_LOW_BATTERY_SNOOZED_ON) == "true";
 			isIFTTTGlucoseReadingsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON) == "true";
 			makerKeyValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY);
+			isIFTTTGlucoseThresholdsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON) == "true";
+			highGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD));
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				highGlucoseThresholdValue = (Math.round(highGlucoseThresholdValue * BgReading.MGDL_TO_MMOLL * 10))/10;
+			lowGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD));
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				lowGlucoseThresholdValue = (Math.round(lowGlucoseThresholdValue * BgReading.MGDL_TO_MMOLL * 10))/10;
 		}
 		
 		private function setupContent():void
 		{
 			//On/Off Toggle
 			IFTTTToggle = LayoutFactory.createToggleSwitch(isIFTTTEnabled);
-			IFTTTToggle.addEventListener( Event.CHANGE, onIFTTTOnOff );
+			IFTTTToggle.addEventListener( Event.CHANGE, onSettingsReload );
 			
 			//Maker Key Input Field
 			makerKeyTextInput = LayoutFactory.createTextInput(false, false, 160, HorizontalAlign.RIGHT);
@@ -133,8 +152,37 @@ package ui.screens.display.settings.integration
 			makerKeyTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Maker Key Description
-			makerKeyDescriptionLabel = LayoutFactory.createLabel("If using more than one key, separate them by commas (,)", HorizontalAlign.CENTER, VerticalAlign.TOP, 10);
+			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, 10);
 			makerKeyDescriptionLabel.width = width - 10;
+			
+			//Glucose tresholds on/off switch
+			glucoseThresholdsSwitch = LayoutFactory.createToggleSwitch(isIFTTTGlucoseThresholdsEnabled);
+			glucoseThresholdsSwitch.addEventListener(Event.CHANGE, onSettingsReload);
+			
+			//Thresholds
+			var upperLimit:Number;
+			var lowerLimit:Number;
+			var step:Number;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+			{
+				upperLimit = 600;
+				lowerLimit = 40;
+				step = 1;
+			}
+			else
+			{
+				upperLimit = (Math.round(600 * BgReading.MGDL_TO_MMOLL * 10))/10;
+				lowerLimit = (Math.round(40 * BgReading.MGDL_TO_MMOLL * 10))/10;
+				step = 0.1;
+			}
+			
+			//High Glucose Threshold Stepper
+			highGlucoseThresholdStepper = LayoutFactory.createNumericStepper(lowerLimit, upperLimit, highGlucoseThresholdValue, step);
+			highGlucoseThresholdStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Low Glucose Threshold Stepper
+			lowGlucoseThresholdStepper = LayoutFactory.createNumericStepper(lowerLimit, upperLimit, lowGlucoseThresholdValue, step);
+			lowGlucoseThresholdStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Urgent High Glucose Triggered
 			urgentHighGlucoseTriggeredCheck = LayoutFactory.createCheckMark(isIFTTTUrgentHighTriggeredEnabled);
@@ -219,29 +267,35 @@ package ui.screens.display.settings.integration
 		private function reloadContent():void
 		{
 			var screenContent:ArrayCollection = new ArrayCollection();
-			screenContent.push({ label: "Enabled", accessory: IFTTTToggle });
+			screenContent.push({ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","enabled"), accessory: IFTTTToggle });
 			
 			if (isIFTTTEnabled)
 			{
-				screenContent.push( { label: "Maker Key(s)", accessory: makerKeyTextInput } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_label"), accessory: makerKeyTextInput } );
 				screenContent.push( { label: "", accessory: makerKeyDescriptionLabel } );
-				screenContent.push( { label: "Urgent High Glucose Triggered", accessory: urgentHighGlucoseTriggeredCheck } );
-				screenContent.push( { label: "Urgent High Glucose Snoozed", accessory: urgentHighGlucoseSnoozedCheck } );
-				screenContent.push( { label: "High Glucose Triggered", accessory: highGlucoseTriggeredCheck } );
-				screenContent.push( { label: "High Glucose Snoozed", accessory: highGlucoseSnoozedCheck } );
-				screenContent.push( { label: "Low Glucose Triggered", accessory: lowGlucoseTriggeredCheck } );
-				screenContent.push( { label: "Low Glucose Snoozed", accessory: lowGlucoseSnoozedCheck } );
-				screenContent.push( { label: "Urgent Low Glucose Triggered", accessory: urgentLowGlucoseTriggeredCheck } );
-				screenContent.push( { label: "Urgent Low Glucose Snoozed", accessory: urgentLowGlucoseSnoozedCheck } );
-				screenContent.push( { label: "Calibration Request Triggered", accessory: calibrationTriggeredCheck } );
-				screenContent.push( { label: "Calibration Request Snoozed", accessory: calibrationSnoozedCheck } );
-				screenContent.push( { label: "Missed Readings Triggered", accessory: missedReadingsTriggeredCheck } );
-				screenContent.push( { label: "Missed Readings Snoozed", accessory: missedReadingsSnoozedCheck } );
-				screenContent.push( { label: "Phone Muted Triggered", accessory: phoneMutedTriggeredCheck } );
-				screenContent.push( { label: "Phone Muted Snoozed", accessory: phoneMutedSnoozedCheck } );
-				screenContent.push( { label: "Transmitter Low Battery Triggered", accessory: transmitterLowBatteryTriggeredCheck } );
-				screenContent.push( { label: "Transmitter Low Battery Snoozed", accessory: transmitterLowBatterySnoozedCheck } );
-				screenContent.push( { label: "Glucose Readings", accessory: glucoseReadingCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_thresholds_label"), accessory: glucoseThresholdsSwitch } );
+				if (isIFTTTGlucoseThresholdsEnabled)
+				{
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","high_threshold_label"), accessory: highGlucoseThresholdStepper } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_threshold_label"), accessory: lowGlucoseThresholdStepper } );
+				}
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_readings_label"), accessory: glucoseReadingCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_high_glucose_triggered_label"), accessory: urgentHighGlucoseTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_high_glucose_snoozed_label"), accessory: urgentHighGlucoseSnoozedCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","high_glucose_triggered_label"), accessory: highGlucoseTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","high_glucose_snoozed_label"), accessory: highGlucoseSnoozedCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_glucose_triggered_label"), accessory: lowGlucoseTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_glucose_snoozed_label"), accessory: lowGlucoseSnoozedCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_low_glucose_triggered_label"), accessory: urgentLowGlucoseTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_low_glucose_snoozed_label"), accessory: urgentLowGlucoseSnoozedCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_triggered_label"), accessory: calibrationTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_snoozed_label"), accessory: calibrationSnoozedCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","missed_readings_triggered_label"), accessory: missedReadingsTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","missed_readings_snoozed_label"), accessory: missedReadingsSnoozedCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","phone_muted_triggered_label"), accessory: phoneMutedTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","phone_muted_snoozed_label"), accessory: phoneMutedSnoozedCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_triggered_label"), accessory: transmitterLowBatteryTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_snoozed_label"), accessory: transmitterLowBatterySnoozedCheck } );
 			}
 			
 			dataProvider = screenContent;
@@ -307,6 +361,27 @@ package ui.screens.display.settings.integration
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY) != makerKeyValue.replace(" ", ""))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY, makerKeyValue.replace(" ", ""));
 			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON) != String(isIFTTTGlucoseThresholdsEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON, String(isIFTTTGlucoseThresholdsEnabled));
+			
+			var highValueToSave:Number;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+				highValueToSave = highGlucoseThresholdValue;
+			else
+				highValueToSave = Math.round(BgReading.mmolToMgdl(highGlucoseThresholdValue));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD) != String(highValueToSave))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD, String(highValueToSave));
+			
+			var lowValueToSave:Number;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+				lowValueToSave = lowGlucoseThresholdValue;
+			else
+				lowValueToSave = Math.round(BgReading.mmolToMgdl(lowGlucoseThresholdValue));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD) != String(lowValueToSave))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD, String(lowValueToSave));
+			
 			needsSave = false;
 		}
 		
@@ -334,13 +409,16 @@ package ui.screens.display.settings.integration
 			isIFTTTTransmitterLowBatterySnoozedEnabled = transmitterLowBatterySnoozedCheck.isSelected;
 			isIFTTTGlucoseReadingsEnabled = glucoseReadingCheck.isSelected;
 			makerKeyValue = makerKeyTextInput.text.replace(" ", "");
+			highGlucoseThresholdValue = highGlucoseThresholdStepper.value;
+			lowGlucoseThresholdValue = lowGlucoseThresholdStepper.value;
 			
 			needsSave = true;
 		}
 		
-		private function onIFTTTOnOff(event:Event):void
+		private function onSettingsReload(event:Event):void
 		{
 			isIFTTTEnabled = IFTTTToggle.isSelected;
+			isIFTTTGlucoseThresholdsEnabled = glucoseThresholdsSwitch.isSelected;
 			reloadContent();
 			needsSave = true;
 		}	
@@ -352,9 +430,16 @@ package ui.screens.display.settings.integration
 		{
 			if(IFTTTToggle != null)
 			{
-				IFTTTToggle.removeEventListener( Event.CHANGE, onIFTTTOnOff );
+				IFTTTToggle.removeEventListener( Event.CHANGE, onSettingsReload );
 				IFTTTToggle.dispose();
 				IFTTTToggle = null;
+			}
+			
+			if(glucoseThresholdsSwitch != null)
+			{
+				glucoseThresholdsSwitch.removeEventListener( Event.CHANGE, onSettingsReload );
+				glucoseThresholdsSwitch.dispose();
+				glucoseThresholdsSwitch = null;
 			}
 			
 			if(urgentHighGlucoseTriggeredCheck != null)
@@ -488,6 +573,20 @@ package ui.screens.display.settings.integration
 				makerKeyDescriptionLabel.removeEventListener( Event.CHANGE, onSettingsChanged);	
 				makerKeyDescriptionLabel.dispose();
 				makerKeyDescriptionLabel = null;
+			}
+			
+			if(highGlucoseThresholdStepper != null)
+			{
+				highGlucoseThresholdStepper.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				highGlucoseThresholdStepper.dispose();
+				highGlucoseThresholdStepper = null;
+			}
+			
+			if(lowGlucoseThresholdStepper != null)
+			{
+				lowGlucoseThresholdStepper.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				lowGlucoseThresholdStepper.dispose();
+				lowGlucoseThresholdStepper = null;
 			}
 			
 			super.dispose();

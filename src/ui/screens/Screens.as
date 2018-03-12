@@ -24,6 +24,7 @@ package ui.screens
 		public static const SETTINGS_TRANSMITTER:String = "transmitterSettings";
 		public static const SETTINGS_INTEGRATION:String = "integrationSettings";
 		public static const SETTINGS_APPLE_WATCH:String = "appleWatchSettings";
+		public static const SETTINGS_IFTTT:String = "IFTTTSettings";
 		public static const DISCLAIMER:String = "disclaimer";
 		public static const HELP:String = "help";
 	}

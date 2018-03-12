@@ -17,7 +17,7 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.integration.HTTPServerSettingsList;
-	import ui.screens.display.settings.integration.IFTTTSettingsList;
+	import ui.screens.display.settings.integration.IFTTTSettingsChooser;
 	import ui.screens.display.settings.integration.SiDiarySettingsList;
 	
 	import utils.Constants;
@@ -33,7 +33,7 @@ package ui.screens
 		private var siDiarySettings:SiDiarySettingsList;
 		private var httpServerSectionSubLabel:Label;
 		private var iFTTTLabel:Label;
-		private var IFTTTSettings:IFTTTSettingsList;
+		private var iFTTTSettingsChooser:IFTTTSettingsChooser;
 		
 		public function IntegrationSettingsScreen() 
 		{
@@ -70,12 +70,12 @@ package ui.screens
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
 			//IFTTT Section Label
-			iFTTTLabel = LayoutFactory.createSectionLabel("IFTTT");
+			iFTTTLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','ifttt_label'));
 			screenRenderer.addChild(iFTTTLabel);
 			
 			//IFTTT Settings
-			IFTTTSettings = new IFTTTSettingsList();
-			screenRenderer.addChild(IFTTTSettings);
+			iFTTTSettingsChooser = new IFTTTSettingsChooser();
+			screenRenderer.addChild(iFTTTSettingsChooser);
 			
 			//SiDiary Section Label
 			siDiaryLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','sidiary_section_label'));
@@ -109,8 +109,6 @@ package ui.screens
 		override protected function onBackButtonTriggered(event:Event):void
 		{
 			//Save Settings
-			if (IFTTTSettings.needsSave)
-				IFTTTSettings.save();
 			if (httpServerSettings.needsSave)
 				httpServerSettings.save();
 			
@@ -154,12 +152,6 @@ package ui.screens
 			{
 				iFTTTLabel.dispose();
 				iFTTTLabel = null;
-			}
-			
-			if (IFTTTSettings != null)
-			{
-				IFTTTSettings.dispose();
-				IFTTTSettings = null;
 			}
 			
 			super.dispose();

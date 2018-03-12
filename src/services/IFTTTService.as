@@ -48,6 +48,9 @@ package services
 		private static var isIFTTTMissedReadingsSnoozedEnabled:Boolean;
 		private static var isIFTTTPhoneMutedSnoozedEnabled:Boolean;
 		private static var isIFTTTTransmitterLowBatterySnoozedEnabled:Boolean;
+		private static var isIFTTTGlucoseThresholdsEnabled:Boolean;
+		private static var highGlucoseThresholdValue:Number;
+		private static var lowGlucoseThresholdValue:Number;
 		private static var makerKeyList:Array;
 		
 		public function IFTTTService()
@@ -84,7 +87,10 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_URGENT_HIGH_SNOOZED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_URGENT_LOW_TRIGGERED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_URGENT_LOW_SNOOZED_ON ||
-				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD
 			)
 			{
 				getInitialProperties();
@@ -113,6 +119,9 @@ package services
 			isIFTTTTransmitterLowBatterySnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TRANSMITTER_LOW_BATTERY_SNOOZED_ON) == "true";
 			isIFTTTGlucoseReadingsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON) == "true";
 			makerKeyList = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY).split(",");
+			isIFTTTGlucoseThresholdsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON) == "true";
+			highGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD));
+			lowGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD));
 		}
 		
 		private static function configureService():void
@@ -197,7 +206,7 @@ package services
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_SNOOZED, onTransmitterLowBatterySnoozed);
 			
-			if (isIFTTTGlucoseReadingsEnabled && isIFTTTEnabled)
+			if ((isIFTTTGlucoseReadingsEnabled || isIFTTTGlucoseThresholdsEnabled) && isIFTTTEnabled)
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReading);
 			else
 				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReading);
@@ -217,12 +226,34 @@ package services
 					info.value1 = BgGraphBuilder.unitizedString(lastReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 					info.value2 = !lastReading.hideSlope ? lastReading.slopeArrow() : "";
 					info.value3 = BgGraphBuilder.unitizedDeltaString(true, true);
-						
-					for (var i:int = 0; i < makerKeyList.length; i++) 
+					
+					var key:String;
+					var i:int;
+					
+					if (isIFTTTGlucoseThresholdsEnabled && !isNaN(lastReading.calculatedValue) && Math.round(lastReading.calculatedValue) <= lowGlucoseThresholdValue)
 					{
-						var key:String = makerKeyList[i] as String;
-						NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
-					}	
+						for (i = 0; i < makerKeyList.length; i++) 
+						{
+							key = makerKeyList[i] as String;
+							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-lowbgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+						}
+					}
+					else if (isIFTTTGlucoseThresholdsEnabled && !isNaN(lastReading.calculatedValue) && Math.round(lastReading.calculatedValue) >= highGlucoseThresholdValue)
+					{
+						for (i = 0; i < makerKeyList.length; i++) 
+						{
+							key = makerKeyList[i] as String;
+							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-highbgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+						}
+					}
+					else if (isIFTTTGlucoseReadingsEnabled) //Trigger glucose reading... this is when the user selected to trigger all glucose readings
+					{
+						for (i = 0; i < makerKeyList.length; i++) 
+						{
+							key = makerKeyList[i] as String;
+							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+						}
+					}
 				}
 			}
 		}

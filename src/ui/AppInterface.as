@@ -27,6 +27,7 @@ package ui
 	import ui.screens.GeneralSettingsScreen;
 	import ui.screens.GlucoseManagementScreen;
 	import ui.screens.HelpScreen;
+	import ui.screens.IFTTTSettingsScreen;
 	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
@@ -190,6 +191,11 @@ package ui
 			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutScreen );
 			aboutSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_ABOUT, aboutSettingsScreenItem );
+			
+			/* IFTTT Settings Screen */
+			var IFTTTSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( IFTTTSettingsScreen );
+			IFTTTSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_IFTTT, IFTTTSettingsScreenItem );
 			
 			/* Help Screen */
 			var helpScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( HelpScreen );

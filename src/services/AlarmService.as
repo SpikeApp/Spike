@@ -320,8 +320,10 @@ package services
 			checkMuted(null);
 			repeatAlerts();
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
-				if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp)/1000 > 10 * 60) {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") 
+			{
+				if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp) > 10 * 60 * 1000) 
+				{
 					myTrace("in onAlarmTimer, calling planApplicationStoppedAlert");
 					planApplicationStoppedAlert();
 					lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
@@ -1064,7 +1066,7 @@ package services
 		
 		private static function planApplicationStoppedAlert():void {
 			myTrace("in planApplicationStoppedAlert, planning alert for the future");
-			lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
+			cancelInactiveAlert();
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "" && (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()))
 			{
@@ -1079,7 +1081,7 @@ package services
 					.enableVibration(true)
 					.enableLights(true)
 					.setSound("../assets/sounds/Sci-Fi_Alarm_Loop_4.caf")
-					.setDelay(640);
+					.setDelay(680);
 				
 				Notifications.service.notify(notificationBuilder.build());
 			}
