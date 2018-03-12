@@ -409,9 +409,8 @@ package services
 					timeOfFirstBgReadingToDowload = latestBGReading.timestamp + 1; //We add 1ms to avoid overlaps
 				
 				var numberOfReadings:Number = ((now - timeOfFirstBgReadingToDowload) / TIME_1_HOUR * 12) + 1; //Add one more just to make sure we get all readings
-				var fetchDate:Date = new Date(timeOfFirstBgReadingToDowload);
 				var parameters:URLVariables = new URLVariables();
-				parameters["find[dateString][$gte]"] = fetchDate.fullYear + "-" + MathHelper.formatNumberToString(fetchDate.month + 1) + "-" + MathHelper.formatNumberToString(fetchDate.date);
+				parameters["find[dateString][$gte]"] = timeOfFirstBgReadingToDowload;
 				parameters["count"] = Math.round(numberOfReadings);
 				
 				waitingForNSData = true;
