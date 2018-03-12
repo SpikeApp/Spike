@@ -10,12 +10,14 @@ package services
 	import database.LocalSettings;
 	
 	import events.AlarmServiceEvent;
+	import events.HTTPServerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
 	
 	import network.NetworkConnector;
+	import network.httpserver.HttpServer;
 	
 	import utils.BgGraphBuilder;
 	import utils.MathHelper;
@@ -49,9 +51,12 @@ package services
 		private static var isIFTTTPhoneMutedSnoozedEnabled:Boolean;
 		private static var isIFTTTTransmitterLowBatterySnoozedEnabled:Boolean;
 		private static var isIFTTTGlucoseThresholdsEnabled:Boolean;
+		private static var isIFTTTinteralServerErrorsEnabled:Boolean;
 		private static var highGlucoseThresholdValue:Number;
 		private static var lowGlucoseThresholdValue:Number;
 		private static var makerKeyList:Array;
+
+		private static var makerKeyValue:String;
 		
 		public function IFTTTService()
 		{
@@ -119,97 +124,104 @@ package services
 			isIFTTTTransmitterLowBatterySnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TRANSMITTER_LOW_BATTERY_SNOOZED_ON) == "true";
 			isIFTTTGlucoseReadingsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON) == "true";
 			makerKeyList = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY).split(",");
+			makerKeyValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY);
 			isIFTTTGlucoseThresholdsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON) == "true";
 			highGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD));
 			lowGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD));
+			isIFTTTinteralServerErrorsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON) == "true";
 		}
 		
 		private static function configureService():void
 		{
-			if (isIFTTTUrgentHighTriggeredEnabled && isIFTTTEnabled)
+			if (isIFTTTUrgentHighTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_TRIGGERED, onUrgentHighGlucoseTriggered);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_TRIGGERED, onUrgentHighGlucoseTriggered);
 			
-			if (isIFTTTUrgentHighSnoozedEnabled && isIFTTTEnabled)
+			if (isIFTTTUrgentHighSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_SNOOZED, onUrgentHighGlucoseSnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_SNOOZED, onUrgentHighGlucoseSnoozed);
 				
-			if (isIFTTTHighTriggeredEnabled && isIFTTTEnabled)
+			if (isIFTTTHighTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.HIGH_GLUCOSE_TRIGGERED, onHighGlucoseTriggered);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_TRIGGERED, onHighGlucoseTriggered);
 			
-			if (isIFTTTHighSnoozedEnabled && isIFTTTEnabled)
+			if (isIFTTTHighSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED, onHighGlucoseSnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED, onHighGlucoseSnoozed);
 				
-			if (isIFTTTLowTriggeredEnabled && isIFTTTEnabled)
+			if (isIFTTTLowTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.LOW_GLUCOSE_TRIGGERED, onLowGlucoseTriggered);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_TRIGGERED, onLowGlucoseTriggered);
 			
-			if (isIFTTTLowSnoozedEnabled && isIFTTTEnabled)
+			if (isIFTTTLowSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.LOW_GLUCOSE_SNOOZED, onLowGlucoseSnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.LOW_GLUCOSE_SNOOZED, onLowGlucoseSnoozed);
 				
-			if (isIFTTTUrgentLowTriggeredEnabled && isIFTTTEnabled)
+			if (isIFTTTUrgentLowTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.URGENT_LOW_GLUCOSE_TRIGGERED, onUrgentLowGlucoseTriggered);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_TRIGGERED, onUrgentLowGlucoseTriggered);
 			
-			if (isIFTTTUrgentLowSnoozedEnabled && isIFTTTEnabled)
+			if (isIFTTTUrgentLowSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.URGENT_LOW_GLUCOSE_SNOOZED, onUrgentLowGlucoseSnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.URGENT_LOW_GLUCOSE_SNOOZED, onUrgentLowGlucoseSnoozed);
 				
-			if (isIFTTTCalibrationTriggeredEnabled && isIFTTTEnabled)
+			if (isIFTTTCalibrationTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.CALIBRATION_TRIGGERED, onCalibrationTriggered);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.CALIBRATION_TRIGGERED, onCalibrationTriggered);
 			
-			if (isIFTTTCalibrationSnoozedEnabled && isIFTTTEnabled)
+			if (isIFTTTCalibrationSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.CALIBRATION_SNOOZED, onCalibrationSnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.CALIBRATION_SNOOZED, onCalibrationSnoozed);
 				
-			if (isIFTTTMissedReadingsTriggeredEnabled && isIFTTTEnabled)
+			if (isIFTTTMissedReadingsTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.MISSED_READINGS_TRIGGERED, onMissedReadingsTriggered);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.MISSED_READINGS_TRIGGERED, onMissedReadingsTriggered);
 			
-			if (isIFTTTMissedReadingsSnoozedEnabled && isIFTTTEnabled)
+			if (isIFTTTMissedReadingsSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.MISSED_READINGS_SNOOZED, onMissedReadingsSnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.MISSED_READINGS_SNOOZED, onMissedReadingsSnoozed);
 				
-			if (isIFTTTPhoneMutedTriggeredEnabled && isIFTTTEnabled)
+			if (isIFTTTPhoneMutedTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.PHONE_MUTED_TRIGGERED, onPhoneMutedTriggered);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.PHONE_MUTED_TRIGGERED, onPhoneMutedTriggered);
 			
-			if (isIFTTTPhoneMutedSnoozedEnabled && isIFTTTEnabled)
+			if (isIFTTTPhoneMutedSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.PHONE_MUTED_SNOOZED, onPhoneMutedSnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.PHONE_MUTED_SNOOZED, onPhoneMutedSnoozed);
 				
-			if (isIFTTTTransmitterLowBatteryTriggeredEnabled && isIFTTTEnabled)
+			if (isIFTTTTransmitterLowBatteryTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_TRIGGERED, onTransmitterLowBatteryTriggered);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_TRIGGERED, onTransmitterLowBatteryTriggered);
 			
-			if (isIFTTTTransmitterLowBatterySnoozedEnabled && isIFTTTEnabled)
+			if (isIFTTTTransmitterLowBatterySnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_SNOOZED, onTransmitterLowBatterySnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_SNOOZED, onTransmitterLowBatterySnoozed);
 			
-			if ((isIFTTTGlucoseReadingsEnabled || isIFTTTGlucoseThresholdsEnabled) && isIFTTTEnabled)
+			if ((isIFTTTGlucoseReadingsEnabled || isIFTTTGlucoseThresholdsEnabled) && isIFTTTEnabled && makerKeyValue != "")
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReading);
 			else
 				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReading);
+			
+			if (isIFTTTinteralServerErrorsEnabled && isIFTTTEnabled && makerKeyValue != "")
+				HttpServer.instance.addEventListener(HTTPServerEvent.SERVER_OFFLINE, onServerOffline, false, 0, true);
+			else
+				HttpServer.instance.removeEventListener(HTTPServerEvent.SERVER_OFFLINE, onServerOffline);
 		}
 		
 		private static function onBgReading(e:Event):void
@@ -503,6 +515,20 @@ package services
 			{
 				var key:String = makerKeyList[i] as String;
 				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-transmitter-low-battery-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+			}
+		}
+		
+		private static function onServerOffline(e:HTTPServerEvent):void
+		{
+			var info:Object = {};
+			info.value1 = e.data.title;
+			info.value2 = e.data.message;
+			info.value3 = "";
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-server-error").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
 			}
 		}
 	}

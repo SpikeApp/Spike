@@ -54,6 +54,8 @@ package ui.screens.display.settings.integration
 		private var glucoseThresholdsSwitch:ToggleSwitch;
 		private var lowGlucoseThresholdStepper:NumericStepper;
 		private var highGlucoseThresholdStepper:NumericStepper;
+		private var alarmsLabel:Label;
+		private var httpServerErrorsCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -80,6 +82,7 @@ package ui.screens.display.settings.integration
 		private var isIFTTTGlucoseThresholdsEnabled:Boolean;
 		private var highGlucoseThresholdValue:Number;
 		private var lowGlucoseThresholdValue:Number;
+		private var isIFTTTinteralServerErrorsEnabled:Boolean;
 
 		public function IFTTTSettingsList()
 		{
@@ -137,6 +140,7 @@ package ui.screens.display.settings.integration
 			lowGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD));
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
 				lowGlucoseThresholdValue = (Math.round(lowGlucoseThresholdValue * BgReading.MGDL_TO_MMOLL * 10))/10;
+			isIFTTTinteralServerErrorsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -183,6 +187,14 @@ package ui.screens.display.settings.integration
 			//Low Glucose Threshold Stepper
 			lowGlucoseThresholdStepper = LayoutFactory.createNumericStepper(lowerLimit, upperLimit, lowGlucoseThresholdValue, step);
 			lowGlucoseThresholdStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//HTTP Server
+			httpServerErrorsCheck = LayoutFactory.createCheckMark(isIFTTTinteralServerErrorsEnabled);
+			httpServerErrorsCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Alarms labels
+			alarmsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","alarms_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, 15, true);
+			alarmsLabel.width = width - 20;
 			
 			//Urgent High Glucose Triggered
 			urgentHighGlucoseTriggeredCheck = LayoutFactory.createCheckMark(isIFTTTUrgentHighTriggeredEnabled);
@@ -280,6 +292,8 @@ package ui.screens.display.settings.integration
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_threshold_label"), accessory: lowGlucoseThresholdStepper } );
 				}
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_readings_label"), accessory: glucoseReadingCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","http_server_errors"), accessory: httpServerErrorsCheck } );
+				screenContent.push( { label: "", accessory: alarmsLabel } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_high_glucose_triggered_label"), accessory: urgentHighGlucoseTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_high_glucose_snoozed_label"), accessory: urgentHighGlucoseSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","high_glucose_triggered_label"), accessory: highGlucoseTriggeredCheck } );
@@ -382,6 +396,9 @@ package ui.screens.display.settings.integration
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD) != String(lowValueToSave))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD, String(lowValueToSave));
 			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON) != String(isIFTTTinteralServerErrorsEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON, String(isIFTTTinteralServerErrorsEnabled));
+			
 			needsSave = false;
 		}
 		
@@ -411,6 +428,7 @@ package ui.screens.display.settings.integration
 			makerKeyValue = makerKeyTextInput.text.replace(" ", "");
 			highGlucoseThresholdValue = highGlucoseThresholdStepper.value;
 			lowGlucoseThresholdValue = lowGlucoseThresholdStepper.value;
+			isIFTTTinteralServerErrorsEnabled = httpServerErrorsCheck.isSelected;
 			
 			needsSave = true;
 		}
@@ -587,6 +605,19 @@ package ui.screens.display.settings.integration
 				lowGlucoseThresholdStepper.removeEventListener( Event.CHANGE, onSettingsChanged);	
 				lowGlucoseThresholdStepper.dispose();
 				lowGlucoseThresholdStepper = null;
+			}
+			
+			if(httpServerErrorsCheck != null)
+			{
+				httpServerErrorsCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				httpServerErrorsCheck.dispose();
+				httpServerErrorsCheck = null;
+			}
+			
+			if(alarmsLabel != null)
+			{
+				alarmsLabel.dispose();
+				alarmsLabel = null;
 			}
 			
 			super.dispose();
