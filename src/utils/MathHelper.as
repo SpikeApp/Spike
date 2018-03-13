@@ -18,6 +18,18 @@ package utils
 			return output;
 		}
 		
+		public static function formatNightscoutFollowerSlope(value:Number):String
+		{
+			var output:String;
+			
+			if (value >= 0)
+				output = "+ " + String(value);
+			else
+				output = "- " + String(Math.abs(value));
+			
+			return output;
+		}
+		
 		public static function formatNumberToStringWithPrefix(value:Number):String
 		{
 			var output:String = "";

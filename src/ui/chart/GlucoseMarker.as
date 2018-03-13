@@ -1,6 +1,7 @@
 package ui.chart
 {
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import model.ModelLocator;
@@ -8,6 +9,7 @@ package ui.chart
 	import starling.display.Canvas;
 	import starling.display.Sprite;
 	
+	import utils.MathHelper;
 	import utils.TimeSpan;
 	
 	[ResourceBundle("chartscreen")]
@@ -71,16 +73,21 @@ package ui.chart
 			//Output
 			if(index > 0)
 			{
-				slopeOutput = GlucoseFactory.getGlucoseSlope
-				(
-					data.previousGlucoseValue,
-					data.previousGlucoseValueFormatted,
-					glucoseValue,
-					glucoseValueFormatted
-				);
+				if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout") 
+					slopeOutput = String(MathHelper.formatNightscoutFollowerSlope(Math.round((glucoseValueFormatted - data.previousGlucoseValueFormatted) * 10) / 10)) + " mmol/L";
+				else
+				{
+					slopeOutput = GlucoseFactory.getGlucoseSlope
+					(
+						data.previousGlucoseValue,
+						data.previousGlucoseValueFormatted,
+						glucoseValue,
+						glucoseValueFormatted
+					);
+				}
 			}
 			else
-				slopeOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown');			
+				slopeOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown');
 			
 			//Arrow
 			if (bgReading.hideSlope)

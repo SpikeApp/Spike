@@ -3,6 +3,7 @@ package ui.chart
 	import flash.errors.IllegalOperationError;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import model.ModelLocator;
@@ -105,7 +106,10 @@ package ui.chart
 			if (glucoseUnit == "mg/dL")
 				glucoseDifference = Math.round((glucoseValueFormatted - previousGlucoseValueFormatted) * 10) / 10;
 			else
+			{
 				glucoseDifference = Math.round(((Math.round(BgReading.mgdlToMmol(glucoseValue) * 100) / 100) - (Math.round(BgReading.mgdlToMmol(previousGlucoseValue) * 100) / 100)) * 100) / 100;
+				
+			}
 				
 			if((glucoseUnit == "mg/dL" && Math.abs(glucoseDifference) > 100) || (glucoseUnit == "mmol/L" && Math.abs(glucoseDifference) > 5.5))
 				slopeOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','slope_error');
@@ -117,7 +121,7 @@ package ui.chart
 				{
 					glucoseDifferenceOutput = String(glucoseDifference);
 						
-					if ( glucoseDifference % 1 == 0)
+					if ( glucoseDifference % 1 == 0 && (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 						glucoseDifferenceOutput += ".0";
 						
 					slopeOutput = "+ " + glucoseDifferenceOutput + " " + glucoseUnit;
@@ -126,7 +130,7 @@ package ui.chart
 				{
 					glucoseDifferenceOutput = String(Math.abs(glucoseDifference));
 						
-					if ( glucoseDifference % 1 == 0)
+					if ( glucoseDifference % 1 == 0 && (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 						glucoseDifferenceOutput += ".0";
 						
 					slopeOutput = "- " + glucoseDifferenceOutput + " " + glucoseUnit;
