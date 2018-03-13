@@ -17,6 +17,7 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.integration.HTTPServerSettingsList;
+	import ui.screens.display.settings.integration.IFTTTSettingsChooser;
 	import ui.screens.display.settings.integration.SiDiarySettingsList;
 	
 	import utils.Constants;
@@ -30,8 +31,9 @@ package ui.screens
 		private var httpServerSectionLabel:Label;
 		private var siDiaryLabel:Label;
 		private var siDiarySettings:SiDiarySettingsList;
-
 		private var httpServerSectionSubLabel:Label;
+		private var iFTTTLabel:Label;
+		private var iFTTTSettingsChooser:IFTTTSettingsChooser;
 		
 		public function IntegrationSettingsScreen() 
 		{
@@ -67,17 +69,13 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
-			//HTTP Server Section Label
-			httpServerSectionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','server_section_label'));
-			screenRenderer.addChild(httpServerSectionLabel);
+			//IFTTT Section Label
+			iFTTTLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','ifttt_label'));
+			screenRenderer.addChild(iFTTTLabel);
 			
-			//HTTP Server Section Sublabel
-			httpServerSectionSubLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','server_section_sublabel'), HorizontalAlign.LEFT, VerticalAlign.TOP, 11, true);
-			screenRenderer.addChild(httpServerSectionSubLabel);
-			
-			//Loop Settings
-			httpServerSettings = new HTTPServerSettingsList();
-			screenRenderer.addChild(httpServerSettings);
+			//IFTTT Settings
+			iFTTTSettingsChooser = new IFTTTSettingsChooser();
+			screenRenderer.addChild(iFTTTSettingsChooser);
 			
 			//SiDiary Section Label
 			siDiaryLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','sidiary_section_label'));
@@ -86,6 +84,18 @@ package ui.screens
 			//SiDiary Settings
 			siDiarySettings = new SiDiarySettingsList();
 			screenRenderer.addChild(siDiarySettings);
+			
+			//HTTP Server Section Label
+			httpServerSectionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','server_section_label'));
+			screenRenderer.addChild(httpServerSectionLabel);
+			
+			//HTTP Server Section Sublabel
+			httpServerSectionSubLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','server_section_sublabel'), HorizontalAlign.LEFT, VerticalAlign.TOP, 11, true);
+			screenRenderer.addChild(httpServerSectionSubLabel);
+			
+			//HTTP Server Settings
+			httpServerSettings = new HTTPServerSettingsList();
+			screenRenderer.addChild(httpServerSettings);
 		}
 		
 		private function adjustMainMenu():void
@@ -136,6 +146,12 @@ package ui.screens
 			{
 				siDiarySettings.dispose();
 				siDiarySettings = null;
+			}
+			
+			if (iFTTTLabel != null)
+			{
+				iFTTTLabel.dispose();
+				iFTTTLabel = null;
 			}
 			
 			super.dispose();

@@ -4,6 +4,7 @@ package network.httpserver
     import com.distriqt.extension.notifications.builders.NotificationBuilder;
     
     import flash.events.Event;
+    import flash.events.EventDispatcher;
     import flash.events.ProgressEvent;
     import flash.events.ServerSocketConnectEvent;
     import flash.net.ServerSocket;
@@ -12,6 +13,8 @@ package network.httpserver
     import flash.utils.ByteArray;
     import flash.utils.clearInterval;
     import flash.utils.setTimeout;
+    
+    import events.HTTPServerEvent;
     
     import model.ModelLocator;
     
@@ -24,19 +27,19 @@ package network.httpserver
 	
 	[ResourceBundle("httpserverservice")]
 	
-    public class HttpServer
+    public class HttpServer extends EventDispatcher
     {
 		/* Constants */
 		private static const MAX_CONNECTION_ATTEMPTS:uint = 50;
+		private static var _instance:HttpServer = new HttpServer();
 		
         private var _serverSocket:ServerSocket;
         private var _controllers:Object = new Object();
         private var _isConnected:Boolean = false;
 		private var _connectionRetries:int = 0;
 		private var _timeoutID:int = -1;
-        
-        public function HttpServer() {}
 
+        public function HttpServer() {}
         
         public function get isConnected():Boolean
         {
@@ -101,6 +104,8 @@ package network.httpserver
 					Notifications.service.notify(notificationBuilder.build());
 					
 					_isConnected = false;
+					
+					_instance.dispatchEvent(new HTTPServerEvent(HTTPServerEvent.SERVER_OFFLINE, false, false, { title: ModelLocator.resourceManagerInstance.getString('httpserverservice','error_alert_title'), message: message } ));
 					
 					return;
 				}
@@ -264,6 +269,11 @@ package network.httpserver
 		public function get serverSocket():ServerSocket
 		{
 			return _serverSocket;
+		}
+
+		public static function get instance():HttpServer
+		{
+			return _instance;
 		}
     }
 }

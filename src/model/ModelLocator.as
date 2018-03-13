@@ -40,8 +40,9 @@ package model
 	import services.CalibrationService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
-	import services.HealthKitService;
 	import services.HTTPServerService;
+	import services.HealthKitService;
+	import services.IFTTTService;
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
@@ -144,8 +145,7 @@ package model
 				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
 				
 				_bgReadings = de.data as Array;
-					//Start rendering interface now that all data is available
-				AppInterface.instance.init();
+				AppInterface.instance.init(); //Start rendering interface now that all data is available
 				AlertManager.init();
 				AlarmSnoozer.init();
 				DeepSleepService.init();
@@ -166,6 +166,7 @@ package model
 				HealthKitService.init();
 				NightscoutService.init();
 				DexcomShareService.init();
+				IFTTTService.init();
 				TextToSpeechService.init();
 				RemoteAlertService.init();
 				if (!TEST_FLIGHT_MODE) UpdateService.init();

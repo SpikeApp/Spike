@@ -4,6 +4,7 @@ package ui.popups
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
+	import events.AlarmServiceEvent;
 	import events.SpikeEvent;
 	
 	import feathers.controls.Button;
@@ -19,6 +20,8 @@ package ui.popups
 	
 	import model.ModelLocator;
 	
+	import services.AlarmService;
+	
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
@@ -29,6 +32,7 @@ package ui.popups
 	import utils.Constants;
 
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("alarmservice")]
 	
 	public class AlarmSnoozer extends EventDispatcher
 	{
@@ -247,6 +251,24 @@ package ui.popups
 			_instance.dispatchEventWith(CLOSED, false, { index: snoozePickerList.selectedIndex });
 			
 			closeCallout();
+			
+			//Notify Services (ex: IFTTT)
+			if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert")) != -1)
+				AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.LOW_GLUCOSE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			else if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert")) != -1)
+				AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			else if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert")) != -1)
+				AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_LOW_GLUCOSE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			else if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert")) != -1)
+				AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			else if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert")) != -1)
+				AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.MISSED_READINGS_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			else if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert")) != -1)
+				AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.PHONE_MUTED_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			else if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert")) != -1)
+				AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			else if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title")) != -1)
+				AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.CALIBRATION_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
 		}
 		
 		private static function onCancel(e:Event):void
