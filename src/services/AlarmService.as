@@ -29,15 +29,11 @@ package services
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
-	import feathers.motion.Fade;
-	
 	import model.ModelLocator;
 	
 	import starling.events.Event;
 	
-	import ui.AppInterface;
 	import ui.popups.AlarmSnoozer;
-	import ui.screens.Screens;
 	
 	import utils.BadgeBuilder;
 	import utils.BgGraphBuilder;
@@ -1273,13 +1269,11 @@ package services
 							 3,
 							 alertType, 
 							 NotificationService.ID_FOR_HIGH_ALERT, 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text")
-							 + "   " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
-							 +  (lastBgReading.hideSlope ? "":(" " + lastBgReading.slopeArrow())),
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_HIGH_CATEGORY,
-							 BgGraphBuilder.unitizedDeltaString(true, true)
+							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _highAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _highAlertSnoozePeriodInMinutes = 0;
@@ -1331,13 +1325,11 @@ package services
 							 4,
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_HIGH_ALERT, 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text")
-							 + "   " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
-							 +  (lastBgReading.hideSlope ? "":(" " + lastBgReading.slopeArrow())),
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY,
-							 BgGraphBuilder.unitizedDeltaString(true, true)
+							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _veryHighAlertSnoozePeriodInMinutes = 0;
@@ -1390,13 +1382,11 @@ package services
 							 1,
 							 alertType, 
 							 NotificationService.ID_FOR_LOW_ALERT, 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text")
-							 + "   " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
-							 +  (lastBgReading.hideSlope ? "":(" " + lastBgReading.slopeArrow())), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_LOW_CATEGORY,
-							 BgGraphBuilder.unitizedDeltaString(true, true)
+							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _lowAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _lowAlertSnoozePeriodInMinutes = 0;
@@ -1448,13 +1438,11 @@ package services
 							 2,
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_LOW_ALERT, 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text")
-							 + "   " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
-							 +  (lastBgReading.hideSlope ? "":(" " + lastBgReading.slopeArrow())), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text"), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY,
-							 BgGraphBuilder.unitizedDeltaString(true, true)
+							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _veryLowAlertSnoozePeriodInMinutes = 0;

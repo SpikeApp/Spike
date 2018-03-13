@@ -2,7 +2,8 @@
 FIX: When in eastern timezones (ex: Russia, Asia, etc.), Spike follower was not able to download new readings after the initial fetch. This has been fixed and Spike follower should now be compatible with all timezones.
 ENHANCEMENT: Spike will now automatically kickstart a new method from 1AM to 8AM to try to avoid being kicked out of memory as that seems to be the time schedule were iOS is most aggressive. Users are advised to leave their devices charging at night.
 ENHANCEMENT: Improvements on how Spike's main chart handles unconventional data coming from the transmitter.
-ENHANCEMENT: More safeguards in Spike's internal server in case the user is using an app that sends requests are outside of Nightscout's API norms..
+ENHANCEMENT: More safeguards in Spike's internal server in case the user is using an app that sends requests are outside of Nightscout's API norms.
+ENHANCEMENT: Improved text in glucose alarms lock screen notifications.
 
 1.1.3
 FEATURE: Spike will now play an alarm sound, vibrate and send a notification to the lock screen in case iOS closes the internal HTTP server if the user's device is low on memory. This servers as a safeguard, especially for offline loopers.
