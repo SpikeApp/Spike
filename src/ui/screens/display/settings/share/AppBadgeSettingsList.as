@@ -2,6 +2,7 @@ package ui.screens.display.settings.share
 {
 	import database.LocalSettings;
 	
+	import feathers.controls.Check;
 	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
@@ -37,8 +38,8 @@ package ui.screens.display.settings.share
 			super.initialize();
 			
 			setupProperties();
-			setupContent();
 			setupInitialState();
+			setupContent();
 		}
 		
 		/**
@@ -55,17 +56,20 @@ package ui.screens.display.settings.share
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 		}
 		
+		private function setupInitialState():void
+		{
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") appBadgeEnabled = true;
+			else appBadgeEnabled = false;
+		}
+		
 		private function setupContent():void
 		{
 			//Notifications On/Off Toggle
-			appBadgeToggle = LayoutFactory.createToggleSwitch(false);
+			appBadgeToggle = LayoutFactory.createToggleSwitch(appBadgeEnabled);
+			appBadgeToggle.addEventListener(Event.CHANGE, onAppBadgeChanged);
 			
-			//Define Notifications Settings Data
-			var settingsData:ArrayCollection = new ArrayCollection(
-				[
-					{ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: appBadgeToggle },
-				]);
-			dataProvider = settingsData;
+			//Mmmol multiplier
+			var mmolMultiplierCheck:Check = LayoutFactory.createCheckMark(true);
 			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -75,15 +79,16 @@ package ui.screens.display.settings.share
 				itemRenderer.accessoryField = "accessory";
 				return itemRenderer;
 			};
+			
+			refreshContent();
 		}
 		
-		private function setupInitialState():void
+		private function refreshContent():void
 		{
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") appBadgeEnabled = true;
-			else appBadgeEnabled = false;
+			var content:Array = [];
+			content.push( { text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: appBadgeToggle } );
 			
-			appBadgeToggle.isSelected = appBadgeEnabled;
-			appBadgeToggle.addEventListener(Event.CHANGE, onAppBadgeChanged);
+			dataProvider = new ArrayCollection(content);
 		}
 		
 		public function save():void
