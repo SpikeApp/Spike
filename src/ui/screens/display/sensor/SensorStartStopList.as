@@ -1,6 +1,9 @@
 package ui.screens.display.sensor
 {
 	import flash.system.Capabilities;
+	import flash.utils.Timer;
+	import flash.utils.clearInterval;
+	import flash.utils.setInterval;
 	
 	import mx.collections.ArrayCollection;
 	
@@ -38,6 +41,7 @@ package ui.screens.display.sensor
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.MathHelper;
 	import utils.TimeSpan;
 	
 	[ResourceBundle("sensorscreen")]
@@ -45,6 +49,9 @@ package ui.screens.display.sensor
 
 	public class SensorStartStopList extends GroupedList 
 	{
+		/* Constants */
+		private const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
+		
 		/* Display Objects */
 		private var actionButton:Button;
 		private var sensorStartDateLabel:Label;
@@ -61,6 +68,11 @@ package ui.screens.display.sensor
 		private var sensorAgeValue:String;
 		private var lastCalibrationDateValue:String;
 		private var numberOfCalibrations:String;
+		private var inSensorCountdown:Boolean = false;
+
+		private var sensorCountdownLabel:Label;
+
+		private var intervalID:int = -1;
 		
 		public function SensorStartStopList()
 		{
@@ -150,6 +162,10 @@ package ui.screens.display.sensor
 				}
 				else
 					lastCalibrationDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
+				
+				//Sensor countdown
+				if (new Date().valueOf() - Sensor.getActiveSensor().startedAt < TIME_2_HOURS)
+					inSensorCountdown = true;
 			}
 			else
 			{
@@ -174,6 +190,24 @@ package ui.screens.display.sensor
 			
 			//Create Sensor Age Label
 			sensorAgeLabel =  LayoutFactory.createLabel("", HorizontalAlign.RIGHT);
+			
+			//Sensor countdown label
+			sensorCountdownLabel = LayoutFactory.createLabel("", HorizontalAlign.RIGHT);
+			if (inSensorCountdown)
+			{
+				var sensor:Sensor = Sensor.getActiveSensor();
+				if (sensor != null)
+				{
+					var sensorReady:Number = sensor.startedAt + TIME_2_HOURS;
+					var now:Number = new Date().valueOf();
+					
+					if (now < sensorReady)
+					{
+						var timeSpan:TimeSpan = TimeSpan.fromMilliseconds(sensorReady - new Date().valueOf());
+						sensorCountdownLabel.text = MathHelper.formatNumberToString(timeSpan.hours) + "h" + MathHelper.formatNumberToString(timeSpan.minutes) + "m" + MathHelper.formatNumberToString(timeSpan.seconds) + "s";
+					}
+				}
+			}
 			
 			//Create Total Calibrations Label
 			totalCalibrationsLabel =  LayoutFactory.createLabel("", HorizontalAlign.RIGHT);
@@ -211,6 +245,39 @@ package ui.screens.display.sensor
 				item.accessoryField = "accessory";
 				return item;
 			};
+			
+			if (inSensorCountdown)
+				intervalID = setInterval(refreshCountDown, 1000);
+		}
+		
+		private function refreshCountDown():void
+		{
+			var sensor:Sensor = Sensor.getActiveSensor();
+			if (sensor == null || !inSensorCountdown)
+			{
+				finishCountdown();
+				return;
+			}
+			
+			var sensorReady:Number = sensor.startedAt + TIME_2_HOURS;
+			var now:Number = new Date().valueOf();
+			
+			if (now >= sensorReady)
+			{
+				finishCountdown();
+				return;
+			}
+			
+			var timeSpan:TimeSpan = TimeSpan.fromMilliseconds(sensorReady - new Date().valueOf());
+			
+			sensorCountdownLabel.text = MathHelper.formatNumberToString(timeSpan.hours) + "h" + MathHelper.formatNumberToString(timeSpan.minutes) + "m" + MathHelper.formatNumberToString(timeSpan.seconds) + "s";
+		}
+		
+		private function finishCountdown():void
+		{
+			clearInterval(intervalID);
+			inSensorCountdown = false;
+			setDataProvider();
 		}
 		
 		private function activateStopButton():void
@@ -241,15 +308,18 @@ package ui.screens.display.sensor
 			totalCalibrationsLabel.text = numberOfCalibrations;
 			lastCalibrationDateLabel.text = lastCalibrationDateValue;
 			
+			var sensorChildrenContent:Array = [];
+			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_label'), accessory: sensorStartDateLabel });
+			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel });
+			if (inSensorCountdown)
+				sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','warmup_countdown'), accessory: sensorCountdownLabel });
+			sensorChildrenContent.push({ label: "", accessory: actionButton });
+			
 			dataProvider = new HierarchicalCollection(
 				[
-					{
+					{	
 						header  : { label: ModelLocator.resourceManagerInstance.getString('sensorscreen','info_section_label') },
-						children: [
-							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_label'), accessory: sensorStartDateLabel },
-							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel },
-							{ label: "", accessory: actionButton },
-						]
+						children: sensorChildrenContent
 					},
 					{
 						header  : { label: ModelLocator.resourceManagerInstance.getString('sensorscreen','calibrations_section_label') },
@@ -293,6 +363,8 @@ package ui.screens.display.sensor
 			activateStartButton();
 			sensorStartDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "not_started_label");
 			sensorAgeValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
+			if (inSensorCountdown)
+				finishCountdown();
 			setupInitialState();
 			setupContent();
 		}

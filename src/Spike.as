@@ -13,14 +13,12 @@ package
 	
 	import events.SpikeEvent;
 	
-	import feathers.motion.Fade;
 	import feathers.utils.ScreenDensityScaleFactorManager;
 	
 	import starling.core.Starling;
 	import starling.events.Event;
 	
 	import ui.AppInterface;
-	import ui.screens.Screens;
 	
 	import utils.Constants;
 	import utils.Trace;
