@@ -29,6 +29,7 @@ package services
 		private static const AUTOMATIC_DEXCOM:int = 10 * 1000;
 		private static const AUTOMATIC_NON_DEXCOM:int = 5 * 1000;
 		private static const AUTOMATIC_FOLLOWER:int = 30 * 1000;
+		private static const TIME_1_MINUTE:int = 1 * 60 * 1000;
 		
 		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
@@ -36,6 +37,8 @@ package services
 		private static var channel:SoundChannel;
 		private static var soundTransform:SoundTransform;
 		private static var soundFile:URLRequest;
+		private static var soundFileNight:URLRequest;
+		private static var soundTransformNight:SoundTransform;
 		
 		/* Variables */
 		private static var deepSleepInterval:int;
@@ -67,7 +70,9 @@ package services
 		private static function createSoundProperties():void
 		{
 			soundTransform = new SoundTransform(0.001);
+			soundTransformNight = new SoundTransform(0.1);
 			soundFile = new URLRequest("../assets/sounds/1-millisecond-of-silence.mp3");
+			soundFileNight = new URLRequest("../assets/sounds/500ms-of-silence.mp3");
 		}
 		
 		/**
@@ -138,8 +143,11 @@ package services
 		{
 			if (!BackgroundFetch.isPlayingSound() && !Constants.appInForeground && !BackgroundFetch.appIsInForeground()) //No need to play if the app is in the foregorund
 			{
-				var now:Number = new Date().valueOf();
-				if (now - lastLogPlaySoundTimeStamp > 1 * 60 * 1000) 
+				var nowDate:Date = new Date();
+				var now:Number = nowDate.valueOf();
+				var hours:Number = nowDate.hours;
+				
+				if (now - lastLogPlaySoundTimeStamp > TIME_1_MINUTE) 
 				{
 					Trace.myTrace("DeepSleepService.as", "Playing deep sleep sound...");
 					lastLogPlaySoundTimeStamp = now;
@@ -148,12 +156,32 @@ package services
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) == "true")
 				{
 					soundPlayer = null;
-					soundPlayer = new Sound(soundFile);
-					channel = soundPlayer.play();
-					channel.soundTransform = soundTransform;
+					if (hours >= 1 && hours <= 7)
+					{
+						//Night mode, play a bigger sound to try an further avoid suspension, also add some volume
+						soundPlayer = new Sound(soundFileNight);
+						channel = soundPlayer.play();
+						channel.soundTransform = soundTransformNight;
+					}
+					else
+					{
+						soundPlayer = new Sound(soundFile);
+						channel = soundPlayer.play();
+						channel.soundTransform = soundTransform;
+					}
 				}
 				else
-					BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
+				{
+					if (hours >= 1 && hours <= 7)
+					{
+						//Night mode, play a bigger sound to try an further avoid suspension, also add some volume
+						BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+					}
+					else
+					{
+						BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
+					}
+				}
 			}
 		}
 		
