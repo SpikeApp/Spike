@@ -1,11 +1,16 @@
 package ui.screens.display.settings.integration
 {
+	import flash.net.URLRequest;
+	import flash.net.navigateToURL;
+	
 	import database.BgReading;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
+	import feathers.controls.Button;
 	import feathers.controls.Check;
 	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.TextInput;
@@ -14,6 +19,7 @@ package ui.screens.display.settings.integration
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
@@ -24,6 +30,7 @@ package ui.screens.display.settings.integration
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("iftttsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -56,6 +63,8 @@ package ui.screens.display.settings.integration
 		private var highGlucoseThresholdStepper:NumericStepper;
 		private var alarmsLabel:Label;
 		private var httpServerErrorsCheck:Check;
+		private var instructionsButton:Button;
+		private var instructionsContainer:LayoutGroup;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -149,14 +158,26 @@ package ui.screens.display.settings.integration
 			IFTTTToggle = LayoutFactory.createToggleSwitch(isIFTTTEnabled);
 			IFTTTToggle.addEventListener( Event.CHANGE, onSettingsReload );
 			
+			//Instructions
+			var instructionsLayout:HorizontalLayout = new HorizontalLayout();
+			instructionsLayout.horizontalAlign = HorizontalAlign.CENTER;
+			
+			instructionsContainer = new LayoutGroup();
+			instructionsContainer.layout = instructionsLayout;
+			instructionsContainer.width = width - 20;
+			
+			instructionsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","instructions_Label"));
+			instructionsContainer.addChild(instructionsButton);
+			instructionsButton.addEventListener(Event.TRIGGERED, onShowInstructions);
+			
 			//Maker Key Input Field
-			makerKeyTextInput = LayoutFactory.createTextInput(false, false, 160, HorizontalAlign.RIGHT);
+			makerKeyTextInput = LayoutFactory.createTextInput(false, false, DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? 160 : 130, HorizontalAlign.RIGHT);
 			makerKeyTextInput.fontStyles.size = 11;
 			makerKeyTextInput.text = makerKeyValue;
 			makerKeyTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Maker Key Description
-			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, 10);
+			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? 10 : 9);
 			makerKeyDescriptionLabel.width = width - 10;
 			
 			//Glucose tresholds on/off switch
@@ -270,6 +291,12 @@ package ui.screens.display.settings.integration
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.accessoryField = "accessory";
+				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				{
+					itemRenderer.paddingRight = 2;
+					itemRenderer.paddingLeft = 3;
+					itemRenderer.gap = 0;
+				}
 				return itemRenderer;
 			};
 			
@@ -283,6 +310,7 @@ package ui.screens.display.settings.integration
 			
 			if (isIFTTTEnabled)
 			{
+				screenContent.push( { label: "", accessory: instructionsContainer } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_label"), accessory: makerKeyTextInput } );
 				screenContent.push( { label: "", accessory: makerKeyDescriptionLabel } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_thresholds_label"), accessory: glucoseThresholdsSwitch } );
@@ -439,7 +467,12 @@ package ui.screens.display.settings.integration
 			isIFTTTGlucoseThresholdsEnabled = glucoseThresholdsSwitch.isSelected;
 			reloadContent();
 			needsSave = true;
-		}	
+		}
+		
+		private function onShowInstructions(e:Event):void
+		{
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/IFTTT"));
+		}
 		
 		/**
 		 * Utility
@@ -618,6 +651,20 @@ package ui.screens.display.settings.integration
 			{
 				alarmsLabel.dispose();
 				alarmsLabel = null;
+			}
+			
+			if(instructionsButton != null)
+			{
+				instructionsButton.removeEventListener( Event.CHANGE, onShowInstructions);
+				instructionsContainer.removeChild(instructionsButton);
+				instructionsButton.dispose();
+				instructionsButton = null;
+			}
+			
+			if(instructionsContainer != null)
+			{
+				instructionsContainer.dispose();
+				instructionsContainer = null;
 			}
 			
 			super.dispose();
