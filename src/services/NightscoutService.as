@@ -9,6 +9,7 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.events.TimerEvent;
+	import flash.globalization.LocaleID;
 	import flash.net.URLLoader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
@@ -41,7 +42,6 @@ package services
 	
 	import ui.popups.AlertManager;
 	
-	import utils.MathHelper;
 	import utils.TimeSpan;
 	import utils.Trace;
 	import utils.UniqueId;
@@ -132,7 +132,7 @@ package services
 			
 			formatter = new DateTimeFormatter();
 			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-			formatter.setStyle("locale", "en_US");
+			formatter.setStyle("locale", LocaleID.DEFAULT);
 			formatter.useUTC = true;
 			
 			//Event listener for settings changes
@@ -542,7 +542,7 @@ package services
 		 * CALIBRATIONS
 		 */
 		private static function createCalibrationObject(calibration:Calibration):Object
-		{
+		{	
 			var newCalibration:Object = new Object();
 			newCalibration["device"] = BlueToothDevice.name;
 			newCalibration["type"] = "cal";

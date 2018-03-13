@@ -12,8 +12,6 @@ package ui.screens.display
 	import feathers.controls.Radio;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
-	import feathers.controls.text.TextFieldTextRenderer;
-	import feathers.core.ITextRenderer;
 	import feathers.core.ToggleGroup;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
