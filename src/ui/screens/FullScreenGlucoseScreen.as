@@ -228,7 +228,7 @@ package ui.screens
 				latestGlucoseValue = glucoseList[1].calculatedValue;
 				
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
-				else if (latestGlucoseValue > 600) latestGlucoseValue = 600;
+				else if (latestGlucoseValue > 400) latestGlucoseValue = 400;
 				
 				if (nowTimestamp - latestGlucoseTimestamp <= TIME_16_MINUTES)
 				{
@@ -270,12 +270,12 @@ package ui.screens
 				previousGlucoseValue = glucoseList[glucoseList.length - 2].calculatedValue;
 				previousGlucoseValueFormatted = GlucoseFactory.getGlucoseOutput(previousGlucoseValue).glucoseValueFormatted;
 				if (previousGlucoseValue < 40) previousGlucoseValue = 40;
-				else if (previousGlucoseValue > 600) previousGlucoseValue = 600;
+				else if (previousGlucoseValue > 400) previousGlucoseValue = 400;
 				
 				//Latest
 				latestGlucoseValue = glucoseList[glucoseList.length - 1].calculatedValue;
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
-				else if (latestGlucoseValue > 600) latestGlucoseValue = 600;
+				else if (latestGlucoseValue > 400) latestGlucoseValue = 400;
 				
 				if (nowTimestamp - latestGlucoseTimestamp <= TIME_16_MINUTES)
 				{

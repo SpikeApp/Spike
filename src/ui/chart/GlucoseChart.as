@@ -145,7 +145,7 @@ package ui.chart
 		
 		//Chart Scale mode
 		private var fixedSize:Boolean = false;
-		private var maxAxisValue:Number = 600;
+		private var maxAxisValue:Number = 400;
 		private var minAxisValue:Number = 40;
 		private var resizeOutOfBounds:Boolean = true;
 		
@@ -379,8 +379,8 @@ package ui.chart
 						lowestGlucoseValue = 40;
 					
 					highestGlucoseValue = highestValue;
-					if (highestGlucoseValue > 600)
-						highestGlucoseValue = 600;
+					if (highestGlucoseValue > 400)
+						highestGlucoseValue = 400;
 				}
 				else
 				{
@@ -433,8 +433,8 @@ package ui.chart
 				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
 				if(currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
-				else if (currentGlucoseValue > 600)
-					currentGlucoseValue = 600;
+				else if (currentGlucoseValue > 400)
+					currentGlucoseValue = 400;
 				
 				//Define glucose marker x position
 				var glucoseX:Number;
@@ -1017,8 +1017,8 @@ package ui.chart
 					lowestGlucoseValue = 40;
 				
 				highestGlucoseValue = highestValue;
-				if (highestGlucoseValue > 600)
-					highestGlucoseValue = 600;
+				if (highestGlucoseValue > 400)
+					highestGlucoseValue = 400;
 			}
 			else
 			{
@@ -1060,8 +1060,8 @@ package ui.chart
 				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
 				if (currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
-				else if (currentGlucoseValue > 600)
-					currentGlucoseValue = 600;
+				else if (currentGlucoseValue > 400)
+					currentGlucoseValue = 400;
 				
 				var glucoseMarker:GlucoseMarker;
 				if(i < dataLength - 1 && chartType == MAIN_CHART)
@@ -1872,8 +1872,8 @@ package ui.chart
 				
 				if (latestCalibrationGlucose < 40)
 					latestCalibrationGlucose = 40;
-				else if (latestCalibrationGlucose > 600)
-					latestCalibrationGlucose = 600;
+				else if (latestCalibrationGlucose > 400)
+					latestCalibrationGlucose = 400;
 				
 				var previousLowestGlucoseValue:Number = lowestGlucoseValue;
 				var previousHighestGlucoseValue:Number = highestGlucoseValue;

@@ -27,7 +27,7 @@ package ui.chart
 			
 			var glucoseOutput:String;
 			var glucoseValueFormatted:Number;
-			if (glucoseValue > 40 && glucoseValue < 600)
+			if (glucoseValue > 40 && glucoseValue < 400)
 			{
 				if (glucoseUnit == "mg/dL")
 				{
@@ -51,7 +51,7 @@ package ui.chart
 				else
 					glucoseValueFormatted = Math.round(BgReading.mgdlToMmol(glucoseValue) * 10) / 10;
 				
-				if (glucoseValue >= 600)
+				if (glucoseValue >= 400)
 					glucoseOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_high');
 				else if (glucoseValue <= 40 && glucoseValue > 12)
 					glucoseOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_low');

@@ -183,7 +183,7 @@ package ui.screens.display.settings.general
 			{
 				//Glucose Urgent High Value
 				glucoseUrgentHighStepper.minimum = 80;
-				glucoseUrgentHighStepper.maximum = 600;
+				glucoseUrgentHighStepper.maximum = 400;
 				glucoseUrgentHighStepper.step = 1;
 				
 				//Glucose High Value
@@ -205,7 +205,7 @@ package ui.screens.display.settings.general
 			{
 				//Glucose Urgent High Value
 				glucoseUrgentHighStepper.minimum = 4.4;
-				glucoseUrgentHighStepper.maximum = 33.3;
+				glucoseUrgentHighStepper.maximum = 22.2;
 				glucoseUrgentHighStepper.step = 0.1;
 				
 				//Glucose High Value

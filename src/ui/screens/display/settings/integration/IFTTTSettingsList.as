@@ -190,13 +190,13 @@ package ui.screens.display.settings.integration
 			var step:Number;
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 			{
-				upperLimit = 600;
+				upperLimit = 400;
 				lowerLimit = 40;
 				step = 1;
 			}
 			else
 			{
-				upperLimit = (Math.round(600 * BgReading.MGDL_TO_MMOLL * 10))/10;
+				upperLimit = (Math.round(400 * BgReading.MGDL_TO_MMOLL * 10))/10;
 				lowerLimit = (Math.round(40 * BgReading.MGDL_TO_MMOLL * 10))/10;
 				step = 0.1;
 			}

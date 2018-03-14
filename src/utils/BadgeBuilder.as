@@ -37,9 +37,9 @@ package utils
 					if (preBadgeNumber == "HIGH")
 					{
 						if (isMgDl)
-							badgeNumber = 600;
+							badgeNumber = 400;
 						else
-							badgeNumber = int(Math.round(BgReading.mgdlToMmol(600)));
+							badgeNumber = int(Math.round(BgReading.mgdlToMmol(400)));
 					}
 					else if (preBadgeNumber == "LOW" || preBadgeNumber == "??0" || preBadgeNumber == "?SN" || preBadgeNumber == "??2" || preBadgeNumber == "?NA" || preBadgeNumber == "?NC" || preBadgeNumber == "?CD" || preBadgeNumber == "?AD" || preBadgeNumber == "?RF" || preBadgeNumber == "???")
 					{
