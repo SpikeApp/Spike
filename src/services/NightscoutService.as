@@ -567,7 +567,7 @@ package services
 			newVisualCalibration["eventType"] = "BG Check";	
 			newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
 			newVisualCalibration["enteredBy"] = "Spike App";	
-			newVisualCalibration["glucose"] = calibration.bg;
+			newVisualCalibration["glucose"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? calibration.bg : Math.round(BgReading.mgdlToMmol(calibration.bg) * 10) / 10;
 			newVisualCalibration["glucoseType"] = "Finger";
 			newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("nightscoutservice","sensor_calibration");
 			
