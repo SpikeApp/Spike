@@ -11,6 +11,7 @@ ENHANCEMENT: Improved text in glucose alarms lock screen notifications.
 ENHANCEMENT: Added Katie DiSimone's repo to Loop offline instructions.
 ENHANCEMENT: Better handling of delta values in the main chart when in follower mode. Should be more precise now.
 ENHANCEMENT: Mmol/L users now have a new option in settings -> share that will allow them to have their latest glucose value on the app badge without being rounded to the nearest integer. With this option on, a value of 4.8 will be displayed as 48, 5.3 as 53 and so on.
+ENHANCEMENT: Now you can extend the pre-snooze time of alarms without having to first cancel the existing snooze. You can see this changes in the Snoozer popup, accessible through the upper right three dots menu.
 
 1.1.3
 FEATURE: Spike will now play an alarm sound, vibrate and send a notification to the lock screen in case iOS closes the internal HTTP server if the user's device is low on memory. This servers as a safeguard, especially for offline loopers.
