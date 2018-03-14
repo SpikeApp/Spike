@@ -135,7 +135,7 @@ package ui.popups
 				PopUpManager.removePopUp(snoozeCallout);
 			
 			//Display callout
-			PopUpManager.addPopUp(snoozeCallout, false, false);
+			PopUpManager.addPopUp(snoozeCallout, true, false);
 			
 			//Manage timer
 			if (closeTimer != null)
