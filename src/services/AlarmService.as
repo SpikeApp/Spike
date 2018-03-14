@@ -322,12 +322,12 @@ package services
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") 
 			{
-				if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp) > 10 * 60 * 1000) 
-				{
+				//if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp) > 10 * 60 * 1000) 
+				//{
 					myTrace("in onAlarmTimer, calling planApplicationStoppedAlert");
 					planApplicationStoppedAlert();
 					lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
-				}
+				//}
 			}
 		}
 		

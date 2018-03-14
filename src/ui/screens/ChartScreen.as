@@ -302,7 +302,7 @@ package ui.screens
 					}		
 				}	
 				
-				AlarmService.cancelInactiveAlert();
+				//AlarmService.cancelInactiveAlert();
 			} 
 			catch(error:Error) 
 			{
@@ -340,7 +340,7 @@ package ui.screens
 					newReadingsList.push(reading);
 				}
 				
-				AlarmService.cancelInactiveAlert();
+				//AlarmService.cancelInactiveAlert();
 			} 
 			catch(error:Error) 
 			{
