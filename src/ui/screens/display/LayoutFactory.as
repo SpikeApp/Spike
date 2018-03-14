@@ -117,6 +117,9 @@ package ui.screens.display
 				txtFormat.color = fontColor;
 			label.fontStyles = txtFormat;
 			
+			if (horizontalAlign == HorizontalAlign.JUSTIFY)
+				label.textRendererProperties.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
+			
 			return label;
 		}
 		

@@ -61,6 +61,7 @@ package ui.screens.display.sensor
 		private var deleteAllCalibrationsButton:Button;
 		private var deleteLastCalibrationButton:Button;
 		private var calibrationActionsContainer:LayoutGroup;
+		private var sensorCountdownLabel:Label;
 		
 		/* Properties */
 		private var dateFormatter:DateTimeFormatter;
@@ -69,9 +70,6 @@ package ui.screens.display.sensor
 		private var lastCalibrationDateValue:String;
 		private var numberOfCalibrations:String;
 		private var inSensorCountdown:Boolean = false;
-
-		private var sensorCountdownLabel:Label;
-
 		private var intervalID:int = -1;
 		
 		public function SensorStartStopList()
@@ -250,36 +248,6 @@ package ui.screens.display.sensor
 				intervalID = setInterval(refreshCountDown, 1000);
 		}
 		
-		private function refreshCountDown():void
-		{
-			var sensor:Sensor = Sensor.getActiveSensor();
-			if (sensor == null || !inSensorCountdown)
-			{
-				finishCountdown();
-				return;
-			}
-			
-			var sensorReady:Number = sensor.startedAt + TIME_2_HOURS;
-			var now:Number = new Date().valueOf();
-			
-			if (now >= sensorReady)
-			{
-				finishCountdown();
-				return;
-			}
-			
-			var timeSpan:TimeSpan = TimeSpan.fromMilliseconds(sensorReady - new Date().valueOf());
-			
-			sensorCountdownLabel.text = MathHelper.formatNumberToString(timeSpan.hours) + "h" + MathHelper.formatNumberToString(timeSpan.minutes) + "m" + MathHelper.formatNumberToString(timeSpan.seconds) + "s";
-		}
-		
-		private function finishCountdown():void
-		{
-			clearInterval(intervalID);
-			inSensorCountdown = false;
-			setDataProvider();
-		}
-		
 		private function activateStopButton():void
 		{
 			if(actionButton != null)
@@ -331,6 +299,36 @@ package ui.screens.display.sensor
 					}
 				]
 			);
+		}
+		
+		private function refreshCountDown():void
+		{
+			var sensor:Sensor = Sensor.getActiveSensor();
+			if (sensor == null || !inSensorCountdown)
+			{
+				finishCountdown();
+				return;
+			}
+			
+			var sensorReady:Number = sensor.startedAt + TIME_2_HOURS;
+			var now:Number = new Date().valueOf();
+			
+			if (now >= sensorReady)
+			{
+				finishCountdown();
+				return;
+			}
+			
+			var timeSpan:TimeSpan = TimeSpan.fromMilliseconds(sensorReady - new Date().valueOf());
+			
+			sensorCountdownLabel.text = MathHelper.formatNumberToString(timeSpan.hours) + "h" + MathHelper.formatNumberToString(timeSpan.minutes) + "m" + MathHelper.formatNumberToString(timeSpan.seconds) + "s";
+		}
+		
+		private function finishCountdown():void
+		{
+			clearInterval(intervalID);
+			inSensorCountdown = false;
+			setDataProvider();
 		}
 		
 		/**
@@ -443,6 +441,8 @@ package ui.screens.display.sensor
 		
 		override public function dispose():void
 		{
+			clearInterval(intervalID);
+			
 			/* Dispose Controls */
 			if(actionButton != null)
 			{
@@ -490,6 +490,12 @@ package ui.screens.display.sensor
 			{
 				calibrationActionsContainer.dispose();
 				calibrationActionsContainer = null;
+			}
+			
+			if(sensorCountdownLabel != null)
+			{
+				sensorCountdownLabel.dispose();
+				sensorCountdownLabel = null;
 			}
 			
 			super.dispose();

@@ -53,7 +53,12 @@ package utils
 						if (isMgDl)
 							badgeNumber = int(preBadgeNumber);
 						else
-							badgeNumber = int(Math.round(Number(preBadgeNumber)));
+						{
+							if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON) == "true")
+								badgeNumber = int(Number(preBadgeNumber) * 10);
+							else
+								badgeNumber = int(Math.round(Number(preBadgeNumber)));
+						}
 					}
 				}
 			}

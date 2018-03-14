@@ -182,6 +182,11 @@ package database
 		public static const LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD:int = 71;
 		public static const LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON:int = 72;
 		
+		/**
+		 * App Badge #2
+		 */
+		public static const LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON:int = 73;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -255,7 +260,8 @@ package database
 			"false",//LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON
 			"150",//LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD
 			"70",//LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD
-			"false"//LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON
+			"false",//LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON
+			"false"//LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON
 		];
 		
 		public function LocalSettings() {

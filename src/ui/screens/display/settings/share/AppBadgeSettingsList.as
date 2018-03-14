@@ -1,13 +1,17 @@
 package ui.screens.display.settings.share
 {
+	import database.CommonSettings;
 	import database.LocalSettings;
 	
 	import feathers.controls.Check;
+	import feathers.controls.Label;
 	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -19,15 +23,19 @@ package ui.screens.display.settings.share
 	import utils.Constants;
 	
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("sharesettingsscreen")]
 
 	public class AppBadgeSettingsList extends List 
 	{
 		/* Display Objects */
 		private var appBadgeToggle:ToggleSwitch;
+		private var mmolMultiplierCheck:Check;
+		private var mmolMultiplierLabel:Label;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
 		private var appBadgeEnabled:Boolean;
+		private var mmolMultiplierEnabled:Boolean;
 		
 		public function AppBadgeSettingsList()
 		{
@@ -60,6 +68,9 @@ package ui.screens.display.settings.share
 		{
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") appBadgeEnabled = true;
 			else appBadgeEnabled = false;
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON) == "true") mmolMultiplierEnabled = true;
+			else mmolMultiplierEnabled = false;
 		}
 		
 		private function setupContent():void
@@ -69,7 +80,14 @@ package ui.screens.display.settings.share
 			appBadgeToggle.addEventListener(Event.CHANGE, onAppBadgeChanged);
 			
 			//Mmmol multiplier
-			var mmolMultiplierCheck:Check = LayoutFactory.createCheckMark(true);
+			mmolMultiplierCheck = LayoutFactory.createCheckMark(mmolMultiplierEnabled);
+			mmolMultiplierCheck.addEventListener(Event.CHANGE, onMMOLMultiplierChanged);
+			
+			//Mmmol multiplier description
+			mmolMultiplierLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','mmol_multiplier_description'), HorizontalAlign.JUSTIFY);
+			mmolMultiplierLabel.wordWrap = true; 
+			mmolMultiplierLabel.width = width - 20;
+			mmolMultiplierLabel.paddingTop = mmolMultiplierLabel.paddingBottom = 10;
 			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -80,6 +98,8 @@ package ui.screens.display.settings.share
 				return itemRenderer;
 			};
 			
+			(layout as VerticalLayout).hasVariableItemDimensions = true;
+			
 			refreshContent();
 		}
 		
@@ -87,18 +107,23 @@ package ui.screens.display.settings.share
 		{
 			var content:Array = [];
 			content.push( { text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: appBadgeToggle } );
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+			{
+				content.push( { text: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','mmol_multiplier_label'), accessory: mmolMultiplierCheck } );
+				content.push( { text: "", accessory: mmolMultiplierLabel } );
+			}
+				
 			
 			dataProvider = new ArrayCollection(content);
 		}
 		
 		public function save():void
 		{
-			var appBadgeValueToSave:String;
-			if(appBadgeEnabled) appBadgeValueToSave = "true";
-			else appBadgeValueToSave = "false";
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) != String(appBadgeEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE, String(appBadgeEnabled));
 			
-			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) != appBadgeValueToSave)
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE, appBadgeValueToSave);
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON) != String(mmolMultiplierEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON, String(mmolMultiplierEnabled));
 			
 			needsSave = false;
 		}
@@ -112,6 +137,12 @@ package ui.screens.display.settings.share
 			needsSave = true;
 		}
 		
+		private function onMMOLMultiplierChanged(e:Event):void
+		{
+			mmolMultiplierEnabled = mmolMultiplierCheck.isSelected;
+			needsSave = true;
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -122,6 +153,19 @@ package ui.screens.display.settings.share
 				appBadgeToggle.removeEventListener(Event.CHANGE, onAppBadgeChanged);
 				appBadgeToggle.dispose();
 				appBadgeToggle = null;
+			}
+			
+			if(mmolMultiplierCheck != null)
+			{
+				mmolMultiplierCheck.removeEventListener(Event.CHANGE, onMMOLMultiplierChanged);
+				mmolMultiplierCheck.dispose();
+				mmolMultiplierCheck = null;
+			}
+			
+			if(mmolMultiplierLabel != null)
+			{
+				mmolMultiplierLabel.dispose();
+				mmolMultiplierLabel = null;
 			}
 			
 			super.dispose();
