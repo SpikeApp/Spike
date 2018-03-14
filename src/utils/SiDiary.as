@@ -239,7 +239,9 @@ package utils
 			
 			//Close the callout
 			if (PopUpManager.isPopUp(siDiarySenderCallout))
-				PopUpManager.removePopUp(siDiarySenderCallout, true);
+				PopUpManager.removePopUp(siDiarySenderCallout, false);
+			else
+				siDiarySenderCallout.close(false);
 			
 			//Display callout
 			PopUpManager.addPopUp(siDiarySenderCallout, false, false);

@@ -453,8 +453,8 @@ package services
 							{
 								if (PopUpManager.isPopUp(alert))
 									PopUpManager.removePopUp(alert, true);
-								else
-									PopUpManager.removeAllPopUps(true);
+								else if (alert != null)
+									alert.removeFromParent(true);
 								
 								if( data.label == ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase") )
 									assignReceiver(transmitterID);

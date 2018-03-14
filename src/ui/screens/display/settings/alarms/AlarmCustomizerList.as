@@ -505,7 +505,10 @@ package ui.screens.display.settings.alarms
 				sortAlarms()
 				setupContent();
 				
-				PopUpManager.removePopUp(alarmCustomizerCallout, true);
+				if (PopUpManager.isPopUp(alarmCustomizerCallout))
+					PopUpManager.removePopUp(alarmCustomizerCallout, true);
+				else if (alarmCustomizerCallout != null)
+					alarmCustomizerCallout.removeFromParent(true);
 				
 				needsSave = true;
 			}
@@ -519,7 +522,10 @@ package ui.screens.display.settings.alarms
 				sortAlarms()
 				setupContent();
 				
-				PopUpManager.removePopUp(alarmCustomizerCallout, true);
+				if (PopUpManager.isPopUp(alarmCustomizerCallout))
+					PopUpManager.removePopUp(alarmCustomizerCallout, true);
+				else if (alarmCustomizerCallout != null)
+					alarmCustomizerCallout.removeFromParent(true);
 				
 				needsSave = true;
 			}	

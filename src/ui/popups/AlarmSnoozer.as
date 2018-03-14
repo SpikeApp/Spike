@@ -133,6 +133,8 @@ package ui.popups
 			//Close the callout
 			if (PopUpManager.isPopUp(snoozeCallout))
 				PopUpManager.removePopUp(snoozeCallout);
+			else if (snoozeCallout != null)
+				snoozeCallout.close();
 			
 			//Display callout
 			PopUpManager.addPopUp(snoozeCallout, true, false);

@@ -521,7 +521,9 @@ package ui.screens.display.settings.watch
 			
 			//Close the callout
 			if (PopUpManager.isPopUp(instructionsSenderCallout))
-				PopUpManager.removePopUp(instructionsSenderCallout, true);
+				PopUpManager.removePopUp(instructionsSenderCallout, false);
+			else if (instructionsSenderCallout != null)
+				instructionsSenderCallout.close(false);
 			
 			//Display callout
 			PopUpManager.addPopUp(instructionsSenderCallout, false, false);
@@ -618,7 +620,7 @@ package ui.screens.display.settings.watch
 			//Close the callout
 			if (PopUpManager.isPopUp(instructionsSenderCallout))
 				PopUpManager.removePopUp(instructionsSenderCallout, true);
-			else
+			else if (instructionsSenderCallout != null)
 				instructionsSenderCallout.close(true);
 		}
 		

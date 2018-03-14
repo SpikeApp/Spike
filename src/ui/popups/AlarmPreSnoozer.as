@@ -25,6 +25,7 @@ package ui.popups
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("alarmpresnoozer")]
@@ -42,7 +43,7 @@ package ui.popups
 		private static var mainContainer:LayoutGroup;
 		private static var actionButtonsContainer:LayoutGroup;
 		private static var alarmTypesPicker:PickerList;
-		private static var actionButton:Button;
+		private static var preSnoozeButton:Button;
 		private static var snoozeStatusLabel:Label;
 		private static var cancelButton:Button;
 		
@@ -55,6 +56,8 @@ package ui.popups
 		private static var snoozeTitle:String = "";
 		private static var unSnoozeAction:Function = null;
 		private static var snoozeAction:Function = null;
+
+		private static var unSnoozeButton:Button;
 		
 		public function AlarmPreSnoozer()
 		{
@@ -87,6 +90,8 @@ package ui.popups
 			//Close the callout
 			if (PopUpManager.isPopUp(snoozeCallout))
 				PopUpManager.removePopUp(snoozeCallout);
+			else if (snoozeCallout != null)
+				snoozeCallout.close();
 			
 			//Display callout
 			PopUpManager.addPopUp(snoozeCallout, true, false);
@@ -114,21 +119,32 @@ package ui.popups
 			
 			/* Action Buttons */
 			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
-			actionButtonsLayout.gap = 10;
+			actionButtonsLayout.gap = 5;
 			
 			actionButtonsContainer = new LayoutGroup();
 			actionButtonsContainer.layout = actionButtonsLayout;
 			mainContainer.addChild(actionButtonsContainer);
 			
 			//Cancel Button
-			cancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label").toUpperCase());
+			cancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label"));
 			cancelButton.addEventListener(Event.TRIGGERED, onCancel);
 			actionButtonsContainer.addChild(cancelButton);
 			
-			//Action Button
-			actionButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"ok_alert_button_label").toUpperCase());
+			//Pre(Un)-snooze Buttons
+			preSnoozeButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label"));
+			preSnoozeButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+			
+			unSnoozeButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label"));
+			unSnoozeButton.addEventListener(Event.TRIGGERED, unSnoozeAlarm);
 			
 			snoozeStatusLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER);
+			
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			{
+				cancelButton.paddingLeft = cancelButton.paddingRight = 10;
+				preSnoozeButton.paddingLeft = preSnoozeButton.paddingRight = 10;
+				unSnoozeButton.paddingLeft = unSnoozeButton.paddingRight = 10;
+			}
 			
 			/* Callout Position Helper Creation */
 			var positionHelper:Sprite = new Sprite();
@@ -141,6 +157,8 @@ package ui.popups
 			snoozeCallout.content = mainContainer;
 			snoozeCallout.origin = positionHelper;
 			snoozeCallout.minWidth = 240;
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				snoozeCallout.paddingLeft = snoozeCallout.paddingRight = 12;
 		}
 		
 		private static function createFirstPhase():void
@@ -184,7 +202,7 @@ package ui.popups
 			if (PopUpManager.isPopUp(snoozeCallout))
 				PopUpManager.removePopUp(snoozeCallout);
 			else if(snoozeCallout != null)
-					snoozeCallout.close();
+				snoozeCallout.close();
 		}
 		
 		/**
@@ -207,15 +225,16 @@ package ui.popups
 					AlarmService.phoneMutedAlertSnoozed() 
 					)
 				{
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, unSnoozeAllAlarms);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					preSnoozeButton.addEventListener(Event.TRIGGERED, snoozeAllAlarms);
+					createSecondPhase();
+					actionButtonsContainer.addChild(unSnoozeButton);
+					unSnoozeButton.addEventListener(Event.TRIGGERED, unSnoozeAllAlarms);
 				}
 				else
 				{
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, snoozeAllAlarms);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					preSnoozeButton.addEventListener(Event.TRIGGERED, snoozeAllAlarms);
 					createSecondPhase();
 				}
 			}
@@ -226,16 +245,15 @@ package ui.popups
 				{
 					snoozeStatusLabel.text = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"snoozed_for") + " " + AlarmService.veryHighAlertSnoozeAsString();
 					mainContainer.addChildAt(snoozeStatusLabel, 2);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeVeryHighAlert
 					unSnoozeAction = AlarmService.resetVeryHighAlert;
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, unSnoozeAlarm);
+					actionButtonsContainer.addChild(unSnoozeButton);
 				}
 				else
 				{
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					actionButtonsContainer.addChild(preSnoozeButton);
 					createSecondPhase();
 					snoozeAction = AlarmService.snoozeVeryHighAlert
 				}
@@ -247,16 +265,15 @@ package ui.popups
 				{
 					snoozeStatusLabel.text = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"snoozed_for") + " " + AlarmService.highAlertSnoozeAsString();
 					mainContainer.addChildAt(snoozeStatusLabel, 2);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeHighAlert;
 					unSnoozeAction = AlarmService.resetHighAlert;
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, unSnoozeAlarm);
+					actionButtonsContainer.addChild(unSnoozeButton);
 				}
 				else
 				{
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					actionButtonsContainer.addChild(preSnoozeButton);
 					createSecondPhase();
 					snoozeAction = AlarmService.snoozeHighAlert;
 				}
@@ -268,16 +285,15 @@ package ui.popups
 				{
 					snoozeStatusLabel.text = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"snoozed_for") + " " + AlarmService.lowAlertSnoozeAsString();
 					mainContainer.addChildAt(snoozeStatusLabel, 2);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeLowAlert;
 					unSnoozeAction = AlarmService.resetLowAlert;
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, unSnoozeAlarm);
+					actionButtonsContainer.addChild(unSnoozeButton);
 				}
 				else
 				{
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					actionButtonsContainer.addChild(preSnoozeButton);
 					createSecondPhase();
 					snoozeAction = AlarmService.snoozeLowAlert;
 				}
@@ -289,16 +305,16 @@ package ui.popups
 				{
 					snoozeStatusLabel.text = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"snoozed_for") + " " + AlarmService.veryLowAlertSnoozeAsString();
 					mainContainer.addChildAt(snoozeStatusLabel, 2);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeVeyLowAlert;
 					unSnoozeAction = AlarmService.resetVeryLowAlert;
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, unSnoozeAlarm);
+					actionButtonsContainer.addChild(unSnoozeButton);
 				}
 				else
 				{
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					preSnoozeButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
+					actionButtonsContainer.addChild(preSnoozeButton);
 					createSecondPhase();
 					snoozeAction = AlarmService.snoozeVeyLowAlert;
 				}
@@ -310,16 +326,15 @@ package ui.popups
 				{
 					snoozeStatusLabel.text = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"snoozed_for") + " " + AlarmService.missedReadingAlertSnoozeAsString();
 					mainContainer.addChildAt(snoozeStatusLabel, 2);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeMissedReadingAlert;
 					unSnoozeAction = AlarmService.resetMissedReadingAlert;
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, unSnoozeAlarm);
+					actionButtonsContainer.addChild(unSnoozeButton);
 				}
 				else
 				{
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					actionButtonsContainer.addChild(preSnoozeButton);
 					createSecondPhase();
 					snoozeAction = AlarmService.snoozeMissedReadingAlert;
 				}
@@ -331,16 +346,15 @@ package ui.popups
 				{
 					snoozeStatusLabel.text = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"snoozed_for") + " " + AlarmService.phoneMutedAlertSnoozeAsString();
 					mainContainer.addChildAt(snoozeStatusLabel, 2);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozePhoneMutedAlert;
 					unSnoozeAction = AlarmService.resetPhoneMutedAlert;
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, unSnoozeAlarm);
+					actionButtonsContainer.addChild(unSnoozeButton);
 				}
 				else
 				{
-					actionButton.label = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label").toUpperCase();
-					actionButtonsContainer.addChild(actionButton);
-					actionButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
+					actionButtonsContainer.addChild(preSnoozeButton);
 					createSecondPhase();
 					snoozeAction = AlarmService.snoozePhoneMutedAlert;
 				}

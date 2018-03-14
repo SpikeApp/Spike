@@ -71,7 +71,9 @@ package ui.popups
 			
 			//Close the callout
 			if (PopUpManager.isPopUp(wixelSenderCallout))
-				PopUpManager.removePopUp(wixelSenderCallout, true);
+				PopUpManager.removePopUp(wixelSenderCallout, false);
+			else if (wixelSenderCallout != null)
+				wixelSenderCallout.close(false);
 			
 			//Display callout
 			PopUpManager.addPopUp(wixelSenderCallout, false, false);
@@ -133,7 +135,7 @@ package ui.popups
 			//Close the callout
 			if (PopUpManager.isPopUp(wixelSenderCallout))
 				PopUpManager.removePopUp(wixelSenderCallout, true);
-			else
+			else if (wixelSenderCallout != null)
 				wixelSenderCallout.close(true);
 		}
 		

@@ -360,7 +360,12 @@ package ui.screens.display.settings.share
 			if (PopUpManager.isPopUp(followerManagerCallout))
 				PopUpManager.removePopUp(followerManagerCallout);
 			else
+			{
+				if (followerManagerCallout != null)
+					followerManagerCallout.close();
+				
 				PopUpManager.removeAllPopUps();
+			}
 		}
 		
 		/**
