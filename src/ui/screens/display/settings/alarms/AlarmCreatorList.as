@@ -490,6 +490,11 @@ package ui.screens.display.settings.alarms
 		{
 			if (e.data != null)
 				refreshAlertTypeList(e.data.newAlertName);
+			else
+			{
+				if (selectedAlertTypeIndex == -1)
+					saveAlarm.isEnabled = false;
+			}
 			
 			alertCreatorCallout.close(true);
 		}

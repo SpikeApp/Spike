@@ -27,6 +27,7 @@ package ui.popups
 	import utils.Trace;
 	
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("calibrationservice")]
 
 	public class AlertManager
 	{
@@ -115,7 +116,14 @@ package ui.popups
 			if (PopUpManager.popUpCount == 0)
 				activeAlertsCount = 0;
 			
-			if (activeAlertsCount == 0 && Constants.appInForeground) //If no alerts are being currently displayed and app is in foreground, let's display this one 
+			if (
+				(activeAlertsCount == 0 || 
+				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_first_calibration_title') || 
+				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_second_calibration_title') || 
+				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_calibration_title') || 
+				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_calibration_title_with_override')
+				) && 
+				Constants.appInForeground) //If no alerts are being currently displayed and app is in foreground, let's display this one 
 			{
 				//Update internal variables
 				activeAlertsCount += 1;

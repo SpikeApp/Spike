@@ -44,6 +44,7 @@ package ui.popups
 		private static var alarmTypesPicker:PickerList;
 		private static var actionButton:Button;
 		private static var snoozeStatusLabel:Label;
+		private static var cancelButton:Button;
 		
 		/* Properties */
 		private static var firstRun:Boolean = true;
@@ -54,9 +55,6 @@ package ui.popups
 		private static var snoozeTitle:String = "";
 		private static var unSnoozeAction:Function = null;
 		private static var snoozeAction:Function = null;
-		private static var isOpened:Boolean = false;
-
-		private static var cancelButton:Button;
 		
 		public function AlarmPreSnoozer()
 		{
@@ -81,23 +79,17 @@ package ui.popups
 			createDisplayObjects();
 			
 			/* Display Callout */
-			if (!isOpened)
-				displayCallout();
+			displayCallout();
 		}
 		
 		private static function displayCallout():void
 		{
-			if (isOpened)
-				return;
-			
 			//Close the callout
 			if (PopUpManager.isPopUp(snoozeCallout))
 				PopUpManager.removePopUp(snoozeCallout);
 			
 			//Display callout
-			PopUpManager.addPopUp(snoozeCallout, false, false);
-			
-			isOpened = true;
+			PopUpManager.addPopUp(snoozeCallout, true, false);
 		}
 		
 		private static function createDisplayObjects():void
@@ -188,16 +180,11 @@ package ui.popups
 		
 		public static function closeCallout():void
 		{
-			if (!isOpened)
-				return;
-			
 			//Close the callout
 			if (PopUpManager.isPopUp(snoozeCallout))
 				PopUpManager.removePopUp(snoozeCallout);
 			else if(snoozeCallout != null)
 					snoozeCallout.close();
-			
-			isOpened = false;
 		}
 		
 		/**
