@@ -16,6 +16,7 @@ ENHANCEMENT: Made some improvements to the app inactive alert.
 FIX: When in eastern timezones (ex: Russia, Asia, etc.), Spike follower was not able to download new readings after the initial fetch. This has been fixed and Spike follower should now be compatible with all timezones.
 FIX: Calibrations made in Spike should now appear correctly in Nightscout's chart for mmol/L users in all timezones.
 FIX: Several fixes for the in-app popup system, especially related to the calibration popup.
+FIX: Speech (spoken readings) now respect the device's mute status as long as "override mute" is off in Spike. Thanks to Johan Degraeve for the fix!
 FIX: Several overall fixes to make Spike more stable.
 
 1.1.3
