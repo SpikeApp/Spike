@@ -18,6 +18,8 @@ package ui.chart
 	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
 	
 	import model.ModelLocator;
 	
@@ -32,6 +34,7 @@ package ui.chart
 	import starling.utils.Align;
 	
 	import ui.AppInterface;
+	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -48,6 +51,10 @@ package ui.chart
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
 		private static const TIME_16_MINUTES:int = 16 * 60 * 1000;
+		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
+		private static const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
+		private static const TIME_3_HOURS:int = 3 * 60 * 60 * 1000;
+		private static const TIME_4_HOURS:int = 4 * 60 * 60 * 1000;
 		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
 		private static const TIME_23_HOURS_57_MINUTES:int = TIME_24_HOURS - (3 * 60 * 1000);
 		public static const TIMELINE_1H:Number = 14;
@@ -123,6 +130,7 @@ package ui.chart
 		private var yAxisContainer:Sprite;
 		private var mainChartContainer:Sprite;
 		private var differenceInMinutesForAllTimestamps:Number;
+		private var mainChartMask:Quad;
 		
 		//Objects
 		private var statusUpdateTimer:Timer;
@@ -148,6 +156,13 @@ package ui.chart
 		private var maxAxisValue:Number = 400;
 		private var minAxisValue:Number = 40;
 		private var resizeOutOfBounds:Boolean = true;
+		
+		//Timeline
+		private var timelineFirstRun:Boolean = true;
+		private var timelineActive:Boolean = true;
+		private var timelineContainer:Sprite;
+		private var timelineObjects:Array = [];
+		
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -231,7 +246,6 @@ package ui.chart
 			glucoseTimelineContainer.addChild(mainChartContainer);
 			
 			//Mask (Only show markers before the delimiter)
-			var mainChartMask:Quad;
 			mainChartMask = new Quad(yAxisMargin, _graphHeight, fakeChartMaskColor);
 			mainChartMask.x = _graphWidth - mainChartMask.width;
 			mainChartContainer.addChild(mainChartMask);
@@ -257,6 +271,9 @@ package ui.chart
 				scrollerChart.y = _graphHeight + scrollerTopPadding;
 			else
 				scrollerChart.y = _graphHeight + scrollerTopPadding - 0.1;
+			
+			if (timelineActive)
+				scrollerChart.y += 10;
 			
 			//Create scroller background
 			var scrollerBackground:Quad = new Quad(_scrollerWidth, _scrollerHeight, 0x282a32);
@@ -324,6 +341,10 @@ package ui.chart
 			 * Calculate Display Labels
 			 */
 			calculateDisplayLabels();
+			
+			//Timeline
+			if (timelineActive)
+				drawTimeline();
 		}
 		
 		private function drawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):Sprite
@@ -560,6 +581,88 @@ package ui.chart
 			}
 			
 			return chartContainer;
+		}
+		
+		private function drawTimeline():void
+		{
+			//Safeguards
+			if (mainChart == null || dummyModeActive || !timelineActive)
+				return;
+			
+			//Setup initial timeline/mask properties
+			if (timelineFirstRun && timelineContainer == null)
+			{
+				timelineContainer = new Sprite();
+				mainChartContainer.addChild(timelineContainer);
+				timelineFirstRun = false;
+			}
+			
+			//Clean previous objects
+			for (var i:int = 0; i < timelineObjects.length; i++) 
+			{
+				var displayObject:Sprite = timelineObjects[i] as Sprite;
+				timelineContainer.removeChild(displayObject);
+				displayObject.dispose();
+				displayObject.removeChildren()
+				displayObject = null;
+			}
+			timelineObjects.length = 0;
+			
+			//Safeguards
+			if (isNaN(firstBGReadingTimeStamp) || isNaN(lastBGreadingTimeStamp))
+				return;
+			
+			//Resize and position timeline container
+			timelineContainer.x = mainChart.x;
+			timelineContainer.width = mainChart.width;
+			
+			//Timeline calculations
+			var firstDate:Date = new Date(firstBGReadingTimeStamp);
+			var lastDate:Date = new Date(lastBGreadingTimeStamp);
+			var initialTimestamp:Number = new Date(firstDate.fullYear, firstDate.month, firstDate.date, firstDate.hours, 0, 0, 0).valueOf();
+			var lastTimestamp:Number = lastDate.valueOf();
+			
+			while (initialTimestamp <= lastTimestamp) 
+			{	
+				//Get marker time
+				var markerDate:Date = new Date(initialTimestamp);
+				var currentMarkerTimestamp:Number = markerDate.valueOf();
+				
+				//Define marker position relative to main chart
+				var currentX:Number = (currentMarkerTimestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				
+				//Visual representation of marker time
+				var label:String;
+				if (dateFormat.slice(0,2) == "24")
+					label = TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
+				else
+					label = TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
+				
+				var time:Label = LayoutFactory.createLabel(label, HorizontalAlign.CENTER, VerticalAlign.TOP, 10, false, axisFontColor);
+				time.validate();
+				
+				//Add marker to display list
+				var timeDisplayContainer:Sprite = new Sprite();
+				timeDisplayContainer.addChild(time);
+				timeDisplayContainer.x =  currentX - (time.width / 2);
+				timelineContainer.addChild(timeDisplayContainer);
+				
+				//Save marker for later processing/disposing
+				timelineObjects.push(timeDisplayContainer);
+				
+				//Update loop condition
+				if (timelineRange == TIMELINE_1H || timelineRange == TIMELINE_3H || timelineRange == TIMELINE_6H)
+					initialTimestamp += TIME_1_HOUR;
+				else if (timelineRange == TIMELINE_12H)
+					initialTimestamp += TIME_2_HOURS;
+				else if (timelineRange == TIMELINE_24H && dateFormat.slice(0,2) == "24")
+					initialTimestamp += TIME_3_HOURS;
+				else if (timelineRange == TIMELINE_24H && dateFormat.slice(0,2) == "12")
+					initialTimestamp += TIME_4_HOURS;
+			}
+			
+			if (scrollerChart != null)
+				timelineContainer.y = scrollerChart.y - timelineContainer.height - 1;
 		}
 		
 		private function drawYAxis():Sprite
@@ -966,6 +1069,8 @@ package ui.chart
 			//Calculate Display Labels
 			currentNumberOfMakers = _dataSource.length;
 			calculateDisplayLabels();
+			
+			drawTimeline()
 			
 			return true;
 		}
@@ -1678,6 +1783,10 @@ package ui.chart
 				}
 				//else if(handPicker.x > _graphWidth - handPicker.width - 1) //Adjustements for finger drag imprecision
 				//displayLatestBGValue = true;
+				
+				//Timeline
+				if (timelineActive)
+					timelineContainer.x = mainChart.x;
 				
 				/**
 				 * Dummy Mode
