@@ -2,6 +2,7 @@ package ui.screens.display.settings.general
 {
 	import database.CommonSettings;
 	
+	import feathers.controls.Label;
 	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
@@ -11,6 +12,7 @@ package ui.screens.display.settings.general
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -30,12 +32,15 @@ package ui.screens.display.settings.general
 		private var collectionModePicker:PickerList;
 		private var nightscoutURLInput:TextInput;
 		private var nightscoutOffsetStepper:NumericStepper;
+		private var nightscoutAPISecretTextInput:TextInput;
+		private var nightscoutAPIDescription:Label;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
 		private var collectionMode:String;		
 		private var followNSURL:String;
 		private var nightscoutOffset:Number;
+		private var nightscoutAPISecretValue:String;
 		
 		public function DataCollectionSettingsList()
 		{
@@ -66,6 +71,7 @@ package ui.screens.display.settings.general
 			collectionMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE);
 			followNSURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL);
 			nightscoutOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
+			nightscoutAPISecretValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET);
 		}
 		
 		private function setupContent():void
@@ -97,11 +103,22 @@ package ui.screens.display.settings.general
 			nightscoutURLInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
 			nightscoutURLInput.fontStyles.size = 10;
 			nightscoutURLInput.text = followNSURL;
-			nightscoutURLInput.addEventListener(Event.CHANGE, onNSURLChanged);
+			nightscoutURLInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Nightscout Offset Stepper
 			nightscoutOffsetStepper = LayoutFactory.createNumericStepper(-10000, 10000, nightscoutOffset, 5); 
-			nightscoutOffsetStepper.addEventListener(Event.CHANGE, onNSOffsetChanged);
+			nightscoutOffsetStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//API Secret
+			nightscoutAPISecretTextInput = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
+			nightscoutAPISecretTextInput.text = nightscoutAPISecretValue;
+			nightscoutAPISecretTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//API Secret Description
+			nightscoutAPIDescription = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','api_secret_description'), HorizontalAlign.JUSTIFY);
+			nightscoutAPIDescription.wordWrap = true;
+			nightscoutAPIDescription.width = width;
+			nightscoutAPIDescription.paddingTop = nightscoutAPIDescription.paddingBottom = 10;
 			
 			/* Set Item Renderer */
 			itemRendererFactory = function():IListItemRenderer
@@ -124,6 +141,8 @@ package ui.screens.display.settings.general
 			{
 				data.push( { text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','follower_ns_url'), accessory: nightscoutURLInput } );
 				data.push( { text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','time_offset'), accessory: nightscoutOffsetStepper } );
+				data.push( { text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','api_secret'), accessory: nightscoutAPISecretTextInput } );
+				data.push( { text:"", accessory: nightscoutAPIDescription } );
 			}
 			
 			dataProvider = new ArrayCollection(data);
@@ -147,6 +166,9 @@ package ui.screens.display.settings.general
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET) != String(nightscoutOffset))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET, String(nightscoutOffset));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != String(nightscoutAPISecretValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET, String(nightscoutAPISecretValue));
+			
 			//Refresh main menu. Menu items are different for hosts and followers
 			AppInterface.instance.menu.refreshContent();
 			
@@ -169,16 +191,11 @@ package ui.screens.display.settings.general
 			refreshContent();
 		}
 		
-		private function onNSURLChanged(e:Event):void
+		private function onSettingsChanged(e:Event):void
 		{
 			followNSURL = nightscoutURLInput.text.replace(" ", "");
-			
-			needsSave = true;
-		}
-		
-		private function onNSOffsetChanged(e:Event):void
-		{
 			nightscoutOffset = nightscoutOffsetStepper.value;
+			nightscoutAPISecretValue = nightscoutAPISecretTextInput.text.replace(" ", "");
 			
 			needsSave = true;
 		}
@@ -186,6 +203,17 @@ package ui.screens.display.settings.general
 		/**
 		 * Utility
 		 */
+		override protected function draw():void
+		{
+			try
+			{
+				(layout as VerticalLayout).hasVariableItemDimensions = true;
+			} 
+			catch(error:Error) {}
+			
+			super.draw();
+		}
+		
 		override public function dispose():void
 		{
 			if (collectionModePicker != null)
@@ -197,16 +225,29 @@ package ui.screens.display.settings.general
 			
 			if (nightscoutURLInput != null)
 			{
-				nightscoutURLInput.removeEventListener(Event.CHANGE, onNSURLChanged);
+				nightscoutURLInput.removeEventListener(Event.CHANGE, onSettingsChanged);
 				nightscoutURLInput.dispose();
 				nightscoutURLInput = null;
 			}
 			
 			if (nightscoutOffsetStepper != null)
 			{
-				nightscoutOffsetStepper.removeEventListener(Event.CHANGE, onNSOffsetChanged);
+				nightscoutOffsetStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
 				nightscoutOffsetStepper.dispose();
 				nightscoutOffsetStepper = null;
+			}
+			
+			if (nightscoutAPISecretTextInput != null)
+			{
+				nightscoutAPISecretTextInput.removeEventListener(Event.CHANGE, onSettingsChanged);
+				nightscoutAPISecretTextInput.dispose();
+				nightscoutAPISecretTextInput = null;
+			}
+			
+			if (nightscoutAPIDescription != null)
+			{
+				nightscoutAPIDescription.dispose();
+				nightscoutAPIDescription = null;
 			}
 			
 			super.dispose();

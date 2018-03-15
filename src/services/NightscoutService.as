@@ -112,6 +112,7 @@ package services
 		private static var nightscoutFollowOffset:Number = 0;
 		private static var followerModeEnabled:Boolean = false;
 		private static var followerTimer:int = -1;
+		private static var nightscoutFollowAPISecret:String = "";
 		
 		private static var _instance:NightscoutService = new NightscoutService();
 		
@@ -295,6 +296,8 @@ package services
 			if (nightscoutFollowURL.indexOf('http') == -1) nightscoutFollowURL = "https://" + nightscoutFollowURL;
 			
 			nightscoutFollowOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
+			
+			nightscoutFollowAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)))));
 		}
 		
 		private static function activateFollower():void
@@ -416,7 +419,10 @@ package services
 				waitingForNSData = true;
 				lastFollowDownloadAttempt = (new Date()).valueOf();
 				
-				NetworkConnector.createNSConnector(nightscoutFollowURL + parameters.toString(), null, URLRequestMethod.GET, null, MODE_GLUCOSE_READING_GET, onDownloadGlucoseReadingsComplete, onConnectionFailed);
+				trace("CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET));
+				trace("nightscoutFollowAPISecret", nightscoutFollowAPISecret);
+				
+				NetworkConnector.createNSConnector(nightscoutFollowURL + parameters.toString(), CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" ? nightscoutFollowAPISecret : null, URLRequestMethod.GET, null, MODE_GLUCOSE_READING_GET, onDownloadGlucoseReadingsComplete, onConnectionFailed);
 			}
 			else
 			{
@@ -1090,7 +1096,7 @@ package services
 				else
 					deactivateFollower()
 			}
-			else if (e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET)
+			else if (e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET || e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)
 			{
 				if (followerModeEnabled)
 				{

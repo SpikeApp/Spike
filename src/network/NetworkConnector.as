@@ -124,8 +124,6 @@ package network
 		
 		public static function createIFTTTConnector(URL:String, method:String, parameters:String, completeHandler:Function = null, errorHandler:Function = null):void
 		{
-			trace("IFTT URL:", URL);
-			
 			//Create the URL Request
 			var request:URLRequest = new URLRequest(URL);
 			request.useCache = false;

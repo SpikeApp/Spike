@@ -4,6 +4,7 @@ FEATURE: Dynamic timeline for the main chart as requested by many users! You wil
 FEATURE: 2H sensor warm-up countdawn now available in the sensor screen (menu -> sensor).
 FEATURE: Mmol/L users now have a new option in settings -> share that will allow them to have their latest glucose value on the app badge without being rounded to the nearest integer. With this option on, a value of 4.8 will be displayed as 48, 5.3 as 53 and so on.
 FEATURE: Added German language to the speech feature (spoken readings). Thank you to Joern Windler for the translations! Complete German UI is coming soon.
+FEATURE: When in follower mode, added ability to input the master's nightscout API secret in case the site is protected by AUTH_DEFAULT_ROLES and Spike cannot fetch data. Setting the master's API secret will make Spike bypass the AUTH_DEFAULT_ROLES restriction. This new setting is available in settings -> general -> data collection.
 ENHANCEMENT: Spike will now automatically kickstart a new method from 1AM to 8AM to try to avoid being kicked out of memory as that seems to be the time schedule were iOS is most aggressive. Users are advised to leave their devices charging at night.
 ENHANCEMENT: Now you can extend the pre-snooze time of alarms without having to first cancel the existing snooze. You can see these changes in the Snoozer popup, accessible through the upper right "three dots" menu.
 ENHANCEMENT: Improvements on how Spike's main chart handles unconventional data coming from the transmitter.
