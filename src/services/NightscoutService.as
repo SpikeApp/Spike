@@ -419,9 +419,6 @@ package services
 				waitingForNSData = true;
 				lastFollowDownloadAttempt = (new Date()).valueOf();
 				
-				trace("CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET));
-				trace("nightscoutFollowAPISecret", nightscoutFollowAPISecret);
-				
 				NetworkConnector.createNSConnector(nightscoutFollowURL + parameters.toString(), CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" ? nightscoutFollowAPISecret : null, URLRequestMethod.GET, null, MODE_GLUCOSE_READING_GET, onDownloadGlucoseReadingsComplete, onConnectionFailed);
 			}
 			else
