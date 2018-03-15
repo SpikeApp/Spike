@@ -1,19 +1,20 @@
 1.1.4
-FEATURE: IFTTT support! Want Spike to make a phone call or send an SMS to a caregiver when your blood sugar is too low? Maybe you want to change the colors of your light bulbs at home when your blood sugar reaches a certain value? What about having your child's Spike send you a notification to your phone when he/she is too far away from the phone when at school and Spike is missing readings? Or maybe notify your caregivers when you snooze an alarm so they know you're ok? The possibilities are exciting and vast. IFTTT follows the "if this then that" model and it's up to your imagination to create IFTTT recipes for Spike that fit your needs. Be sure to go to settings -> integration -> IFTTT to activate this feature and read the instructions. 
+FEATURE: IFTTT support! Want Spike to make a phone call or send an SMS to a caregiver when your blood sugar is too low? Maybe you want to change the colors of your light bulbs at home when your blood sugar reaches a certain value? What about having your child's Spike send you a notification to your phone when he/she is too far away from the phone when at school and Spike is missing readings? Or maybe notify your caregivers when you snooze an alarm so they know you're ok? The possibilities are exciting and vast. IFTTT follows the "if this then that" model and it's up to your imagination to create IFTTT recipes for Spike that fit your needs. Be sure to go to settings -> integration -> IFTTT to activate this feature and read the instructions. Don't forget to share your favorite Spike IFTTT recipes on our Facebook support group!
 FEATURE: Dynamic timeline for the main chart as requested by many users! You will now be able to have a better sense of your glucose trend throughout the day. 
 FEATURE: 2H sensor warm-up countdawn now available in the sensor screen (menu -> sensor).
 FEATURE: Mmol/L users now have a new option in settings -> share that will allow them to have their latest glucose value on the app badge without being rounded to the nearest integer. With this option on, a value of 4.8 will be displayed as 48, 5.3 as 53 and so on.
-FIX: When in eastern timezones (ex: Russia, Asia, etc.), Spike follower was not able to download new readings after the initial fetch. This has been fixed and Spike follower should now be compatible with all timezones.
-FIX: Calibrations made in Spike should now appear correctly in Nightscout's chart for mmol/L users in all timezones.
-FIX: Several fixes for the in-app popup system, especially related to the calibration popup.
 ENHANCEMENT: Spike will now automatically kickstart a new method from 1AM to 8AM to try to avoid being kicked out of memory as that seems to be the time schedule were iOS is most aggressive. Users are advised to leave their devices charging at night.
-ENHANCEMENT: Now you can extend the pre-snooze time of alarms without having to first cancel the existing snooze. You can see this changes in the Snoozer popup, accessible through the upper right three dots menu.
+ENHANCEMENT: Now you can extend the pre-snooze time of alarms without having to first cancel the existing snooze. You can see these changes in the Snoozer popup, accessible through the upper right "three dots" menu.
 ENHANCEMENT: Improvements on how Spike's main chart handles unconventional data coming from the transmitter.
 ENHANCEMENT: More safeguards in Spike's internal server in case the user is using an app that sends requests that are outside of Nightscout's API norms.
-ENHANCEMENT: Improved text in glucose alarms lock screen notifications.
+ENHANCEMENT: Improved text in glucose alarm's lock screen notifications.
 ENHANCEMENT: Added Katie DiSimone's repo to Loop offline instructions.
 ENHANCEMENT: Better handling of delta values in the main chart when in follower mode. Should be more precise now.
 ENHANCEMENT: Made some improvements to the app inactive alert.
+FIX: When in eastern timezones (ex: Russia, Asia, etc.), Spike follower was not able to download new readings after the initial fetch. This has been fixed and Spike follower should now be compatible with all timezones.
+FIX: Calibrations made in Spike should now appear correctly in Nightscout's chart for mmol/L users in all timezones.
+FIX: Several fixes for the in-app popup system, especially related to the calibration popup.
+FIX: Several overall fixes to make Spike more stable.
 
 1.1.3
 FEATURE: Spike will now play an alarm sound, vibrate and send a notification to the lock screen in case iOS closes the internal HTTP server if the user's device is low on memory. This servers as a safeguard, especially for offline loopers.

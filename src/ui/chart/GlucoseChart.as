@@ -598,15 +598,21 @@ package ui.chart
 			}
 			
 			//Clean previous objects
-			for (var i:int = 0; i < timelineObjects.length; i++) 
+			if (timelineObjects != null && timelineObjects.length > 0)
 			{
-				var displayObject:Sprite = timelineObjects[i] as Sprite;
-				timelineContainer.removeChild(displayObject);
-				displayObject.dispose();
-				displayObject.removeChildren()
-				displayObject = null;
+				for (var i:int = 0; i < timelineObjects.length; i++) 
+				{
+					var displayObject:Sprite = timelineObjects[i] as Sprite;
+					if (displayObject != null && timelineContainer != null)
+					{
+						timelineContainer.removeChild(displayObject);
+						displayObject.dispose();
+						displayObject.removeChildren()
+						displayObject = null;
+					}
+				}
+				timelineObjects.length = 0;
 			}
-			timelineObjects.length = 0;
 			
 			//Safeguards
 			if (isNaN(firstBGReadingTimeStamp) || isNaN(lastBGreadingTimeStamp))
@@ -1589,10 +1595,6 @@ package ui.chart
 			currentNumberOfMakers == previousNumberOfMakers
 		}
 		
-		
-		
-		
-		
 		private function createStatusTextDisplays():void
 		{
 			/* Calculate Font Sizes */
@@ -2202,6 +2204,29 @@ package ui.chart
 			removeChild(mainChartContainer);
 			mainChartContainer.dispose();
 			mainChartContainer = null;
+			
+			//Timeline
+			if (timelineObjects != null && timelineObjects.length > 0)
+			{
+				for (var i:int = 0; i < timelineObjects.length; i++) 
+				{
+					var displayObject:Sprite = timelineObjects[i] as Sprite;
+					if (timelineContainer != null && displayObject != null)
+					{
+						timelineContainer.removeChild(displayObject);
+						displayObject.dispose();
+						displayObject.removeChildren()
+						displayObject = null;
+					}
+				}
+				timelineObjects.length = 0;
+			}
+			
+			if (timelineContainer != null)
+			{
+				timelineContainer.dispose();
+				timelineContainer = null;
+			}
 			
 			super.dispose();
 			
