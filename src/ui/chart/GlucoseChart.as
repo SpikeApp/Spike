@@ -644,7 +644,13 @@ package ui.chart
 				else
 					label = TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 				
-				var time:Label = LayoutFactory.createLabel(label, HorizontalAlign.CENTER, VerticalAlign.TOP, 10, false, axisFontColor);
+				var fontSize:int;
+				if (timelineRange == TIMELINE_1H || timelineRange == TIMELINE_3H || timelineRange == TIMELINE_6H)
+					fontSize = 11;
+				else
+					fontSize = 10;
+				
+				var time:Label = LayoutFactory.createLabel(label, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, false, axisFontColor);
 				time.validate();
 				
 				//Add marker to display list
@@ -2208,7 +2214,7 @@ package ui.chart
 			//Timeline
 			if (timelineObjects != null && timelineObjects.length > 0)
 			{
-				for (var i:int = 0; i < timelineObjects.length; i++) 
+				for (i = 0; i < timelineObjects.length; i++) 
 				{
 					var displayObject:Sprite = timelineObjects[i] as Sprite;
 					if (timelineContainer != null && displayObject != null)

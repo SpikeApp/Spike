@@ -26,7 +26,6 @@ package ui.screens
 	
 	import model.ModelLocator;
 	
-	import services.AlarmService;
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
