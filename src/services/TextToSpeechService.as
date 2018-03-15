@@ -142,6 +142,10 @@ package services
 			{
 				ModelLocator.resourceManagerInstance.localeChain = ["sl_SL","en_US"];
 			}
+			else if(speechLanguageCode == "de-DE")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["de_DE","en_US"];
+			}
 		}
 		
 		public static function sayText(text:String, language:String = "en-US"):void 

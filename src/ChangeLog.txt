@@ -3,6 +3,7 @@ FEATURE: IFTTT support! Want Spike to make a phone call or send an SMS to a care
 FEATURE: Dynamic timeline for the main chart as requested by many users! You will now be able to have a better sense of your glucose trend throughout the day. 
 FEATURE: 2H sensor warm-up countdawn now available in the sensor screen (menu -> sensor).
 FEATURE: Mmol/L users now have a new option in settings -> share that will allow them to have their latest glucose value on the app badge without being rounded to the nearest integer. With this option on, a value of 4.8 will be displayed as 48, 5.3 as 53 and so on.
+FEATURE: Added German language to the speech feature (spoken readings). Thank you to Joern Windler for the translations! Complete German UI is coming soon.
 ENHANCEMENT: Spike will now automatically kickstart a new method from 1AM to 8AM to try to avoid being kicked out of memory as that seems to be the time schedule were iOS is most aggressive. Users are advised to leave their devices charging at night.
 ENHANCEMENT: Now you can extend the pre-snooze time of alarms without having to first cancel the existing snooze. You can see these changes in the Snoozer popup, accessible through the upper right "three dots" menu.
 ENHANCEMENT: Improvements on how Spike's main chart handles unconventional data coming from the transmitter.
