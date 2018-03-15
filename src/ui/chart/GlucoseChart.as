@@ -622,7 +622,7 @@ package ui.chart
 			var initialTimestamp:Number = new Date(firstDate.fullYear, firstDate.month, firstDate.date, firstDate.hours, 0, 0, 0).valueOf();
 			var lastTimestamp:Number = lastDate.valueOf();
 			
-			while (initialTimestamp <= lastTimestamp) 
+			while (initialTimestamp <= lastTimestamp + TIME_1_HOUR) 
 			{	
 				//Get marker time
 				var markerDate:Date = new Date(initialTimestamp);
