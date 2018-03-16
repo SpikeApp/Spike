@@ -165,9 +165,20 @@ package services
 					}
 					else
 					{
-						soundPlayer = new Sound(soundFile);
-						channel = soundPlayer.play();
-						channel.soundTransform = soundTransform;
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2) == "true")
+						{
+							//Plays with flash player audio and a 500ms sound file
+							soundPlayer = new Sound(soundFileNight);
+							channel = soundPlayer.play();
+							channel.soundTransform = soundTransformNight;
+						}
+						else
+						{
+							//Plays with flash player audio
+							soundPlayer = new Sound(soundFile);
+							channel = soundPlayer.play();
+							channel.soundTransform = soundTransform;
+						}
 					}
 				}
 				else
@@ -179,7 +190,10 @@ package services
 					}
 					else
 					{
-						BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2) == "true")
+							BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+						else
+							BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
 					}
 				}
 			}

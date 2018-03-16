@@ -328,6 +328,11 @@
 		  */
 		 public static const COMMON_SETTING_DATA_COLLECTION_NS_OFFSET:int = 114;
 		 public static const COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET:int = 115;
+		 
+		 /**
+		  * Deep Sleep Timer #3
+		  */
+		 public static const COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2:int = 116;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -445,7 +450,8 @@
 			 "16776960",//COMMON_SETTING_PIE_CHART_HIGH_COLOR
 			 "false",//COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE
 			 "0",//COMMON_SETTING_DATA_COLLECTION_NS_OFFSET
-			 ""//COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET
+			 "",//COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET
+			 "false"//COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2
 		 ];
 
 		 public function CommonSettings()

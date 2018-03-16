@@ -37,13 +37,15 @@ package ui.screens.display.settings.advanced
 		private var suspensionModePicker:PickerList;
 		private var instructionsTitleLabel:Label;
 		private var instructionsDescriptionLabel:Label;
-		private var alternativeMethodCheck:Check;
+		private var alternativeMethod1Check:Check;
+		private var alternativeMethod2Check:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
 		private var userManagesSuspension:Boolean;
 		private var suspensionMode:int;
-		private var alternativeModeActive:Boolean;
+		private var alternativeMode1Active:Boolean;
+		private var alternativeMode2Active:Boolean;
 		
 		public function DeepSleepSettingsList()
 		{
@@ -73,7 +75,8 @@ package ui.screens.display.settings.advanced
 			/* Get Values From Database */
 			userManagesSuspension = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) == "true";
 			suspensionMode = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE));
-			alternativeModeActive = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) == "true";
+			alternativeMode1Active = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) == "true";
+			alternativeMode2Active = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2) == "true";
 		}
 		
 		private function setupContent():void
@@ -101,9 +104,13 @@ package ui.screens.display.settings.advanced
 			suspensionModePicker.selectedIndex = suspensionMode;
 			suspensionModePicker.addEventListener(Event.CHANGE, onSuspensionModeChanged);
 			
-			//Alternative method
-			alternativeMethodCheck = LayoutFactory.createCheckMark(alternativeModeActive);
-			alternativeMethodCheck.addEventListener(Event.CHANGE, onAlternativeMethodChanged);
+			//Alternative method #1
+			alternativeMethod1Check = LayoutFactory.createCheckMark(alternativeMode1Active);
+			alternativeMethod1Check.addEventListener(Event.CHANGE, onAlternativeMethod1Changed);
+			
+			//Alternative method #2
+			alternativeMethod2Check = LayoutFactory.createCheckMark(alternativeMode2Active);
+			alternativeMethod2Check.addEventListener(Event.CHANGE, onAlternativeMethod2Changed);
 			
 			/* Set Item Renderer */
 			itemRendererFactory = function():IListItemRenderer
@@ -146,7 +153,8 @@ package ui.screens.display.settings.advanced
 			if (userManagesSuspension)
 			{
 				content.push( { text: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','mode_label'), accessory: suspensionModePicker } );
-				content.push( { text: "Alternative Method:", accessory: alternativeMethodCheck } );
+				content.push( { text: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','alternative_method_1'), accessory: alternativeMethod1Check } );
+				content.push( { text: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','alternative_method_2'), accessory: alternativeMethod2Check } );
 				content.push({ text: "", accessory: instructionsTitleLabel });
 				content.push({ text: "", accessory: instructionsDescriptionLabel });
 			}
@@ -169,9 +177,13 @@ package ui.screens.display.settings.advanced
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE) != suspensionModeValueToSave)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE, suspensionModeValueToSave);
 			
-			//Alternative method
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) != String(alternativeModeActive))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE, String(alternativeModeActive));
+			//Alternative method # 1
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) != String(alternativeMode1Active))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE, String(alternativeMode1Active));
+			
+			//Alternative method # 2
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2) != String(alternativeMode2Active))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2, String(alternativeMode2Active));
 			
 			needsSave = false;
 		}
@@ -195,9 +207,27 @@ package ui.screens.display.settings.advanced
 			refreshContent();
 		}
 		
-		private function onAlternativeMethodChanged(e:Event):void
+		private function onAlternativeMethod1Changed(e:Event):void
 		{
-			alternativeModeActive = alternativeMethodCheck.isSelected
+			alternativeMode1Active = alternativeMethod1Check.isSelected;
+			/*if (alternativeMode1Active)
+			{
+				alternativeMethod2Check.isSelected = false;
+				alternativeMode2Active = false;
+			}*/
+				
+			needsSave = true;
+		}
+		
+		private function onAlternativeMethod2Changed(e:Event):void
+		{
+			alternativeMode2Active = alternativeMethod2Check.isSelected;
+			/*if (alternativeMode2Active)
+			{
+				alternativeMethod1Check.isSelected = false;
+				alternativeMode1Active = false;
+			}*/
+			
 			needsSave = true;
 		}
 		
@@ -208,7 +238,6 @@ package ui.screens.display.settings.advanced
 		{
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			super.draw();
-			
 		}
 		
 		override public function dispose():void
@@ -227,11 +256,18 @@ package ui.screens.display.settings.advanced
 				manageSuspensionToggle = null;
 			}
 			
-			if (alternativeMethodCheck != null)
+			if (alternativeMethod1Check != null)
 			{
-				alternativeMethodCheck.removeEventListener(Event.CHANGE, onAlternativeMethodChanged);
-				alternativeMethodCheck.dispose();
-				alternativeMethodCheck = null;
+				alternativeMethod1Check.removeEventListener(Event.CHANGE, onAlternativeMethod1Changed);
+				alternativeMethod1Check.dispose();
+				alternativeMethod1Check = null;
+			}
+			
+			if (alternativeMethod2Check != null)
+			{
+				alternativeMethod2Check.removeEventListener(Event.CHANGE, onAlternativeMethod2Changed);
+				alternativeMethod2Check.dispose();
+				alternativeMethod2Check = null;
 			}
 			
 			super.dispose();
