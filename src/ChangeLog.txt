@@ -1,3 +1,6 @@
+1.1.5
+FIX: Fixed some inconsistencies in the Today Widget that resulted in the line coloring for mg/dL users not being 100% correct.
+
 1.1.4
 FEATURE: IFTTT support! Want Spike to make a phone call or send an SMS to a caregiver when your blood sugar is too low? Maybe you want to change the colors of your light bulbs at home when your blood sugar reaches a certain value? What about having your child's Spike send you a notification to your phone when he/she is too far away from the phone when at school and Spike is missing readings? Or maybe notify your caregivers when you snooze an alarm so they know you're ok? The possibilities are exciting and vast. IFTTT follows the "if this then that" model and it's up to your imagination to create IFTTT recipes for Spike that fit your needs. Be sure to go to settings -> integration -> IFTTT to activate this feature and read the instructions. Don't forget to share your favorite Spike IFTTT recipes on our Facebook support group!
 FEATURE: Dynamic timeline for the main chart as requested by many users! You will now be able to have a better sense of your glucose trend throughout the day. 
