@@ -18,6 +18,8 @@ package ui.screens.display.treatments
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
+	import treatments.TreatmentsManager;
+	
 	[ResourceBundle("chartscreen")]
 
 	public class TreatmentsList extends List 
@@ -60,31 +62,36 @@ package ui.screens.display.treatments
 			
 			calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
 			calibrationImage = new Image(calibrationTexture);
-			bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.accountChildTexture;
+			bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
 			bolusImage = new Image(bolusTexture);
 		}
 		
 		private function setupContent():void
 		{
 			/* Content */
-			if (Calibration.allForSensor().length > 1 && !BlueToothDevice.isFollower())
+			if (true)//(Calibration.allForSensor().length > 1 && !BlueToothDevice.isFollower())
 				calibrationButtonEnabled = true;
+			
+			if (ModelLocator.bgReadings.length > 0)
+				var bolusEnabled:Boolean = true;
 			
 			//if (ModelLocator.INTERNAL_TESTING == false)
 			//{
-			dataProvider = new ListCollection(
+			//dataProvider = new ListCollection(
+				//[
+					//{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable:calibrationButtonEnabled, id: 1 }
+				//]);
+			//}
+			//else
+			//{
+			dataProvider = new ListCollection
+			(
 				[
-					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable:calibrationButtonEnabled, id: 1 }
-				]);
-			/*}
-			else
-			{
-				dataProvider = new ListCollection(
-					[
-						{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable:calibrationButtonEnabled, id: 1 },
-						{ label: "Bolus", icon: bolusImage, selectable:calibrationButtonEnabled, id: 2 }
-					]);
-			}*/
+					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 },
+					{ label: "Bolus", icon: bolusImage, selectable: bolusEnabled, id: 2 }
+				]
+			);
+			//}
 			
 			//Calibration Item Renderer Factory
 			function calibrationItemFactory():IListItemRenderer
@@ -104,11 +111,30 @@ package ui.screens.display.treatments
 			}
 			setItemRendererFactoryWithID( "calibration-item", calibrationItemFactory );
 			
+			function bolusItemFactory():IListItemRenderer
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.iconField = "icon";
+				item.itemHasSelectable = true;
+				item.selectableField = "selectable";
+				item.gap = 5;
+				if(!bolusEnabled)
+					item.alpha = 0.4;
+				item.paddingLeft = 8;
+				item.paddingRight = 14;
+				item.isQuickHitAreaEnabled = true;
+				return item;
+			}
+			setItemRendererFactoryWithID( "bolus-item", bolusItemFactory );
+			
 			//Menu Factory
 			factoryIDFunction = function( item:Object, index:int ):String
 			{
 				if(index === 0)
 					return "calibration-item";
+				else if(index == 1)
+					return "bolus-item";
 				
 				return "default-item";
 			};
@@ -132,6 +158,12 @@ package ui.screens.display.treatments
 				CalibrationService.calibrationOnRequest();
 				
 				dispatchEventWith(CLOSE); //Close Menu
+			}
+			else if(treatmentID == 2) //Bolus
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addInsulin();
 			}
 		}
 		

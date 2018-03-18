@@ -1,11 +1,10 @@
 package treatments
 {
-	
-
 	public class Treatment
 	{
 		/* Public Constants */
 		public static const TYPE_MEAL_BOLUS:String = "mealBolus";
+		public static const TYPE_BOLUS:String = "bolus";
 		public static const TYPE_CORRECTION_BOLUS:String = "correctionBolus";
 		public static const TYPE_CARBS_CORRECTION:String = "carbCorrection";
 		public static const TYPE_GLUCOSE_CHECK:String = "glucoseCheck";
@@ -19,17 +18,19 @@ package treatments
 		public var dia:Number;
 		public var carbs:Number;
 		public var glucose:Number;
+		public var glucoseEstimated:Number;
 		public var note:String;
 		public var timestamp:Number;
 		private var insulinScaleFactor:Number;
 		
-		public function Treatment(type:String, insulin:Number = 0, dia:Number = 0, carbs:Number = 0, glucose:Number, note:String = "", timestamp:Number = new Date().valueOf())
+		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, dia:Number = 2, carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "")
 		{
 			this.type = type;
 			this.insulin = insulin;
 			this.dia = dia;
 			this.carbs = carbs;
 			this.glucose = glucose;
+			this.glucoseEstimated = glucoseEstimated;
 			this.note = note;
 			this.timestamp = timestamp;
 			this.insulinScaleFactor = 3 / dia;
@@ -37,7 +38,7 @@ package treatments
 		
 		public function calculateIOB():Number
 		{
-			if (insulin = 0)
+			if (insulin == 0)
 				return 0;
 			
 			var now:Number = new Date().valueOf();
