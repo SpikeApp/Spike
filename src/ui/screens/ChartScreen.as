@@ -14,6 +14,7 @@ package ui.screens
 	import events.FollowerEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
+	import events.TreatmentsEvent;
 	
 	import feathers.controls.Check;
 	import feathers.controls.Radio;
@@ -32,6 +33,9 @@ package ui.screens
 	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.events.Event;
+	
+	import treatments.Treatment;
+	import treatments.TreatmentsManager;
 	
 	import ui.chart.DistributionChart;
 	import ui.chart.GlucoseChart;
@@ -101,6 +105,7 @@ package ui.screens
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -345,6 +350,24 @@ package ui.screens
 			{
 				Trace.myTrace("ChartScreen.as", "Error adding readings to chart. Error: " + error.message)
 			}
+		}
+		
+		private function onTreatmentAdded(e:TreatmentsEvent):void
+		{
+			if (!appInBackground && glucoseChart != null && Constants.appInForeground)
+			{
+				var treatment:Treatment = e.treatment;
+				if (treatment != null)
+				{
+					Trace.myTrace("ChartScreen.as", "Adding treatment to the chart: Type: " + treatment.type);
+					glucoseChart.addTreatment(e.treatment);
+				}
+			}
+			/*else
+			{
+				Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
+				newReadingsList.push(reading);
+			}*/
 		}
 		
 		private function onAppInBackground (e:SpikeEvent):void

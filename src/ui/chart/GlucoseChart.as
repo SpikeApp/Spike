@@ -33,6 +33,8 @@ package ui.chart
 	import starling.events.TouchPhase;
 	import starling.utils.Align;
 	
+	import treatments.Treatment;
+	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	
@@ -163,6 +165,12 @@ package ui.chart
 		private var timelineContainer:Sprite;
 		private var timelineObjects:Array = [];
 		
+		//Treatments
+		private var treatmentsFirstRun:Boolean = true;
+		private var treatmentsActive:Boolean = true;
+		private var treatmentsContainer:Sprite;
+
+		private var mainChartYFactor:Number;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -580,7 +588,31 @@ package ui.chart
 					scrollerChartLineList.push(line);
 			}
 			
+			if(chartType == MAIN_CHART)
+				mainChartYFactor = scaleYFactor;
+			
 			return chartContainer;
+		}
+		
+		public function addTreatment(treatment:Treatment):void
+		{
+			//Setup initial timeline/mask properties
+			if (treatmentsFirstRun && treatmentsContainer == null)
+			{
+				treatmentsContainer = new Sprite();
+				treatmentsContainer.x = mainChart.x;
+				treatmentsContainer.y = mainChart.y;
+				mainChartContainer.addChild(treatmentsContainer);
+				treatmentsFirstRun = false;
+			}
+			
+			if (treatment.type == Treatment.TYPE_BOLUS)
+			{
+				var insulinMarker:InsulinMarker = new InsulinMarker(treatment);
+				insulinMarker.x = (insulinMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				insulinMarker.y = _graphHeight - (insulinMarker.radius * 1.66) - ((insulinMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				treatmentsContainer.addChild(insulinMarker);
+			}
 		}
 		
 		private function drawTimeline():void
@@ -1324,6 +1356,13 @@ package ui.chart
 				else if (chartType == SCROLLER_CHART)
 					scrollerChartLineList.push(line);
 			}
+			
+			if(chartType == MAIN_CHART)
+			{
+				mainChartYFactor = scaleYFactor;
+				trace("lowestGlucoseValue C2:", lowestGlucoseValue);
+				trace("mainChartYFactor C2", mainChartYFactor);
+			}
 		}
 		
 		private function drawLine(chartType:String):void 
@@ -1793,8 +1832,12 @@ package ui.chart
 				//displayLatestBGValue = true;
 				
 				//Timeline
-				if (timelineActive)
+				if (timelineActive && timelineContainer != null)
 					timelineContainer.x = mainChart.x;
+				
+				//Treatments
+				if (treatmentsActive && treatmentsContainer != null)
+					treatmentsContainer.x = mainChart.x;
 				
 				/**
 				 * Dummy Mode

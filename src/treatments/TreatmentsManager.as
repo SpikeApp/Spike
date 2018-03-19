@@ -2,7 +2,11 @@ package treatments
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
+	import flash.events.EventDispatcher;
+	
 	import database.BgReading;
+	
+	import events.TreatmentsEvent;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.DateTimeSpinner;
@@ -18,17 +22,21 @@ package treatments
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 
-	public class TreatmentsManager
+	public class TreatmentsManager extends EventDispatcher
 	{
 		/* Constants */
 		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
+		
+		/* Instance */
+		private static var _instance:TreatmentsManager = new TreatmentsManager();
 		
 		/* Internal variables/objects */
 		public static var treatmentsList:Array = [];
 		
 		public function TreatmentsManager()
 		{
-			throw new Error("TreatmentsManager is not meant to be instantiated!");
+			if (_instance != null)
+				throw new Error("TreatmentsManager is not meant to be instantiated!");
 		}
 		
 		public static function addInsulin():void
@@ -113,7 +121,11 @@ package treatments
 						""
 					)
 					
+					//Add to list
 					treatmentsList.push(treatment);
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 				}
 			}
 		}
@@ -137,5 +149,11 @@ package treatments
 			
 			return estimatedGlucose;
 		}
+
+		public static function get instance():TreatmentsManager
+		{
+			return _instance;
+		}
+
 	}
 }

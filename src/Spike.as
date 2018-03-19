@@ -70,7 +70,7 @@ package
 			starling = new Starling( AppInterface, stage, null, null, "auto", Context3DProfile.BASELINE_EXTENDED );
 			starling.enableErrorChecking = false;
 			starling.skipUnchangedFrames = true;
-			starling.antiAliasing = 1;
+			starling.antiAliasing = 6;
 			//Starling.current.showStatsAt("right", "bottom");
 			//Starling.current.showStatsAt("left", "bottom");
 			scaler = new ScreenDensityScaleFactorManager( starling );
