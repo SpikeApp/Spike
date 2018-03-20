@@ -1,9 +1,9 @@
 1.1.5
 FIX: Fixed some inconsistencies on the Today Widget that resulted in the line coloring for mg/dL users not being 100% correct. It's more accurate now.
-FIX: Some fixes for the nightscout upload events related to locales and timezones
+FIX: Some fixes for the Nightscout upload events related to locales and timezones
 FIX: Fix for a rare bug in the NightscoutService that could crash Spike
-FIX: Fix for a bug in iOS that could crash Spike while in background when writting values to the app badge.
-FIX: A lot of small fizes and safeguards all over to make Spike more stable.
+FIX: Fix for a bug in iOS that could crash Spike while in background when writing values to the app badge. This bug would also prevent the app inactive alert from firing so now Spike should report inactive alert with more precision.
+FIX: A lot of small fixes and safeguards all over to make Spike more stable.
 ENHANCEMENT: Global exception handling. If an error occurs anywhere in Spike's code, SPike will try to recover and will notify developers of the issue so a fix can be included in subsequent updates.
 
 1.1.4
