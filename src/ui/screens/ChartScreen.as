@@ -314,7 +314,10 @@ package ui.screens
 			Trace.myTrace("ChartScreen.as", "on onBgReadingReceived!");
 			
 			if (BlueToothDevice.isFollower())
+			{
 				Trace.myTrace("ChartScreen.as", "User is a follower. Ignoring");
+				return;
+			}
 			
 			try
 			{
@@ -326,7 +329,7 @@ package ui.screens
 					return;
 				}
 				
-				if (!appInBackground && glucoseChart != null && Constants.appInForeground)
+				if (!appInBackground && glucoseChart != null && Constants.appInForeground && BackgroundFetch.appIsInForeground())
 				{
 					Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
 					glucoseChart.addGlucose([reading]);
@@ -361,7 +364,7 @@ package ui.screens
 		{
 			clearTimeout(queueTimeout);
 			
-			if(!BackgroundFetch.appIsInForeground())
+			if(!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 			{
 				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
 				

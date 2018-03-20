@@ -1410,6 +1410,9 @@ package ui.chart
 			if (currentNumberOfMakers == previousNumberOfMakers && !displayLatestBGValue)
 				return;
 			
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			if (!displayLatestBGValue && !dummyModeActive)
 			{
 				if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || selectedGlucoseMarkerIndex == mainChartGlucoseMarkersList.length - 1)
