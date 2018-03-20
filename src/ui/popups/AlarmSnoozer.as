@@ -1,5 +1,7 @@
 package ui.popups
 {	
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.errors.IllegalOperationError;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
@@ -98,7 +100,7 @@ package ui.popups
 			}
 			
 			/* Display Callout */
-			if (Constants.appInForeground)
+			if (Constants.appInForeground && BackgroundFetch.appIsInForeground())
 			{
 				if (!isOpened)
 					displayCallout();
@@ -120,7 +122,7 @@ package ui.popups
 			if (isOpened)
 				return;
 			
-			if (!Constants.appInForeground)
+			if (!Constants.appInForeground || !BackgroundFetch.appIsInForeground())
 			{
 				if (closeTimer != null && closeTimer.running)
 					closeTimer.stop();
