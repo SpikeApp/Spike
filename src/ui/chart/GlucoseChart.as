@@ -8,6 +8,8 @@ package ui.chart
 	import flash.system.System;
 	import flash.utils.Timer;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -16,10 +18,18 @@ package ui.chart
 	import events.CalibrationServiceEvent;
 	import events.SpikeEvent;
 	
+	import feathers.controls.Button;
+	import feathers.controls.Callout;
+	import feathers.controls.DateTimeMode;
+	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
+	import feathers.layout.RelativePosition;
 	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
 	
 	import model.ModelLocator;
 	
@@ -28,12 +38,14 @@ package ui.chart
 	import starling.display.Quad;
 	import starling.display.Shape;
 	import starling.display.Sprite;
+	import starling.events.Event;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.utils.Align;
 	
 	import treatments.Treatment;
+	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -106,7 +118,7 @@ package ui.chart
 		private var graphDisplayTextSize:int = 20;
 		private var glucoseUnit:String = "mg/dL";
 		private var handPickerStrokeThickness:int = 1;
-		private var chartTopPadding:int = 50;
+		private var chartTopPadding:int = 70;
 		private var scrollerTopPadding:int = 5;
 		private var _displayLine:Boolean = false;
 		private var fakeChartMaskColor:uint = 0x20222a;
@@ -169,8 +181,13 @@ package ui.chart
 		private var treatmentsFirstRun:Boolean = true;
 		private var treatmentsActive:Boolean = true;
 		private var treatmentsContainer:Sprite;
+		private var treatmenstsList:Array = [];
 
 		private var mainChartYFactor:Number;
+
+		private var treatmentCallout:Callout;
+
+		private var iobDisplay:Label;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -268,6 +285,22 @@ package ui.chart
 			 */
 			yAxisContainer = drawYAxis();
 			addChild(yAxisContainer);
+			
+			/**
+			 * Add Treatments
+			 */
+			if (TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && treatmentsActive)
+			{
+				for (var i:int = 0; i < TreatmentsManager.treatmentsList.length; i++) 
+				{
+					var treatment:Treatment = TreatmentsManager.treatmentsList[i] as Treatment;
+					if (treatment != null)
+						addTreatment(treatment);
+				}
+				
+				//Update Display Treatments Values
+				calculateTotalIOB();
+			}
 			
 			/**
 			 * Scroller
@@ -594,6 +627,18 @@ package ui.chart
 			return chartContainer;
 		}
 		
+		private function calculateTotalIOB():void
+		{
+			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && iobDisplay != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
+			{
+				iobDisplay.text = "IOB: " + TreatmentsManager.getTotalIOB() + "U";
+			}
+			else
+			{
+				iobDisplay.text = "IOB: 0U";
+			}
+		}
+		
 		public function addTreatment(treatment:Treatment):void
 		{
 			//Setup initial timeline/mask properties
@@ -606,12 +651,134 @@ package ui.chart
 				treatmentsFirstRun = false;
 			}
 			
+			//Check treatment type
 			if (treatment.type == Treatment.TYPE_BOLUS)
 			{
+				//Create treatment marker and add it to the chart
 				var insulinMarker:InsulinMarker = new InsulinMarker(treatment);
 				insulinMarker.x = (insulinMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				insulinMarker.y = _graphHeight - (insulinMarker.radius * 1.66) - ((insulinMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				insulinMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 				treatmentsContainer.addChild(insulinMarker);
+				
+				insulinMarker.index = treatmenstsList.length;
+				treatmenstsList.push(insulinMarker);
+				
+				calculateTotalIOB();
+			}
+		}
+		
+		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				var treatment:ChartTreatment = e.currentTarget as ChartTreatment;
+				
+				var treatmentLayout:VerticalLayout = new VerticalLayout();
+				treatmentLayout.horizontalAlign = HorizontalAlign.CENTER;
+				treatmentLayout.gap = 10;
+				var treatmentContainer:LayoutGroup = new LayoutGroup();
+				treatmentContainer.layout = treatmentLayout;
+				
+				//Treatment Value
+				var treatmentValue:String;
+				if (treatment.treatment.type == Treatment.TYPE_BOLUS)
+					treatmentValue = treatment.treatment.insulinAmount + " U";
+				
+				var value:Label = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+				treatmentContainer.addChild(value);
+				
+				//Treatment Time
+				var time:DateTimeSpinner = new DateTimeSpinner();
+				time.editingMode = DateTimeMode.TIME;
+				//time.minimum = new Date(firstBGReadingTimeStamp);
+				//time.maximum = new Date(lastBGreadingTimeStamp);
+				time.value = new Date(treatment.treatment.timestamp);
+				time.height = 30;
+				treatmentContainer.addChild(time);
+				
+				//Action Buttons
+				var actionsLayout:HorizontalLayout = new HorizontalLayout();
+				actionsLayout.gap = 5;
+				var actionsContainer:LayoutGroup = new LayoutGroup();
+				actionsContainer.layout = actionsLayout;
+				
+				var moveBtn:Button = LayoutFactory.createButton("Move");
+				moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+				actionsContainer.addChild(moveBtn);
+				var deleteBtn:Button = LayoutFactory.createButton("Delete");
+				deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+				actionsContainer.addChild(deleteBtn);
+				treatmentContainer.addChild(actionsContainer);
+				
+				treatmentCallout = Callout.show(treatmentContainer, treatment, null, true);
+				
+				function onDelete(e:starling.events.Event):void
+				{
+					treatmentsContainer.removeChild(treatment);
+					treatmenstsList.removeAt(treatment.index);
+					
+					treatmentCallout.close(true);
+					
+					TreatmentsManager.deleteTreatment(treatment.treatment);
+					
+					treatment.dispose();
+					treatment = null;
+					
+					calculateTotalIOB();
+				}
+				
+				function onMove(e:starling.events.Event):void
+				{
+					var movedTimestamp:Number = time.value.valueOf();
+					var estimatedGlucoseValue:Number = TreatmentsManager.getEstimatedGlucose(movedTimestamp);
+					treatment.treatment.timestamp = movedTimestamp;
+					treatment.treatment.glucoseEstimated = estimatedGlucoseValue;
+					manageTreatments();
+					
+					treatmentCallout.close(true);
+					
+					calculateTotalIOB();
+					
+					//Update database
+					TreatmentsManager.updateTreatment(treatment.treatment);
+				}
+			}
+		}
+		
+		private function manageTreatments():void
+		{
+			if (treatmentsContainer == null || !treatmentsActive)
+				return;
+			
+			//Reposition Container
+			treatmentsContainer.x = mainChart.x;
+			treatmentsContainer.y = mainChart.y;
+			
+			if (treatmenstsList != null && treatmenstsList.length > 0)
+			{
+				//Loop through all treatments
+				for(var i:int = treatmenstsList.length - 1 ; i >= 0; i--)
+				{
+					var treatment:ChartTreatment = treatmenstsList[i];
+					if (treatment.treatment.timestamp < firstBGReadingTimeStamp)
+					{
+						//Treatment has expired (>24H). Discart it
+						treatmentsContainer.removeChild(treatment);
+						treatmenstsList.removeAt(i);
+						treatment.dispose();
+						treatment = null;
+					}
+					else
+					{
+						//Treatment is still valid. Reposition it.
+						treatment.x = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+						if (!isNaN(treatment.radius))
+							treatment.y = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+					}
+				}
 			}
 		}
 		
@@ -1114,7 +1281,9 @@ package ui.chart
 			currentNumberOfMakers = _dataSource.length;
 			calculateDisplayLabels();
 			
-			drawTimeline()
+			drawTimeline();
+			manageTreatments();
+			calculateTotalIOB();
 			
 			return true;
 		}
@@ -1358,11 +1527,7 @@ package ui.chart
 			}
 			
 			if(chartType == MAIN_CHART)
-			{
 				mainChartYFactor = scaleYFactor;
-				trace("lowestGlucoseValue C2:", lowestGlucoseValue);
-				trace("mainChartYFactor C2", mainChartYFactor);
-			}
 		}
 		
 		private function drawLine(chartType:String):void 
@@ -1673,11 +1838,19 @@ package ui.chart
 			glucoseTimeAgoDisplay.fontStyles.color = chartFontColor;
 			
 			//Glucose Time Display
-			glucoseSlopeDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, timeDisplayFont, Align.CENTER, false);
+			glucoseSlopeDisplay = GraphLayoutFactory.createChartStatusText("0", chartFontColor, timeDisplayFont, Align.CENTER, false);
 			glucoseSlopeDisplay.x = glucoseTimeAgoDisplay.x;
 			glucoseSlopeDisplay.y = glucoseTimeAgoDisplay.y + glucoseTimeAgoDisplay.height + 2;
-			glucoseTimeAgoDisplay.text = "";
+			glucoseSlopeDisplay.invalidate();
+			glucoseSlopeDisplay.validate();
+			glucoseSlopeDisplay.text = "";
 			addChild(glucoseSlopeDisplay);
+			
+			//IOB
+			iobDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, timeDisplayFont, Align.LEFT, false, 150);
+			iobDisplay.x = glucoseTimeAgoDisplay.x;
+			iobDisplay.y = glucoseSlopeDisplay.y + glucoseSlopeDisplay.height + 2;
+			addChild(iobDisplay);
 		}
 		
 		public function showLine():void
@@ -2016,7 +2189,10 @@ package ui.chart
 		private function onUpdateTimerRefresh(event:flash.events.Event = null):void
 		{
 			if (BackgroundFetch.appIsInForeground())
+			{
 				calculateDisplayLabels();
+				calculateTotalIOB();
+			}
 		}
 		
 		private function onCaibrationReceived(e:CalibrationServiceEvent):void

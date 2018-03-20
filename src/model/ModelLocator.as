@@ -52,6 +52,8 @@ package model
 	import services.WatchService;
 	import services.WidgetService;
 	
+	import treatments.TreatmentsManager;
+	
 	import ui.AppInterface;
 	import ui.InterfaceController;
 	import ui.popups.AlarmSnoozer;
@@ -145,6 +147,7 @@ package model
 				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
 				
 				_bgReadings = de.data as Array;
+				TreatmentsManager.init();
 				AppInterface.instance.init(); //Start rendering interface now that all data is available
 				AlertManager.init();
 				AlarmSnoozer.init();

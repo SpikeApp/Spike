@@ -5,6 +5,7 @@ package treatments
 	import flash.events.EventDispatcher;
 	
 	import database.BgReading;
+	import database.Database;
 	
 	import events.TreatmentsEvent;
 	
@@ -37,6 +38,84 @@ package treatments
 		{
 			if (_instance != null)
 				throw new Error("TreatmentsManager is not meant to be instantiated!");
+		}
+		
+		public static function init():void
+		{
+			var now:Number = new Date().valueOf();
+			var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TIME_24_HOURS, now);
+			
+			if (dbTreatments != null && dbTreatments.length > 0)
+			{
+				for (var i:int = 0; i < dbTreatments.length; i++) 
+				{
+					var dbTreatment:Object = dbTreatments[i] as Object;
+					if (dbTreatment == null)
+						continue;
+					
+					var treatment:Treatment = new Treatment
+					(
+						dbTreatment.type,
+						dbTreatment.lastmodifiedtimestamp,
+						dbTreatment.insulinamount,
+						dbTreatment.insulinid,
+						dbTreatment.carbs,
+						dbTreatment.glucose,
+						dbTreatment.glucoseestimated,
+						dbTreatment.note
+					);
+					treatment.ID = dbTreatment.id;
+					
+					treatmentsList.push(treatment);
+				}
+			}
+		}
+		
+		public static function getTotalIOB():Number
+		{
+			var totalIOB:Number = 0;
+			
+			if (treatmentsList != null && treatmentsList.length > 0)
+			{
+				var loopLength:int = treatmentsList.length;
+				for (var i:int = 0; i < loopLength; i++) 
+				{
+					var treatment:Treatment = treatmentsList[i];
+					if (treatment != null && (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS))
+					{
+						totalIOB += treatment.calculateIOB();
+					}
+				}
+				
+			}
+			
+			totalIOB = Math.floor(totalIOB * 100) / 100;
+			
+			return totalIOB;
+		}
+		
+		public static function deleteTreatment(treatment:Treatment):void
+		{
+			//Delete from Spike
+			for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+			{
+				var spikeTreatment:Treatment = treatmentsList[i] as Treatment;
+				if (treatment.ID == spikeTreatment.ID)
+				{
+					treatmentsList.removeAt(i);
+					spikeTreatment = null;
+					break;
+				}
+			}
+			
+			//Delete from databse
+			Database.deleteTreatmentSynchronous(treatment);
+		}
+		
+		public static function updateTreatment(treatment:Treatment):void
+		{
+			//Update in Database
+			Database.updateTreatmentSynchronous(treatment);
 		}
 		
 		public static function addInsulin():void
@@ -114,7 +193,7 @@ package treatments
 						Treatment.TYPE_BOLUS,
 						treatmentTime.value.valueOf(),
 						insulinValue,
-						2,
+						-1,
 						0,
 						0,
 						getEstimatedGlucose(treatmentTime.value.valueOf()),
@@ -126,11 +205,14 @@ package treatments
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Insert in DB
+					Database.insertTreatmentSynchronous(treatment);
 				}
 			}
 		}
 		
-		private static function getEstimatedGlucose(timestamp:Number):Number
+		public static function getEstimatedGlucose(timestamp:Number):Number
 		{
 			var estimatedGlucose:Number = 100;
 			

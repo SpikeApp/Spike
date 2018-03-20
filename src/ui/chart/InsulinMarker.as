@@ -7,17 +7,13 @@ package ui.chart
 	import starling.display.Shape;
 	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
-	import starling.filters.BlurFilter;
 	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
 	
-	public class InsulinMarker extends Sprite
+	public class InsulinMarker extends ChartTreatment
 	{
-		public var treatment:Treatment;
-		public var radius:Number;
-		
 		public function InsulinMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
@@ -28,7 +24,7 @@ package ui.chart
 		private function draw():void
 		{
 			//Radius
-			radius = 4 + treatment.insulin;
+			this.radius = 4 + treatment.insulinAmount;
 			if (radius > 15)
 				radius = 15;
 			
@@ -48,7 +44,7 @@ package ui.chart
 			addChild(stroke);
 			
 			//Label
-			var label:Label = LayoutFactory.createLabel(treatment.insulin + " U", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
+			var label:Label = LayoutFactory.createLabel(treatment.insulinAmount + " U", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			label.validate();
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 3;
