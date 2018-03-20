@@ -1,5 +1,10 @@
 1.1.5
-FIX: Fixed some inconsistencies in the Today Widget that resulted in the line coloring for mg/dL users not being 100% correct.
+FIX: Fixed some inconsistencies on the Today Widget that resulted in the line coloring for mg/dL users not being 100% correct. It's more accurate now.
+FIX: Some fixes for the nightscout upload events related to locales and timezones
+FIX: Fix for a rare bug in the NightscoutService that could crash Spike
+FIX: Fix for a bug in iOS that could crash Spike while in background when writting values to the app badge.
+FIX: A lot of small fizes and safeguards all over to make Spike more stable.
+ENHANCEMENT: Global exception handling. If an error occurs anywhere in Spike's code, SPike will try to recover and will notify developers of the issue so a fix can be included in subsequent updates.
 
 1.1.4
 FEATURE: IFTTT support! Want Spike to make a phone call or send an SMS to a caregiver when your blood sugar is too low? Maybe you want to change the colors of your light bulbs at home when your blood sugar reaches a certain value? What about having your child's Spike send you a notification to your phone when he/she is too far away from the phone when at school and Spike is missing readings? Or maybe notify your caregivers when you snooze an alarm so they know you're ok? The possibilities are exciting and vast. IFTTT follows the "if this then that" model and it's up to your imagination to create IFTTT recipes for Spike that fit your needs. Be sure to go to settings -> integration -> IFTTT to activate this feature and read the instructions. Don't forget to share your favorite Spike IFTTT recipes on our Facebook support group!
