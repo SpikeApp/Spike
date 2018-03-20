@@ -629,6 +629,9 @@ package ui.chart
 		
 		private function calculateTotalIOB():void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && iobDisplay != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
 				iobDisplay.text = "IOB: " + TreatmentsManager.getTotalIOB() + "U";
