@@ -64,8 +64,6 @@ package
 		
 		private function initStarling():void 
 		{
-			NativeApplication.nativeApplication.executeInBackground = true;
-			
 			/* Initialize and start the Starling instance */
 			starling = new Starling( AppInterface, stage, null, null, "auto", Context3DProfile.BASELINE_EXTENDED );
 			starling.enableErrorChecking = false;
@@ -99,6 +97,7 @@ package
 		private function onActivate( event:flash.events.Event ):void 
 		{
 			//Start Starling
+			NativeApplication.nativeApplication.executeInBackground = false;
 			starling.start();
 			
 			//Push Chart Screen
@@ -130,6 +129,7 @@ package
 			Constants.appInForeground = false;
 			
 			//Stop Starling 
+			NativeApplication.nativeApplication.executeInBackground = true;
 			starling.stop( true );
 			
 			//Notify Services
