@@ -28,6 +28,7 @@ package database
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
+	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -2069,7 +2070,7 @@ package database
 				text += "'" + treatment.ID + "', ";
 				text += "'" + treatment.type + "', ";
 				text += treatment.insulinAmount + ", ";
-				text += treatment.insulinID + ", ";
+				text += "'" + treatment.insulinID + "', ";
 				text += treatment.carbs + ", ";
 				text += treatment.glucose + ", ";
 				text += treatment.glucoseEstimated + ", ";
@@ -2107,7 +2108,7 @@ package database
 				"id = '" + treatment.ID + "', " +
 				"type = '" + treatment.type + "', " +
 				"insulinamount = " + treatment.insulinAmount + ", " +
-				"insulinid = " + treatment.insulinID + ", " +
+				"insulinid = '" + treatment.insulinID + "', " +
 				"carbs = " + treatment.carbs + ", " +
 				"glucose = " + treatment.glucose + ", " +
 				"glucoseestimated = " + treatment.glucoseEstimated + ", " +
@@ -2167,6 +2168,10 @@ package database
 				conn.close();
 				if (result.data != null)
 					returnValue = result.data;
+				
+				trace("DB");
+				trace(ObjectUtil.toString(returnValue));
+				
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();
 				dispatchInformation('error_while_getting_insulins', error.message + " - " + error.details);

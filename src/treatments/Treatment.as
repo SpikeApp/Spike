@@ -17,8 +17,8 @@ package treatments
 		/* Properties */
 		public var type:String;
 		public var insulinAmount:Number;
-		public var insulinID:Number = -1;
-		public var dia:Number = 2;
+		public var insulinID:String = "";
+		public var dia:Number = 3;
 		public var carbs:Number;
 		public var glucose:Number;
 		public var glucoseEstimated:Number;
@@ -27,11 +27,13 @@ package treatments
 		public var ID:String;
 		private var insulinScaleFactor:Number;
 		
-		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:Number = -1, carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "")
+		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "")
 		{
 			this.type = type;
 			this.insulinAmount = insulin;
-			this.dia = dia;
+			if (insulinID != "")
+				this.dia = ProfileManager.getInsulin(insulinID).dia;
+			this.insulinID = insulinID;
 			this.carbs = carbs;
 			this.glucose = glucose;
 			this.glucoseEstimated = glucoseEstimated;

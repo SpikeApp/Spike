@@ -52,6 +52,7 @@ package model
 	import services.WatchService;
 	import services.WidgetService;
 	
+	import treatments.ProfileManager;
 	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
@@ -147,6 +148,7 @@ package model
 				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
 				
 				_bgReadings = de.data as Array;
+				ProfileManager.init();
 				TreatmentsManager.init();
 				AppInterface.instance.init(); //Start rendering interface now that all data is available
 				AlertManager.init();

@@ -44,6 +44,8 @@ package ui.chart
 	import starling.events.TouchPhase;
 	import starling.utils.Align;
 	
+	import treatments.Insulin;
+	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -687,8 +689,13 @@ package ui.chart
 				
 				//Treatment Value
 				var treatmentValue:String;
-				if (treatment.treatment.type == Treatment.TYPE_BOLUS)
-					treatmentValue = treatment.treatment.insulinAmount + " U";
+				var treatmentNotes:String;
+				if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+				{
+					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
+					treatmentValue = (insulin != null ? insulin.name + ": " : "") + treatment.treatment.insulinAmount + " U";
+					treatmentNotes = treatment.treatment.note;
+				}
 				
 				var value:Label = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
 				treatmentContainer.addChild(value);
@@ -701,6 +708,14 @@ package ui.chart
 				time.value = new Date(treatment.treatment.timestamp);
 				time.height = 30;
 				treatmentContainer.addChild(time);
+				
+				if (treatmentNotes != "")
+				{
+					var notes:Label = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
+					notes.wordWrap = true;
+					notes.maxWidth = 150;
+					treatmentContainer.addChild(notes);
+				}
 				
 				//Action Buttons
 				var actionsLayout:HorizontalLayout = new HorizontalLayout();
