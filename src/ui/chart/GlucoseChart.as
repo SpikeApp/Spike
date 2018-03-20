@@ -585,6 +585,9 @@ package ui.chart
 		
 		private function drawTimeline():void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			//Safeguards
 			if (mainChart == null || dummyModeActive || !timelineActive)
 				return;
@@ -931,7 +934,7 @@ package ui.chart
 		
 		public function addGlucose(BGReadingsList:Array):Boolean
 		{
-			if(BGReadingsList == null || BGReadingsList.length == 0 || !BackgroundFetch.appIsInForeground())
+			if(BGReadingsList == null || BGReadingsList.length == 0 || !BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 				return false;
 			
 			var latestTimestamp:Number = Number(BGReadingsList[BGReadingsList.length - 1].timestamp);
@@ -1089,6 +1092,9 @@ package ui.chart
 		
 		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int):void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			/**
 			 * Calculation of X Axis scale factor
 			 */
@@ -1328,6 +1334,9 @@ package ui.chart
 		
 		private function drawLine(chartType:String):void 
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			//Line container
 			var line:Shape = new Shape();
 			
@@ -1646,6 +1655,9 @@ package ui.chart
 		
 		public function showLine():void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			if(_displayLine == false)
 			{
 				_displayLine = true;
@@ -1661,6 +1673,9 @@ package ui.chart
 		
 		public function hideLine():void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			if(_displayLine == true)
 			{
 				_displayLine = false;
@@ -1676,6 +1691,9 @@ package ui.chart
 		
 		private function disposeLine(chartType:String):void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			var sourceList:Array;
 			if(chartType == MAIN_CHART)
 				sourceList = mainChartGlucoseMarkersList;
@@ -1695,6 +1713,9 @@ package ui.chart
 		
 		private function destroyAllLines(scrollerIncluded:Boolean = true):void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+				return;
+			
 			var i:int = 0
 			if(mainChartLineList != null && mainChartLineList.length > 0)
 			{
@@ -1970,12 +1991,13 @@ package ui.chart
 		
 		private function onAppInForeground (e:SpikeEvent):void
 		{
-			calculateDisplayLabels();
+			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+				calculateDisplayLabels();
 		}
 		
 		private function onUpdateTimerRefresh(event:flash.events.Event = null):void
 		{
-			if (BackgroundFetch.appIsInForeground())
+			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
 				calculateDisplayLabels();
 		}
 		
