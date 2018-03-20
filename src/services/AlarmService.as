@@ -1073,7 +1073,6 @@ package services
 				Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 				
 				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
-					.setCount(BadgeBuilder.getAppBadge())
 					.setId(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT)
 					.setAlert(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
 					.setTitle(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
