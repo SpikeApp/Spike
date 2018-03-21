@@ -10,6 +10,7 @@ package treatments
 		public static const TYPE_CORRECTION_BOLUS:String = "correctionBolus";
 		public static const TYPE_CARBS_CORRECTION:String = "carbCorrection";
 		public static const TYPE_GLUCOSE_CHECK:String = "glucoseCheck";
+		public static const TYPE_NOTE:String = "note";
 		
 		/* Internal Constants */
 		public static const INSULIN_PEAK:uint = 75;

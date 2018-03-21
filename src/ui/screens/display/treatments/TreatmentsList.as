@@ -18,6 +18,7 @@ package ui.screens.display.treatments
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
+	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
 	[ResourceBundle("chartscreen")]
@@ -32,9 +33,13 @@ package ui.screens.display.treatments
 		private var calibrationImage:Image;
 		private var bolusTexture:Texture;
 		private var bolusImage:Image;
+		private var noteTexture:Texture;
+		private var noteImage:Image;
+		
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
+
 		
 		public function TreatmentsList()
 		{
@@ -64,6 +69,8 @@ package ui.screens.display.treatments
 			calibrationImage = new Image(calibrationTexture);
 			bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
 			bolusImage = new Image(bolusTexture);
+			noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
+			noteImage = new Image(noteTexture);
 		}
 		
 		private function setupContent():void
@@ -73,25 +80,16 @@ package ui.screens.display.treatments
 				calibrationButtonEnabled = true;
 			
 			if (ModelLocator.bgReadings.length > 0)
-				var bolusEnabled:Boolean = true;
+				var treatmentsEnabled:Boolean = true;
 			
-			//if (ModelLocator.INTERNAL_TESTING == false)
-			//{
-			//dataProvider = new ListCollection(
-				//[
-					//{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable:calibrationButtonEnabled, id: 1 }
-				//]);
-			//}
-			//else
-			//{
 			dataProvider = new ListCollection
 			(
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 },
-					{ label: "Bolus", icon: bolusImage, selectable: bolusEnabled, id: 2 }
+					{ label: "Bolus", icon: bolusImage, selectable: treatmentsEnabled, id: 2 },
+					{ label: "Note", icon: noteImage, selectable: treatmentsEnabled, id: 3 }
 				]
 			);
-			//}
 			
 			//Calibration Item Renderer Factory
 			function calibrationItemFactory():IListItemRenderer
@@ -111,7 +109,7 @@ package ui.screens.display.treatments
 			}
 			setItemRendererFactoryWithID( "calibration-item", calibrationItemFactory );
 			
-			function bolusItemFactory():IListItemRenderer
+			function treatmentItemFactory():IListItemRenderer
 			{
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
@@ -119,22 +117,22 @@ package ui.screens.display.treatments
 				item.itemHasSelectable = true;
 				item.selectableField = "selectable";
 				item.gap = 5;
-				if(!bolusEnabled)
+				if(!treatmentsEnabled)
 					item.alpha = 0.4;
 				item.paddingLeft = 8;
 				item.paddingRight = 14;
 				item.isQuickHitAreaEnabled = true;
 				return item;
 			}
-			setItemRendererFactoryWithID( "bolus-item", bolusItemFactory );
+			setItemRendererFactoryWithID( "treatment-item", treatmentItemFactory );
 			
 			//Menu Factory
 			factoryIDFunction = function( item:Object, index:int ):String
 			{
 				if(index === 0)
 					return "calibration-item";
-				else if(index == 1)
-					return "bolus-item";
+				else if(index == 1 || index == 2)
+					return "treatment-item";
 				
 				return "default-item";
 			};
@@ -163,7 +161,13 @@ package ui.screens.display.treatments
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
-				TreatmentsManager.addInsulin();
+				TreatmentsManager.addTreatment(Treatment.TYPE_BOLUS);
+			}
+			else if(treatmentID == 3) //Note
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_NOTE);
 			}
 		}
 		
@@ -184,6 +188,30 @@ package ui.screens.display.treatments
 			{
 				calibrationImage.dispose();
 				calibrationImage = null;
+			}
+			
+			if (bolusTexture != null)
+			{
+				bolusTexture.dispose();
+				bolusTexture = null;
+			}
+			
+			if (bolusImage != null)
+			{
+				bolusImage.dispose();
+				bolusImage = null;
+			}
+			
+			if (noteTexture != null)
+			{
+				noteTexture.dispose();
+				noteTexture = null;
+			}
+			
+			if (noteImage != null)
+			{
+				noteImage.dispose();
+				noteImage = null;
 			}
 			
 			super.dispose();

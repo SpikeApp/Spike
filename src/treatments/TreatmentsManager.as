@@ -4,8 +4,6 @@ package treatments
 	
 	import flash.events.EventDispatcher;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.Database;
 	
@@ -15,14 +13,11 @@ package treatments
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
-	import feathers.controls.TextArea;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
-	import feathers.layout.HorizontalLayout;
-	import feathers.layout.RelativePosition;
 	import feathers.layout.VerticalLayout;
 	
 	import model.ModelLocator;
@@ -36,6 +31,7 @@ package treatments
 	{
 		/* Constants */
 		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
+		public static const TREATMENT_TYPE_BOLUS:String = "bolus";
 		
 		/* Instance */
 		private static var _instance:TreatmentsManager = new TreatmentsManager();
@@ -129,11 +125,8 @@ package treatments
 			Database.updateTreatmentSynchronous(treatment);
 		}
 		
-		public static function addInsulin():void
-		{
-			//Logical
-			var canAddInsulin:Boolean = true;
-			
+		public static function addTreatment(type:String):void
+		{	
 			//Time
 			var now:Number = new Date().valueOf();
 			
@@ -146,21 +139,28 @@ package treatments
 			displayContainer.layout = displayLayout;
 			
 			//Fields
-			//Insulin Amout
-			var insulinTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
-			insulinTextInput.maxChars = 5;
-			displayContainer.addChild(insulinTextInput);
+			if (type == Treatment.TYPE_BOLUS)
+			{
+				//Logical
+				var canAddInsulin:Boolean = true;
+				
+				//Insulin Amout
+				var insulinTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				insulinTextInput.maxChars = 5;
+				displayContainer.addChild(insulinTextInput);
+			}
 			
-			//Insulin Time
+			//Treatment Time
 			var treatmentTime:DateTimeSpinner = new DateTimeSpinner();
 			treatmentTime.minimum = new Date(now - TIME_24_HOURS);
 			treatmentTime.maximum = new Date(now);
 			treatmentTime.value = new Date();
 			treatmentTime.height = 30;
-			//treatmentTime.width = 100;
 			displayContainer.addChild(treatmentTime);
 			treatmentTime.validate();
-			insulinTextInput.width = treatmentTime.width;
+			
+			if (type == Treatment.TYPE_BOLUS)
+				insulinTextInput.width = treatmentTime.width;
 			
 			//Other Fields constainer
 			var otherFieldsLayout:VerticalLayout = new VerticalLayout();
@@ -168,62 +168,78 @@ package treatments
 			otherFieldsLayout.gap = 10;
 			var otherFieldsConstainer:LayoutGroup = new LayoutGroup();
 			otherFieldsConstainer.layout = otherFieldsLayout;
-			otherFieldsConstainer.width = insulinTextInput.width;
+			otherFieldsConstainer.width = treatmentTime.width;
 			displayContainer.addChild(otherFieldsConstainer);
 			
-			//Insulin Type
-			var insulinList:PickerList = LayoutFactory.createPickerList();
-			var insulinDataProvider:ArrayCollection = new ArrayCollection();
-			if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
+			if (type == Treatment.TYPE_BOLUS)
 			{
-				var numInsulins:int = ProfileManager.insulinsList.length
-				for (var i:int = 0; i < numInsulins; i++) 
+				//Insulin Type
+				var insulinList:PickerList = LayoutFactory.createPickerList();
+				var insulinDataProvider:ArrayCollection = new ArrayCollection();
+				if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
 				{
-					var insulin:Insulin = ProfileManager.insulinsList[i];
-					insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
+					var numInsulins:int = ProfileManager.insulinsList.length
+					for (var i:int = 0; i < numInsulins; i++) 
+					{
+						var insulin:Insulin = ProfileManager.insulinsList[i];
+						insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
+					}
 				}
+				else
+				{
+					insulinList.prompt = "No available insulins";
+					insulinList.selectedIndex = -1;
+					canAddInsulin = false;
+				}
+				insulinList.dataProvider = insulinDataProvider;
+				insulinList.popUpContentManager = new DropDownPopUpContentManager();
+				otherFieldsConstainer.addChild(insulinList);
 			}
-			else
-			{
-				insulinList.prompt = "No available insulins";
-				insulinList.selectedIndex = -1;
-				canAddInsulin = false;
-			}
-			insulinList.dataProvider = insulinDataProvider;
-			insulinList.popUpContentManager = new DropDownPopUpContentManager();
-			otherFieldsConstainer.addChild(insulinList);
 			
 			var notes:TextInput = LayoutFactory.createTextInput(false, false, treatmentTime.width, HorizontalAlign.CENTER);
-			notes.prompt = "Notes";
+			notes.prompt = "Note";
+			notes.maxChars = 50;
 			otherFieldsConstainer.addChild(notes);
 			
 			//Action Buttons
+			var actionFunction:Function;
+			if (type == Treatment.TYPE_BOLUS)
+				actionFunction = onInsulinEntered;
+			else if (type == Treatment.TYPE_NOTE)
+				actionFunction = onNotenEntered;
+			
 			var actionButtons:Array = [];
 			actionButtons.push( { label: "CANCEL" } );
-			if (canAddInsulin)
-				actionButtons.push( { label: "ADD", triggered: onInsulinEntered } );
+			if ((type == Treatment.TYPE_BOLUS && canAddInsulin) || type == Treatment.TYPE_NOTE)
+				actionButtons.push( { label: "ADD", triggered: actionFunction } );
 			
-			var insulinPopup:Alert = AlertManager.showActionAlert
+			//Popup
+			var treatmentTitle:String;
+			if (type == Treatment.TYPE_BOLUS)
+				treatmentTitle = "Enter Units";
+			else if (type == Treatment.TYPE_NOTE)
+				treatmentTitle = "Enter Note";
+				
+			var treatmentPopup:Alert = AlertManager.showActionAlert
 				(
-					"Enter Units",
+					treatmentTitle,
 					"",
 					Number.NaN,
 					actionButtons,
 					HorizontalAlign.JUSTIFY,
 					displayContainer
 				);
-			insulinPopup.gap = 0;
-			insulinPopup.headerProperties.maxHeight = 30;
-			insulinPopup.buttonGroupProperties.paddingTop = -10;
-			insulinPopup.buttonGroupProperties.gap = 10;
-			insulinPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
-			insulinTextInput.setFocus();
+			treatmentPopup.gap = 0;
+			treatmentPopup.headerProperties.maxHeight = 30;
+			treatmentPopup.buttonGroupProperties.paddingTop = -10;
+			treatmentPopup.buttonGroupProperties.gap = 10;
+			treatmentPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 			
-			treatmentTime.addEventListener(FeathersEventType.CREATION_COMPLETE, onCreationComplete);
-			function onCreationComplete(e:Event):void
-			{
-				insulinPopup.validate();
-			}
+			//Keyboard Focus
+			if (type == Treatment.TYPE_BOLUS)
+				insulinTextInput.setFocus();
+			else if (type == Treatment.TYPE_NOTE)
+				notes.setFocus();
 			
 			function onInsulinEntered (e:Event):void
 			{
@@ -243,13 +259,11 @@ package treatments
 					
 					function onAskNewBolus():void
 					{
-						addInsulin();
+						addTreatment(type);
 					}
 				}
 				else
 				{
-					trace("insulinList.selectedItem.id", insulinList.selectedItem.id);
-					
 					var treatment:Treatment = new Treatment
 					(
 						Treatment.TYPE_BOLUS,
@@ -261,6 +275,51 @@ package treatments
 						getEstimatedGlucose(treatmentTime.value.valueOf()),
 						notes.text
 					)
+					
+					//Add to list
+					treatmentsList.push(treatment);
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Insert in DB
+					Database.insertTreatmentSynchronous(treatment);
+				}
+			}
+			
+			function onNotenEntered (e:Event):void
+			{
+				if (notes == null || notes.text == null || !BackgroundFetch.appIsInForeground())
+					return;
+				
+				if (notes.text == "")
+				{
+					AlertManager.showSimpleAlert
+						(
+							"Alert",
+							"Note cannot be empty!",
+							Number.NaN,
+							onAskNewNote
+						);
+					
+					function onAskNewNote():void
+					{
+						addTreatment(type);
+					}
+				}
+				else
+				{
+					var treatment:Treatment = new Treatment
+						(
+							Treatment.TYPE_NOTE,
+							treatmentTime.value.valueOf(),
+							0,
+							"",
+							0,
+							0,
+							getEstimatedGlucose(treatmentTime.value.valueOf()),
+							notes.text
+						)
 					
 					//Add to list
 					treatmentsList.push(treatment);

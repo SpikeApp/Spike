@@ -5,7 +5,6 @@ package ui.chart
 	import feathers.layout.VerticalAlign;
 	
 	import starling.display.Shape;
-	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
 	
 	import treatments.Treatment;

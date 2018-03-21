@@ -8,8 +8,6 @@ package ui.chart
 	import flash.system.System;
 	import flash.utils.Timer;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -27,7 +25,6 @@ package ui.chart
 	import feathers.controls.LayoutGroup;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
-	import feathers.layout.RelativePosition;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
@@ -160,6 +157,7 @@ package ui.chart
 		//Movement
 		private var scrollMultiplier:Number;
 		private var mainChartXFactor:Number;
+		private var mainChartYFactor:Number;
 		private var displayLatestBGValue:Boolean = true;
 		private var selectedGlucoseMarkerIndex:int;
 		
@@ -184,12 +182,8 @@ package ui.chart
 		private var treatmentsActive:Boolean = true;
 		private var treatmentsContainer:Sprite;
 		private var treatmenstsList:Array = [];
-
-		private var mainChartYFactor:Number;
-
 		private var treatmentCallout:Callout;
-
-		private var iobDisplay:Label;
+		private var IOBPill:ChartPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -634,13 +628,18 @@ package ui.chart
 			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 				return;
 			
-			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && iobDisplay != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
+			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
-				iobDisplay.text = "IOB: " + TreatmentsManager.getTotalIOB() + "U";
+				IOBPill.setValue(TreatmentsManager.getTotalIOB() + "U");
+				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin;
+				IOBPill.visible = true;
 			}
-			else
+			
+			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
 			{
-				iobDisplay.text = "IOB: 0U";
+				IOBPill.setValue("0U");
+				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin;
+				IOBPill.visible = true;
 			}
 		}
 		
@@ -657,7 +656,7 @@ package ui.chart
 			}
 			
 			//Check treatment type
-			if (treatment.type == Treatment.TYPE_BOLUS)
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 			{
 				//Create treatment marker and add it to the chart
 				var insulinMarker:InsulinMarker = new InsulinMarker(treatment);
@@ -671,6 +670,21 @@ package ui.chart
 				
 				calculateTotalIOB();
 			}
+			else if (treatment.type == Treatment.TYPE_NOTE)
+			{
+				//Create treatment marker and add it to the chart
+				var noteMarker:NoteMarker = new NoteMarker(treatment);
+				noteMarker.x = ((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius;
+				noteMarker.y = _graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3);
+				noteMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+				treatmentsContainer.addChild(noteMarker);
+				
+				noteMarker.index = treatmenstsList.length;
+				treatmenstsList.push(noteMarker);
+			}
+			
+			if (mainChartMask != null && mainChartContainer != null)
+				mainChartContainer.addChild(mainChartMask);
 		}
 		
 		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
@@ -688,17 +702,19 @@ package ui.chart
 				treatmentContainer.layout = treatmentLayout;
 				
 				//Treatment Value
-				var treatmentValue:String;
-				var treatmentNotes:String;
+				var treatmentValue:String = "";
+				var treatmentNotes:String = treatmentNotes = treatment.treatment.note;
 				if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
 					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
 					treatmentValue = (insulin != null ? insulin.name + ": " : "") + treatment.treatment.insulinAmount + " U";
-					treatmentNotes = treatment.treatment.note;
 				}
 				
-				var value:Label = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
-				treatmentContainer.addChild(value);
+				if (treatmentValue != "")
+				{
+					var value:Label = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+					treatmentContainer.addChild(value);
+				}
 				
 				//Treatment Time
 				var time:DateTimeSpinner = new DateTimeSpinner();
@@ -792,9 +808,16 @@ package ui.chart
 					else
 					{
 						//Treatment is still valid. Reposition it.
-						treatment.x = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
-						if (!isNaN(treatment.radius))
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+						{
+							treatment.x = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 							treatment.y = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+						}
+						else if (treatment.treatment.type == Treatment.TYPE_NOTE)
+						{
+							treatment.x = ((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius;
+							treatment.y = _graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2);
+						}
 					}
 				}
 			}
@@ -1841,8 +1864,10 @@ package ui.chart
 			var yPos:Number = 3 * DeviceInfo.getVerticalPaddingMultipier() * userBGFontMultiplier;
 			
 			//Glucose Value Display
-			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
+			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("0", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
 			glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width -glucoseStatusLabelsMargin;
+			glucoseValueDisplay.validate();
+			glucoseValueDisplay.text = "";
 			addChild(glucoseValueDisplay);
 			
 			//Glucose Retro Display
@@ -1865,10 +1890,11 @@ package ui.chart
 			addChild(glucoseSlopeDisplay);
 			
 			//IOB
-			iobDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, timeDisplayFont, Align.LEFT, false, 150);
-			iobDisplay.x = glucoseTimeAgoDisplay.x;
-			iobDisplay.y = glucoseSlopeDisplay.y + glucoseSlopeDisplay.height + 2;
-			addChild(iobDisplay);
+			IOBPill = new ChartPill(ChartPill.TYPE_IOB);
+			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplay.height - 5;
+			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin;
+			IOBPill.visible = false;
+			addChild(IOBPill);
 		}
 		
 		public function showLine():void
