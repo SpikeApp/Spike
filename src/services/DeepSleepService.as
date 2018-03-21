@@ -156,6 +156,10 @@ package services
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) == "true")
 				{
 					soundPlayer = null;
+					
+					if (soundFile == null || soundFileNight == null || soundTransformNight == null || soundTransform == null)
+						createSoundProperties();
+					
 					if (hours >= 1 && hours <= 7)
 					{
 						//Night mode, play a bigger sound to try an further avoid suspension, also add some volume
