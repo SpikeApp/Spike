@@ -5,6 +5,7 @@ package treatments
 	import flash.events.EventDispatcher;
 	
 	import database.BgReading;
+	import database.CommonSettings;
 	import database.Database;
 	
 	import events.TreatmentsEvent;
@@ -17,11 +18,8 @@ package treatments
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.data.ArrayCollection;
-	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalLayout;
-	import feathers.motion.Reveal;
-	import feathers.motion.Slide;
 	
 	import model.ModelLocator;
 	
@@ -161,6 +159,16 @@ package treatments
 				insulinSpacer.height = 10;
 				displayContainer.addChild(insulinSpacer);
 			}
+			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
+			{
+				//Glucose Amout
+				var glucoseTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				glucoseTextInput.maxChars = 3;
+				displayContainer.addChild(glucoseTextInput);
+				var glucoseSpacer:Sprite = new Sprite();
+				glucoseSpacer.height = 10;
+				displayContainer.addChild(glucoseSpacer);
+			}
 			
 			//Treatment Time
 			var treatmentTime:DateTimeSpinner = new DateTimeSpinner();
@@ -176,6 +184,8 @@ package treatments
 			
 			if (type == Treatment.TYPE_BOLUS)
 				insulinTextInput.width = treatmentTime.width;
+			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
+				glucoseTextInput.width = treatmentTime.width;
 			
 			//Other Fields constainer
 			var otherFieldsLayout:VerticalLayout = new VerticalLayout();
@@ -223,10 +233,12 @@ package treatments
 				actionFunction = onInsulinEntered;
 			else if (type == Treatment.TYPE_NOTE)
 				actionFunction = onNoteEntered;
+			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
+				actionFunction = onBGCheckEntered;
 			
 			var actionButtons:Array = [];
 			actionButtons.push( { label: "CANCEL" } );
-			if ((type == Treatment.TYPE_BOLUS && canAddInsulin) || type == Treatment.TYPE_NOTE)
+			if ((type == Treatment.TYPE_BOLUS && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK)
 				actionButtons.push( { label: "ADD", triggered: actionFunction } );
 			
 			//Popup
@@ -235,6 +247,8 @@ package treatments
 				treatmentTitle = "Enter Units";
 			else if (type == Treatment.TYPE_NOTE)
 				treatmentTitle = "Enter Note";
+			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
+				treatmentTitle = "Enter Blood Glucose";
 				
 			var treatmentPopup:Alert = AlertManager.showActionAlert
 				(
@@ -256,6 +270,8 @@ package treatments
 				insulinTextInput.setFocus();
 			else if (type == Treatment.TYPE_NOTE)
 				notes.setFocus();
+			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
+				glucoseTextInput.setFocus();
 			
 			function onInsulinEntered (e:Event):void
 			{
@@ -290,7 +306,7 @@ package treatments
 						0,
 						getEstimatedGlucose(treatmentTime.value.valueOf()),
 						notes.text
-					)
+					);
 					
 					//Add to list
 					treatmentsList.push(treatment);
@@ -301,8 +317,59 @@ package treatments
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
 				}
+			}
+			
+			function onBGCheckEntered (e:Event):void
+			{
+				if (glucoseTextInput == null || glucoseTextInput.text == null || !BackgroundFetch.appIsInForeground())
+					return;
 				
-				treatmentPopup.dispose();
+				var glucoseValue:Number = Number((glucoseTextInput.text as String).replace(",","."));
+				if (isNaN(glucoseValue) || glucoseTextInput.text == "") 
+				{
+					AlertManager.showSimpleAlert
+						(
+							"Alert",
+							"Glucose amount needs to be numeric!",
+							Number.NaN,
+							onAskNewGlucose
+						);
+					
+					function onAskNewGlucose():void
+					{
+						addTreatment(type);
+					}
+				}
+				else
+				{
+					
+					var glucoseValueToAdd:Number;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+						glucoseValueToAdd = glucoseValue;
+					else
+						glucoseValueToAdd = Math.round(BgReading.mmolToMgdl(glucoseValue))
+					
+					var treatment:Treatment = new Treatment
+					(
+						Treatment.TYPE_GLUCOSE_CHECK,
+						treatmentTime.value.valueOf(),
+						0,
+						"",
+						0,
+						glucoseValueToAdd,
+						glucoseValueToAdd,
+						notes.text
+					);
+					
+					//Add to list
+					treatmentsList.push(treatment);
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Insert in DB
+					Database.insertTreatmentSynchronous(treatment);
+				}
 			}
 			
 			function onNoteEntered (e:Event):void
@@ -348,8 +415,6 @@ package treatments
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
 				}
-				
-				treatmentPopup.dispose();
 			}
 			
 			function onConfigureInsulins(e:Event):void

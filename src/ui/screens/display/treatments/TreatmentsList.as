@@ -1,8 +1,5 @@
 package ui.screens.display.treatments
 {
-	import database.BlueToothDevice;
-	import database.Calibration;
-	
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
@@ -35,11 +32,11 @@ package ui.screens.display.treatments
 		private var bolusImage:Image;
 		private var noteTexture:Texture;
 		private var noteImage:Image;
-		
+		private var bgCheckTexture:Texture;
+		private var bgCheckImage:Image;
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
-
 		
 		public function TreatmentsList()
 		{
@@ -69,6 +66,8 @@ package ui.screens.display.treatments
 			calibrationImage = new Image(calibrationTexture);
 			bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
 			bolusImage = new Image(bolusTexture);
+			bgCheckTexture = MaterialDeepGreyAmberMobileThemeIcons.bgCheckTexture;
+			bgCheckImage = new Image(bgCheckTexture);
 			noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
 			noteImage = new Image(noteTexture);
 		}
@@ -87,7 +86,8 @@ package ui.screens.display.treatments
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 },
 					{ label: "Bolus", icon: bolusImage, selectable: treatmentsEnabled, id: 2 },
-					{ label: "Note", icon: noteImage, selectable: treatmentsEnabled, id: 3 }
+					{ label: "BG Check", icon: bgCheckImage, selectable: treatmentsEnabled, id: 3 },
+					{ label: "Note", icon: noteImage, selectable: treatmentsEnabled, id: 4 }
 				]
 			);
 			
@@ -131,7 +131,7 @@ package ui.screens.display.treatments
 			{
 				if(index === 0)
 					return "calibration-item";
-				else if(index == 1 || index == 2)
+				else if(index == 1 || index == 2 || index == 3)
 					return "treatment-item";
 				
 				return "default-item";
@@ -163,7 +163,13 @@ package ui.screens.display.treatments
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_BOLUS);
 			}
-			else if(treatmentID == 3) //Note
+			else if(treatmentID == 3) //BG Check
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_GLUCOSE_CHECK);
+			}
+			else if(treatmentID == 4) //Note
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
@@ -212,6 +218,18 @@ package ui.screens.display.treatments
 			{
 				noteImage.dispose();
 				noteImage = null;
+			}
+			
+			if (bgCheckTexture != null)
+			{
+				bgCheckTexture.dispose();
+				bgCheckTexture = null;
+			}
+			
+			if (bgCheckImage != null)
+			{
+				bgCheckImage.dispose();
+				bgCheckImage = null;
 			}
 			
 			super.dispose();

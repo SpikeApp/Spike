@@ -16,7 +16,7 @@ package ui.chart
 	{
 		/* Constants */
 		private static const PADDING:int = 3;
-		private static const CORNER_RADIUS:int = 3;
+		private static const CORNER_RADIUS:int = 4;
 		private static const STROKE_THICKNESS:int = 1;
 		
 		/* Properties */

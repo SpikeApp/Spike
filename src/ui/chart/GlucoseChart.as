@@ -636,7 +636,7 @@ package ui.chart
 		
 		public function calculateTotalIOB():void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -693,6 +693,18 @@ package ui.chart
 				noteMarker.index = treatmenstsList.length;
 				treatmenstsList.push(noteMarker);
 			}
+			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+			{
+				//Create treatment marker and add it to the chart
+				var glucoseCheckMarker:BGCheckMarker = new BGCheckMarker(treatment);
+				glucoseCheckMarker.x = (glucoseCheckMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				glucoseCheckMarker.y = _graphHeight - (glucoseCheckMarker.radius * 1.66) - ((glucoseCheckMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				glucoseCheckMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+				treatmentsContainer.addChild(glucoseCheckMarker);
+				
+				glucoseCheckMarker.index = treatmenstsList.length;
+				treatmenstsList.push(glucoseCheckMarker);
+			}
 			
 			if (mainChartMask != null && mainChartContainer != null)
 				mainChartContainer.addChild(mainChartMask);
@@ -724,6 +736,10 @@ package ui.chart
 				{
 					treatmentValue = "Note";
 				}
+				else if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+				{
+					treatmentValue = "BG Check";
+				}
 				
 				if (treatmentValue != "")
 				{
@@ -738,14 +754,16 @@ package ui.chart
 				time.value = new Date(treatment.treatment.timestamp);
 				time.height = 30;
 				time.paddingTop = time.paddingBottom = 0;
+				var timeSpacer:Sprite = new Sprite();
+				timeSpacer.height = 10;
 				treatmentContainer.addChild(time);
+				treatmentContainer.addChild(timeSpacer);
 				
 				if (treatmentNotes != "")
 				{
 					var notes:Label = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
 					notes.wordWrap = true;
 					notes.maxWidth = 150;
-					notes.paddingTop = 12;
 					treatmentContainer.addChild(notes);
 				}
 				
@@ -794,14 +812,19 @@ package ui.chart
 					}
 					else
 					{
-						var estimatedGlucoseValue:Number = TreatmentsManager.getEstimatedGlucose(movedTimestamp);
+						var estimatedGlucoseValue:Number;
+						if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK)
+							estimatedGlucoseValue = TreatmentsManager.getEstimatedGlucose(movedTimestamp);
+						else
+							estimatedGlucoseValue = treatment.treatment.glucoseEstimated;
 						treatment.treatment.timestamp = movedTimestamp;
 						treatment.treatment.glucoseEstimated = estimatedGlucoseValue;
 						manageTreatments();
 						
 						treatmentCallout.close(true);
 						
-						calculateTotalIOB();
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+							calculateTotalIOB();
 						
 						//Update database
 						TreatmentsManager.updateTreatment(treatment.treatment);
@@ -836,7 +859,7 @@ package ui.chart
 					else
 					{
 						//Treatment is still valid. Reposition it.
-						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 						{
 							treatment.x = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 							treatment.y = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
@@ -1908,7 +1931,7 @@ package ui.chart
 			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplay.height + 6;
 			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 			
-			if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0)
+			if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive)
 				IOBPill.visible = false;
 			
 			addChild(IOBPill);
