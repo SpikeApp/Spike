@@ -32,6 +32,7 @@ package ui.screens
 	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import ui.chart.DistributionChart;
 	import ui.chart.GlucoseChart;
@@ -357,7 +358,7 @@ package ui.screens
 		
 		private function onAppInForeground (e:SpikeEvent):void
 		{
-			Starling.juggler.delayCall(processQueue, 0.2);
+			SystemUtil.executeWhenApplicationIsActive( processQueue );
 		}
 		
 		private function processQueue():void
