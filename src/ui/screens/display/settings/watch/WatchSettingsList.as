@@ -433,6 +433,12 @@ package ui.screens.display.settings.watch
 				isDeviceAuthorized = true;
 				populateCalendarList();
 				refreshContent();
+				
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','info_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','reboot_warning')
+				);
 			}
 			else
 			{
