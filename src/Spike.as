@@ -5,18 +5,27 @@ package
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.display3D.Context3DProfile;
+	import flash.events.ErrorEvent;
 	import flash.events.Event;
+	import flash.events.UncaughtErrorEvent;
+	import flash.net.URLLoader;
+	import flash.net.URLVariables;
 	import flash.system.System;
 	import flash.utils.clearInterval;
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import events.SpikeEvent;
 	
 	import feathers.utils.ScreenDensityScaleFactorManager;
 	
+	import network.EmailSender;
+	
 	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
 	
@@ -40,6 +49,8 @@ package
 		
 		public function Spike() 
 		{
+			SystemUtil.initialize();
+			
 			stage.align = StageAlign.TOP_LEFT;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			//stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
@@ -48,6 +59,49 @@ package
 			
 			stage.addEventListener( flash.events.Event.RESIZE, onStageResize );
 			timeoutID = setTimeout( initStarling, 50 );
+			
+			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
+		}
+		
+		private function onUncaughtError(e:UncaughtErrorEvent):void
+		{
+			// Do something with your error.
+			if (e.error is Error)
+			{
+				var error:Error = e.error as Error;
+				sendError("<p>Error ID: " + error.errorID + "</p><p>Error Name: " + error.name + "</p><p> Error Message: " + error.message + "</p><p>Error Stack Trace: " + error.getStackTrace() + "</p>");
+			}
+			else
+			{
+				var errorEvent:ErrorEvent = e.error as ErrorEvent;
+				sendError("<p>Error Event ID: " + errorEvent.errorID + "</p><p>Text: " + errorEvent.text + "</p><p>Type: " + errorEvent.type + "</p><p>Target: " + ObjectUtil.toString(errorEvent.target) + "</p><p>Current Target: " + ObjectUtil.toString(errorEvent.currentTarget));
+			}
+		}
+		
+		private function sendError(error:String):void
+		{
+			//Create URL Request 
+			var vars:URLVariables = new URLVariables();
+			vars.mimeType = "text/html";
+			vars.emailSubject = "Spike Uncaught Error (Calá)";
+			vars.emailBody = error;
+			vars.userName = "";
+			vars.userEmail = "bug@spike-app.com";
+			
+			//Send Email
+			EmailSender.sendData
+			(
+				EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
+				onLoadCompleteHandler,
+				vars
+			);
+		}
+		
+		private function onLoadCompleteHandler(event:flash.events.Event):void 
+		{ 
+			var loader:URLLoader = URLLoader(event.target);
+			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
+			loader = null;
 		}
 		
 		private function onStageResize( event:flash.events.Event ):void 
@@ -76,10 +130,16 @@ package
 			/* Initialize Constants */
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
+			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
 			
 			/* Handle application Activation & Deactivation */
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
+		}
+		
+		private function onContextCreated(event:flash.events.Event):void
+		{
+			Trace.myTrace("Spike.as", "onContextCreated! Event Debug: " + ObjectUtil.toString(event));
 		}
 		
 		/**
@@ -88,17 +148,17 @@ package
 		private function onStarlingReady( event:starling.events.Event, root:AppInterface ):void 
 		{
 			/* Start Starling */
-			starling.start();
+			SystemUtil.executeWhenApplicationIsActive( starling.start );
 			
 			/* Start Interface */
-			root.start();
+			SystemUtil.executeWhenApplicationIsActive( root.start );
 		}
 		
 		private function onActivate( event:flash.events.Event ):void 
 		{
 			//Start Starling
 			NativeApplication.nativeApplication.executeInBackground = false;
-			starling.start();
+			SystemUtil.executeWhenApplicationIsActive( starling.start );
 			
 			//Push Chart Screen
 			/*if(AppInterface.instance.navigator != null)
