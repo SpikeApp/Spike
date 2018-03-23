@@ -9,7 +9,6 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.events.TimerEvent;
-	import flash.globalization.LocaleID;
 	import flash.net.URLLoader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
@@ -573,7 +572,7 @@ package services
 			var newVisualCalibration:Object = new Object();
 			newVisualCalibration["eventType"] = "BG Check";	
 			newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
-			newVisualCalibration["enteredBy"] = "Spike App";	
+			newVisualCalibration["enteredBy"] = "Spike";	
 			newVisualCalibration["glucose"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? calibration.bg : Math.round(BgReading.mgdlToMmol(calibration.bg) * 10) / 10;
 			newVisualCalibration["glucoseType"] = "Finger";
 			newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("nightscoutservice","sensor_calibration");
@@ -775,7 +774,7 @@ package services
 				credentialsTester["_id"] = credentialsTesterID;
 				credentialsTester["eventType"] = "Note";
 				credentialsTester["duration"] = 30;
-				credentialsTester["notes"] = "Spike App Authentication Test";
+				credentialsTester["notes"] = "Spike Authentication Test";
 				
 				NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, JSON.stringify(credentialsTester), MODE_TEST_CREDENTIALS, onTestCredentialsComplete, onConnectionFailed);
 			}
