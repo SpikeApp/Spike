@@ -10,6 +10,7 @@ package treatments
 	import events.TreatmentsEvent;
 	
 	import feathers.controls.Alert;
+	import feathers.controls.Button;
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
@@ -19,12 +20,20 @@ package treatments
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalLayout;
+	import feathers.motion.Reveal;
+	import feathers.motion.Slide;
 	
 	import model.ModelLocator;
 	
+	import starling.animation.Transitions;
+	import starling.animation.Tween;
+	import starling.core.Starling;
+	import starling.display.Sprite;
 	import starling.events.Event;
 	
+	import ui.AppInterface;
 	import ui.popups.AlertManager;
+	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 
 	public class TreatmentsManager extends EventDispatcher
@@ -148,6 +157,9 @@ package treatments
 				var insulinTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
 				insulinTextInput.maxChars = 5;
 				displayContainer.addChild(insulinTextInput);
+				var insulinSpacer:Sprite = new Sprite();
+				insulinSpacer.height = 10;
+				displayContainer.addChild(insulinSpacer);
 			}
 			
 			//Treatment Time
@@ -158,6 +170,9 @@ package treatments
 			treatmentTime.height = 30;
 			displayContainer.addChild(treatmentTime);
 			treatmentTime.validate();
+			var treatmentSpacer:Sprite = new Sprite();
+			treatmentSpacer.height = 10;
+			displayContainer.addChild(treatmentSpacer);
 			
 			if (type == Treatment.TYPE_BOLUS)
 				insulinTextInput.width = treatmentTime.width;
@@ -174,26 +189,27 @@ package treatments
 			if (type == Treatment.TYPE_BOLUS)
 			{
 				//Insulin Type
-				var insulinList:PickerList = LayoutFactory.createPickerList();
-				var insulinDataProvider:ArrayCollection = new ArrayCollection();
 				if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
 				{
+					var insulinList:PickerList = LayoutFactory.createPickerList();
+					var insulinDataProvider:ArrayCollection = new ArrayCollection();
 					var numInsulins:int = ProfileManager.insulinsList.length
 					for (var i:int = 0; i < numInsulins; i++) 
 					{
 						var insulin:Insulin = ProfileManager.insulinsList[i];
 						insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
 					}
+					insulinList.dataProvider = insulinDataProvider;
+					insulinList.popUpContentManager = new DropDownPopUpContentManager();
+					otherFieldsConstainer.addChild(insulinList);
 				}
 				else
 				{
-					insulinList.prompt = "No available insulins";
-					insulinList.selectedIndex = -1;
+					var createInsulinButton:Button = LayoutFactory.createButton("Configure Insulins");
+					createInsulinButton.addEventListener(Event.TRIGGERED, onConfigureInsulins);
+					otherFieldsConstainer.addChild(createInsulinButton);
 					canAddInsulin = false;
 				}
-				insulinList.dataProvider = insulinDataProvider;
-				insulinList.popUpContentManager = new DropDownPopUpContentManager();
-				otherFieldsConstainer.addChild(insulinList);
 			}
 			
 			var notes:TextInput = LayoutFactory.createTextInput(false, false, treatmentTime.width, HorizontalAlign.CENTER);
@@ -206,7 +222,7 @@ package treatments
 			if (type == Treatment.TYPE_BOLUS)
 				actionFunction = onInsulinEntered;
 			else if (type == Treatment.TYPE_NOTE)
-				actionFunction = onNotenEntered;
+				actionFunction = onNoteEntered;
 			
 			var actionButtons:Array = [];
 			actionButtons.push( { label: "CANCEL" } );
@@ -229,7 +245,7 @@ package treatments
 					HorizontalAlign.JUSTIFY,
 					displayContainer
 				);
-			treatmentPopup.gap = 0;
+			treatmentPopup.gap = 5;
 			treatmentPopup.headerProperties.maxHeight = 30;
 			treatmentPopup.buttonGroupProperties.paddingTop = -10;
 			treatmentPopup.buttonGroupProperties.gap = 10;
@@ -285,9 +301,11 @@ package treatments
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
 				}
+				
+				treatmentPopup.dispose();
 			}
 			
-			function onNotenEntered (e:Event):void
+			function onNoteEntered (e:Event):void
 			{
 				if (notes == null || notes.text == null || !BackgroundFetch.appIsInForeground())
 					return;
@@ -330,6 +348,21 @@ package treatments
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
 				}
+				
+				treatmentPopup.dispose();
+			}
+			
+			function onConfigureInsulins(e:Event):void
+			{
+				AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_PROFILE );
+				
+				var popupTween:Tween=new Tween(treatmentPopup, 0.3, Transitions.LINEAR);
+				popupTween.fadeTo(0);
+				popupTween.onComplete = function():void
+				{
+					treatmentPopup.removeFromParent(true);
+				}
+				Starling.juggler.add(popupTween);
 			}
 		}
 		

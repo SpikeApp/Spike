@@ -74,7 +74,7 @@ package ui.chart
 				pillWidth = valueLabel.width + (2 * PADDING) + (2 * STROKE_THICKNESS);
 			
 			var valueBackgroundWidth:Number = valueLabel.width + (2 * PADDING);
-			var valueBackgroundHeight:Number = valueLabel.height + (2 * PADDING);
+			var valueBackgroundHeight:Number = valueLabel.height + (1 * PADDING);
 			
 			//Pill Background
 			pillBackground = new Shape();

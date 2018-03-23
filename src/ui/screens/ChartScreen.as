@@ -154,6 +154,7 @@ package ui.screens
 			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
+			glucoseChart.calculateTotalIOB();
 			addChild(glucoseChart);
 			
 			//Prevents Starling Line Mask Bug

@@ -28,7 +28,6 @@ package database
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
-	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -2169,9 +2168,6 @@ package database
 				conn.close();
 				if (result.data != null)
 					returnValue = result.data;
-				
-				trace("DB");
-				trace(ObjectUtil.toString(returnValue));
 				
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();
