@@ -169,7 +169,7 @@ package database
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
-			"id REAL PRIMARY KEY," +
+			"id STRING PRIMARY KEY," +
 			"name STRING, " +
 			"dia REAL, " +
 			"type STRING, " +

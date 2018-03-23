@@ -23,7 +23,7 @@ package ui.chart
 		private function draw():void
 		{
 			//Radius
-			this.radius = 4 + treatment.insulinAmount;
+			this.radius = 8 + treatment.insulinAmount;
 			if (radius > 15)
 				radius = 15;
 			

@@ -33,7 +33,11 @@ package treatments
 			this.type = type;
 			this.insulinAmount = insulin;
 			if (insulinID != "")
-				this.dia = ProfileManager.getInsulin(insulinID).dia;
+			{
+				var insulinMatch:Insulin = ProfileManager.getInsulin(insulinID);
+				if (insulinMatch != null && !isNaN(insulinMatch.dia))
+					this.dia = insulinMatch.dia;
+			}
 			this.insulinID = insulinID;
 			this.carbs = carbs;
 			this.glucose = glucose;
