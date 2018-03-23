@@ -31,6 +31,7 @@ package ui
 	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
+	import ui.screens.ProfileSettingsScreen;
 	import ui.screens.Screens;
 	import ui.screens.SensorScreen;
 	import ui.screens.SensorStartScreen;
@@ -134,6 +135,11 @@ package ui
 			var transmitterSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TransmitterSettingsScreen );
 			transmitterSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_TRANSMITTER, transmitterSettingsScreenItem );
+			
+			/* Profile Settings Screen */
+			var profileSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( ProfileSettingsScreen );
+			profileSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_PROFILE, profileSettingsScreenItem );
 			
 			/* Chart Settings Screen */
 			var chartSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( ChartSettingsScreen );

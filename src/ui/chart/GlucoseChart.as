@@ -47,11 +47,14 @@ package ui.chart
 	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
+	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.TimeSpan;
+	
+	[ResourceBundle("chartscreen")]
 	
 	public class GlucoseChart extends Sprite
 	{
@@ -117,7 +120,7 @@ package ui.chart
 		private var graphDisplayTextSize:int = 20;
 		private var glucoseUnit:String = "mg/dL";
 		private var handPickerStrokeThickness:int = 1;
-		private var chartTopPadding:int = 70;
+		private var chartTopPadding:int = 80;
 		private var scrollerTopPadding:int = 5;
 		private var _displayLine:Boolean = false;
 		private var fakeChartMaskColor:uint = 0x20222a;
@@ -183,7 +186,15 @@ package ui.chart
 		private var treatmentsContainer:Sprite;
 		private var treatmenstsList:Array = [];
 		private var treatmentCallout:Callout;
-		private var IOBPill:ChartPill;
+		private var IOBPill:ChartTreatmentPill;
+
+		private var glucoseSlopePill:ChartInfoPill;
+
+		private var glucoseTimeAgoPill:ChartInfoPill;
+
+		private var ago:String;
+
+		private var now:String;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -239,6 +250,8 @@ package ui.chart
 			
 			//Strings
 			retroOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','retro_title');
+			ago = ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
+			now = ModelLocator.resourceManagerInstance.getString('chartscreen','now');
 			
 			//Add timeline to display list
 			glucoseTimelineContainer = new Sprite();
@@ -623,7 +636,7 @@ package ui.chart
 			return chartContainer;
 		}
 		
-		private function calculateTotalIOB():void
+		public function calculateTotalIOB():void
 		{
 			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 				return;
@@ -631,14 +644,14 @@ package ui.chart
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
 				IOBPill.setValue(TreatmentsManager.getTotalIOB() + "U");
-				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin;
+				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 				IOBPill.visible = true;
 			}
 			
 			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
 			{
 				IOBPill.setValue("0U");
-				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin;
+				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 				IOBPill.visible = true;
 			}
 		}
@@ -709,20 +722,24 @@ package ui.chart
 					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
 					treatmentValue = (insulin != null ? insulin.name + ": " : "") + treatment.treatment.insulinAmount + " U";
 				}
+				else if (treatment.treatment.type == Treatment.TYPE_NOTE)
+				{
+					treatmentValue = "Note";
+				}
 				
 				if (treatmentValue != "")
 				{
 					var value:Label = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+					value.paddingBottom = 12;
 					treatmentContainer.addChild(value);
 				}
 				
 				//Treatment Time
 				var time:DateTimeSpinner = new DateTimeSpinner();
 				time.editingMode = DateTimeMode.TIME;
-				//time.minimum = new Date(firstBGReadingTimeStamp);
-				//time.maximum = new Date(lastBGreadingTimeStamp);
 				time.value = new Date(treatment.treatment.timestamp);
 				time.height = 30;
+				time.paddingTop = time.paddingBottom = 0;
 				treatmentContainer.addChild(time);
 				
 				if (treatmentNotes != "")
@@ -730,6 +747,7 @@ package ui.chart
 					var notes:Label = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
 					notes.wordWrap = true;
 					notes.maxWidth = 150;
+					notes.paddingTop = 12;
 					treatmentContainer.addChild(notes);
 				}
 				
@@ -767,17 +785,29 @@ package ui.chart
 				function onMove(e:starling.events.Event):void
 				{
 					var movedTimestamp:Number = time.value.valueOf();
-					var estimatedGlucoseValue:Number = TreatmentsManager.getEstimatedGlucose(movedTimestamp);
-					treatment.treatment.timestamp = movedTimestamp;
-					treatment.treatment.glucoseEstimated = estimatedGlucoseValue;
-					manageTreatments();
 					
-					treatmentCallout.close(true);
-					
-					calculateTotalIOB();
-					
-					//Update database
-					TreatmentsManager.updateTreatment(treatment.treatment);
+					if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > lastBGreadingTimeStamp)
+					{
+						AlertManager.showSimpleAlert
+						(
+							"Warning",
+							"Selected time is outside of your first or last reading in the chart! Please choose a different time."
+						);
+					}
+					else
+					{
+						var estimatedGlucoseValue:Number = TreatmentsManager.getEstimatedGlucose(movedTimestamp);
+						treatment.treatment.timestamp = movedTimestamp;
+						treatment.treatment.glucoseEstimated = estimatedGlucoseValue;
+						manageTreatments();
+						
+						treatmentCallout.close(true);
+						
+						calculateTotalIOB();
+						
+						//Update database
+						TreatmentsManager.updateTreatment(treatment.treatment);
+					}
 				}
 			}
 		}
@@ -1694,6 +1724,7 @@ package ui.chart
 						
 						//Marker Date Time
 						glucoseTimeAgoDisplay.text = retroOutput + " - " + currentMarker.timeFormatted;
+						glucoseTimeAgoPill.setValue(currentMarker.timeFormatted, retroOutput, differenceInMinutes <= 6 ? newColor : oldColor);
 						if (differenceInMinutes <= 6)
 							glucoseTimeAgoDisplay.fontStyles.color = newColor;
 						else
@@ -1701,6 +1732,7 @@ package ui.chart
 						
 						//Marker Slope
 						glucoseSlopeDisplay.text = currentMarker.slopeOutput;
+						glucoseSlopePill.setValue(currentMarker.slopeOutput, glucoseUnit, differenceInMinutes <= 6 ? newColor : oldColor);
 						if (differenceInMinutes <= 6)
 							glucoseSlopeDisplay.fontStyles.color = newColor;
 						else
@@ -1715,11 +1747,13 @@ package ui.chart
 							glucoseValueDisplay.text = "---";
 							glucoseValueDisplay.fontStyles.color = oldColor;
 							glucoseSlopeDisplay.text = "";
+							glucoseSlopePill.setValue("", "", oldColor);
 						}
 						else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
 						{
 							glucoseValueDisplay.fontStyles.color = oldColor;
 							glucoseSlopeDisplay.fontStyles.color = oldColor;
+							glucoseSlopePill.setValue(glucoseSlopePill.value, glucoseSlopePill.unit, oldColor);
 						}
 						
 						if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && !hitTestCurrent)
@@ -1736,6 +1770,7 @@ package ui.chart
 							
 							glucoseTimeAgoDisplay.text = retroOutput + " - " + (currentTimelineOutput);
 							glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+							glucoseTimeAgoPill.setValue(currentTimelineOutput, retroOutput, oldColor);
 						}
 					}
 				}
@@ -1748,9 +1783,11 @@ package ui.chart
 					//Marker Date Time
 					glucoseTimeAgoDisplay.text = retroOutput + " - " + nextMarker.timeFormatted;
 					glucoseTimeAgoDisplay.fontStyles.color = newColor;
+					glucoseTimeAgoPill.setValue(nextMarker.timeFormatted, retroOutput, newColor);
 					
 					//Marker Slope
 					glucoseSlopeDisplay.text = nextMarker.slopeOutput;
+					glucoseSlopePill.setValue(nextMarker.slopeOutput, glucoseUnit, newColor);
 					glucoseSlopeDisplay.fontStyles.color = newColor;
 					
 					selectedGlucoseMarkerIndex = nextMarker.index;
@@ -1766,9 +1803,12 @@ package ui.chart
 						//Marker Date Time
 						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
 						glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+						var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
+						glucoseTimeAgoPill.setValue(timeAgoValue, timeAgoValue != now ? ago : "", oldColor);
 						
 						//Marker Slope
 						glucoseSlopeDisplay.text = ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown');
+						glucoseSlopePill.setValue(ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown'), "", oldColor);
 						glucoseSlopeDisplay.fontStyles.color = oldColor;
 						
 						if (selectedGlucoseMarkerIndex > 0)
@@ -1790,9 +1830,11 @@ package ui.chart
 					
 					//Marker Date Time
 					glucoseTimeAgoDisplay.text = "";
+					glucoseTimeAgoPill.setValue("", "", oldColor);
 					
 					//Marker Slope
 					glucoseSlopeDisplay.text = "";
+					glucoseSlopePill.setValue("", "", oldColor)
 				}
 				else
 				{
@@ -1814,6 +1856,8 @@ package ui.chart
 						
 						//Marker Date Time
 						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
+						var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
+						glucoseTimeAgoPill.setValue(timeAgoValue, timeAgoValue != now ? ago : "", timestampDifference <= TIME_6_MINUTES ? newColor : oldColor);
 						if (timestampDifference <= TIME_6_MINUTES)
 							glucoseTimeAgoDisplay.fontStyles.color = newColor;
 						else
@@ -1821,6 +1865,7 @@ package ui.chart
 						
 						//Marker Slope
 						glucoseSlopeDisplay.text = latestMarker.slopeOutput;
+						glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, timestampDifference <= TIME_6_MINUTES ? newColor : oldColor)
 						if (timestampDifference <= TIME_6_MINUTES)
 							glucoseSlopeDisplay.fontStyles.color = newColor;
 						else
@@ -1835,9 +1880,12 @@ package ui.chart
 						//Marker Date Time
 						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
 						glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+						var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
+						glucoseTimeAgoPill.setValue(timeAgoValue, timeAgoValue != now ? ago : "", oldColor);
 						
 						//Marker Slope
 						glucoseSlopeDisplay.text = "";
+						glucoseSlopePill.setValue("", "", oldColor)
 						glucoseSlopeDisplay.fontStyles.color = oldColor;
 					}
 				}
@@ -1889,11 +1937,26 @@ package ui.chart
 			glucoseSlopeDisplay.text = "";
 			addChild(glucoseSlopeDisplay);
 			
+			
+			
+			glucoseSlopePill = new ChartInfoPill(timeDisplayFont);
+			glucoseSlopePill.x = glucoseTimeAgoDisplay.x;
+			glucoseSlopePill.y = glucoseTimeAgoDisplay.y + glucoseTimeAgoDisplay.height + 2;
+			addChild(glucoseSlopePill);
+			
+			glucoseTimeAgoPill = new ChartInfoPill(retroDisplayFont);
+			glucoseTimeAgoPill.x = glucoseSlopePill.x;
+			glucoseTimeAgoPill.y = glucoseSlopePill.y + 30;
+			addChild(glucoseTimeAgoPill);
+			
 			//IOB
-			IOBPill = new ChartPill(ChartPill.TYPE_IOB);
-			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplay.height - 5;
-			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin;
-			IOBPill.visible = false;
+			IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
+			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplay.height + 5;
+			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+			
+			if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0)
+				IOBPill.visible = false;
+			
 			addChild(IOBPill);
 		}
 		
@@ -2090,6 +2153,7 @@ package ui.chart
 						
 						glucoseTimeAgoDisplay.text = retroOutput + " - " + (futureTimeOutput);
 						glucoseValueDisplay.fontStyles.color = oldColor;
+						glucoseTimeAgoPill.setValue(futureTimeOutput, retroOutput, oldColor);
 					}
 					else
 					{
@@ -2098,10 +2162,13 @@ package ui.chart
 						var differenceInSec:Number = (nowTimestamp - lastTimestamp) / 1000;
 						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
 						glucoseTimeAgoDisplay.fontStyles.color = newColor;
+						var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
+						glucoseTimeAgoPill.setValue(timeAgoValue, timeAgoValue != now ? ago : "", newColor);
 					}
 					
-					glucoseTimeAgoDisplay.fontStyles.color = oldColor;	
-					glucoseSlopeDisplay.text = "";
+					glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+					glucoseTimeAgoPill.setValue(glucoseTimeAgoPill.value, glucoseTimeAgoPill.unit, oldColor);
+					
 					glucoseValueDisplay.text = "---";
 					glucoseValueDisplay.fontStyles.color = oldColor;
 					
@@ -2163,6 +2230,7 @@ package ui.chart
 							if (!displayLatestBGValue)
 							{
 								glucoseSlopeDisplay.text = currentMarker.slopeOutput;
+								glucoseSlopePill.setValue(currentMarker.slopeOutput, glucoseUnit, newColor)
 								glucoseSlopeDisplay.fontStyles.color = newColor;
 								
 								if (mainChartGlucoseMarkersList.length > 1)
@@ -2170,9 +2238,11 @@ package ui.chart
 									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
 									{
 										glucoseSlopeDisplay.text = "";
+										glucoseSlopePill.setValue("", "", oldColor)
 									}
 									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
 									{
+										glucoseSlopePill.setValue(glucoseSlopePill.value, glucoseSlopePill.unit, oldColor)
 										glucoseSlopeDisplay.fontStyles.color = oldColor;	
 									}
 								}
@@ -2184,6 +2254,7 @@ package ui.chart
 							{
 								glucoseTimeAgoDisplay.text = retroOutput + " - " + currentMarker.timeFormatted;
 								glucoseTimeAgoDisplay.fontStyles.color = newColor;
+								glucoseTimeAgoPill.setValue(currentMarker.timeFormatted, retroOutput, newColor);
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
@@ -2201,6 +2272,7 @@ package ui.chart
 										
 										glucoseTimeAgoDisplay.text = retroOutput + " - " + (currentTimelineOutput);
 										glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+										glucoseTimeAgoPill.setValue(currentTimelineOutput, retroOutput, oldColor);
 									}
 								}
 							}
@@ -2384,6 +2456,7 @@ package ui.chart
 				glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
 				glucoseValueDisplay.fontStyles.color = latestMarker.color;
 				glucoseSlopeDisplay.text = latestMarker.slopeOutput;
+				glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, newColor)
 				glucoseSlopeDisplay.fontStyles.color = newColor;
 				
 				//Deativate DummyMode

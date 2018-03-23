@@ -40,6 +40,7 @@ package database
 	
 	import services.TransmitterService;
 	
+	import treatments.Insulin;
 	import treatments.Treatment;
 	
 	import utils.Trace;
@@ -2181,6 +2182,46 @@ package database
 			} finally {
 				if (conn.connected) conn.close();
 				return returnValue;
+			}
+		}
+		
+		/**
+		 * inserts an insulin in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertInsulinSynchronous(insulin:Insulin):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO insulins (";
+				text += "id, ";
+				text += "name, ";
+				text += "dia, ";
+				text += "type, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + insulin.ID + "', ";
+				text += "'" + insulin.name + "', ";
+				text += insulin.dia + ", ";
+				text += "'" + insulin.type + "', ";
+				text += insulin.timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_insulin_in_db', error.message + " - " + error.details);
 			}
 		}
 		

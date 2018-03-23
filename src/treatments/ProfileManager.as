@@ -1,6 +1,8 @@
 package treatments
 {
 	import database.Database;
+	
+	import utils.UniqueId;
 
 	public class ProfileManager
 	{
@@ -32,7 +34,8 @@ package treatments
 					);
 					
 					insulinsList.push(insulin);
-				}	
+				}
+				insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
 			}
 		}
 		
@@ -54,6 +57,26 @@ package treatments
 			}
 			
 			return insulinMatched;
+		}
+		
+		public static function addInsulin(name:String, dia:Number, type:String):void
+		{
+			//Create new insulin
+			var insulin:Insulin = new Insulin
+			(
+				UniqueId.createEventId(),
+				name,
+				dia,
+				type,
+				new Date().valueOf()
+			);
+			
+			//Add to Spike
+			insulinsList.push(insulin);
+			insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
+			
+			//Save in database
+			Database.insertInsulinSynchronous(insulin);
 		}
 	}
 }

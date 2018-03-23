@@ -10,7 +10,7 @@ package ui.chart
 	
 	import ui.screens.display.LayoutFactory;
 	
-	public class ChartPill extends Sprite
+	public class ChartTreatmentPill extends Sprite
 	{
 		/* Constants */
 		public static const TYPE_IOB:String = "IOB";
@@ -30,47 +30,10 @@ package ui.chart
 		private var titleLabel:Label;
 		private var valueLabel:Label;
 		
-		public function ChartPill(type:String)
+		public function ChartTreatmentPill(type:String)
 		{
 			this.type = type;
 		}
-		
-		/*public function ChartPill(type:String, pillWidth:Number, pillHeight:Number)
-		{
-			this.type = type;
-			
-			drawPill();
-			
-			var valueBackgroundWidth:Number = 33;
-			var strokeThickness:Number = 1;
-				
-			if (type == TYPE_IOB)
-			{
-				var pillBackground:Shape = new Shape();
-				pillBackground.graphics.beginFill(0xEEEEEE, 1);
-				pillBackground.graphics.drawRoundRect(0, 0, pillWidth, pillHeight, 3);
-				addChild(pillBackground);
-				
-				var valueBackground:Shape = new Shape();
-				valueBackground.graphics.beginFill(0x20222a, 1);
-				valueBackground.graphics.drawRoundRect(pillWidth - valueBackgroundWidth - strokeThickness, strokeThickness, valueBackgroundWidth, pillHeight - (2 * strokeThickness), 3);
-				addChild(valueBackground);
-				
-				var title:Label = LayoutFactory.createLabel("IOB", HorizontalAlign.CENTER, VerticalAlign.TOP, 11, true,  0x20222a);
-				title.validate();
-				title.x = 0;
-				title.y = (pillHeight / 2) - (title.height / 2);
-				title.width = pillWidth - valueBackgroundWidth;
-				addChild(title);
-				
-				valueLabel = LayoutFactory.createLabel("60.34U", HorizontalAlign.CENTER, VerticalAlign.TOP, 11, false, 0xEEEEEE);
-				valueLabel.validate();
-				valueLabel.x = pillWidth - valueBackgroundWidth - strokeThickness;
-				valueLabel.y = (pillHeight / 2) - (title.height / 2);
-				valueLabel.width = valueBackgroundWidth;
-				addChild(valueLabel);
-			}
-		}*/
 		
 		public function setValue(value:String):void
 		{
@@ -81,7 +44,7 @@ package ui.chart
 		private function drawPill():void
 		{
 			//Discart previous display objects
-			discart();
+			discard();
 			
 			//Create Title Label
 			titleLabel = LayoutFactory.createLabel(type, HorizontalAlign.CENTER, VerticalAlign.TOP, 11, true,  0x20222a);
@@ -121,7 +84,7 @@ package ui.chart
 			addChild(valueLabel);
 		}
 		
-		private function discart():void
+		private function discard():void
 		{
 			if (titleLabel != null)
 			{

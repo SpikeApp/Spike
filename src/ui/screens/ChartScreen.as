@@ -228,15 +228,12 @@ package ui.screens
 			
 			//Create new chart
 			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
-			//glucoseChart.dataSource = previousData.concat();
 			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
+			glucoseChart.calculateTotalIOB();
 			glucoseChart.y = glucoseChartTopPadding;
 			addChild(glucoseChart);
-			
-			//previousData.length = 0;
-			//previousData = null;
 		}
 		
 		private function calculateChartHeight():Number

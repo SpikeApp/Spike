@@ -124,7 +124,7 @@ package ui.chart
 					if ( glucoseDifference % 1 == 0 && (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 						glucoseDifferenceOutput += ".0";
 						
-					slopeOutput = "+ " + glucoseDifferenceOutput + " " + glucoseUnit;
+					slopeOutput = "+ " + glucoseDifferenceOutput;
 				}
 				else
 				{
@@ -133,7 +133,7 @@ package ui.chart
 					if ( glucoseDifference % 1 == 0 && (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 						glucoseDifferenceOutput += ".0";
 						
-					slopeOutput = "- " + glucoseDifferenceOutput + " " + glucoseUnit;
+					slopeOutput = "- " + glucoseDifferenceOutput;
 				}
 			}
 			
