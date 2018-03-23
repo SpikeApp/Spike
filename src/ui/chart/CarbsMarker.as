@@ -1,8 +1,5 @@
 package ui.chart
 {
-	import database.BgReading;
-	import database.CommonSettings;
-	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
@@ -14,9 +11,9 @@ package ui.chart
 	
 	import ui.screens.display.LayoutFactory;
 	
-	public class BGCheckMarker extends ChartTreatment
+	public class CarbsMarker extends ChartTreatment
 	{
-		public function BGCheckMarker(treatment:Treatment)
+		public function CarbsMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
 			
@@ -26,14 +23,16 @@ package ui.chart
 		private function draw():void
 		{
 			//Radius
-			this.radius = 6;
+			this.radius = 4 + (treatment.carbs / 6);
+			if (radius > 15)
+				radius = 15;
 			
 			//Background
-			var BGMarker:NGon = new NGon(radius, 20, 0, 0, 360);
-			BGMarker.x = radius / 3;
-			BGMarker.y = radius + radius/4;
-			BGMarker.color = 0xFF0000;
-			addChild(BGMarker);
+			var carbsMarker:NGon = new NGon(radius, 20, 0, 0, 360);
+			carbsMarker.x = radius / 3;
+			carbsMarker.y = radius + radius/4;
+			carbsMarker.color = 0xf15b28;
+			addChild(carbsMarker);
 			
 			//Stroke
 			var stroke:Shape = new Shape();
@@ -44,13 +43,7 @@ package ui.chart
 			addChild(stroke);
 			
 			//Label
-			var glucoseValue:Number;
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
-				glucoseValue = treatment.glucose;
-			else
-				glucoseValue = Math.round(((BgReading.mgdlToMmol((treatment.glucose))) * 10)) / 10;
-			
-			var label:Label = LayoutFactory.createLabel(String(glucoseValue), HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
+			var label:Label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			label.validate();
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 3;

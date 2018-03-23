@@ -681,6 +681,20 @@ package ui.chart
 				
 				calculateTotalIOB();
 			}
+			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+			{
+				//Create treatment marker and add it to the chart
+				var carbsMarker:CarbsMarker = new CarbsMarker(treatment);
+				carbsMarker.x = (carbsMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				carbsMarker.y = _graphHeight - (carbsMarker.radius * 1.66) - ((carbsMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				carbsMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+				treatmentsContainer.addChild(carbsMarker);
+				
+				carbsMarker.index = treatmenstsList.length;
+				treatmenstsList.push(carbsMarker);
+				
+				//calculateTotalIOB();
+			}
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{
 				//Create treatment marker and add it to the chart
@@ -731,6 +745,10 @@ package ui.chart
 				{
 					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
 					treatmentValue = (insulin != null ? insulin.name + "\n" : "") + treatment.treatment.insulinAmount + " U";
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+				{
+					treatmentValue = "Carbs\n" + treatment.treatment.carbs + "g";
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 				{
@@ -865,7 +883,7 @@ package ui.chart
 					else
 					{
 						//Treatment is still valid. Reposition it.
-						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 						{
 							treatment.x = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 							treatment.y = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);

@@ -169,6 +169,16 @@ package treatments
 				glucoseSpacer.height = 10;
 				displayContainer.addChild(glucoseSpacer);
 			}
+			else if (type == Treatment.TYPE_CARBS_CORRECTION)
+			{
+				//Glucose Amout
+				var carbsTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				carbsTextInput.maxChars = 4;
+				displayContainer.addChild(carbsTextInput);
+				var carbSpacer:Sprite = new Sprite();
+				carbSpacer.height = 10;
+				displayContainer.addChild(carbSpacer);
+			}
 			
 			//Treatment Time
 			var treatmentTime:DateTimeSpinner = new DateTimeSpinner();
@@ -186,6 +196,8 @@ package treatments
 				insulinTextInput.width = treatmentTime.width;
 			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
 				glucoseTextInput.width = treatmentTime.width;
+			else if (type == Treatment.TYPE_CARBS_CORRECTION)
+				carbsTextInput.width = treatmentTime.width;
 			
 			//Other Fields constainer
 			var otherFieldsLayout:VerticalLayout = new VerticalLayout();
@@ -235,10 +247,12 @@ package treatments
 				actionFunction = onNoteEntered;
 			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
 				actionFunction = onBGCheckEntered;
+			else if (type == Treatment.TYPE_CARBS_CORRECTION)
+				actionFunction = onCarbsEntered;
 			
 			var actionButtons:Array = [];
 			actionButtons.push( { label: "CANCEL" } );
-			if ((type == Treatment.TYPE_BOLUS && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK)
+			if ((type == Treatment.TYPE_BOLUS && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION)
 				actionButtons.push( { label: "ADD", triggered: actionFunction } );
 			
 			//Popup
@@ -249,6 +263,8 @@ package treatments
 				treatmentTitle = "Enter Note";
 			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
 				treatmentTitle = "Enter Blood Glucose";
+			else if (type == Treatment.TYPE_CARBS_CORRECTION)
+				treatmentTitle = "Enter Grams";
 				
 			var treatmentPopup:Alert = AlertManager.showActionAlert
 				(
@@ -272,6 +288,8 @@ package treatments
 				notes.setFocus();
 			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
 				glucoseTextInput.setFocus();
+			else if (type == Treatment.TYPE_CARBS_CORRECTION)
+				carbsTextInput.setFocus();
 			
 			function onInsulinEntered (e:Event):void
 			{
@@ -303,6 +321,52 @@ package treatments
 						insulinValue,
 						insulinList.selectedItem.id,
 						0,
+						0,
+						getEstimatedGlucose(treatmentTime.value.valueOf()),
+						notes.text
+					);
+					
+					//Add to list
+					treatmentsList.push(treatment);
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Insert in DB
+					Database.insertTreatmentSynchronous(treatment);
+				}
+			}
+			
+			function onCarbsEntered (e:Event):void
+			{
+				if (carbsTextInput == null || carbsTextInput.text == null || !BackgroundFetch.appIsInForeground())
+					return;
+				
+				var carbsValue:Number = Number((carbsTextInput.text as String).replace(",","."));
+				if (isNaN(carbsValue) || carbsTextInput.text == "") 
+				{
+					AlertManager.showSimpleAlert
+					(
+						"Alert",
+						"Carbs amount needs to be numeric!",
+						Number.NaN,
+						onAskNewCarbs
+					);
+					
+					function onAskNewCarbs():void
+					{
+						addTreatment(type);
+					}
+				}
+				else
+				{
+					var treatment:Treatment = new Treatment
+					(
+						Treatment.TYPE_CARBS_CORRECTION,
+						treatmentTime.value.valueOf(),
+						0,
+						"",
+						carbsValue,
 						0,
 						getEstimatedGlucose(treatmentTime.value.valueOf()),
 						notes.text
