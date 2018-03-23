@@ -13,7 +13,7 @@ package treatments
 		public static const TYPE_NOTE:String = "note";
 		
 		/* Internal Constants */
-		public static const INSULIN_PEAK:uint = 75;
+		private static const INSULIN_PEAK:uint = 75;
 		
 		/* Properties */
 		public var type:String;

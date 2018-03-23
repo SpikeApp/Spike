@@ -730,7 +730,7 @@ package ui.chart
 				if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
 					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
-					treatmentValue = (insulin != null ? insulin.name + ": " : "") + treatment.treatment.insulinAmount + " U";
+					treatmentValue = (insulin != null ? insulin.name + "\n" : "") + treatment.treatment.insulinAmount + " U";
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 				{
@@ -738,7 +738,13 @@ package ui.chart
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 				{
-					treatmentValue = "BG Check";
+					var glucoseValue:Number;
+					if (glucoseUnit == "mg/dL")
+						glucoseValue = treatment.treatment.glucose;
+					else
+						glucoseValue = Math.round(((BgReading.mgdlToMmol((treatment.treatment.glucose))) * 10)) / 10; 
+					
+					treatmentValue = "BG Check\n" + glucoseValue + " " + glucoseUnit;
 				}
 				
 				if (treatmentValue != "")

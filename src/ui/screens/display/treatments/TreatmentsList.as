@@ -34,6 +34,10 @@ package ui.screens.display.treatments
 		private var noteImage:Image;
 		private var bgCheckTexture:Texture;
 		private var bgCheckImage:Image;
+		private var carbsTexture:Texture;
+		private var carbsImage:Image;
+		private var mealTexture:Texture;
+		private var mealImage:Image;
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
@@ -66,6 +70,10 @@ package ui.screens.display.treatments
 			calibrationImage = new Image(calibrationTexture);
 			bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
 			bolusImage = new Image(bolusTexture);
+			carbsTexture = MaterialDeepGreyAmberMobileThemeIcons.carbsTexture;
+			carbsImage = new Image(carbsTexture);
+			mealTexture = MaterialDeepGreyAmberMobileThemeIcons.mealTexture;
+			mealImage = new Image(mealTexture);
 			bgCheckTexture = MaterialDeepGreyAmberMobileThemeIcons.bgCheckTexture;
 			bgCheckImage = new Image(bgCheckTexture);
 			noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
@@ -86,8 +94,10 @@ package ui.screens.display.treatments
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 },
 					{ label: "Bolus", icon: bolusImage, selectable: treatmentsEnabled, id: 2 },
-					{ label: "BG Check", icon: bgCheckImage, selectable: treatmentsEnabled, id: 3 },
-					{ label: "Note", icon: noteImage, selectable: treatmentsEnabled, id: 4 }
+					{ label: "Carbs", icon: carbsImage, selectable: treatmentsEnabled, id: 3 },
+					{ label: "Meal", icon: mealImage, selectable: treatmentsEnabled, id: 4 },
+					{ label: "BG Check", icon: bgCheckImage, selectable: treatmentsEnabled, id: 5 },
+					{ label: "Note", icon: noteImage, selectable: treatmentsEnabled, id: 6 }
 				]
 			);
 			
@@ -131,7 +141,7 @@ package ui.screens.display.treatments
 			{
 				if(index === 0)
 					return "calibration-item";
-				else if(index == 1 || index == 2 || index == 3)
+				else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5)
 					return "treatment-item";
 				
 				return "default-item";
@@ -163,13 +173,25 @@ package ui.screens.display.treatments
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_BOLUS);
 			}
-			else if(treatmentID == 3) //BG Check
+			else if(treatmentID == 3) //Carbs
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_CARBS_CORRECTION);
+			}
+			else if(treatmentID == 4) //Meal
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_MEAL_BOLUS);
+			}
+			else if(treatmentID == 5) //BG Check
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_GLUCOSE_CHECK);
 			}
-			else if(treatmentID == 4) //Note
+			else if(treatmentID == 6) //Note
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
@@ -230,6 +252,30 @@ package ui.screens.display.treatments
 			{
 				bgCheckImage.dispose();
 				bgCheckImage = null;
+			}
+			
+			if (carbsTexture != null)
+			{
+				carbsTexture.dispose();
+				carbsTexture = null;
+			}
+			
+			if (carbsImage != null)
+			{
+				carbsImage.dispose();
+				carbsImage = null;
+			}
+			
+			if (mealTexture != null)
+			{
+				mealTexture.dispose();
+				mealTexture = null;
+			}
+			
+			if (mealImage != null)
+			{
+				mealImage.dispose();
+				mealImage = null;
 			}
 			
 			super.dispose();
