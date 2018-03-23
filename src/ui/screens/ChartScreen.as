@@ -224,15 +224,11 @@ package ui.screens
 			
 			//Create new chart
 			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
-			//glucoseChart.dataSource = previousData.concat();
 			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
 			glucoseChart.y = glucoseChartTopPadding;
 			addChild(glucoseChart);
-			
-			//previousData.length = 0;
-			//previousData = null;
 		}
 		
 		private function calculateChartHeight():Number
@@ -301,8 +297,6 @@ package ui.screens
 						newReadingsListFollower = newReadingsListFollower.concat(readings);
 					}		
 				}	
-				
-				//AlarmService.cancelInactiveAlert();
 			} 
 			catch(error:Error) 
 			{
@@ -342,8 +336,6 @@ package ui.screens
 					Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
 					newReadingsList.push(reading);
 				}
-				
-				//AlarmService.cancelInactiveAlert();
 			} 
 			catch(error:Error) 
 			{
@@ -514,7 +506,6 @@ package ui.screens
 				var pieTopPadding:Number = Math.round((lastAvailableSpace * 0.3) / 2);
 				
 				//Pie Chart
-				//pieChart = new DistributionChart(pieHeight, glucoseChart.dataSource);
 				pieChart = new DistributionChart(pieHeight, chartData);
 				pieChart.y = Math.round(h24.y + h24.height + delimitterTopPadding + delimitter.height + pieTopPadding);
 				pieChart.x = 10;
