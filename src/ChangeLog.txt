@@ -9,6 +9,7 @@ ENHANCEMENT: Feathers and Starling UI frameworks have been updated to the latest
 ENHANCEMENT: Improvement of German translations for the Speech feature. Thank you Christian Pichmann!
 ENHANCEMENT: Improvements for the Apple Watch complication instructions.
 ENHANCEMENT: Improvements for the lock screen notification's body text when Spike is ready for the first/second calibration after starting a new sensor.
+ENHANCEMENT: Added some more "missed readings" suggestions to the help screen.
 
 This is a critical update. ALL users are advise to update!
 
