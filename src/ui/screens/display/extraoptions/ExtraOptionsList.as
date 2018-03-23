@@ -31,6 +31,7 @@ package ui.screens.display.extraoptions
 	import starling.events.Event;
 	import starling.text.TextFormat;
 	import starling.textures.Texture;
+	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
 	import ui.popups.AlarmPreSnoozer;
@@ -399,6 +400,11 @@ package ui.screens.display.extraoptions
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreationComplete);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
 			removeEventListener( starling.events.Event.CHANGE, onMenuChanged );
+			
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || !SystemUtil.isApplicationActive)
+			{
+				return;
+			}
 			
 			if (fullScreenIconTexture != null)
 			{
