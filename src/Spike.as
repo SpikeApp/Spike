@@ -83,7 +83,7 @@ package
 			//Create URL Request 
 			var vars:URLVariables = new URLVariables();
 			vars.mimeType = "text/html";
-			vars.emailSubject = "Spike Uncaught Error (Calá)";
+			vars.emailSubject = "Spike Uncaught Error";
 			vars.emailBody = error;
 			vars.userName = "";
 			vars.userEmail = "bug@spike-app.com";
