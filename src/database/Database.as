@@ -1189,11 +1189,11 @@ package database
 				var result:SQLResult = getRequest.getResult();
 				if (result.data != null) {
 					if (result.data != null) {
-						var calibrations:ArrayCollection = new ArrayCollection();
+						var calibrations:Array = [];
 						var numResults:int = result.data.length;
 						for (var i:int = 0; i < numResults; i++) 
 						{ 
-							calibrations.addItem(
+							calibrations.push(
 								new Calibration(
 									result.data[i].timestamp,
 									result.data[i].sensorAgeAtTimeOfEstimation,
@@ -1223,17 +1223,14 @@ package database
 									result.data[i].calibrationid)
 							);
 						} 
-						var dataSortFieldForReturnValue:SortField = new SortField();
-						dataSortFieldForReturnValue.name = "timestamp";
-						dataSortFieldForReturnValue.numeric = true;
+						
 						if (!first)
-							dataSortFieldForReturnValue.descending = true;//ie large to small
-						var dataSortForBGReadings:Sort = new Sort();
-						dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-						calibrations.sort = dataSortForBGReadings;
-						calibrations.refresh();
+							calibrations.sortOn(["timestamp"], Array.DESCENDING);
+						else
+							calibrations.sortOn(["timestamp"]);
+						
 						if (calibrations.length > 0)
-							returnValue = calibrations.getItemAt(0) as Calibration;
+							returnValue = calibrations[0] as Calibration;
 					}
 				}
 			} catch (error:SQLError) {
