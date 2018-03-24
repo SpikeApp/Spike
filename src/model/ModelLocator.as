@@ -46,6 +46,7 @@ package model
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
+	import services.Tester;
 	import services.TextToSpeechService;
 	import services.TransmitterService;
 	import services.UpdateService;
@@ -172,6 +173,8 @@ package model
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				
 				updateApplicationVersion();
+				
+				Tester.init();
 			}
 
 		}

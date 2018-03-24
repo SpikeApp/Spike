@@ -595,7 +595,7 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "in getInitialCalibrations.");
 			
-			var calibrationList:Array = Calibration.allForSensor().toArray();
+			var calibrationList:Array = Calibration.allForSensor();
 			var lastCalibrationSyncTimeStamp:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP));
 			
 			for(var i:int = calibrationList.length - 1 ; i >= 0; i--)

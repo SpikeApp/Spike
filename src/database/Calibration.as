@@ -303,32 +303,27 @@ package database
 		
 		/**
 		 * returns all calibrations for the ative sensor<br>
-		 * if no sensor active then the return value is an empty arraycollection (size = 0)<br> 
+		 * if no sensor active then the return value is an empty array (size = 0)<br> 
 		 * the calibrations will be order in descending order by timestamp
 		 */
-		public static function allForSensor():ArrayCollection {
+		public static function allForSensor():Array { //SPIKE
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) == "0")
-				return new ArrayCollection();//an empty arraycollection
+				return new Array();//an empty arraycollection
 			
-			var returnValue:ArrayCollection = Database.getCalibrationForSensorId(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR));
+			var returnValue:Array = Database.getCalibrationForSensorId(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR));
 			for (var i:int = 0; i < returnValue.length; i++) {
-				var calibration:Calibration = returnValue.getItemAt(i) as Calibration;
+				var calibration:Calibration = returnValue[i] as Calibration;
 				if (calibration.slopeConfidence == 0 || calibration.sensorConfidence == 0) {
-					returnValue.removeItemAt(i);
+					returnValue.removeAt(i);
 					i--;
 				}
 				i++;
 				if (i == returnValue.length)
 					break;
 			}
-			var dataSortFieldForReturnValue:SortField = new SortField();
-			dataSortFieldForReturnValue.name = "timestamp";
-			dataSortFieldForReturnValue.numeric = true;
-			dataSortFieldForReturnValue.descending = true;//ie from large to small
-			var dataSortForBGReadings:Sort = new Sort();
-			dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-			returnValue.sort = dataSortForBGReadings;
-			returnValue.refresh();
+			
+			returnValue.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+			
 			return returnValue;
 		}
 		
