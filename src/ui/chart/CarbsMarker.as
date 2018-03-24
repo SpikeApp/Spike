@@ -31,7 +31,7 @@ package ui.chart
 			var carbsMarker:NGon = new NGon(radius, 20, 0, 0, 360);
 			carbsMarker.x = radius / 3;
 			carbsMarker.y = radius + radius/4;
-			carbsMarker.color = 0xf15b28;
+			carbsMarker.color = 0xf8a246;
 			addChild(carbsMarker);
 			
 			//Stroke

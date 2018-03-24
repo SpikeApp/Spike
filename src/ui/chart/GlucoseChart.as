@@ -278,8 +278,9 @@ package ui.chart
 			glucoseTimelineContainer.addChild(mainChartContainer);
 			
 			//Mask (Only show markers before the delimiter)
-			mainChartMask = new Quad(yAxisMargin, _graphHeight, fakeChartMaskColor);
+			mainChartMask = new Quad(yAxisMargin, _graphHeight + (treatmentsActive ? 80 : 0), fakeChartMaskColor);
 			mainChartMask.x = _graphWidth - mainChartMask.width;
+			mainChartMask.y = treatmentsActive ? -40 : 0;
 			mainChartContainer.addChild(mainChartMask);
 			
 			/**
@@ -695,6 +696,20 @@ package ui.chart
 				
 				//calculateTotalIOB();
 			}
+			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				//Create treatment marker and add it to the chart
+				var mealMarker:MealMarker = new MealMarker(treatment);
+				mealMarker.x = (mealMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				mealMarker.y = _graphHeight - (mealMarker.radius * 1.66) - ((mealMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				mealMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+				treatmentsContainer.addChild(mealMarker);
+				
+				mealMarker.index = treatmenstsList.length;
+				treatmenstsList.push(mealMarker);
+				
+				calculateTotalIOB();
+			}
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{
 				//Create treatment marker and add it to the chart
@@ -744,11 +759,15 @@ package ui.chart
 				if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
 					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
-					treatmentValue = (insulin != null ? insulin.name + "\n" : "") + treatment.treatment.insulinAmount + " U";
+					treatmentValue = (insulin != null ? insulin.name + "\n" : "") + treatment.treatment.insulinAmount + "U";
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 				{
 					treatmentValue = "Carbs\n" + treatment.treatment.carbs + "g";
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+				{
+					treatmentValue += "Meal\n" + treatment.treatment.insulinAmount + "U" + " / " + treatment.treatment.carbs + "g";
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 				{
@@ -883,7 +902,7 @@ package ui.chart
 					else
 					{
 						//Treatment is still valid. Reposition it.
-						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 						{
 							treatment.x = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 							treatment.y = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);

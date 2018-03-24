@@ -146,7 +146,7 @@ package treatments
 			displayContainer.layout = displayLayout;
 			
 			//Fields
-			if (type == Treatment.TYPE_BOLUS)
+			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				//Logical
 				var canAddInsulin:Boolean = true;
@@ -154,12 +154,15 @@ package treatments
 				//Insulin Amout
 				var insulinTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
 				insulinTextInput.maxChars = 5;
+				if (type == Treatment.TYPE_MEAL_BOLUS)
+					insulinTextInput.prompt = "Insulin";
 				displayContainer.addChild(insulinTextInput);
 				var insulinSpacer:Sprite = new Sprite();
 				insulinSpacer.height = 10;
 				displayContainer.addChild(insulinSpacer);
 			}
-			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
+			
+			if (type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
 				//Glucose Amout
 				var glucoseTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
@@ -169,11 +172,14 @@ package treatments
 				glucoseSpacer.height = 10;
 				displayContainer.addChild(glucoseSpacer);
 			}
-			else if (type == Treatment.TYPE_CARBS_CORRECTION)
+			
+			if (type == Treatment.TYPE_CARBS_CORRECTION || type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				//Glucose Amout
 				var carbsTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
 				carbsTextInput.maxChars = 4;
+				if (type == Treatment.TYPE_MEAL_BOLUS)
+					carbsTextInput.prompt = "Carbs";
 				displayContainer.addChild(carbsTextInput);
 				var carbSpacer:Sprite = new Sprite();
 				carbSpacer.height = 10;
@@ -192,11 +198,11 @@ package treatments
 			treatmentSpacer.height = 10;
 			displayContainer.addChild(treatmentSpacer);
 			
-			if (type == Treatment.TYPE_BOLUS)
+			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
 				insulinTextInput.width = treatmentTime.width;
-			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
+			if (type == Treatment.TYPE_GLUCOSE_CHECK)
 				glucoseTextInput.width = treatmentTime.width;
-			else if (type == Treatment.TYPE_CARBS_CORRECTION)
+			if (type == Treatment.TYPE_CARBS_CORRECTION || type == Treatment.TYPE_MEAL_BOLUS)
 				carbsTextInput.width = treatmentTime.width;
 			
 			//Other Fields constainer
@@ -208,7 +214,7 @@ package treatments
 			otherFieldsConstainer.width = treatmentTime.width;
 			displayContainer.addChild(otherFieldsConstainer);
 			
-			if (type == Treatment.TYPE_BOLUS)
+			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				//Insulin Type
 				if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
@@ -249,10 +255,12 @@ package treatments
 				actionFunction = onBGCheckEntered;
 			else if (type == Treatment.TYPE_CARBS_CORRECTION)
 				actionFunction = onCarbsEntered;
+			else if (type == Treatment.TYPE_MEAL_BOLUS)
+				actionFunction = onMealEntered;
 			
 			var actionButtons:Array = [];
 			actionButtons.push( { label: "CANCEL" } );
-			if ((type == Treatment.TYPE_BOLUS && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION)
+			if (((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION)
 				actionButtons.push( { label: "ADD", triggered: actionFunction } );
 			
 			//Popup
@@ -265,6 +273,8 @@ package treatments
 				treatmentTitle = "Enter Blood Glucose";
 			else if (type == Treatment.TYPE_CARBS_CORRECTION)
 				treatmentTitle = "Enter Grams";
+			else if (type == Treatment.TYPE_MEAL_BOLUS)
+				treatmentTitle = "Enter Meal";
 				
 			var treatmentPopup:Alert = AlertManager.showActionAlert
 				(
@@ -282,7 +292,7 @@ package treatments
 			treatmentPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 			
 			//Keyboard Focus
-			if (type == Treatment.TYPE_BOLUS)
+			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
 				insulinTextInput.setFocus();
 			else if (type == Treatment.TYPE_NOTE)
 				notes.setFocus();
@@ -371,6 +381,69 @@ package treatments
 						getEstimatedGlucose(treatmentTime.value.valueOf()),
 						notes.text
 					);
+					
+					//Add to list
+					treatmentsList.push(treatment);
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Insert in DB
+					Database.insertTreatmentSynchronous(treatment);
+				}
+			}
+			
+			function onMealEntered (e:Event):void
+			{
+				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null ||!BackgroundFetch.appIsInForeground())
+					return;
+				
+				var insulinValue:Number = Number((insulinTextInput.text as String).replace(",","."));
+				var carbsValue:Number = Number((carbsTextInput.text as String).replace(",","."));
+				
+				if (isNaN(insulinValue) || insulinTextInput.text == "") 
+				{
+					AlertManager.showSimpleAlert
+						(
+							"Alert",
+							"Insulin amount needs to be numeric!",
+							Number.NaN,
+							onAskNewBolus
+						);
+					
+					function onAskNewBolus():void
+					{
+						addTreatment(type);
+					}
+				}
+				else if (isNaN(carbsValue) || carbsTextInput.text == "") 
+				{
+					AlertManager.showSimpleAlert
+						(
+							"Alert",
+							"Carbs amount needs to be numeric!",
+							Number.NaN,
+							onAskNewCarbs
+						);
+					
+					function onAskNewCarbs():void
+					{
+						addTreatment(type);
+					}
+				}
+				else
+				{
+					var treatment:Treatment = new Treatment
+						(
+							Treatment.TYPE_MEAL_BOLUS,
+							treatmentTime.value.valueOf(),
+							insulinValue,
+							insulinList.selectedItem.id,
+							carbsValue,
+							0,
+							getEstimatedGlucose(treatmentTime.value.valueOf()),
+							notes.text
+						);
 					
 					//Add to list
 					treatmentsList.push(treatment);
