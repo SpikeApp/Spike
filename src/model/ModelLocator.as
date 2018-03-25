@@ -46,7 +46,6 @@ package model
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
-	import services.Tester;
 	import services.TextToSpeechService;
 	import services.TransmitterService;
 	import services.UpdateService;
@@ -71,8 +70,8 @@ package model
 		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 60 * 60 * 1000 + Constants.READING_OFFSET;
 		public static const DEBUG_MODE:Boolean = true;
 
-		public static const TEST_FLIGHT_MODE:Boolean = false;
-		public static const INTERNAL_TESTING:Boolean = true;
+		public static const TEST_FLIGHT_MODE:Boolean = true;
+		public static const INTERNAL_TESTING:Boolean = false;
 		
 		public static function get instance():ModelLocator
 		{
@@ -149,7 +148,7 @@ package model
 				AppInterface.instance.init(); //Start rendering interface now that all data is available
 				AlertManager.init();
 				AlarmSnoozer.init();
-				//DeepSleepService.init();
+				DeepSleepService.init();
 				Database.getBlueToothDevice();
 				TransmitterService.init();
 				BackGroundFetchService.init();
