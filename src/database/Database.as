@@ -1459,78 +1459,11 @@ package database
 		
 		/**
 		 * get calibration for specified sensorId<br>
-		 * if there's no calibration for the specified sensorId then the returnvalue is an empty arraycollection<br>
+		 * if there's no calibration for the specified sensorId then the returnvalue is an empty array<br>
 		 * the calibrations will be order in descending order by timestamp<br>
 		 * synchronous
 		 */
-		/*public static function getCalibrationForSensorId(sensorId:String):ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
-			try {
-				var conn:SQLConnection = new SQLConnection();
-				conn.open(dbFile, SQLMode.READ);
-				conn.begin();
-				var getRequest:SQLStatement = new SQLStatement();
-				getRequest.sqlConnection = conn;
-				getRequest.text = "SELECT * FROM calibration WHERE sensorid = '" + sensorId + "'";
-				getRequest.execute();
-				var result:SQLResult = getRequest.getResult();
-				conn.close();
-				if (result.data != null) {
-					var numResults:int = result.data.length;
-					for (var i:int = 0; i < numResults; i++) 
-					{ 
-						returnValue.addItem(new Calibration(
-							result.data[i].timestamp,
-							result.data[i].sensorAgeAtTimeOfEstimation,
-							((result.data[i].sensorid) as String) == "-" ? null:getSensor(result.data[i].sensorid),
-							result.data[i].bg,
-							result.data[i].rawValue,
-							result.data[i].adjustedRawValue,
-							result.data[i].sensorConfidence,
-							result.data[i].slopeConfidence,
-							result.data[i].rawTimestamp,
-							result.data[i].slope,
-							result.data[i].intercept,
-							result.data[i].distanceFromEstimate,
-							result.data[i].estimateRawAtTimeOfCalibration,
-							result.data[i].estimateBgAtTimeOfCalibration,
-							result.data[i].possibleBad == "1" ? true:false,
-							result.data[i].checkIn == "1" ? true:false,
-							result.data[i].firstDecay,
-							result.data[i].secondDecay,
-							result.data[i].firstSlope,
-							result.data[i].secondSlope,
-							result.data[i].firstIntercept,
-							result.data[i].secondIntercept,
-							result.data[i].firstScale,
-							result.data[i].secondScale,
-							result.data[i].lastmodifiedtimestamp,
-							result.data[i].calibrationid
-						));
-					} 
-					var dataSortFieldForReturnValue:SortField = new SortField();
-					dataSortFieldForReturnValue.name = "timestamp";
-					dataSortFieldForReturnValue.numeric = true;
-					dataSortFieldForReturnValue.descending = true;//ie large to small
-					var dataSortForBGReadings:Sort = new Sort();
-					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-					returnValue.sort = dataSortForBGReadings;
-					returnValue.refresh();
-					
-				}
-			} catch (error:SQLError) {
-				if (conn.connected) conn.close();
-				dispatchInformation('error_while_getting_calibration_in_db', error.message + " - " + error.details);
-			} catch (other:Error) {
-				if (conn.connected) conn.close();
-				dispatchInformation('error_while_getting_calibration_in_db', other.getStackTrace().toString());
-			} finally {
-				if (conn.connected) conn.close();
-				return returnValue;
-			}
-		}*/
-		
-		public static function getCalibrationForSensorId(sensorId:String):Array   //SPIKE 
+		public static function getCalibrationForSensorId(sensorId:String):Array
 		{
 			var returnValue:Array = [];
 			
