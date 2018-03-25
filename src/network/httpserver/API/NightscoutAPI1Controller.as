@@ -2,7 +2,6 @@ package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
-	import mx.collections.ArrayCollection;
 	import mx.utils.ObjectUtil;
 	
 	import spark.formatters.DateTimeFormatter;

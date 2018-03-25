@@ -2,8 +2,6 @@ package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
-	import mx.collections.ArrayCollection;
-	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	
@@ -70,12 +68,12 @@ package network.httpserver.API
 				if (params.maxCount != null)	
 					numReadings = int(params.maxCount);
 				
-				var dexcomReadingsList:ArrayCollection = BgReading.latest(numReadings, BlueToothDevice.isFollower());
+				var dexcomReadingsList:Array = BgReading.latest(numReadings, BlueToothDevice.isFollower());
 				var dexcomReadingsCollection:Array = [];
 				
 				for (var i:int = 0; i < dexcomReadingsList.length; i++) 
 				{
-					var bgReading:BgReading = dexcomReadingsList.getItemAt(i) as BgReading;
+					var bgReading:BgReading = dexcomReadingsList[i] as BgReading;
 					if (bgReading == null || bgReading.calculatedValue == 0)
 						continue;
 					

@@ -20,12 +20,10 @@
  */
 package database
 {
-	import mx.collections.ArrayCollection;
+	import model.ModelLocator;
 	
 	import utils.BgGraphBuilder;
 	import utils.Trace;
-	
-	import model.ModelLocator;
 	
 	public class BgReading extends SuperDatabaseClass
 	{
@@ -321,17 +319,17 @@ package database
 		}
 		
 		/**
-		 * arraycollection will contain number of bgreadings with<br>
+		 * array will contain number of bgreadings with<br>
 		 * - sensor = current sensor<br>
 		 * - calculatedValule != 0<br>
 		 * - rawData != 0<br>
 		 * - latest 'number' that match these requirements<br>
 		 * - descending timestamp, order
 		 * <br>
-		 * could also be less than number, ie returnvalue could be arraycollection of size 0 
+		 * could also be less than number, ie returnvalue could be array of size 0 
 		 */
-		public static function latest(number:int, ignoreSensorId:Boolean = false):ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
+		public static function latest(number:int, ignoreSensorId:Boolean = false):Array {
+			var returnValue:Array = [];
 			var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			if (currentSensorId != "0" || ignoreSensorId) {
 				var cntr:int = ModelLocator.bgReadings.length - 1;
@@ -340,27 +338,29 @@ package database
 					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
 					if (bgReading.sensor != null || ignoreSensorId) {
 						if ((ignoreSensorId || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
-							returnValue.addItem(bgReading);
+							returnValue.push(bgReading);
 							itemsAdded++;
 						}
 					}
 					cntr--;
 				}
 			}
+			
 			return returnValue;
 		}
 		
 		/**
-		 * arraycollection will contain number of bgreadings with<br>
+		 * array will contain number of bgreadings with<br>
 		 * - sensor = current sensor<br>
 		 * - rawData != 0<br>
 		 * - latest 'number' that match these requirements<br>
 		 * - descending timestamp, order
 		 * <br>
-		 * could also be less than number, ie returnvalue could be arraycollection of size 0 
+		 * could also be less than number, ie returnvalue could be array of size 0 
 		 */
-		public static function latestBySize(number:int):ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
+		public static function latestBySize(number:int):Array {
+			
+			var returnValue:Array = [];
 			var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			if (currentSensorId != "0") {
 				var cntr:int = ModelLocator.bgReadings.length - 1;
@@ -369,26 +369,27 @@ package database
 					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
 					if (bgReading.sensor != null) {
 						if (bgReading.sensor.uniqueId == currentSensorId && bgReading.rawData != 0) {
-							returnValue.addItem(bgReading);
+							returnValue.push(bgReading);
 							itemsAdded++;
 						}
 					}
 					cntr--;
 				}
 			}
+			
 			return returnValue;
 		}
 		
 		/**
-		 * arraycollection will contain bgreadings with<br>
+		 * array will contain bgreadings with<br>
 		 * - rawData != 0<br>
 		 * - calculatedValue != 0<br>
 		 * - descending timestamp, order
 		 * <br>
-		 * returnvalue could be arraycollection of size 0 
+		 * returnvalue could be array of size 0 
 		 */
-		public static function last30Minutes():ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
+		public static function last30Minutes():Array {
+			var returnValue:Array = [];
 			if (ModelLocator.bgReadings.length == 0)
 				return returnValue;
 			
@@ -398,18 +399,16 @@ package database
 			var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
 			while (cntr > -1 && bgReading.timestamp > timestamp) {
 				if (bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
-					returnValue.addItem(bgReading);
+					returnValue.push(bgReading);
 					itemsAdded++;
 				}
 				cntr--;
 				if (cntr > -1)
 					bgReading = ModelLocator.bgReadings[cntr] as BgReading;
 			}
+			
 			return returnValue;
 		}
-
-		
-		
 		
 		/**
 		 * - rawData != 0<br>
@@ -454,7 +453,7 @@ package database
 		 * no database update ! 
 		 */
 		public function findNewCurve():void {
-			var last3:ArrayCollection = latest(3);
+			var last3:Array = latest(3);
 			var log:String = "";
 			var y3:Number;
 			var x3:Number;
@@ -466,9 +465,9 @@ package database
 			var second_latest:BgReading;
 			var third_latest:BgReading;
 			if (last3.length == 3) {
-				latest = last3.getItemAt(0) as BgReading;
-				second_latest = last3.getItemAt(1) as BgReading;
-				third_latest = last3.getItemAt(2) as BgReading;
+				latest = last3[0] as BgReading;
+				second_latest = last3[1] as BgReading;
+				third_latest = last3[2] as BgReading;
 				y3 = latest.calculatedValue;
 				x3 = latest.timestamp;
 				y2 = second_latest.calculatedValue;
@@ -482,8 +481,8 @@ package database
 				
 				resetLastModifiedTimeStamp();
 			} else if (last3.length == 2) {
-				latest = last3.getItemAt(0) as BgReading;
-				second_latest = last3.getItemAt(1) as BgReading;
+				latest = last3[0] as BgReading;
+				second_latest = last3[1] as BgReading;
 				
 				y2 = latest.calculatedValue;
 				x2 = latest.timestamp;
@@ -512,7 +511,7 @@ package database
 		 * no database update ! 
 		 */
 		public function findNewRawCurve():void {
-			var last3:ArrayCollection = BgReading.latest(3);
+			var last3:Array = BgReading.latest(3);
 			var y3:Number;
 			var x3:Number;
 			var y2:Number;
@@ -523,9 +522,9 @@ package database
 			var second_latest:BgReading; 
 			var third_latest:BgReading;
 			if (last3.length == 3) {
-				latest = last3.getItemAt(0) as BgReading;
-				second_latest = last3.getItemAt(1) as BgReading;
-				third_latest = last3.getItemAt(2) as BgReading;
+				latest = last3[0] as BgReading;
+				second_latest = last3[1] as BgReading;
+				third_latest = last3[2] as BgReading;
 				
 				y3 = latest.ageAdjustedRawValue;
 				x3 = latest.timestamp;
@@ -541,8 +540,8 @@ package database
 				resetLastModifiedTimeStamp();
 				
 			} else if (last3.length == 2) {
-				latest = last3.getItemAt(0) as BgReading;
-				second_latest = last3.getItemAt(1) as BgReading;
+				latest = last3[0] as BgReading;
+				second_latest = last3[1] as BgReading;
 				
 				y2 = latest.ageAdjustedRawValue;
 				x2 = latest.timestamp;
@@ -587,11 +586,11 @@ package database
 		public static function estimatedRawBg(timestamp:Number):Number {
 			timestamp = timestamp + BESTOFFSET;
 			var estimate:Number;
-			var latestReadings:ArrayCollection = BgReading.latest(1);
+			var latestReadings:Array = BgReading.latest(1);
 			if (latestReadings.length == 0) {
 				estimate = 160;
 			} else {
-				var latest:BgReading = latestReadings.getItemAt(0) as BgReading;
+				var latest:BgReading = latestReadings[0] as BgReading;
 				estimate = (latest.ra * timestamp * timestamp) + (latest.rb * timestamp) + latest.rc;
 			}
 			return estimate;
@@ -708,11 +707,11 @@ package database
 		 * no database update ! 
 		 */
 		public function findSlope(ignoreSensorId:Boolean = false):void {
-			var last2:ArrayCollection = BgReading.latest(2, ignoreSensorId);
+			var last2:Array = BgReading.latest(2, ignoreSensorId);
 			
 			_hideSlope = true;
 			if (last2.length == 2) {
-				var slopePair:Array = calculateSlope(this, last2.getItemAt(1) as BgReading);
+				var slopePair:Array = calculateSlope(this, last2[1] as BgReading);
 				_calculatedValueSlope = slopePair[0] as Number;
 				_hideSlope = slopePair[1] as Boolean;
 			} else if (last2.length == 1) {
@@ -885,9 +884,9 @@ package database
 		 * if  ignoreSensorId = true, then calculations takes into account only readings that have sensor id = current sensor id
 		 */
 		public static function currentSlope(ignoreSensorId:Boolean = false):Number {
-			var last_2:ArrayCollection = BgReading.latest(2, ignoreSensorId);
+			var last_2:Array = BgReading.latest(2, ignoreSensorId);
 			if (last_2.length == 2) {
-				var slopePair:Array = calculateSlope(last_2.getItemAt(0) as BgReading, last_2.getItemAt(1) as BgReading);
+				var slopePair:Array = calculateSlope(last_2[0] as BgReading, last_2[1] as BgReading);
 				return slopePair[0] as Number;
 			} else{
 				return new Number(0);

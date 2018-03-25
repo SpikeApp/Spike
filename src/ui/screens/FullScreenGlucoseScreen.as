@@ -128,7 +128,7 @@ package ui.screens
 			userTimeAgoFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
 		
 			//Latest 2 BgReadings
-			glucoseList = BgReading.latest(2, BlueToothDevice.isFollower()).toArray().reverse();
+			glucoseList = BgReading.latest(2, BlueToothDevice.isFollower()).reverse();
 			
 			//Calculate Values
 			calculateValues();

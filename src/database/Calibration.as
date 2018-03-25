@@ -342,9 +342,9 @@ package database
 
 			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			var sensor:Sensor = Database.getSensor(sensorId);
-			var bgReadings:ArrayCollection = BgReading.latestBySize(2);
-			var bgReading1:BgReading = bgReadings.getItemAt(0) as BgReading;
-			var bgReading2:BgReading = bgReadings.getItemAt(1) as BgReading;
+			var bgReadings:Array = BgReading.latestBySize(2);
+			var bgReading1:BgReading = bgReadings[0] as BgReading;
+			var bgReading2:BgReading = bgReadings[1] as BgReading;
 			
 			bgReading1.calculatedValue = bg1;
 			bgReading1.calibrationFlag = true;
@@ -776,7 +776,7 @@ package database
 		 * calibrations should be the latest, maximum 3, descending by timestamp, ie large to small
 		 */
 		public static function adjustRecentBgReadings(adjustCount:int, calibrations:Array):void {
-			var bgReadings:ArrayCollection= BgReading.latestBySize(adjustCount);
+			var bgReadings:Array= BgReading.latestBySize(adjustCount);
 			var latestCalibration:Calibration;
 			var bgcntr:int;
 			var bgReading:BgReading;
@@ -802,9 +802,9 @@ package database
 					bgReading.updateInDatabaseSynchronous();
 				}
 			}
-			(bgReadings.getItemAt(0) as BgReading).findNewRawCurve();
-			(bgReadings.getItemAt(0) as BgReading).findNewCurve();
-			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseSynchronous();		
+			(bgReadings[0] as BgReading).findNewRawCurve();
+			(bgReadings[0] as BgReading).findNewCurve();
+			(bgReadings[0] as BgReading).updateInDatabaseSynchronous();		
 		}
 		
 		/**

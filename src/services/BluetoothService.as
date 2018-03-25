@@ -37,8 +37,6 @@ package services
 	import flash.utils.Endian;
 	import flash.utils.Timer;
 	
-	import mx.collections.ArrayCollection;
-	
 	import G5Model.AuthChallengeRxMessage;
 	import G5Model.AuthChallengeTxMessage;
 	import G5Model.AuthRequestTxMessage;
@@ -1525,7 +1523,7 @@ package services
 				var i:int;
 				var delayedBlockNumber:String;
 				// calculate time delta to last valid BG reading
-				var bgReadings:ArrayCollection = BgReading.latest(1);
+				var bgReadings:Array = BgReading.latest(1);
 				if (bgReadings.length > 0) {
 					var bgReading:BgReading = (BgReading.latest(1))[0]  as BgReading;
 					m_persistentTimeLastBg = bgReading.timestamp;

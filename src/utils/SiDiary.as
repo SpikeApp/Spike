@@ -5,8 +5,6 @@ package utils
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import mx.collections.ArrayCollection;
-	
 	import database.BgReading;
 	import database.Calibration;
 	import database.Database;

@@ -2,6 +2,7 @@ package services
 {
 	import mx.utils.ObjectUtil;
 	
+	import database.BgReading;
 	import database.Calibration;
 	import database.Database;
 	import database.Sensor;
@@ -16,7 +17,7 @@ package services
 		{
 			trace("TESTER INIT");
 			
-			//ObjectUtil.toString(Database.getLatestCalibrations(4, Sensor.getActiveSensor().uniqueId));
+			//BgReading.last30Minutes();
 		}
 	}
 }

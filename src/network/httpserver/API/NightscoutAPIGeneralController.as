@@ -2,8 +2,6 @@ package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
-	import mx.collections.ArrayCollection;
-	
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BgReading;
@@ -121,7 +119,7 @@ package network.httpserver.API
 				if (params.count != null)	
 					numReadings = int(params.count);
 				
-				var readingsList:ArrayCollection = BgReading.latest(numReadings + 1, BlueToothDevice.isFollower());
+				var readingsList:Array = BgReading.latest(numReadings + 1, BlueToothDevice.isFollower());
 				var readingsCollection:Array = [];
 				var loopLength: int;
 				if (readingsList.length > numReadings)
@@ -131,7 +129,7 @@ package network.httpserver.API
 				
 				for (var i:int = 0; i < loopLength; i++) 
 				{
-					var bgReading:BgReading = readingsList.getItemAt(i) as BgReading;
+					var bgReading:BgReading = readingsList[i] as BgReading;
 					if (bgReading == null || bgReading.calculatedValue == 0)
 						continue;
 					
