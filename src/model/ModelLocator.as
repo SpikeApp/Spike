@@ -149,7 +149,7 @@ package model
 				AppInterface.instance.init(); //Start rendering interface now that all data is available
 				AlertManager.init();
 				AlarmSnoozer.init();
-				DeepSleepService.init();
+				//DeepSleepService.init();
 				Database.getBlueToothDevice();
 				TransmitterService.init();
 				BackGroundFetchService.init();
@@ -173,8 +173,6 @@ package model
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				
 				updateApplicationVersion();
-				
-				Tester.init();
 			}
 
 		}
