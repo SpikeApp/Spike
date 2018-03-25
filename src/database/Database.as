@@ -1021,8 +1021,8 @@ package database
 		/**
 		 * latest calibrations with the specified sensor id from large to small (ie descending) 
 		 */
-		public static function getLatestCalibrations(number:int, sensorId:String):ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
+		public static function getLatestCalibrations(number:int, sensorId:String):Array { 
+			var returnValue:Array = [];
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.READ);
@@ -1033,12 +1033,13 @@ package database
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				if (result.data != null) {
+				if (result.data != null) 
+				{	
 					var numResults:int = result.data.length;
-					var tempReturnValue:ArrayCollection = new ArrayCollection();
+					var tempReturnValue:Array = [];
 					for (var i:int = 0; i < numResults; i++) 
 					{ 
-						tempReturnValue.addItem(
+						tempReturnValue.push(
 							new Calibration(
 								result.data[i].timestamp,
 								result.data[i].sensorAgeAtTimeOfEstimation,
@@ -1068,16 +1069,11 @@ package database
 								result.data[i].calibrationid)
 						);
 					}
-					var dataSortFieldForReturnValue:SortField = new SortField();
-					dataSortFieldForReturnValue.name = "timestamp";
-					dataSortFieldForReturnValue.numeric = true;
-					dataSortFieldForReturnValue.descending = true;//ie from large to small
-					var dataSortForBGReadings:Sort = new Sort();
-					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-					tempReturnValue.sort = dataSortForBGReadings;
-					tempReturnValue.refresh();
+					
+					tempReturnValue.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+					
 					for (var cntr:int = 0; cntr < tempReturnValue.length; cntr++) {
-						returnValue.addItem(tempReturnValue.getItemAt(cntr));
+						returnValue.push(tempReturnValue[cntr]);
 						if (cntr == number - 1) {
 							break;
 						}

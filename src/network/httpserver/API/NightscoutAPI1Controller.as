@@ -147,7 +147,7 @@ package network.httpserver.API
 				if (params.count != null)	
 					numCalibrations = int(params.count);
 				var calibrationsCollection:Array = [];
-				var calibrationsList:ArrayCollection;
+				var calibrationsList:Array;
 				var i:int;
 				
 				if (!BlueToothDevice.isFollower())
@@ -156,7 +156,7 @@ package network.httpserver.API
 					
 					for (i = 0; i < calibrationsList.length; i++) 
 					{
-						var calibration:Calibration = calibrationsList.getItemAt(i) as Calibration;
+						var calibration:Calibration = calibrationsList[i] as Calibration;
 						if (calibration == null)
 							continue;
 						

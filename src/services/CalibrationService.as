@@ -415,7 +415,7 @@ package services
 					calibrationValue.maxChars = 4;
 				}
 				
-				if (((new Date()).valueOf() - (Calibration.latest(2).getItemAt(0) as Calibration).timestamp < (1000 * 60 * 60)) && override) 
+				if (((new Date()).valueOf() - (Calibration.latest(2)[0] as Calibration).timestamp < (1000 * 60 * 60)) && override) 
 				{
 					AlertManager.showActionAlert
 					(

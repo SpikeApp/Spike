@@ -3,6 +3,8 @@ package services
 	import mx.utils.ObjectUtil;
 	
 	import database.Calibration;
+	import database.Database;
+	import database.Sensor;
 
 	public class Tester
 	{
@@ -14,8 +16,7 @@ package services
 		{
 			trace("TESTER INIT");
 			
-			trace(ObjectUtil.toString(Calibration.first()));
-			trace(ObjectUtil.toString(Calibration.last()));
+			//ObjectUtil.toString(Database.getLatestCalibrations(4, Sensor.getActiveSensor().uniqueId));
 		}
 	}
 }
