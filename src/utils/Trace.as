@@ -101,7 +101,9 @@ package utils
 				if (filePath == "")
 					getSaveStream();
 				
-				stringToWrite += traceText.replace(" spiketrace ", " ") + "\n"; 
+				stringToWrite += traceText.replace(" spiketrace ", " ");
+				if (!SystemUtil.isApplicationActive && !BackgroundFetch.appIsInForeground() && !Constants.appInForeground)
+					stringToWrite += "\n"; 
 				
 				//Write to log only if Spike is in the foreground, otherwise queue it for later. This is to avoid crashes on some specific devices and/or iOS versions
 				if (SystemUtil.isApplicationActive && BackgroundFetch.appIsInForeground() && Constants.appInForeground)
