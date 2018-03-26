@@ -56,7 +56,7 @@ package ui.chart
 			label = LayoutFactory.createLabel(String(glucoseValue), HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			label.validate();
 			label.x = radius/3 - (label.width / 2);
-			label.y = radius * 2 + 3;
+			label.y = radius * 2 + 4;
 			addChild(label);
 		}	
 		

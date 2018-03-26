@@ -58,13 +58,13 @@ package ui.chart
 			insulinLabel = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			insulinLabel.validate();
 			insulinLabel.x = radius/3 - (insulinLabel.width / 2);
-			insulinLabel.y = radius * 2 + 3;
+			insulinLabel.y = radius * 2 + 4;
 			addChild(insulinLabel);
 			
 			carbsLabel = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			carbsLabel.validate();
 			carbsLabel.x = radius/3 - (carbsLabel.width / 2);
-			carbsLabel.y = -carbsLabel.height + 3;
+			carbsLabel.y = -carbsLabel.height + 4;
 			addChild(carbsLabel);
 			
 			mainLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);

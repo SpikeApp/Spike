@@ -944,6 +944,13 @@ package ui.chart
 							treatment.x = ((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius;
 							treatment.y = _graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2);
 						}
+						
+						//Reposition out of bounds treatments
+						if (yAxisHeight > 0 && treatment.y + treatment.height > yAxisHeight) //Lower Area
+							treatment.labelUp();
+						
+						if (treatment.y < -2) //Upper Area
+							treatment.y = -2;
 					}
 				}
 			}
