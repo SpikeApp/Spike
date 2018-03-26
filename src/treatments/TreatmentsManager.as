@@ -83,7 +83,7 @@ package treatments
 			}
 		}
 		
-		public static function getTotalIOB():Number
+		public static function getTotalIOB(time:Number):Number
 		{
 			var totalIOB:Number = 0;
 			
@@ -95,7 +95,7 @@ package treatments
 					var treatment:Treatment = treatmentsList[i];
 					if (treatment != null && (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS))
 					{
-						totalIOB += treatment.calculateIOB();
+						totalIOB += treatment.calculateIOB(time);
 					}
 				}
 			}

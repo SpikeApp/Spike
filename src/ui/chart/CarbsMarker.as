@@ -13,6 +13,9 @@ package ui.chart
 	
 	public class CarbsMarker extends ChartTreatment
 	{
+
+		private var label:Label;
+		
 		public function CarbsMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
@@ -43,11 +46,23 @@ package ui.chart
 			addChild(stroke);
 			
 			//Label
-			var label:Label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
+			label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			label.validate();
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 3;
 			addChild(label);
-		}		
+		}	
+		
+		override public function labelUp():void
+		{
+			if (label != null)
+				label.y = -label.height + 3;
+		}
+		
+		override public function labelDown():void
+		{
+			if (label != null)
+				label.y = radius * 2 + 3;
+		}
 	}
 }

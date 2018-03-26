@@ -13,5 +13,13 @@ package ui.chart
 		public function ChartTreatment()
 		{
 		}
+		
+		public function labelUp():void
+		{
+		}
+		
+		public function labelDown():void
+		{
+		}
 	}
 }

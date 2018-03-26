@@ -39,6 +39,7 @@ package ui.chart
 		public function setValue(value:String):void
 		{
 			this.value = value;
+			
 			drawPill();
 		}
 		

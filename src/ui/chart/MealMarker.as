@@ -1,5 +1,5 @@
 package ui.chart
-{
+{	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
@@ -13,6 +13,12 @@ package ui.chart
 	
 	public class MealMarker extends ChartTreatment
 	{
+
+		private var insulinLabel:Label;
+
+		private var carbsLabel:Label;
+
+		private var mainLabel:Label;
 		public function MealMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
@@ -49,17 +55,43 @@ package ui.chart
 			addChild(stroke);
 			
 			//Label
-			var insulinLabel:Label = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
+			insulinLabel = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			insulinLabel.validate();
 			insulinLabel.x = radius/3 - (insulinLabel.width / 2);
 			insulinLabel.y = radius * 2 + 3;
 			addChild(insulinLabel);
 			
-			var carbsLabel:Label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
+			carbsLabel = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			carbsLabel.validate();
 			carbsLabel.x = radius/3 - (carbsLabel.width / 2);
 			carbsLabel.y = -carbsLabel.height + 3;
 			addChild(carbsLabel);
-		}		
+			
+			mainLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
+			mainLabel.y = carbsLabel.y;
+			mainLabel.visible = false;
+			addChild(mainLabel);
+		}	
+		
+		override public function labelUp():void
+		{
+			if (mainLabel != null)
+			{
+				insulinLabel.visible = false;
+				carbsLabel.visible = false;
+				mainLabel.text = insulinLabel.text + " / " + carbsLabel.text;
+				mainLabel.validate();
+				mainLabel.y = carbsLabel.y;
+				mainLabel.x = radius/3 - (mainLabel.width / 2);
+				mainLabel.visible = true;
+			}
+		}
+		
+		override public function labelDown():void
+		{
+			insulinLabel.visible = true;
+			carbsLabel.visible = true;
+			mainLabel.visible = false;
+		}
 	}
 }

@@ -16,6 +16,9 @@ package ui.chart
 	
 	public class BGCheckMarker extends ChartTreatment
 	{
+
+		private var label:Label;
+		
 		public function BGCheckMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
@@ -50,11 +53,23 @@ package ui.chart
 			else
 				glucoseValue = Math.round(((BgReading.mgdlToMmol((treatment.glucose))) * 10)) / 10;
 			
-			var label:Label = LayoutFactory.createLabel(String(glucoseValue), HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
+			label = LayoutFactory.createLabel(String(glucoseValue), HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
 			label.validate();
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 3;
 			addChild(label);
-		}		
+		}	
+		
+		override public function labelUp():void
+		{
+			if (label != null)
+				label.y = -label.height + 3;
+		}
+		
+		override public function labelDown():void
+		{
+			if (label != null)
+				label.y = radius * 2 + 3;
+		}
 	}
 }
