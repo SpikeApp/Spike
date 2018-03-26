@@ -3,6 +3,7 @@ package utils
 	
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
+	import flash.events.Event;
 	import flash.filesystem.File;
 	import flash.system.Capabilities;
 	
@@ -19,6 +20,9 @@ package utils
 	import database.Sensor;
 	
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
+	
+	import starling.utils.SystemUtil;
 	
 	
 	public class Trace
@@ -28,6 +32,7 @@ package utils
 		private static const debugMode:Boolean = true;
 		private static var initialStart:Boolean = true;
 		private static var filePath:String = "";
+		private static var stringToWrite:String = "";
 		
 		public function Trace()
 		{
@@ -38,6 +43,21 @@ package utils
 				initialStart = false;
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 				filePath = "";
+				Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
+			}
+		}
+		
+		protected static function onAppActivated(event:Event):void
+		{
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "true")
+			{
+				if (filePath == "")
+					getSaveStream();
+				
+				//Now that Spike is in the foreground we write the log
+				BackgroundFetch.writeTraceToFile(filePath, stringToWrite);
+				
+				stringToWrite = "";
 			}
 		}
 		
@@ -80,7 +100,15 @@ package utils
 			} else {
 				if (filePath == "")
 					getSaveStream();
-				BackgroundFetch.writeTraceToFile(filePath, traceText.replace(" spiketrace ", " "));			
+				
+				stringToWrite += traceText.replace(" spiketrace ", " ") + "\n"; 
+				
+				//Write to log only if Spike is in the foreground, otherwise queue it for later. This is to avoid crashes on some specific devices and/or iOS versions
+				if (SystemUtil.isApplicationActive && BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+				{
+					BackgroundFetch.writeTraceToFile(filePath, stringToWrite);
+					stringToWrite = "";
+				}
 			}
 		}
 		
