@@ -12,6 +12,7 @@ package network.httpserver.API
 	import network.httpserver.ActionController;
 	
 	import utils.BgGraphBuilder;
+	import utils.SpikeJSON;
 	import utils.Trace;
 	
 	public class NightscoutAPIGeneralController extends ActionController
@@ -97,7 +98,8 @@ package network.httpserver.API
 				}
 				
 				//Final Response
-				response = JSON.stringify(responseObject);
+				//response = JSON.stringify(responseObject);
+				response = SpikeJSON.stringify(responseObject);
 			} 
 			catch(error:Error) 
 			{
@@ -158,7 +160,8 @@ package network.httpserver.API
 					readingsCollection.push(bgObject);
 				}
 				
-				response = JSON.stringify(readingsCollection);
+				//response = JSON.stringify(readingsCollection);
+				response = SpikeJSON.stringify(readingsCollection);
 				
 				readingsList = null;
 				readingsCollection = null;

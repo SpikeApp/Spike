@@ -38,6 +38,7 @@ package ui.screens.display.dexcomshare
 	
 	import utils.DataValidator;
 	import utils.DeviceInfo;
+	import utils.SpikeJSON;
 	import utils.Trace;
 	
 	[ResourceBundle("sharesettingsscreen")]
@@ -510,7 +511,8 @@ package ui.screens.display.dexcomshare
 				newFollowerParameters.DisplayName = userDisplayName.text;
 				
 				DexcomShareService.instance.addEventListener(DexcomShareEvent.INVITE_FOLLOWER, onFollowerInvited);
-				DexcomShareService.inviteFollower(contactID, JSON.stringify(newFollowerParameters));
+				//DexcomShareService.inviteFollower(contactID, JSON.stringify(newFollowerParameters));
+				DexcomShareService.inviteFollower(contactID, SpikeJSON.stringify(newFollowerParameters));
 			}
 			else
 			{
@@ -771,7 +773,8 @@ package ui.screens.display.dexcomshare
 			
 			try
 			{
-				responseInfo = JSON.parse(response);
+				//responseInfo = JSON.parse(response);
+				responseInfo = SpikeJSON.parse(response);
 			} 
 			catch(error:Error) 
 			{

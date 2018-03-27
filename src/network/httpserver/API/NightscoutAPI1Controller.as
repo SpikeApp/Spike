@@ -16,6 +16,7 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
+	import utils.SpikeJSON;
 	import utils.Trace;
 	import utils.UniqueId;
 	
@@ -121,7 +122,8 @@ package network.httpserver.API
 					}
 				}
 				
-				response = JSON.stringify(readingsCollection);
+				//response = JSON.stringify(readingsCollection);
+				response = SpikeJSON.stringify(readingsCollection);
 				
 				readingsCollection = null;
 				params = null;
@@ -192,7 +194,8 @@ package network.httpserver.API
 					}
 				}
 				
-				response = JSON.stringify(calibrationsCollection);
+				//response = JSON.stringify(calibrationsCollection);
+				response = SpikeJSON.stringify(calibrationsCollection);
 				
 				calibrationsList = null;
 				calibrationsCollection = null;
@@ -435,7 +438,8 @@ package network.httpserver.API
 					};
 				statusObject.authorized = null;
 				
-				response = JSON.stringify(statusObject);
+				//response = JSON.stringify(statusObject);
+				response = SpikeJSON.stringify(statusObject);
 			} 
 			catch(error:Error) 
 			{

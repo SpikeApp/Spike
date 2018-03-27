@@ -41,6 +41,7 @@ package services
 	
 	import ui.popups.AlertManager;
 	
+	import utils.SpikeJSON;
 	import utils.TimeSpan;
 	import utils.Trace;
 	import utils.UniqueId;
@@ -224,7 +225,8 @@ package services
 			syncGlucoseReadingsActive = true;
 			
 			//Upload Glucose Readings
-			NetworkConnector.createNSConnector(nightscoutEventsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeGlucoseReadings), MODE_GLUCOSE_READING, onUploadGlucoseReadingsComplete, onConnectionFailed);
+			//NetworkConnector.createNSConnector(nightscoutEventsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeGlucoseReadings), MODE_GLUCOSE_READING, onUploadGlucoseReadingsComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutEventsURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(activeGlucoseReadings), MODE_GLUCOSE_READING, onUploadGlucoseReadingsComplete, onConnectionFailed);
 		}
 		
 		private static function onBgreadingReceived(e:Event):void 
@@ -471,7 +473,8 @@ package services
 			try 
 			{
 				var BgReadingsToSend:Array = [];
-				var NSResponseJSON:Object = JSON.parse(response);
+				//var NSResponseJSON:Object = JSON.parse(response);
+				var NSResponseJSON:Object = SpikeJSON.parse(response);
 				if (NSResponseJSON is Array) 
 				{
 					var NSBgReadings:Array = NSResponseJSON as Array;
@@ -588,7 +591,8 @@ package services
 			syncCalibrationsActive = true;
 			
 			//Upload Glucose Readings
-			NetworkConnector.createNSConnector(nightscoutEventsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeCalibrations), MODE_CALIBRATION, onUploadCalibrationsComplete, onConnectionFailed);
+			//NetworkConnector.createNSConnector(nightscoutEventsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeCalibrations), MODE_CALIBRATION, onUploadCalibrationsComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutEventsURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(activeCalibrations), MODE_CALIBRATION, onUploadCalibrationsComplete, onConnectionFailed);
 		}
 		
 		private static function getInitialCalibrations():void
@@ -668,7 +672,8 @@ package services
 			syncVisualCalibrationsActive = true;
 			
 			//Upload Glucose Readings
-			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeVisualCalibrations), MODE_VISUAL_CALIBRATION, onUploadVisualCalibrationsComplete, onConnectionFailed);
+			//NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeVisualCalibrations), MODE_VISUAL_CALIBRATION, onUploadVisualCalibrationsComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(activeVisualCalibrations), MODE_VISUAL_CALIBRATION, onUploadVisualCalibrationsComplete, onConnectionFailed);
 		}
 		
 		private static function onUploadVisualCalibrationsComplete(e:Event):void
@@ -710,7 +715,8 @@ package services
 			syncSensorStartActive = true;
 			
 			//Upload Glucose Readings
-			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeSensorStarts), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
+			//NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeSensorStarts), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(activeSensorStarts), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
 		}
 		
 		private static function getSensorStart():void
@@ -776,7 +782,8 @@ package services
 				credentialsTester["duration"] = 30;
 				credentialsTester["notes"] = "Spike Authentication Test";
 				
-				NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, JSON.stringify(credentialsTester), MODE_TEST_CREDENTIALS, onTestCredentialsComplete, onConnectionFailed);
+				//NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, JSON.stringify(credentialsTester), MODE_TEST_CREDENTIALS, onTestCredentialsComplete, onConnectionFailed);
+				NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, SpikeJSON.stringify(credentialsTester), MODE_TEST_CREDENTIALS, onTestCredentialsComplete, onConnectionFailed);
 			}
 			else
 			{
@@ -825,7 +832,8 @@ package services
 				}
 				else
 				{
-					var responseInfo:Object = JSON.parse(response);
+					//var responseInfo:Object = JSON.parse(response);
+					var responseInfo:Object = SpikeJSON.parse(response);
 					if (responseInfo.ok != null && responseInfo.ok == 1)
 					{
 						Trace.myTrace("NightscoutService.as", "NS Authentication successful! Activating service");
