@@ -191,6 +191,7 @@ package ui.chart
 		private var now:String;
 		private var COBPill:ChartTreatmentPill;
 		private var yAxisHeight:Number = 0;
+		private var allTreatmentsAdded:Boolean = false;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -299,20 +300,9 @@ package ui.chart
 			addChild(yAxisContainer);
 			
 			/**
-			 * Add Treatments
+			 * Treatments
 			 */
-			if (TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && treatmentsActive && !dummyModeActive)
-			{
-				for (var i:int = 0; i < TreatmentsManager.treatmentsList.length; i++) 
-				{
-					var treatment:Treatment = TreatmentsManager.treatmentsList[i] as Treatment;
-					if (treatment != null)
-						addTreatment(treatment);
-				}
-				
-				//Update Display Treatments Values
-				calculateTotalIOB(new Date().valueOf());
-			}
+			addAllTreatments();
 			
 			/**
 			 * Scroller
@@ -657,6 +647,24 @@ package ui.chart
 			}
 		}
 		
+		public function calculateTotalCOB(time:Number):void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive)
+				return;
+			
+			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
+			{
+				COBPill.setValue(GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(time)));
+				repositionTreatmentPills();
+			}
+			
+			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
+			{
+				COBPill.setValue(GlucoseFactory.formatCOB(0));
+				repositionTreatmentPills();
+			}
+		}
+		
 		private function repositionTreatmentPills():void
 		{
 			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
@@ -664,6 +672,25 @@ package ui.chart
 			
 			COBPill.x = IOBPill.x - COBPill.width - 6;
 			COBPill.visible = true;
+		}
+		
+		public function addAllTreatments():void
+		{
+			if (TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && treatmentsActive && !dummyModeActive && !allTreatmentsAdded)
+			{
+				allTreatmentsAdded = true;
+				
+				for (var i:int = 0; i < TreatmentsManager.treatmentsList.length; i++) 
+				{
+					var treatment:Treatment = TreatmentsManager.treatmentsList[i] as Treatment;
+					if (treatment != null)
+						addTreatment(treatment);
+				}
+				
+				//Update Display Treatments Values
+				calculateTotalIOB(new Date().valueOf());
+				calculateTotalCOB(new Date().valueOf());
+			}
 		}
 		
 		public function addTreatment(treatment:Treatment):void
@@ -694,6 +721,7 @@ package ui.chart
 				treatmenstsList.push(insulinMarker);
 				
 				calculateTotalIOB(getTimelineTimestamp());
+				calculateTotalCOB(getTimelineTimestamp());
 				
 				chartTreatment = insulinMarker;
 			}
@@ -709,7 +737,7 @@ package ui.chart
 				carbsMarker.index = treatmenstsList.length;
 				treatmenstsList.push(carbsMarker);
 				
-				//calculateTotalIOB();
+				calculateTotalCOB(getTimelineTimestamp());
 				
 				chartTreatment = carbsMarker;
 			}
@@ -726,6 +754,7 @@ package ui.chart
 				treatmenstsList.push(mealMarker);
 				
 				calculateTotalIOB(getTimelineTimestamp());
+				calculateTotalCOB(getTimelineTimestamp());
 				
 				chartTreatment = mealMarker;
 			}
@@ -762,7 +791,7 @@ package ui.chart
 				mainChartContainer.addChild(mainChartMask);
 			
 			//Reposition out of bounds treatments
-			if (yAxisHeight > 0 && chartTreatment.y + chartTreatment.height > yAxisHeight) //Lower Area
+			if (yAxisHeight > 0 && chartTreatment.y + chartTreatment.height > yAxisHeight - 5) //Lower Area
 				chartTreatment.labelUp();
 			
 			if (chartTreatment.y < -2) //Upper Area
@@ -869,6 +898,7 @@ package ui.chart
 					treatment = null;
 					
 					calculateTotalIOB(getTimelineTimestamp());
+					calculateTotalCOB(getTimelineTimestamp());
 				}
 				
 				function onMove(e:starling.events.Event):void
@@ -897,7 +927,13 @@ package ui.chart
 						treatmentCallout.close(true);
 						
 						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+						{
 							calculateTotalIOB(getTimelineTimestamp());
+							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+								calculateTotalCOB(getTimelineTimestamp());
+						}
+						else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+							calculateTotalCOB(getTimelineTimestamp());
 						
 						//Update database
 						TreatmentsManager.updateTreatment(treatment.treatment);
@@ -946,8 +982,10 @@ package ui.chart
 						}
 						
 						//Reposition out of bounds treatments
-						if (yAxisHeight > 0 && treatment.y + treatment.height > yAxisHeight) //Lower Area
+						if (yAxisHeight > 0 && treatment.y + treatment.height > yAxisHeight - 5) //Lower Area
 							treatment.labelUp();
+						else
+							treatment.labelDown();
 						
 						if (treatment.y < -2) //Upper Area
 							treatment.y = -2;
@@ -1469,8 +1507,10 @@ package ui.chart
 			calculateDisplayLabels();
 			
 			drawTimeline();
+			addAllTreatments();
 			manageTreatments();
 			calculateTotalIOB(getTimelineTimestamp());
+			calculateTotalCOB(getTimelineTimestamp());
 			
 			return true;
 		}
@@ -2255,6 +2295,7 @@ package ui.chart
 					glucoseValueDisplay.fontStyles.color = oldColor;
 					
 					calculateTotalIOB(getTimelineTimestamp());
+					calculateTotalCOB(getTimelineTimestamp());
 					
 					return;
 				}
@@ -2363,8 +2404,8 @@ package ui.chart
 								displayLatestBGValue = true;
 							
 							//Treatments
-							//calculateTotalIOB(currentMarker.timestamp);
 							calculateTotalIOB(getTimelineTimestamp());
+							calculateTotalCOB(getTimelineTimestamp());
 						}
 						
 						//We found a mach so we can break the loop to save CPU cycles
@@ -2388,6 +2429,7 @@ package ui.chart
 			{
 				calculateDisplayLabels();
 				calculateTotalIOB(getTimelineTimestamp());
+				calculateTotalCOB(getTimelineTimestamp());
 			}
 		}
 		

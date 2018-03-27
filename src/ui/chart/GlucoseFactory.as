@@ -191,5 +191,24 @@ package ui.chart
 			
 			return value;
 		}
+		public static function formatCOB(COBValue:Number):String
+		{
+			var value:String = String(COBValue);
+			var valueLength:int = value.length;
+			var decimalPosition:int = -1;
+			if (value.indexOf(".") != -1)
+				decimalPosition = value.indexOf(".");
+			if (value.indexOf(",") != -1)
+				decimalPosition = value.indexOf(",");
+			
+			if (decimalPosition == -1 && COBValue != 0)
+				value = value + ".0";
+			else if (COBValue == 0)
+				value = "0.0";
+			
+			value += "g";
+			
+			return value;
+		}
 	}
 }

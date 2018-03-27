@@ -154,7 +154,9 @@ package ui.screens
 			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
+			glucoseChart.addAllTreatments();
 			glucoseChart.calculateTotalIOB(new Date().valueOf());
+			glucoseChart.calculateTotalCOB(new Date().valueOf());
 			addChild(glucoseChart);
 			
 			//Prevents Starling Line Mask Bug
@@ -232,7 +234,9 @@ package ui.screens
 			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
+			glucoseChart.addAllTreatments();
 			glucoseChart.calculateTotalIOB(new Date().valueOf());
+			glucoseChart.calculateTotalCOB(new Date().valueOf());
 			glucoseChart.y = glucoseChartTopPadding;
 			addChild(glucoseChart);
 		}

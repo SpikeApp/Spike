@@ -2,6 +2,8 @@ package treatments
 {
 	import flash.utils.setInterval;
 	
+	import mx.utils.ObjectUtil;
+	
 	import utils.UniqueId;
 
 	public class Treatment
@@ -29,14 +31,6 @@ package treatments
 		public var timestamp:Number;
 		public var ID:String;
 		private var insulinScaleFactor:Number;
-		
-		/*private var decayedBy:Number = 0;
-		private var lastDecayedBy:Number = 0;
-		private var initialCarbs:Number;
-		private var isDecaying:Number;*/
-		
-		/*private var carbTime:Date;
-		private var lastDecayedBy:Number = 0;*/
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "")
 		{
@@ -83,9 +77,111 @@ package treatments
 			return iob;
 		}
 		
-		public function calculateCOB():void
+		private function COBxDrip(lastDecayedBy:Number, time:Number):CobCalc
 		{
+			var delay:int = 20; // minutes till carbs start decaying
+			var delayms:Number = delay * 60 * 1000;
 			
+			if (carbs > 0)
+			{
+				var thisCobCalc:CobCalc = new CobCalc();
+				thisCobCalc.carbTime = this.timestamp;
+				
+				// no previous carb treatment? Set to our start time
+				if (lastDecayedBy == 0) 
+				{
+					lastDecayedBy = thisCobCalc.carbTime;
+				}
+				
+				var carbs_hr:Number = 30; //30g per hour
+				var carbs_min:Number = carbs_hr / 60;
+				var carbs_ms:Number = carbs_min / (60 * 1000);
+				
+				thisCobCalc.decayedBy = thisCobCalc.carbTime; // initially set to start time for this treatment
+				
+				var minutesleft:Number = (lastDecayedBy - thisCobCalc.carbTime) / 1000 / 60;
+				var how_long_till_carbs_start_ms:Number = (lastDecayedBy - thisCobCalc.carbTime);
+				thisCobCalc.decayedBy += (Math.max(delay, minutesleft) + carbs / carbs_min) * 60 * 1000;
+				
+				if (delay > minutesleft) 
+				{
+					thisCobCalc.initialCarbs = carbs;
+				} 
+				else 
+				{
+					thisCobCalc.initialCarbs = carbs + minutesleft * carbs_min;
+				}
+				
+				var startDecay:Number = thisCobCalc.carbTime + (delay * 60 * 1000);
+				
+				if (time < lastDecayedBy || time > startDecay) 
+				{
+					thisCobCalc.isDecaying = 1;
+				} 
+				else 
+				{
+					thisCobCalc.isDecaying = 0;
+				}
+				
+				trace("XDRIP", ObjectUtil.toString(thisCobCalc));
+				
+				return thisCobCalc;
+			} 
+			else 
+			{
+				return null;
+			}
+		}
+		
+		public function calculateCOB(lastDecayedBy:Number, time:Number):CobCalc
+		{
+			var absorptionRate:int = 30;
+			var delay:int = 20;
+			var isDecaying:int = 0;
+			
+			if (carbs > 0)
+			{
+				var thisCobCalc:CobCalc = new CobCalc();
+				thisCobCalc.carbTime = this.timestamp;
+				
+				var carbs_hr:Number = absorptionRate;
+				var carbs_min:Number = carbs_hr / 60;
+				
+				thisCobCalc.decayedBy = thisCobCalc.carbTime;
+				
+				var minutesleft:Number = (lastDecayedBy - thisCobCalc.carbTime) / 1000 / 60;
+				
+				thisCobCalc.decayedBy += (Math.max(delay, minutesleft) + carbs / carbs_min) * 60 * 1000;
+				
+				
+				if (delay > minutesleft) {
+					thisCobCalc.initialCarbs = carbs;
+				}
+				else 
+				{
+					thisCobCalc.initialCarbs = carbs + minutesleft * carbs_min;
+				}
+				
+				var startDecay:Number = thisCobCalc.carbTime;
+				startDecay += (thisCobCalc.carbTime + delay) * 60 * 1000
+				
+				if (time < lastDecayedBy || time > startDecay) 
+				{
+					thisCobCalc.isDecaying = 1;
+				}
+				else 
+				{
+					thisCobCalc.isDecaying = 0;
+				}
+				
+				trace("NS", ObjectUtil.toString(thisCobCalc));
+				
+				return thisCobCalc;
+			}
+			else 
+			{
+				return null;
+			}
 		}
 	}
 }
