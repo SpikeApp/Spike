@@ -10,14 +10,12 @@ package utils
 		
 		public static function stringify(object:Object):String
 		{
-			trace("Spike JSON stringify called");
 			return com.adobe.serialization.json.JSON.encode(object);
 		}
 		
-		public static function parse(string:String):*
+		public static function parse(string:String):Object
 		{
-			trace("Spike JSON parse called");
-			com.adobe.serialization.json.JSON.decode(string);
+			return com.adobe.serialization.json.JSON.decode(string, true);
 		}
 	}
 }
