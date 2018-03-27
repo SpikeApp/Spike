@@ -39,6 +39,7 @@ package ui
 	import ui.screens.SpeechSettingsScreen;
 	import ui.screens.TransmitterScreen;
 	import ui.screens.TransmitterSettingsScreen;
+	import ui.screens.TreatmentsManagementScreen;
 	import ui.screens.WatchSettingsScreen;
 	import ui.screens.WidgetSettingsScreen;
 	import ui.screens.data.AlarmNavigatorData;
@@ -223,6 +224,13 @@ package ui
 			disclaimerScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
 			disclaimerScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.DISCLAIMER, disclaimerScreenItem );
+			
+			/* Treatments Management Screen */
+			var treatmentsManagementScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TreatmentsManagementScreen );
+			treatmentsManagementScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			treatmentsManagementScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			treatmentsManagementScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.ALL_TREATMENTS, treatmentsManagementScreenItem );
 			
 			/* Screen Navigator */
 			navigator.rootScreenID = Screens.GLUCOSE_CHART;

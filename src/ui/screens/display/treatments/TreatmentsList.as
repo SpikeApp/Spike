@@ -18,6 +18,9 @@ package ui.screens.display.treatments
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
+	import ui.AppInterface;
+	import ui.screens.Screens;
+	
 	[ResourceBundle("chartscreen")]
 
 	public class TreatmentsList extends List 
@@ -38,6 +41,8 @@ package ui.screens.display.treatments
 		private var carbsImage:Image;
 		private var mealTexture:Texture;
 		private var mealImage:Image;
+		private var treatmentsTexture:Texture;
+		private var treatmentsImage:Image;
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
@@ -78,6 +83,8 @@ package ui.screens.display.treatments
 			bgCheckImage = new Image(bgCheckTexture);
 			noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
 			noteImage = new Image(noteTexture);
+			treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.treatmentsTexture;
+			treatmentsImage = new Image(treatmentsTexture);
 		}
 		
 		private function setupContent():void
@@ -97,7 +104,8 @@ package ui.screens.display.treatments
 					{ label: "Carbs", icon: carbsImage, selectable: treatmentsEnabled, id: 3 },
 					{ label: "Meal", icon: mealImage, selectable: treatmentsEnabled, id: 4 },
 					{ label: "BG Check", icon: bgCheckImage, selectable: treatmentsEnabled, id: 5 },
-					{ label: "Note", icon: noteImage, selectable: treatmentsEnabled, id: 6 }
+					{ label: "Note", icon: noteImage, selectable: treatmentsEnabled, id: 6 },
+					{ label: "Treatments", icon: treatmentsImage, selectable: treatmentsEnabled, id: 7 }
 				]
 			);
 			
@@ -141,7 +149,7 @@ package ui.screens.display.treatments
 			{
 				if(index === 0)
 					return "calibration-item";
-				else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5)
+				else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6)
 					return "treatment-item";
 				
 				return "default-item";
@@ -196,6 +204,12 @@ package ui.screens.display.treatments
 				dispatchEventWith(CLOSE); //Close Menu
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_NOTE);
+			}
+			else if(treatmentID == 7) //All Treatments
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				AppInterface.instance.navigator.pushScreen( Screens.ALL_TREATMENTS ); //Push Treatments Management Screen
 			}
 		}
 		
@@ -276,6 +290,18 @@ package ui.screens.display.treatments
 			{
 				mealImage.dispose();
 				mealImage = null;
+			}
+			
+			if (treatmentsTexture != null)
+			{
+				treatmentsTexture.dispose();
+				treatmentsTexture = null;
+			}
+			
+			if (treatmentsImage != null)
+			{
+				treatmentsImage.dispose();
+				treatmentsImage = null;
 			}
 			
 			super.dispose();

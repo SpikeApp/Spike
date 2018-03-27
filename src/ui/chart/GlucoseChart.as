@@ -702,6 +702,7 @@ package ui.chart
 				treatmentsContainer.x = mainChart.x;
 				treatmentsContainer.y = mainChart.y;
 				mainChartContainer.addChild(treatmentsContainer);
+				mainChartContainer.addChild(mainChart);
 				treatmentsFirstRun = false;
 			}
 			
