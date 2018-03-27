@@ -587,7 +587,7 @@ package services
 			
 			syncCalibrationsActive = true;
 			
-			//Upload Glucose Readings
+			//Upload Visua Calibration Treatment
 			NetworkConnector.createNSConnector(nightscoutEventsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeCalibrations), MODE_CALIBRATION, onUploadCalibrationsComplete, onConnectionFailed);
 		}
 		
@@ -709,7 +709,7 @@ package services
 			
 			syncSensorStartActive = true;
 			
-			//Upload Glucose Readings
+			//Upload Sensor Start treatment
 			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeSensorStarts), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
 		}
 		
