@@ -1,7 +1,5 @@
 package treatments
 {
-	import flash.utils.setInterval;
-	
 	import mx.utils.ObjectUtil;
 	
 	import utils.UniqueId;
@@ -23,7 +21,7 @@ package treatments
 		public var type:String;
 		public var insulinAmount:Number;
 		public var insulinID:String = "";
-		public var dia:Number = 3;
+		private var _dia:Number = 3;
 		public var carbs:Number;
 		public var glucose:Number;
 		public var glucoseEstimated:Number;
@@ -72,7 +70,7 @@ package treatments
 				iob = insulinAmount * (0.001323 * x2 * x2 - 0.054233 * x2 + 0.55556);
 			}
 			
-			if (iob < 0.001) iob = 0;
+			if (iob < 0.001 || isNaN(iob)) iob = 0;
 			
 			return iob;
 		}
@@ -174,7 +172,7 @@ package treatments
 					thisCobCalc.isDecaying = 0;
 				}
 				
-				trace("NS", ObjectUtil.toString(thisCobCalc));
+				//trace("NS", ObjectUtil.toString(thisCobCalc));
 				
 				return thisCobCalc;
 			}
@@ -183,5 +181,20 @@ package treatments
 				return null;
 			}
 		}
+
+		/**
+		 * Getters & Setters
+		 */
+		public function get dia():Number
+		{
+			return _dia;
+		}
+
+		public function set dia(value:Number):void
+		{
+			_dia = value;
+			this.insulinScaleFactor = 3 / _dia;
+		}
+
 	}
 }

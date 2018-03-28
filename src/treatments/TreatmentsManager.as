@@ -3,7 +3,6 @@ package treatments
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.EventDispatcher;
-	import flash.utils.setInterval;
 	
 	import database.BgReading;
 	import database.CommonSettings;
@@ -154,12 +153,15 @@ package treatments
 							
 							if (cCalc) 
 							{
-								lastDecayedBy = cCalc.decayedBy;
+								//lastDecayedBy = cCalc.decayedBy;
 							}
 							
 							if (decaysin_hr > 0) 
 							{
-								totalCOB += Math.min(Number(treatment.carbs), decaysin_hr * carbsAbsorptionRate);
+								var treatmentCOB:Number = Math.min(Number(treatment.carbs), decaysin_hr * carbsAbsorptionRate);
+								if (isNaN(treatmentCOB))
+									treatmentCOB = 0;
+								totalCOB += treatmentCOB;
 								isDecaying = cCalc.isDecaying;
 							} else 
 								totalCOB += 0;

@@ -4,16 +4,19 @@ package ui.screens.display.treatments
 	
 	import database.BgReading;
 	import database.CommonSettings;
-	import database.Database;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
+	import feathers.controls.Callout;
 	import feathers.controls.ImageLoader;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -21,6 +24,7 @@ package ui.screens.display.treatments
 	
 	import starling.display.Canvas;
 	import starling.display.Image;
+	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
 	import starling.events.Event;
 	import starling.textures.RenderTexture;
@@ -32,6 +36,7 @@ package ui.screens.display.treatments
 	import ui.popups.AlertManager;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
 	import utils.TimeSpan;
 	
@@ -52,30 +57,25 @@ package ui.screens.display.treatments
 		private var mealTexture:RenderTexture;
 		
 		/* Objects */
-		private var accessoriesList:Array = [];
+		private var allTreatments:Array;
 		private var accessoryDictionary:Dictionary = new Dictionary( true );
 		
 		/* Properties */
-		private var urgentLowThreshold:Number;
-		private var lowThreshold:Number;
-		private var highThreshold:Number;
-		private var urgentHighThreshold:Number;
-		private var lowColor:uint;
-		private var inRangeColor:uint;
-		private var highColor:uint;
-		private var urgentHighColor:uint;
-		private var urgentLowColor:uint;
 		private var dateFormat:String;
-
-		private var allTreatments:Array;
-
 		private var glucoseUnit:String;
+
+		private var treatmentEditorCallout:Callout;
+
+		private var positionHelper:Sprite;
+
+		private var treatmentEditor:TreatmentEditorList;
 		
 		
 		public function TreatmentsManagementList()
 		{
 			super();
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
@@ -103,7 +103,6 @@ package ui.screens.display.treatments
 		{
 			//Get treatments
 			allTreatments = TreatmentsManager.treatmentsList.concat();
-			allTreatments.sortOn(["timestamp"], Array.NUMERIC);
 			
 			//Get user's date format (24H/12H)
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
@@ -114,6 +113,9 @@ package ui.screens.display.treatments
 		
 		private function setupContent():void
 		{
+			//Sort treatments by date/time
+			allTreatments.sortOn(["timestamp"], Array.NUMERIC);
+			
 			//Treatments icons
 			bolusCanvas = createTreatmentIcon(Treatment.TYPE_BOLUS);
 			bolusTexture = new RenderTexture(bolusCanvas.width, bolusCanvas.height);
@@ -155,7 +157,7 @@ package ui.screens.display.treatments
 				}
 				else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 				{
-					treatmentValue = treatment.glucose + " " + glucoseUnit;
+					treatmentValue = (glucoseUnit == "mg/dL" ? treatment.glucose : Math.round(((BgReading.mgdlToMmol((treatment.glucose))) * 10)) / 10) + " " + glucoseUnit;
 					icon = glucoseTexture;
 				}
 				else if (treatment.type == Treatment.TYPE_NOTE)
@@ -196,23 +198,83 @@ package ui.screens.display.treatments
 				}
 				itemRenderer.iconOffsetX = 10;
 				itemRenderer.labelField = "label";
-				itemRenderer.accessoryFunction = function(item:Object):Button
+				itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
 				{
-					var deleteButton:Button = accessoryDictionary[ item ];
-					if(!deleteButton)
+					var actionsContainer:LayoutGroup = accessoryDictionary[ item ];
+					if(!actionsContainer)
 					{
-						deleteButton = new Button();
+						var containerLayout:HorizontalLayout = new HorizontalLayout();
+						containerLayout.gap = -10;
+						
+						actionsContainer = new LayoutGroup();
+						actionsContainer.layout = containerLayout;
+						
+						var editButton:Button = new Button();
+						editButton.name = "editButton";
+						editButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.editTexture);
+						editButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+						editButton.addEventListener(Event.TRIGGERED, onEditTreatment);
+						actionsContainer.addChild(editButton);
+						
+						var deleteButton:Button = new Button();
+						deleteButton.name = "deleteButton";
 						deleteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture);
 						deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
-						deleteButton.pivotX = -5;
 						deleteButton.addEventListener(Event.TRIGGERED, onDeleteTreatment);
-						accessoryDictionary[ item ] = deleteButton;
+						actionsContainer.addChild(deleteButton);
+						
+						accessoryDictionary[ item ] = actionsContainer;
 					}
-					return deleteButton;
+					
+					return actionsContainer;
 				}
 				
 				return itemRenderer;
 			}
+		}
+		
+		private function onEditTreatment(e:Event):void
+		{
+			var item:Object = (((e.currentTarget as Button).parent as LayoutGroup).parent as DefaultListItemRenderer).data as Object;
+			var treatment:Treatment = item.treatment as Treatment;
+			
+			setupCalloutPosition();
+			
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				positionHelper.y -= 10;	
+			}
+			
+			treatmentEditor = new TreatmentEditorList(treatment);
+			treatmentEditor.addEventListener(Event.CANCEL, onCancelTreatmentEditor);
+			treatmentEditor.addEventListener(Event.CHANGE, onRefreshContent);
+			
+			treatmentEditorCallout = new Callout();
+			treatmentEditorCallout.content = treatmentEditor;
+			treatmentEditorCallout.origin = positionHelper;
+			
+			PopUpManager.addPopUp(treatmentEditorCallout, false, false);
+		}
+		
+		private function onCancelTreatmentEditor(e:Event):void
+		{
+			treatmentEditorCallout.close(true);
+		}
+		
+		private function onRefreshContent(e:Event):void
+		{
+			treatmentEditorCallout.close(true);
+			
+			setupContent();
+		}
+		
+		private function setupCalloutPosition():void
+		{
+			//Position helper for the callout
+			positionHelper = new Sprite();
+			positionHelper.x = (Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2)) / 2;
+			positionHelper.y = 0;
+			addChild(positionHelper);
 		}
 		
 		private function createTreatmentIcon(treatmentType:String):Canvas
@@ -263,7 +325,7 @@ package ui.screens.display.treatments
 		private function onDeleteTreatment(e:Event):void
 		{
 			//Get list row properties
-			var item:Object = ((e.currentTarget as Button).parent as DefaultListItemRenderer).data as Object;
+			var item:Object = (((e.currentTarget as Button).parent as LayoutGroup).parent as DefaultListItemRenderer).data as Object;
 			var treatment:Treatment = item.treatment as Treatment;
 			
 			var alert:Alert = AlertManager.showActionAlert
@@ -297,11 +359,28 @@ package ui.screens.display.treatments
 			//Clear accessories
 			if (accessoryDictionary != null)
 			{
-				for each (var deleteButton:Button in accessoryDictionary) 
+				for each (var accessoryContainer:LayoutGroup in accessoryDictionary) 
 				{
-					deleteButton.removeEventListener(Event.TRIGGERED, onDeleteTreatment);
-					deleteButton.dispose();
-					deleteButton = null;
+					var deleteButton:Button = accessoryContainer.getChildByName("deleteButton") as Button;
+					if (deleteButton != null)
+					{
+						accessoryContainer.removeChild(deleteButton);
+						deleteButton.addEventListener(Event.TRIGGERED, onDeleteTreatment);
+						deleteButton.dispose();
+						deleteButton = null;
+					}
+					
+					var editButton:Button = accessoryContainer.getChildByName("editButton") as Button;
+					if (editButton != null)
+					{
+						accessoryContainer.removeChild(editButton);
+						editButton.addEventListener(Event.TRIGGERED, onEditTreatment);
+						editButton.dispose();
+						editButton = null;
+					}
+					
+					accessoryContainer.dispose();
+					accessoryContainer = null;
 				}
 			}
 

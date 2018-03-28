@@ -788,8 +788,12 @@ package ui.chart
 				chartTreatment = glucoseCheckMarker;
 			}
 			
-			if (mainChartMask != null && mainChartContainer != null) //Make mask appear in front of everything
+			if (mainChartMask != null && mainChartContainer != null) //Make mask appear in front of everything except the timeline
+			{
 				mainChartContainer.addChild(mainChartMask);
+				if (timelineContainer != null)
+					mainChartContainer.addChild(timelineContainer);
+			}
 			
 			//Reposition out of bounds treatments
 			if (yAxisHeight > 0 && chartTreatment.y + chartTreatment.height > yAxisHeight - 5) //Lower Area
