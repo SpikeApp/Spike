@@ -1,5 +1,7 @@
 package 
 {
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.desktop.NativeApplication;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
@@ -12,6 +14,7 @@ package
 	import flash.net.URLVariables;
 	import flash.system.System;
 	import flash.utils.clearInterval;
+	import flash.utils.clearTimeout;
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
@@ -39,6 +42,7 @@ package
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
 		private var deactivationTimer:Number;
+		private var activateSpikeTimeout:int = -1;
 		
 		private static var _instance:Spike;
 		
@@ -156,27 +160,39 @@ package
 		
 		private function onActivate( event:flash.events.Event ):void 
 		{
-			//Start Starling
-			NativeApplication.nativeApplication.executeInBackground = false;
-			SystemUtil.executeWhenApplicationIsActive( starling.start );
+			activateSpikeTimeout = setTimeout(activateSpike, 3000);
+		}
+		
+		private function activateSpike():void
+		{
+			clearTimeout(activateSpikeTimeout);
 			
-			//Push Chart Screen
-			/*if(AppInterface.instance.navigator != null)
+			if (BackgroundFetch.appIsInForeground())
 			{
+				trace("Spike activated!");
+				
+				//Start Starling
+				NativeApplication.nativeApplication.executeInBackground = false;
+				SystemUtil.executeWhenApplicationIsActive( starling.start );
+				
+				//Push Chart Screen
+				/*if(AppInterface.instance.navigator != null)
+				{
 				var nowTimer:Number = getTimer();
 				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART && nowTimer - deactivationTimer > 5 * 60 * 1000)
 				{
-					AppInterface.instance.menu.selectedIndex = 0;
-					AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
+				AppInterface.instance.menu.selectedIndex = 0;
+				AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
 				}
-			}*/
-			
-			//Update Variables
-			Constants.appInForeground = true;
-			
-			//Notify Services
-			myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
-			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
+				}*/
+				
+				//Update Variables
+				Constants.appInForeground = true;
+				
+				//Notify Services
+				myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
+				instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
+			}
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
@@ -197,7 +213,7 @@ package
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
 			
 			//Update timer
-			deactivationTimer = getTimer();
+			//deactivationTimer = getTimer();
 		}
 		
 		/**
