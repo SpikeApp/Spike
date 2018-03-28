@@ -37,6 +37,7 @@ package ui.screens.display.treatments
 	
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
 	
 	[ResourceBundle("profilesettingsscreen")]
@@ -134,6 +135,7 @@ package ui.screens.display.treatments
 				
 				//Insulin Amount
 				insulinAmountStepper = LayoutFactory.createNumericStepper(0.1, 150, treatment.insulinAmount, 0.1);
+				insulinAmountStepper.pivotX = -10;
 				insulinAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
 			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
@@ -144,6 +146,7 @@ package ui.screens.display.treatments
 				
 				//Carbs Amount
 				carbsAmountStepper = LayoutFactory.createNumericStepper(1, 1000, treatment.carbs, 0.5);
+				carbsAmountStepper.pivotX = -10;
 				carbsAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
 			if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
@@ -159,6 +162,7 @@ package ui.screens.display.treatments
 					isMgDl ? treatment.glucose : Math.round(((BgReading.mgdlToMmol((treatment.glucose))) * 10)) / 10,
 					isMgDl ? 1 : 0.1
 				);
+				glucoseAmountStepper.pivotX = -10;
 				glucoseAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
 			if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
@@ -173,13 +177,14 @@ package ui.screens.display.treatments
 			treatmentTime.height = 40;
 			treatmentTime.paddingTop = 5;
 			treatmentTime.paddingBottom = 5;
-			treatmentTime.pivotX = -1;
 			treatmentTime.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			/* Treatment Note */
 			noteTextArea = new TextArea();
 			noteTextArea.width = 140;
-			noteTextArea.height = 50;
+			noteTextArea.height = 120;
+			if ((treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS) && DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				noteTextArea.height = 50;
 			noteTextArea.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.RIGHT, VerticalAlign.TOP);
 			noteTextArea.paddingTop = noteTextArea.paddingBottom = 10;
 			noteTextArea.maxChars = 50;
@@ -210,7 +215,6 @@ package ui.screens.display.treatments
 			infoSection.header = { label: treatmentType };
 			
 			var infoSectionChildren:Array = [];
-			
 			infoSectionChildren.push({ label: "Time", accessory: treatmentTime });
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
@@ -226,9 +230,7 @@ package ui.screens.display.treatments
 				infoSectionChildren.push({ label: "Value (" + GlucoseHelper.getGlucoseUnit() + ")", accessory: glucoseAmountStepper });
 			}
 			infoSectionChildren.push({ label: "Note", accessory: noteTextArea });
-			
 			infoSectionChildren.push({ label: "", accessory: actionButtonsContainer });
-			
 			infoSection.children = infoSectionChildren;
 			screenDataContent.push(infoSection);
 			

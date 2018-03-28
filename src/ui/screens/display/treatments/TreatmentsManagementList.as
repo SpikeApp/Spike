@@ -196,7 +196,9 @@ package ui.screens.display.treatments
 					var loader:ImageLoader = new ImageLoader();
 					return loader;
 				}
-				itemRenderer.iconOffsetX = 10;
+				itemRenderer.iconOffsetX = 0;
+				itemRenderer.paddingRight = -25;
+				itemRenderer.accessoryOffsetX = -30;
 				itemRenderer.labelField = "label";
 				itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
 				{
@@ -207,6 +209,7 @@ package ui.screens.display.treatments
 						containerLayout.gap = -10;
 						
 						actionsContainer = new LayoutGroup();
+						actionsContainer.pivotX = -10;
 						actionsContainer.layout = containerLayout;
 						
 						var editButton:Button = new Button();
