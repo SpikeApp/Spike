@@ -35,13 +35,14 @@ package ui.screens.display.treatments
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
+	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
 	
-	[ResourceBundle("profilesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("treatments")]
 
 	public class TreatmentEditorList extends GroupedList 
 	{	
@@ -103,7 +104,7 @@ package ui.screens.display.treatments
 			{
 				//Treatment Type
 				if (treatment.type == Treatment.TYPE_BOLUS)
-					treatmentType = "Bolus";
+					treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_bolus");
 				
 				//User's insulins
 				var userInsulins:Array = ProfileManager.insulinsList;
@@ -142,7 +143,7 @@ package ui.screens.display.treatments
 			{
 				//Treatment Type
 				if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
-					treatmentType = "Carbs";
+					treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_carbs");
 				
 				//Carbs Amount
 				carbsAmountStepper = LayoutFactory.createNumericStepper(1, 1000, treatment.carbs, 0.5);
@@ -152,7 +153,7 @@ package ui.screens.display.treatments
 			if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
 				//Treatment Type
-				treatmentType = "BG Check";
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_bg_check");
 				
 				//Glucose Amount
 				glucoseAmountStepper = LayoutFactory.createNumericStepper
@@ -166,9 +167,9 @@ package ui.screens.display.treatments
 				glucoseAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
 			if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
-				treatmentType = "Meal"; //Treatment Type
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_meal"); //Treatment Type
 			if (treatment.type == Treatment.TYPE_NOTE)
-				treatmentType = "Note"; //Treatment Type
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_note"); //Treatment Type
 			
 			//Treatment Time
 			treatmentTime = new DateTimeSpinner();
@@ -215,21 +216,21 @@ package ui.screens.display.treatments
 			infoSection.header = { label: treatmentType };
 			
 			var infoSectionChildren:Array = [];
-			infoSectionChildren.push({ label: "Time", accessory: treatmentTime });
+			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_time_label"), accessory: treatmentTime });
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
-				infoSectionChildren.push({ label: "Insulin", accessory: insulinsPicker });
-				infoSectionChildren.push({ label: "Amount (U)", accessory: insulinAmountStepper });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
 			}
 			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
-				infoSectionChildren.push({ label: "Amount (g)", accessory: carbsAmountStepper });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_carbs_amount_label"), accessory: carbsAmountStepper });
 			}
 			if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
-				infoSectionChildren.push({ label: "Value (" + GlucoseHelper.getGlucoseUnit() + ")", accessory: glucoseAmountStepper });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_value_label") + " (" + GlucoseHelper.getGlucoseUnit() + ")", accessory: glucoseAmountStepper });
 			}
-			infoSectionChildren.push({ label: "Note", accessory: noteTextArea });
+			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_note_label"), accessory: noteTextArea });
 			infoSectionChildren.push({ label: "", accessory: actionButtonsContainer });
 			infoSection.children = infoSectionChildren;
 			screenDataContent.push(infoSection);
@@ -260,6 +261,27 @@ package ui.screens.display.treatments
 		 */
 		private function onSaveTreatment(e:Event):void
 		{
+			//Check if selected time range is acceptable
+			var firstBGReadingTimeStamp:Number;
+			var lastBGreadingTimeStamp:Number;
+			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+			{
+				firstBGReadingTimeStamp = (ModelLocator.bgReadings[0] as BgReading).timestamp;
+				lastBGreadingTimeStamp = (ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).timestamp;
+			}
+			else
+				return
+			
+			if(treatmentTime.value.valueOf() < firstBGReadingTimeStamp || treatmentTime.value.valueOf() > lastBGreadingTimeStamp)
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations',"warning_alert_title"),
+					ModelLocator.resourceManagerInstance.getString('treatments',"out_of_range_treatment_time_message")
+				);
+				return
+			}
+			
 			//Update treatment properties that are the same for all treatments
 			treatment.timestamp = treatmentTime.value.valueOf();
 			treatment.note = noteTextArea.text;

@@ -55,6 +55,9 @@ package ui.screens.display.treatments
 		private var noteTexture:RenderTexture;
 		private var mealCanvas:Canvas;
 		private var mealTexture:RenderTexture;
+		private var treatmentEditorCallout:Callout;
+		private var positionHelper:Sprite;
+		private var treatmentEditor:TreatmentEditorList;
 		
 		/* Objects */
 		private var allTreatments:Array;
@@ -63,13 +66,6 @@ package ui.screens.display.treatments
 		/* Properties */
 		private var dateFormat:String;
 		private var glucoseUnit:String;
-
-		private var treatmentEditorCallout:Callout;
-
-		private var positionHelper:Sprite;
-
-		private var treatmentEditor:TreatmentEditorList;
-		
 		
 		public function TreatmentsManagementList()
 		{
