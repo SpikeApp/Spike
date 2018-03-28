@@ -49,7 +49,6 @@ package ui.screens.display.treatments
 		private var saveTreatment:Button;
 		private var cancelTreatment:Button;
 		private var actionButtonsContainer:LayoutGroup;
-		private var treatment:Treatment;
 		private var insulinsPicker:PickerList;
 		private var insulinAmountStepper:NumericStepper;
 		private var carbsAmountStepper:NumericStepper;
@@ -57,7 +56,7 @@ package ui.screens.display.treatments
 		private var noteTextArea:TextArea;
 		
 		/* Properties */
-		private var headerLabelValue:String;
+		private var treatment:Treatment;
 		private var isMgDl:Boolean;
 		
 		public function TreatmentEditorList(treatment:Treatment)
@@ -105,7 +104,7 @@ package ui.screens.display.treatments
 				if (treatment.type == Treatment.TYPE_BOLUS)
 					treatmentType = "Bolus";
 				
-				//User+s insulins
+				//User's insulins
 				var userInsulins:Array = ProfileManager.insulinsList;
 				insulinsPicker = LayoutFactory.createPickerList()
 				var insulinsList:ArrayCollection = new ArrayCollection();
@@ -139,6 +138,7 @@ package ui.screens.display.treatments
 			}
 			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
+				//Treatment Type
 				if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 					treatmentType = "Carbs";
 				
@@ -148,6 +148,7 @@ package ui.screens.display.treatments
 			}
 			if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
+				//Treatment Type
 				treatmentType = "BG Check";
 				
 				//Glucose Amount
@@ -161,10 +162,11 @@ package ui.screens.display.treatments
 				glucoseAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
 			if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
-				treatmentType = "Meal";
+				treatmentType = "Meal"; //Treatment Type
 			if (treatment.type == Treatment.TYPE_NOTE)
-				treatmentType = "Note";
+				treatmentType = "Note"; //Treatment Type
 			
+			//Treatment Time
 			treatmentTime = new DateTimeSpinner();
 			treatmentTime.editingMode = DateTimeMode.TIME;
 			treatmentTime.value = new Date(treatment.timestamp);
@@ -198,7 +200,7 @@ package ui.screens.display.treatments
 			
 			saveTreatment = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"save_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.saveTexture);
 			saveTreatment.isEnabled = false;
-			saveTreatment.addEventListener(Event.TRIGGERED, onSave);
+			saveTreatment.addEventListener(Event.TRIGGERED, onSaveTreatment);
 			actionButtonsContainer.addChild(saveTreatment);
 			
 			/* Data */
@@ -254,7 +256,7 @@ package ui.screens.display.treatments
 		/**
 		 * Event Handlers
 		 */
-		private function onSave(e:Event):void
+		private function onSaveTreatment(e:Event):void
 		{
 			//Update treatment properties that are the same for all treatments
 			treatment.timestamp = treatmentTime.value.valueOf();
@@ -304,7 +306,69 @@ package ui.screens.display.treatments
 		 */
 		override public function dispose():void
 		{	
+			if (treatmentTime != null)
+			{
+				treatmentTime.removeEventListener(Event.CHANGE, onSettingsChanged);
+				treatmentTime.dispose();
+				treatmentTime = null;
+			}
 			
+			if (saveTreatment != null)
+			{
+				actionButtonsContainer.removeChild(saveTreatment);
+				saveTreatment.removeEventListener(Event.CHANGE, onSaveTreatment);
+				saveTreatment.dispose();
+				saveTreatment = null;
+			}
+			
+			if (cancelTreatment != null)
+			{
+				actionButtonsContainer.removeChild(cancelTreatment);
+				cancelTreatment.removeEventListener(Event.CHANGE, onCancelTreatment);
+				cancelTreatment.dispose();
+				cancelTreatment = null;
+			}
+			
+			if (actionButtonsContainer != null)
+			{
+				actionButtonsContainer.dispose();
+				actionButtonsContainer = null;
+			}
+			
+			if (insulinsPicker != null)
+			{
+				insulinsPicker.removeEventListener(Event.CHANGE, onSettingsChanged);
+				insulinsPicker.dispose();
+				insulinsPicker = null;
+			}
+			
+			if (insulinAmountStepper != null)
+			{
+				insulinAmountStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
+				insulinAmountStepper.dispose();
+				insulinAmountStepper = null;
+			}
+			
+			if (carbsAmountStepper != null)
+			{
+				carbsAmountStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
+				carbsAmountStepper.dispose();
+				carbsAmountStepper = null;
+			}
+			
+			if (glucoseAmountStepper != null)
+			{
+				glucoseAmountStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
+				glucoseAmountStepper.dispose();
+				glucoseAmountStepper = null;
+			}
+			
+			if (noteTextArea != null)
+			{
+				noteTextArea.removeEventListener(Event.CHANGE, onSettingsChanged);
+				noteTextArea.dispose();
+				noteTextArea = null;
+			}
 			
 			super.dispose();
 		}
