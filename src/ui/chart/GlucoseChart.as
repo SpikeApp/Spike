@@ -910,7 +910,7 @@ package ui.chart
 				{
 					var movedTimestamp:Number = time.value.valueOf();
 					
-					if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > lastBGreadingTimeStamp)
+					if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > new Date().valueOf())
 					{
 						AlertManager.showSimpleAlert
 						(
