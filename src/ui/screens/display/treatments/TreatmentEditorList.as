@@ -263,16 +263,14 @@ package ui.screens.display.treatments
 		{
 			//Check if selected time range is acceptable
 			var firstBGReadingTimeStamp:Number;
-			var lastBGreadingTimeStamp:Number;
 			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
 			{
 				firstBGReadingTimeStamp = (ModelLocator.bgReadings[0] as BgReading).timestamp;
-				lastBGreadingTimeStamp = (ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).timestamp;
 			}
 			else
 				return
 			
-			if(treatmentTime.value.valueOf() < firstBGReadingTimeStamp || treatmentTime.value.valueOf() > lastBGreadingTimeStamp)
+			if(treatmentTime.value.valueOf() < firstBGReadingTimeStamp || treatmentTime.value.valueOf() > new Date().valueOf())
 			{
 				AlertManager.showSimpleAlert
 				(

@@ -23,6 +23,8 @@ package treatments
 	
 	import model.ModelLocator;
 	
+	import services.NightscoutService;
+	
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
 	import starling.core.Starling;
@@ -240,6 +242,12 @@ package treatments
 		
 		public static function deleteTreatment(treatment:Treatment):void
 		{
+			//Delete from databse
+			Database.deleteTreatmentSynchronous(treatment);
+			
+			//Delete from Nightscout
+			NightscoutService.deleteTreatment(treatment);
+			
 			//Delete from Spike
 			for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
 			{
@@ -251,15 +259,15 @@ package treatments
 					break;
 				}
 			}
-			
-			//Delete from databse
-			Database.deleteTreatmentSynchronous(treatment);
 		}
 		
 		public static function updateTreatment(treatment:Treatment):void
 		{
 			//Update in Database
 			Database.updateTreatmentSynchronous(treatment);
+			
+			//Update Nightscout
+			NightscoutService.uploadTreatment(treatment);
 		}
 		
 		public static function addTreatment(type:String):void
@@ -474,6 +482,9 @@ package treatments
 					
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(treatment);
 				}
 			}
 			
@@ -520,6 +531,9 @@ package treatments
 					
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(treatment);
 				}
 			}
 			
@@ -583,6 +597,9 @@ package treatments
 					
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(treatment);
 				}
 			}
 			
@@ -636,6 +653,9 @@ package treatments
 					
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(treatment);
 				}
 			}
 			
@@ -681,6 +701,9 @@ package treatments
 					
 					//Insert in DB
 					Database.insertTreatmentSynchronous(treatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(treatment);
 				}
 			}
 			

@@ -40,6 +40,8 @@ package services
 	
 	import network.NetworkConnector;
 	
+	import treatments.Treatment;
+	
 	import ui.popups.AlertManager;
 	
 	import utils.TimeSpan;
@@ -57,6 +59,8 @@ package services
 		private static const MODE_VISUAL_CALIBRATION:String = "visualCalibration";
 		private static const MODE_SENSOR_START:String = "sensorStart";
 		private static const MODE_TEST_CREDENTIALS:String = "testCredentials";
+		private static const MODE_TREATMENT_UPLOAD:String = "treatmentUpload";
+		private static const MODE_TREATMENT_DELETE:String = "treatmentDelete";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
@@ -82,6 +86,8 @@ package services
 		private static var externalAuthenticationCall:Boolean = false;
 		public static var ignoreSettingsChanged:Boolean = false;
 		public static var uploadSensorStart:Boolean = true;
+		private static var syncTreatmentsUploadActive:Boolean = false;
+		private static var syncTreatmentsDeleteActive:Boolean = false;
 		
 		/* Data Variables */
 		private static var apiSecret:String;
@@ -102,6 +108,8 @@ package services
 		private static var activeCalibrations:Array = [];
 		private static var activeVisualCalibrations:Array = [];
 		private static var activeSensorStarts:Array = [];
+		private static var activeTreatmentsUpload:Array = [];
+		private static var activeTreatmentsDelete:Array = [];
 		
 		/* Follower */
 		private static var nextFollowDownloadTime:Number = 0;
@@ -219,7 +227,7 @@ package services
 			if (activeGlucoseReadings.length == 0 || syncGlucoseReadingsActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (Calibration.allForSensor().length < 2) 
+			if (Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) 
 				return;
 			
 			syncGlucoseReadingsActive = true;
@@ -241,7 +249,7 @@ package services
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
 			
-			//Only start uploading bg reading if it's newer than 6 minutes. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last readings. The previous readings will still be uploaded because the reside in the queue array.
+			//Only start uploading bg reading if it's newer than 6 minutes. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last reading. The previous readings will still be uploaded because they reside in the queue array.
 			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_6_MINUTES)
 				syncGlucoseReadings();
 		}
@@ -539,6 +547,160 @@ package services
 			}
 			
 			setNextFollowerFetch();
+		}
+		
+		/**
+		 * TREATMENTS
+		 */
+		private static function createTreatmentObject(treatment:Treatment):Object
+		{
+			var newTreatment:Object = new Object();
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+			{
+				newTreatment["eventType"] = "Correction Bolus";	
+				newTreatment["insulin"] = treatment.insulinAmount;	
+			}
+			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+			{
+				newTreatment["eventType"] = "Carb Correction";	
+				newTreatment["carbs"] = treatment.carbs;	
+			}
+			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+			{
+				newTreatment["eventType"] = "BG Check";	
+				newTreatment["glucose"] = treatment.glucose;
+				newTreatment["glucoseType"] = "Finger";	
+			}
+			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				newTreatment["eventType"] = "Meal Bolus";
+				newTreatment["insulin"] = treatment.insulinAmount;
+				newTreatment["carbs"] = treatment.carbs;
+			}
+			else if (treatment.type == Treatment.TYPE_NOTE)
+			{
+				newTreatment["eventType"] = "Note";
+				newTreatment["duration"] = 45;
+			}
+			newTreatment["_id"] = treatment.ID;
+			newTreatment["created_at"] = formatter.format(treatment.timestamp);
+			newTreatment["enteredBy"] = "Spike";
+			newTreatment["notes"] = treatment.note;
+			
+			return newTreatment;
+		}
+		
+		public static function uploadTreatment(treatment:Treatment):void
+		{
+			Trace.myTrace("NightscoutService.as", "in uploadTreatment.");
+			
+			activeTreatmentsUpload.push(createTreatmentObject(treatment));
+			
+			syncTreatmentsUpload();
+		}
+		
+		private static function syncTreatmentsUpload():void
+		{
+			if (activeTreatmentsUpload.length == 0 || syncTreatmentsUploadActive || !NetworkInfo.networkInfo.isReachable())
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to upload/update: " + activeTreatmentsUpload.length);
+			
+			syncTreatmentsUploadActive = true;
+			
+			//Upload Treatment
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, JSON.stringify(activeTreatmentsUpload[0]), MODE_TREATMENT_UPLOAD, onUploadTreatmentComplete, onConnectionFailed);
+		}
+		
+		private static function onUploadTreatmentComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "in onUploadTreatmentComplete.");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onUploadTreatmentComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onUploadTreatmentComplete);
+			loader = null;
+			
+			syncTreatmentsUploadActive = false;
+			
+			if (response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("\"ok\":1") != -1)
+			{
+				Trace.myTrace("NightscoutService.as", "Treatment uploaded/updated successfully!");
+				
+				//Remove treatment from queue
+				activeTreatmentsUpload.shift() 
+				
+				if (activeTreatmentsUpload.length > 0)
+				{
+					Trace.myTrace("NightscoutService.as", "Uploading/updating next treatment in queue.");
+					syncTreatmentsUpload();
+				}
+			}
+			else
+				Trace.myTrace("NightscoutService.as", "Error uploading/updating treatment. Server response: " + response);
+		}
+		
+		public static function deleteTreatment(treatment:Treatment):void
+		{
+			Trace.myTrace("NightscoutService.as", "in deleteTreatment.");
+			
+			activeTreatmentsDelete.push(treatment);
+			
+			syncTreatmentsDelete();
+		}
+		
+		private static function syncTreatmentsDelete():void
+		{
+			if (activeTreatmentsDelete.length == 0 || syncTreatmentsDeleteActive || !NetworkInfo.networkInfo.isReachable())
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to delete: " + activeTreatmentsDelete.length);
+			
+			syncTreatmentsDeleteActive = true;
+			
+			//Delete Treatment
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + "/" + (activeTreatmentsDelete[0] as Treatment).ID, apiSecret, URLRequestMethod.DELETE, null, MODE_TREATMENT_DELETE, onDeleteTreatmentComplete, onConnectionFailed);
+		}
+		
+		private static function onDeleteTreatmentComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "in onTreatmentDelete.");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDeleteTreatmentComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDeleteTreatmentComplete);
+			loader = null;
+			
+			//Update Internal Variables
+			syncTreatmentsDeleteActive = false;
+			
+			if (response.indexOf("{}") != -1)
+			{
+				Trace.myTrace("NightscoutService.as", "Treatment deleted successfully!");
+				
+				//Remove treatment from queue
+				activeTreatmentsDelete.shift() 
+				
+				if (activeTreatmentsDelete.length > 0)
+				{
+					Trace.myTrace("NightscoutService.as", "Deleting next treatment in queue.");
+					syncTreatmentsDelete();
+				}
+			}
+			else
+				Trace.myTrace("NightscoutService.as", "Error deleting treatment. Server response: " + response);
 		}
 		
 		/**
@@ -994,6 +1156,8 @@ package services
 			if (activeSensorStarts.length > 0) syncSensorStart();
 			
 			if (BlueToothDevice.isFollower()) getRemoteReadings();
+			
+			if (activeTreatmentsUpload.length > 0) syncTreatmentsUpload();
 		}
 		
 		/**
@@ -1031,6 +1195,16 @@ package services
 				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Can't make connection to the server while trying to download glucose readings. Error: " +  error.message);
 				
 				setNextFollowerFetch(TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
+			}
+			else if (mode == MODE_TREATMENT_UPLOAD)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error uploading/updating treatment. Error: " + error.message);
+				syncTreatmentsUploadActive = false;
+			}
+			else if (mode == MODE_TREATMENT_DELETE)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error deleting treatment. Error: " + error.message);
+				syncTreatmentsDeleteActive = false;
 			}
 		}
 		
