@@ -4,21 +4,21 @@ package ui
 	import com.adobe.touch3D.Touch3DEvent;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
-	import com.distriqt.extension.exceptions.ExceptionReport;
-	import com.distriqt.extension.exceptions.Exceptions;
-	import com.distriqt.extension.networkinfo.NetworkInfo;
+	//import com.distriqt.extension.exceptions.ExceptionReport;
+	//import com.distriqt.extension.exceptions.Exceptions;
+	//import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.net.URLLoader;
-	import flash.net.URLVariables;
+	//import flash.net.URLLoader;
+	//import flash.net.URLVariables;
 	import flash.system.Capabilities;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
-	import flash.utils.ByteArray;
+	//import flash.utils.ByteArray;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -38,7 +38,7 @@ package ui
 	
 	import model.ModelLocator;
 	
-	import network.EmailSender;
+	//import network.EmailSender;
 	
 	import services.BluetoothService;
 	import services.CalibrationService;
@@ -127,13 +127,13 @@ package ui
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
 				
 				//Exceptions Management
-				Exceptions.service.setUncaughtExceptionHandler();
+				/*Exceptions.service.setUncaughtExceptionHandler();
 				
 				if (Exceptions.service.hasPendingException())
 				{
 					Trace.myTrace("interfaceController.as", "A crash has ocurred. Notifying user...");
 					//Starling.juggler.delayCall(manageExceptions, 5);
-				}
+				}*/
 				
 				//3D Touch Management
 				setup3DTouch();
@@ -204,7 +204,7 @@ package ui
 			}
 		}
 		
-		private static function manageExceptions():void
+		/*private static function manageExceptions():void
 		{
 			AlertManager.showActionAlert
 				(
@@ -273,7 +273,7 @@ package ui
 				else
 					Trace.myTrace("interfaceController.as", "Error sending crash report! Error: " + response.statuscode);
 			} 
-		}
+		}*/
 		
 		private static function setup3DTouch():void
 		{

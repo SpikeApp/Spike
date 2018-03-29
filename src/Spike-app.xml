@@ -199,7 +199,7 @@
 
 	<!-- iOS specific capabilities -->
 	<iPhone>
-		<assetsCar>Assets.car</assetsCar>
+		<!-- <assetsCar>Assets.car</assetsCar> -->
 		<!-- A list of plist key/value pairs to be added to the application Info.plist -->
 		<InfoAdditions>
 			<![CDATA[<key>UIViewControllerBasedStatusBarAppearance</key><false/>]]>
@@ -506,7 +506,6 @@
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Calendar</extensionID>
 		<extensionID>com.distriqt.Core</extensionID>
-		<extensionID>com.distriqt.Exceptions</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
