@@ -590,13 +590,37 @@ package services
 			return newTreatment;
 		}
 		
+		private static function deleteInternalTreatment(arrayToDelete:Array, treatment:Treatment):Boolean
+		{
+			var treatmentDeleted:Boolean = false;
+			for (var i:int = 0; i < arrayToDelete.length; i++) 
+			{
+				var nsTreatment:Object = arrayToDelete[i] as Object;
+				if (nsTreatment["_id"] == treatment.ID)
+				{
+					arrayToDelete.removeAt(i);
+					nsTreatment = null;
+					treatmentDeleted = true;
+					break;
+				}
+			}
+			
+			return treatmentDeleted;
+		}
+		
 		public static function uploadTreatment(treatment:Treatment):void
 		{
 			Trace.myTrace("NightscoutService.as", "in uploadTreatment.");
 			
-			activeTreatmentsUpload.push(createTreatmentObject(treatment));
-			
-			syncTreatmentsUpload();
+			//Check if the treatment is already present in another queue and delete it.
+			if (!deleteInternalTreatment(activeTreatmentsDelete, treatment))
+			{
+				//Add treatment to queue
+				activeTreatmentsUpload.push(createTreatmentObject(treatment));
+				
+				//Sync uploads
+				syncTreatmentsUpload();
+			}
 		}
 		
 		private static function syncTreatmentsUpload():void
@@ -650,9 +674,15 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "in deleteTreatment.");
 			
-			activeTreatmentsDelete.push(treatment);
-			
-			syncTreatmentsDelete();
+			//Check if the treatment is already present in another queue and delete it.
+			if (!deleteInternalTreatment(activeTreatmentsUpload, treatment))
+			{
+				//Add treatment to queue
+				activeTreatmentsDelete.push(treatment);
+				
+				//Delete treatment
+				syncTreatmentsDelete();
+			}
 		}
 		
 		private static function syncTreatmentsDelete():void
