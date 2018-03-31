@@ -13,7 +13,10 @@ package ui.chart
 	
 	public class CarbsMarker extends ChartTreatment
 	{
-
+		/* Constants */
+		private const FONT_SIZE:int = 10;
+		
+		/* Display Objects */
 		private var label:Label;
 		
 		public function CarbsMarker(treatment:Treatment)
@@ -46,7 +49,7 @@ package ui.chart
 			addChild(stroke);
 			
 			//Label
-			label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, 9, true);
+			label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, FONT_SIZE, true);
 			label.validate();
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 4;

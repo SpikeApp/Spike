@@ -7,8 +7,12 @@ package events
 	public class TreatmentsEvent extends Event
 	{
 		[Event(name="treatmentAdded",type="events.TreatmentsEvent")]
+		[Event(name="treatmentDeleted",type="events.TreatmentsEvent")]
+		[Event(name="treatmentUpdated",type="events.TreatmentsEvent")]
 		
 		public static const TREATMENT_ADDED:String = "treatmentAdded";
+		public static const TREATMENT_DELETED:String = "treatmentDeleted";
+		public static const TREATMENT_UPDATED:String = "treatmentUpdated";
 		
 		public var treatment:Treatment;
 		

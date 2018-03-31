@@ -18,6 +18,7 @@ package treatments
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.data.ArrayCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalLayout;
 	
@@ -259,10 +260,16 @@ package treatments
 					break;
 				}
 			}
+			
+			//Notify listeners
+			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, treatment));
 		}
 		
 		public static function updateTreatment(treatment:Treatment):void
 		{
+			//Notify listeners
+			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
+			
 			//Update in Database
 			Database.updateTreatmentSynchronous(treatment);
 			
@@ -291,6 +298,7 @@ package treatments
 				
 				//Insulin Amout
 				var insulinTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				insulinTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				insulinTextInput.maxChars = 5;
 				if (type == Treatment.TYPE_MEAL_BOLUS)
 					insulinTextInput.prompt = "Insulin";
@@ -304,6 +312,7 @@ package treatments
 			{
 				//Glucose Amout
 				var glucoseTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				glucoseTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				glucoseTextInput.maxChars = 3;
 				displayContainer.addChild(glucoseTextInput);
 				var glucoseSpacer:Sprite = new Sprite();
@@ -315,6 +324,7 @@ package treatments
 			{
 				//Glucose Amout
 				var carbsTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				carbsTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				carbsTextInput.maxChars = 4;
 				if (type == Treatment.TYPE_MEAL_BOLUS)
 					carbsTextInput.prompt = "Carbs";
@@ -379,6 +389,7 @@ package treatments
 			}
 			
 			var notes:TextInput = LayoutFactory.createTextInput(false, false, treatmentTime.width, HorizontalAlign.CENTER);
+			notes.addEventListener(FeathersEventType.ENTER, onClearFocus);
 			notes.prompt = "Note";
 			notes.maxChars = 50;
 			otherFieldsConstainer.addChild(notes);
@@ -718,6 +729,21 @@ package treatments
 					treatmentPopup.removeFromParent(true);
 				}
 				Starling.juggler.add(popupTween);
+			}
+			
+			function onClearFocus(e:Event):void
+			{
+				if (insulinTextInput != null)
+					insulinTextInput.clearFocus();
+				
+				if (carbsTextInput != null)
+					carbsTextInput.clearFocus();
+				
+				if (glucoseTextInput != null)
+					glucoseTextInput.clearFocus();
+				
+				if (notes != null)
+					notes.clearFocus();
 			}
 		}
 		

@@ -77,6 +77,8 @@ package ui.screens.display.settings.watch
 		private var sendButton:Button;
 		private var instructionsSenderCallout:Callout;
 		private var gapFixCheck:Check;
+		private var displayIOBCheck:Check;
+		private var displayCOBCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -89,7 +91,9 @@ package ui.screens.display.settings.watch
 		private var displayDeltaEnabled:Boolean;
 		private var displayUnitsEnabled:Boolean;
 		private var glucoseHistoryValue:int;
-		private var gapFixValue:Boolean;		
+		private var gapFixValue:Boolean;
+		private var displayIOBEnabled:Boolean;
+		private var displayCOBEnabled:Boolean;
 
 		public function WatchSettingsList()
 		{
@@ -130,6 +134,8 @@ package ui.screens.display.settings.watch
 			displayUnitsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS) == "true";
 			glucoseHistoryValue = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY));
 			gapFixValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) == "true";
+			displayIOBEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_IOB_ON) == "true";
+			displayCOBEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON) == "true";
 			
 			Trace.myTrace("WatchSettingsList.as", "setupInitialState called! AuthorizationStatus = " + Calendar.service.authorisationStatus());
 		}
@@ -173,7 +179,15 @@ package ui.screens.display.settings.watch
 			
 			//Display Name Toggle
 			displayNameToggle = LayoutFactory.createToggleSwitch(displayNameEnabled);
-			displayNameToggle.addEventListener(starling.events.Event.CHANGE, onSettingsChanged);
+			displayNameToggle.addEventListener(starling.events.Event.CHANGE, onDisplayNameChanged);
+			
+			//Display IOB Toggle
+			displayIOBCheck = LayoutFactory.createCheckMark(displayIOBEnabled);
+			displayIOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+			
+			//Display COB Toggle
+			displayCOBCheck = LayoutFactory.createCheckMark(displayCOBEnabled);
+			displayCOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
 			
 			//Display Name TextInput
 			displayNameTextInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
@@ -253,6 +267,8 @@ package ui.screens.display.settings.watch
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_name_label'), accessory: displayNameToggle });
 					if (displayNameEnabled)
 						content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','your_name_label'), accessory: displayNameTextInput });
+					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_iob_label'), accessory: displayIOBCheck });
+					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_cob_label'), accessory: displayCOBCheck });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_trend_label'), accessory: displayTrend });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_delta_label'), accessory: displayDelta });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_units_label'), accessory: displayUnits });
@@ -348,6 +364,14 @@ package ui.screens.display.settings.watch
 			
 			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_NAME) != displayNameValueToSave)
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_NAME, displayNameValueToSave);
+			
+			//Display IOB
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_IOB_ON) != String(displayIOBEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_IOB_ON, String(displayIOBEnabled));
+			
+			//Display COB
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON) != String(displayCOBEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON, String(displayCOBEnabled));
 			
 			//Calendar ID
 			if (isDeviceAuthorized && calendarPickerList.selectedIndex != -1)
@@ -449,7 +473,47 @@ package ui.screens.display.settings.watch
 		private function onSettingsChanged(e:starling.events.Event):void
 		{
 			watchComplicationEnabled = watchComplicationToggle.isSelected;
+			
+			refreshContent();
+			
+			needsSave = true;
+			
+			save();
+		}
+		
+		private function onDisplayNameChanged(e:starling.events.Event):void
+		{
 			displayNameEnabled = displayNameToggle.isSelected;
+			if (displayNameEnabled)
+			{
+				displayIOBEnabled = false;
+				displayCOBEnabled = false;
+				displayIOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayCOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayIOBCheck.isSelected = displayIOBEnabled;
+				displayCOBCheck.isSelected = displayCOBEnabled;
+				displayIOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayCOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+			}
+			
+			refreshContent();
+			
+			needsSave = true;
+			
+			save();
+		}
+		
+		private function onDisplayTreatmentsChanged(e:starling.events.Event):void
+		{
+			displayIOBEnabled = displayIOBCheck.isSelected;
+			displayCOBEnabled = displayCOBCheck.isSelected;
+			if (displayIOBEnabled || displayCOBEnabled)
+			{
+				displayNameEnabled = false;
+				displayNameToggle.removeEventListener(starling.events.Event.CHANGE, onDisplayNameChanged);
+				displayNameToggle.isSelected = displayNameEnabled;
+				displayNameToggle.addEventListener(starling.events.Event.CHANGE, onDisplayNameChanged);
+			}
 			
 			refreshContent();
 			
@@ -658,7 +722,7 @@ package ui.screens.display.settings.watch
 			
 			if (displayNameToggle != null)
 			{
-				displayNameToggle.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);
+				displayNameToggle.removeEventListener(starling.events.Event.CHANGE, onDisplayNameChanged);
 				displayNameToggle.dispose();
 				displayNameToggle = null;
 			}
@@ -673,8 +737,12 @@ package ui.screens.display.settings.watch
 			if (calendarPickerList != null)
 			{
 				calendarPickerList.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
-				calendarPickerList.dispose();
-				calendarPickerList = null;
+				try
+				{
+					calendarPickerList.dispose();
+					calendarPickerList = null;
+				} 
+				catch(error:Error) {}
 			}
 			
 			if (displayTrend != null)
@@ -749,6 +817,20 @@ package ui.screens.display.settings.watch
 				gapFixCheck.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 				gapFixCheck.dispose();
 				gapFixCheck = null;
+			}
+			
+			if (displayIOBCheck != null)
+			{
+				displayIOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayIOBCheck.dispose();
+				displayIOBCheck = null;
+			}
+			
+			if (displayCOBCheck != null)
+			{
+				displayCOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayCOBCheck.dispose();
+				displayCOBCheck = null;
 			}
 			
 			super.dispose();

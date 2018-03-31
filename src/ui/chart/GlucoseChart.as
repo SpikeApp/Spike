@@ -526,6 +526,7 @@ package ui.chart
 							previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 						}
 					);
+				glucoseMarker.touchable = false;
 				
 				//Hide glucose marker if it is out of bounds (fixed size chart);
 				if (glucoseMarker.glucoseValue < lowestGlucoseValue || glucoseMarker.glucoseValue > highestGlucoseValue)
@@ -1653,6 +1654,7 @@ package ui.chart
 								previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 							}
 						);
+					glucoseMarker.touchable = false;
 					
 					if(chartType == MAIN_CHART)
 					{
@@ -2034,8 +2036,10 @@ package ui.chart
 			/* Calculate Font Sizes */
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
 			glucoseDisplayFont = 44 * deviceFontMultiplier * userBGFontMultiplier;
-			var timeDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-			var retroDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			/*var timeDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			var retroDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;*/
+			var timeDisplayFont:Number = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			var retroDisplayFont:Number = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			
 			/* Calculate Position & Padding */
 			chartTopPadding *= deviceFontMultiplier;
@@ -2069,7 +2073,7 @@ package ui.chart
 			
 			//IOB
 			IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
-			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplay.height + 4;
+			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplay.height + 8;
 			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 			
 			if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive)

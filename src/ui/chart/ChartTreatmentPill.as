@@ -16,8 +16,8 @@ package ui.chart
 		public static const TYPE_IOB:String = "IOB";
 		public static const TYPE_COB:String = "COB";
 		private static const PADDING:int = 3;
-		private static const FONT_SIZE:int = 13;
-		private static const PILL_HEIGHT:int = 20;
+		private static const FONT_SIZE:int = 16;
+		private static const PILL_HEIGHT:int = 25;
 		private static const CORNER_RADIUS:int = 4;
 		private static const STROKE_THICKNESS:int = 1;
 		
