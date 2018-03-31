@@ -450,11 +450,15 @@ package treatments
 			else if (type == Treatment.TYPE_CARBS_CORRECTION)
 				carbsTextInput.setFocus();
 			
+			//Cleanup
+			notes.text = notes.text.replace(" ", "");
+			
 			function onInsulinEntered (e:Event):void
 			{
 				if (insulinTextInput == null || insulinTextInput.text == null || !BackgroundFetch.appIsInForeground())
 					return;
 				
+				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
 				var insulinValue:Number = Number((insulinTextInput.text as String).replace(",","."));
 				if (isNaN(insulinValue) || insulinTextInput.text == "") 
 				{
@@ -504,6 +508,7 @@ package treatments
 				if (carbsTextInput == null || carbsTextInput.text == null || !BackgroundFetch.appIsInForeground())
 					return;
 				
+				carbsTextInput.text = carbsTextInput.text.replace(" ", "");
 				var carbsValue:Number = Number((carbsTextInput.text as String).replace(",","."));
 				if (isNaN(carbsValue) || carbsTextInput.text == "") 
 				{
@@ -553,6 +558,8 @@ package treatments
 				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null ||!BackgroundFetch.appIsInForeground())
 					return;
 				
+				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
+				carbsTextInput.text = carbsTextInput.text.replace(" ", "");
 				var insulinValue:Number = Number((insulinTextInput.text as String).replace(",","."));
 				var carbsValue:Number = Number((carbsTextInput.text as String).replace(",","."));
 				
@@ -619,6 +626,7 @@ package treatments
 				if (glucoseTextInput == null || glucoseTextInput.text == null || !BackgroundFetch.appIsInForeground())
 					return;
 				
+				glucoseTextInput.text = glucoseTextInput.text.replace(" ", "");
 				var glucoseValue:Number = Number((glucoseTextInput.text as String).replace(",","."));
 				if (isNaN(glucoseValue) || glucoseTextInput.text == "") 
 				{
