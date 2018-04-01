@@ -450,9 +450,6 @@ package treatments
 			else if (type == Treatment.TYPE_CARBS_CORRECTION)
 				carbsTextInput.setFocus();
 			
-			//Cleanup
-			notes.text = notes.text.replace(" ", "");
-			
 			function onInsulinEntered (e:Event):void
 			{
 				if (insulinTextInput == null || insulinTextInput.text == null || !BackgroundFetch.appIsInForeground())

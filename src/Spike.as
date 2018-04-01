@@ -98,6 +98,10 @@ package
 		
 		private function onActivate( event:flash.events.Event ):void 
 		{
+			//Restart stage framerate
+			stage.frameRate = 60;
+			Starling.current.nativeStage.frameRate = 60;
+			
 			//Start Starling
 			starling.start();
 			
@@ -137,7 +141,11 @@ package
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
 			
 			//Update timer
-			deactivationTimer = getTimer();
+			//deactivationTimer = getTimer();
+			
+			//Stop stage almost completely
+			stage.frameRate = 0.1;
+			Starling.current.nativeStage.frameRate = 0.1;
 		}
 		
 		/**

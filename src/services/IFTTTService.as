@@ -55,8 +55,24 @@ package services
 		private static var highGlucoseThresholdValue:Number;
 		private static var lowGlucoseThresholdValue:Number;
 		private static var makerKeyList:Array;
-
 		private static var makerKeyValue:String;
+		private static var isIFTTTbolusTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTbolusTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTbolusTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTcarbsTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTcarbsTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTcarbsTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTmealTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTmealTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTmealTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTbgCheckTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTbgCheckTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTbgCheckTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTnoteTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTnoteTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTnoteTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTiobUpdatedEnabled:Boolean;
+		private static var isIFTTTcobUpdatedEnabled:Boolean;
 		
 		public function IFTTTService()
 		{
@@ -95,7 +111,26 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD ||
-				e.data == LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_BOLUS_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_BOLUS_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_BOLUS_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_CARBS_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_CARBS_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_CARBS_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MEAL_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MEAL_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MEAL_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_NOTE_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_NOTE_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_NOTE_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_NOTE_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_IOB_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_COB_UPDATED_ON
 			)
 			{
 				getInitialProperties();
@@ -129,6 +164,23 @@ package services
 			highGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD));
 			lowGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD));
 			isIFTTTinteralServerErrorsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON) == "true";
+			isIFTTTbolusTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BOLUS_ADDED_ON) == "true";
+			isIFTTTbolusTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BOLUS_UPDATED_ON) == "true";
+			isIFTTTbolusTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BOLUS_DELETED_ON) == "true";
+			isIFTTTcarbsTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_CARBS_ADDED_ON) == "true";
+			isIFTTTcarbsTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_CARBS_UPDATED_ON) == "true";
+			isIFTTTcarbsTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_CARBS_DELETED_ON) == "true";
+			isIFTTTmealTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MEAL_ADDED_ON) == "true";
+			isIFTTTmealTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MEAL_UPDATED_ON) == "true";
+			isIFTTTmealTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MEAL_DELETED_ON) == "true";
+			isIFTTTbgCheckTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_ADDED_ON) == "true";
+			isIFTTTbgCheckTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_UPDATED_ON) == "true";
+			isIFTTTbgCheckTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_DELETED_ON) == "true";
+			isIFTTTnoteTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_NOTE_ADDED_ON) == "true";
+			isIFTTTnoteTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_NOTE_UPDATED_ON) == "true";
+			isIFTTTnoteTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_NOTE_DELETED_ON) == "true";
+			isIFTTTiobUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_IOB_UPDATED_ON) == "true";
+			isIFTTTcobUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_COB_UPDATED_ON) == "true";
 		}
 		
 		private static function configureService():void
