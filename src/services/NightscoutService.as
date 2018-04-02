@@ -121,6 +121,8 @@ package services
 		private static var followerModeEnabled:Boolean = false;
 		private static var followerTimer:int = -1;
 		private static var nightscoutFollowAPISecret:String = "";
+		private static var nightscoutProfileURL:String = "";
+		private static var isNSProfileSet:Boolean = false;
 		
 		private static var _instance:NightscoutService = new NightscoutService();
 
