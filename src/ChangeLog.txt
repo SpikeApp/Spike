@@ -4,6 +4,7 @@ FIX: Fixed some inconsistencies on the Today Widget that resulted in the line co
 FIX: Some fixes for the Nightscout upload events related to locales and timezones.
 FIX: Fix for a rare bug in the NightscoutService that could crash Spike
 FIX: A lot of small fixes and safeguards all over to make Spike more stable.
+FIX: Small fix for some rare cases where the BG lockscreen notification was not displaying values correctly.
 ENHANCEMENT: Global exception handling. If an error occurs anywhere in Spike's code, Spike will try to recover and will notify developers of the issue so a fix can be included in subsequent updates.
 ENHANCEMENT: Feathers and Starling UI frameworks have been updated to the latest versions (both include bug fixes).
 ENHANCEMENT: Improvement of German translations for the Speech feature. Thank you Christian Pichmann!
