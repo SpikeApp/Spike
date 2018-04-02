@@ -10,20 +10,29 @@ package services
 	import database.LocalSettings;
 	
 	import events.AlarmServiceEvent;
+	import events.FollowerEvent;
 	import events.HTTPServerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
+	import events.TreatmentsEvent;
 	
 	import model.ModelLocator;
 	
 	import network.NetworkConnector;
 	import network.httpserver.HttpServer;
 	
+	import treatments.Treatment;
+	import treatments.TreatmentsManager;
+	
+	import ui.chart.GlucoseFactory;
+	
 	import utils.BgGraphBuilder;
+	import utils.GlucoseHelper;
 	import utils.MathHelper;
 	import utils.TimeSpan;
 	
 	[ResourceBundle("alarmservice")]
+	[ResourceBundle("treatments")]
 
 	public class IFTTTService
 	{
@@ -265,15 +274,207 @@ package services
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_SNOOZED, onTransmitterLowBatterySnoozed);
 			
-			if ((isIFTTTGlucoseReadingsEnabled || isIFTTTGlucoseThresholdsEnabled) && isIFTTTEnabled && makerKeyValue != "")
+			if ((isIFTTTGlucoseReadingsEnabled || isIFTTTGlucoseThresholdsEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+			{
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReading);
+				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReading);
+			}
 			else
+			{
 				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReading);
+				NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReading);
+			}
 			
 			if (isIFTTTinteralServerErrorsEnabled && isIFTTTEnabled && makerKeyValue != "")
 				HttpServer.instance.addEventListener(HTTPServerEvent.SERVER_OFFLINE, onServerOffline, false, 0, true);
 			else
 				HttpServer.instance.removeEventListener(HTTPServerEvent.SERVER_OFFLINE, onServerOffline);
+			
+			if ((isIFTTTbolusTreatmentAddedEnabled || isIFTTTcarbsTreatmentAddedEnabled || isIFTTTmealTreatmentAddedEnabled || isIFTTTbgCheckTreatmentAddedEnabled || isIFTTTnoteTreatmentAddedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			else
+				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			
+			if ((isIFTTTbolusTreatmentDeletedEnabled || isIFTTTcarbsTreatmentDeletedEnabled || isIFTTTmealTreatmentDeletedEnabled || isIFTTTbgCheckTreatmentDeletedEnabled || isIFTTTnoteTreatmentDeletedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
+			else
+				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
+			
+			if ((isIFTTTbolusTreatmentUpdatedEnabled || isIFTTTcarbsTreatmentUpdatedEnabled || isIFTTTmealTreatmentUpdatedEnabled || isIFTTTbgCheckTreatmentUpdatedEnabled || isIFTTTnoteTreatmentUpdatedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentUpdated);
+			else
+				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentUpdated);
+		}
+		
+		private static function onTreatmentAdded(e:TreatmentsEvent):void
+		{
+			var treatment:Treatment = e.treatment;
+			if 
+			(
+				(treatment.type == Treatment.TYPE_BOLUS && isIFTTTbolusTreatmentAddedEnabled) || 
+				(treatment.type == Treatment.TYPE_CORRECTION_BOLUS && isIFTTTbolusTreatmentAddedEnabled) || 
+				(treatment.type == Treatment.TYPE_CARBS_CORRECTION && isIFTTTcarbsTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentAddedEnabled)
+			)
+				triggerTreatment(treatment, "added");
+			
+			if (isIFTTTiobUpdatedEnabled && isIFTTTcobUpdatedEnabled)
+				triggerIOBCOB();
+			else if (isIFTTTiobUpdatedEnabled)
+				triggerIOB();
+			else if (isIFTTTcobUpdatedEnabled)
+				triggerCOB();
+		}
+		
+		private static function onTreatmentDeleted(e:TreatmentsEvent):void
+		{
+			var treatment:Treatment = e.treatment;
+			if 
+			(
+				(treatment.type == Treatment.TYPE_BOLUS && isIFTTTbolusTreatmentDeletedEnabled) || 
+				(treatment.type == Treatment.TYPE_CORRECTION_BOLUS && isIFTTTbolusTreatmentDeletedEnabled) || 
+				(treatment.type == Treatment.TYPE_CARBS_CORRECTION && isIFTTTcarbsTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentDeletedEnabled)
+			)
+				triggerTreatment(treatment, "deleted");
+			
+			if (isIFTTTiobUpdatedEnabled && isIFTTTcobUpdatedEnabled)
+				triggerIOBCOB();
+			else if (isIFTTTiobUpdatedEnabled)
+				triggerIOB();
+			else if (isIFTTTcobUpdatedEnabled)
+				triggerCOB();
+		}
+		
+		private static function onTreatmentUpdated(e:TreatmentsEvent):void
+		{
+			var treatment:Treatment = e.treatment;
+			if 
+			(
+				(treatment.type == Treatment.TYPE_BOLUS && isIFTTTbolusTreatmentUpdatedEnabled) || 
+				(treatment.type == Treatment.TYPE_CORRECTION_BOLUS && isIFTTTbolusTreatmentUpdatedEnabled) || 
+				(treatment.type == Treatment.TYPE_CARBS_CORRECTION && isIFTTTcarbsTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentUpdatedEnabled)
+			)
+				triggerTreatment(treatment, "updated");
+			
+			if (isIFTTTiobUpdatedEnabled && isIFTTTcobUpdatedEnabled)
+				triggerIOBCOB();
+			else if (isIFTTTiobUpdatedEnabled)
+				triggerIOB();
+			else if (isIFTTTcobUpdatedEnabled)
+				triggerCOB();
+		}
+		
+		private static function triggerTreatment(treatment:Treatment, mode:String):void
+		{
+			var treatmentDate:Date = new Date(treatment.timestamp);
+			var dateFormat:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
+			var treatmentTime:String;
+			if (dateFormat.slice(0,2) == "24")
+				treatmentTime = TimeSpan.formatHoursMinutes(treatmentDate.getHours(), treatmentDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
+			else
+				treatmentTime = TimeSpan.formatHoursMinutes(treatmentDate.getHours(), treatmentDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
+			
+			var treatmentType:String;
+			var treatmentValue:String;
+			
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_bolus");
+				treatmentValue = GlucoseFactory.formatIOB(treatment.insulinAmount);
+			}
+			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_carbs");
+				treatmentValue = GlucoseFactory.formatCOB(treatment.carbs);
+			}
+			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_bg_check");
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+					treatmentValue = treatment.glucose + " " + GlucoseHelper.getGlucoseUnit();
+				else
+					treatmentValue = (Math.round(((BgReading.mgdlToMmol((treatment.glucose))) * 10)) / 10) + " " + GlucoseHelper.getGlucoseUnit();
+			}
+			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_meal");
+				treatmentValue = ModelLocator.resourceManagerInstance.getString("treatments","treatment_insulin_label") + ": " + GlucoseFactory.formatIOB(treatment.insulinAmount) + ", " + ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_carbs") + ": " + GlucoseFactory.formatCOB(treatment.carbs);
+			}
+			else if (treatment.type == Treatment.TYPE_NOTE)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_note");
+				treatmentValue = treatment.note;
+			}
+			
+			//JSON Object
+			var info:Object = {};
+			info.value1 = treatmentType;
+			info.value2 = treatmentValue;
+			info.value3 = treatmentTime;
+			
+			var triggerName:String;
+			if (mode == "added")
+				triggerName = "spike-treatment-added";
+			else if (mode == "deleted")
+				triggerName = "spike-treatment-deleted";
+			else if (mode == "updated")
+				triggerName = "spike-treatment-updated";
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", triggerName).replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+			}
+		}
+		
+		private static function triggerIOB():void
+		{
+			var info:Object = {};
+			info.value1 = GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()));
+			info.value2 = "";
+			info.value3 = "";
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-iob").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+			}
+		}
+		
+		private static function triggerCOB():void
+		{
+			var info:Object = {};
+			info.value1 = GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
+			info.value2 = "";
+			info.value3 = "";
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-cob").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+			}
+		}
+		
+		private static function triggerIOBCOB():void
+		{
+			var info:Object = {};
+			info.value1 = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()));
+			info.value2 = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
+			info.value3 = "";
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-iobcob").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+			}
 		}
 		
 		private static function onBgReading(e:Event):void
@@ -318,6 +519,13 @@ package services
 							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
 						}
 					}
+					
+					if (isIFTTTiobUpdatedEnabled && isIFTTTcobUpdatedEnabled)
+						triggerIOBCOB();
+					else if (isIFTTTiobUpdatedEnabled)
+						triggerIOB();
+					else if (isIFTTTcobUpdatedEnabled)
+						triggerCOB();
 				}
 			}
 		}

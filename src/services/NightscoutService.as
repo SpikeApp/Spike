@@ -653,7 +653,7 @@ package services
 			
 			syncTreatmentsUploadActive = false;
 			
-			if (response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("\"ok\":1") != -1)
+			if (response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("ok") != -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Treatment uploaded/updated successfully!");
 				

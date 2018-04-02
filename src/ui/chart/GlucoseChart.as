@@ -988,13 +988,16 @@ package ui.chart
 						}
 						
 						//Reposition out of bounds treatments
-						if (yAxisHeight > 0 && treatment.y + treatment.height > yAxisHeight - 5) //Lower Area
-							treatment.labelUp();
-						else
-							treatment.labelDown();
-						
-						if (treatment.y < -2) //Upper Area
-							treatment.y = -2;
+						if (treatment != null && !isNaN(treatment.y) && !isNaN(treatment.height) && !isNaN(yAxisHeight))
+						{
+							if (yAxisHeight > 0 && treatment.y + treatment.height > yAxisHeight - 5) //Lower Area
+								treatment.labelUp();
+							else
+								treatment.labelDown();
+							
+							if (treatment.y < -2) //Upper Area
+								treatment.y = -2;
+						}
 					}
 				}
 			}
