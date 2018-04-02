@@ -123,7 +123,7 @@ package services
 		private static var nightscoutFollowAPISecret:String = "";
 		
 		private static var _instance:NightscoutService = new NightscoutService();
-		
+
 		public function NightscoutService()
 		{
 			if (_instance != null)
