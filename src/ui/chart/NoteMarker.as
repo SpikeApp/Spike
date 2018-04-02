@@ -3,6 +3,8 @@ package ui.chart
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import starling.display.Image;
+	import starling.display.Quad;
+	import starling.display.Sprite;
 	import starling.textures.Texture;
 	
 	import treatments.Treatment;
@@ -20,7 +22,13 @@ package ui.chart
 		{
 			var noteTexture:Texture = MaterialDeepGreyAmberMobileThemeIcons.noteChartTexture;
 			var noteMarker:Image = new Image(noteTexture);
-			addChild(noteMarker);
+			noteMarker.y = noteMarker.x = 5;
+			var hitArea:Quad = new Quad(30, 30, 0xFF0000);
+			hitArea.alpha = 0;
+			var markerContainer:Sprite = new Sprite();
+			markerContainer.addChild(noteMarker);
+			markerContainer.addChild(hitArea);
+			addChild(markerContainer);
 		}		
 	}
 }

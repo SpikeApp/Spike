@@ -764,8 +764,8 @@ package ui.chart
 			{
 				//Create treatment marker and add it to the chart
 				var noteMarker:NoteMarker = new NoteMarker(treatment);
-				noteMarker.x = ((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius;
-				noteMarker.y = _graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3);
+				noteMarker.x = (((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+				noteMarker.y = (_graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3)) + 5;
 				noteMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 				treatmentsContainer.addChild(noteMarker);
 				
@@ -983,8 +983,8 @@ package ui.chart
 						}
 						else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 						{
-							treatment.x = ((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius;
-							treatment.y = _graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2);
+							treatment.x = (((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+							treatment.y = (_graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 5;
 						}
 						
 						//Reposition out of bounds treatments
@@ -1751,6 +1751,9 @@ package ui.chart
 			//Chart Line
 			if(_displayLine)
 			{
+				//Remove touch events from line
+				line.touchable = false;
+				
 				//Add Line to the display list
 				if(chartType == MAIN_CHART)
 					mainChart.addChild(line);
@@ -1833,6 +1836,9 @@ package ui.chart
 				glucoseMarker.alpha = 0;
 				previousGlucoseMarker = glucoseMarker;
 			}
+			
+			//Remove touch events from line
+			line.touchable = false;
 			
 			//Add line to display list
 			if(chartType == MAIN_CHART)
@@ -2581,6 +2587,9 @@ package ui.chart
 						glucoseMarker.alpha = 0;
 						previousGlucoseMarker = glucoseMarker;
 					}
+					
+					//Remove touch events from line
+					line.touchable = false;
 					
 					mainChart.addChild(line);
 					mainChartLineList.push(line);
