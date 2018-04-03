@@ -40,7 +40,9 @@ package services
 	
 	import network.NetworkConnector;
 	
+	import treatments.ProfileManager;
 	import treatments.Treatment;
+	import treatments.TreatmentsManager;
 	
 	import ui.popups.AlertManager;
 	
@@ -61,6 +63,8 @@ package services
 		private static const MODE_TEST_CREDENTIALS:String = "testCredentials";
 		private static const MODE_TREATMENT_UPLOAD:String = "treatmentUpload";
 		private static const MODE_TREATMENT_DELETE:String = "treatmentDelete";
+		private static const MODE_PROFILE_GET:String = "profileGet";
+		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
@@ -149,6 +153,17 @@ package services
 			//Event listener for settings changes
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 			
+			if (BlueToothDevice.isFollower() && 
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT" &&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""
+			)
+			{
+				setupNightscoutProperties();
+				setupFollowerProperties();
+				activateFollower();
+			}
+			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "" &&
@@ -163,16 +178,6 @@ package services
 					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true")
 			{
 				activateService();
-			}
-			
-			if (BlueToothDevice.isFollower() && 
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT" &&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""
-			)
-			{
-				setupFollowerProperties();
-				activateFollower();
 			}
 		}
 		
@@ -288,6 +293,9 @@ package services
 					activeGlucoseReadings = activeGlucoseReadings.slice(0, initialGlucoseReadingsIndex);
 					initialGlucoseReadingsIndex = 0;
 				}
+				
+				//Get remote treatments
+				getRemoteTreatments();
 			}
 			else
 			{
@@ -295,6 +303,159 @@ package services
 			}
 			
 			syncGlucoseReadingsActive = false;
+		}
+		
+		/**
+		 * PROFILE
+		 */
+		private static function getNightscoutProfile():void
+		{
+			Trace.myTrace("NightscoutService.as", "getNightscoutProfile called!");
+			
+			if (!isNSProfileSet)
+			{
+				if (!NetworkInfo.networkInfo.isReachable())
+				{
+					Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
+					
+					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+					
+					return;
+				}
+				
+				var profileAPISecret:String = "";
+				if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+					profileAPISecret = nightscoutFollowAPISecret;
+				else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+					profileAPISecret = apiSecret;
+				
+				NetworkConnector.createNSConnector(nightscoutProfileURL, profileAPISecret != "" ? profileAPISecret : null, URLRequestMethod.GET, null, MODE_PROFILE_GET, onGetProfileComplete, onConnectionFailed);
+			}
+		}
+		
+		private static function onGetProfileComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onGetProfileComplete called!");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate response
+			if (response.indexOf("defaultProfile") != -1)
+			{
+				try
+				{
+					var profileProperties:Object = JSON.parse(response);
+					if (profileProperties != null)
+					{
+						var dia:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].dia);
+						if (!isNaN(dia))
+						{
+							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!");
+							
+							ProfileManager.addInsulin("Nightscout", dia, "", "000000", false);
+							isNSProfileSet = true;
+							getRemoteTreatments();
+						}
+						else
+						{
+							Trace.myTrace("NightscoutService.as", "Error retrieving insulin. Retrying in 30 seconds! Response: " + response);
+							setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+						}
+					}
+				} 
+				catch(error:Error) 
+				{
+					Trace.myTrace("NightscoutService.as", "Error parsing profile properties. Retrying in 30 seconds! Response: " + response);
+					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+				}
+			}
+		}
+		
+		private static function getRemoteTreatments():void
+		{
+			Trace.myTrace("NightscoutService.as", "getRemoteTreatments called!");
+			
+			if (!isNSProfileSet)
+			{
+				Trace.myTrace("NightscoutService.as", "Profile has not yet been downloaded. Will try to download now!");
+				getNightscoutProfile();
+				return;
+			}
+			
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
+				
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				
+				return;
+			}
+			
+			var parameters:URLVariables = new URLVariables();
+			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
+			
+			//API Secret
+			var treatmentAPISecret:String = "";
+			if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+				treatmentAPISecret = nightscoutFollowAPISecret;
+			else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+				treatmentAPISecret = apiSecret;
+			
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + ".json?" + parameters, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_TREATMENTS_GET, onGetTreatmentsComplete, onConnectionFailed);
+		}
+		
+		private static function onGetTreatmentsComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onGetTreatmentsComplete called!");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate response
+			if (response.indexOf("created_at") != -1)
+			{
+				try
+				{
+					var nightscoutTreatments:Array = JSON.parse(response) as Array;
+					if (nightscoutTreatments!= null && nightscoutTreatments is Array)
+					{
+						//Send nightscout treatments to TreatmentsManager for further processing
+						TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
+					}
+					else
+					{
+						Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					}
+				} 
+				catch(error:Error) 
+				{
+					Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				}
+			}
+			else
+			{
+				Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+			}
 		}
 		
 		/**
@@ -318,6 +479,7 @@ package services
 			
 			clearTimeout(followerTimer);
 			
+			getNightscoutProfile();
 			getRemoteReadings();
 			
 			activateTimer();
@@ -537,7 +699,11 @@ package services
 					
 					if (newData) 
 					{
+						//Notify Listeners
 						_instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
+						
+						//Get remote treatments
+						getRemoteTreatments();
 					}
 				} 
 				else 
@@ -1109,6 +1275,7 @@ package services
 			Trace.myTrace("NightscoutService.as", "Service activated!");
 			serviceActive = true;
 			setupNightscoutProperties();
+			getNightscoutProfile();
 			getInitialGlucoseReadings();
 			getInitialCalibrations();
 			activateEventListeners();
@@ -1154,8 +1321,11 @@ package services
 			nightscoutEventsURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";
 			if (nightscoutEventsURL.indexOf('http') == -1) nightscoutEventsURL = "https://" + nightscoutEventsURL;
 			
-			nightscoutTreatmentsURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
+			nightscoutTreatmentsURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/treatments";
 			if (nightscoutTreatmentsURL.indexOf('http') == -1) nightscoutTreatmentsURL = "https://" + nightscoutTreatmentsURL;
+			
+			nightscoutProfileURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/profile.json" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/profile.json";
+			if (nightscoutProfileURL.indexOf('http') == -1) nightscoutProfileURL = "https://" + nightscoutProfileURL;
 		}
 		
 		private static function activateEventListeners():void

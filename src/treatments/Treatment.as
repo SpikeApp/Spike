@@ -30,7 +30,7 @@ package treatments
 		public var ID:String;
 		private var insulinScaleFactor:Number;
 		
-		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "")
+		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null)
 		{
 			this.type = type;
 			this.insulinAmount = insulin;
@@ -47,9 +47,7 @@ package treatments
 			this.note = note;
 			this.timestamp = timestamp;
 			this.insulinScaleFactor = 3 / dia;
-			this.ID = UniqueId.createEventId();
-			
-			//setInterval(calculateCOB, 5000);
+			this.ID = treatmentID == null ? UniqueId.createEventId() : treatmentID;
 		}
 		
 		public function calculateIOB(time:Number):Number

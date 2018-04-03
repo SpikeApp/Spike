@@ -1,8 +1,13 @@
 package treatments
 {
+	import com.adobe.utils.DateUtil;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.EventDispatcher;
+	import flash.sampler.getGetterInvocationCount;
+	import flash.utils.Dictionary;
+	
+	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CommonSettings;
@@ -48,6 +53,7 @@ package treatments
 		
 		/* Internal variables/objects */
 		public static var treatmentsList:Array = [];
+		private static var treatmentsMap:Dictionary = new Dictionary();
 		
 		public function TreatmentsManager()
 		{
@@ -82,6 +88,7 @@ package treatments
 					treatment.ID = dbTreatment.id;
 					
 					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
 				}
 			}
 		}
@@ -249,6 +256,9 @@ package treatments
 			//Delete from Nightscout
 			NightscoutService.deleteTreatment(treatment);
 			
+			//Notify listeners
+			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, treatment));
+			
 			//Delete from Spike
 			for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
 			{
@@ -260,9 +270,7 @@ package treatments
 					break;
 				}
 			}
-			
-			//Notify listeners
-			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, treatment));
+			treatmentsMap[treatment.ID] = null;
 		}
 		
 		public static function updateTreatment(treatment:Treatment):void
@@ -488,6 +496,7 @@ package treatments
 					
 					//Add to list
 					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
@@ -538,6 +547,7 @@ package treatments
 					
 					//Add to list
 					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
@@ -606,6 +616,7 @@ package treatments
 					
 					//Add to list
 					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
@@ -663,6 +674,7 @@ package treatments
 					
 					//Add to list
 					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
@@ -711,6 +723,7 @@ package treatments
 					
 					//Add to list
 					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
@@ -750,6 +763,99 @@ package treatments
 				if (notes != null)
 					notes.clearFocus();
 			}
+		}
+		
+		public static function processNightscoutTreatments(nsTreatments:Array):void
+		{
+			//trace(ObjectUtil.toString(nsTreatments));
+			
+			var loopLength:int = nsTreatments.length;
+			for (var i:int = 0; i < loopLength; i++) 
+			{
+				//Define initial treatment properties
+				var nsTreatment:Object = nsTreatments[i];
+				var treatmentTimestamp:Number = DateUtil.parseW3CDTF(nsTreatment.created_at).valueOf();
+				//var treatmentTimestamp:Number = new Date(nsTreatment.created_at).valueOf();
+				/*trace("nsTreatment.created_at", nsTreatment.created_at);
+				trace("treatmentTimestamp", treatmentTimestamp);
+				trace("treatment date", new Date(treatmentTimestamp));
+				trace("treatment date2", DateUtil.parseW3CDTF(nsTreatment.created_at));*/
+				
+				var treatmentID:String = nsTreatment._id;
+				var treatmentEventType:String = nsTreatment.eventType;
+				var treatmentType:String = "";
+				var treatmentInsulinAmount:Number = 0;
+				var treatmentInsulinID:String = "";
+				var treatmentCarbs:Number = 0;
+				var treatmentGlucose:Number = 0;
+				var treatmentNote:String = "";
+				if (treatmentEventType == "Correction Bolus")
+				{
+					treatmentType = Treatment.TYPE_BOLUS;
+					if (nsTreatment.insulin != null)
+						treatmentInsulinAmount = Number(nsTreatment.insulin);
+					treatmentInsulinID = "000000";
+				}
+				else if (treatmentEventType == "Meal Bolus")
+				{
+					treatmentType = Treatment.TYPE_MEAL_BOLUS;
+					if (nsTreatment.insulin != null)
+						treatmentInsulinAmount = Number(nsTreatment.insulin);
+					treatmentInsulinID = "000000";
+					if (nsTreatment.carbs != null)
+						treatmentCarbs = Number(nsTreatment.carbs);
+				}
+				else if (treatmentEventType == "Carb Correction")
+				{
+					treatmentType = Treatment.TYPE_MEAL_BOLUS;
+					if (nsTreatment.carbs != null)
+						treatmentCarbs = Number(nsTreatment.carbs);
+				}
+				else if (treatmentEventType == "Note")
+					treatmentType = Treatment.TYPE_NOTE;
+				else if (treatmentEventType == "BG Check")
+				{
+					treatmentType = Treatment.TYPE_GLUCOSE_CHECK;
+					treatmentGlucose = Number(nsTreatment.glucose);
+				}
+				
+				if (nsTreatment.notes != null)
+					treatmentNote = nsTreatment.notes;
+				
+				//Check if treatment is supported by Spike
+				if (treatmentType != "")
+				{
+					//Check if treatment already exists in Spike
+					if (treatmentsMap[treatmentID] == null)
+					{
+						//It's a new treatment. Let's create it
+						var treatment:Treatment = new Treatment
+						(
+							treatmentType,
+							treatmentTimestamp,
+							treatmentInsulinAmount,
+							treatmentInsulinID,
+							treatmentCarbs,
+							treatmentGlucose,
+							getEstimatedGlucose(treatmentTimestamp),
+							treatmentNote,
+							treatmentID
+						);
+						
+						//Add treatment to Spike
+						treatmentsList.push(treatment);
+						treatmentsMap[treatment.ID] = treatment;
+						
+						//Notify listeners
+						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+						
+						trace("added treatment");
+					}
+				}
+			}
+			
+			//Sort treatments
+			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 		}
 		
 		public static function getEstimatedGlucose(timestamp:Number):Number

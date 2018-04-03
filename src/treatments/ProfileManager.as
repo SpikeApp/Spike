@@ -1,5 +1,7 @@
 package treatments
 {
+	import flash.utils.Dictionary;
+	
 	import database.Database;
 	
 	import utils.UniqueId;
@@ -7,6 +9,7 @@ package treatments
 	public class ProfileManager
 	{
 		public static var insulinsList:Array = [];
+		private static var insulinsMap:Dictionary = new Dictionary();
 		
 		public function ProfileManager()
 		{
@@ -34,6 +37,7 @@ package treatments
 					);
 					
 					insulinsList.push(insulin);
+					insulinsMap[dbInsulin.id] = insulin;
 				}
 				insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
 			}
@@ -59,12 +63,19 @@ package treatments
 			return insulinMatched;
 		}
 		
-		public static function addInsulin(name:String, dia:Number, type:String):void
+		public static function addInsulin(name:String, dia:Number, type:String, insulinID:String = null, saveToDatabase:Boolean = true):void
 		{
+			//Generate insulin ID
+			var newInsulinID:String = insulinID == null ? UniqueId.createEventId() : insulinID;
+			
+			//Check duplicates
+			if (insulinsMap[newInsulinID] != null)
+				return;
+			
 			//Create new insulin
 			var insulin:Insulin = new Insulin
 			(
-				UniqueId.createEventId(),
+				newInsulinID,
 				name,
 				dia,
 				type,
@@ -74,9 +85,11 @@ package treatments
 			//Add to Spike
 			insulinsList.push(insulin);
 			insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
+			insulinsMap[newInsulinID] = insulin;
 			
 			//Save in database
-			Database.insertInsulinSynchronous(insulin);
+			if (saveToDatabase)
+				Database.insertInsulinSynchronous(insulin);
 		}
 	}
 }
