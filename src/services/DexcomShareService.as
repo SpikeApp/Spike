@@ -407,7 +407,6 @@ package services
 					}
 					else if (errorCode == "MonitoringSessionNotActive") 
 					{
-						trace("ENTREI");
 						NetworkConnector.createDSConnector(dexcomShareURL + "Publisher/StartRemoteMonitoringSession?sessionId=" + escape(dexcomShareSessionID) + "&serialNumber=" + escape(transmitterID), URLRequestMethod.POST, null, null, MODE_GLUCOSE_READING, onStartRemoteMonitoringResponse, onConnectionFailed);
 					}
 					else if (errorCode == "DuplicateEgvPosted") 

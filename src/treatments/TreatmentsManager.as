@@ -775,12 +775,6 @@ package treatments
 				//Define initial treatment properties
 				var nsTreatment:Object = nsTreatments[i];
 				var treatmentTimestamp:Number = DateUtil.parseW3CDTF(nsTreatment.created_at).valueOf();
-				//var treatmentTimestamp:Number = new Date(nsTreatment.created_at).valueOf();
-				/*trace("nsTreatment.created_at", nsTreatment.created_at);
-				trace("treatmentTimestamp", treatmentTimestamp);
-				trace("treatment date", new Date(treatmentTimestamp));
-				trace("treatment date2", DateUtil.parseW3CDTF(nsTreatment.created_at));*/
-				
 				var treatmentID:String = nsTreatment._id;
 				var treatmentEventType:String = nsTreatment.eventType;
 				var treatmentType:String = "";
@@ -848,8 +842,43 @@ package treatments
 						
 						//Notify listeners
 						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					}
+					else
+					{
+						//Treatment exists... Lets check if it was modified
+						var wasTreatmentModified:Boolean = false;
+						var spikeTreatment:Treatment = treatmentsMap[treatmentID];
+						if (spikeTreatment.carbs != treatmentCarbs)
+						{
+							spikeTreatment.carbs = treatmentCarbs;
+							wasTreatmentModified = true;
+						}
+						if (spikeTreatment.glucose != treatmentGlucose)
+						{
+							spikeTreatment.glucose = treatmentGlucose;
+							wasTreatmentModified = true;
+						}
+						if (spikeTreatment.insulinAmount != treatmentInsulinAmount)
+						{
+							spikeTreatment.insulinAmount = treatmentInsulinAmount;
+							wasTreatmentModified = true;
+						}
+						if (spikeTreatment.note != treatmentNote)
+						{
+							spikeTreatment.note = treatmentNote;
+							wasTreatmentModified = true;
+						}
+						if (spikeTreatment.timestamp != treatmentTimestamp)
+						{
+							spikeTreatment.timestamp = treatmentTimestamp;
+							spikeTreatment.glucoseEstimated = getEstimatedGlucose(treatmentTimestamp);
+							wasTreatmentModified = true;
+						}
 						
-						trace("added treatment");
+						if (wasTreatmentModified)
+						{
+							trace("treatment was modified");
+						}
 					}
 				}
 			}

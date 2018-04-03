@@ -696,7 +696,6 @@ package ui.chart
 		
 		public function addTreatment(treatment:Treatment):void
 		{
-			trace("C1");
 			//Setup initial timeline/mask properties
 			if (treatmentsFirstRun && treatmentsContainer == null)
 			{
@@ -713,7 +712,6 @@ package ui.chart
 			//Check treatment type
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 			{
-				trace("C2");
 				//Create treatment marker and add it to the chart
 				var insulinMarker:InsulinMarker = new InsulinMarker(treatment);
 				insulinMarker.x = (insulinMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
