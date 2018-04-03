@@ -501,7 +501,7 @@ package services
 		{
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
-			if (String(loader.data).indexOf("MonitoredReceiverSerialNumberDoesNotMatch") == -1)
+			if (String(loader.data).indexOf("MonitoredReceiverSerialNumberDoesNotMatch") == -1 && String(loader.data).indexOf("NotAssigned") == -1 && String(loader.data).indexOf("MonitoredReceiverNotAssigned") == -1)
 				syncGlucoseReadings();
 			else
 			{

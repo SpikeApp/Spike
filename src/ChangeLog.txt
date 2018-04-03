@@ -11,6 +11,7 @@ ENHANCEMENT: Improvement of German translations for the Speech feature. Thank yo
 ENHANCEMENT: Improvements for the Apple Watch complication instructions.
 ENHANCEMENT: Improvements for the lock screen notification's body text when Spike is ready for the first/second calibration after starting a new sensor.
 ENHANCEMENT: Added some more "missed readings" suggestions to the help screen.
+ENHANCEMENT: Improved the way Spike automatically assigns a receiver to a Dexcom Share account in case the user is using a receiver that has yet not been assigned to his/her account.
 
 This is a critical update. ALL users are advise to update!
 
