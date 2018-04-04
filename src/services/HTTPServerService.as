@@ -12,6 +12,7 @@ package services
 	import network.httpserver.API.DexcomShareController;
 	import network.httpserver.API.NightscoutAPI1Controller;
 	import network.httpserver.API.NightscoutAPIGeneralController;
+	import network.httpserver.API.SpikeTreatmentsController;
 	
 	import utils.Trace;
 
@@ -32,6 +33,7 @@ package services
 		private static var nsGeneralController:NightscoutAPIGeneralController;
 		private static var nsAPI1Controller:NightscoutAPI1Controller;
 		private static var nsAPI1StatusController:NightscoutAPI1Controller;
+		private static var spikeTreatmentsController:SpikeTreatmentsController;
 		
 		public function HTTPServerService()
 		{
@@ -78,6 +80,9 @@ package services
 				nsAPI1Controller = new NightscoutAPI1Controller('/api/v1/entries');
 				nsAPI1StatusController = new NightscoutAPI1Controller('/api/v1');
 				
+				//Spike
+				spikeTreatmentsController = new SpikeTreatmentsController('/SpikeTreatments');
+				
 				//Server
 				httpServer = new HttpServer();
 				httpServer.registerController(dexcomAuthenticationController);			
@@ -85,6 +90,7 @@ package services
 				httpServer.registerController(nsGeneralController);
 				httpServer.registerController(nsAPI1Controller);
 				httpServer.registerController(nsAPI1StatusController);
+				httpServer.registerController(spikeTreatmentsController);
 				httpServer.listen(1979);
 				
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
@@ -118,6 +124,9 @@ package services
 			
 			if (nsAPI1StatusController != null)
 				nsAPI1StatusController = null;
+			
+			if (spikeTreatmentsController != null)
+				spikeTreatmentsController = null;
 			
 			if (httpServer != null)
 			{

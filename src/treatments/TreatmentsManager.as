@@ -118,7 +118,7 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):Number 
 		{
-			var carbsAbsorptionRate:Number = 30; //MAKE DYNAMIC
+			var carbsAbsorptionRate:Number = ProfileManager.carbAbsorptionRate;
 			var now:Number = new Date().valueOf();
 			
 			// TODO: figure out the liverSensRatio that gives the most accurate purple line predictions
@@ -786,6 +786,49 @@ package treatments
 			}
 		}
 		
+		public static function addExternalTreatment(treatment:Treatment):void
+		{
+			//Add to list
+			treatmentsList.push(treatment);
+			treatmentsMap[treatment.ID] = treatment;
+			
+			//Notify listeners
+			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+			
+			//Insert in DB
+			if (!BlueToothDevice.isFollower())
+				Database.insertTreatmentSynchronous(treatment);
+			
+			//Upload to Nightscout
+			NightscoutService.uploadTreatment(treatment);
+		}
+		
+		public static function addInternalCalibrationTreatment(glucoseValue:Number, timestamp:Number, treatmentID:String):void
+		{
+			var treatment:Treatment = new Treatment
+			(
+				Treatment.TYPE_GLUCOSE_CHECK,
+				timestamp,
+				0,
+				"",
+				0,
+				glucoseValue,
+				glucoseValue,
+				"Sensor Calibration",
+				treatmentID
+			);
+			
+			//Add to list
+			treatmentsList.push(treatment);
+			treatmentsMap[treatment.ID] = treatment;
+			
+			//Notify listeners
+			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+			
+			//Insert in DB
+			Database.insertTreatmentSynchronous(treatment);
+		}
+		
 		public static function processNightscoutTreatments(nsTreatments:Array):void
 		{
 			var nightscoutTreatmentsMap:Dictionary = new Dictionary();
@@ -822,7 +865,7 @@ package treatments
 				}
 				else if (treatmentEventType == "Carb Correction")
 				{
-					treatmentType = Treatment.TYPE_MEAL_BOLUS;
+					treatmentType = Treatment.TYPE_CARBS_CORRECTION;
 					if (nsTreatment.carbs != null)
 						treatmentCarbs = Number(nsTreatment.carbs);
 				}
@@ -852,7 +895,7 @@ package treatments
 							treatmentInsulinID,
 							treatmentCarbs,
 							treatmentGlucose,
-							getEstimatedGlucose(treatmentTimestamp),
+							treatmentEventType != "BG Check" ? getEstimatedGlucose(treatmentTimestamp) : treatmentGlucose,
 							treatmentNote,
 							treatmentID
 						);

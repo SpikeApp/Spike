@@ -58,6 +58,7 @@ package ui.chart
 	import utils.TimeSpan;
 	
 	[ResourceBundle("chartscreen")]
+	[ResourceBundle("treatments")]
 	
 	public class GlucoseChart extends Sprite
 	{
@@ -923,6 +924,8 @@ package ui.chart
 				time.value = new Date(treatment.treatment.timestamp);
 				time.height = 30;
 				time.paddingTop = time.paddingBottom = 0;
+				if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+					time.isEnabled = false;
 				var timeSpacer:Sprite = new Sprite();
 				timeSpacer.height = 10;
 				treatmentContainer.addChild(time);
@@ -937,18 +940,21 @@ package ui.chart
 				}
 				
 				//Action Buttons
-				var actionsLayout:HorizontalLayout = new HorizontalLayout();
-				actionsLayout.gap = 5;
-				var actionsContainer:LayoutGroup = new LayoutGroup();
-				actionsContainer.layout = actionsLayout;
-				
-				var moveBtn:Button = LayoutFactory.createButton("Move");
-				moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
-				actionsContainer.addChild(moveBtn);
-				var deleteBtn:Button = LayoutFactory.createButton("Delete");
-				deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
-				actionsContainer.addChild(deleteBtn);
-				treatmentContainer.addChild(actionsContainer);
+				if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+				{
+					var actionsLayout:HorizontalLayout = new HorizontalLayout();
+					actionsLayout.gap = 5;
+					var actionsContainer:LayoutGroup = new LayoutGroup();
+					actionsContainer.layout = actionsLayout;
+					
+					var moveBtn:Button = LayoutFactory.createButton("Move");
+					moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+					actionsContainer.addChild(moveBtn);
+					var deleteBtn:Button = LayoutFactory.createButton("Delete");
+					deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+					actionsContainer.addChild(deleteBtn);
+					treatmentContainer.addChild(actionsContainer);
+				}
 				
 				treatmentCallout = Callout.show(treatmentContainer, treatment, null, true);
 				
@@ -1420,6 +1426,8 @@ package ui.chart
 			}
 			
 			yAxisHeight = yAxis.height;
+			
+			yAxis.touchable = false;
 			
 			return yAxis;
 		}

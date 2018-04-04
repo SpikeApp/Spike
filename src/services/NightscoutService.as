@@ -51,6 +51,7 @@ package services
 	import utils.UniqueId;
 	
 	[ResourceBundle("nightscoutservice")]
+	[ResourceBundle("treatments")]
 	
 	public class NightscoutService extends EventDispatcher
 	{
@@ -127,10 +128,10 @@ package services
 		private static var nightscoutFollowAPISecret:String = "";
 		private static var nightscoutProfileURL:String = "";
 		private static var isNSProfileSet:Boolean = false;
+		private static var lastRemoteTreatmentsSync:Number = 0;
+		private static var lastRemoteProfileSync:Number = 0;
 		
 		private static var _instance:NightscoutService = new NightscoutService();
-
-		private static var lastRemoteTreatmentSync:Number = 0;
 
 		public function NightscoutService()
 		{
@@ -315,6 +316,16 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "getNightscoutProfile called!");
 			
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastRemoteProfileSync < TIME_30_SECONDS)
+			{
+				Trace.myTrace("NightscoutService.as", "Fetched profile less than 30 seconds ago. Ignoring!");
+				return;
+			}
+			
+			lastRemoteProfileSync = now;
+			
 			if (!isNSProfileSet)
 			{
 				if (!NetworkInfo.networkInfo.isReachable())
@@ -326,12 +337,14 @@ package services
 					return;
 				}
 				
+				//Define API secret
 				var profileAPISecret:String = "";
 				if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
 					profileAPISecret = nightscoutFollowAPISecret;
 				else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
 					profileAPISecret = apiSecret;
 				
+				//Fetch profile
 				NetworkConnector.createNSConnector(nightscoutProfileURL, profileAPISecret != "" ? profileAPISecret : null, URLRequestMethod.GET, null, MODE_PROFILE_GET, onGetProfileComplete, onConnectionFailed);
 			}
 		}
@@ -360,7 +373,8 @@ package services
 					if (profileProperties != null)
 					{
 						var dia:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].dia);
-						if (!isNaN(dia))
+						var carbAbsorptionRate:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr);
+						if (!isNaN(dia) && !isNaN(carbAbsorptionRate))
 						{
 							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!");
 							
@@ -368,6 +382,9 @@ package services
 							
 							//Add nightscout insulin to Spike and don't save it to DB
 							ProfileManager.addInsulin("Nightscout Insulin", dia, "", "000000", false);
+							
+							//Add nightscout carbs absorption rate and don't save it to DB
+							ProfileManager.addCarbAbsorptionRate(carbAbsorptionRate);
 							
 							//Get treatmenents
 							if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
@@ -390,91 +407,6 @@ package services
 			{
 				Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Retrying in 30 seconds! Response: " + response);
 				setTimeout(getNightscoutProfile, TIME_30_SECONDS);
-			}
-		}
-		
-		private static function getRemoteTreatments():void
-		{
-			Trace.myTrace("NightscoutService.as", "getRemoteTreatments called!");
-			
-			if (!isNSProfileSet)
-			{
-				Trace.myTrace("NightscoutService.as", "Profile has not yet been downloaded. Will try to download now!");
-				getNightscoutProfile();
-				return;
-			}
-			
-			if (!NetworkInfo.networkInfo.isReachable())
-			{
-				Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
-				
-				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
-				
-				return;
-			}
-			
-			var now:Number = new Date().valueOf();
-			
-			if (now - lastRemoteTreatmentSync < TIME_30_SECONDS)
-				return;
-			
-			lastRemoteTreatmentSync = now;
-			
-			var parameters:URLVariables = new URLVariables();
-			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
-			
-			//API Secret
-			var treatmentAPISecret:String = "";
-			if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
-				treatmentAPISecret = nightscoutFollowAPISecret;
-			else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
-				treatmentAPISecret = apiSecret;
-			
-			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + ".json?" + parameters, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_TREATMENTS_GET, onGetTreatmentsComplete, onConnectionFailed);
-		}
-		
-		private static function onGetTreatmentsComplete(e:Event):void
-		{
-			Trace.myTrace("NightscoutService.as", "onGetTreatmentsComplete called!");
-			
-			//Get loader
-			var loader:URLLoader = e.currentTarget as URLLoader;
-			
-			//Get response
-			var response:String = loader.data;
-			
-			//Dispose loader
-			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
-			loader = null;
-			
-			//Validate response
-			if (response.indexOf("created_at") != -1)
-			{
-				try
-				{
-					var nightscoutTreatments:Array = JSON.parse(response) as Array;
-					if (nightscoutTreatments!= null && nightscoutTreatments is Array)
-					{
-						//Send nightscout treatments to TreatmentsManager for further processing
-						TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
-					}
-					else
-					{
-						Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
-					}
-				} 
-				catch(error:Error) 
-				{
-					Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
-				}
-			}
-			else
-			{
-				Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
 			}
 		}
 		
@@ -922,6 +854,93 @@ package services
 				Trace.myTrace("NightscoutService.as", "Error deleting treatment. Server response: " + response);
 		}
 		
+		private static function getRemoteTreatments():void
+		{
+			Trace.myTrace("NightscoutService.as", "getRemoteTreatments called!");
+			
+			//Validation
+			if (!isNSProfileSet)
+			{
+				Trace.myTrace("NightscoutService.as", "Profile has not yet been downloaded. Will try to download now!");
+				getNightscoutProfile();
+				return;
+			}
+			
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
+				
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				
+				return;
+			}
+			
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastRemoteTreatmentsSync < TIME_30_SECONDS)
+				return;
+			
+			lastRemoteTreatmentsSync = now;
+			
+			//Define request parameters
+			var parameters:URLVariables = new URLVariables();
+			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
+			
+			//API Secret
+			var treatmentAPISecret:String = "";
+			if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+				treatmentAPISecret = nightscoutFollowAPISecret;
+			else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+				treatmentAPISecret = apiSecret;
+			
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + ".json?" + parameters, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_TREATMENTS_GET, onGetTreatmentsComplete, onConnectionFailed);
+		}
+		
+		private static function onGetTreatmentsComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onGetTreatmentsComplete called!");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate response
+			if (response.indexOf("created_at") != -1)
+			{
+				try
+				{
+					var nightscoutTreatments:Array = JSON.parse(response) as Array;
+					if (nightscoutTreatments!= null && nightscoutTreatments is Array)
+					{
+						//Send nightscout treatments to TreatmentsManager for further processing
+						TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
+					}
+					else
+					{
+						Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					}
+				} 
+				catch(error:Error) 
+				{
+					Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				}
+			}
+			else
+			{
+				Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+			}
+		}
+		
 		/**
 		 * CALIBRATIONS
 		 */
@@ -948,12 +967,13 @@ package services
 		private static function createVisualCalibrationObject(calibration:Calibration):Object
 		{
 			var newVisualCalibration:Object = new Object();
+			newVisualCalibration["_id"] = UniqueId.createEventId();	
 			newVisualCalibration["eventType"] = "BG Check";	
 			newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
-			newVisualCalibration["enteredBy"] = "Spike App";	
+			newVisualCalibration["enteredBy"] = "Spike";	
 			newVisualCalibration["glucose"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? calibration.bg : Math.round(BgReading.mgdlToMmol(calibration.bg) * 10) / 10;
 			newVisualCalibration["glucoseType"] = "Finger";
-			newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("nightscoutservice","sensor_calibration");
+			newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note");
 			
 			return newVisualCalibration;
 		}
@@ -1002,7 +1022,11 @@ package services
 			var lastCalibration:Calibration = Calibration.last();
 			
 			activeCalibrations.push(createCalibrationObject(lastCalibration));
-			activeVisualCalibrations.push(createVisualCalibrationObject(lastCalibration));
+			var visualCalibration:Object = createVisualCalibrationObject(lastCalibration);
+			activeVisualCalibrations.push(visualCalibration);
+			
+			//Add calibration treatment to Spike
+			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, visualCalibration._id);
 			
 			syncCalibrations();
 			syncVisualCalibrations();
@@ -1381,6 +1405,9 @@ package services
 			if (BlueToothDevice.isFollower()) getRemoteReadings();
 			
 			if (activeTreatmentsUpload.length > 0) syncTreatmentsUpload();
+			
+			//Update remote treatments so the user has updated data when returning to Spike
+			getRemoteTreatments();
 		}
 		
 		/**
@@ -1428,6 +1455,16 @@ package services
 			{
 				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error deleting treatment. Error: " + error.message);
 				syncTreatmentsDeleteActive = false;
+			}
+			else if (mode == MODE_TREATMENTS_GET)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting treatments. Retrying in 30 seconds. Error: " + error.message);
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+			}
+			else if (mode == MODE_PROFILE_GET)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting profile. Retrying in 30 seconds. Error: " + error.message);
+				setTimeout(getNightscoutProfile, TIME_30_SECONDS);
 			}
 		}
 		

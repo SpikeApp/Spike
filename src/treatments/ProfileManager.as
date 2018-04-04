@@ -8,6 +8,7 @@ package treatments
 
 	public class ProfileManager
 	{
+		public static var carbAbsorptionRate:Number = 30;
 		public static var insulinsList:Array = [];
 		private static var insulinsMap:Dictionary = new Dictionary();
 		
@@ -18,6 +19,7 @@ package treatments
 		
 		public static function init():void
 		{
+			//Get insulins
 			var dbInsulines:Array = Database.getInsulinsSynchronous();
 			if (dbInsulines != null && dbInsulines.length > 0)
 			{
@@ -41,6 +43,9 @@ package treatments
 				}
 				insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
 			}
+			
+			//Get Profile
+			
 		}
 		
 		public static function getInsulin(ID:String):Insulin
@@ -90,6 +95,11 @@ package treatments
 			//Save in database
 			if (saveToDatabase)
 				Database.insertInsulinSynchronous(insulin);
+		}
+		
+		public static function addCarbAbsorptionRate(rate:Number):void
+		{
+			carbAbsorptionRate = rate;
 		}
 	}
 }
