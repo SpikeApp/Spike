@@ -33,6 +33,7 @@ package ui.screens
 	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
@@ -356,14 +357,11 @@ package ui.screens
 		
 		private function onTreatmentAdded(e:TreatmentsEvent):void
 		{
-			if (!appInBackground && glucoseChart != null && Constants.appInForeground)
+			var treatment:Treatment = e.treatment;
+			if (treatment != null)
 			{
-				var treatment:Treatment = e.treatment;
-				if (treatment != null)
-				{
-					Trace.myTrace("ChartScreen.as", "Adding treatment to the chart: Type: " + treatment.type);
-					glucoseChart.addTreatment(treatment);
-				}
+				Trace.myTrace("ChartScreen.as", "Adding treatment to the chart: Type: " + treatment.type);
+				SystemUtil.executeWhenApplicationIsActive(glucoseChart.addTreatment, treatment);
 			}
 		}
 		
@@ -373,7 +371,7 @@ package ui.screens
 			if (treatment != null)
 			{
 				Trace.myTrace("ChartScreen.as", "Sending externally modified treatment to the chart: Type: " + treatment.type);
-				glucoseChart.updateExternallyModifiedTreatment(treatment);
+				SystemUtil.executeWhenApplicationIsActive(glucoseChart.updateExternallyModifiedTreatment, treatment);
 			}
 		}
 		
@@ -383,7 +381,7 @@ package ui.screens
 			if (treatment != null)
 			{
 				Trace.myTrace("ChartScreen.as", "Sending externally deleted treatment to the chart: Type: " + treatment.type);
-				glucoseChart.updateExternallyDeletedTreatment(treatment);
+				SystemUtil.executeWhenApplicationIsActive(glucoseChart.updateExternallyDeletedTreatment, treatment);
 			}
 		}
 		
