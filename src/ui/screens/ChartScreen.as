@@ -106,6 +106,8 @@ package ui.screens
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -345,8 +347,6 @@ package ui.screens
 					Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
 					newReadingsList.push(reading);
 				}
-				
-				//AlarmService.cancelInactiveAlert();
 			} 
 			catch(error:Error) 
 			{
@@ -362,14 +362,29 @@ package ui.screens
 				if (treatment != null)
 				{
 					Trace.myTrace("ChartScreen.as", "Adding treatment to the chart: Type: " + treatment.type);
-					glucoseChart.addTreatment(e.treatment);
+					glucoseChart.addTreatment(treatment);
 				}
 			}
-			/*else
+		}
+		
+		private function onTreatmentExternallyModified(e:TreatmentsEvent):void
+		{
+			var treatment:Treatment = e.treatment;
+			if (treatment != null)
 			{
-				Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
-				newReadingsList.push(reading);
-			}*/
+				Trace.myTrace("ChartScreen.as", "Sending externally modified treatment to the chart: Type: " + treatment.type);
+				glucoseChart.updateExternallyModifiedTreatment(treatment);
+			}
+		}
+		
+		private function onTreatmentExternallyDeleted(e:TreatmentsEvent):void
+		{
+			var treatment:Treatment = e.treatment;
+			if (treatment != null)
+			{
+				Trace.myTrace("ChartScreen.as", "Sending externally deleted treatment to the chart: Type: " + treatment.type);
+				glucoseChart.updateExternallyDeletedTreatment(treatment);
+			}
 		}
 		
 		private function onAppInBackground (e:SpikeEvent):void

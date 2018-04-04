@@ -29,6 +29,15 @@ package ui.chart
 			markerContainer.addChild(noteMarker);
 			markerContainer.addChild(hitArea);
 			addChild(markerContainer);
-		}		
+		}
+		
+		override public function updateMarker(treatment:Treatment):void
+		{
+			this.treatment = treatment;
+			
+			removeChildren(0, 10, true);
+			
+			draw();
+		}
 	}
 }

@@ -6,7 +6,10 @@ package ui.chart
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.system.System;
+	import flash.utils.Dictionary;
 	import flash.utils.Timer;
+	
+	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -182,7 +185,8 @@ package ui.chart
 		private var treatmentsFirstRun:Boolean = true;
 		private var treatmentsActive:Boolean = true;
 		private var treatmentsContainer:Sprite;
-		private var treatmenstsList:Array = [];
+		private var treatmentsList:Array = [];
+		private var treatmentsMap:Dictionary = new Dictionary();
 		private var treatmentCallout:Callout;
 		private var IOBPill:ChartTreatmentPill;
 		private var glucoseSlopePill:ChartInfoPill;
@@ -694,6 +698,50 @@ package ui.chart
 			}
 		}
 		
+		public function updateExternallyModifiedTreatment(treatment:Treatment):void
+		{
+			var modifiedTreatment:ChartTreatment = treatmentsMap[treatment.ID] as ChartTreatment;
+			if (modifiedTreatment != null)
+			{
+				//Update the treatment marker
+				modifiedTreatment.updateMarker(treatment);
+				
+				//Reposition all treatments
+				manageTreatments();
+				
+				//Recalculate total IOB and COB
+				calculateTotalIOB(getTimelineTimestamp());
+				calculateTotalCOB(getTimelineTimestamp());
+			}
+		}
+		
+		public function updateExternallyDeletedTreatment(treatment:Treatment):void
+		{
+			if (treatment != null)
+			{
+				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+				{
+					var chartTreatment:ChartTreatment = treatmentsList[i];
+					if (chartTreatment!= null && chartTreatment.treatment != null && chartTreatment.treatment.ID == treatment.ID)
+					{
+						//Dispose chart treatment
+						chartTreatment.removeFromParent();
+						chartTreatment.removeEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+						treatmentsList.removeAt(i);
+						chartTreatment.dispose();
+						chartTreatment = null;
+						treatmentsMap[treatment.ID] = null;
+						
+						//Recalculate IOB & COB
+						var timelineTimestamp:Number = getTimelineTimestamp();
+						calculateTotalIOB(timelineTimestamp);
+						calculateTotalCOB(timelineTimestamp);
+						break;
+					}
+				}
+			}
+		}
+		
 		public function addTreatment(treatment:Treatment):void
 		{
 			//Setup initial timeline/mask properties
@@ -707,6 +755,14 @@ package ui.chart
 				treatmentsFirstRun = false;
 			}
 			
+			//Validations
+			if (treatment == null)
+				return;
+			
+			if (treatmentsMap[treatment.ID] != null)
+				return; //Treatment was already added previously
+			
+			//Common variables
 			var chartTreatment:ChartTreatment;
 			
 			//Check treatment type
@@ -719,11 +775,11 @@ package ui.chart
 				insulinMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 				treatmentsContainer.addChild(insulinMarker);
 				
-				insulinMarker.index = treatmenstsList.length;
-				treatmenstsList.push(insulinMarker);
+				insulinMarker.index = treatmentsList.length;
+				treatmentsList.push(insulinMarker);
+				treatmentsMap[treatment.ID] = insulinMarker;
 				
 				calculateTotalIOB(getTimelineTimestamp());
-				calculateTotalCOB(getTimelineTimestamp());
 				
 				chartTreatment = insulinMarker;
 			}
@@ -736,8 +792,9 @@ package ui.chart
 				carbsMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 				treatmentsContainer.addChild(carbsMarker);
 				
-				carbsMarker.index = treatmenstsList.length;
-				treatmenstsList.push(carbsMarker);
+				carbsMarker.index = treatmentsList.length;
+				treatmentsList.push(carbsMarker);
+				treatmentsMap[treatment.ID] = carbsMarker;
 				
 				calculateTotalCOB(getTimelineTimestamp());
 				
@@ -752,11 +809,13 @@ package ui.chart
 				mealMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 				treatmentsContainer.addChild(mealMarker);
 				
-				mealMarker.index = treatmenstsList.length;
-				treatmenstsList.push(mealMarker);
+				mealMarker.index = treatmentsList.length;
+				treatmentsList.push(mealMarker);
+				treatmentsMap[treatment.ID] = mealMarker;
 				
-				calculateTotalIOB(getTimelineTimestamp());
-				calculateTotalCOB(getTimelineTimestamp());
+				var timelineTimestamp:Number = getTimelineTimestamp();
+				calculateTotalIOB(timelineTimestamp);
+				calculateTotalCOB(timelineTimestamp);
 				
 				chartTreatment = mealMarker;
 			}
@@ -769,8 +828,9 @@ package ui.chart
 				noteMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 				treatmentsContainer.addChild(noteMarker);
 				
-				noteMarker.index = treatmenstsList.length;
-				treatmenstsList.push(noteMarker);
+				noteMarker.index = treatmentsList.length;
+				treatmentsList.push(noteMarker);
+				treatmentsMap[treatment.ID] = noteMarker;
 				
 				chartTreatment = noteMarker;
 			}
@@ -783,8 +843,9 @@ package ui.chart
 				glucoseCheckMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 				treatmentsContainer.addChild(glucoseCheckMarker);
 				
-				glucoseCheckMarker.index = treatmenstsList.length;
-				treatmenstsList.push(glucoseCheckMarker);
+				glucoseCheckMarker.index = treatmentsList.length;
+				treatmentsList.push(glucoseCheckMarker);
+				treatmentsMap[treatment.ID] = glucoseCheckMarker;
 				
 				chartTreatment = glucoseCheckMarker;
 			}
@@ -894,7 +955,7 @@ package ui.chart
 				function onDelete(e:starling.events.Event):void
 				{
 					treatmentsContainer.removeChild(treatment);
-					treatmenstsList.removeAt(treatment.index);
+					treatmentsList.removeAt(treatment.index);
 					
 					treatmentCallout.close(true);
 					
@@ -957,17 +1018,18 @@ package ui.chart
 			treatmentsContainer.x = mainChart.x;
 			treatmentsContainer.y = mainChart.y;
 			
-			if (treatmenstsList != null && treatmenstsList.length > 0)
+			if (treatmentsList != null && treatmentsList.length > 0)
 			{
 				//Loop through all treatments
-				for(var i:int = treatmenstsList.length - 1 ; i >= 0; i--)
+				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
 				{
-					var treatment:ChartTreatment = treatmenstsList[i];
+					var treatment:ChartTreatment = treatmentsList[i];
 					if (treatment.treatment.timestamp < firstBGReadingTimeStamp)
 					{
 						//Treatment has expired (>24H). Discart it
 						treatmentsContainer.removeChild(treatment);
-						treatmenstsList.removeAt(i);
+						treatmentsList.removeAt(i);
+						TreatmentsManager.removeTreatmentFromMemory(treatment.treatment);
 						treatment.dispose();
 						treatment = null;
 					}

@@ -67,5 +67,14 @@ package ui.chart
 			if (label != null)
 				label.y = radius * 2 + 3;
 		}
+		
+		override public function updateMarker(treatment:Treatment):void
+		{
+			this.treatment = treatment;
+			
+			removeChildren(0, 10, true);
+			
+			draw();
+		}
 	}
 }

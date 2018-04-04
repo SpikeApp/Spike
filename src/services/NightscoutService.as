@@ -130,6 +130,8 @@ package services
 		
 		private static var _instance:NightscoutService = new NightscoutService();
 
+		private static var lastRemoteTreatmentSync:Number = 0;
+
 		public function NightscoutService()
 		{
 			if (_instance != null)
@@ -295,7 +297,8 @@ package services
 				}
 				
 				//Get remote treatments
-				getRemoteTreatments();
+				if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+					getRemoteTreatments();
 			}
 			else
 			{
@@ -361,9 +364,14 @@ package services
 						{
 							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!");
 							
-							ProfileManager.addInsulin("Nightscout", dia, "", "000000", false);
-							isNSProfileSet = true;
-							getRemoteTreatments();
+							isNSProfileSet = true; //Mark profile as downloaded
+							
+							//Add nightscout insulin to Spike and don't save it to DB
+							ProfileManager.addInsulin("Nightscout Insulin", dia, "", "000000", false);
+							
+							//Get treatmenents
+							if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+								getRemoteTreatments();
 						}
 						else
 						{
@@ -377,6 +385,11 @@ package services
 					Trace.myTrace("NightscoutService.as", "Error parsing profile properties. Retrying in 30 seconds! Response: " + response);
 					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
 				}
+			}
+			else
+			{
+				Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Retrying in 30 seconds! Response: " + response);
+				setTimeout(getNightscoutProfile, TIME_30_SECONDS);
 			}
 		}
 		
@@ -399,6 +412,13 @@ package services
 				
 				return;
 			}
+			
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastRemoteTreatmentSync < TIME_30_SECONDS)
+				return;
+			
+			lastRemoteTreatmentSync = now;
 			
 			var parameters:URLVariables = new URLVariables();
 			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
@@ -703,7 +723,8 @@ package services
 						_instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
 						
 						//Get remote treatments
-						getRemoteTreatments();
+						if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+							getRemoteTreatments();
 					}
 				} 
 				else 

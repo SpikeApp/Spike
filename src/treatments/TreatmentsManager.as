@@ -4,12 +4,10 @@ package treatments
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.EventDispatcher;
-	import flash.sampler.getGetterInvocationCount;
 	import flash.utils.Dictionary;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	
@@ -248,14 +246,8 @@ package treatments
 		
 		
 		
-		public static function deleteTreatment(treatment:Treatment):void
+		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
 		{
-			//Delete from databse
-			Database.deleteTreatmentSynchronous(treatment);
-			
-			//Delete from Nightscout
-			NightscoutService.deleteTreatment(treatment);
-			
 			//Notify listeners
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, treatment));
 			
@@ -271,18 +263,42 @@ package treatments
 				}
 			}
 			treatmentsMap[treatment.ID] = null;
+			
+			//Delete from Nightscout
+			if (updateNightscout)
+				NightscoutService.deleteTreatment(treatment);
+			
+			//Delete from databse
+			if (!BlueToothDevice.isFollower())
+				Database.deleteTreatmentSynchronous(treatment);
 		}
 		
-		public static function updateTreatment(treatment:Treatment):void
+		public static function updateTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
 		{
 			//Notify listeners
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			
 			//Update in Database
-			Database.updateTreatmentSynchronous(treatment);
+			if (!BlueToothDevice.isFollower())
+				Database.updateTreatmentSynchronous(treatment);
 			
 			//Update Nightscout
-			NightscoutService.uploadTreatment(treatment);
+			if (updateNightscout)
+				NightscoutService.uploadTreatment(treatment);
+		}
+		
+		public static function addNightscoutTreatment(treatment:Treatment):void
+		{
+			//Add treatment to Spike
+			treatmentsList.push(treatment);
+			treatmentsMap[treatment.ID] = treatment;
+			
+			//Notify listeners
+			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+			
+			//Insert in Database
+			if (!BlueToothDevice.isFollower())
+				Database.insertTreatmentSynchronous(treatment);
 		}
 		
 		public static function addTreatment(type:String):void
@@ -502,7 +518,8 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					Database.insertTreatmentSynchronous(treatment);
+					if (!BlueToothDevice.isFollower())
+						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
@@ -553,7 +570,8 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					Database.insertTreatmentSynchronous(treatment);
+					if (!BlueToothDevice.isFollower())
+						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
@@ -622,7 +640,8 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					Database.insertTreatmentSynchronous(treatment);
+					if (!BlueToothDevice.isFollower())
+						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
@@ -680,7 +699,8 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					Database.insertTreatmentSynchronous(treatment);
+					if (!BlueToothDevice.isFollower())
+						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
@@ -729,7 +749,8 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					Database.insertTreatmentSynchronous(treatment);
+					if (!BlueToothDevice.isFollower())
+						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
@@ -767,15 +788,15 @@ package treatments
 		
 		public static function processNightscoutTreatments(nsTreatments:Array):void
 		{
-			//trace(ObjectUtil.toString(nsTreatments));
-			
-			var loopLength:int = nsTreatments.length;
-			for (var i:int = 0; i < loopLength; i++) 
+			var nightscoutTreatmentsMap:Dictionary = new Dictionary();
+			var numNightscoutTreatments:int = nsTreatments.length;
+			for (var i:int = 0; i < numNightscoutTreatments; i++) 
 			{
 				//Define initial treatment properties
 				var nsTreatment:Object = nsTreatments[i];
 				var treatmentTimestamp:Number = DateUtil.parseW3CDTF(nsTreatment.created_at).valueOf();
 				var treatmentID:String = nsTreatment._id;
+				nightscoutTreatmentsMap[treatmentID] = nsTreatment;
 				var treatmentEventType:String = nsTreatment.eventType;
 				var treatmentType:String = "";
 				var treatmentInsulinAmount:Number = 0;
@@ -836,12 +857,8 @@ package treatments
 							treatmentID
 						);
 						
-						//Add treatment to Spike
-						treatmentsList.push(treatment);
-						treatmentsMap[treatment.ID] = treatment;
-						
-						//Notify listeners
-						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+						//Add treatment to Spike and Databse
+						addNightscoutTreatment(treatment);
 					}
 					else
 					{
@@ -877,14 +894,58 @@ package treatments
 						
 						if (wasTreatmentModified)
 						{
-							trace("treatment was modified");
+							//Treatment was modified. Update Spike and notify listeners
+							updateTreatment(spikeTreatment, false);
+							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, spikeTreatment));
 						}
+					}
+				}
+			}
+			
+			//Check for deleted treatments in Nightscout
+			var numSpikeTreatments:int = treatmentsList.length;
+			if (numNightscoutTreatments < numSpikeTreatments)
+			{
+				for (var j:int = 0; j <numSpikeTreatments; j++) 
+				{
+					var internalTreatment:Treatment = treatmentsList[j];
+					if (nightscoutTreatmentsMap[internalTreatment.ID] == null)
+					{
+						//Notify Listeners
+						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalTreatment));
+						
+						//Treatment is not present in Nightscout. User has deleted it
+						deleteTreatment(internalTreatment, false);
 					}
 				}
 			}
 			
 			//Sort treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+		}
+		
+		public static function removeTreatmentFromMemory(treatment:Treatment):void
+		{
+			//Validation
+			if (treatment == null)
+				return;
+			
+			//Remove from list
+			for (var i:int = 0; i < treatmentsList.length; i++) 
+			{
+				var internalTreatment:Treatment = treatmentsList[i];
+				if (internalTreatment != null && internalTreatment.ID == treatment.ID)
+				{
+					treatmentsList.removeAt(i);
+					break;
+				}
+			}
+			
+			//Remove from map
+			treatmentsMap[treatment.ID] = null;
+			
+			//Dispose
+			treatment = null;
 		}
 		
 		public static function getEstimatedGlucose(timestamp:Number):Number

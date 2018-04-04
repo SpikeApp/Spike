@@ -95,5 +95,14 @@ package ui.chart
 			carbsLabel.visible = true;
 			mainLabel.visible = false;
 		}
+		
+		override public function updateMarker(treatment:Treatment):void
+		{
+			this.treatment = treatment;
+			
+			removeChildren(0, 10, true);
+			
+			draw();
+		}
 	}
 }
