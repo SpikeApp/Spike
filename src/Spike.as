@@ -12,6 +12,7 @@ package
 	import flash.net.URLVariables;
 	import flash.system.System;
 	import flash.utils.clearInterval;
+	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
@@ -37,6 +38,7 @@ package
 		private var starling:Starling;
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
+		private var deactivationTimer:Number;
 		
 		private static var _instance:Spike;
 		
@@ -161,12 +163,12 @@ package
 			//Push Chart Screen
 			/*if(AppInterface.instance.navigator != null)
 			{
-			var nowTimer:Number = getTimer();
-			if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART && nowTimer - deactivationTimer > 5 * 60 * 1000)
-			{
-			AppInterface.instance.menu.selectedIndex = 0;
-			AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
-			}
+				var nowTimer:Number = getTimer();
+				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART && nowTimer - deactivationTimer > 5 * 60 * 1000)
+				{
+					AppInterface.instance.menu.selectedIndex = 0;
+					AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
+				}
 			}*/
 			
 			//Update Variables
@@ -193,6 +195,9 @@ package
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_BACKGROUND");
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
+			
+			//Update timer
+			deactivationTimer = getTimer();
 		}
 		
 		/**
