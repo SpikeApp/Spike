@@ -908,17 +908,17 @@ package treatments
 						//Treatment exists... Lets check if it was modified
 						var wasTreatmentModified:Boolean = false;
 						var spikeTreatment:Treatment = treatmentsMap[treatmentID];
-						if (spikeTreatment.carbs != treatmentCarbs)
+						if (!isNaN(treatmentCarbs) && spikeTreatment.carbs != treatmentCarbs)
 						{
 							spikeTreatment.carbs = treatmentCarbs;
 							wasTreatmentModified = true;
 						}
-						if (spikeTreatment.glucose != treatmentGlucose)
+						if (!isNaN(treatmentGlucose) && Math.abs(spikeTreatment.glucose - treatmentGlucose) >= 1) //Nightscout rounds values so we just check if the glucose value differnce is bigger than 1 to avoid triggering this on every treatment
 						{
 							spikeTreatment.glucose = treatmentGlucose;
 							wasTreatmentModified = true;
 						}
-						if (spikeTreatment.insulinAmount != treatmentInsulinAmount)
+						if (!isNaN(treatmentInsulinAmount) && spikeTreatment.insulinAmount != treatmentInsulinAmount)
 						{
 							spikeTreatment.insulinAmount = treatmentInsulinAmount;
 							wasTreatmentModified = true;
@@ -928,10 +928,10 @@ package treatments
 							spikeTreatment.note = treatmentNote;
 							wasTreatmentModified = true;
 						}
-						if (spikeTreatment.timestamp != treatmentTimestamp)
+						if (Math.abs(spikeTreatment.timestamp - treatmentTimestamp) > 1000) //parseW3CDTF ignores ms so we just check if the time difference is bigger than 1 sec to determine if the user changed the treatment type. This avoids triggering this on every treatment.
 						{
 							spikeTreatment.timestamp = treatmentTimestamp;
-							spikeTreatment.glucoseEstimated = getEstimatedGlucose(treatmentTimestamp);
+							spikeTreatment.glucoseEstimated = treatmentType != Treatment.TYPE_GLUCOSE_CHECK ? getEstimatedGlucose(treatmentTimestamp) : spikeTreatment.glucose;
 							wasTreatmentModified = true;
 						}
 						

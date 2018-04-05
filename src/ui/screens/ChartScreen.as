@@ -358,7 +358,7 @@ package ui.screens
 		private function onTreatmentAdded(e:TreatmentsEvent):void
 		{
 			var treatment:Treatment = e.treatment;
-			if (treatment != null)
+			if (treatment != null && glucoseChart != null)
 			{
 				Trace.myTrace("ChartScreen.as", "Adding treatment to the chart: Type: " + treatment.type);
 				SystemUtil.executeWhenApplicationIsActive(glucoseChart.addTreatment, treatment);
@@ -368,7 +368,7 @@ package ui.screens
 		private function onTreatmentExternallyModified(e:TreatmentsEvent):void
 		{
 			var treatment:Treatment = e.treatment;
-			if (treatment != null)
+			if (treatment != null && glucoseChart != null)
 			{
 				Trace.myTrace("ChartScreen.as", "Sending externally modified treatment to the chart: Type: " + treatment.type);
 				SystemUtil.executeWhenApplicationIsActive(glucoseChart.updateExternallyModifiedTreatment, treatment);
@@ -378,7 +378,7 @@ package ui.screens
 		private function onTreatmentExternallyDeleted(e:TreatmentsEvent):void
 		{
 			var treatment:Treatment = e.treatment;
-			if (treatment != null)
+			if (treatment != null && glucoseChart != null)
 			{
 				Trace.myTrace("ChartScreen.as", "Sending externally deleted treatment to the chart: Type: " + treatment.type);
 				SystemUtil.executeWhenApplicationIsActive(glucoseChart.updateExternallyDeletedTreatment, treatment);

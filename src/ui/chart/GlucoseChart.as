@@ -281,6 +281,7 @@ package ui.chart
 			 */
 			mainChart = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
 			mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+			mainChart.touchable = false;
 			mainChartContainer = new Sprite();
 			mainChartContainer.addChild(mainChart);
 			
@@ -291,6 +292,7 @@ package ui.chart
 			mainChartMask = new Quad(yAxisMargin, _graphHeight + (treatmentsActive ? 80 : 0), fakeChartMaskColor);
 			mainChartMask.x = _graphWidth - mainChartMask.width;
 			mainChartMask.y = treatmentsActive ? -40 : 0;
+			mainChartMask.touchable = false;
 			mainChartContainer.addChild(mainChartMask);
 			
 			/**
@@ -302,6 +304,7 @@ package ui.chart
 			 * yAxis Line
 			 */
 			yAxisContainer = drawYAxis();
+			yAxisContainer.touchable = false;
 			addChild(yAxisContainer);
 			
 			/**

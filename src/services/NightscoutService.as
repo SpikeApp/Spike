@@ -875,6 +875,15 @@ package services
 				return;
 			}
 			
+			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0)
+			{
+				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
+				
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				
+				return;
+			}
+			
 			var now:Number = new Date().valueOf();
 			
 			if (now - lastRemoteTreatmentsSync < TIME_30_SECONDS)
@@ -910,6 +919,16 @@ package services
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
 			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
 			loader = null;
+			
+			//Validate if we can process treatments
+			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0)
+			{
+				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
+				
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				
+				return;
+			}
 			
 			//Validate response
 			if (response.indexOf("created_at") != -1)
