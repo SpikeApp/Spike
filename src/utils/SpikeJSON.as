@@ -4,9 +4,10 @@ package utils
 
 	public class SpikeJSON
 	{
-		public function SpikeJSON()
-		{
-		}
+		/**
+		 * Alternative to default AS3 JSON package that doesn't seem to crash when system is low on resources
+		 */
+		public function SpikeJSON() {}
 		
 		public static function stringify(object:Object):String
 		{

@@ -16,6 +16,8 @@ package services
 	
 	import events.SettingsServiceEvent;
 	
+	import starling.core.Starling;
+	
 	import utils.Constants;
 	import utils.Trace;
 	
@@ -141,6 +143,10 @@ package services
 		
 		private static function playSound():void 
 		{
+			//Safeguard for Starling
+			if (!BackgroundFetch.appIsInForeground())
+				Starling.current.stop( true );
+			
 			if (!BackgroundFetch.isPlayingSound() && !Constants.appInForeground && !BackgroundFetch.appIsInForeground()) //No need to play if the app is in the foregorund
 			{
 				var nowDate:Date = new Date();
