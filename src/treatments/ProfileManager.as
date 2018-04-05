@@ -35,6 +35,7 @@ package treatments
 						dbInsulin.name,
 						dbInsulin.dia,
 						dbInsulin.type,
+						dbInsulin.isdefault == "true" ? true : false,
 						dbInsulin.lastmodifiedtimestamp
 					);
 					
@@ -50,25 +51,10 @@ package treatments
 		
 		public static function getInsulin(ID:String):Insulin
 		{
-			var insulinMatched:Insulin;
-			
-			for (var i:int = 0; i < insulinsList.length; i++) 
-			{
-				var insulin:Insulin = insulinsList[i] as Insulin;
-				if (insulin == null)
-					continue;
-				
-				if (insulin.ID == ID)
-				{
-					insulinMatched = insulin;
-					break;
-				}
-			}
-			
-			return insulinMatched;
+			return insulinsMap[ID];
 		}
 		
-		public static function addInsulin(name:String, dia:Number, type:String, insulinID:String = null, saveToDatabase:Boolean = true):void
+		public static function addInsulin(name:String, dia:Number, type:String, isDefault:Boolean = false, insulinID:String = null, saveToDatabase:Boolean = true):void
 		{
 			//Generate insulin ID
 			var newInsulinID:String = insulinID == null ? UniqueId.createEventId() : insulinID;
@@ -84,6 +70,7 @@ package treatments
 				name,
 				dia,
 				type,
+				isDefault,
 				new Date().valueOf()
 			);
 			
@@ -95,6 +82,31 @@ package treatments
 			//Save in database
 			if (saveToDatabase)
 				Database.insertInsulinSynchronous(insulin);
+		}
+		
+		public static function updateInsulin(insulin:Insulin):void
+		{
+			Database.updateInsulinSynchronous(insulin);
+		}
+		
+		public static function deleteInsulin(insulin:Insulin):void
+		{
+			//Find insulin
+			for (var i:int = 0; i < insulinsList.length; i++) 
+			{
+				var userInsulin:Insulin = insulinsList[i];
+				if (userInsulin.ID == insulin.ID)
+				{
+					//Insulin found. Remove it from Spike.
+					insulinsList.removeAt(i);
+					insulinsMap[insulin.ID] = null;
+					
+					//Delete from database
+					Database.deleteInsulinSynchronous(userInsulin);
+					
+					break;
+				}
+			}
 		}
 		
 		public static function addCarbAbsorptionRate(rate:Number):void

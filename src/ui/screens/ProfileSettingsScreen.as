@@ -58,11 +58,11 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
-			//Deep Slepp Section Label
+			//Insulins Section Label
 			insulinsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulins_label'), true);
 			screenRenderer.addChild(insulinsLabel);
 			
-			//24H Distribution Settings
+			//Insulins Settings
 			insulinsSettings = new InsulinsSettingsList();
 			screenRenderer.addChild(insulinsSettings);
 		}
@@ -72,10 +72,6 @@ package ui.screens
 		 */
 		override protected function onBackButtonTriggered(event:Event):void
 		{
-			//Save Settings
-			if (insulinsSettings.needsSave)
-				insulinsSettings.save();
-			
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
 			

@@ -20,6 +20,8 @@ package treatments
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
@@ -389,6 +391,7 @@ package treatments
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				//Insulin Type
+				var askForInsulinConfiguration:Boolean = true;
 				if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
 				{
 					var insulinList:PickerList = LayoutFactory.createPickerList();
@@ -397,13 +400,26 @@ package treatments
 					for (var i:int = 0; i < numInsulins; i++) 
 					{
 						var insulin:Insulin = ProfileManager.insulinsList[i];
-						insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
+						if (insulin.name.indexOf("Nightscout") == -1)
+						{
+							insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
+							askForInsulinConfiguration = false;
+						}
 					}
 					insulinList.dataProvider = insulinDataProvider;
 					insulinList.popUpContentManager = new DropDownPopUpContentManager();
-					otherFieldsConstainer.addChild(insulinList);
+					insulinList.itemRendererFactory = function():IListItemRenderer
+					{
+						var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+						renderer.paddingRight = renderer.paddingLeft = 15;
+						return renderer;
+					};
+					
+					if (!askForInsulinConfiguration)
+						otherFieldsConstainer.addChild(insulinList);
 				}
-				else
+				
+				if (askForInsulinConfiguration)
 				{
 					var createInsulinButton:Button = LayoutFactory.createButton("Configure Insulins");
 					createInsulinButton.addEventListener(Event.TRIGGERED, onConfigureInsulins);

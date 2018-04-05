@@ -173,6 +173,7 @@ package database
 			"name STRING, " +
 			"dia REAL, " +
 			"type STRING, " +
+			"isdefault STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_PROFILE:String = "CREATE TABLE IF NOT EXISTS profiles(" +
@@ -2200,12 +2201,14 @@ package database
 				text += "name, ";
 				text += "dia, ";
 				text += "type, ";
+				text += "isdefault, ";
 				text += "lastmodifiedtimestamp) ";
 				text += "VALUES (";
 				text += "'" + insulin.ID + "', ";
 				text += "'" + insulin.name + "', ";
 				text += insulin.dia + ", ";
 				text += "'" + insulin.type + "', ";
+				text += "'" + insulin.isDefault + "', ";
 				text += insulin.timestamp + ")";
 				
 				insertRequest.text = text;
@@ -2218,6 +2221,65 @@ package database
 					conn.close();
 				}
 				dispatchInformation('error_while_inserting_insulin_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * updates an insulin in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function updateInsulinSynchronous(insulin:Insulin):void 
+		{
+			trace("updateInsulinSynchronous");
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE insulins SET " +
+					"id = '" + insulin.ID + "', " +
+					"name = '" + insulin.name + "', " +
+					"dia = " + insulin.dia + ", " +
+					"type = '" + insulin.type + "', " +
+					"isdefault = '" + insulin.isDefault + "', " +
+					"lastmodifiedtimestamp = " + insulin.timestamp + " " +
+					"WHERE id = '" + insulin.ID + "'";
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_insulin_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * deletes an insulin in the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteInsulinSynchronous(insulin:Insulin):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from insulins WHERE id = " + "'" + insulin.ID + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_insulin_in_db', error.message + " - " + error.details);
 			}
 		}
 		

@@ -381,7 +381,7 @@ package services
 							isNSProfileSet = true; //Mark profile as downloaded
 							
 							//Add nightscout insulin to Spike and don't save it to DB
-							ProfileManager.addInsulin("Nightscout Insulin", dia, "", "000000", false);
+							ProfileManager.addInsulin("Nightscout Insulin", dia, "", BlueToothDevice.isFollower() ? true : false, "000000", false);
 							
 							//Add nightscout carbs absorption rate and don't save it to DB
 							ProfileManager.addCarbAbsorptionRate(carbAbsorptionRate);
