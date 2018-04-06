@@ -347,7 +347,7 @@ package ui.screens.display.bugreport
 						var vars:URLVariables = new URLVariables();
 						vars.fileName = fileName;
 						vars.mimeType = "text/plain";
-						vars.emailSubject = "Bug Report";
+						vars.emailSubject = "Bug Report by " + nameField.text;
 						vars.emailBody = emailBody;
 						vars.userEmail = emailField.text;
 						vars.mode = EmailSender.MODE_EMAIL_SUPPORT;
