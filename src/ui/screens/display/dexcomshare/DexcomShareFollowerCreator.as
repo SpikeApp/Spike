@@ -2,6 +2,8 @@ package ui.screens.display.dexcomshare
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CommonSettings;
 	

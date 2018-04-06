@@ -23,6 +23,7 @@ package services
 	import utils.MathHelper;
 	import utils.SpikeJSON;
 	import utils.TimeSpan;
+	import utils.Trace;
 	
 	[ResourceBundle("alarmservice")]
 
@@ -66,6 +67,8 @@ package services
 		
 		public static function init():void
 		{
+			Trace.myTrace("IFTTTService.as", "Service started!");
+			
 			getInitialProperties();
 			
 			if (isIFTTTEnabled)
