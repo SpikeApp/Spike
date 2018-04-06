@@ -2,8 +2,6 @@ package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
-	import mx.collections.ArrayCollection;
-	
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BgReading;
@@ -14,6 +12,7 @@ package network.httpserver.API
 	import network.httpserver.ActionController;
 	
 	import utils.BgGraphBuilder;
+	import utils.SpikeJSON;
 	import utils.Trace;
 	
 	public class NightscoutAPIGeneralController extends ActionController
@@ -28,7 +27,7 @@ package network.httpserver.API
 			nsFormatter = new DateTimeFormatter();
 			nsFormatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 			nsFormatter.setStyle("locale", "en_US");
-			nsFormatter.useUTC = false;
+			nsFormatter.useUTC = true;
 		}
 		
 		/**
@@ -99,7 +98,8 @@ package network.httpserver.API
 				}
 				
 				//Final Response
-				response = JSON.stringify(responseObject);
+				//response = JSON.stringify(responseObject);
+				response = SpikeJSON.stringify(responseObject);
 			} 
 			catch(error:Error) 
 			{
@@ -121,7 +121,7 @@ package network.httpserver.API
 				if (params.count != null)	
 					numReadings = int(params.count);
 				
-				var readingsList:ArrayCollection = BgReading.latest(numReadings + 1, BlueToothDevice.isFollower());
+				var readingsList:Array = BgReading.latest(numReadings + 1, BlueToothDevice.isFollower());
 				var readingsCollection:Array = [];
 				var loopLength: int;
 				if (readingsList.length > numReadings)
@@ -131,7 +131,7 @@ package network.httpserver.API
 				
 				for (var i:int = 0; i < loopLength; i++) 
 				{
-					var bgReading:BgReading = readingsList.getItemAt(i) as BgReading;
+					var bgReading:BgReading = readingsList[i] as BgReading;
 					if (bgReading == null || bgReading.calculatedValue == 0)
 						continue;
 					
@@ -160,7 +160,8 @@ package network.httpserver.API
 					readingsCollection.push(bgObject);
 				}
 				
-				response = JSON.stringify(readingsCollection);
+				//response = JSON.stringify(readingsCollection);
+				response = SpikeJSON.stringify(readingsCollection);
 				
 				readingsList = null;
 				readingsCollection = null;

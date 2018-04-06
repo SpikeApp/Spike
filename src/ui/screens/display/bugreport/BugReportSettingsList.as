@@ -46,6 +46,7 @@ package ui.screens.display.bugreport
 	import utils.DataValidator;
 	import utils.DeviceInfo;
 	import utils.TimeSpan;
+	import utils.Trace;
 
 	[ResourceBundle("bugreportsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -329,6 +330,8 @@ package ui.screens.display.bugreport
 					
 					if (traceLogAgeInMinutes >= 15)
 					{
+						Trace.myTrace("BugReportSettingsList.as", "Sending log!");
+						
 						//Get the trace log
 						var fileStream:FileStream = new FileStream();
 						fileStream.open(file, FileMode.READ);

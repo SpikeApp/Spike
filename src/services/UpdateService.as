@@ -26,6 +26,7 @@ package services
 	
 	import ui.popups.AlertManager;
 	
+	import utils.SpikeJSON;
 	import utils.Trace;
 	
 	[ResourceBundle('updateservice')]
@@ -186,7 +187,8 @@ package services
 			
 			try
 			{
-				var data:Object = JSON.parse(loader.data as String);
+				//var data:Object = JSON.parse(loader.data as String);
+				var data:Object = SpikeJSON.parse(loader.data as String);
 			} 
 			catch(error:Error) 
 			{

@@ -2,7 +2,6 @@ package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
-	import mx.collections.ArrayCollection;
 	import mx.utils.ObjectUtil;
 	
 	import spark.formatters.DateTimeFormatter;
@@ -17,6 +16,7 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
+	import utils.SpikeJSON;
 	import utils.Trace;
 	import utils.UniqueId;
 	
@@ -35,7 +35,7 @@ package network.httpserver.API
 			nsFormatter = new DateTimeFormatter();
 			nsFormatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 			nsFormatter.setStyle("locale", "en_US");
-			nsFormatter.useUTC = false;
+			nsFormatter.useUTC = true;
 		}
 		
 		/**
@@ -122,7 +122,8 @@ package network.httpserver.API
 					}
 				}
 				
-				response = JSON.stringify(readingsCollection);
+				//response = JSON.stringify(readingsCollection);
+				response = SpikeJSON.stringify(readingsCollection);
 				
 				readingsCollection = null;
 				params = null;
@@ -147,7 +148,7 @@ package network.httpserver.API
 				if (params.count != null)	
 					numCalibrations = int(params.count);
 				var calibrationsCollection:Array = [];
-				var calibrationsList:ArrayCollection;
+				var calibrationsList:Array;
 				var i:int;
 				
 				if (!BlueToothDevice.isFollower())
@@ -156,7 +157,7 @@ package network.httpserver.API
 					
 					for (i = 0; i < calibrationsList.length; i++) 
 					{
-						var calibration:Calibration = calibrationsList.getItemAt(i) as Calibration;
+						var calibration:Calibration = calibrationsList[i] as Calibration;
 						if (calibration == null)
 							continue;
 						
@@ -193,7 +194,8 @@ package network.httpserver.API
 					}
 				}
 				
-				response = JSON.stringify(calibrationsCollection);
+				//response = JSON.stringify(calibrationsCollection);
+				response = SpikeJSON.stringify(calibrationsCollection);
 				
 				calibrationsList = null;
 				calibrationsCollection = null;
@@ -217,7 +219,7 @@ package network.httpserver.API
 			{
 				try
 				{
-					response = getSGV(params)
+					response = getSGV(params);
 				} 
 				catch(error:Error) 
 				{
@@ -436,7 +438,8 @@ package network.httpserver.API
 					};
 				statusObject.authorized = null;
 				
-				response = JSON.stringify(statusObject);
+				//response = JSON.stringify(statusObject);
+				response = SpikeJSON.stringify(statusObject);
 			} 
 			catch(error:Error) 
 			{

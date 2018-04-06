@@ -21,6 +21,7 @@ package services
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
 	import utils.MathHelper;
+	import utils.SpikeJSON;
 	import utils.TimeSpan;
 	import utils.Trace;
 
@@ -162,7 +163,8 @@ package services
 			activeGlucoseReadingsList.reverse();
 			
 			//Graph Data
-			BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
+			//BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
+			BackgroundFetch.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 			
 			//Settings
 			BackgroundFetch.setUserDefaultsData("smoothLine", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SMOOTH_LINE));
@@ -313,7 +315,8 @@ package services
 			BackgroundFetch.setUserDefaultsData("latestGlucoseSlopeArrow", currentReading.slopeArrow());
 			BackgroundFetch.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
 			BackgroundFetch.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
-			BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
+			//BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
+			BackgroundFetch.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 		}
 		
 		/**

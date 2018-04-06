@@ -33,6 +33,7 @@ package
 	import utils.Trace;
 	
 	[SWF(frameRate="60", backgroundColor="#20222a")]
+	
 	public class Spike extends Sprite 
 	{
 		private var starling:Starling;
@@ -115,7 +116,6 @@ package
 		/**
 		 * Initialization
 		 */
-		
 		private function initStarling():void 
 		{
 			/* Initialize and start the Starling instance */
@@ -156,6 +156,10 @@ package
 		
 		private function onActivate( event:flash.events.Event ):void 
 		{
+			//Resume normal framerate
+			stage.frameRate = 60;
+			Starling.current.nativeStage.frameRate = 60;
+			
 			//Start Starling
 			NativeApplication.nativeApplication.executeInBackground = false;
 			SystemUtil.executeWhenApplicationIsActive( starling.start );
@@ -181,6 +185,10 @@ package
 		
 		private function onDeactivate( event:flash.events.Event ):void 
 		{
+			//Decrease framerate almost to a halt
+			stage.frameRate = 0.5;
+			Starling.current.nativeStage.frameRate = 0.5;
+			
 			//Call Garbage Collector
 			System.pauseForGCIfCollectionImminent(0);
 			

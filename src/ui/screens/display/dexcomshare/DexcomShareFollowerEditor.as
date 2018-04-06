@@ -37,6 +37,7 @@ package ui.screens.display.dexcomshare
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.DeviceInfo;
+	import utils.SpikeJSON;
 	import utils.Trace;
 	
 	[ResourceBundle("sharesettingsscreen")]
@@ -890,7 +891,8 @@ package ui.screens.display.dexcomshare
 			
 			try
 			{
-				responseInfo = JSON.parse(response);
+				//responseInfo = JSON.parse(response);
+				responseInfo = SpikeJSON.parse(response);
 			} 
 			catch(error:Error) 
 			{

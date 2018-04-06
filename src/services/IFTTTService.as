@@ -21,7 +21,9 @@ package services
 	
 	import utils.BgGraphBuilder;
 	import utils.MathHelper;
+	import utils.SpikeJSON;
 	import utils.TimeSpan;
+	import utils.Trace;
 	
 	[ResourceBundle("alarmservice")]
 
@@ -65,6 +67,8 @@ package services
 		
 		public static function init():void
 		{
+			Trace.myTrace("IFTTTService.as", "Service started!");
+			
 			getInitialProperties();
 			
 			if (isIFTTTEnabled)
@@ -247,7 +251,8 @@ package services
 						for (i = 0; i < makerKeyList.length; i++) 
 						{
 							key = makerKeyList[i] as String;
-							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-lowbgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+							//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-lowbgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-lowbgreading").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 						}
 					}
 					else if (isIFTTTGlucoseThresholdsEnabled && !isNaN(lastReading.calculatedValue) && Math.round(lastReading.calculatedValue) >= highGlucoseThresholdValue)
@@ -255,7 +260,8 @@ package services
 						for (i = 0; i < makerKeyList.length; i++) 
 						{
 							key = makerKeyList[i] as String;
-							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-highbgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+							//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-highbgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-highbgreading").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 						}
 					}
 					else if (isIFTTTGlucoseReadingsEnabled) //Trigger glucose reading... this is when the user selected to trigger all glucose readings
@@ -263,7 +269,8 @@ package services
 						for (i = 0; i < makerKeyList.length; i++) 
 						{
 							key = makerKeyList[i] as String;
-							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+							//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 						}
 					}
 				}
@@ -284,7 +291,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-high-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-high-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-high-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -298,7 +306,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-high-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-high-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-high-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -316,7 +325,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-high-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-high-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-high-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -330,7 +340,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-high-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-high-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-high-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -348,7 +359,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-low-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-low-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-low-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -362,7 +374,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-low-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-low-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-low-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -380,7 +393,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-low-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-low-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-low-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -394,7 +408,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-low-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-low-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-low-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -408,7 +423,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-calibration-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-calibration-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-calibration-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -422,7 +438,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-calibration-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-calibration-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-calibration-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -444,7 +461,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-missed-readings-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-missed-readings-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-missed-readings-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -458,7 +476,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-missed-readings-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-missed-readings-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-missed-readings-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -472,7 +491,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-phone-muted-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-phone-muted-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-phone-muted-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -486,7 +506,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-phone-muted-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-phone-muted-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-phone-muted-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -500,7 +521,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-transmitter-low-battery-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-transmitter-low-battery-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-transmitter-low-battery-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -514,7 +536,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-transmitter-low-battery-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-transmitter-low-battery-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-transmitter-low-battery-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		
@@ -528,7 +551,8 @@ package services
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
 				var key:String = makerKeyList[i] as String;
-				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-server-error").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-server-error").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-server-error").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 	}

@@ -8,8 +8,6 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
-	import mx.collections.ArrayCollection;
-	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -113,14 +111,14 @@ package services
 		{
 			myTrace("in requestInitialCalibration");
 			
-			var latestReadings:ArrayCollection = BgReading.latestBySize(1);
+			var latestReadings:Array = BgReading.latestBySize(1);
 			if (latestReadings.length == 0) 
 			{
 				myTrace("in requestInitialCalibration but latestReadings.length == 0, looks like an error because there shouldn't have been an calibration request, returning");
 				return;
 			}
 			
-			var latestReading:BgReading = (latestReadings.getItemAt(0)) as BgReading;
+			var latestReading:BgReading = (latestReadings[0]) as BgReading;
 			if ((new Date()).valueOf() - latestReading.timestamp > MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000) 
 			{
 				myTrace("in requestInitialCalibration, but latest reading was more than MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS");
@@ -181,7 +179,7 @@ package services
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
 			myTrace("in bgReadingReceived");
 
-			var latestReadings:ArrayCollection = BgReading.latestBySize(1);
+			var latestReadings:Array = BgReading.latestBySize(1);
 			if (latestReadings.length == 0) 
 			{
 				//should never happen
@@ -189,7 +187,7 @@ package services
 				return;
 			}
 			
-			var latestReading:BgReading = (latestReadings.getItemAt(0)) as BgReading;
+			var latestReading:BgReading = (latestReadings[0]) as BgReading;
 			if ((new Date()).valueOf() - latestReading.timestamp > MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000) 
 			{
 				//this can happen for example in case of blucon, if historical data is read which contains readings > 2 minutes old
@@ -415,7 +413,7 @@ package services
 					calibrationValue.maxChars = 4;
 				}
 				
-				if (((new Date()).valueOf() - (Calibration.latest(2).getItemAt(0) as Calibration).timestamp < (1000 * 60 * 60)) && override) 
+				if (((new Date()).valueOf() - (Calibration.latest(2)[0] as Calibration).timestamp < (1000 * 60 * 60)) && override) 
 				{
 					AlertManager.showActionAlert
 					(

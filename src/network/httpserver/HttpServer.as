@@ -23,6 +23,7 @@ package network.httpserver
     import ui.popups.AlertManager;
     
     import utils.BadgeBuilder;
+    import utils.SpikeJSON;
     import utils.Trace;
 	
 	[ResourceBundle("httpserverservice")]
@@ -200,7 +201,8 @@ package network.httpserver
 					try
 					{
 						var messageLines:Array = request.split("\n");
-						postJSONResponse = JSON.parse(messageLines[messageLines.length - 1]);
+						//postJSONResponse = JSON.parse(messageLines[messageLines.length - 1]);
+						postJSONResponse = SpikeJSON.parse(messageLines[messageLines.length - 1]);
 					} 
 					catch(error:Error) {}
 					

@@ -4,19 +4,18 @@ package ui
 	import com.adobe.touch3D.Touch3DEvent;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
+	import com.distriqt.extension.exceptions.ExceptionReport;
+	import com.distriqt.extension.exceptions.Exceptions;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.net.URLLoader;
-	import flash.net.URLVariables;
 	import flash.system.Capabilities;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
-	import flash.utils.ByteArray;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -35,8 +34,6 @@ package ui
 	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
-	
-	import network.EmailSender;
 	
 	import services.BluetoothService;
 	import services.CalibrationService;
@@ -394,6 +391,5 @@ package ui
 			
 			return _instance;
 		}
-
 	}
 }

@@ -149,7 +149,7 @@ package ui.screens.display.sensor
 				}
 				
 				//Calculate number of calibrations
-				var allCalibrations:ArrayCollection = Calibration.allForSensor();
+				var allCalibrations:Array = Calibration.allForSensor();
 				numberOfCalibrations = String(allCalibrations.length);
 				
 				//Calculate Last Calibration Time

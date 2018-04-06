@@ -16,6 +16,8 @@ package services
 	
 	import events.SettingsServiceEvent;
 	
+	import starling.core.Starling;
+	
 	import utils.Constants;
 	import utils.Trace;
 	
@@ -141,6 +143,10 @@ package services
 		
 		private static function playSound():void 
 		{
+			//Safeguard for Starling
+			if (!BackgroundFetch.appIsInForeground())
+				Starling.current.stop( true );
+			
 			if (!BackgroundFetch.isPlayingSound() && !Constants.appInForeground && !BackgroundFetch.appIsInForeground()) //No need to play if the app is in the foregorund
 			{
 				var nowDate:Date = new Date();
@@ -165,7 +171,13 @@ package services
 						//Night mode, play a bigger sound to try an further avoid suspension, also add some volume
 						soundPlayer = new Sound(soundFileNight);
 						channel = soundPlayer.play();
-						channel.soundTransform = soundTransformNight;
+						if (channel != null)
+							channel.soundTransform = soundTransformNight;
+						else
+						{
+							//Spike is suspended in memory. Let's try and play the sound with Backgroundfetch!
+							BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+						}
 					}
 					else
 					{
@@ -174,14 +186,26 @@ package services
 							//Plays with flash player audio and a 500ms sound file
 							soundPlayer = new Sound(soundFileNight);
 							channel = soundPlayer.play();
-							channel.soundTransform = soundTransformNight;
+							if (channel != null)
+								channel.soundTransform = soundTransformNight;
+							else
+							{
+								//Spike is suspended in memory. Let's try and play the sound with Backgroundfetch!
+								BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+							}
 						}
 						else
 						{
 							//Plays with flash player audio
 							soundPlayer = new Sound(soundFile);
 							channel = soundPlayer.play();
-							channel.soundTransform = soundTransform;
+							if (channel != null)
+								channel.soundTransform = soundTransform;
+							else
+							{
+								//Spike is suspended in memory. Let's try and play the sound with Backgroundfetch!
+								BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+							}
 						}
 					}
 				}

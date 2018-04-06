@@ -1020,8 +1020,8 @@ package database
 		/**
 		 * latest calibrations with the specified sensor id from large to small (ie descending) 
 		 */
-		public static function getLatestCalibrations(number:int, sensorId:String):ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
+		public static function getLatestCalibrations(number:int, sensorId:String):Array { 
+			var returnValue:Array = [];
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.READ);
@@ -1032,12 +1032,13 @@ package database
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				if (result.data != null) {
+				if (result.data != null) 
+				{	
 					var numResults:int = result.data.length;
-					var tempReturnValue:ArrayCollection = new ArrayCollection();
+					var tempReturnValue:Array = [];
 					for (var i:int = 0; i < numResults; i++) 
 					{ 
-						tempReturnValue.addItem(
+						tempReturnValue.push(
 							new Calibration(
 								result.data[i].timestamp,
 								result.data[i].sensorAgeAtTimeOfEstimation,
@@ -1067,16 +1068,11 @@ package database
 								result.data[i].calibrationid)
 						);
 					}
-					var dataSortFieldForReturnValue:SortField = new SortField();
-					dataSortFieldForReturnValue.name = "timestamp";
-					dataSortFieldForReturnValue.numeric = true;
-					dataSortFieldForReturnValue.descending = true;//ie from large to small
-					var dataSortForBGReadings:Sort = new Sort();
-					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-					tempReturnValue.sort = dataSortForBGReadings;
-					tempReturnValue.refresh();
+					
+					tempReturnValue.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+					
 					for (var cntr:int = 0; cntr < tempReturnValue.length; cntr++) {
-						returnValue.addItem(tempReturnValue.getItemAt(cntr));
+						returnValue.push(tempReturnValue[cntr]);
 						if (cntr == number - 1) {
 							break;
 						}
@@ -1188,11 +1184,11 @@ package database
 				var result:SQLResult = getRequest.getResult();
 				if (result.data != null) {
 					if (result.data != null) {
-						var calibrations:ArrayCollection = new ArrayCollection();
+						var calibrations:Array = [];
 						var numResults:int = result.data.length;
 						for (var i:int = 0; i < numResults; i++) 
 						{ 
-							calibrations.addItem(
+							calibrations.push(
 								new Calibration(
 									result.data[i].timestamp,
 									result.data[i].sensorAgeAtTimeOfEstimation,
@@ -1222,17 +1218,14 @@ package database
 									result.data[i].calibrationid)
 							);
 						} 
-						var dataSortFieldForReturnValue:SortField = new SortField();
-						dataSortFieldForReturnValue.name = "timestamp";
-						dataSortFieldForReturnValue.numeric = true;
+						
 						if (!first)
-							dataSortFieldForReturnValue.descending = true;//ie large to small
-						var dataSortForBGReadings:Sort = new Sort();
-						dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-						calibrations.sort = dataSortForBGReadings;
-						calibrations.refresh();
+							calibrations.sortOn(["timestamp"], Array.DESCENDING);
+						else
+							calibrations.sortOn(["timestamp"]);
+						
 						if (calibrations.length > 0)
-							returnValue = calibrations.getItemAt(0) as Calibration;
+							returnValue = calibrations[0] as Calibration;
 					}
 				}
 			} catch (error:SQLError) {
@@ -1465,12 +1458,14 @@ package database
 		
 		/**
 		 * get calibration for specified sensorId<br>
-		 * if there's no calibration for the specified sensorId then the returnvalue is an empty arraycollection<br>
+		 * if there's no calibration for the specified sensorId then the returnvalue is an empty array<br>
 		 * the calibrations will be order in descending order by timestamp<br>
 		 * synchronous
 		 */
-		public static function getCalibrationForSensorId(sensorId:String):ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
+		public static function getCalibrationForSensorId(sensorId:String):Array
+		{
+			var returnValue:Array = [];
+			
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.READ);
@@ -1482,10 +1477,11 @@ package database
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
 				if (result.data != null) {
+					
 					var numResults:int = result.data.length;
 					for (var i:int = 0; i < numResults; i++) 
 					{ 
-						returnValue.addItem(new Calibration(
+						returnValue.push(new Calibration(
 							result.data[i].timestamp,
 							result.data[i].sensorAgeAtTimeOfEstimation,
 							((result.data[i].sensorid) as String) == "-" ? null:getSensor(result.data[i].sensorid),
@@ -1514,14 +1510,8 @@ package database
 							result.data[i].calibrationid
 						));
 					} 
-					var dataSortFieldForReturnValue:SortField = new SortField();
-					dataSortFieldForReturnValue.name = "timestamp";
-					dataSortFieldForReturnValue.numeric = true;
-					dataSortFieldForReturnValue.descending = true;//ie large to small
-					var dataSortForBGReadings:Sort = new Sort();
-					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-					returnValue.sort = dataSortForBGReadings;
-					returnValue.refresh();
+					
+					returnValue.sortOn(["timestamp"], Array.NUMERIC);
 					
 				}
 			} catch (error:SQLError) {
@@ -1535,7 +1525,6 @@ package database
 				return returnValue;
 			}
 		}
-		
 		
 		/**
 		 * inserts a sensor in the database<br>

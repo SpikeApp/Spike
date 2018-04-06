@@ -17,6 +17,7 @@ package services
 	
 	import ui.popups.AlertManager;
 	
+	import utils.SpikeJSON;
 	import utils.Trace;
 	
 	[ResourceBundle('globaltranslations')]
@@ -139,7 +140,8 @@ package services
 				return;
 			}
 			
-			var data:Object = JSON.parse(loader.data as String);
+			//var data:Object = JSON.parse(loader.data as String);
+			var data:Object = SpikeJSON.parse(loader.data as String);
 			if (data.id == null) 
 			{
 				myTrace("no data.id");

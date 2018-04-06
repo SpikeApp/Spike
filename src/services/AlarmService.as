@@ -1105,14 +1105,14 @@ package services
 			}
 			var lastBgReading:BgReading 
 			if (!BlueToothDevice.isFollower()) {
-				var lastBgReadings:ArrayCollection = BgReading.latest(1);
+				var lastBgReadings:Array = BgReading.latest(1);
 				if (lastBgReadings.length == 0) {
 					myTrace("in checkMissedReadingAlert, but no readings exist yet, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
 					myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 					return;
 				} 
-				lastBgReading = lastBgReadings.getItemAt(0) as BgReading;
+				lastBgReading = lastBgReadings[0] as BgReading;
 			} else {
 				lastBgReading = BgReading.lastWithCalculatedValue();
 				if (lastBgReading == null) {

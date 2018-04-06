@@ -35,6 +35,7 @@ package services
 	import ui.popups.AlertManager;
 	
 	import utils.DeviceInfo;
+	import utils.SpikeJSON;
 	import utils.Trace;
 	
 	[ResourceBundle("dexcomshareservice")]
@@ -150,7 +151,8 @@ package services
 			authParameters["applicationId"] = APPLICATION_ID;
 			authParameters["password"] = accountPassword;
 			
-			NetworkConnector.createDSConnector(dexcomShareURL + "General/LoginPublisherAccountByName", URLRequestMethod.POST, null, JSON.stringify(authParameters), MODE_TEST_CREDENTIALS, onTestCredentialsComplete, onConnectionFailed);
+			//NetworkConnector.createDSConnector(dexcomShareURL + "General/LoginPublisherAccountByName", URLRequestMethod.POST, null, JSON.stringify(authParameters), MODE_TEST_CREDENTIALS, onTestCredentialsComplete, onConnectionFailed);
+			NetworkConnector.createDSConnector(dexcomShareURL + "General/LoginPublisherAccountByName", URLRequestMethod.POST, null, SpikeJSON.stringify(authParameters), MODE_TEST_CREDENTIALS, onTestCredentialsComplete, onConnectionFailed);
 		}
 		
 		private static function onTestCredentialsComplete(e:flash.events.Event):void
@@ -357,7 +359,8 @@ package services
 			data.SN = transmitterID;
 			data.TA = -5;
 			
-			NetworkConnector.createDSConnector(dexcomShareURL + "Publisher/PostReceiverEgvRecords", URLRequestMethod.POST, dexcomShareSessionID, JSON.stringify(data), MODE_GLUCOSE_READING, onUploadGlucoseReadingsComplete, onConnectionFailed);
+			//NetworkConnector.createDSConnector(dexcomShareURL + "Publisher/PostReceiverEgvRecords", URLRequestMethod.POST, dexcomShareSessionID, JSON.stringify(data), MODE_GLUCOSE_READING, onUploadGlucoseReadingsComplete, onConnectionFailed);
+			NetworkConnector.createDSConnector(dexcomShareURL + "Publisher/PostReceiverEgvRecords", URLRequestMethod.POST, dexcomShareSessionID, SpikeJSON.stringify(data), MODE_GLUCOSE_READING, onUploadGlucoseReadingsComplete, onConnectionFailed);
 		}
 		
 		private static function onUploadGlucoseReadingsComplete(e:flash.events.Event):void
@@ -862,7 +865,8 @@ package services
 			
 			try
 			{
-				responseInfo = JSON.parse(response);
+				//responseInfo = JSON.parse(response);
+				responseInfo = SpikeJSON.parse(response);
 			} 
 			catch(error:Error) 
 			{

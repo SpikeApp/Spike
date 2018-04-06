@@ -5,8 +5,6 @@ package utils
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import mx.collections.ArrayCollection;
-	
 	import database.BgReading;
 	import database.Calibration;
 	import database.Database;
@@ -143,10 +141,10 @@ package utils
 			}
 			
 			//Process calibrations output
-			var calibrations:ArrayCollection = Calibration.allForSensor();
+			var calibrations:Array = Calibration.allForSensor();
 			var calibrationsLength:int = calibrations.length - 1;
 			while (calibrationsLength > -1) {
-				var calibration:Calibration = calibrations.getItemAt(calibrationsLength) as Calibration;
+				var calibration:Calibration = calibrations[calibrationsLength] as Calibration;
 				if (calibration.timestamp > lastExportTimeStamp) 
 				{
 					outputArray[index] = DateTimeUtilities.createSiDiaryEntryFormattedDateAndTime(new Date(calibration.timestamp)) + ";;" + Math.round(calibration.bg) + ";;;;;" + "\n";

@@ -17,8 +17,6 @@
  */
 package utils
 {
-	import mx.collections.ArrayCollection;
-	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.CommonSettings;
@@ -87,8 +85,8 @@ package utils
 		
 		public static function unitizedDeltaString(showUnit:Boolean,highGranularity:Boolean):String {
 			
-			var last2:ArrayCollection = BgReading.latest(2, BlueToothDevice.isFollower());
-			if(last2.length < 2 || (last2.getItemAt(0) as BgReading).timestamp - (last2.getItemAt(1) as BgReading).timestamp > MAX_SLOPE_MINUTES * 60 * 1000) {
+			var last2:Array = BgReading.latest(2, BlueToothDevice.isFollower());
+			if(last2.length < 2 || (last2[0] as BgReading).timestamp - (last2[1] as BgReading).timestamp > MAX_SLOPE_MINUTES * 60 * 1000) {
 				// don't show delta if there are not enough values or the values are more than 20 mintes apart
 				return "???";
 			}

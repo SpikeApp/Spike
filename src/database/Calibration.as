@@ -21,6 +21,7 @@
 package database
 {
 	import mx.collections.ArrayCollection;
+	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -303,32 +304,27 @@ package database
 		
 		/**
 		 * returns all calibrations for the ative sensor<br>
-		 * if no sensor active then the return value is an empty arraycollection (size = 0)<br> 
+		 * if no sensor active then the return value is an empty array (size = 0)<br> 
 		 * the calibrations will be order in descending order by timestamp
 		 */
-		public static function allForSensor():ArrayCollection {
+		public static function allForSensor():Array { //SPIKE
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) == "0")
-				return new ArrayCollection();//an empty arraycollection
+				return new Array();//an empty arraycollection
 			
-			var returnValue:ArrayCollection = Database.getCalibrationForSensorId(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR));
+			var returnValue:Array = Database.getCalibrationForSensorId(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR));
 			for (var i:int = 0; i < returnValue.length; i++) {
-				var calibration:Calibration = returnValue.getItemAt(i) as Calibration;
+				var calibration:Calibration = returnValue[i] as Calibration;
 				if (calibration.slopeConfidence == 0 || calibration.sensorConfidence == 0) {
-					returnValue.removeItemAt(i);
+					returnValue.removeAt(i);
 					i--;
 				}
 				i++;
 				if (i == returnValue.length)
 					break;
 			}
-			var dataSortFieldForReturnValue:SortField = new SortField();
-			dataSortFieldForReturnValue.name = "timestamp";
-			dataSortFieldForReturnValue.numeric = true;
-			dataSortFieldForReturnValue.descending = true;//ie from large to small
-			var dataSortForBGReadings:Sort = new Sort();
-			dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-			returnValue.sort = dataSortForBGReadings;
-			returnValue.refresh();
+			
+			returnValue.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+			
 			return returnValue;
 		}
 		
@@ -346,9 +342,9 @@ package database
 
 			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			var sensor:Sensor = Database.getSensor(sensorId);
-			var bgReadings:ArrayCollection = BgReading.latestBySize(2);
-			var bgReading1:BgReading = bgReadings.getItemAt(0) as BgReading;
-			var bgReading2:BgReading = bgReadings.getItemAt(1) as BgReading;
+			var bgReadings:Array = BgReading.latestBySize(2);
+			var bgReading1:BgReading = bgReadings[0] as BgReading;
+			var bgReading2:BgReading = bgReadings[1] as BgReading;
 			
 			bgReading1.calculatedValue = bg1;
 			bgReading1.calibrationFlag = true;
@@ -433,9 +429,9 @@ package database
 			//myTrace("Calibration.intialCalibration after calculate_w_l_s");
 			//myTrace("before adjustbgreadings bgReading1 = " + bgReading1.print("   "));
 			//myTrace("before adjustbgreadings bgReading2 = " + bgReading2.print("   "));
-			var latest3Calibrations:ArrayCollection = new ArrayCollection();
-			latest3Calibrations.addItem(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
-			latest3Calibrations.addItem(calibration1);
+			var latest3Calibrations:Array = [];
+			latest3Calibrations.push(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
+			latest3Calibrations.push(calibration1);
 			
 			adjustRecentBgReadings(5, latest3Calibrations);
 			//myTrace("after adjustbgreadings");
@@ -495,9 +491,10 @@ package database
 					
 					//just doing an update of the latest bgreading, which may not be aligned with the Android version
 					//not doing a database update of the bgreading, because adjustRecentBgReadings is already doing that update
-					var latest3Calibrations:ArrayCollection = latest(2);
-					latest3Calibrations.addItemAt(calibration,0);
+					var latest3Calibrations:Array = latest(2);
+					latest3Calibrations.unshift(calibration)
 					adjustRecentBgReadings(1, latest3Calibrations);
+					
 					//calling requestCalibrationIfRangeTooNarrow in the CalibrationService which handles also the save to database
 				}
 			}
@@ -590,26 +587,20 @@ package database
 					
 					//getting the latest 3 calibrations from database
 					//then check if calibration is not null and of not if it's already in that list, if not add it, resort and get the latest 3
-					var latest3Calibrations:ArrayCollection = Calibration.latest(3);
+					var latest3Calibrations:Array = Calibration.latest(3);
 					if (calibration != null) {
 						for (calibcntr = 0; calibcntr < latest3Calibrations.length; calibcntr++) {
-							if ((latest3Calibrations.getItemAt(calibcntr) as Calibration).uniqueId == calibration.uniqueId) {
+							if ((latest3Calibrations[calibcntr] as Calibration).uniqueId == calibration.uniqueId) {
 								itemfound = true;
 								break;
 							}
 						}
 						if (!itemfound) {
-							latest3Calibrations.addItemAt(calibration, 0);
-							dataSortFieldForReturnValue = new SortField();
-							dataSortFieldForReturnValue.name = "timestamp";
-							dataSortFieldForReturnValue.numeric = true;
-							dataSortFieldForReturnValue.descending = true;//ie from large to small
-							dataSortForBGReadings = new Sort();
-							dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-							latest3Calibrations.sort = dataSortForBGReadings;
-							latest3Calibrations.refresh();
+							latest3Calibrations.unshift(calibration);
+							latest3Calibrations.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+							
 							while (latest3Calibrations.length > 3)
-								latest3Calibrations.removeItemAt(latest3Calibrations.length - 1);
+								latest3Calibrations.removeAt(latest3Calibrations.length - 1);
 						}
 					}
 					
@@ -635,31 +626,31 @@ package database
 		}
 		
 		/**
-		 * arraycollection with latest number of calibrations that match the active sensorid<br>
+		 * array with latest number of calibrations that match the active sensorid<br>
 		 * descending timestamp, large to small<br>
-		 * if there's none then empty arraycollection is returned 
+		 * if there's none then empty array is returned 
 		 */
-		public static function latest(number:int):ArrayCollection {
+		public static function latest(number:int):Array {
 			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			if (sensorId == "0")
-				return new ArrayCollection();
+				return new Array();
 			return Database.getLatestCalibrations(number,sensorId);
 		}
 		
 		/**
 		 * calibrations should have maximum 3 calibrations, the latest,  from large to small ie descending
 		 */
-		private function slopeOOBHandler(status:int, calibrations:ArrayCollection):Number {
+		private function slopeOOBHandler(status:int, calibrations:Array):Number {
 			var sParams:SlopeParameters = BlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
 			
-			var thisCalibration:Calibration = calibrations.getItemAt(0) as Calibration;
+			var thisCalibration:Calibration = calibrations[0] as Calibration;
 			if(status == 0) {
 				//myTrace("in slopeOOBHandler, with status = 0");
 				//myTrace("calibrations.size = " + calibrations.length);
 				if (calibrations.length == 3) {
-					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && ((calibrations.getItemAt(1) as Calibration).possibleBad == true)) {
+					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && ((calibrations[1] as Calibration).possibleBad == true)) {
 						//myTrace("returnvalue for size 3, first branch = " + (calibrations.getItemAt(1) as Calibration).slope);
-						return (calibrations.getItemAt(1) as Calibration).slope;
+						return (calibrations[1] as Calibration).slope;
 					} else {
 						//myTrace("returnvalue for size 3, second branch = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW));
 						return Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW);
@@ -674,8 +665,8 @@ package database
 				return sParams.DEFAULT_SLOPE;
 			} else {
 				if (calibrations.length == 3) {
-					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && ((calibrations.getItemAt(1) as Calibration).possibleBad)) {
-						return (calibrations.getItemAt(1) as Calibration).slope;
+					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && ((calibrations[1] as Calibration).possibleBad)) {
+						return (calibrations[1] as Calibration).slope;
 					} else {
 						return sParams.DEFAULT_HIGH_SLOPE_HIGH;
 					}
@@ -784,8 +775,8 @@ package database
 		 * with database update of the adjusted bgreadings<br>
 		 * calibrations should be the latest, maximum 3, descending by timestamp, ie large to small
 		 */
-		public static function adjustRecentBgReadings(adjustCount:int, calibrations:ArrayCollection):void {
-			var bgReadings:ArrayCollection= BgReading.latestBySize(adjustCount);
+		public static function adjustRecentBgReadings(adjustCount:int, calibrations:Array):void {
+			var bgReadings:Array= BgReading.latestBySize(adjustCount);
 			var latestCalibration:Calibration;
 			var bgcntr:int;
 			var bgReading:BgReading;
@@ -793,7 +784,7 @@ package database
 			var oldYValue:Number;
 			if (calibrations.length == 3) {
 				var denom:int = bgReadings.length;
-				latestCalibration = calibrations.getItemAt(0) as Calibration;
+				latestCalibration = calibrations[0] as Calibration;
 				var i:int = 0;
 				for each (bgReading in bgReadings) {
 					oldYValue = bgReading.calculatedValue;
@@ -803,7 +794,7 @@ package database
 					i += 1;
 				}
 			} else if (calibrations.length == 2) {
-				latestCalibration = calibrations.getItemAt(0) as Calibration;
+				latestCalibration = calibrations[0] as Calibration;
 				for each (bgReading in bgReadings) {
 					newYvalue = (bgReading.ageAdjustedRawValue * latestCalibration.slope) + latestCalibration.intercept;
 					bgReading.calculatedValue = newYvalue;
@@ -811,9 +802,9 @@ package database
 					bgReading.updateInDatabaseSynchronous();
 				}
 			}
-			(bgReadings.getItemAt(0) as BgReading).findNewRawCurve();
-			(bgReadings.getItemAt(0) as BgReading).findNewCurve();
-			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseSynchronous();		
+			(bgReadings[0] as BgReading).findNewRawCurve();
+			(bgReadings[0] as BgReading).findNewCurve();
+			(bgReadings[0] as BgReading).updateInDatabaseSynchronous();		
 		}
 		
 		/**

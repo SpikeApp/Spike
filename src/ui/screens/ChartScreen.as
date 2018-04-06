@@ -286,7 +286,7 @@ package ui.screens
 				var readings:Array = e.data;
 				if (readings != null && readings.length > 0)
 				{
-					if (BackgroundFetch.appIsInForeground() && glucoseChart != null && Constants.appInForeground)
+					if (BackgroundFetch.appIsInForeground() && glucoseChart != null && Constants.appInForeground && SystemUtil.isApplicationActive)
 					{
 						glucoseChart.addGlucose(readings);
 						if (displayPieChart)
@@ -324,7 +324,7 @@ package ui.screens
 					return;
 				}
 				
-				if (!appInBackground && glucoseChart != null && Constants.appInForeground && BackgroundFetch.appIsInForeground())
+				if (!appInBackground && glucoseChart != null && Constants.appInForeground && BackgroundFetch.appIsInForeground() && SystemUtil.isApplicationActive)
 				{
 					Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
 					glucoseChart.addGlucose([reading]);
