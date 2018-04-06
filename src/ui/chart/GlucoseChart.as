@@ -2136,7 +2136,9 @@ package ui.chart
 			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("0", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
 			glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width -glucoseStatusLabelsMargin;
 			glucoseValueDisplay.validate();
+			var glucoseValueDisplayHeight:Number = glucoseValueDisplay.height;
 			glucoseValueDisplay.text = "";
+			glucoseValueDisplay.validate();
 			addChild(glucoseValueDisplay);
 			
 			//Glucose Retro Display
@@ -2155,7 +2157,7 @@ package ui.chart
 			
 			//IOB
 			IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
-			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplay.height + 8;
+			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplayHeight + 8;
 			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 			
 			if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive)
