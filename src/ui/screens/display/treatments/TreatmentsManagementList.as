@@ -3,6 +3,7 @@ package ui.screens.display.treatments
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Alert;
@@ -196,36 +197,39 @@ package ui.screens.display.treatments
 				itemRenderer.paddingRight = -25;
 				itemRenderer.accessoryOffsetX = -30;
 				itemRenderer.labelField = "label";
-				itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
+				if (!BlueToothDevice.isFollower())
 				{
-					var actionsContainer:LayoutGroup = accessoryDictionary[ item ];
-					if(!actionsContainer)
+					itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
 					{
-						var containerLayout:HorizontalLayout = new HorizontalLayout();
-						containerLayout.gap = -10;
+						var actionsContainer:LayoutGroup = accessoryDictionary[ item ];
+						if(!actionsContainer)
+						{
+							var containerLayout:HorizontalLayout = new HorizontalLayout();
+							containerLayout.gap = -10;
+							
+							actionsContainer = new LayoutGroup();
+							actionsContainer.pivotX = -10;
+							actionsContainer.layout = containerLayout;
+							
+							var editButton:Button = new Button();
+							editButton.name = "editButton";
+							editButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.editTexture);
+							editButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+							editButton.addEventListener(Event.TRIGGERED, onEditTreatment);
+							actionsContainer.addChild(editButton);
+							
+							var deleteButton:Button = new Button();
+							deleteButton.name = "deleteButton";
+							deleteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture);
+							deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+							deleteButton.addEventListener(Event.TRIGGERED, onDeleteTreatment);
+							actionsContainer.addChild(deleteButton);
+							
+							accessoryDictionary[ item ] = actionsContainer;
+						}
 						
-						actionsContainer = new LayoutGroup();
-						actionsContainer.pivotX = -10;
-						actionsContainer.layout = containerLayout;
-						
-						var editButton:Button = new Button();
-						editButton.name = "editButton";
-						editButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.editTexture);
-						editButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
-						editButton.addEventListener(Event.TRIGGERED, onEditTreatment);
-						actionsContainer.addChild(editButton);
-						
-						var deleteButton:Button = new Button();
-						deleteButton.name = "deleteButton";
-						deleteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture);
-						deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
-						deleteButton.addEventListener(Event.TRIGGERED, onDeleteTreatment);
-						actionsContainer.addChild(deleteButton);
-						
-						accessoryDictionary[ item ] = actionsContainer;
+						return actionsContainer;
 					}
-					
-					return actionsContainer;
 				}
 				
 				return itemRenderer;

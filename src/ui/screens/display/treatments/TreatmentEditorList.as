@@ -116,6 +116,7 @@ package ui.screens.display.treatments
 					for (var i:int = 0; i < userInsulins.length; i++) 
 					{
 						var insulin:Insulin = userInsulins[i];
+						
 						insulinsList.push( {label: insulin.name, id: insulin.ID} );
 						
 						if (insulin.ID == treatment.insulinID)
