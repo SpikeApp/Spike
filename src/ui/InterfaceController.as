@@ -2,12 +2,11 @@ package ui
 {
 	import com.adobe.touch3D.Touch3D;
 	import com.adobe.touch3D.Touch3DEvent;
+	
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
-	import com.distriqt.extension.exceptions.ExceptionReport;
-	import com.distriqt.extension.exceptions.Exceptions;
-	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.notifications.Notifications;
+	
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
