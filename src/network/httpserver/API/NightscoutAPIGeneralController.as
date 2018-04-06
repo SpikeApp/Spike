@@ -27,7 +27,7 @@ package network.httpserver.API
 			nsFormatter = new DateTimeFormatter();
 			nsFormatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 			nsFormatter.setStyle("locale", "en_US");
-			nsFormatter.useUTC = false;
+			nsFormatter.useUTC = true;
 		}
 		
 		/**

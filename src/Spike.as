@@ -185,9 +185,9 @@ package
 		
 		private function onDeactivate( event:flash.events.Event ):void 
 		{
-			//Put framerate to a halt
-			stage.frameRate = 0.1;
-			Starling.current.nativeStage.frameRate = 0.1;
+			//Decrease framerate almost to a halt
+			stage.frameRate = 0.5;
+			Starling.current.nativeStage.frameRate = 0.5;
 			
 			//Call Garbage Collector
 			System.pauseForGCIfCollectionImminent(0);
