@@ -109,6 +109,36 @@ package treatments
 			}
 		}
 		
+		public static function getDefaultInsulinID():String
+		{
+			var insulinID:String = "";
+			var foundDefault:Boolean = false;
+			
+			insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
+			
+			for (var i:int = 0; i < insulinsList.length; i++) 
+			{
+				var insulin:Insulin = insulinsList[i];
+				if (insulin.isDefault)
+				{
+					insulinID = insulin.ID;
+					foundDefault = true;
+					break;
+				}
+			}
+			
+			if (!foundDefault && insulinsList.length > 0)
+			{
+				insulinID = (insulinsList[0] as Insulin).ID;
+				foundDefault;
+			}
+			
+			if (insulinsList.length == 0 && !foundDefault)
+				insulinID = "000000"; //Nightscout insulin
+			
+			return insulinID;
+		}
+		
 		public static function addCarbAbsorptionRate(rate:Number):void
 		{
 			carbAbsorptionRate = rate;

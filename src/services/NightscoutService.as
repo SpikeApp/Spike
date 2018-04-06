@@ -1424,9 +1424,6 @@ package services
 			if (BlueToothDevice.isFollower()) getRemoteReadings();
 			
 			if (activeTreatmentsUpload.length > 0) syncTreatmentsUpload();
-			
-			//Update remote treatments so the user has updated data when returning to Spike
-			getRemoteTreatments();
 		}
 		
 		/**
@@ -1567,7 +1564,11 @@ package services
 			if(NetworkInfo.networkInfo.isReachable() && networkChangeOcurrances > 0)
 			{
 				Trace.myTrace("NightscoutService.as", "Network is reachable again. Calling resync.");
+				
 				resync();
+				
+				//Update remote treatments so the user has updated data when returning to Spike
+				getRemoteTreatments();
 			}
 			else
 				networkChangeOcurrances++;
@@ -1576,7 +1577,11 @@ package services
 		private static function onAppActivated(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "App in foreground. Calling resync.");
+			
 			resync();
+			
+			//Update remote treatments so the user has updated data when returning to Spike
+			getRemoteTreatments();
 		}
 
 		/**

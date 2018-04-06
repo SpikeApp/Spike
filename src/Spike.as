@@ -8,7 +8,6 @@ package
 	import flash.events.Event;
 	import flash.system.System;
 	import flash.utils.clearInterval;
-	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
 	import events.SpikeEvent;

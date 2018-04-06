@@ -3,10 +3,12 @@ package network.httpserver.API
 	import flash.net.URLVariables;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import network.httpserver.ActionController;
 	
+	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -25,6 +27,9 @@ package network.httpserver.API
 		public function AddTreatment(params:URLVariables):String
 		{
 			Trace.myTrace("SpikeTreatmentsController.as", "AddTreatment endpoint called!");
+			
+			if (BlueToothDevice.isFollower())
+				return responseSuccess("No treatments for follower!");
 			
 			var response:String = "OK";
 			var treatmentType:String = "";
@@ -48,7 +53,7 @@ package network.httpserver.API
 						else
 							response = "ERROR";
 						
-						treatmentInsulinID = "000000";
+						treatmentInsulinID = ProfileManager.getDefaultInsulinID();
 					}
 					else if (treatmentType == Treatment.TYPE_MEAL_BOLUS)
 					{
@@ -57,7 +62,7 @@ package network.httpserver.API
 						else
 							response = "ERROR";
 						
-						treatmentInsulinID = "000000";
+						treatmentInsulinID = ProfileManager.getDefaultInsulinID();
 						
 						if (params.carbs != null)
 							treatmentCarbs = Number(String(params.carbs).replace(",", "."));

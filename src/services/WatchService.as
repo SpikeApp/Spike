@@ -186,7 +186,7 @@ package services
 				var events:Array = Calendar.service.getEvents( new Date(now - TIME_30_MINUTES), new Date(now), calendarID );
 				for each (var event:EventObject in events)
 				{
-					if (event.notes.indexOf(lastEvent.notes) != -1)
+					if (event != null && event.notes != null && lastEvent != null && lastEvent.notes != null && event.notes.indexOf(lastEvent.notes) != -1)
 					{
 						Calendar.service.removeEvent(event);
 						queue.pop();

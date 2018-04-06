@@ -177,7 +177,9 @@ package network.httpserver
                 // Get the request string and pull out the URL 
                 socket.readBytes(bytes);
                 var request:String          = "" + bytes;
-                var url:String              = request.substring(4, request.indexOf("HTTP/") - 1).replace(".json","");
+				var url:String              = request.substring(4, request.indexOf("HTTP/") - 1).replace(".json","");
+				if (url.substr(-1) == "/")
+					url = url.slice(0, -1);
 				
 				// Parse out the controller name, action name and paramert list
                 var url_pattern:RegExp      = /(.*)\/([^\?]*)\??(.*)$/;
@@ -202,7 +204,19 @@ package network.httpserver
 						var messageLines:Array = request.split("\n");
 						postJSONResponse = JSON.parse(messageLines[messageLines.length - 1]);
 					} 
-					catch(error:Error) {}
+					catch(error:Error) 
+					{
+						Trace.myTrace("HttpServer.as", "Error parsing POST resquest! Error Message: " + error.message + ", POST Request: " + messageLines[messageLines.length - 1]);
+						try
+						{
+							Trace.myTrace("HttpServer.as", "Trying to parse as URLVariables...");
+							postJSONResponse = new URLVariables(messageLines[messageLines.length - 1]);
+						} 
+						catch(error:Error) 
+						{
+							Trace.myTrace("HttpServer.as", "Error parsing as URLVariables! Error: " + error.message);
+						}
+					}
 					
 					parameters = objectToURLVariables(postJSONResponse, param_string);
 				}

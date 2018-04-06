@@ -289,7 +289,7 @@ package treatments
 				NightscoutService.uploadTreatment(treatment);
 		}
 		
-		public static function addNightscoutTreatment(treatment:Treatment):void
+		public static function addNightscoutTreatment(treatment:Treatment, uploadToNightscout:Boolean = false):void
 		{
 			//Add treatment to Spike
 			treatmentsList.push(treatment);
@@ -301,6 +301,10 @@ package treatments
 			//Insert in Database
 			if (!BlueToothDevice.isFollower())
 				Database.insertTreatmentSynchronous(treatment);
+			
+			//Upload to Nightscout
+			if (uploadToNightscout)
+				NightscoutService.uploadTreatment(treatment);
 		}
 		
 		public static function addTreatment(type:String):void
@@ -863,14 +867,14 @@ package treatments
 				var treatmentCarbs:Number = 0;
 				var treatmentGlucose:Number = 0;
 				var treatmentNote:String = "";
-				if (treatmentEventType == "Correction Bolus")
+				if (treatmentEventType == "Correction Bolus" || treatmentEventType == "Bolus" || treatmentEventType == "Correction")
 				{
 					treatmentType = Treatment.TYPE_BOLUS;
 					if (nsTreatment.insulin != null)
 						treatmentInsulinAmount = Number(nsTreatment.insulin);
 					treatmentInsulinID = "000000";
 				}
-				else if (treatmentEventType == "Meal Bolus")
+				else if (treatmentEventType == "Meal Bolus" || treatmentEventType == "Snack Bolus")
 				{
 					treatmentType = Treatment.TYPE_MEAL_BOLUS;
 					if (nsTreatment.insulin != null)
@@ -879,7 +883,7 @@ package treatments
 					if (nsTreatment.carbs != null)
 						treatmentCarbs = Number(nsTreatment.carbs);
 				}
-				else if (treatmentEventType == "Carb Correction")
+				else if (treatmentEventType == "Carb Correction" || treatmentEventType == "Carbs")
 				{
 					treatmentType = Treatment.TYPE_CARBS_CORRECTION;
 					if (nsTreatment.carbs != null)
