@@ -29,6 +29,7 @@ package services
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -61,6 +62,7 @@ package services
 	import feathers.controls.Alert;
 	
 	import model.ModelLocator;
+	import model.Tomato;
 	import model.TransmitterDataBluKonPacket;
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
@@ -78,6 +80,7 @@ package services
 	import utils.BadgeBuilder;
 	import utils.Trace;
 	import utils.UniqueId;
+	import utils.libre.LibreAlarmReceiver;
 	
 	/**
 	 * all functionality related to bluetooth connectivity<br>
@@ -175,9 +178,9 @@ package services
 		private static var nowGlucoseOffset:int = 0;
 		
 		/**
-		 * used for intial scan G4, but also other peripherals that broadcast themselves continuously, like bluereader
+		 * used for scanning devices that are not of type always scan, G4, Transmiter PL, miaomiao...
 		 */
-		private static var G4ScanTimer:Timer;
+		private static var ScanTimer:Timer;
 		
 		private static var peripheralConnected:Boolean = false;
 		
@@ -204,6 +207,16 @@ package services
 		 * Therefore the amount of notifications will be reduced, this setting counts the number
 		 */
 		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5:int = 5;
+		
+		private static var _amountOfConsecutiveSensorNotDetectedForMiaoMiao:int = 0;
+		
+		/**
+		 * if miaomiao, this is the amount of times a sensorNotDetected was received consecutively without receiving a full data packet
+		 */
+		public static function get amountOfConsecutiveSensorNotDetectedForMiaoMiao():int
+		{
+			return _amountOfConsecutiveSensorNotDetectedForMiaoMiao;
+		}
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -295,9 +308,16 @@ package services
 			m_getNowGlucoseDataIndexCommand = false;
 			m_getOlderReading = false;
 			m_blockNumber = 0;
-			if (BlueToothDevice.isBluKon()) {
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
+			
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
+			
+			if (BlueToothDevice.isMiaoMiao()) {
+				BackgroundFetch.startScanDeviceMiaoMiao();
+				if (BlueToothDevice.known()) {
+					BackgroundFetch.setMiaoMiaoMac(BlueToothDevice.address);
+				}
 			}
 			
 			BluetoothLE.init(DistriqtKey.distriqtKey);
@@ -315,11 +335,11 @@ package services
 					
 					case AuthorisationStatus.NOT_DETERMINED:
 					case AuthorisationStatus.AUTHORISED:				
-						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
-						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, central_peripheralConnectHandler );
-						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT_FAIL, central_peripheralDisconnectHandler );
-						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
-						BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+						if (BlueToothDevice.isMiaoMiao()) {
+							addMiaoMiaoEventListeners();
+						} else {
+							addBluetoothLEEventListeners();
+						}
 						
 						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED);
 						_instance.dispatchEvent(blueToothServiceEvent);
@@ -362,21 +382,28 @@ package services
 				} else if (notificationEvent.id == NotificationService.ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL) {
 					AlertManager.showSimpleAlert
 						(
-						ModelLocator.resourceManagerInstance.getString("settingsview","warning"),
+						ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
 						ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor")
 					);
-				}	
+				}
+				else if (notificationEvent.id == NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO) {
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+						ModelLocator.resourceManagerInstance.getString("bluetoothservice","sensor_not_detected_miaomiao")
+					);
+				} 
 			}
 		}
 		
 		private static function commonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
-				if (G4ScanTimer != null) {
-					if (G4ScanTimer.running) {
-						G4ScanTimer.stop();
+				if (ScanTimer != null) {
+					if (ScanTimer.running) {
+						ScanTimer.stop();
 					}
-					G4ScanTimer = null;
+					ScanTimer = null;
 				}
 				stopScanning(null);//need to stop scanning because device type has changed, means also the UUID to scan for
 				if (!BlueToothDevice.isFollower()) {
@@ -386,6 +413,18 @@ package services
 						}
 					} else {
 					}
+				}
+				
+				BlueToothDevice.forgetBlueToothDevice();
+				
+				if (BlueToothDevice.isMiaoMiao()) {
+					BackgroundFetch.startScanDeviceMiaoMiao();
+					removeBluetoothLEEventListeners();
+					addMiaoMiaoEventListeners();
+				} else {
+					BackgroundFetch.stopScanDeviceMiaoMiao();
+					addBluetoothLEEventListeners();
+					removeMiaoMiaoEventListeners();
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
@@ -452,6 +491,13 @@ package services
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("Trying to connect to bluereader.");
+			} else if (BlueToothDevice.isMiaoMiao()) {
+				if (BlueToothDevice.known()) {
+					myTrace("in bluetoothStatusIsOn isMiaoMiao");
+					BackgroundFetch.setMiaoMiaoMac(BlueToothDevice.address);
+					startScanning();
+				}
+				myTrace("in bluetoothStatusIsOn device is miaomiao - DO WE NEED TO DEVELOP ANYTHING HERE ?.");
 			} else if (BlueToothDevice.known() || (BlueToothDevice.alwaysScan() && BlueToothDevice.transmitterIdKnown())) {
 				myTrace("call startScanning");
 				startScanning();
@@ -460,11 +506,18 @@ package services
 			}
 		}
 		
-		public static function startScanning(initialG4Scan:Boolean = false):void {
+		public static function startScanning(itsNotAnAlwaysScanDevice:Boolean = false):void {
 			if (BlueToothDevice.isFollower()) {
 				myTrace("in startScanning but follower, not starting scan");
 				return;
 			}
+			
+			if (BlueToothDevice.isMiaoMiao()) {
+				myTrace("in startScanning, is miaomiao");
+				BackgroundFetch.startScanningForMiaoMiao();
+				return;
+			}
+
 			if (!BluetoothLE.service.centralManager.isScanning) {
 				if (!BluetoothLE.service.centralManager.scanForPeripherals(
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 
@@ -476,11 +529,11 @@ package services
 					return;
 				} else {
 					myTrace("started scanning for peripherals, peripheraltype = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE));
-					if (initialG4Scan) {
-						myTrace("it's a G4 scan, starting scanTimer");
-						G4ScanTimer = new Timer(MAX_SCAN_TIME_IN_SECONDS * 1000, 1);
-						G4ScanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
-						G4ScanTimer.start();
+					if (itsNotAnAlwaysScanDevice) {
+						myTrace("it's a device which does not require always scanning, start the scan timer");
+						ScanTimer = new Timer(MAX_SCAN_TIME_IN_SECONDS * 1000, 1);
+						ScanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
+						ScanTimer.start();
 					}
 					if (BlueToothDevice.isBluKon()) {
 						startMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
@@ -491,20 +544,24 @@ package services
 			}
 		}
 		
-		private static function stopScanning(event:flash.events.Event):void {
+		public static function stopScanning(event:flash.events.Event):void {
 			myTrace("in stopScanning");
-			if (BluetoothLE.service.centralManager.isScanning) {
-				myTrace("in stopScanning, is scanning, call stopScan");
-				BluetoothLE.service.centralManager.stopScan();
-				if (BlueToothDevice.isBluKon()) {
-					stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+			if (BlueToothDevice.isMiaoMiao()) {
+				BackgroundFetch.stopScanningMiaoMiao();				
+			} else {
+				if (BluetoothLE.service.centralManager.isScanning) {
+					myTrace("in stopScanning, is scanning, call stopScan");
+					BluetoothLE.service.centralManager.stopScan();
+					if (BlueToothDevice.isBluKon()) {
+						stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+					}
+					_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 				}
-				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
-			myTrace("in central_peripheralDiscoveredHandler, stop scanning");
+			myTrace("in central_peripheralDiscoveredHandler, stop scanning. Device name = " + event.peripheral.name + ", Device address = " + event.peripheral.uuid);
 			BluetoothLE.service.centralManager.stopScan();
 			if (BlueToothDevice.isBluKon()) {
 				stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
@@ -620,12 +677,12 @@ package services
 				}
 			}
 			
-			if (G4ScanTimer != null) {
-				if (G4ScanTimer.running) {
+			if (ScanTimer != null) {
+				if (ScanTimer.running) {
 					myTrace("in central_peripheralConnectHandler, stopping scanTimer");
-					G4ScanTimer.stop();
+					ScanTimer.stop();
 				}
-				G4ScanTimer = null;
+				ScanTimer = null;
 			}
 
 			if (!awaitingConnect && !BlueToothDevice.isBluKon()) {
@@ -636,7 +693,7 @@ package services
 			} 
 			
 			awaitingConnect = false;
-			if (!BlueToothDevice.alwaysScan()) {
+			if (!BlueToothDevice.alwaysScan() && !BlueToothDevice.isMiaoMiao()) {
 				if ((new Date()).valueOf() - connectionAttemptTimeStamp > maxTimeBetweenConnectAttemptAndConnectSuccess * 1000) { //not waiting more than 3 seconds between device discovery and connection success
 					myTrace("passing in central_peripheralConnectHandler but time between connect attempt and connect success is more than " + maxTimeBetweenConnectAttemptAndConnectSuccess + " seconds. Will disconnect");
 					BluetoothLE.service.centralManager.disconnect(event.peripheral);
@@ -1126,8 +1183,7 @@ package services
 			myTrace("peripheral_characteristic_writeHandler " + getCharacteristicName(event.characteristic.uuid));
 			if (BlueToothDevice.isDexcomG4()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
-			}
-			if (BlueToothDevice.isDexcomG5() && event.characteristic.uuid.toUpperCase() == G5_Authentication_Characteristic_UUID.toUpperCase()) {
+			} else if (BlueToothDevice.isDexcomG5() && event.characteristic.uuid.toUpperCase() == G5_Authentication_Characteristic_UUID.toUpperCase()) {
 				awaitingAuthStatusRxMessage = true;
 			}
 		}
@@ -1154,7 +1210,8 @@ package services
 			} else if (BlueToothDevice.isBluKon()) {
 				if (event.characteristic.uuid.toUpperCase() == BC_desiredReceiveCharacteristicUUID.toUpperCase()) {
 				}
-			} else if (!BlueToothDevice.alwaysScan()) {
+			}
+			if (!BlueToothDevice.alwaysScan()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			}
 		}
@@ -1186,13 +1243,20 @@ package services
 		 * Disconnects the active bluetooth peripheral if any and sets it to null(otherwise returns without doing anything)<br>
 		 */
 		public static function forgetActiveBluetoothPeripheral():void {
-			myTrace("in forgetActiveBluetoothPeripheral");
-			if (activeBluetoothPeripheral == null)
-				return;
-			
-			BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
-			activeBluetoothPeripheral = null;
-			myTrace("bluetooth device forgotten");
+			if (BlueToothDevice.isMiaoMiao()) {
+				myTrace("in forgetActiveBluetoothPeripheral  miaomiao device");
+				BackgroundFetch.cancelMiaoMiaoConnection(BlueToothDevice.address);
+				BackgroundFetch.resetMiaoMiaoMac();
+				BackgroundFetch.forgetMiaoMiaoPeripheral();
+			} else {
+				myTrace("in forgetActiveBluetoothPeripheral");
+				if (activeBluetoothPeripheral == null)
+					return;
+				
+				BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
+				activeBluetoothPeripheral = null;
+				myTrace("bluetooth device forgotten");
+			}
 		}
 		
 		/**
@@ -1234,7 +1298,7 @@ package services
 			var code:int = buffer.readByte();
 			switch (code) {
 				case 5:
-					var blueToothServiceEvent:BlueToothServiceEvent
+					var blueToothServiceEvent:BlueToothServiceEvent;
 					authStatus = new AuthStatusRxMessage(buffer);
 					myTrace("AuthStatusRxMessage created = " + UniqueId.byteArrayToString(authStatus.byteSequence));
 					if (!authStatus.bonded) {
@@ -1742,11 +1806,6 @@ package services
 		}
 		
 
-		private static function getGlucose(rawGlucose:Number):Number {
-			//LIBRE_MULTIPLIER
-			return (rawGlucose * 117.64705);
-		}
-		
 		public static function nowGetGlucoseValue(input:ByteArray):Number {
 			input.position = 3 + nowGlucoseOffset;
 			var curGluc:Number;
@@ -1760,7 +1819,7 @@ package services
 			myTrace("in nowGetGlucoseValue rawGlucose=" + rawGlucose);
 			
 			// rescale
-			curGluc = getGlucose(rawGlucose);
+			curGluc = LibreAlarmReceiver.getGlucose(rawGlucose);
 			
 			return(curGluc);
 		}
@@ -1855,8 +1914,8 @@ package services
 							} else {
 								var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 										.setId(NotificationService.ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL)
-										.setAlert(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
-										.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
+										.setAlert(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
+										.setTitle(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
 										.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor"))
 										.enableVibration(true)
 								Notifications.service.notify(notificationBuilder.build());
@@ -2168,10 +2227,77 @@ package services
 				startedMonitoringAndRangingBeaconsInRegion = true;
 			}
 		}
+		
 		private static function stopMonitoringAndRangingBeaconsInRegion(uuid:String):void {
 			if (startedMonitoringAndRangingBeaconsInRegion) {
 				BackgroundFetch.stopMonitoringAndRangingBeaconsInRegion(uuid);
 				startedMonitoringAndRangingBeaconsInRegion = false;
+			}
+		}
+		
+		private static function addBluetoothLEEventListeners():void {
+			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
+			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, central_peripheralConnectHandler );
+			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT_FAIL, central_peripheralDisconnectHandler );
+			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
+			BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+		}
+		
+		private static function removeBluetoothLEEventListeners():void {
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, central_peripheralConnectHandler );
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT_FAIL, central_peripheralDisconnectHandler );
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
+			BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+		}
+		
+		private static function addMiaoMiaoEventListeners():void {
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorNotDetectedFromMiaoMiao);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorChangedFromMiaoMiao);
+		}
+		
+		private static function receivedSensorChangedFromMiaoMiao(event:flash.events.Event):void {
+			myTrace("in receivedSensorChangedFromMiaoMiao");
+			Tomato.receivedSensorChangedFromMiaoMiao();
+		}
+		
+		private static function receivedSensorNotDetectedFromMiaoMiao(event:flash.events.Event):void {
+			myTrace("in receivedSensorNotDetectedFromMiaoMiao received sensor not detected");
+			var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+				.setId(NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO)
+				.setAlert(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
+				.setTitle(ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"))
+				.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","sensor_not_detected_miaomiao"))
+				.enableVibration(false)
+				.setSound("");
+			Notifications.service.notify(notificationBuilder.build());
+			_amountOfConsecutiveSensorNotDetectedForMiaoMiao++;
+		}
+		
+		private static function removeMiaoMiaoEventListeners():void {
+			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
+			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
+			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorNotDetectedFromMiaoMiao);
+		}
+		
+		private static function receivedMiaoMiaoDeviceAddress(event:BackgroundFetchEvent):void {
+			if (!BlueToothDevice.isMiaoMiao()) {
+				myTrace("in receivedMiaoMiaoDeviceAddress but not miaomiao device, not processing");
+			} else {
+				BlueToothDevice.address = event.data.MAC;
+				BlueToothDevice.name = "MIAOMIAO";
+			}
+		}
+		
+		private static function receivedMiaoMiaoDataPacket(event:BackgroundFetchEvent):void {
+			Notifications.service.cancel(NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO);
+			_amountOfConsecutiveSensorNotDetectedForMiaoMiao = 0;
+			if (!BlueToothDevice.isMiaoMiao()) {
+				myTrace("in receivedMiaoMiaoDataPacket but not miaomiao device, not processing");
+			} else {
+				Tomato.decodeTomatoPacket(utils.UniqueId.hexStringToByteArray(event.data.packet as String));
 			}
 		}
 	}

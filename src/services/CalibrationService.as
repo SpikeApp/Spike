@@ -200,14 +200,19 @@ package services
 				return;
 			}
 			
+			var warmupTimeInMs:Number = 2 * 3600 * 1000;
+			if (BlueToothDevice.isMiaoMiao()) {
+				warmupTimeInMs = 1 * 3600 * 1000;
+			}
+			
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			if (Calibration.allForSensor().length < 2) 
 			{
 				myTrace("Calibration.allForSensor().length < 2");
 				
-				if (((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) && !BlueToothDevice.isTypeLimitter()) 
+				if ((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < warmupTimeInMs) 
 				{
-					myTrace("CalibrationService : bgreading received but sensor age < 2 hours, so ignoring");
+					myTrace("CalibrationService : bgreading received but sensor age < " + warmupTimeInMs + " milliseconds, so ignoring");
 				} 
 				else 
 				{

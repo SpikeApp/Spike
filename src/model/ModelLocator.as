@@ -158,7 +158,7 @@ package model
 				CalibrationService.init();
 				NetworkInfo.init(DistriqtKey.distriqtKey);
 				BackgroundFetch.setAvAudioSessionCategory(true);
-				BackgroundFetch.isVersion1_4_0();//to make sure the correct ANE is used
+				BackgroundFetch..isVersion2_0_1();//to make sure the correct ANE is used
 				WidgetService.init();
 				WatchService.init();
 				AlarmService.init();
@@ -204,6 +204,31 @@ package model
 					
 				firstBGReading = _bgReadings[0] as BgReading;
 			}
+		}
+		
+		/**
+		 * returns true if last reading was successfully removed 
+		 */
+		public static function removeLastBgReading():Boolean 
+		{
+			if (_bgReadings.length > 0) 
+			{
+				var removedReading:BgReading = _bgReadings.pop() as BgReading;
+				Database.deleteBgReadingSynchronous(removedReading);
+				return true;
+			}
+			
+			return false;
+		}
+		
+		public static function getLastBgReading():BgReading 
+		{
+			if (_bgReadings.length > 0) 
+			{
+				return _bgReadings[_bgReadings.length - 1] as BgReading;
+			}
+			
+			return null;
 		}
 	}
 }

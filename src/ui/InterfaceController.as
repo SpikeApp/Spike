@@ -2,12 +2,11 @@ package ui
 {
 	import com.adobe.touch3D.Touch3D;
 	import com.adobe.touch3D.Touch3DEvent;
-	
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.notifications.Notifications;
-	
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -306,6 +305,8 @@ package ui
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, bluetoothDeviceConnectionCompleted);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_DISCONNECTED, central_peripheralDisconnectHandler);
 		}
 		
 		private static function deviceNotPaired(event:flash.events.Event):void 
@@ -330,7 +331,7 @@ package ui
 			Notifications.service.cancel(NotificationService.ID_FOR_DEVICE_NOT_PAIRED);
 		}
 		
-		private static function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void 
+		private static function bluetoothDeviceConnectionCompleted(event:flash.events.Event):void 
 		{
 			Trace.myTrace("interfaceController.as", "in bluetoothDeviceConnectionCompleted");
 			if (!peripheralConnected) 
@@ -341,7 +342,7 @@ package ui
 			}
 		}
 		
-		private static function central_peripheralDisconnectHandler(event:PeripheralEvent):void 
+		private static function central_peripheralDisconnectHandler(event:flash.events.Event):void 
 		{
 			if (peripheralConnected) 
 			{
@@ -368,9 +369,10 @@ package ui
 			}
 		}
 		
-		public static function userInitiatedBTScanningSucceeded(event:PeripheralEvent):void 
+		public static function userInitiatedBTScanningSucceeded(event:flash.events.Event):void 
 		{
 			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
+			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
 			
 			AlertManager.showSimpleAlert
 			(

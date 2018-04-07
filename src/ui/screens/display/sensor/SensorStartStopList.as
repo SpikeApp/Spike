@@ -1,11 +1,8 @@
 package ui.screens.display.sensor
 {
 	import flash.system.Capabilities;
-	import flash.utils.Timer;
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
-	
-	import mx.collections.ArrayCollection;
 	
 	import spark.formatters.DateTimeFormatter;
 	

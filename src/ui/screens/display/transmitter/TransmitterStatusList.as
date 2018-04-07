@@ -4,12 +4,15 @@ package ui.screens.display.transmitter
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.BluetoothLEState;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
 	import flash.events.TimerEvent;
 	import flash.system.Capabilities;
 	import flash.utils.Timer;
+	import flash.utils.setTimeout;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -293,6 +296,19 @@ package ui.screens.display.transmitter
 				else
 					batteryLevelValue = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL) + " %");
 			}
+			else if (BlueToothDevice.isMiaoMiao())
+			{
+				/* Transmitter Type */
+				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
+				
+				/* Battery Level */
+				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);
+				
+				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					batteryLevelValue = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL) + " %");
+			}
 			else if (BlueToothDevice.isBluKon())
 			{
 				/* Transmitter Type */
@@ -377,9 +393,9 @@ package ui.screens.display.transmitter
 			{
 				if(batteryLevelValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown') || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryUnknownTexture;
-				else if(Number(batteryLevelValue) > 60) //OK Battery
+				else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 60) //OK Battery
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryOkTexture;
-				else if(Number(batteryLevelValue) > 30) //Alert Battery
+				else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 30) //Alert Battery
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryAlertTexture;
 				else //Low Battery
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;
@@ -620,6 +636,7 @@ package ui.screens.display.transmitter
 			{
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped, false, 0, true);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded, false, 0, true);
+				BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
 				BluetoothService.startScanning(true);
 				
 				AlertManager.showSimpleAlert(
@@ -650,6 +667,8 @@ package ui.screens.display.transmitter
 		private function onTransmitterForget():void
 		{
 			BlueToothDevice.forgetBlueToothDevice();
+			BluetoothService.stopScanning(null);
+			InterfaceController.peripheralConnected = false;
 			
 			AlertManager.showSimpleAlert
 			(
@@ -661,6 +680,7 @@ package ui.screens.display.transmitter
 			);
 			
 			disposeRefreshTimer();
+			setupInitialState();
 			setupContent();
 		}
 		
@@ -669,9 +689,16 @@ package ui.screens.display.transmitter
 			if (refreshSecondsElapsed <= 0)
 			{
 				refreshSecondsElapsed = 4;
+				setupInitialState();
 				setupContent();
 				if (InterfaceController.peripheralConnected)
+				{
 					disposeRefreshTimer();
+					//Ensure that the battery levels are displayed correctly by refreshing the screen after 3 seconds 
+					//so Spike has enough time to get battery info from the transmitter
+					setTimeout(setupInitialState, 3000);
+					setTimeout(setupContent, 3300); 
+				}
 			}
 			else
 			{

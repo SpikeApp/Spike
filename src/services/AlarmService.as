@@ -11,7 +11,6 @@ package services
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
-	import mx.collections.ArrayCollection;
 	import mx.utils.StringUtil;
 	
 	import database.AlertType;
@@ -1137,6 +1136,19 @@ package services
 					//not snoozed
 					if (((now.valueOf() - lastBgReading.timestamp) > alertValue * 60 * 1000) && ((now.valueOf() - ModelLocator.appStartTimestamp) > 5 * 60 * 1000)) {
 						myTrace("in checkAlarms, missed reading");
+						
+						var alertBody:String = " ";
+						if (BlueToothDevice.isMiaoMiao()) 
+						{
+							if (BluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao > 0) 
+							{
+								alertBody = ModelLocator.resourceManagerInstance.getString("alarmservice","received");
+								alertBody += " " + BluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao + " ";
+								alertBody += ModelLocator.resourceManagerInstance.getString("alarmservice","consecutive_sensor_not_detected");
+							}
+							myTrace("in checkMissedReadingAlert, fire alert with body = " + alertBody);
+						}
+						
 						fireAlert(
 							5,
 							alertType, 
@@ -1144,7 +1156,8 @@ package services
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
 							alertType.enableVibration,
 							alertType.enableLights,
-							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY
+							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+							alertBody
 						); 
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
 						_missedReadingAlertSnoozePeriodInMinutes = 0;
@@ -1249,6 +1262,8 @@ package services
 					 if ((BlueToothDevice.isDexcomG4() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) > 0))
 						 ||
 						 (BlueToothDevice.isBluKon() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) > 0))
+						 ||
+						 (BlueToothDevice.isMiaoMiao() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) > 0))
 						 ||
 						 (BlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown"))) {
 						 myTrace("in checkAlarms, battery level is too low");
