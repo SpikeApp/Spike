@@ -8,6 +8,7 @@ package ui.chart
 	import flash.utils.getTimer;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import model.ModelLocator;
@@ -387,10 +388,22 @@ package ui.chart
 				A1C = 0;
 			
 			//Calculate readings percentage
-			var percentageReadings:Number = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
+			var numReadungsSectionValue:String;
+			if (!dummyModeActive)
+			{
+				//if (!BlueToothDevice.isMiaoMiao())
+				//{
+					var percentageReadings:Number = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
+					numReadungsSectionValue = realReadingsNumber + " (" + percentageReadings + "%)";
+				//}
+				//else
+					//numReadungsSectionValue = String(realReadingsNumber);
+			}
+			else
+				numReadungsSectionValue = ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			
 			//Populate Stats
-			numReadingsSection.message.text = !dummyModeActive ? realReadingsNumber + " (" + percentageReadings + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			numReadingsSection.message.text = numReadungsSectionValue;
 			avgGlucoseSection.message.text = !dummyModeActive ? averageGlucoseValueOutput + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			estA1CSection.message.text = !dummyModeActive ? A1C + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			

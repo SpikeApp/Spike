@@ -117,12 +117,16 @@ package ui.screens.display.sensor
 				var sensorDays:String;
 				var sensorHours:String;
 				
-				if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL()) 
+				if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL() || BlueToothDevice.isMiaoMiao()) 
 				{
 					var sensorAgeInMinutes:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
 					
 					if (sensorAgeInMinutes == "0") 
 						sensorAgeValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
+					else if ((new Number(sensorAgeInMinutes)) > 14.5 * 24 * 60) 
+					{
+						sensorAgeValue = ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_expired');
+					}
 					else 
 					{
 						sensorDays = TimeSpan.fromMinutes(Number(sensorAgeInMinutes)).days.toString();
@@ -278,7 +282,8 @@ package ui.screens.display.sensor
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel });
 			if (inSensorCountdown)
 				sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','warmup_countdown'), accessory: sensorCountdownLabel });
-			sensorChildrenContent.push({ label: "", accessory: actionButton });
+			if (!BlueToothDevice.isMiaoMiao())
+				sensorChildrenContent.push({ label: "", accessory: actionButton });
 			
 			dataProvider = new HierarchicalCollection(
 				[

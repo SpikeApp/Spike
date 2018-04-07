@@ -124,10 +124,11 @@ package database
 		 */
 		public static function forgetBlueToothDevice():void {
 			myTrace("in forgetBlueToothDevice");
+			var tempAddress:String = _address;
 			_address = "";
 			_name = "";
 			Database.updateBlueToothDeviceSynchronous("", "", (new Date()).valueOf());
-			BluetoothService.forgetActiveBluetoothPeripheral();
+			BluetoothService.forgetActiveBluetoothPeripheral(tempAddress);
 		}
 		
 		/**

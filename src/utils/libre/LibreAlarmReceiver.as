@@ -99,10 +99,10 @@ package utils.libre
 						//adding it now will guarantee that the most recent reading is shown, next readings will follow 5 minutes later)
 
 						//however if the last reading that was added, is less than 2 minutes close to this lastReadingNotAdded, then let's remove the lastreading that was added
-						if (lastReadingNotAdded.realDate - timeStampLastAddedBgReading < 2 * 60 * 1000) {
+						/*if (lastReadingNotAdded.realDate - timeStampLastAddedBgReading < 2 * 60 * 1000) {
 							myTrace("in CalculateFromDataTransferObject, removing last reading from modellocator");
 							ModelLocator.removeLastBgReading();
-						}
+						}*/
 						myTrace("in CalculateFromDataTransferObject createbgd : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + " " + gd.glucose(0, false));
 						createBGfromGD(lastReadingNotAdded);
 					}
