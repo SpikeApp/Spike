@@ -230,7 +230,7 @@ package services
 							.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
 							.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-							.setBody(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+							.setBody(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_notification_body") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_notification_body"))
 							.enableVibration(true)
 							.enableLights(true)
 							.build());
