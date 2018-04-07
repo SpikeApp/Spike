@@ -21,7 +21,9 @@ package ui.screens.display.transmitter
 	import G5Model.TransmitterStatus;
 	
 	import database.BlueToothDevice;
+	import database.Calibration;
 	import database.CommonSettings;
+	import database.Sensor;
 	
 	import events.BlueToothServiceEvent;
 	import events.SettingsServiceEvent;
@@ -95,6 +97,7 @@ package ui.screens.display.transmitter
 		private var batteryStatusG5Callout:TextCallout;
 		private var transmitterRuntimeLabel:Label;
 		private var screenRefreshLabel:Label;
+		private var transmitterFirmwareLabel:Label;
 		
 		/* Properties */
 		private var transmitterNameValue:String;
@@ -114,6 +117,7 @@ package ui.screens.display.transmitter
 		private var transmitterRuntimeValue:String;
 		private var sensorRxTimestamp:Number;
 		private var refreshSecondsElapsed:int = 4;
+		private var transmitterFirmwareValue:String = "";
 
 		/* Objects */
 		private var refreshTimer:Timer;
@@ -301,6 +305,11 @@ package ui.screens.display.transmitter
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
 				
+				/* Transmitter Firmware */
+				transmitterFirmwareValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW);
+				if (transmitterFirmwareValue == "")
+					transmitterFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');;
+				
 				/* Battery Level */
 				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);
 				
@@ -407,6 +416,9 @@ package ui.screens.display.transmitter
 			/* Define Info & Battery/Connection Status Labels */
 			transmitterTypeLabel = LayoutFactory.createLabel(transmitterTypeValue, HorizontalAlign.RIGHT);
 			transmitterNameLabel = LayoutFactory.createLabel(transmitterNameValue, HorizontalAlign.RIGHT);
+			if (BlueToothDevice.isMiaoMiao())
+				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);
+			
 			if (transmitterConnectionStatusValue != null)
 				transmitterConnectionStatusLabel = LayoutFactory.createLabel(transmitterConnectionStatusValue, HorizontalAlign.RIGHT);
 			if (BlueToothDevice.isDexcomG5())
@@ -439,6 +451,8 @@ package ui.screens.display.transmitter
 			var infoSectionChildren:Array = [];
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','data_source_label'), accessory: transmitterTypeLabel });
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_name_label'), accessory: transmitterNameLabel });
+			if (BlueToothDevice.isMiaoMiao())
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_label'), accessory: transmitterFirmwareLabel });
 			if (transmitterConnectionStatusValue != null)
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_connection_status_label'), accessory: transmitterConnectionStatusLabel });
 			if (BlueToothDevice.isDexcomG5())
@@ -670,6 +684,9 @@ package ui.screens.display.transmitter
 			BluetoothService.stopScanning(null);
 			InterfaceController.peripheralConnected = false;
 			
+			if (BlueToothDevice.isMiaoMiao() && Calibration.allForSensor().length < 2)
+				Sensor.stopSensor();
+			
 			AlertManager.showSimpleAlert
 			(
 				ModelLocator.resourceManagerInstance.getString('transmitterscreen',"forget_device_alert_title"),
@@ -849,6 +866,12 @@ package ui.screens.display.transmitter
 			{
 				screenRefreshLabel.dispose();
 				screenRefreshLabel = null;
+			}
+			
+			if (transmitterFirmwareLabel != null)
+			{
+				transmitterFirmwareLabel.dispose();
+				transmitterFirmwareLabel = null;
 			}
 			
 			disposeRefreshTimer();

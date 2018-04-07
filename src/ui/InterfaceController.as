@@ -374,12 +374,12 @@ package ui
 			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
 			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
 			
-			AlertManager.showSimpleAlert
+			/*AlertManager.showSimpleAlert
 			(
 				ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scan_for_device_alert_title"),
 				ModelLocator.resourceManagerInstance.getString('transmitterscreen',"connected_to_peripheral_device_id_stored"),
 				30
-			);
+			);*/
 		}
 		
 		/**

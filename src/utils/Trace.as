@@ -136,6 +136,8 @@ package utils
 				BackgroundFetch.writeTraceToFile(filePath, "Device Info = " + Capabilities.os);
 				var additionalInfoToWrite:String = "";
 				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
+				if (BlueToothDevice.isMiaoMiao())
+					additionalInfoToWrite += "Firmware = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ".\n";
 				additionalInfoToWrite += "Transmitterid = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) + ".\n";
 				additionalInfoToWrite += "Sensor " + (Sensor.getActiveSensor() == null ? "not":"") + " started ";
 				additionalInfoToWrite += (Sensor.getActiveSensor() == null ? ".\n": dateFormatter.format(new Date(Sensor.getActiveSensor().startedAt)) + ".\n" + "\n");
