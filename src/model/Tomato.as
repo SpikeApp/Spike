@@ -9,8 +9,6 @@ package model
 	import flash.utils.Endian;
 	import flash.utils.Timer;
 	
-	import mx.collections.ArrayCollection;
-	
 	import database.CommonSettings;
 	
 	import services.TransmitterService;
@@ -104,7 +102,7 @@ package model
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW,utils.UniqueId.bytesToHex(temp));
 			myTrace("in decodeTomatoPacket, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 
 			
-			var mResult:ArrayCollection = LibreAlarmReceiver.parseData("tomato", data);
+			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
 			if (LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)) {
 				TransmitterService.dispatchBgReadingEvent();
 			}
