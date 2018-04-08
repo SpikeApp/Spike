@@ -21,7 +21,6 @@
 package database
 {
 	import mx.collections.ArrayCollection;
-	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -328,11 +327,9 @@ package database
 			return returnValue;
 		}
 		
-		/**
-		 * bg1 must be before bg2, this is not checked by initialCalibration 
-		 */
-		public static function initialCalibration(bg1:Number, timestampCalibration1:Number, bg2:Number, timestampCalibration2:Number):void {
+		public static function initialCalibration(bg1:Number, timestampCalibration1:Number, timestampCalibration2:Number):void {
 			myTrace("start initialCalibration");
+			var bg2:Number = bg1;
 			//TODO take unit from settings
 			var unit:String = "mgdl";
 			if (unit != "mgdl") {

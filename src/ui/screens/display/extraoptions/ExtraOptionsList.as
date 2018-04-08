@@ -41,6 +41,7 @@ package ui.screens.display.extraoptions
 	
 	import utils.Constants;
 	import utils.Trace;
+	import utils.libre.LibreAlarmReceiver;
 	
 	[ResourceBundle("chartscreen")]
 
@@ -370,10 +371,7 @@ package ui.screens.display.extraoptions
 				else if ( itemAction == "readingOnDemand" ) 
 				{	
 					if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
-					{
-						Constants.readingOnDemand = true;
-						BackgroundFetch.sendStartReadingCommmandToMiaoMia();	
-					}
+						BackgroundFetch.sendStartReadingCommmandToMiaoMia();
 					
 					dispatchEventWith(CLOSE); //Close Menu
 				}

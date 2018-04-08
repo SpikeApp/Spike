@@ -12,9 +12,6 @@ package utils.libre
 	
 	import model.ModelLocator;
 	
-	import services.TransmitterService;
-	
-	import utils.Constants;
 	import utils.Trace;
 	
 	public class LibreAlarmReceiver extends EventDispatcher
@@ -103,6 +100,7 @@ package utils.libre
 						}*/
 						myTrace("in CalculateFromDataTransferObject createbgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
 						createBGfromGD(lastReadingNotAdded);
+						timeStampLastAddedBgReading = gd.realDate;
 					}
 				} else {
 					myTrace("in CalculateFromDataTransferObject, Trend data has no elements")
@@ -110,6 +108,9 @@ package utils.libre
 			} else {
 				myTrace("in CalculateFromDataTransferObject, Trend data is null!");
 			}
+			
+			trace("Debug:", timeStampLastAddedBgReading > timeStampLastBgReadingBeforeStart);
+			
 			return timeStampLastAddedBgReading > timeStampLastBgReadingBeforeStart;
 		}
 		
@@ -119,12 +120,6 @@ package utils.libre
 			//myTrace("in createBGfromGD, created bgreading at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + ", with value " + bgReading.calculatedValue);
 			myTrace("in createBGfromGD, created bgreading at: " + (new Date(gd.realDate)).toString() + ", with value " + bgReading.calculatedValue);
 			bgReading.saveToDatabaseSynchronous();
-			
-			if (Constants.readingOnDemand)
-			{
-				Constants.readingOnDemand = false;
-				TransmitterService.dispatchBgReadingEvent();
-			}
 		}
 		
 		public static function getGlucose(rawGlucose:Number):Number {
