@@ -181,6 +181,19 @@ package
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
+			
+			//Resume normal framerate
+			stage.frameRate = 60;
+			Starling.current.nativeStage.frameRate = 60;
+			
+			setTimeout(resumeFrameRate, 1000); //Sometimes framerate doesn't resume after app is activated, this will ensure it resumes properly.
+		}
+		
+		private function resumeFrameRate():void
+		{
+			//Resume normal framerate
+			stage.frameRate = 60;
+			Starling.current.nativeStage.frameRate = 60;
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
