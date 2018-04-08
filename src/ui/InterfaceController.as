@@ -374,6 +374,9 @@ package ui
 			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
 			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
 			
+			//Vibrate device to warn user that scan was successful
+			BackgroundFetch.vibrate();
+			
 			/*AlertManager.showSimpleAlert
 			(
 				ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scan_for_device_alert_title"),

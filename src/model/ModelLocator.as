@@ -158,7 +158,7 @@ package model
 				CalibrationService.init();
 				NetworkInfo.init(DistriqtKey.distriqtKey);
 				BackgroundFetch.setAvAudioSessionCategory(true);
-				BackgroundFetch.isVersion2_0_2();//to make sure the correct ANE is used
+				//BackgroundFetch.isVersion2_0_2();//to make sure the correct ANE is used
 				WidgetService.init();
 				WatchService.init();
 				AlarmService.init();
@@ -170,10 +170,8 @@ package model
 				TextToSpeechService.init();
 				RemoteAlertService.init();
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
-				
 				updateApplicationVersion();
 			}
-
 		}
 		
 		private static function updateApplicationVersion():void 

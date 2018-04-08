@@ -8,14 +8,17 @@ package utils.libre
 	
 	import mx.collections.ArrayCollection;
 	
-	import utils.DateTimeUtilities;
-	import utils.Trace;
-	
 	import database.BgReading;
 	import database.CommonSettings;
 	import database.Sensor;
 	
 	import model.ModelLocator;
+	
+	import services.TransmitterService;
+	
+	import utils.Constants;
+	import utils.DateTimeUtilities;
+	import utils.Trace;
 	
 	public class LibreAlarmReceiver extends EventDispatcher
 	{
@@ -120,6 +123,12 @@ package utils.libre
 			bgReading = BgReading.create(getGlucose(gd.glucoseLevelRaw), getGlucose(gd.glucoseLevelRaw), gd.realDate);
 			myTrace("in createBGfromGD, created bgreading at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + ", with value " + bgReading.calculatedValue);
 			bgReading.saveToDatabaseSynchronous();
+			
+			if (Constants.readingOnDemand)
+			{
+				Constants.readingOnDemand = false;
+				TransmitterService.dispatchBgReadingEvent();
+			}
 		}
 		
 		public static function getGlucose(rawGlucose:Number):Number {

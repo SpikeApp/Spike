@@ -9,6 +9,7 @@ package ui.screens.display.extraoptions
 	import flash.media.StageWebView;
 	import flash.utils.Timer;
 	
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.SpikeEvent;
@@ -34,6 +35,7 @@ package ui.screens.display.extraoptions
 	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
+	import ui.InterfaceController;
 	import ui.popups.AlarmPreSnoozer;
 	import ui.screens.Screens;
 	
@@ -61,6 +63,8 @@ package ui.screens.display.extraoptions
 		private var unselectedFontTxtFormat:TextFormat;
 		private var preSnoozeScreenIconTexture:Texture;
 		private var preSnoozeScreenIconImage:Image;
+		private var readingOnDemandIconTexture:Texture;
+		private var readingOnDemandIconImage:Image;
 		
 		/* Properties */
 		private var speechEnabled:Boolean;
@@ -142,9 +146,13 @@ package ui.screens.display.extraoptions
 			nightscoutScreenIconTexture = MaterialDeepGreyAmberMobileThemeIcons.nightscoutTexture;
 			nightscoutScreenIconImage = new Image(nightscoutScreenIconTexture);
 			
-			//Pre-snooze
+			//Pre-snooze Icon
 			preSnoozeScreenIconTexture = MaterialDeepGreyAmberMobileThemeIcons.snoozeTexture;
 			preSnoozeScreenIconImage = new Image(preSnoozeScreenIconTexture);
+			
+			//Reading On-Demand Icon
+			readingOnDemandIconTexture = MaterialDeepGreyAmberMobileThemeIcons.readingOnDemandTexture;
+			readingOnDemandIconImage = new Image(readingOnDemandIconTexture);
 			
 			//Build Menu
 			buildListLayout();
@@ -181,7 +189,7 @@ package ui.screens.display.extraoptions
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','snoozer_button_title'), icon: preSnoozeScreenIconImage, id: menuItems.length, action: "preSnooze" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_lock_button_title'), icon: noLockIconImage, id: menuItems.length, action: "enableNoLock" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','speech_button_title'), icon: speechIconImage, id: menuItems.length, action: "enableSpeech" });
-			
+			if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected) menuItems.push({ label: "On-Demand", icon: readingOnDemandIconImage, id: menuItems.length, action: "readingOnDemand" });
 			
 			dataProvider = new ListCollection(menuItems);
 		}
@@ -359,6 +367,16 @@ package ui.screens.display.extraoptions
 					
 					AlarmPreSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString('chartscreen','snoozer_popup_title'), AlarmService.snoozeValueStrings);	
 				}
+				else if ( itemAction == "readingOnDemand" ) 
+				{	
+					if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
+					{
+						Constants.readingOnDemand = true;
+						BackgroundFetch.sendStartReadingCommmandToMiaoMia();	
+					}
+					
+					dispatchEventWith(CLOSE); //Close Menu
+				}
 			}
 		}
 		
@@ -476,6 +494,18 @@ package ui.screens.display.extraoptions
 			{
 				preSnoozeScreenIconTexture.dispose();
 				preSnoozeScreenIconTexture = null;;
+			}
+			
+			if (readingOnDemandIconTexture != null)
+			{
+				readingOnDemandIconTexture.dispose();
+				readingOnDemandIconTexture = null;;
+			}
+			
+			if (readingOnDemandIconImage != null)
+			{
+				readingOnDemandIconImage.dispose();
+				readingOnDemandIconImage = null;;
 			}
 			
 			if (timeoutTimer != null)

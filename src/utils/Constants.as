@@ -26,6 +26,9 @@ package utils
 		public static var mainMenuButton:Button;
 		public static var settingsIcon:SubTexture;
 		
+		/* MiaoMiao */
+		public static var readingOnDemand:Boolean = false;
+		
 		public static function init( stageWidth:int, stageHeight:int, stage:Stage ):void 
 		{
 			_stageWidth = stageWidth;
