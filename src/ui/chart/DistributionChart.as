@@ -269,6 +269,10 @@ package ui.chart
 				realReadingsNumber++;
 			}
 			
+			//If there's no good readings then activate dummy mode.
+			if (realReadingsNumber == 0)
+				dummyModeActive = true;
+			
 			//Glucose Distribution Percentages
 			percentageHigh = (high * 100) / realReadingsNumber;
 			percentageHighRounded = (( percentageHigh * 10 + 0.5)  >> 0) / 10;
