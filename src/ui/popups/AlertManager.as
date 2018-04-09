@@ -197,9 +197,12 @@ package ui.popups
 		private static function onAlertTimedOut(event:TimerEvent):void
 		{
 			/* Cleanup Timeout Timer */
-			timeoutTimer.stop();
-			timeoutTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, onAlertTimedOut);
-			timeoutTimer = null;
+			if (timeoutTimer != null)
+			{
+				timeoutTimer.stop();
+				timeoutTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, onAlertTimedOut);
+				timeoutTimer = null;
+			}
 			
 			/* Process Internal Queue */
 			if (Constants.appInForeground)
@@ -208,7 +211,7 @@ package ui.popups
 
 		private static function onAlertClosed(e:Event):void
 		{
-			processQueue();
+			onAlertTimedOut(null);
 		}
 		
 		private static function onAppInForeground (e:SpikeEvent):void
