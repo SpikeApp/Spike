@@ -331,12 +331,12 @@ package services
 			/* Create and Style Calibration Text Input */
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 			{
-				calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
+				calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.CENTER);
 				calibrationValue.maxChars = 3;
 			}
 			else
 			{
-				calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.RIGHT, true);
+				calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.CENTER, true);
 				calibrationValue.maxChars = 4;
 			}
 			
@@ -396,12 +396,12 @@ package services
 				/* Create and Style Calibration Text Input */
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 				{
-					calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
+					calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.CENTER);
 					calibrationValue.maxChars = 3;
 				}
 				else
 				{
-					calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.RIGHT, true);
+					calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.CENTER, true);
 					calibrationValue.maxChars = 4;
 				}
 				
