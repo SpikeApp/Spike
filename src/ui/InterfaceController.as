@@ -172,16 +172,28 @@ package ui
 				} 
 				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 				{
-					var alertMessageG4:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g4_info_screen');
-					if (Sensor.getActiveSensor() == null)
-						alertMessageG4 += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
-					
-					var alertG4:Alert = AlertManager.showSimpleAlert
-						(
-							ModelLocator.resourceManagerInstance.getString('transmitterscreen','alert_info_title'),
-							alertMessageG4
-						);
-					alertG4.height = 400;
+					if (BlueToothDevice.isMiaoMiao())
+					{
+						var alertMiaoMiao:Alert = AlertManager.showSimpleAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('transmitterscreen','alert_info_title'),
+								ModelLocator.resourceManagerInstance.getString('transmitterscreen','miaomiao_info_screen')
+							);
+						alertMiaoMiao.height = 400;
+					}
+					else
+					{
+						var alertMessageG4:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g4_info_screen');
+						if (Sensor.getActiveSensor() == null)
+							alertMessageG4 += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
+						
+						var alertG4:Alert = AlertManager.showSimpleAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('transmitterscreen','alert_info_title'),
+								alertMessageG4
+							);
+						alertG4.height = 400;
+					}
 					
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN,"true");
 				}
