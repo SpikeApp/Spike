@@ -605,7 +605,7 @@ package services
 			for(var i:int = calibrationList.length - 1 ; i >= 0; i--)
 			{
 				var calibration:Calibration = calibrationList[i] as Calibration;
-				if (calibration.timestamp > lastCalibrationSyncTimeStamp && calibration.slope != 0) 
+				if (calibration.timestamp > lastCalibrationSyncTimeStamp && calibration.slope != 0 && i > 0) 
 				{
 					activeCalibrations.push(createCalibrationObject(calibration));					
 					activeVisualCalibrations.push(createVisualCalibrationObject(calibration));
