@@ -21,6 +21,7 @@ package services
 	
 	import feathers.controls.Alert;
 	import feathers.controls.TextInput;
+	import feathers.core.PopUpManager;
 	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
@@ -231,6 +232,12 @@ package services
 					{
 						myTrace("opening dialog to request calibration");
 						
+						try
+						{
+							PopUpManager.removeAllPopUps(true);
+						} 
+						catch(error:Error) {}
+						
 						/* Create and Style Calibration Text Input */
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 						{
@@ -276,7 +283,7 @@ package services
 			initialCalibrationActive = false;
 		}
 		
-		private static function initialCalibrationValueEntered():void 
+		private static function initialCalibrationValueEntered(e:starling.events.Event = null):void 
 		{
 			initialCalibrationActive = false;
 			
