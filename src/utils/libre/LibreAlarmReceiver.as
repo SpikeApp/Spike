@@ -109,8 +109,6 @@ package utils.libre
 				myTrace("in CalculateFromDataTransferObject, Trend data is null!");
 			}
 			
-			trace("Debug:", timeStampLastAddedBgReading > timeStampLastBgReadingBeforeStart);
-			
 			return timeStampLastAddedBgReading > timeStampLastBgReadingBeforeStart;
 		}
 		

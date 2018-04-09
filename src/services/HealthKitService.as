@@ -62,7 +62,7 @@ package services
 				return;
 			}*/
 			
-			BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue);
+			BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue, bgReading.timestamp);
 		}
 	}
 }

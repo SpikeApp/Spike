@@ -206,6 +206,13 @@ package services
 				seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
 				Starling.juggler.delayCall( closeCallout, 50, seventhStepCallout );
 			}
+			else if (BlueToothDevice.isMiaoMiao())
+			{
+				seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message_miaomiao'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
+				Starling.juggler.delayCall( closeCallout, 15, seventhStepCallout );
+				onTutorialFinished();
+				return;
+			}
 			else
 			{
 				seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message_non_g5'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
