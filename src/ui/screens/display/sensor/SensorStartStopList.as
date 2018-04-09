@@ -49,6 +49,7 @@ package ui.screens.display.sensor
 	{
 		/* Constants */
 		private const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
+		private const TIME_1_HOUR:int = 1 * 60 * 60 * 1000;
 		
 		/* Display Objects */
 		private var actionButton:Button;
@@ -69,6 +70,7 @@ package ui.screens.display.sensor
 		private var numberOfCalibrations:String;
 		private var inSensorCountdown:Boolean = false;
 		private var intervalID:int = -1;
+		private var warmupTime:Number;
 		
 		public function SensorStartStopList()
 		{
@@ -107,6 +109,9 @@ package ui.screens.display.sensor
 		
 		private function setupInitialState():void
 		{
+			/* Warmup Time */
+			warmupTime = BlueToothDevice.isMiaoMiao() ? TIME_1_HOUR : TIME_2_HOURS;
+			
 			/* Sensor Start Date */
 			if (Sensor.getActiveSensor() != null)
 			{
@@ -164,7 +169,7 @@ package ui.screens.display.sensor
 					lastCalibrationDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
 				
 				//Sensor countdown
-				if (new Date().valueOf() - Sensor.getActiveSensor().startedAt < TIME_2_HOURS)
+				if (new Date().valueOf() - Sensor.getActiveSensor().startedAt < warmupTime)
 					inSensorCountdown = true;
 			}
 			else
@@ -198,7 +203,7 @@ package ui.screens.display.sensor
 				var sensor:Sensor = Sensor.getActiveSensor();
 				if (sensor != null)
 				{
-					var sensorReady:Number = sensor.startedAt + TIME_2_HOURS;
+					var sensorReady:Number = sensor.startedAt + warmupTime;
 					var now:Number = new Date().valueOf();
 					
 					if (now < sensorReady)
@@ -313,7 +318,7 @@ package ui.screens.display.sensor
 				return;
 			}
 			
-			var sensorReady:Number = sensor.startedAt + TIME_2_HOURS;
+			var sensorReady:Number = sensor.startedAt + warmupTime;
 			var now:Number = new Date().valueOf();
 			
 			if (now >= sensorReady)
