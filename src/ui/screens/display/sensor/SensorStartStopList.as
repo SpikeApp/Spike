@@ -9,6 +9,7 @@ package ui.screens.display.sensor
 	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	import database.Database;
 	import database.Sensor;
 	
 	import feathers.controls.Alert;
@@ -151,7 +152,7 @@ package ui.screens.display.sensor
 				
 				//Calculate number of calibrations
 				var allCalibrations:Array = Calibration.allForSensor();
-				numberOfCalibrations = String(allCalibrations.length);
+				numberOfCalibrations = String(allCalibrations.length > 0 ? allCalibrations.length - 1 : 0); //Compatibility with new method of only one initial calibration
 				
 				//Calculate Last Calibration Time
 				if (allCalibrations.length > 0)
@@ -421,7 +422,8 @@ package ui.screens.display.sensor
 			
 			function deleteLastCalibration(e:Event):void
 			{
-				Calibration.clearLastCalibration();
+				var lastCalibration:Calibration = Calibration.last();
+				Database.deleteCalibrationSynchronous(lastCalibration);
 				setupInitialState();
 				setupContent();
 			}
@@ -437,7 +439,7 @@ package ui.screens.display.sensor
 			if (Number(numberOfCalibrations) > 0 && deleteAllCalibrationsButton != null)
 				deleteAllCalibrationsButton.isEnabled = true;
 			
-			if (Number(numberOfCalibrations) > 2 && deleteLastCalibrationButton != null)
+			if (Number(numberOfCalibrations) > 1 && deleteLastCalibrationButton != null)
 				deleteLastCalibrationButton.isEnabled = true;
 		}
 		
