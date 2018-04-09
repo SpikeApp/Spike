@@ -47,9 +47,13 @@ package services
 		}
 		
 		private static function bgReadingReceived(be:Event):void {
+			trace("bgReadingReceived no HEALTHKIT");
+			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") {
 				return;
 			}
+			
+			trace("1");
 			
 			var bgReading:BgReading = BgReading.lastNoSensor();
 			
@@ -58,9 +62,13 @@ package services
 			if (bgReading.calculatedValue == 0) {
 				return;
 			}
+			
+			trace("2")
 			/*if ((new Date()).valueOf() - bgReading.timestamp > 4 * 60 * 1000) {
 				return;
 			}*/
+			
+			trace(new Date(bgReading.timestamp));
 			
 			BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue, bgReading.timestamp);
 		}
