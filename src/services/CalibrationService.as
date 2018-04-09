@@ -57,6 +57,8 @@ package services
 
 		private static var initialCalibrationActive:Boolean = false;
 		
+		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
+		
 		
 		public static function get instance():CalibrationService {
 			return _instance;
@@ -322,7 +324,8 @@ package services
 				}
 				
 				myTrace("in intialCalibrationValueEntered, starting Calibration.initialCalibration");
-				Calibration.initialCalibration(asNumber, (new Date()).valueOf() - 5 * 60 * 1000, (new Date()).valueOf(), BlueToothDevice.isMiaoMiao() ? 36 : 5);
+				var now:Number = new Date().valueOf();
+				Calibration.initialCalibration(asNumber, (now - TIME_5_MINUTES, now, BlueToothDevice.isMiaoMiao() ? 36 : 5);
 				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 				_instance.dispatchEvent(calibrationServiceEvent);
 			}
