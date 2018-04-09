@@ -67,6 +67,7 @@ package services
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
 		private static const RETRY_TIME_FOR_SERVER_ERRORS:Number = 4.5 * 60 * 1000; //4.5 minutes
 		private static const RETRY_TIME_FOR_MAX_AUTHENTICATION_RETRIES:Number = 10 * 60 * 1000;
+		private static const MAX_RETRIES_FOR_MONITORING_SESSION_NOT_ACTIVE:int = 5;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
 		
 		/* Data Objects */
@@ -93,6 +94,7 @@ package services
 		private static var nextFunctionToCall:Function = null;
 		private static var timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived:Number = 0;
 		private static var timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed:Number = 0;
+		private static var retriesForSessionNotActive:int = 0;
 		
 		public function DexcomShareService()
 		{
@@ -502,9 +504,11 @@ package services
 		 */
 		private static function onStartRemoteMonitoringResponse(e:flash.events.Event):void
 		{
+			retriesForSessionNotActive ++;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
-			if (String(loader.data).indexOf("MonitoredReceiverSerialNumberDoesNotMatch") == -1 && String(loader.data).indexOf("NotAssigned") == -1 && String(loader.data).indexOf("MonitoredReceiverNotAssigned") == -1)
+			if (String(loader.data).indexOf("MonitoredReceiverSerialNumberDoesNotMatch") == -1 && String(loader.data).indexOf("NotAssigned") == -1 && String(loader.data).indexOf("MonitoredReceiverNotAssigned") == -1 && retriesForSessionNotActive < MAX_RETRIES_FOR_MONITORING_SESSION_NOT_ACTIVE)
 				syncGlucoseReadings();
 			else
 			{

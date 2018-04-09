@@ -188,8 +188,6 @@ package ui.screens.display.readings
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseTime.getHours(), glucoseTime.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 				var label:String = timeFormatted + "  -  " + glucoseValue;
 				
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "true");
-				
 				//Row icon (changes color depending of value of glucose reading
 				var icon:RenderTexture;
 				if (glucoseValueNumber >= urgentHighThreshold)

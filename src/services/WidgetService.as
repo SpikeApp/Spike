@@ -10,6 +10,7 @@ package services
 	import database.Calibration;
 	import database.CommonSettings;
 	
+	import events.CalibrationServiceEvent;
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -68,6 +69,7 @@ package services
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived);
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
@@ -237,11 +239,11 @@ package services
 		
 		private static function processChartGlucoseValues():void
 		{
-			if (BlueToothDevice.isFollower())
-			{
+			//if (BlueToothDevice.isFollower())
+			//{
 				activeGlucoseReadingsList = removeDuplicates(activeGlucoseReadingsList);
 				activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
-			}
+			//}
 			
 			var currentTimestamp:Number
 			if (BlueToothDevice.isFollower())
