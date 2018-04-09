@@ -14,6 +14,7 @@ ENHANCEMENT: Improvements for the Apple Watch complication instructions.
 ENHANCEMENT: Improvements for the lock screen notification's body text when Spike is ready for the first/second calibration after starting a new sensor.
 ENHANCEMENT: Added some more "missed readings" suggestions to the help screen.
 ENHANCEMENT: Improved the way Spike automatically assigns a receiver to a Dexcom Share account in case the user is using a receiver that has yet not been assigned to his/her account.
+ENHANCEMENT: 24h glucose distribution chart and stats now ignore readings that don't have calibration.
 
 MiaoMiao support
 Widget now updates when a new calibration is inserted and fixes a rare bug when duplicate values where shown
