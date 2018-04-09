@@ -111,6 +111,9 @@ package services
 		{
 			myTrace("in requestInitialCalibration");
 			
+			if (Calibration.allForSensor().length >= 2)
+				return;
+			
 			var latestReadings:Array = BgReading.latestBySize(2);
 			if (latestReadings.length < 2) {
 				myTrace("in requestInitialCalibration but latestReadings.length < 0, returning");
@@ -325,7 +328,7 @@ package services
 				
 				myTrace("in intialCalibrationValueEntered, starting Calibration.initialCalibration");
 				var now:Number = new Date().valueOf();
-				Calibration.initialCalibration(asNumber, (now - TIME_5_MINUTES, now, BlueToothDevice.isMiaoMiao() ? 36 : 5);
+				Calibration.initialCalibration(asNumber, now - TIME_5_MINUTES, now, BlueToothDevice.isMiaoMiao() ? 36 : 5);
 				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 				_instance.dispatchEvent(calibrationServiceEvent);
 			}
