@@ -26,6 +26,7 @@ package services
 	import model.ModelLocator;
 	
 	import starling.core.Starling;
+	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -75,7 +76,7 @@ package services
 			myTrace("finished init");
 		}
 		
-		public static function appInForeGround(event:Event = null):void {
+		public static function appInForeGround(event:flash.events.Event = null):void {
 			myTrace("in appInForeGround");
 			if (initialCalibrationRequested) {
 				myTrace("in appInForeGround, app has fired a notification for initialcalibration, but app was opened before notification was received - or appInForeGround is triggered faster than the notification event");
@@ -263,14 +264,14 @@ package services
 						calibrationPopup.buttonGroupProperties.gap = 10;
 						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 						calibrationValue.setFocus();
-						calibrationPopup.addEventListener(Event.CLOSE, onInitialCalibrationClosed);
+						calibrationPopup.addEventListener(starling.events.Event.CLOSE, onInitialCalibrationClosed);
 						initialCalibrationActive = true;
 					}
 				}
 			}
 		}
 		
-		private static function onInitialCalibrationClosed(e:Event):void
+		private static function onInitialCalibrationClosed(e:starling.events.Event):void
 		{
 			initialCalibrationActive = false;
 		}

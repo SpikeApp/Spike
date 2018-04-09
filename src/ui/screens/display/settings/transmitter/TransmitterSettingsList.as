@@ -212,7 +212,6 @@ package ui.screens.display.settings.transmitter
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != transmitterTypeToSave)
 			{
-				trace("transmitterTypeToSave", transmitterTypeToSave);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, transmitterTypeToSave);
 				updateAlarms(); //Update battery values in existing alarms or delete them in case it's not possible to get alarms for the selected transmitter type
 			}

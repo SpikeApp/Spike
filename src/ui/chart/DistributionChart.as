@@ -8,7 +8,6 @@ package ui.chart
 	import flash.utils.getTimer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import model.ModelLocator;
@@ -247,10 +246,12 @@ package ui.chart
 			var nowTimestamp:Number = (new Date()).valueOf();
 			for (i = 0; i < dataLength; i++) 
 			{
-				if (nowTimestamp - _dataSource[i].timestamp > TIME_24H - TIME_30SEC)
+				var bgReading:BgReading = _dataSource[i];
+				
+				if (nowTimestamp - bgReading.timestamp > TIME_24H - TIME_30SEC || (bgReading.calibration == null && bgReading.calculatedValue == 0))
 					continue;
 				
-				glucoseValue = Number(_dataSource[i].calculatedValue);
+				glucoseValue = Number(bgReading.calculatedValue);
 				if(glucoseValue >= highTreshold)
 				{
 					high += 1;
@@ -269,13 +270,13 @@ package ui.chart
 			}
 			
 			//Glucose Distribution Percentages
-			percentageHigh = (high * 100) / dataLength;
+			percentageHigh = (high * 100) / realReadingsNumber;
 			percentageHighRounded = (( percentageHigh * 10 + 0.5)  >> 0) / 10;
 			
-			percentageInRange = (inRange * 100) / dataLength;
+			percentageInRange = (inRange * 100) / realReadingsNumber;
 			percentageInRangeRounded = (( percentageInRange * 10 + 0.5)  >> 0) / 10;
 			
-			var preLow:Number = Math.round((low * 100) / dataLength) * 10 / 10;
+			var preLow:Number = Math.round((low * 100) / realReadingsNumber) * 10 / 10;
 			if ( preLow != 0 && !isNaN(preLow))
 			{
 				percentageLow = 100 - percentageInRange - percentageHigh;
@@ -366,7 +367,7 @@ package ui.chart
 			pieContainer.addChild(pieGraphicContainer);
 			
 			//Calculate Average Glucose & A1C
-			averageGlucose = (( (totalGlucose / dataLength) * 10 + 0.5)  >> 0) / 10;
+			averageGlucose = (( (totalGlucose / realReadingsNumber) * 10 + 0.5)  >> 0) / 10;
 			var averageGlucoseValue:Number = averageGlucose;
 			if (glucoseUnit != "mg/dL")
 				averageGlucoseValue = Math.round(((BgReading.mgdlToMmol((averageGlucoseValue))) * 10)) / 10;
@@ -388,22 +389,10 @@ package ui.chart
 				A1C = 0;
 			
 			//Calculate readings percentage
-			var numReadungsSectionValue:String;
-			if (!dummyModeActive)
-			{
-				//if (!BlueToothDevice.isMiaoMiao())
-				//{
-					var percentageReadings:Number = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
-					numReadungsSectionValue = realReadingsNumber + " (" + percentageReadings + "%)";
-				//}
-				//else
-					//numReadungsSectionValue = String(realReadingsNumber);
-			}
-			else
-				numReadungsSectionValue = ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			var percentageReadings:Number = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 			
 			//Populate Stats
-			numReadingsSection.message.text = numReadungsSectionValue;
+			numReadingsSection.message.text = !dummyModeActive ? realReadingsNumber + " (" + percentageReadings + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			avgGlucoseSection.message.text = !dummyModeActive ? averageGlucoseValueOutput + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			estA1CSection.message.text = !dummyModeActive ? A1C + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			
