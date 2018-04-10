@@ -2,7 +2,7 @@
 FEATURE: MiaoMiao support! MiaoMiao is a powerful new transmitter for Libre sensors. With MiaoMiao, Spike will automatically start your sensor based on the time and date you activated it with the Libre Reader, LibreLink app or any third party app like Glimp S so no need for the user to manually start a sensor in Spike. As soon as you open Spike it will automatically fetch your current glucose value so you don't have to wait for the next reading. User also has the option to request readings on-demand (upper right "three dots" menu) any time he/she wants to know the current glucose value. Spike supports 8h backfill data with MiaoMiao. The last 25-30 minutes of data come in 5min intervals, the previous data comes in 15min intervals. When you add your initial calibration after starting a new sensor, Spike will apply it to all backfill data present in MiaoMiao, this means you'll have values collected during the warmup period on Spike's chart. Johan Degraeve did an incredible job adding support for MiaoMiao, I can't stress this enough! What we though was going to be a straightforward process turned out to be quite complicated. Johan used a lot of skill and resourcefulness to make this a reality. Incredible job, brother! My hat is off to you. I just ported his code, adapted to Spike and added the on-demand and a few other features. All kudos to Johan! It's times like this that make me really grateful to have you on team Spike! Special thanks also to tzachi-dar and JamOrHam from team xDrip+ for the initial implementation of the MiaoMiao protocol.  
 FIX: Fixed some inconsistencies in the Today Widget that resulted in the line coloring for mg/dL users not being 100% correct. It's 100% accurate now.
 FIX: Some fixes for Nightscout upload events related to locales and timezones.
-FIX: Fix for a rare bug in the Nightscout Service that could crash Spike
+FIX: Fix for a rare bug in the Nightscout Service that could crash Spike.
 FIX: Small fix for some rare cases where the BG lock screen notification was not displaying values correctly.
 FIX: Fixed a rare bug that could cause Spike to continually try to create a remote monitoring session in Dexcom Share servers with transmitters not assigned to the user's account. This resulted in increase battery consumption. Now Spike should correctly detect these cases and will try to assign the transmitter to the user's account automatically.
 FIX: Delete last calibration in sensor screen now really clears and deletes the last calibration. Subsequent readings will be calibrated with the previous calibration.
@@ -19,8 +19,8 @@ ENHANCEMENT: Improvements for the lock screen notification's body text when Spik
 ENHANCEMENT: Added some more "missed readings" suggestions to the help screen.
 ENHANCEMENT: 24h glucose distribution chart and stats now ignore readings that don't have a calibration.
 ENHANCEMENT: Today Widget now updates right away when a new calibration is inserted.
-ENHANCEMENT: Healthkit now supports writing backfill values with correct time/date of the respecting readings (Johan Degraeve)
-ENHANCEMENT: A lot more stuff that I can't remember right now :)
+ENHANCEMENT: Healthkit now supports writing backfill values with correct time/date of the corresponding readings (Johan Degraeve)
+ENHANCEMENT: A lot more stuff that I can't remember right now. :)
 
 This is an important update. ALL users are advised to update!
 
