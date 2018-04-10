@@ -163,7 +163,7 @@ package model
 				CalibrationService.init();
 				NetworkInfo.init(DistriqtKey.distriqtKey);
 				BackgroundFetch.setAvAudioSessionCategory(true);
-				BackgroundFetch.isVersion2_0_1();//to make sure the correct ANE is used
+				BackgroundFetch.isVersion2_0_3();//to make sure the correct ANE is used
 				WidgetService.init();
 				WatchService.init();
 				AlarmService.init();
