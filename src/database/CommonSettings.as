@@ -341,6 +341,11 @@
 		 public static const COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL:int = 118;
 		 public static const COMMON_SETTING_MIAOMIAO_HARDWARE:int = 119;
 		 public static const COMMON_SETTING_MIAOMIAO_FW:int = 120;
+		 
+		 /**
+		 * Healthkit
+		 */
+		 public static const COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP:int = 121;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -463,7 +468,8 @@
 			 "false",//COMMON_SETTING_NFC_AGE_PROBEM
 			 "0",//COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL
 			 "",//COMMON_SETTING_MIAOMIAO_HARDWARE
-			 ""//COMMON_SETTING_MIAOMIAO_FW
+			 "",//COMMON_SETTING_MIAOMIAO_FW
+			 "0"//COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP
 		 ];
 
 		 public function CommonSettings()

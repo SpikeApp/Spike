@@ -70,7 +70,7 @@ package services
 		
 		/* Logical Variables */
 		private static var serviceStarted:Boolean = false;
-		private static var serviceActive:Boolean = false;
+		public static var serviceActive:Boolean = false;
 		private static var _syncGlucoseReadingsActive:Boolean = false;
 		private static var syncGlucoseReadingsActiveLastChange:Number = (new Date()).valueOf();
 		private static var _syncCalibrationsActive:Boolean = false;
@@ -187,7 +187,7 @@ package services
 			return newReading;
 		}
 		
-		private static function getInitialGlucoseReadings():void
+		private static function getInitialGlucoseReadings(e:Event = null):void
 		{
 			Trace.myTrace("NightscoutService.as", "in getInitialGlucoseReadings.");
 			
@@ -237,7 +237,7 @@ package services
 			else
 				latestGlucoseReading= BgReading.lastWithCalculatedValue();
 			
-			if(latestGlucoseReading == null)
+			if(latestGlucoseReading == null || (latestGlucoseReading.calculatedValue == 0 && latestGlucoseReading.calibration == null))
 				return;
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
@@ -983,6 +983,7 @@ package services
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, getInitialGlucoseReadings);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
 			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, onNetworkChange);
@@ -992,6 +993,7 @@ package services
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, getInitialGlucoseReadings);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
 			NetworkInfo.networkInfo.removeEventListener(NetworkInfoEvent.CHANGE, onNetworkChange);

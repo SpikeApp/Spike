@@ -104,9 +104,10 @@ package model
 			myTrace("in decodeTomatoPacket, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 
 			
 			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
-			if (LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)) {
+			LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
+			/*if (LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)) {
 				TransmitterService.dispatchBgReadingEvent();
-			}
+			}*/
 		}
 		
 		public static function receivedSensorChangedFromMiaoMiao():void {

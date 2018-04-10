@@ -31,6 +31,7 @@ package services
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.dexcomshare.DexcomShareFollowersList;
 	
 	import utils.BadgeBuilder;
 	import utils.Trace;

@@ -12,6 +12,8 @@ package utils.libre
 	
 	import model.ModelLocator;
 	
+	import services.TransmitterService;
+	
 	import utils.Trace;
 	
 	public class LibreAlarmReceiver extends EventDispatcher
@@ -118,6 +120,7 @@ package utils.libre
 			//myTrace("in createBGfromGD, created bgreading at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + ", with value " + bgReading.calculatedValue);
 			myTrace("in createBGfromGD, created bgreading at: " + (new Date(gd.realDate)).toString() + ", with value " + bgReading.calculatedValue);
 			bgReading.saveToDatabaseSynchronous();
+			TransmitterService.dispatchBgReadingEvent();
 		}
 		
 		public static function getGlucose(rawGlucose:Number):Number {
