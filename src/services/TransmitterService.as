@@ -101,6 +101,10 @@ package services
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
 		}
 		
+		public static function dispatchBgReadingEvent():void {
+			_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT));
+		}
+		
 		private static function transmitterDataReceived(be:BlueToothServiceEvent):void {
 			
 			var value:ByteArray;

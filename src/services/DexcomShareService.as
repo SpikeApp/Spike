@@ -16,6 +16,7 @@ package services
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
+	import events.CalibrationServiceEvent;
 	import events.DexcomShareEvent;
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
@@ -76,7 +77,7 @@ package services
 		
 		/* Logical Variables */
 		private static var serviceStarted:Boolean = false;
-		private static var serviceActive:Boolean = false;
+		public static var serviceActive:Boolean = false;
 		private static var externalAuthenticationCall:Boolean = false;
 		public static var ignoreSettingsChanged:Boolean = false;
 		private static var _syncGlucoseReadingsActive:Boolean;
@@ -312,7 +313,7 @@ package services
 			return newReading;
 		}
 		
-		private static function getInitialGlucoseReadings():void
+		private static function getInitialGlucoseReadings(e:flash.events.Event = null):void
 		{
 			lastGlucoseReadingsSyncTimeStamp = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP));
 			var now:Number = (new Date()).valueOf();
@@ -489,7 +490,7 @@ package services
 			else
 				latestGlucoseReading= BgReading.lastWithCalculatedValue();
 			
-			if(latestGlucoseReading == null)
+			if(latestGlucoseReading == null || (latestGlucoseReading.calculatedValue == 0 && latestGlucoseReading.calibration == null))
 				return;
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
@@ -837,6 +838,7 @@ package services
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
 			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, onNetworkChange);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, getInitialGlucoseReadings);
 		}
 		private static function deactivateEventListeners():void
 		{
@@ -844,6 +846,7 @@ package services
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
 			NetworkInfo.networkInfo.removeEventListener(NetworkInfoEvent.CHANGE, onNetworkChange);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, getInitialGlucoseReadings);
 		}
 		
 		private static function activateTimer():void

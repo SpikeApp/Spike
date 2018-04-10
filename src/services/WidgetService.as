@@ -71,6 +71,7 @@ package services
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, setInitialGraphData);
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
@@ -126,7 +127,7 @@ package services
 				BackgroundFetch.setUserDefaultsData("oldDataColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR)).toString(16).toUpperCase());
 		}
 		
-		private static function setInitialGraphData():void
+		private static function setInitialGraphData(e:Event = null):void
 		{
 			Trace.myTrace("WidgetService.as", "Setting initial widget data!");
 			

@@ -177,14 +177,14 @@
 		  */
 		 public static const COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL:int = 36;
 		 /**
-		  * For limitter and/or bluereaderw<br>
+		  * For bluereaderw<br>
 		  * value 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BLUEREADER_BATTERY_LEVEL:int = 37;
 		 /**
-		  * For limitter and/or bluereaderw<br>
+		  * For any device that reads Freestyle (bluerader, blukon, transmiter pl, miaomiao)<br>
 		  * value 0 means level not known<br>
-		  * time in minutes
+		  * time in minutes<br>
 		  */
 		 public static const COMMON_SETTING_FSL_SENSOR_AGE:int = 38;
 		 /**
@@ -333,6 +333,19 @@
 		  * Deep Sleep Timer #3
 		  */
 		 public static const COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2:int = 116;
+		 
+		 /**
+		  * MiaoMiao	 
+		  */
+		 public static const COMMON_SETTING_NFC_AGE_PROBEM:int = 117;
+		 public static const COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL:int = 118;
+		 public static const COMMON_SETTING_MIAOMIAO_HARDWARE:int = 119;
+		 public static const COMMON_SETTING_MIAOMIAO_FW:int = 120;
+		 
+		 /**
+		 * Healthkit
+		 */
+		 public static const COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP:int = 121;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -451,7 +464,12 @@
 			 "false",//COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE
 			 "0",//COMMON_SETTING_DATA_COLLECTION_NS_OFFSET
 			 "",//COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET
-			 "false"//COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2
+			 "false",//COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2
+			 "false",//COMMON_SETTING_NFC_AGE_PROBEM
+			 "0",//COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL
+			 "",//COMMON_SETTING_MIAOMIAO_HARDWARE
+			 "",//COMMON_SETTING_MIAOMIAO_FW
+			 "0"//COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP
 		 ];
 
 		 public function CommonSettings()
@@ -466,6 +484,8 @@
 			 var newString:String;
 			 if (commonSettingId == COMMON_SETTING_BATTERY_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('DefaultValue') > -1) {
+					 //actually the alert value is reset when user changes the transmittertype, which is each time the app starts
+					 //as a result this branch is not useful anymore
 					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
 						 .replace('DefaultValue', "300");//default value for G5 is 300 - if user picks other transmitter type, (s)he will need to change the default value
 					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);

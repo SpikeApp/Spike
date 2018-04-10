@@ -188,7 +188,7 @@ package services
 			sixthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','sixth_step_message'), calloutLocationHelper, null, false);
 			sixthStepCallout.textRendererFactory = calloutTextRenderer;
 			
-			Starling.juggler.delayCall( closeCallout, 18, sixthStepCallout );
+			Starling.juggler.delayCall( closeCallout, 25, sixthStepCallout );
 		}
 		
 		public static function seventhStep():void
@@ -205,6 +205,16 @@ package services
 				Constants.noLockEnabled = true;
 				seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
 				Starling.juggler.delayCall( closeCallout, 50, seventhStepCallout );
+			}
+			else if (BlueToothDevice.isMiaoMiao())
+			{
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				Constants.noLockEnabled = true;
+				seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message_miaomiao'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
+				seventhStepCallout.textRendererFactory = calloutTextRenderer;
+				Starling.juggler.delayCall( closeCallout, 35, seventhStepCallout );
+				Starling.juggler.delayCall( onTutorialFinished, 36);
+				return;
 			}
 			else
 			{

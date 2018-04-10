@@ -1,17 +1,15 @@
 package ui.screens.display.sensor
 {
 	import flash.system.Capabilities;
-	import flash.utils.Timer;
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
-	
-	import mx.collections.ArrayCollection;
 	
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	import database.Database;
 	import database.Sensor;
 	
 	import feathers.controls.Alert;
@@ -51,6 +49,7 @@ package ui.screens.display.sensor
 	{
 		/* Constants */
 		private const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
+		private const TIME_1_HOUR:int = 1 * 60 * 60 * 1000;
 		
 		/* Display Objects */
 		private var actionButton:Button;
@@ -71,6 +70,7 @@ package ui.screens.display.sensor
 		private var numberOfCalibrations:String;
 		private var inSensorCountdown:Boolean = false;
 		private var intervalID:int = -1;
+		private var warmupTime:Number;
 		
 		public function SensorStartStopList()
 		{
@@ -109,6 +109,9 @@ package ui.screens.display.sensor
 		
 		private function setupInitialState():void
 		{
+			/* Warmup Time */
+			warmupTime = BlueToothDevice.isMiaoMiao() ? TIME_1_HOUR : TIME_2_HOURS;
+			
 			/* Sensor Start Date */
 			if (Sensor.getActiveSensor() != null)
 			{
@@ -120,12 +123,16 @@ package ui.screens.display.sensor
 				var sensorDays:String;
 				var sensorHours:String;
 				
-				if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL()) 
+				if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL() || BlueToothDevice.isMiaoMiao()) 
 				{
 					var sensorAgeInMinutes:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
 					
 					if (sensorAgeInMinutes == "0") 
 						sensorAgeValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
+					else if ((new Number(sensorAgeInMinutes)) > 14.5 * 24 * 60) 
+					{
+						sensorAgeValue = ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_expired');
+					}
 					else 
 					{
 						sensorDays = TimeSpan.fromMinutes(Number(sensorAgeInMinutes)).days.toString();
@@ -150,7 +157,7 @@ package ui.screens.display.sensor
 				
 				//Calculate number of calibrations
 				var allCalibrations:Array = Calibration.allForSensor();
-				numberOfCalibrations = String(allCalibrations.length);
+				numberOfCalibrations = String(allCalibrations.length > 0 ? allCalibrations.length - 1 : 0); //Compatibility with new method of only one initial calibration
 				
 				//Calculate Last Calibration Time
 				if (allCalibrations.length > 0)
@@ -162,7 +169,7 @@ package ui.screens.display.sensor
 					lastCalibrationDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
 				
 				//Sensor countdown
-				if (new Date().valueOf() - Sensor.getActiveSensor().startedAt < TIME_2_HOURS)
+				if (new Date().valueOf() - Sensor.getActiveSensor().startedAt < warmupTime)
 					inSensorCountdown = true;
 			}
 			else
@@ -196,7 +203,7 @@ package ui.screens.display.sensor
 				var sensor:Sensor = Sensor.getActiveSensor();
 				if (sensor != null)
 				{
-					var sensorReady:Number = sensor.startedAt + TIME_2_HOURS;
+					var sensorReady:Number = sensor.startedAt + warmupTime;
 					var now:Number = new Date().valueOf();
 					
 					if (now < sensorReady)
@@ -281,7 +288,8 @@ package ui.screens.display.sensor
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel });
 			if (inSensorCountdown)
 				sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','warmup_countdown'), accessory: sensorCountdownLabel });
-			sensorChildrenContent.push({ label: "", accessory: actionButton });
+			if (!BlueToothDevice.isMiaoMiao())
+				sensorChildrenContent.push({ label: "", accessory: actionButton });
 			
 			dataProvider = new HierarchicalCollection(
 				[
@@ -310,7 +318,7 @@ package ui.screens.display.sensor
 				return;
 			}
 			
-			var sensorReady:Number = sensor.startedAt + TIME_2_HOURS;
+			var sensorReady:Number = sensor.startedAt + warmupTime;
 			var now:Number = new Date().valueOf();
 			
 			if (now >= sensorReady)
@@ -419,7 +427,8 @@ package ui.screens.display.sensor
 			
 			function deleteLastCalibration(e:Event):void
 			{
-				Calibration.clearLastCalibration();
+				var lastCalibration:Calibration = Calibration.last();
+				Database.deleteCalibrationSynchronous(lastCalibration);
 				setupInitialState();
 				setupContent();
 			}
@@ -435,7 +444,7 @@ package ui.screens.display.sensor
 			if (Number(numberOfCalibrations) > 0 && deleteAllCalibrationsButton != null)
 				deleteAllCalibrationsButton.isEnabled = true;
 			
-			if (Number(numberOfCalibrations) > 2 && deleteLastCalibrationButton != null)
+			if (Number(numberOfCalibrations) > 1 && deleteLastCalibrationButton != null)
 				deleteLastCalibrationButton.isEnabled = true;
 		}
 		

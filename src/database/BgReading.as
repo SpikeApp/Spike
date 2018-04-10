@@ -23,6 +23,7 @@ package database
 	import model.ModelLocator;
 	
 	import utils.BgGraphBuilder;
+	import utils.DateTimeUtilities;
 	import utils.Trace;
 	
 	public class BgReading extends SuperDatabaseClass
@@ -320,7 +321,7 @@ package database
 		
 		/**
 		 * array will contain number of bgreadings with<br>
-		 * - sensor = current sensor<br>
+		 * - if ignoreSensorId = false, then return only readings for which sensor = current sensor<br>
 		 * - calculatedValule != 0<br>
 		 * - rawData != 0<br>
 		 * - latest 'number' that match these requirements<br>
@@ -413,7 +414,7 @@ package database
 		/**
 		 * - rawData != 0<br>
 		 * - calculatedValule != 0<br>
-		 * - latest
+		 * - latest<br>
 		 * - null if there's none i guess
 		 */
 		public static function lastNoSensor():BgReading {
@@ -651,14 +652,19 @@ package database
 					bgReading.filteredCalculatedValue = (((calSlope * bgReading.ageAdjustedRawValue) + calIntercept) -5);
 					
 				} else {
-					var lastBgReading:BgReading = (BgReading.latest(1))[0] as BgReading;
-					if (lastBgReading != null && lastBgReading.calibration != null) {
-						if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
-							lastBgReading.calibration
-								.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
-								.updateInDatabaseSynchronous();
+					var lastBgReading:BgReading = null;
+					var lastBgReadings:Array = BgReading.latest(1);
+					if (lastBgReadings.length > 0) {
+						lastBgReading = (BgReading.latest(1))[0] as BgReading;
+						if (lastBgReading != null && lastBgReading.calibration != null) {
+							if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
+								lastBgReading.calibration
+									.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
+									.updateInDatabaseSynchronous();
+							}
 						}
 					}
+					
 					bgReading.calculatedValue = ((calibration.slope * bgReading.ageAdjustedRawValue) + calibration.intercept);
 					bgReading.filteredCalculatedValue = ((calibration.slope * bgReading.ageAdjustedFiltered()) + calibration.intercept);
 				}
@@ -734,7 +740,6 @@ package database
 			}
 			var adjust_for:Number = AGE_ADJUSTMENT_TIME - (timestamp - sensor.startedAt);
 			if (adjust_for <= 0 || BlueToothDevice.isTypeLimitter()) {
-				myTrace("in calculateAgeAdjustedRawValue, istypelimitter or sensor more than one day old, not applying age adjustment");
 				_ageAdjustedRawValue = rawData;
 			} else {
 				_ageAdjustedRawValue = ((AGE_ADJUSTMENT_FACTOR * (adjust_for / AGE_ADJUSTMENT_TIME)) * rawData) + rawData;
@@ -893,5 +898,26 @@ package database
 			}
 		}
 		
+		public static function getForPreciseTimestamp(timestamp:Number, precision:Number, lock_to_sensor:Boolean = true):BgReading {
+			var activeSensor:Sensor = Sensor.getActiveSensor();
+			var returnValue:BgReading = null;
+			var cntr:int = ModelLocator.bgReadings.length - 1;
+			if ((activeSensor != null) || (!lock_to_sensor)) {
+				while (cntr > -1 && returnValue == null) {
+					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
+					if ( (timestamp - precision <= bgReading.timestamp) 
+						&& 
+						(bgReading.timestamp >= timestamp + precision)
+						&&
+						(lock_to_sensor ? bgReading.sensor.uniqueId == activeSensor.uniqueId : bgReading.timestamp > 0) ) {
+						returnValue = bgReading;
+					}
+					cntr--;
+				}
+			}
+			if (returnValue == null)
+				myTrace("getForPreciseTimestamp: No luck finding a BG timestamp match: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(timestamp)) + ", precision:" + precision + ", Sensor: " + ((activeSensor == null) ? "null" : activeSensor.uniqueId));
+			return returnValue;
+		}
 	}
 }

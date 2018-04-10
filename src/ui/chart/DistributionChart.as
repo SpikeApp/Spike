@@ -246,10 +246,12 @@ package ui.chart
 			var nowTimestamp:Number = (new Date()).valueOf();
 			for (i = 0; i < dataLength; i++) 
 			{
-				if (nowTimestamp - _dataSource[i].timestamp > TIME_24H - TIME_30SEC)
+				var bgReading:BgReading = _dataSource[i];
+				
+				if (nowTimestamp - bgReading.timestamp > TIME_24H - TIME_30SEC || (bgReading.calibration == null && bgReading.calculatedValue == 0))
 					continue;
 				
-				glucoseValue = Number(_dataSource[i].calculatedValue);
+				glucoseValue = Number(bgReading.calculatedValue);
 				if(glucoseValue >= highTreshold)
 				{
 					high += 1;
@@ -267,14 +269,18 @@ package ui.chart
 				realReadingsNumber++;
 			}
 			
+			//If there's no good readings then activate dummy mode.
+			if (realReadingsNumber == 0)
+				dummyModeActive = true;
+			
 			//Glucose Distribution Percentages
-			percentageHigh = (high * 100) / dataLength;
+			percentageHigh = (high * 100) / realReadingsNumber;
 			percentageHighRounded = (( percentageHigh * 10 + 0.5)  >> 0) / 10;
 			
-			percentageInRange = (inRange * 100) / dataLength;
+			percentageInRange = (inRange * 100) / realReadingsNumber;
 			percentageInRangeRounded = (( percentageInRange * 10 + 0.5)  >> 0) / 10;
 			
-			var preLow:Number = Math.round((low * 100) / dataLength) * 10 / 10;
+			var preLow:Number = Math.round((low * 100) / realReadingsNumber) * 10 / 10;
 			if ( preLow != 0 && !isNaN(preLow))
 			{
 				percentageLow = 100 - percentageInRange - percentageHigh;
@@ -365,7 +371,7 @@ package ui.chart
 			pieContainer.addChild(pieGraphicContainer);
 			
 			//Calculate Average Glucose & A1C
-			averageGlucose = (( (totalGlucose / dataLength) * 10 + 0.5)  >> 0) / 10;
+			averageGlucose = (( (totalGlucose / realReadingsNumber) * 10 + 0.5)  >> 0) / 10;
 			var averageGlucoseValue:Number = averageGlucose;
 			if (glucoseUnit != "mg/dL")
 				averageGlucoseValue = Math.round(((BgReading.mgdlToMmol((averageGlucoseValue))) * 10)) / 10;

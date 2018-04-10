@@ -4,12 +4,15 @@ package ui.screens.display.transmitter
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.BluetoothLEState;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
 	import flash.events.TimerEvent;
 	import flash.system.Capabilities;
 	import flash.utils.Timer;
+	import flash.utils.setTimeout;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -18,7 +21,9 @@ package ui.screens.display.transmitter
 	import G5Model.TransmitterStatus;
 	
 	import database.BlueToothDevice;
+	import database.Calibration;
 	import database.CommonSettings;
+	import database.Sensor;
 	
 	import events.BlueToothServiceEvent;
 	import events.SettingsServiceEvent;
@@ -92,6 +97,7 @@ package ui.screens.display.transmitter
 		private var batteryStatusG5Callout:TextCallout;
 		private var transmitterRuntimeLabel:Label;
 		private var screenRefreshLabel:Label;
+		private var transmitterFirmwareLabel:Label;
 		
 		/* Properties */
 		private var transmitterNameValue:String;
@@ -111,6 +117,7 @@ package ui.screens.display.transmitter
 		private var transmitterRuntimeValue:String;
 		private var sensorRxTimestamp:Number;
 		private var refreshSecondsElapsed:int = 4;
+		private var transmitterFirmwareValue:String = "";
 
 		/* Objects */
 		private var refreshTimer:Timer;
@@ -291,7 +298,25 @@ package ui.screens.display.transmitter
 				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
 					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				else
-					batteryLevelValue = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL) + " %");
+					batteryLevelValue = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL) + "%");
+			}
+			else if (BlueToothDevice.isMiaoMiao())
+			{
+				/* Transmitter Type */
+				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
+				
+				/* Transmitter Firmware */
+				transmitterFirmwareValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW);
+				if (transmitterFirmwareValue == "" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
+					transmitterFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');;
+				
+				/* Battery Level */
+				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);
+				
+				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					batteryLevelValue = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL) + "%");
 			}
 			else if (BlueToothDevice.isBluKon())
 			{
@@ -299,7 +324,7 @@ package ui.screens.display.transmitter
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
 				
 				/* Battery Level */
-				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL);
+				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL) + "%";
 				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
 					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 			}
@@ -377,9 +402,9 @@ package ui.screens.display.transmitter
 			{
 				if(batteryLevelValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown') || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryUnknownTexture;
-				else if(Number(batteryLevelValue) > 60) //OK Battery
+				else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 60) //OK Battery
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryOkTexture;
-				else if(Number(batteryLevelValue) > 30) //Alert Battery
+				else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 30) //Alert Battery
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryAlertTexture;
 				else //Low Battery
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;
@@ -391,6 +416,9 @@ package ui.screens.display.transmitter
 			/* Define Info & Battery/Connection Status Labels */
 			transmitterTypeLabel = LayoutFactory.createLabel(transmitterTypeValue, HorizontalAlign.RIGHT);
 			transmitterNameLabel = LayoutFactory.createLabel(transmitterNameValue, HorizontalAlign.RIGHT);
+			if (BlueToothDevice.isMiaoMiao())
+				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);
+			
 			if (transmitterConnectionStatusValue != null)
 				transmitterConnectionStatusLabel = LayoutFactory.createLabel(transmitterConnectionStatusValue, HorizontalAlign.RIGHT);
 			if (BlueToothDevice.isDexcomG5())
@@ -423,6 +451,8 @@ package ui.screens.display.transmitter
 			var infoSectionChildren:Array = [];
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','data_source_label'), accessory: transmitterTypeLabel });
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_name_label'), accessory: transmitterNameLabel });
+			if (BlueToothDevice.isMiaoMiao())
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_label'), accessory: transmitterFirmwareLabel });
 			if (transmitterConnectionStatusValue != null)
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_connection_status_label'), accessory: transmitterConnectionStatusLabel });
 			if (BlueToothDevice.isDexcomG5())
@@ -620,6 +650,7 @@ package ui.screens.display.transmitter
 			{
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped, false, 0, true);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded, false, 0, true);
+				BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
 				BluetoothService.startScanning(true);
 				
 				AlertManager.showSimpleAlert(
@@ -630,6 +661,7 @@ package ui.screens.display.transmitter
 				
 				Trace.myTrace("TransmitterStatusList.as", "in onTransmitterScan, initial scan for device, setting systemIdleMode = SystemIdleMode.KEEP_AWAKE");
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				BackgroundFetch.vibrate();
 				
 				setupRefreshTimer();
 			} 
@@ -650,6 +682,11 @@ package ui.screens.display.transmitter
 		private function onTransmitterForget():void
 		{
 			BlueToothDevice.forgetBlueToothDevice();
+			BluetoothService.stopScanning(null);
+			InterfaceController.peripheralConnected = false;
+			
+			if (BlueToothDevice.isMiaoMiao() && Calibration.allForSensor().length < 2)
+				Sensor.stopSensor();
 			
 			AlertManager.showSimpleAlert
 			(
@@ -661,6 +698,7 @@ package ui.screens.display.transmitter
 			);
 			
 			disposeRefreshTimer();
+			setupInitialState();
 			setupContent();
 		}
 		
@@ -669,9 +707,16 @@ package ui.screens.display.transmitter
 			if (refreshSecondsElapsed <= 0)
 			{
 				refreshSecondsElapsed = 4;
+				setupInitialState();
 				setupContent();
 				if (InterfaceController.peripheralConnected)
+				{
 					disposeRefreshTimer();
+					//Ensure that the battery levels are displayed correctly by refreshing the screen after 3 seconds 
+					//so Spike has enough time to get battery info from the transmitter
+					setTimeout(setupInitialState, 3000);
+					setTimeout(setupContent, 3300); 
+				}
 			}
 			else
 			{
@@ -822,6 +867,12 @@ package ui.screens.display.transmitter
 			{
 				screenRefreshLabel.dispose();
 				screenRefreshLabel = null;
+			}
+			
+			if (transmitterFirmwareLabel != null)
+			{
+				transmitterFirmwareLabel.dispose();
+				transmitterFirmwareLabel = null;
 			}
 			
 			disposeRefreshTimer();

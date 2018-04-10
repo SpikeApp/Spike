@@ -21,14 +21,17 @@ package services
 	
 	import feathers.controls.Alert;
 	import feathers.controls.TextInput;
+	import feathers.core.PopUpManager;
 	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
 	
 	import starling.core.Starling;
+	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.dexcomshare.DexcomShareFollowersList;
 	
 	import utils.BadgeBuilder;
 	import utils.Trace;
@@ -43,8 +46,6 @@ package services
 		[ResourceBundle("globaltranslations")]
 		
 		private static var _instance:CalibrationService = new CalibrationService();
-		private static var bgLevel1:Number;
-		private static var timeStampOfFirstBgLevel:Number;
 		/**
 		 * if notification launched for requesting initial calibration, this value will be true<br>
 		 *
@@ -56,6 +57,8 @@ package services
 		private static var calibrationValue:TextInput;
 
 		private static var initialCalibrationActive:Boolean = false;
+		
+		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		
 		
 		public static function get instance():CalibrationService {
@@ -70,8 +73,6 @@ package services
 		
 		public static function init():void {
 			myTrace("init");
-			bgLevel1 = Number.NaN;
-			timeStampOfFirstBgLevel = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
@@ -79,7 +80,7 @@ package services
 			myTrace("finished init");
 		}
 		
-		public static function appInForeGround(event:Event = null):void {
+		public static function appInForeGround(event:flash.events.Event = null):void {
 			myTrace("in appInForeGround");
 			if (initialCalibrationRequested) {
 				myTrace("in appInForeGround, app has fired a notification for initialcalibration, but app was opened before notification was received - or appInForeGround is triggered faster than the notification event");
@@ -111,10 +112,12 @@ package services
 		{
 			myTrace("in requestInitialCalibration");
 			
-			var latestReadings:Array = BgReading.latestBySize(1);
-			if (latestReadings.length == 0) 
-			{
-				myTrace("in requestInitialCalibration but latestReadings.length == 0, looks like an error because there shouldn't have been an calibration request, returning");
+			if (Calibration.allForSensor().length >= 2)
+				return;
+			
+			var latestReadings:Array = BgReading.latestBySize(2);
+			if (latestReadings.length < 2) {
+				myTrace("in requestInitialCalibration but latestReadings.length < 0, returning");
 				return;
 			}
 			
@@ -133,30 +136,23 @@ package services
 				
 				return;
 			}
-
-			if (((new Date()).valueOf() - timeStampOfFirstBgLevel) > (7 * 60 * 1000 + 100)) 
-			{
-				myTrace("previous calibration was more than 7 minutes ago , restart");
-				timeStampOfFirstBgLevel = new Number(0);
-				bgLevel1 = Number.NaN;
-			}
 			
 			/* Create and Style Calibration Text Input */
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 			{
-				calibrationValue = LayoutFactory.createTextInput(false, true, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT);
+				calibrationValue = LayoutFactory.createTextInput(false, true, 170, HorizontalAlign.CENTER);
 				calibrationValue.maxChars = 3;
 			}
 			else
 			{
-				calibrationValue = LayoutFactory.createTextInput(false, false, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT, true);
+				calibrationValue = LayoutFactory.createTextInput(false, false, 170, HorizontalAlign.CENTER, true);
 				calibrationValue.maxChars = 4;
 			}
 			
 			/* Create and Style Popup Window */
 			var calibrationPopup:Alert = AlertManager.showActionAlert
 			(
-				isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"),
+				ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_initial_calibration_title"),
 				"",
 				MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS,
 				[
@@ -179,11 +175,9 @@ package services
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
 			myTrace("in bgReadingReceived");
 
-			var latestReadings:Array = BgReading.latestBySize(1);
-			if (latestReadings.length == 0) 
-			{
-				//should never happen
-				myTrace("in bgReadingReceived but latestReadings.length == 0, looks like an error");
+			var latestReadings:Array = BgReading.latestBySize(2);
+			if (latestReadings.length < 2) {
+				myTrace("in bgReadingReceived but latestReadings.length <2");
 				return;
 			}
 			
@@ -200,14 +194,21 @@ package services
 				return;
 			}
 			
+			initialCalibrationActive = false;
+			
+			var warmupTimeInMs:Number = 2 * 3600 * 1000;
+			if (BlueToothDevice.isMiaoMiao()) {
+				warmupTimeInMs = 1 * 3600 * 1000;
+			}
+			
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			if (Calibration.allForSensor().length < 2) 
 			{
 				myTrace("Calibration.allForSensor().length < 2");
 				
-				if (((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) && !BlueToothDevice.isTypeLimitter()) 
+				if ((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < warmupTimeInMs) 
 				{
-					myTrace("CalibrationService : bgreading received but sensor age < 2 hours, so ignoring");
+					myTrace("CalibrationService : bgreading received but sensor age < " + warmupTimeInMs + " milliseconds, so ignoring");
 				} 
 				else 
 				{
@@ -223,9 +224,9 @@ package services
 							new NotificationBuilder()
 							.setCount(BadgeBuilder.getAppBadge())
 							.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
-							.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-							.setBody(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+							.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_initial_calibration_title"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_initial_calibration_title"))
+							.setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_initial_calibration_notification_body"))
 							.enableVibration(true)
 							.enableLights(true)
 							.build());
@@ -237,24 +238,28 @@ package services
 					{
 						myTrace("opening dialog to request calibration");
 						
-						initialCalibrationActive = true;
+						try
+						{
+							PopUpManager.removeAllPopUps(true);
+						} 
+						catch(error:Error) {}
 						
 						/* Create and Style Calibration Text Input */
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 						{
-							calibrationValue = LayoutFactory.createTextInput(false, true, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT);
+							calibrationValue = LayoutFactory.createTextInput(false, true, 170, HorizontalAlign.CENTER);
 							calibrationValue.maxChars = 3;
 						}
 						else
 						{
-							calibrationValue = LayoutFactory.createTextInput(false, false, isNaN(bgLevel1) ? 145 : 170, HorizontalAlign.RIGHT, true);
+							calibrationValue = LayoutFactory.createTextInput(false, false, 170, HorizontalAlign.CENTER, true);
 							calibrationValue.maxChars = 4;
 						}
 						
 						/* Create and Style Popup Window */
 						var calibrationPopup:Alert = AlertManager.showActionAlert
 							(
-								isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"),
+								ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_initial_calibration_title"),
 								"",
 								MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS,
 								[
@@ -272,17 +277,30 @@ package services
 						calibrationPopup.buttonGroupProperties.gap = 10;
 						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 						calibrationValue.setFocus();
+						calibrationPopup.addEventListener(starling.events.Event.CLOSE, onInitialCalibrationClosed);
+						initialCalibrationActive = true;
 					}
 				}
 			}
 		}
 		
-		private static function initialCalibrationValueEntered():void 
+		private static function onInitialCalibrationClosed(e:starling.events.Event):void
+		{
+			initialCalibrationActive = false;
+		}
+		
+		private static function initialCalibrationValueEntered(e:starling.events.Event = null):void 
 		{
 			initialCalibrationActive = false;
 			
 			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
 				return;
+			
+			var latestReadings:Array = BgReading.latestBySize(2);
+			if (latestReadings.length < 2) {
+				myTrace("in initialCalibrationValueEntered but latestReadings.length < 2, looks like an error");
+				return;
+			}
 			
 			myTrace("in intialCalibrationValueEntered");
 			
@@ -309,23 +327,11 @@ package services
 					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 				}
 				
-				if (isNaN(bgLevel1)) 
-				{
-					myTrace("in intialCalibrationValueEntered, this is the first calibration, waiting for next reading");
-					bgLevel1 = asNumber;
-					timeStampOfFirstBgLevel = (new Date()).valueOf();
-				} 
-				else 
-				{
-					myTrace("in intialCalibrationValueEntered, this is the second calibration, starting Calibration.initialCalibration");
-					Calibration.initialCalibration(bgLevel1, timeStampOfFirstBgLevel, asNumber, (new Date()).valueOf());
-					var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
-					_instance.dispatchEvent(calibrationServiceEvent);
-					
-					//reset values for the case that the sensor is stopped and restarted
-					bgLevel1 = Number.NaN;
-					timeStampOfFirstBgLevel = 0;
-				}
+				myTrace("in intialCalibrationValueEntered, starting Calibration.initialCalibration");
+				var now:Number = new Date().valueOf();
+				Calibration.initialCalibration(asNumber, now - TIME_5_MINUTES, now, BlueToothDevice.isMiaoMiao() ? 36 : 5);
+				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
+				_instance.dispatchEvent(calibrationServiceEvent);
 			}
 		}
 		
@@ -339,12 +345,12 @@ package services
 			/* Create and Style Calibration Text Input */
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 			{
-				calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
+				calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.CENTER);
 				calibrationValue.maxChars = 3;
 			}
 			else
 			{
-				calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.RIGHT, true);
+				calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.CENTER, true);
 				calibrationValue.maxChars = 4;
 			}
 			
@@ -404,12 +410,12 @@ package services
 				/* Create and Style Calibration Text Input */
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 				{
-					calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.RIGHT);
+					calibrationValue = LayoutFactory.createTextInput(false, true, 135, HorizontalAlign.CENTER);
 					calibrationValue.maxChars = 3;
 				}
 				else
 				{
-					calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.RIGHT, true);
+					calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.CENTER, true);
 					calibrationValue.maxChars = 4;
 				}
 				

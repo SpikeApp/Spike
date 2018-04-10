@@ -154,7 +154,6 @@ package utils
 			 while (previousItem < length - 1 && (getItemAt(previousItem + 1) as FromtimeAndValue).from < timeAsNumber)
 				 previousItem++;
 			 
-			 myTrace("in getValue, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).value);
 			 return  (getItemAt(previousItem) as FromtimeAndValue).value;
 		 }
 		 
@@ -187,7 +186,6 @@ package utils
 			 if (previousItem == length)
 				 previousItem = 0;
 			 
-			 myTrace("in getNextValue, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).value);
 			 return  (getItemAt(previousItem) as FromtimeAndValue).value;
 		 }
 		 
@@ -231,7 +229,6 @@ package utils
 			 while (previousItem < length - 1 && (getItemAt(previousItem + 1) as FromtimeAndValue).from < timeAsNumber)
 				 previousItem++;
 			 
-			 myTrace("in getAlarmName, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).alarmName);
 			 return  (getItemAt(previousItem) as FromtimeAndValue).alarmName;
 		 }
 		 
@@ -264,7 +261,6 @@ package utils
 			 if (previousItem == length)
 				 previousItem = 0;
 		 
-			 myTrace("in getNextAlarmName, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).alarmName);
 			 return  (getItemAt(previousItem) as FromtimeAndValue).alarmName;
 		 }
 		 
@@ -294,7 +290,6 @@ package utils
 			 if (previousItem == length)
 				 previousItem = 0;
 			 
-			 myTrace("in getNextFromTime, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).from);
 			 return  (getItemAt(previousItem) as FromtimeAndValue).from;
 		 }
 		 
@@ -352,7 +347,7 @@ package utils
 				 returnValue += ">";
 				 returnValue += (getItemAt(cntr) as FromtimeAndValue).alarmName;
 			 }
-			 myTrace("in createAlarmString, returnvalue = " + returnValue);
+			 
 			 return returnValue;
 		 }
 		 

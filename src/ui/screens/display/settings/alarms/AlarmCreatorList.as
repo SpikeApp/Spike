@@ -529,6 +529,8 @@ package ui.screens.display.settings.alarms
 					alarmData.value = 210;
 				else if (BlueToothDevice.isBluKon())
 					alarmData.value = 5;
+				else if (BlueToothDevice.isMiaoMiao())
+					alarmData.value = 20;
 			}
 			else if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING && alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) || (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT))
 				alarmData.value = valueStepper.value

@@ -82,7 +82,6 @@ package ui.screens.display.settings.transmitter
 			if (!BlueToothDevice.needsTransmitterId())
 				transmitterIDValue = "";
 			transmitterTypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
-			trace("transmitterTypeValue", transmitterTypeValue);
 			
 			/* Ensure BluCon and Dexcom compatibility */
 			if (transmitterTypeValue == "BluKon")
@@ -91,7 +90,7 @@ package ui.screens.display.settings.transmitter
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
 			else if (transmitterTypeValue == "G4")
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
-			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL")
+			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO")
 				transmitterIDisEnabled = false;
 		}
 		
@@ -190,7 +189,7 @@ package ui.screens.display.settings.transmitter
 				transmitterIDisEnabled = transmitterID.isEnabled = true;
 				transmitterID.prompt = "BLUXXXXX";
 			}
-			else if ((!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL") && transmitterID.text == "")
+			else if ((!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO") && transmitterID.text == "")
 			{
 				transmitterIDisEnabled = transmitterID.isEnabled = false;
 				transmitterID.prompt = "";
@@ -230,6 +229,10 @@ package ui.screens.display.settings.transmitter
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
+			
+			//Reset Firmware version
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW, "");
 			
 			//Set collection mode to host
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE, "Host");
@@ -271,6 +274,8 @@ package ui.screens.display.settings.transmitter
 				batteryValue = "210";
 			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'))
 				batteryValue = "5";
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao'))
+				batteryValue = "20";
 			
 			//Process Alarms
 			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter'))

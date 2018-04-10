@@ -12,6 +12,7 @@ package
 	import flash.net.URLVariables;
 	import flash.system.System;
 	import flash.utils.clearInterval;
+	import flash.utils.clearTimeout;
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
@@ -59,14 +60,20 @@ package
 			_instance = this;
 			
 			stage.addEventListener( flash.events.Event.RESIZE, onStageResize );
-			timeoutID = setTimeout( initStarling, 50 );
 			
+			/* Handle Application Activation & Deactivation */
+			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
+			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
+			
+			/* Global Exceptions Handling */
 			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
+			
+			/* Start Starling */
+			timeoutID = setTimeout( initStarling, 50 );
 		}
 		
 		private function onUncaughtError(e:UncaughtErrorEvent):void
 		{
-			// Do something with your error.
 			if (e.error is Error)
 			{
 				var error:Error = e.error as Error;
@@ -131,10 +138,6 @@ package
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
-			
-			/* Handle application Activation & Deactivation */
-			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
-			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
 		}
 		
 		private function onContextCreated(event:flash.events.Event):void
@@ -157,23 +160,11 @@ package
 		private function onActivate( event:flash.events.Event ):void 
 		{
 			//Resume normal framerate
-			stage.frameRate = 60;
 			Starling.current.nativeStage.frameRate = 60;
 			
 			//Start Starling
 			NativeApplication.nativeApplication.executeInBackground = false;
 			SystemUtil.executeWhenApplicationIsActive( starling.start );
-			
-			//Push Chart Screen
-			/*if(AppInterface.instance.navigator != null)
-			{
-				var nowTimer:Number = getTimer();
-				if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART && nowTimer - deactivationTimer > 5 * 60 * 1000)
-				{
-					AppInterface.instance.menu.selectedIndex = 0;
-					AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
-				}
-			}*/
 			
 			//Update Variables
 			Constants.appInForeground = true;
@@ -199,7 +190,6 @@ package
 		private function onDeactivate( event:flash.events.Event ):void 
 		{
 			//Decrease framerate almost to a halt
-			stage.frameRate = 0.5;
 			Starling.current.nativeStage.frameRate = 0.5;
 			
 			//Call Garbage Collector
@@ -224,7 +214,6 @@ package
 		/**
 		 * Utility Functions
 		 */
-		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("Spike.as", log);
 		}	
