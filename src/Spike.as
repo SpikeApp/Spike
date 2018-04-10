@@ -41,7 +41,6 @@ package
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
 		private var deactivationTimer:Number;
-		private var framerateTimeoutID:int = .1;
 		
 		private static var _instance:Spike;
 		
@@ -62,18 +61,19 @@ package
 			
 			stage.addEventListener( flash.events.Event.RESIZE, onStageResize );
 			
-			/* Handle application Activation & Deactivation */
+			/* Handle Application Activation & Deactivation */
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
 			
-			timeoutID = setTimeout( initStarling, 50 );
-			
+			/* Global Exceptions Handling */
 			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
+			
+			/* Start Starling */
+			timeoutID = setTimeout( initStarling, 50 );
 		}
 		
 		private function onUncaughtError(e:UncaughtErrorEvent):void
 		{
-			// Do something with your error.
 			if (e.error is Error)
 			{
 				var error:Error = e.error as Error;
@@ -98,11 +98,11 @@ package
 			
 			//Send Email
 			EmailSender.sendData
-				(
-					EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
-					onLoadCompleteHandler,
-					vars
-				);
+			(
+				EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
+				onLoadCompleteHandler,
+				vars
+			);
 		}
 		
 		private function onLoadCompleteHandler(event:flash.events.Event):void 
@@ -166,41 +166,16 @@ package
 			NativeApplication.nativeApplication.executeInBackground = false;
 			SystemUtil.executeWhenApplicationIsActive( starling.start );
 			
-			//Push Chart Screen
-			/*if(AppInterface.instance.navigator != null)
-			{
-			var nowTimer:Number = getTimer();
-			if(AppInterface.instance.navigator.activeScreenID != Screens.GLUCOSE_CHART && nowTimer - deactivationTimer > 5 * 60 * 1000)
-			{
-			AppInterface.instance.menu.selectedIndex = 0;
-			AppInterface.instance.navigator.replaceScreen(Screens.GLUCOSE_CHART, Fade.createCrossfadeTransition(1.5));
-			}
-			}*/
-			
 			//Update Variables
 			Constants.appInForeground = true;
 			
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
-			
-			//Resume normal framerate
-			//Starling.current.nativeStage.frameRate = 60;
-			
-			//framerateTimeoutID = setTimeout(resumeFrameRate, 1000); //Sometimes framerate doesn't resume after app is activated, this will ensure it resumes properly.
-		}
-		
-		private function resumeFrameRate():void
-		{
-			//Resume normal framerate
-			Starling.current.nativeStage.frameRate = 60;
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
 		{
-			//Safeguard for framerate so it doesn't set it to 60 if the user activates and deactivates Spike too quicly (<1 second)
-			//clearTimeout(framerateTimeoutID);
-			
 			//Decrease framerate almost to a halt
 			Starling.current.nativeStage.frameRate = 0.5;
 			
@@ -226,7 +201,6 @@ package
 		/**
 		 * Utility Functions
 		 */
-		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("Spike.as", log);
 		}	
