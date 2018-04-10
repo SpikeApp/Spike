@@ -868,16 +868,14 @@ package services
 			
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
-				
-				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				Trace.myTrace("NightscoutService.as", "There's no Internet connection.");
 				
 				return;
 			}
 			
 			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0)
 			{
-				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
+				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds");
 				
 				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
 				
