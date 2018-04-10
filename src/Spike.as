@@ -61,6 +61,11 @@ package
 			_instance = this;
 			
 			stage.addEventListener( flash.events.Event.RESIZE, onStageResize );
+			
+			/* Handle application Activation & Deactivation */
+			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
+			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
+			
 			timeoutID = setTimeout( initStarling, 50 );
 			
 			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
@@ -133,10 +138,6 @@ package
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
-			
-			/* Handle application Activation & Deactivation */
-			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
-			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
 		}
 		
 		private function onContextCreated(event:flash.events.Event):void
@@ -159,7 +160,7 @@ package
 		private function onActivate( event:flash.events.Event ):void 
 		{
 			//Resume normal framerate
-			//Starling.current.nativeStage.frameRate = 60;
+			Starling.current.nativeStage.frameRate = 60;
 			
 			//Start Starling
 			NativeApplication.nativeApplication.executeInBackground = false;
@@ -201,7 +202,7 @@ package
 			//clearTimeout(framerateTimeoutID);
 			
 			//Decrease framerate almost to a halt
-			//Starling.current.nativeStage.frameRate = 0.5;
+			Starling.current.nativeStage.frameRate = 0.5;
 			
 			//Call Garbage Collector
 			System.pauseForGCIfCollectionImminent(0);

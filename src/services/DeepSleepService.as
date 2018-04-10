@@ -16,8 +16,6 @@ package services
 	
 	import events.SettingsServiceEvent;
 	
-	import starling.core.Starling;
-	
 	import utils.Constants;
 	import utils.Trace;
 	
