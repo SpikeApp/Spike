@@ -2,6 +2,7 @@ package ui.screens.display.settings.transmitter
 {
 	import database.BlueToothDevice;
 	import database.CommonSettings;
+	import database.Sensor;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
@@ -198,8 +199,13 @@ package ui.screens.display.settings.transmitter
 		
 		public function save():void
 		{
+			var needsReset:Boolean = false;
+			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != transmitterIDValue.toUpperCase())
+			{
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDValue.toUpperCase());
+				needsReset = true;
+			}
 			
 			/* Save BluCon as BluKon in database to ensure compatibility, correct Dexcom G5 and G4 values */
 			var transmitterTypeToSave:String = transmitterTypeValue;
@@ -214,28 +220,35 @@ package ui.screens.display.settings.transmitter
 			{
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, transmitterTypeToSave);
 				updateAlarms(); //Update battery values in existing alarms or delete them in case it's not possible to get alarms for the selected transmitter type
+				needsReset = true;
 			}
 			
-			//Reset all transmitters battery levels
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA, "unknown");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB, "unknown");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST, "unknown");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE, "unknown");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME, "unknown");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS, "unknown");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, "0");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, "0");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, "0");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
-			
-			//Reset Firmware version
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW, "");
-			
-			//Set collection mode to host
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE, "Host");
+			if (needsReset)
+			{
+				//Reset all transmitters battery levels
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
+				
+				//Reset Firmware version
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW, "");
+				
+				//Set collection mode to host
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE, "Host");
+				
+				//Stop sensor
+				Sensor.stopSensor();
+			}
 			
 			//Refresh main menu. Menu items are different for hosts and followers
 			AppInterface.instance.menu.refreshContent();
