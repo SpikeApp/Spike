@@ -2,19 +2,18 @@ package treatments
 {
 	import flash.utils.Dictionary;
 	
-	import mx.utils.ObjectUtil;
-	
+	import database.BlueToothDevice;
 	import database.Database;
 	
 	import utils.UniqueId;
 
 	public class ProfileManager
 	{
-		public static var carbAbsorptionRate:Number = 30;
 		public static var insulinsList:Array = [];
 		private static var insulinsMap:Dictionary = new Dictionary();
 		public static var profilesList:Array = [];
 		private static var profilesMap:Dictionary = new Dictionary();
+		private static var nightscoutCarbAbsorptionRate:Number = 0;
 		
 		public function ProfileManager()
 		{
@@ -196,15 +195,30 @@ package treatments
 			return insulinID;
 		}
 		
-		public static function addCarbAbsorptionRate(rate:Number):void
-		{
-			carbAbsorptionRate = rate;
-		}
-		
 		public static function updateProfile(profile:Profile):void
 		{	
 			//Update Database
 			Database.updateProfileSynchronous(profile);
+		}
+		
+		public static function addNightscoutCarbAbsorptionRate(rate:Number):void
+		{
+			nightscoutCarbAbsorptionRate = rate;
+		}
+		
+		public static function getCarbAbsorptionRate():Number
+		{
+			var carbAbsorptionRate:Number = 0;
+			
+			if (!BlueToothDevice.isFollower())
+			{
+				if (profilesList != null && profilesList.length > 0 && profilesList[0] != null && !isNaN((profilesList[0] as Profile).carbsAbsorptionRate))
+					carbAbsorptionRate = (profilesList[0] as Profile).carbsAbsorptionRate;
+			}
+			else
+				carbAbsorptionRate = nightscoutCarbAbsorptionRate;
+			
+			return carbAbsorptionRate;
 		}
 	}
 }

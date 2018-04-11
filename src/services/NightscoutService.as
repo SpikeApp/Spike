@@ -384,7 +384,7 @@ package services
 							ProfileManager.addInsulin("Nightscout Insulin", dia, "", BlueToothDevice.isFollower() ? true : false, "000000", false);
 							
 							//Add nightscout carbs absorption rate and don't save it to DB
-							ProfileManager.addCarbAbsorptionRate(carbAbsorptionRate);
+							ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
 							
 							//Get treatmenents
 							if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)

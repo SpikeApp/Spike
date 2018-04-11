@@ -120,7 +120,7 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):Number 
 		{
-			var carbsAbsorptionRate:Number = ProfileManager.carbAbsorptionRate;
+			var carbsAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate();
 			var now:Number = new Date().valueOf();
 			
 			// TODO: figure out the liverSensRatio that gives the most accurate purple line predictions

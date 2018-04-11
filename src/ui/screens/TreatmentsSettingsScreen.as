@@ -73,6 +73,10 @@ package ui.screens
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
 			
+			//Save settings
+			if (treatmentsSettings.needsSave)
+				treatmentsSettings.save();
+			
 			//Pop Screen
 			dispatchEventWith(Event.COMPLETE);
 		}
