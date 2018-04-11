@@ -1084,7 +1084,7 @@ package services
 				Notifications.service.notify(notificationBuilder.build());
 			}
 			else
-				myTrace("in planApplicationStoppedAlert, not planning an inactive alert... user has not set a transmitter yet.");
+				myTrace("in planApplicationStoppedAlert, not planning an inactive alert... user has not set a transmitter yet or doesn't have enough calibrtions.");
 		}
 		
 		private static function checkMissedReadingAlert():void {
