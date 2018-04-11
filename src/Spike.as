@@ -12,8 +12,6 @@ package
 	import flash.net.URLVariables;
 	import flash.system.System;
 	import flash.utils.clearInterval;
-	import flash.utils.clearTimeout;
-	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
@@ -40,7 +38,6 @@ package
 		private var starling:Starling;
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
-		private var deactivationTimer:Number;
 		
 		private static var _instance:Spike;
 		
@@ -172,28 +169,12 @@ package
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
-			
-			//Resume normal framerate
-			stage.frameRate = 60;
-			Starling.current.nativeStage.frameRate = 60;
-			
-			setTimeout(resumeFrameRate, 1000); //Sometimes framerate doesn't resume after app is activated, this will ensure it resumes properly.
-		}
-		
-		private function resumeFrameRate():void
-		{
-			//Resume normal framerate
-			stage.frameRate = 60;
-			Starling.current.nativeStage.frameRate = 60;
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
 		{
 			//Decrease framerate almost to a halt
 			Starling.current.nativeStage.frameRate = 0.5;
-			
-			//Call Garbage Collector
-			System.pauseForGCIfCollectionImminent(0);
 			
 			//Update Variables
 			Constants.noLockEnabled = false;
@@ -207,8 +188,8 @@ package
 			myTrace("dispatching event SpikeEvent.APP_IN_BACKGROUND");
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
 			
-			//Update timer
-			deactivationTimer = getTimer();
+			//Call Garbage Collector
+			System.pauseForGCIfCollectionImminent(0);
 		}
 		
 		/**
