@@ -1,0 +1,6 @@
+framework module PNChart {
+  umbrella header "PNChart-umbrella.h"
+
+  export *
+  module * { export * }
+}
