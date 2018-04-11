@@ -2,6 +2,8 @@ package treatments
 {
 	import flash.utils.Dictionary;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.Database;
 	
 	import utils.UniqueId;
@@ -11,6 +13,8 @@ package treatments
 		public static var carbAbsorptionRate:Number = 30;
 		public static var insulinsList:Array = [];
 		private static var insulinsMap:Dictionary = new Dictionary();
+		public static var profilesList:Array = [];
+		private static var profilesMap:Dictionary = new Dictionary();
 		
 		public function ProfileManager()
 		{
@@ -19,11 +23,14 @@ package treatments
 		
 		public static function init():void
 		{
+			//Common variables
+			var i:int;
+			
 			//Get insulins
 			var dbInsulines:Array = Database.getInsulinsSynchronous();
 			if (dbInsulines != null && dbInsulines.length > 0)
 			{
-				for (var i:int = 0; i < dbInsulines.length; i++) 
+				for (i = 0; i < dbInsulines.length; i++) 
 				{
 					var dbInsulin:Object = dbInsulines[i] as Object;
 					if (dbInsulin == null)
@@ -45,8 +52,58 @@ package treatments
 				insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
 			}
 			
-			//Get Profile
+			//Get Profiles
+			var dbProfiles:Array = Database.getProfilesSynchronous();
+			if (dbProfiles != null && dbProfiles.length > 0)
+			{
+				for (i = 0; i < dbProfiles.length; i++) 
+				{
+					var dbProfile:Object = dbProfiles[i] as Object;
+					if (dbProfile == null)
+						continue;
+					
+					var profile:Profile = new Profile
+					(
+						dbProfile.id,
+						dbProfile.time,
+						dbProfile.name,
+						dbProfile.insulintocarbratios,
+						dbProfile.insulinsensitivityfactors,
+						dbProfile.carbsabsorptionrate,
+						dbProfile.basalrates,
+						dbProfile.targetglucoserates,
+						Number(dbProfile.lastmodifiedtimestamp)
+					);
+					
+					profilesList.push(profile);
+					profilesMap[dbProfile.id] = profile;
+				}
+				profilesList.sortOn(["name"], Array.CASEINSENSITIVE);
+			}
 			
+			if (profilesList.length == 0)
+			{
+				//Create default profile
+				var defaultProfile:Profile = new Profile
+				(
+					UniqueId.createEventId(),
+					"00:00",
+					"Default",
+					"",
+					"",
+					30,
+					"",
+					"",
+					new Date().valueOf()
+				);
+				
+				//Push to memory
+				profilesList.push(defaultProfile);
+				profilesMap[defaultProfile.ID] = defaultProfile;
+				
+				//Save to Database
+				Database.insertProfileSynchronous(defaultProfile);
+			}
 		}
 		
 		public static function getInsulin(ID:String):Insulin
@@ -142,6 +199,12 @@ package treatments
 		public static function addCarbAbsorptionRate(rate:Number):void
 		{
 			carbAbsorptionRate = rate;
+		}
+		
+		public static function updateProfile(profile:Profile):void
+		{	
+			//Update Database
+			Database.updateProfileSynchronous(profile);
 		}
 	}
 }

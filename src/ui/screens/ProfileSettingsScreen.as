@@ -14,7 +14,8 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.settings.profile.InsulinsSettingsList;
+	import ui.screens.display.settings.treatments.CarbsSettingsList;
+	import ui.screens.display.settings.treatments.InsulinsSettingsList;
 	
 	import utils.Constants;
 	
@@ -25,6 +26,8 @@ package ui.screens
 		/* Display Objects */
 		private var insulinsSettings:InsulinsSettingsList;
 		private var insulinsLabel:Label;
+		private var carbsLabel:Label;
+		private var carbsSettings:CarbsSettingsList;
 		
 		public function ProfileSettingsScreen() 
 		{
@@ -65,6 +68,14 @@ package ui.screens
 			//Insulins Settings
 			insulinsSettings = new InsulinsSettingsList();
 			screenRenderer.addChild(insulinsSettings);
+			
+			//Carbs Section Label
+			carbsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','carbs_label'), true);
+			screenRenderer.addChild(carbsLabel);
+			
+			//Insulins Settings
+			carbsSettings = new CarbsSettingsList();
+			screenRenderer.addChild(carbsSettings);
 		}
 		
 		/**
@@ -72,6 +83,9 @@ package ui.screens
 		 */
 		override protected function onBackButtonTriggered(event:Event):void
 		{
+			if (carbsSettings.needsSave)
+				carbsSettings.save();
+			
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
 			
@@ -94,6 +108,18 @@ package ui.screens
 			{
 				insulinsSettings.dispose();
 				insulinsSettings = null;
+			}
+			
+			if (carbsLabel != null)
+			{
+				carbsLabel.dispose();
+				carbsLabel = null;
+			}
+			
+			if (carbsSettings != null)
+			{
+				carbsSettings.dispose();
+				carbsSettings = null;
 			}
 			
 			super.dispose();

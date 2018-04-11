@@ -36,7 +36,7 @@ package ui.screens.display.settings.main
 		private var integrationIconImage:Image;
 		private var widgetIconImage:Image;
 		private var advancedIconImage:Image;
-		private var profileIconImage:Image;
+		private var treatmentsIconImage:Image;
 		
 		public function SettingsList()
 		{
@@ -78,15 +78,15 @@ package ui.screens.display.settings.main
 			watchIconImage = new Image(chevronIconTexture);
 			appInfoIconImage = new Image(chevronIconTexture);
 			advancedIconImage = new Image(chevronIconTexture);
-			profileIconImage = new Image(chevronIconTexture);
+			treatmentsIconImage = new Image(chevronIconTexture);
 			
 			/* Data */
 			dataProvider = new ListCollection(
 				[
 					{ screen: Screens.SETTINGS_GENERAL, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','general_settings_title'), accessory: generalIconImage },
 					{ screen: Screens.SETTINGS_TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','transmitter_settings_title'), accessory: transmitterIconImage },
-					{ screen: Screens.SETTINGS_PROFILE, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','profile_settings_title'), accessory: profileIconImage },
 					{ screen: Screens.SETTINGS_CHART, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','chart_settings_title'), accessory: chartIconImage },
+					{ screen: Screens.SETTINGS_TREATMENTS, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','treatments_settings_title'), accessory: treatmentsIconImage },
 					{ screen: Screens.SETTINGS_WIDGET, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','widget_settings_title'), accessory: widgetIconImage },
 					{ screen: Screens.SETTINGS_ALARMS, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','alarms_settings_title'), accessory: alarmsIconImage },
 					{ screen: Screens.SETTINGS_SPEECH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','speech_settings_title'), accessory: speechIconImage },
@@ -186,10 +186,10 @@ package ui.screens.display.settings.main
 				advancedIconImage.dispose();
 				advancedIconImage = null;
 			}
-			if(profileIconImage != null)
+			if(treatmentsIconImage != null)
 			{
-				profileIconImage.dispose();
-				profileIconImage = null;
+				treatmentsIconImage.dispose();
+				treatmentsIconImage = null;
 			}
 			
 			super.dispose();

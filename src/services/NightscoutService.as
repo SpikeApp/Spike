@@ -431,6 +431,7 @@ package services
 			
 			clearTimeout(followerTimer);
 			
+			setupNightscoutProperties();
 			getNightscoutProfile();
 			getRemoteReadings();
 			

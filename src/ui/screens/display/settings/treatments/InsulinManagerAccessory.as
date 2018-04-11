@@ -1,4 +1,4 @@
-package ui.screens.display.settings.profile
+package ui.screens.display.settings.treatments
 {
 	import feathers.controls.Button;
 	import feathers.controls.LayoutGroup;

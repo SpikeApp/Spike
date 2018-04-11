@@ -40,6 +40,7 @@ package ui
 	import ui.screens.TransmitterScreen;
 	import ui.screens.TransmitterSettingsScreen;
 	import ui.screens.TreatmentsManagementScreen;
+	import ui.screens.TreatmentsSettingsScreen;
 	import ui.screens.WatchSettingsScreen;
 	import ui.screens.WidgetSettingsScreen;
 	import ui.screens.data.AlarmNavigatorData;
@@ -136,6 +137,11 @@ package ui
 			var transmitterSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TransmitterSettingsScreen );
 			transmitterSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_TRANSMITTER, transmitterSettingsScreenItem );
+			
+			/* Treatments Settings Screen */
+			var treatmentsSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TreatmentsSettingsScreen );
+			treatmentsSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_TREATMENTS, treatmentsSettingsScreenItem );
 			
 			/* Profile Settings Screen */
 			var profileSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( ProfileSettingsScreen );
