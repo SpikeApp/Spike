@@ -20,6 +20,9 @@ package ui.chart
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	
+	import ui.AppInterface;
+	import ui.screens.Screens;
+	
 	import utils.Constants;
 	
 	[ResourceBundle("chartscreen")]
@@ -438,6 +441,9 @@ package ui.chart
 					
 					//Activate Keep Awake
 					NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+					
+					//Push Fullscreen View
+					AppInterface.instance.navigator.pushScreen( Screens.FULLSCREEN_GLUCOSE );
 				}
 				else if (Constants.noLockEnabled)
 				{

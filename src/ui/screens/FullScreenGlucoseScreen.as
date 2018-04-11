@@ -1,5 +1,7 @@
 package ui.screens
 {
+	import flash.desktop.NativeApplication;
+	import flash.desktop.SystemIdleMode;
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.system.System;
@@ -12,6 +14,7 @@ package ui.screens
 	import events.FollowerEvent;
 	import events.TransmitterServiceEvent;
 	
+	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.layout.AnchorLayout;
@@ -28,6 +31,7 @@ package ui.screens
 	import services.TransmitterService;
 	
 	import starling.display.DisplayObject;
+	import starling.events.Event;
 	import starling.utils.Align;
 	
 	import ui.AppInterface;
@@ -409,7 +413,7 @@ package ui.screens
 		/**
 		 * Event Listeners
 		 */
-		private function onBgReadingReceived(e:Event):void
+		private function onBgReadingReceived(e:flash.events.Event):void
 		{
 			//Get latest BGReading
 			var latestBgReading:BgReading;
@@ -496,6 +500,19 @@ package ui.screens
 					slopeArrowDisplay.fontStyles.color = oldColor;
 				}
 			}
+		}
+		
+		override protected function onBackButtonTriggered(event:starling.events.Event):void
+		{
+			//Pop this screen off
+			dispatchEventWith(starling.events.Event.COMPLETE);
+			
+			//Activate menu drag gesture
+			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
+			
+			//Deactivate Keep Awake
+			NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
+			Constants.noLockEnabled = false;
 		}
 		
 		/**
