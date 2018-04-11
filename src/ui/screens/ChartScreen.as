@@ -11,6 +11,7 @@ package ui.screens
 	import database.Calibration;
 	import database.CommonSettings;
 	
+	import events.CalibrationServiceEvent;
 	import events.FollowerEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
@@ -26,6 +27,7 @@ package ui.screens
 	
 	import model.ModelLocator;
 	
+	import services.CalibrationService;
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
@@ -102,6 +104,7 @@ package ui.screens
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onInitialCalibrationReceived);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -343,6 +346,11 @@ package ui.screens
 			}
 		}
 		
+		private function onInitialCalibrationReceived(e:CalibrationServiceEvent):void
+		{
+			onBgReadingReceived(null);
+		}
+		
 		private function onAppInBackground (e:SpikeEvent):void
 		{
 			appInBackground = true;
@@ -548,6 +556,7 @@ package ui.screens
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onInitialCalibrationReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			
