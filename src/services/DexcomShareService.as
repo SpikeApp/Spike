@@ -490,7 +490,7 @@ package services
 			else
 				latestGlucoseReading= BgReading.lastWithCalculatedValue();
 			
-			if(latestGlucoseReading == null || (latestGlucoseReading.calculatedValue == 0 && latestGlucoseReading.calibration == null))
+			if(latestGlucoseReading == null || (latestGlucoseReading.calculatedValue == 0 && latestGlucoseReading.calibration == null) || latestGlucoseReading.calculatedValue == 0)
 				return;
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
