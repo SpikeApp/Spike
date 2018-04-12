@@ -35,9 +35,11 @@ package
 	
 	public class Spike extends Sprite 
 	{
+		private static const TIME_1_MINUTE:int = 60 * 1000;
 		private var starling:Starling;
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
+		private var lastCrashReportTimestamp:Number = 0;
 		
 		private static var _instance:Spike;
 		
@@ -85,6 +87,13 @@ package
 		
 		private function sendError(error:String):void
 		{
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastCrashReportTimestamp < TIME_1_MINUTE)
+				return;
+			
+			lastCrashReportTimestamp = now;
+			
 			//Create URL Request 
 			var vars:URLVariables = new URLVariables();
 			vars.mimeType = "text/html";
