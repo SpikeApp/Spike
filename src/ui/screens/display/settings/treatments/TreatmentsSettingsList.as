@@ -1,5 +1,8 @@
 package ui.screens.display.settings.treatments
 {
+	import flash.net.URLRequest;
+	import flash.net.navigateToURL;
+	
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
@@ -23,6 +26,7 @@ package ui.screens.display.settings.treatments
 	
 	import ui.AppInterface;
 	import ui.chart.ColorPicker;
+	import ui.popups.TreatmentsConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
@@ -282,12 +286,12 @@ package ui.screens.display.settings.treatments
 		
 		private function onLoadInstructions(e:Event):void
 		{
-			
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Treatments"));
 		}
 		
 		private function onSendConfigurationFiles(e:Event):void
 		{
-			
+			TreatmentsConfigSender.displayTreatmentsConfigSender();
 		}
 		
 		private function onColorPaletteOpened(e:Event):void

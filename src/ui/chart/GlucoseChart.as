@@ -2272,7 +2272,7 @@ package ui.chart
 		 */
 		private function onHandPickerTouch (e:TouchEvent):void
 		{
-			if (handPicker == null || mainChart = null || isNaN(mainChart.width) || isNaN(mainChart.x) || isNaN(handPicker.width) || isNaN(handPicker.x) || glucoseDelimiter == null || isNaN(glucoseDelimiter.x) || mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0)
+			if (handPicker == null || mainChart == null || isNaN(mainChart.width) || isNaN(mainChart.x) || isNaN(handPicker.width) || isNaN(handPicker.x) || glucoseDelimiter == null || isNaN(glucoseDelimiter.x) || mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0)
 				return;
 			
 			//Get touch data
