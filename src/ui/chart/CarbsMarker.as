@@ -1,5 +1,7 @@
 package ui.chart
 {
+	import database.CommonSettings;
+	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
@@ -19,9 +21,15 @@ package ui.chart
 		/* Display Objects */
 		private var label:Label;
 		
+		/* Properties */
+		private var backgroundColor:uint;
+		private var strokeColor:uint;
+		
 		public function CarbsMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
+			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
+			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
 			
 			draw();
 		}
@@ -37,12 +45,12 @@ package ui.chart
 			var carbsMarker:NGon = new NGon(radius, 20, 0, 0, 360);
 			carbsMarker.x = radius / 3;
 			carbsMarker.y = radius + radius/4;
-			carbsMarker.color = 0xf8a246;
+			carbsMarker.color = backgroundColor;
 			addChild(carbsMarker);
 			
 			//Stroke
 			var stroke:Shape = new Shape();
-			stroke.graphics.lineStyle(0.8, 0xEEEEEE, 1);
+			stroke.graphics.lineStyle(0.8, strokeColor, 1);
 			stroke.graphics.drawCircle(radius, radius, radius);
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;

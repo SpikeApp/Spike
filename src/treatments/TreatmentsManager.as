@@ -867,6 +867,7 @@ package treatments
 				var treatmentCarbs:Number = 0;
 				var treatmentGlucose:Number = 0;
 				var treatmentNote:String = "";
+				
 				if (treatmentEventType == "Correction Bolus" || treatmentEventType == "Bolus" || treatmentEventType == "Correction")
 				{
 					treatmentType = Treatment.TYPE_BOLUS;
@@ -894,7 +895,11 @@ package treatments
 				else if (treatmentEventType == "BG Check")
 				{
 					treatmentType = Treatment.TYPE_GLUCOSE_CHECK;
-					treatmentGlucose = Number(nsTreatment.glucose);
+					var glucoseValue:Number = Number(nsTreatment.glucose);
+					if (glucoseValue < 25) //It's mmol
+						glucoseValue = Math.round(BgReading.mmolToMgdl(glucoseValue));
+					
+					treatmentGlucose = glucoseValue;
 				}
 				
 				if (nsTreatment.notes != null)

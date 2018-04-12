@@ -1,5 +1,7 @@
 package ui.chart
 {
+	import database.CommonSettings;
+	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
@@ -19,9 +21,15 @@ package ui.chart
 		/* Display Objects */
 		private var label:Label;
 		
+		/* Properties */
+		private var backgroundColor:uint;
+		private var strokeColor:uint;
+		
 		public function InsulinMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
+			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
+			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
 			
 			draw();
 		}
@@ -37,12 +45,12 @@ package ui.chart
 			var insulinMarker:NGon = new NGon(radius, 20, 0, 0, 360);
 			insulinMarker.x = radius / 3;
 			insulinMarker.y = radius + radius/4;
-			insulinMarker.color = 0x0086ff;
+			insulinMarker.color = backgroundColor;
 			addChild(insulinMarker);
 			
 			//Stroke
 			var stroke:Shape = new Shape();
-			stroke.graphics.lineStyle(0.8, 0xEEEEEE, 1);
+			stroke.graphics.lineStyle(0.8, strokeColor, 1);
 			stroke.graphics.drawCircle(radius, radius, radius);
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;

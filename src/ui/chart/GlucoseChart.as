@@ -9,8 +9,6 @@ package ui.chart
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -149,6 +147,7 @@ package ui.chart
 		private var mainChartContainer:Sprite;
 		private var differenceInMinutesForAllTimestamps:Number;
 		private var mainChartMask:Quad;
+		private var dummySprite:Sprite;
 		
 		//Objects
 		private var statusUpdateTimer:Timer;
@@ -604,9 +603,9 @@ package ui.chart
 			{
 				if (lastBGreadingTimeStamp > Number(_dataSource[_dataSource.length - 1].timestamp) && lastBGreadingTimeStamp - Number(_dataSource[_dataSource.length - 1].timestamp) > (4.5 * 60 * 1000) && chartType == MAIN_CHART)
 				{
-					var dummy:Sprite = new Sprite();
-					dummy.x = (lastBGreadingTimeStamp - firstBGReadingTimeStamp) * scaleXFactor;
-					chartContainer.addChild(dummy);
+					dummySprite = new Sprite();
+					dummySprite.x = (lastBGreadingTimeStamp - firstBGReadingTimeStamp) * scaleXFactor;
+					chartContainer.addChild(dummySprite);
 				}
 			}
 			
@@ -1504,6 +1503,14 @@ package ui.chart
 			{
 				//Dispose previous lines
 				destroyAllLines();
+			}
+			
+			//Destroy Dummy Sprite
+			if (dummySprite != null)
+			{
+				dummySprite.removeFromParent();
+				dummySprite.dispose();
+				dummySprite = null;
 			}
 			
 			//Add the new readings to the data array

@@ -22,9 +22,15 @@ package ui.chart
 		/* Display Objects */
 		private var label:Label;
 		
+		/* Properties */
+		private var backgroundColor:uint;
+		private var strokeColor:uint;
+		
 		public function BGCheckMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
+			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR));
+			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
 			
 			draw();
 		}
@@ -38,12 +44,12 @@ package ui.chart
 			var BGMarker:NGon = new NGon(radius, 20, 0, 0, 360);
 			BGMarker.x = radius / 3;
 			BGMarker.y = radius + radius/4;
-			BGMarker.color = 0xFF0000;
+			BGMarker.color = backgroundColor;
 			addChild(BGMarker);
 			
 			//Stroke
 			var stroke:Shape = new Shape();
-			stroke.graphics.lineStyle(0.8, 0xEEEEEE, 1);
+			stroke.graphics.lineStyle(0.8, strokeColor, 1);
 			stroke.graphics.drawCircle(radius, radius, radius);
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;

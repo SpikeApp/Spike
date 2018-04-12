@@ -61,7 +61,7 @@ package ui.screens
 			//screenRenderer.addChild(treatmentsLabel);
 			
 			//Treatments Settings
-			treatmentsSettings = new TreatmentsSettingsList();
+			treatmentsSettings = new TreatmentsSettingsList(this);
 			screenRenderer.addChild(treatmentsSettings);
 		}
 		

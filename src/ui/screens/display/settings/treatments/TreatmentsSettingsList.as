@@ -1,22 +1,28 @@
 package ui.screens.display.settings.treatments
 {
+	import database.CommonSettings;
+	
+	import feathers.controls.Button;
 	import feathers.controls.Check;
 	import feathers.controls.List;
+	import feathers.controls.PanelScreen;
+	import feathers.controls.ScrollPolicy;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
-	
-	import model.ModelLocator;
 	
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
+	import ui.chart.ColorPicker;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
@@ -30,15 +36,36 @@ package ui.screens.display.settings.treatments
 		private var treatmentsEnabled:ToggleSwitch;
 		private var nightscoutSyncEnabled:Check;
 		private var chartDisplayEnabled:Check;
+		private var displayIOBEnabled:Check;
+		private var displayCOBEnabled:Check;
+		private var insulinColorPicker:ColorPicker;
+		private var carbsColorPicker:ColorPicker;
+		private var bgCheckColorPicker:ColorPicker;
+		private var strokeColorPicker:ColorPicker;
+		private var treatmentPillColorPicker:ColorPicker;
+		private var _parent:PanelScreen;
+		private var resetColors:Button;
+		private var emailConfigurationFiles:Button;
+		private var loadInstructions:Button;
 		
 		/* Internal Variables */
 		public var needsSave:Boolean = false;
 		private var treatmentsEnabledValue:Boolean;
 		private var nightscoutSyncEnabledValue:Boolean;
 		private var chartDisplayEnabledValue:Boolean;
+		private var displayIOBEnabledValue:Boolean;
+		private var displayCOBEnabledValue:Boolean;
+		private var insulinMarkerColorValue:uint;
+		private var carbsMarkerColorValue:uint;
+		private var bgCheckMarkerColorValue:uint;
+		private var treatmentPillColorValue:uint;
+		private var strokeMarkerColorValue:uint;
+		private var colorPickers:Array = [];
 		
-		public function TreatmentsSettingsList()
+		public function TreatmentsSettingsList(parentDisplayObject:PanelScreen)
 		{
+			this._parent = parentDisplayObject;
+			
 			super();
 		}
 		override protected function initialize():void 
@@ -65,9 +92,16 @@ package ui.screens.display.settings.treatments
 		
 		private function setupInitialContent():void
 		{
-			treatmentsEnabledValue = true;
-			chartDisplayEnabledValue = true;
-			nightscoutSyncEnabledValue = true;
+			treatmentsEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
+			chartDisplayEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
+			nightscoutSyncEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
+			displayIOBEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
+			displayCOBEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
+			insulinMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
+			carbsMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
+			bgCheckMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR));
+			strokeMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			treatmentPillColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR));
 		}
 		
 		private function setupContent():void
@@ -84,9 +118,70 @@ package ui.screens.display.settings.treatments
 			chartDisplayEnabled = LayoutFactory.createCheckMark(chartDisplayEnabledValue);
 			chartDisplayEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
 			
+			/* Enable/Disable IOB */
+			displayIOBEnabled = LayoutFactory.createCheckMark(displayIOBEnabledValue);
+			displayIOBEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			/* Enable/Disable COB */
+			displayCOBEnabled = LayoutFactory.createCheckMark(displayCOBEnabledValue);
+			displayCOBEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			/* Enable/Disable Nightscout Sync */
 			nightscoutSyncEnabled = LayoutFactory.createCheckMark(nightscoutSyncEnabledValue);
 			nightscoutSyncEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Insulin Color Picker
+			insulinColorPicker = new ColorPicker(20, insulinMarkerColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			insulinColorPicker.name = "insulinColor";
+			insulinColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			insulinColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			insulinColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			colorPickers.push(insulinColorPicker);
+			
+			//Carbs Color Picker
+			carbsColorPicker = new ColorPicker(20, carbsMarkerColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			carbsColorPicker.name = "carbsColor";
+			carbsColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			carbsColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			carbsColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			colorPickers.push(carbsColorPicker);
+			
+			//BG Check Color Picker
+			bgCheckColorPicker = new ColorPicker(20, bgCheckMarkerColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			bgCheckColorPicker.name = "bgCheckColor";
+			bgCheckColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			bgCheckColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			bgCheckColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			
+			//Stroke Color Picker
+			strokeColorPicker = new ColorPicker(20, strokeMarkerColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			strokeColorPicker.name = "strokeColor";
+			strokeColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			strokeColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			strokeColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			
+			//Treatment Pill Color Picker
+			treatmentPillColorPicker = new ColorPicker(20, treatmentPillColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			treatmentPillColorPicker.name = "treatmentPillColor";
+			treatmentPillColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			treatmentPillColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			treatmentPillColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			colorPickers.push(treatmentPillColorPicker);
+			
+			//Color Reset Button
+			resetColors = LayoutFactory.createButton("Load Default Colors");
+			resetColors.pivotX = -3;
+			resetColors.addEventListener(Event.TRIGGERED, onResetColor);
+			
+			//Email configuration files
+			loadInstructions = LayoutFactory.createButton("Read Instructions");
+			loadInstructions.pivotX = -3;
+			loadInstructions.addEventListener(Event.TRIGGERED, onLoadInstructions);
+			
+			//Email configuration files
+			emailConfigurationFiles = LayoutFactory.createButton("Email Configuration Files");
+			emailConfigurationFiles.pivotX = -3;
+			emailConfigurationFiles.addEventListener(Event.TRIGGERED, onSendConfigurationFiles);
 			
 			/* Renderer */
 			itemRendererFactory = function():IListItemRenderer 
@@ -111,11 +206,24 @@ package ui.screens.display.settings.treatments
 			var data:Array = [];
 			
 			data.push({ screen: Screens.SETTINGS_PROFILE, label: "Profile", accessory: profileIconImage, selectable: true });
-			data.push({ screen: Screens.SETTINGS_PROFILE, label: "Enabled", accessory: treatmentsEnabled, selectable: false });
+			data.push({ label: "Enabled", accessory: treatmentsEnabled, selectable: false });
 			if (treatmentsEnabledValue)
 			{
-				data.push({ screen: Screens.SETTINGS_PROFILE, label: "Display on Chart", accessory: chartDisplayEnabled, selectable: false });
-				data.push({ screen: Screens.SETTINGS_PROFILE, label: "Nightscout Download Sync", accessory: nightscoutSyncEnabled, selectable: false });
+				data.push({ label: "Display on Chart", accessory: chartDisplayEnabled, selectable: false });
+				if (chartDisplayEnabledValue)
+				{
+					data.push({ label: "Display IOB", accessory: displayIOBEnabled, selectable: false });
+					data.push({ label: "Display COB", accessory: displayCOBEnabled, selectable: false });
+					data.push({ label: "Download NS Treatments", accessory: nightscoutSyncEnabled, selectable: false });
+					data.push({ label: "Insulin Marker Color", accessory: insulinColorPicker, selectable: false });
+					data.push({ label: "Carbs Marker Color", accessory: carbsColorPicker, selectable: false });
+					data.push({ label: "BG Check Marker Color", accessory: bgCheckColorPicker, selectable: false });
+					data.push({ label: "Stroke Color", accessory: strokeColorPicker, selectable: false });
+					data.push({ label: "Pill Color", accessory: treatmentPillColorPicker, selectable: false });
+					data.push({ label: "", accessory: resetColors, selectable: false });
+					data.push({ label: "", accessory: loadInstructions, selectable: false });
+					data.push({ label: "", accessory: emailConfigurationFiles, selectable: false });
+				}
 			}
 			
 			dataProvider = new ListCollection(data);
@@ -123,19 +231,149 @@ package ui.screens.display.settings.treatments
 		
 		public function save():void
 		{
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != String(treatmentsEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED, String(treatmentsEnabledValue));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) != String(chartDisplayEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED, String(chartDisplayEnabledValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) != String(nightscoutSyncEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED, String(nightscoutSyncEnabledValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) != String(displayIOBEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED, String(displayIOBEnabledValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) != String(displayCOBEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED, String(displayCOBEnabledValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR) != String(insulinMarkerColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR, String(insulinMarkerColorValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR) != String(carbsMarkerColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR, String(carbsMarkerColorValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR) != String(bgCheckMarkerColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR, String(bgCheckMarkerColorValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR) != String(strokeMarkerColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR, String(strokeMarkerColorValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR) != String(treatmentPillColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR, String(treatmentPillColorValue));
+			
+			needsSave = false;
 		}
 		
 		/**
 		 * Event Handlers
 		 */
 		private function onSettingsChanged(e:Event):void
-		{
+		{	
 			treatmentsEnabledValue = treatmentsEnabled.isSelected;
 			chartDisplayEnabledValue = chartDisplayEnabled.isSelected;
 			nightscoutSyncEnabledValue = nightscoutSyncEnabled.isSelected;
+			displayIOBEnabledValue = displayIOBEnabled.isSelected;
+			displayCOBEnabledValue = displayCOBEnabled.isSelected;
 			
 			refreshContent();
+			
+			needsSave = true;
+		}
+		
+		private function onLoadInstructions(e:Event):void
+		{
+			
+		}
+		
+		private function onSendConfigurationFiles(e:Event):void
+		{
+			
+		}
+		
+		private function onColorPaletteOpened(e:Event):void
+		{
+			var triggerName:String = e.data.name;
+			for (var i:int = 0; i < colorPickers.length; i++) 
+			{
+				var currentName:String = colorPickers[i].name;
+				if(currentName != triggerName)
+					(colorPickers[i] as ColorPicker).palette.visible = false;
+			}
+			_parent.verticalScrollPolicy = ScrollPolicy.OFF;
+		}
+		
+		private function onColorPaletteClosed(e:Event):void
+		{
+			_parent.verticalScrollPolicy = ScrollPolicy.ON;
+		}
+		
+		private function onColorChanged(e:Event):void
+		{
+			var currentTargetName:String = (e.currentTarget as ColorPicker).name;
+			
+			if(currentTargetName == "insulinColor")
+			{
+				if(insulinColorPicker.value != insulinMarkerColorValue)
+				{
+					insulinMarkerColorValue = insulinColorPicker.value;
+					needsSave = true;
+				}
+			}
+			else if(currentTargetName == "carbsColor")
+			{
+				if(carbsColorPicker.value != carbsMarkerColorValue)
+				{
+					carbsMarkerColorValue = carbsColorPicker.value;
+					needsSave = true;
+				}
+			}
+			else if(currentTargetName == "bgCheckColor")
+			{
+				if(bgCheckColorPicker.value != bgCheckMarkerColorValue)
+				{
+					bgCheckMarkerColorValue = bgCheckColorPicker.value;
+					needsSave = true;
+				}
+			}
+			else if(currentTargetName == "treatmentPillColor")
+			{
+				if(treatmentPillColorPicker.value != treatmentPillColorValue)
+				{
+					treatmentPillColorValue = treatmentPillColorPicker.value;
+					needsSave = true;
+				}
+			}
+			else if(currentTargetName == "strokeColor")
+			{
+				if(strokeColorPicker.value != strokeMarkerColorValue)
+				{
+					strokeMarkerColorValue = strokeColorPicker.value;
+					needsSave = true;
+				}
+			}
+		}
+		
+		private function onResetColor(e:Event):void
+		{
+			//Insulin Color Picker
+			insulinColorPicker.setColor(0x0086FF);
+			insulinMarkerColorValue = 0x0086FF;
+			
+			//Carbs Color Picker
+			carbsColorPicker.setColor(0xF8A246);
+			carbsMarkerColorValue = 0xF8A246;
+			
+			//BG Check Color Picker
+			bgCheckColorPicker.setColor(0xFF0000);
+			bgCheckMarkerColorValue = 0xFF0000;
+			
+			//Stroke Color Picker
+			strokeColorPicker.setColor(0xEEEEEE);
+			strokeMarkerColorValue = 0xEEEEEE;
+			
+			//Low Color Picker
+			treatmentPillColorPicker.setColor(0xEEEEEE);
+			treatmentPillColorValue = 0xEEEEEE;
 			
 			needsSave = true;
 		}
@@ -143,6 +381,10 @@ package ui.screens.display.settings.treatments
 		private function onMenuChanged(e:Event):void 
 		{
 			const screenName:String = selectedItem.screen as String;
+			
+			if (needsSave)
+				save();
+			
 			AppInterface.instance.navigator.pushScreen( screenName );
 		}
 		
@@ -184,6 +426,86 @@ package ui.screens.display.settings.treatments
 				nightscoutSyncEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
 				nightscoutSyncEnabled.dispose();
 				nightscoutSyncEnabled = null;
+			}
+			
+			if (displayIOBEnabled != null)
+			{
+				displayIOBEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
+				displayIOBEnabled.dispose();
+				displayIOBEnabled = null;
+			}
+			
+			if (displayCOBEnabled != null)
+			{
+				displayCOBEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
+				displayCOBEnabled.dispose();
+				displayCOBEnabled = null;
+			}
+			
+			if (insulinColorPicker != null)
+			{
+				insulinColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				insulinColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				insulinColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				insulinColorPicker.dispose();
+				insulinColorPicker = null;
+			}
+			
+			if (carbsColorPicker != null)
+			{
+				carbsColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				carbsColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				carbsColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				carbsColorPicker.dispose();
+				carbsColorPicker = null;
+			}
+			
+			if (bgCheckColorPicker != null)
+			{
+				bgCheckColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				bgCheckColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				bgCheckColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				bgCheckColorPicker.dispose();
+				bgCheckColorPicker = null;
+			}
+			
+			if (strokeColorPicker != null)
+			{
+				strokeColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				strokeColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				strokeColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				strokeColorPicker.dispose();
+				strokeColorPicker = null;
+			}
+			
+			if (treatmentPillColorPicker != null)
+			{
+				treatmentPillColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				treatmentPillColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				treatmentPillColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				treatmentPillColorPicker.dispose();
+				treatmentPillColorPicker = null;
+			}
+			
+			if (resetColors != null)
+			{
+				resetColors.removeEventListener(Event.TRIGGERED, onResetColor);
+				resetColors.dispose();
+				resetColors = null;
+			}
+			
+			if (loadInstructions != null)
+			{
+				loadInstructions.removeEventListener(Event.TRIGGERED, onLoadInstructions);
+				loadInstructions.dispose();
+				loadInstructions = null;
+			}
+			
+			if (emailConfigurationFiles != null)
+			{
+				emailConfigurationFiles.removeEventListener(Event.TRIGGERED, onSendConfigurationFiles);
+				emailConfigurationFiles.dispose();
+				emailConfigurationFiles = null;
 			}
 			
 			super.dispose();
