@@ -2272,25 +2272,28 @@ package ui.chart
 		 */
 		private function onHandPickerTouch (e:TouchEvent):void
 		{
+			if (handPicker == null || mainChart = null || isNaN(mainChart.width) || isNaN(mainChart.x) || isNaN(handPicker.width) || isNaN(handPicker.x) || glucoseDelimiter == null || isNaN(glucoseDelimiter.x) || mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0)
+				return;
+			
 			//Get touch data
 			var touch:Touch = e.getTouch(stage);
 			
 			/**
 			 * UI Menu
 			 */
-			if(touch != null && touch.phase == TouchPhase.ENDED) 
+			if(touch != null && touch.phase != null && touch.phase == TouchPhase.ENDED) 
 			{
 				//Activate menu drag gesture when drag finishes
 				AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
 			}
-			else if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			else if(touch != null && touch.phase != null &&  touch.phase == TouchPhase.BEGAN) 
 			{	
 				//Deactivate menu drag gesture when drag starts
 				AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			}
 			
 			//Dragging
-			if(touch != null && touch.phase == TouchPhase.MOVED)
+			if(touch != null && touch.phase != null && touch.phase == TouchPhase.MOVED)
 			{
 				displayLatestBGValue = false;
 				previousNumberOfMakers = currentNumberOfMakers;
@@ -2353,6 +2356,8 @@ package ui.chart
 				 */
 				/* Check if there are missed readings and we're in the future */
 				var latestMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1];
+				if (latestMarker == null)
+					return;
 				var latestMarkerGlobalX:Number = latestMarker.x + mainChart.x + (latestMarker.width) - glucoseDelimiter.x;
 				var futureTimeStamp:Number = latestMarker.timestamp + (Math.abs(latestMarkerGlobalX) / mainChartXFactor);
 				var nowTimestamp:Number;
@@ -2374,8 +2379,10 @@ package ui.chart
 						else
 							futureTimeOutput = TimeSpan.formatHoursMinutes(futureHours, futureMinutes, TimeSpan.TIME_FORMAT_12H);
 						
-						glucoseTimeAgoPill.setValue(futureTimeOutput, retroOutput, oldColor);
-						glucoseValueDisplay.fontStyles.color = oldColor;
+						if (glucoseTimeAgoPill != null)
+							glucoseTimeAgoPill.setValue(futureTimeOutput, retroOutput, oldColor);
+						if (glucoseValueDisplay != null)
+							glucoseValueDisplay.fontStyles.color = oldColor;
 					}
 					else
 					{
@@ -2389,10 +2396,14 @@ package ui.chart
 							glucoseTimeAgoPill.setValue("0m", now, newColor);
 					}
 					
-					glucoseTimeAgoPill.setValue(glucoseTimeAgoPill.value, glucoseTimeAgoPill.unit, oldColor);
+					if (glucoseTimeAgoPill != null)
+						glucoseTimeAgoPill.setValue(glucoseTimeAgoPill.value, glucoseTimeAgoPill.unit, oldColor);
 					
-					glucoseValueDisplay.text = "---";
-					glucoseValueDisplay.fontStyles.color = oldColor;
+					if (glucoseTimeAgoPill != null)
+					{
+						glucoseValueDisplay.text = "---";
+						glucoseValueDisplay.fontStyles.color = oldColor;
+					}
 					
 					calculateTotalIOB(getTimelineTimestamp());
 					calculateTotalCOB(getTimelineTimestamp());
@@ -2406,6 +2417,8 @@ package ui.chart
 				{
 					//Get Current and Previous Glucose Markers
 					var currentMarker:GlucoseMarker = mainChartGlucoseMarkersList[i];
+					if (currentMarker == null)
+						continue;
 					var previousMaker:GlucoseMarker = null;
 					if (i > 0)
 						previousMaker = mainChartGlucoseMarkersList[i - 1];
@@ -2414,12 +2427,22 @@ package ui.chart
 					var currentMarkerGlobalX:Number = currentMarker.x + mainChart.x + currentMarker.width;
 					var previousMarkerGlobalX:Number;
 					if (i > 0)
-						previousMarkerGlobalX = previousMaker.x + mainChart.x + previousMaker.width;
+					{
+						if (previousMaker != null && mainChart != null)
+							previousMarkerGlobalX = previousMaker.x + mainChart.x + previousMaker.width;
+						else
+							previousMarkerGlobalX = 0;
+					}
 					else
-						previousMarkerGlobalX  = 0;
+						previousMarkerGlobalX = 0;
 					
 					// Get current timeline timestamp
-					var firstAvailableTimestamp:Number = (mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp;
+					var firstAvailableTimestamp:Number;
+					
+					if (mainChartGlucoseMarkersList[0] != null)
+						firstAvailableTimestamp= (mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp;
+					else
+						continue;
 					var currentTimelineTimestamp:Number = firstAvailableTimestamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin) + (mainChartGlucoseMarkerRadius * 2)) / mainChartXFactor);
 					var hitTestCurrent:Boolean = currentMarkerGlobalX - currentMarker.width < glucoseDelimiter.x;
 					
@@ -2429,7 +2452,11 @@ package ui.chart
 						if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || BlueToothDevice.isFollower()))
 						{
 							nowTimestamp = new Date().valueOf();
-							var latestTimestamp:Number = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).timestamp;
+							var latestTimestamp:Number;
+							if (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] != null)
+								latestTimestamp = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).timestamp;
+							else
+								continue;
 							
 							//Display Glucose Value
 							if (!displayLatestBGValue)
@@ -2454,17 +2481,20 @@ package ui.chart
 							//Display Slope
 							if (!displayLatestBGValue)
 							{
-								glucoseSlopePill.setValue(currentMarker.slopeOutput, glucoseUnit, newColor)
+								if (glucoseSlopePill != null)
+									glucoseSlopePill.setValue(currentMarker.slopeOutput, glucoseUnit, newColor)
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
 									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
 									{
-										glucoseSlopePill.setValue("", "", oldColor)
+										if (glucoseSlopePill != null)
+											glucoseSlopePill.setValue("", "", oldColor)
 									}
 									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
 									{
-										glucoseSlopePill.setValue(glucoseSlopePill.value, glucoseSlopePill.unit, oldColor)
+										if (glucoseSlopePill != null)
+											glucoseSlopePill.setValue(glucoseSlopePill.value, glucoseSlopePill.unit, oldColor)
 									}
 								}
 							}
@@ -2473,7 +2503,8 @@ package ui.chart
 							//if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin) //Display time of BGReading
 							if (!displayLatestBGValue) //Display time of BGReading
 							{
-								glucoseTimeAgoPill.setValue(currentMarker.timeFormatted, retroOutput, newColor);
+								if (glucoseTimeAgoPill != null)
+									glucoseTimeAgoPill.setValue(currentMarker.timeFormatted, retroOutput, newColor);
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
@@ -2489,7 +2520,8 @@ package ui.chart
 										else
 											currentTimelineOutput = TimeSpan.formatHoursMinutes(currentTimelineHours, currentTimelineMinutes, TimeSpan.TIME_FORMAT_12H);
 										
-										glucoseTimeAgoPill.setValue(currentTimelineOutput, retroOutput, oldColor);
+										if (glucoseTimeAgoPill != null)
+											glucoseTimeAgoPill.setValue(currentTimelineOutput, retroOutput, oldColor);
 									}
 								}
 							}
@@ -2695,13 +2727,17 @@ package ui.chart
 			/* Event Listeners */
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived);
-			handPicker.removeEventListener(TouchEvent.TOUCH, onHandPickerTouch);
+			if (handPicker != null)
+				handPicker.removeEventListener(TouchEvent.TOUCH, onHandPickerTouch);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			
 			/* Update Timer */
-			statusUpdateTimer.stop();
-			statusUpdateTimer.removeEventListener(TimerEvent.TIMER, onUpdateTimerRefresh);
-			statusUpdateTimer = null;
+			if (statusUpdateTimer != null)
+			{
+				statusUpdateTimer.stop();
+				statusUpdateTimer.removeEventListener(TimerEvent.TIMER, onUpdateTimerRefresh);
+				statusUpdateTimer = null;
+			}
 			
 			/* Lines */
 			destroyAllLines();
