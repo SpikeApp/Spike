@@ -129,11 +129,13 @@ package ui.screens.display.bugreport
 			nameField = LayoutFactory.createTextInput(false, false, fieldWidth, HorizontalAlign.RIGHT);
 			nameField.addEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 			nameField.pivotX = 6;
+			nameField.text = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_BUG_REPORT_NAME);
 			
 			//Email Field
 			emailField = LayoutFactory.createTextInput(false, false, fieldWidth, HorizontalAlign.RIGHT);
 			emailField.addEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 			emailField.pivotX = 6;
+			emailField.text = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_BUG_REPORT_EMAIL);
 			
 			//Text Area
 			messageField = new TextArea();
@@ -254,8 +256,6 @@ package ui.screens.display.bugreport
 			if (!isTraceEnabled)
 			{
 				resetLogFile();
-				nameField.text = "";
-				emailField.text = "";
 				messageField.text = "";
 			}
 		}
@@ -313,6 +313,10 @@ package ui.screens.display.bugreport
 				
 				return;
 			}
+			
+			//Store name and email, they will be used to prefill the fields next time
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_BUG_REPORT_EMAIL, emailField.text);
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_BUG_REPORT_NAME, nameField.text);
 			
 			//Temporarly disable send button
 			sendEmail.label = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','stand_by_button_label');
