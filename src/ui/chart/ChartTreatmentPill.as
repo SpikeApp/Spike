@@ -1,6 +1,8 @@
 package ui.chart
 {
 	
+	import database.CommonSettings;
+	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
@@ -24,6 +26,7 @@ package ui.chart
 		/* Properties */
 		private var type:String;
 		private var value:String = "";
+		private var treatmentPillColor:uint;
 
 		/* Display Objects */
 		private var pillBackground:Shape;
@@ -39,6 +42,8 @@ package ui.chart
 		public function setValue(value:String):void
 		{
 			this.value = value;
+			
+			treatmentPillColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR));
 			
 			drawPill();
 		}
@@ -62,7 +67,7 @@ package ui.chart
 			
 			//Pill Background
 			pillBackground = new Shape();
-			pillBackground.graphics.beginFill(0xEEEEEE, 1);
+			pillBackground.graphics.beginFill(treatmentPillColor, 1);
 			pillBackground.graphics.drawRoundRect(0, 0, pillWidth, PILL_HEIGHT, CORNER_RADIUS);
 			
 			//Value Background

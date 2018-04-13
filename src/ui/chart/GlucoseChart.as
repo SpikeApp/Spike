@@ -2424,6 +2424,7 @@ package ui.chart
 				var futureTimeStamp:Number = latestMarker.timestamp + (Math.abs(latestMarkerGlobalX) / mainChartXFactor);
 				var nowTimestamp:Number;
 				var isFuture:Boolean = false;
+				var timelineTimestamp:Number;
 				
 				if (latestMarkerGlobalX < 0 - (TIME_6_MINUTES * mainChartXFactor)) //We are in the future and there are missing readings
 				{
@@ -2467,7 +2468,7 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 					}
 					
-					var timelineTimestamp:Number = getTimelineTimestamp();
+					timelineTimestamp = getTimelineTimestamp();
 					if (displayIOBEnabled)
 						calculateTotalIOB(getTimelineTimestamp());
 					if (displayCOBEnabled)
@@ -2601,7 +2602,7 @@ package ui.chart
 								displayLatestBGValue = true;
 							
 							//Treatments
-							var timelineTimestamp: Number = getTimelineTimestamp();
+							timelineTimestamp = getTimelineTimestamp();
 							if (displayIOBEnabled)
 								calculateTotalIOB(timelineTimestamp);
 							if (displayCOBEnabled)
