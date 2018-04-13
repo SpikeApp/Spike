@@ -187,6 +187,13 @@ package database
 		 */
 		public static const LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON:int = 73;
 		
+		/**
+		 * Values in bugreport screen (email address, name). Will be saved so that user doesn't need to retype them everytime<br>
+		 * Default empty string
+		 */
+		public static const LOCAL_SETTING_BUG_REPORT_EMAIL:int = 74;
+		public static const LOCAL_SETTING_BUG_REPORT_NAME:int = 75;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -261,7 +268,9 @@ package database
 			"150",//LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD
 			"70",//LOCAL_SETTING_IFTTT_GLUCOSE_LOW_THRESHOLD
 			"false",//LOCAL_SETTING_IFTTT_HTTP_SERVER_ERRORS_ON
-			"false"//LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON
+			"false",//LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON
+			"",//LOCAL_SETTING_BUG_REPORT_EMAIL
+			""//LOCAL_SETTING_BUG_REPORT_NAME
 		];
 		
 		public function LocalSettings() {
