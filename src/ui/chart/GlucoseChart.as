@@ -196,8 +196,9 @@ package ui.chart
 		private var COBPill:ChartTreatmentPill;
 		private var yAxisHeight:Number = 0;
 		private var allTreatmentsAdded:Boolean = false;
-
 		private var displayTreatmentsOnChart:Boolean;
+		private var displayCOBEnabled:Boolean;
+		private var displayIOBEnabled:Boolean;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -260,6 +261,8 @@ package ui.chart
 			treatmentsActive = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 			treatmentsActive == true ? chartTopPadding = 90 : chartTopPadding = 65;
 			displayTreatmentsOnChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
+			displayIOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
+			displayCOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
 			
 			//Add timeline to display list
 			glucoseTimelineContainer = new Sprite();
@@ -640,7 +643,7 @@ package ui.chart
 		
 		public function calculateTotalIOB(time:Number):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -658,7 +661,7 @@ package ui.chart
 		
 		public function calculateTotalCOB(time:Number):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -679,11 +682,21 @@ package ui.chart
 			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
-			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
-			IOBPill.visible = true;
+			if (displayIOBEnabled)
+			{
+				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+				IOBPill.visible = true;
+			}
 			
-			COBPill.x = IOBPill.x - COBPill.width - 6;
-			COBPill.visible = true;
+			if (displayCOBEnabled)
+			{
+				if (displayIOBEnabled)
+					COBPill.x = IOBPill.x - COBPill.width - 6;
+				else
+					COBPill.x = _graphWidth - COBPill.width -glucoseStatusLabelsMargin - 2;
+				
+				COBPill.visible = true;
+			}
 		}
 		
 		public function addAllTreatments():void
@@ -703,8 +716,11 @@ package ui.chart
 				}
 				
 				//Update Display Treatments Values
-				calculateTotalIOB(new Date().valueOf());
-				calculateTotalCOB(new Date().valueOf());
+				var now:Number = new Date().valueOf();
+				if (displayIOBEnabled)
+					calculateTotalIOB(now);
+				if (displayCOBEnabled)
+					calculateTotalCOB(now);
 			}
 		}
 		
@@ -723,8 +739,11 @@ package ui.chart
 				manageTreatments();
 				
 				//Recalculate total IOB and COB
-				calculateTotalIOB(getTimelineTimestamp());
-				calculateTotalCOB(getTimelineTimestamp());
+				var timelineTimestamp:Number = getTimelineTimestamp();
+				if (displayIOBEnabled)
+					calculateTotalIOB(timelineTimestamp);
+				if (displayCOBEnabled)
+					calculateTotalCOB(timelineTimestamp);
 			}
 		}
 		
@@ -750,8 +769,10 @@ package ui.chart
 						
 						//Recalculate IOB & COB
 						var timelineTimestamp:Number = getTimelineTimestamp();
-						calculateTotalIOB(timelineTimestamp);
-						calculateTotalCOB(timelineTimestamp);
+						if (displayIOBEnabled)
+							calculateTotalIOB(timelineTimestamp);
+						if (displayCOBEnabled)
+							calculateTotalCOB(timelineTimestamp);
 						break;
 					}
 				}
@@ -798,7 +819,8 @@ package ui.chart
 				treatmentsList.push(insulinMarker);
 				treatmentsMap[treatment.ID] = insulinMarker;
 				
-				calculateTotalIOB(getTimelineTimestamp());
+				if (displayIOBEnabled)
+					calculateTotalIOB(getTimelineTimestamp());
 				
 				chartTreatment = insulinMarker;
 			}
@@ -815,7 +837,8 @@ package ui.chart
 				treatmentsList.push(carbsMarker);
 				treatmentsMap[treatment.ID] = carbsMarker;
 				
-				calculateTotalCOB(getTimelineTimestamp());
+				if (displayCOBEnabled)
+					calculateTotalCOB(getTimelineTimestamp());
 				
 				chartTreatment = carbsMarker;
 			}
@@ -833,8 +856,10 @@ package ui.chart
 				treatmentsMap[treatment.ID] = mealMarker;
 				
 				var timelineTimestamp:Number = getTimelineTimestamp();
-				calculateTotalIOB(timelineTimestamp);
-				calculateTotalCOB(timelineTimestamp);
+				if (displayIOBEnabled)
+					calculateTotalIOB(timelineTimestamp);
+				if (displayCOBEnabled)
+					calculateTotalCOB(timelineTimestamp);
 				
 				chartTreatment = mealMarker;
 			}
@@ -991,8 +1016,11 @@ package ui.chart
 					treatment.dispose();
 					treatment = null;
 					
-					calculateTotalIOB(getTimelineTimestamp());
-					calculateTotalCOB(getTimelineTimestamp());
+					var timelineTimestamp:Number = getTimelineTimestamp();
+					if (displayIOBEnabled)
+						calculateTotalIOB(timelineTimestamp);
+					if (displayCOBEnabled)
+						calculateTotalCOB(timelineTimestamp);
 				}
 				
 				function onMove(e:starling.events.Event):void
@@ -1022,11 +1050,12 @@ package ui.chart
 						
 						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 						{
-							calculateTotalIOB(getTimelineTimestamp());
-							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+							if (displayIOBEnabled)
+								calculateTotalIOB(getTimelineTimestamp());
+							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && displayCOBEnabled)
 								calculateTotalCOB(getTimelineTimestamp());
 						}
-						else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+						else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION && displayCOBEnabled)
 							calculateTotalCOB(getTimelineTimestamp());
 						
 						//Update database
@@ -1620,8 +1649,11 @@ package ui.chart
 			drawTimeline();
 			addAllTreatments();
 			manageTreatments();
-			calculateTotalIOB(getTimelineTimestamp());
-			calculateTotalCOB(getTimelineTimestamp());
+			var timelineTimestamp:Number = getTimelineTimestamp();
+			if (displayIOBEnabled)
+				calculateTotalIOB(timelineTimestamp);
+			if (displayCOBEnabled)
+				calculateTotalCOB(timelineTimestamp);
 			
 			return true;
 		}
@@ -2187,24 +2219,29 @@ package ui.chart
 			//IOB
 			if (treatmentsActive && displayTreatmentsOnChart)
 			{
-				IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
-				IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplayHeight + 8;
-				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+				if (displayIOBEnabled)
+				{
+					IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
+					IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplayHeight + 8;
+					IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+					
+					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
+						IOBPill.visible = false;
+					
+					addChild(IOBPill);
+				}
 				
-				if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
-					IOBPill.visible = false;
-				
-				addChild(IOBPill);
-				
-				//COB
-				COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
-				COBPill.y = IOBPill.y;
-				COBPill.setValue("0g");
-				
-				if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
-					COBPill.visible = false;
-				
-				addChild(COBPill);
+				if (displayCOBEnabled)
+				{
+					COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
+					COBPill.y = glucoseValueDisplay.y + glucoseValueDisplayHeight + 8;
+					COBPill.setValue("0g");
+					
+					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
+						COBPill.visible = false;
+					
+					addChild(COBPill);
+				}
 			}
 		}
 		
@@ -2430,8 +2467,11 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 					}
 					
-					calculateTotalIOB(getTimelineTimestamp());
-					calculateTotalCOB(getTimelineTimestamp());
+					var timelineTimestamp:Number = getTimelineTimestamp();
+					if (displayIOBEnabled)
+						calculateTotalIOB(getTimelineTimestamp());
+					if (displayCOBEnabled)
+						calculateTotalCOB(getTimelineTimestamp());
 					
 					return;
 				}
@@ -2561,8 +2601,11 @@ package ui.chart
 								displayLatestBGValue = true;
 							
 							//Treatments
-							calculateTotalIOB(getTimelineTimestamp());
-							calculateTotalCOB(getTimelineTimestamp());
+							var timelineTimestamp: Number = getTimelineTimestamp();
+							if (displayIOBEnabled)
+								calculateTotalIOB(timelineTimestamp);
+							if (displayCOBEnabled)
+								calculateTotalCOB(timelineTimestamp);
 						}
 						
 						//We found a mach so we can break the loop to save CPU cycles
@@ -2585,8 +2628,11 @@ package ui.chart
 			if (BackgroundFetch.appIsInForeground())
 			{
 				calculateDisplayLabels();
-				calculateTotalIOB(getTimelineTimestamp());
-				calculateTotalCOB(getTimelineTimestamp());
+				var timelineTimestamp:Number = getTimelineTimestamp();
+				if (displayIOBEnabled)
+					calculateTotalIOB(timelineTimestamp);
+				if (displayCOBEnabled)
+					calculateTotalCOB(timelineTimestamp);
 			}
 		}
 		

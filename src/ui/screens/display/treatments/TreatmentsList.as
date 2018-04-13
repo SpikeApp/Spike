@@ -1,5 +1,9 @@
 package ui.screens.display.treatments
 {
+	import database.BlueToothDevice;
+	import database.Calibration;
+	import database.CommonSettings;
+	
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
@@ -22,6 +26,7 @@ package ui.screens.display.treatments
 	import ui.screens.Screens;
 	
 	[ResourceBundle("chartscreen")]
+	[ResourceBundle("treatments")]
 
 	public class TreatmentsList extends List 
 	{
@@ -46,6 +51,8 @@ package ui.screens.display.treatments
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
+		private var treatmentsEnabled:Boolean = false;
+		private var numBgReadings:int = 0;
 		
 		public function TreatmentsList()
 		{
@@ -57,6 +64,7 @@ package ui.screens.display.treatments
 			super.initialize();
 			
 			setupProperties();
+			setupInitialContent();
 			setupContent();
 		}
 		
@@ -70,44 +78,53 @@ package ui.screens.display.treatments
 			isSelectable = true;
 			autoHideBackground = true;
 			hasElasticEdges = false;
+		}
+		
+		private function setupInitialContent():void
+		{
+			//Properties
+			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
+			numBgReadings = ModelLocator.bgReadings.length;
 			
+			//Images & Textures
 			calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
 			calibrationImage = new Image(calibrationTexture);
-			bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
-			bolusImage = new Image(bolusTexture);
-			carbsTexture = MaterialDeepGreyAmberMobileThemeIcons.carbsTexture;
-			carbsImage = new Image(carbsTexture);
-			mealTexture = MaterialDeepGreyAmberMobileThemeIcons.mealTexture;
-			mealImage = new Image(mealTexture);
-			bgCheckTexture = MaterialDeepGreyAmberMobileThemeIcons.bgCheckTexture;
-			bgCheckImage = new Image(bgCheckTexture);
-			noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
-			noteImage = new Image(noteTexture);
-			treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.treatmentsTexture;
-			treatmentsImage = new Image(treatmentsTexture);
+			if (treatmentsEnabled)
+			{
+				bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
+				bolusImage = new Image(bolusTexture);
+				carbsTexture = MaterialDeepGreyAmberMobileThemeIcons.carbsTexture;
+				carbsImage = new Image(carbsTexture);
+				mealTexture = MaterialDeepGreyAmberMobileThemeIcons.mealTexture;
+				mealImage = new Image(mealTexture);
+				bgCheckTexture = MaterialDeepGreyAmberMobileThemeIcons.bgCheckTexture;
+				bgCheckImage = new Image(bgCheckTexture);
+				noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
+				noteImage = new Image(noteTexture);
+				treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.treatmentsTexture;
+				treatmentsImage = new Image(treatmentsTexture);
+			}
 		}
 		
 		private function setupContent():void
 		{
 			/* Content */
-			if (true)//(Calibration.allForSensor().length > 1 && !BlueToothDevice.isFollower())
+			if (Calibration.allForSensor().length > 1 && !BlueToothDevice.isFollower())
 				calibrationButtonEnabled = true;
 			
-			if (ModelLocator.bgReadings.length > 0)
-				var treatmentsEnabled:Boolean = true;
+			var menuData:Array = [];
+			menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
+			if (treatmentsEnabled)
+			{
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: treatmentsEnabled, id: 2 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: treatmentsEnabled, id: 3 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: treatmentsEnabled, id: 4 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: treatmentsEnabled, id: 5 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: treatmentsEnabled, id: 6 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: treatmentsEnabled, id: 7 } );
+			}
 			
-			dataProvider = new ListCollection
-			(
-				[
-					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 },
-					{ label: "Bolus", icon: bolusImage, selectable: treatmentsEnabled, id: 2 },
-					{ label: "Carbs", icon: carbsImage, selectable: treatmentsEnabled, id: 3 },
-					{ label: "Meal", icon: mealImage, selectable: treatmentsEnabled, id: 4 },
-					{ label: "BG Check", icon: bgCheckImage, selectable: treatmentsEnabled, id: 5 },
-					{ label: "Note", icon: noteImage, selectable: treatmentsEnabled, id: 6 },
-					{ label: "Treatments", icon: treatmentsImage, selectable: treatmentsEnabled, id: 7 }
-				]
-			);
+			dataProvider = new ListCollection(menuData);
 			
 			//Calibration Item Renderer Factory
 			function calibrationItemFactory():IListItemRenderer
@@ -135,7 +152,7 @@ package ui.screens.display.treatments
 				item.itemHasSelectable = true;
 				item.selectableField = "selectable";
 				item.gap = 5;
-				if(!treatmentsEnabled)
+				if(numBgReadings == 0)
 					item.alpha = 0.4;
 				item.paddingLeft = 8;
 				item.paddingRight = 14;
