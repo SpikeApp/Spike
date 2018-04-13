@@ -3,7 +3,6 @@ package ui.screens
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
-	import feathers.controls.Label;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -13,16 +12,16 @@ package ui.screens
 	import starling.events.Event;
 	
 	import ui.AppInterface;
-	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.treatments.TreatmentsSettingsList;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("treatments")]
 	
 	public class TreatmentsSettingsScreen extends BaseSubScreen
 	{
 		/* Display Objects */
 		private var treatmentsSettings:TreatmentsSettingsList;
-		private var treatmentsLabel:Label;
 		
 		public function TreatmentsSettingsScreen() 
 		{
@@ -43,7 +42,7 @@ package ui.screens
 		private function setupHeader():void
 		{
 			/* Set Header Title */
-			title = "Treatments";
+			title = ModelLocator.resourceManagerInstance.getString('treatments',"treatments_screen_title");
 			
 			/* Set Header Icon */
 			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.treatmentsTexture);
@@ -55,10 +54,6 @@ package ui.screens
 		{
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
-			
-			//Treatments Section Label
-			treatmentsLabel = LayoutFactory.createSectionLabel("Treatments", true);
-			//screenRenderer.addChild(treatmentsLabel);
 			
 			//Treatments Settings
 			treatmentsSettings = new TreatmentsSettingsList(this);
@@ -86,12 +81,6 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
-			if (treatmentsLabel != null)
-			{
-				treatmentsLabel.dispose();
-				treatmentsLabel = null;
-			}
-			
 			if (treatmentsSettings != null)
 			{
 				treatmentsSettings.dispose();

@@ -196,6 +196,8 @@ package ui.chart
 		private var COBPill:ChartTreatmentPill;
 		private var yAxisHeight:Number = 0;
 		private var allTreatmentsAdded:Boolean = false;
+
+		private var displayTreatmentsOnChart:Boolean;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -255,10 +257,9 @@ package ui.chart
 			now = ModelLocator.resourceManagerInstance.getString('chartscreen','now');
 			
 			//Treatments
-			if (treatmentsActive)
-				chartTopPadding = 90;
-			else
-				chartTopPadding = 65;
+			treatmentsActive = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
+			treatmentsActive == true ? chartTopPadding = 90 : chartTopPadding = 65;
+			displayTreatmentsOnChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
 			
 			//Add timeline to display list
 			glucoseTimelineContainer = new Sprite();
@@ -639,7 +640,7 @@ package ui.chart
 		
 		public function calculateTotalIOB(time:Number):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive)
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -657,7 +658,7 @@ package ui.chart
 		
 		public function calculateTotalCOB(time:Number):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive)
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -675,6 +676,9 @@ package ui.chart
 		
 		private function repositionTreatmentPills():void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
 			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 			IOBPill.visible = true;
 			
@@ -684,6 +688,9 @@ package ui.chart
 		
 		public function addAllTreatments():void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
 			if (TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && treatmentsActive && !dummyModeActive && !allTreatmentsAdded)
 			{
 				allTreatmentsAdded = true;
@@ -703,6 +710,9 @@ package ui.chart
 		
 		public function updateExternallyModifiedTreatment(treatment:Treatment):void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
 			var modifiedTreatment:ChartTreatment = treatmentsMap[treatment.ID] as ChartTreatment;
 			if (modifiedTreatment != null)
 			{
@@ -720,6 +730,9 @@ package ui.chart
 		
 		public function updateExternallyDeletedTreatment(treatment:Treatment):void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
 			if (treatment != null)
 			{
 				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
@@ -747,6 +760,9 @@ package ui.chart
 		
 		public function addTreatment(treatment:Treatment):void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
 			//Setup initial timeline/mask properties
 			if (treatmentsFirstRun && treatmentsContainer == null)
 			{
@@ -870,6 +886,9 @@ package ui.chart
 		
 		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
 			var touch:Touch = e.getTouch(stage);
 			
 			if(touch != null && touch.phase == TouchPhase.BEGAN) 
@@ -1019,6 +1038,9 @@ package ui.chart
 		
 		private function manageTreatments():void
 		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
 			if (treatmentsContainer == null || !treatmentsActive)
 				return;
 			
@@ -2163,24 +2185,27 @@ package ui.chart
 			addChild(glucoseSlopePill);
 			
 			//IOB
-			IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
-			IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplayHeight + 8;
-			IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
-			
-			if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive)
-				IOBPill.visible = false;
-			
-			addChild(IOBPill);
-			
-			//COB
-			COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
-			COBPill.y = IOBPill.y;
-			COBPill.setValue("0g");
-			
-			if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive)
-				COBPill.visible = false;
-			
-			addChild(COBPill);
+			if (treatmentsActive && displayTreatmentsOnChart)
+			{
+				IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
+				IOBPill.y = glucoseValueDisplay.y + glucoseValueDisplayHeight + 8;
+				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+				
+				if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+					IOBPill.visible = false;
+				
+				addChild(IOBPill);
+				
+				//COB
+				COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
+				COBPill.y = IOBPill.y;
+				COBPill.setValue("0g");
+				
+				if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+					COBPill.visible = false;
+				
+				addChild(COBPill);
+			}
 		}
 		
 		public function showLine():void

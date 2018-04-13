@@ -3,9 +3,10 @@ package ui.screens
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
-	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
+	
+	import model.ModelLocator;
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
@@ -15,7 +16,7 @@ package ui.screens
 	
 	import utils.Constants;
 	
-	[ResourceBundle("glucosemanagementscreen")]
+	[ResourceBundle("treatments")]
 
 	public class TreatmentsManagementScreen extends BaseSubScreen
 	{
@@ -41,7 +42,7 @@ package ui.screens
 		private function setupHeader():void
 		{
 			/* Set Header Title */
-			title = "Treatments";
+			title = ModelLocator.resourceManagerInstance.getString('treatments',"treatments_screen_title");
 			
 			/* Set Header Icon */
 			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.treatmentsTexture);

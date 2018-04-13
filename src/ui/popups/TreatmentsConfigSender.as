@@ -4,12 +4,8 @@ package ui.popups
 	
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
-	import flash.filesystem.File;
-	import flash.filesystem.FileMode;
-	import flash.filesystem.FileStream;
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
-	import flash.utils.ByteArray;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
@@ -36,7 +32,7 @@ package ui.popups
 	import utils.DataValidator;
 
 	[ResourceBundle("globaltranslations")]
-	[ResourceBundle("wixelsender")]
+	[ResourceBundle("treatments")]
 	
 	public class TreatmentsConfigSender
 	{
@@ -48,8 +44,6 @@ package ui.popups
 		
 		/* Properties */
 		private static var dataProvider:ArrayCollection;
-
-		private static var filesList:Array;
 		
 		public function TreatmentsConfigSender()
 		{
@@ -92,7 +86,7 @@ package ui.popups
 			mainContainer.layout = mainLayout;
 			
 			/* Title */
-			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('wixelsender',"user_email_label"), HorizontalAlign.CENTER);
+			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label"), HorizontalAlign.CENTER);
 			mainContainer.addChild(emailLabel);
 			
 			/* Email Input */
@@ -113,7 +107,7 @@ package ui.popups
 			actionButtonsContainer.addChild(cancelButton);
 			
 			//Send Button
-			sendButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('wixelsender',"send_alert_button_label"));
+			sendButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"send_button_label_capitalized"));
 			sendButton.addEventListener(starling.events.Event.TRIGGERED, onClose);
 			actionButtonsContainer.addChild(sendButton);
 			
@@ -147,102 +141,38 @@ package ui.popups
 		private static function onClose(e:starling.events.Event):void
 		{
 			//Validation
-			emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"user_email_label");
+			emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label");
 			emailLabel.fontStyles.color = 0xEEEEEE;
 			
 			if (emailField.text == "")
 			{
-				emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_address_required");
+				emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_address_required");
 				emailLabel.fontStyles.color = 0xFF0000;
 				return;
 			}
 			else if (!DataValidator.validateEmail(emailField.text))
 			{
-				emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_address_invalid");
+				emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_address_invalid");
 				emailLabel.fontStyles.color = 0xFF0000;
 				return;
 			}
 			
 			sendButton.isEnabled = false;
 			
-			filesList = 
-			[
-				{
-					fileName: "SpikeBGCheck.wflow",
-					emailSubject: "BG Check Treatment",
-					emailBody: "Configuration file for Spike BG Treatment"
-				},
-				{
-					fileName: "SpikeBolus.wflow",
-					emailSubject: "Bolus Treatment",
-					emailBody: "Configuration file for Spike Bolus"
-				},
-				{
-					fileName: "SpikeCarbs.wflow",
-					emailSubject: "Carb Treatment",
-					emailBody: "Configuration file for Spike Carbs"
-				},
-				{
-					fileName: "SpikeMeal.wflow",
-					emailSubject: "Meal Treatment",
-					emailBody: "Configuration file for Spike Meal"
-				},
-				{
-					fileName: "SpikeSampleNote.wflow",
-					emailSubject: "Note Treatment",
-					emailBody: "Configuration file for Spike Note example"
-				}
-			];
-			
-			for (var i:int = 0; i < filesList.length; i++) 
-			{
-				//Get corresponding file
-				var fileName:String = filesList[i].fileName as String;
-				trace("fileName", fileName);
-				var file:File = File.applicationDirectory.resolvePath("assets/files/" + fileName);
-				if (file.exists && file.size > 0)
-				{
-					var fileStream:FileStream = new FileStream();
-					fileStream.open(file, FileMode.READ);
-					
-					//Read trace log raw bytes into memory
-					var fileData:ByteArray = new ByteArray();
-					fileStream.readBytes(fileData);
-					fileStream.close();
-					
-					//Create URL Request Address
-					var emailBody:String = filesList[i].emailBody as String;
-					trace("emailBody", emailBody);
-					
-					var vars:URLVariables = new URLVariables();
-					vars.fileName = fileName;
-					vars.mimeType = "application/zip";
-					vars.emailSubject = filesList[i].emailSubject as String;
-					trace("vars.emailSubject", vars.emailSubject);
-					vars.emailBody = emailBody;
-					vars.userEmail = emailField.text.replace(" ", "");
-					vars.mode = EmailSender.MODE_EMAIL_USER;
-					
-					//Send data
-					EmailSender.sendData
-					(
-						EmailSender.TRANSMISSION_URL_WITH_ATTACHMENT,
-						onLoadCompleteHandler,
-						vars,
-						fileData
-					);
-				}
-				else
-				{
-					AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('wixelsender','wixel_file_not_found')
-					);
-					
-					sendButton.isEnabled = true;
-				}
-			}
+			//Create URL Request 
+			var vars:URLVariables = new URLVariables();
+			vars.mimeType = "text/html";
+			vars.emailSubject = ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_subject");
+			vars.emailBody = ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_body");
+			vars.userEmail = emailField.text.replace(" ", "");
+				
+			//Send data
+			EmailSender.sendData
+			(
+				EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
+				onLoadCompleteHandler,
+				vars
+			);
 		}
 		
 		private static function onLoadCompleteHandler(event:flash.events.Event):void 
@@ -258,7 +188,7 @@ package ui.popups
 				AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('wixelsender','wixel_file_sent_successfully'),
+					ModelLocator.resourceManagerInstance.getString('treatments','configuration_sent_successfully'),
 					Number.NaN
 				);
 				
@@ -271,7 +201,7 @@ package ui.popups
 				AlertManager.showActionAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('wixelsender','wixel_file_not_sent') + " " + response.statuscode,
+					ModelLocator.resourceManagerInstance.getString('treatments','configuration_not_sent') + " " + response.statuscode,
 					Number.NaN,
 					[
 						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },	

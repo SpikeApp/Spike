@@ -7,6 +7,8 @@ package ui.screens.display.settings.treatments
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
 	import starling.events.Event;
 	
 	import treatments.Profile;
@@ -15,6 +17,8 @@ package ui.screens.display.settings.treatments
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	
+	[ResourceBundle("profilesettingsscreen")]
 	
 	public class CarbsSettingsList extends List 
 	{
@@ -64,7 +68,7 @@ package ui.screens.display.settings.treatments
 			
 			//Set screen content
 			var data:Array = [];
-			data.push( { text: "Absorption Rate (g)", accessory: carbAbsorptionRateStepper } );
+			data.push( { text: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','carb_absorption_rate_label'), accessory: carbAbsorptionRateStepper } );
 			dataProvider = new ArrayCollection(data);
 			
 			/* Set Item Renderer */

@@ -20,6 +20,8 @@ package ui.screens.display.settings.treatments
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import model.ModelLocator;
+	
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.Texture;
@@ -31,6 +33,10 @@ package ui.screens.display.settings.treatments
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
+	
+	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class TreatmentsSettingsList extends List 
 	{
@@ -173,17 +179,17 @@ package ui.screens.display.settings.treatments
 			colorPickers.push(treatmentPillColorPicker);
 			
 			//Color Reset Button
-			resetColors = LayoutFactory.createButton("Load Default Colors");
+			resetColors = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments',"default_colors_label"));
 			resetColors.pivotX = -3;
 			resetColors.addEventListener(Event.TRIGGERED, onResetColor);
 			
 			//Email configuration files
-			loadInstructions = LayoutFactory.createButton("Read Instructions");
+			loadInstructions = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments',"read_instructions_label"));
 			loadInstructions.pivotX = -3;
 			loadInstructions.addEventListener(Event.TRIGGERED, onLoadInstructions);
 			
 			//Email configuration files
-			emailConfigurationFiles = LayoutFactory.createButton("Email Configuration Files");
+			emailConfigurationFiles = LayoutFactory.createButton(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_label") : ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_iphone_x_label"));
 			emailConfigurationFiles.pivotX = -3;
 			emailConfigurationFiles.addEventListener(Event.TRIGGERED, onSendConfigurationFiles);
 			
@@ -209,21 +215,21 @@ package ui.screens.display.settings.treatments
 			/* Data */
 			var data:Array = [];
 			
-			data.push({ screen: Screens.SETTINGS_PROFILE, label: "Profile", accessory: profileIconImage, selectable: true });
-			data.push({ label: "Enabled", accessory: treatmentsEnabled, selectable: false });
+			data.push({ screen: Screens.SETTINGS_PROFILE, label: ModelLocator.resourceManagerInstance.getString('treatments',"profile_menu_label"), accessory: profileIconImage, selectable: true });
+			data.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"enabled"), accessory: treatmentsEnabled, selectable: false });
 			if (treatmentsEnabledValue)
 			{
-				data.push({ label: "Display on Chart", accessory: chartDisplayEnabled, selectable: false });
+				data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"display_on_chart_label"), accessory: chartDisplayEnabled, selectable: false });
 				if (chartDisplayEnabledValue)
 				{
-					data.push({ label: "Display IOB", accessory: displayIOBEnabled, selectable: false });
-					data.push({ label: "Display COB", accessory: displayCOBEnabled, selectable: false });
-					data.push({ label: "Download NS Treatments", accessory: nightscoutSyncEnabled, selectable: false });
-					data.push({ label: "Insulin Marker Color", accessory: insulinColorPicker, selectable: false });
-					data.push({ label: "Carbs Marker Color", accessory: carbsColorPicker, selectable: false });
-					data.push({ label: "BG Check Marker Color", accessory: bgCheckColorPicker, selectable: false });
-					data.push({ label: "Stroke Color", accessory: strokeColorPicker, selectable: false });
-					data.push({ label: "Pill Color", accessory: treatmentPillColorPicker, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"display_iob_label"), accessory: displayIOBEnabled, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"display_cob_label"), accessory: displayCOBEnabled, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"download_ns_treatments_label"), accessory: nightscoutSyncEnabled, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"insulin_marker_color_label"), accessory: insulinColorPicker, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"carbs_marker_color_label"), accessory: carbsColorPicker, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"bg_check_marker_color_label"), accessory: bgCheckColorPicker, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"stroke_marker_color_label"), accessory: strokeColorPicker, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"pill_color_label"), accessory: treatmentPillColorPicker, selectable: false });
 					data.push({ label: "", accessory: resetColors, selectable: false });
 					data.push({ label: "", accessory: loadInstructions, selectable: false });
 					data.push({ label: "", accessory: emailConfigurationFiles, selectable: false });
