@@ -33,7 +33,7 @@ package ui.chart
 		private var valueBackground:Shape;
 		private var titleLabel:Label;
 		private var valueLabel:Label;
-		
+
 		public function ChartTreatmentPill(type:String)
 		{
 			this.type = type;
@@ -58,7 +58,7 @@ package ui.chart
 			titleLabel.validate();
 			
 			//Create Value Label
-			valueLabel = LayoutFactory.createLabel(value, HorizontalAlign.CENTER, VerticalAlign.TOP, FONT_SIZE, false,  0xEEEEEE);
+			valueLabel = LayoutFactory.createLabel(value, HorizontalAlign.CENTER, VerticalAlign.TOP, FONT_SIZE, false,  treatmentPillColor);
 			valueLabel.validate();
 			
 			//Calculate Dimensions

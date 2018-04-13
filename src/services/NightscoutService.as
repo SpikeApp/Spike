@@ -133,6 +133,10 @@ package services
 		
 		private static var _instance:NightscoutService = new NightscoutService();
 
+		private static var nightscoutTreatmentsSyncEnabled:Boolean;
+
+		private static var treatmentsEnabled:Boolean;
+
 		public function NightscoutService()
 		{
 			if (_instance != null)
@@ -156,13 +160,14 @@ package services
 			//Event listener for settings changes
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 			
+			setupNightscoutProperties();
+			
 			if (BlueToothDevice.isFollower() && 
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""
 			)
 			{
-				setupNightscoutProperties();
 				setupFollowerProperties();
 				activateFollower();
 			}
@@ -172,7 +177,6 @@ package services
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false")
 			{
-				setupNightscoutProperties();
 				testNightscoutCredentials();
 			}
 			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" &&
@@ -298,7 +302,7 @@ package services
 				}
 				
 				//Get remote treatments
-				if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+				if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 					getRemoteTreatments();
 			}
 			else
@@ -330,9 +334,11 @@ package services
 			{
 				if (!NetworkInfo.networkInfo.isReachable())
 				{
-					Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
-					
-					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					{
+						Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
+						setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+					}
 					
 					return;
 				}
@@ -387,26 +393,35 @@ package services
 							ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
 							
 							//Get treatmenents
-							if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+							if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 								getRemoteTreatments();
 						}
 						else
 						{
-							Trace.myTrace("NightscoutService.as", "Error retrieving insulin. Retrying in 30 seconds! Response: " + response);
-							setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+							{
+								Trace.myTrace("NightscoutService.as", "Error retrieving insulin. Retrying in 30 seconds! Response: " + response);
+								setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+							}
 						}
 					}
 				} 
 				catch(error:Error) 
 				{
-					Trace.myTrace("NightscoutService.as", "Error parsing profile properties. Retrying in 30 seconds! Response: " + response);
-					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					{
+						Trace.myTrace("NightscoutService.as", "Error parsing profile properties. Retrying in 30 seconds! Response: " + response);
+						setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+					}
 				}
 			}
 			else
 			{
-				Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Retrying in 30 seconds! Response: " + response);
-				setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Retrying in 30 seconds! Response: " + response);
+					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+				}
 			}
 		}
 		
@@ -432,7 +447,8 @@ package services
 			clearTimeout(followerTimer);
 			
 			setupNightscoutProperties();
-			getNightscoutProfile();
+			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				getNightscoutProfile();
 			getRemoteReadings();
 			
 			activateTimer();
@@ -656,7 +672,7 @@ package services
 						_instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
 						
 						//Get remote treatments
-						if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+						if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 							getRemoteTreatments();
 					}
 				} 
@@ -857,13 +873,19 @@ package services
 		
 		private static function getRemoteTreatments():void
 		{
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "getRemoteTreatments called!");
 			
 			//Validation
 			if (!isNSProfileSet)
 			{
-				Trace.myTrace("NightscoutService.as", "Profile has not yet been downloaded. Will try to download now!");
-				getNightscoutProfile();
+				if (nightscoutTreatmentsSyncEnabled && treatmentsEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Profile has not yet been downloaded. Will try to download now!");
+					getNightscoutProfile();
+				}
 				return;
 			}
 			
@@ -876,9 +898,12 @@ package services
 			
 			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0)
 			{
-				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds");
-				
-				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds");
+					
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				}
 				
 				return;
 			}
@@ -920,7 +945,7 @@ package services
 			loader = null;
 			
 			//Validate if we can process treatments
-			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0)
+			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 			{
 				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
 				
@@ -942,20 +967,29 @@ package services
 					}
 					else
 					{
-						Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+						{
+							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+							setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+						}
 					}
 				} 
 				catch(error:Error) 
 				{
-					Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					{
+						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					}
 				}
 			}
 			else
 			{
-				Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				}
 			}
 		}
 		
@@ -1338,7 +1372,8 @@ package services
 			Trace.myTrace("NightscoutService.as", "Service activated!");
 			serviceActive = true;
 			setupNightscoutProperties();
-			getNightscoutProfile();
+			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				getNightscoutProfile();
 			getInitialGlucoseReadings();
 			getInitialCalibrations();
 			activateEventListeners();
@@ -1389,6 +1424,10 @@ package services
 			
 			nightscoutProfileURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/profile.json" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/profile.json";
 			if (nightscoutProfileURL.indexOf('http') == -1) nightscoutProfileURL = "https://" + nightscoutProfileURL;
+			
+			nightscoutTreatmentsSyncEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
+			
+			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 		}
 		
 		private static function activateEventListeners():void
@@ -1473,13 +1512,19 @@ package services
 			}
 			else if (mode == MODE_TREATMENTS_GET)
 			{
-				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting treatments. Retrying in 30 seconds. Error: " + error.message);
-				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting treatments. Retrying in 30 seconds. Error: " + error.message);
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				}
 			}
 			else if (mode == MODE_PROFILE_GET)
 			{
-				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting profile. Retrying in 30 seconds. Error: " + error.message);
-				setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting profile. Retrying in 30 seconds. Error: " + error.message);
+					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+				}
 			}
 		}
 		
@@ -1495,6 +1540,8 @@ package services
 			{
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true")
 				{
+					setupNightscoutProperties();
+					
 					setupNightscoutProperties();
 					if (CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED, "false"))
 						testNightscoutCredentials();
@@ -1536,6 +1583,7 @@ package services
 				)
 				{
 					deactivateFollower();
+					setupNightscoutProperties();
 					setupFollowerProperties();
 					activateFollower();
 				}
@@ -1547,9 +1595,14 @@ package services
 				if (followerModeEnabled)
 				{
 					deactivateFollower();
+					setupNightscoutProperties();
 					setupFollowerProperties();
 					activateFollower();
 				}
+			}
+			else if (e.data == CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED || e.data == CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED)
+			{
+				setupNightscoutProperties();
 			}
 		}
 		
@@ -1567,7 +1620,8 @@ package services
 				resync();
 				
 				//Update remote treatments so the user has updated data when returning to Spike
-				getRemoteTreatments();
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					getRemoteTreatments();
 			}
 			else
 				networkChangeOcurrances++;
@@ -1580,7 +1634,8 @@ package services
 			resync();
 			
 			//Update remote treatments so the user has updated data when returning to Spike
-			getRemoteTreatments();
+			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				getRemoteTreatments();
 		}
 
 		/**

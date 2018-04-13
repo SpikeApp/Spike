@@ -30,10 +30,16 @@ package ui.chart
 		private var valueBackground:Shape;
 		private var unitLabel:Label;
 		private var valueLabel:Label;
+
+		private var fontColor:uint;
+
+		private var oldColor:uint;
 		
 		public function ChartInfoPill(fontSize:Number)
 		{
 			this.fontSize = fontSize;
+			fontColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_FONT_COLOR));
+			oldColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR));
 		}
 		
 		public function setValue(value:String, unit:String, color:uint):void
