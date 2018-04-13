@@ -509,5 +509,6 @@
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
+    <extensionID>com.distriqt.Exceptions</extensionID>
     </extensions>
 </application>

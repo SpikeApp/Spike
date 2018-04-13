@@ -31,7 +31,7 @@ package ui.chart
 			{
 				if (glucoseUnit == "mg/dL")
 				{
-					glucoseValueFormatted = Math.round(glucoseValue * 10) / 10;
+					glucoseValueFormatted = Math.round(glucoseValue);
 					glucoseOutput = String( glucoseValueFormatted );
 				}
 				else
@@ -47,7 +47,7 @@ package ui.chart
 			else
 			{
 				if (glucoseUnit == "mg/dL")
-					glucoseValueFormatted = Math.round(glucoseValue * 10) / 10;
+					glucoseValueFormatted = Math.round(glucoseValue);
 				else
 					glucoseValueFormatted = Math.round(BgReading.mgdlToMmol(glucoseValue) * 10) / 10;
 				
