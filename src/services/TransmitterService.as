@@ -143,7 +143,7 @@ package services
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeG4Characteristic(value);
+						BluetoothService.writeToCharacteristic(value);
 					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 						&&
 						transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
@@ -153,12 +153,12 @@ package services
 						value.writeByte(0x01);
 						value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
 						myTrace("calling BluetoothService.ackCharacteristicUpdate");
-						BluetoothService.writeG4Characteristic(value);
+						BluetoothService.writeToCharacteristic(value);
 					} else {
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeG4Characteristic(value);
+						BluetoothService.writeToCharacteristic(value);
 					}
 				} else if ((be.data is TransmitterDataXBridgeDataPacket) || (be.data is TransmitterDataXBridgeRDataPacket)) {
 					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket;
@@ -175,7 +175,7 @@ package services
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeG4Characteristic(value);
+						BluetoothService.writeToCharacteristic(value);
 					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 						&&
 						transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
@@ -185,12 +185,12 @@ package services
 						value.writeByte(0x01);
 						value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
 						myTrace("calling BluetoothService.ackCharacteristicUpdate");
-						BluetoothService.writeG4Characteristic(value);
+						BluetoothService.writeToCharacteristic(value);
 					} else {
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeG4Characteristic(value);
+						BluetoothService.writeToCharacteristic(value);
 					}						
 
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
@@ -231,10 +231,6 @@ package services
 					}
 				} else if (be.data is TransmitterDataG5Packet) {
 					var transmitterDataG5Packet:TransmitterDataG5Packet = be.data as TransmitterDataG5Packet;
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE, "0");
-					
-					//store the transmitter battery level in the common settings (to be synchronized)
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataG5Packet.transmitterBatteryVoltage.toString());
 					
 					//check special values filtered and unfiltered to detect dead battery
 					if (transmitterDataG5Packet.filteredData == 2096896) {
@@ -330,7 +326,7 @@ package services
 					lastBgReading = BgReading.lastNoSensor();
 					if (lastBgReading == null || lastBgReading.timestamp + 4 * 60 * 1000 < (new Date()).valueOf()) {
 						myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket, sending 6C");
-						BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
+						BluetoothService.writeToCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 					}
 				} else if (be.data is TransmitterDataBluKonPacket) {
 					lastBgReading = BgReading.lastNoSensor();
@@ -415,7 +411,7 @@ package services
 				value.writeByte(0x01);
 				value.writeInt(BluetoothService.encodeTxID(transmitterIDTextInput.text));
 				myTrace("calling BluetoothService.ackCharacteristicUpdate");
-				BluetoothService.writeG4Characteristic(value);
+				BluetoothService.writeToCharacteristic(value);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDTextInput.text.toUpperCase());
 			}
 		}
