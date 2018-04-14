@@ -280,7 +280,7 @@ package ui
 			if(Capabilities.cpuArchitecture == "ARM") 
 			{
 				var touch:Touch3D = new Touch3D();
-				if (touch.isSupported() || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
+				if (touch.isSupported() || Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
 				{
 					touch.init();
 					touch.addEventListener(Touch3DEvent.SHORTCUT_ITEM, itemStatus);

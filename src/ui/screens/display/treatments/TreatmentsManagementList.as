@@ -243,7 +243,7 @@ package ui.screens.display.treatments
 			
 			setupCalloutPosition();
 			
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				positionHelper.y -= 10;	
 			}

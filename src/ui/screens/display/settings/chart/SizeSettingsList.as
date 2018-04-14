@@ -72,7 +72,7 @@ package ui.screens.display.settings.chart
 			glucoseDisplayFontSize.step = 50;
 			glucoseDisplayFontSize.width = glucoseMarkerRadius.width;
 			glucoseDisplayFontSize.pivotX = 10;
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				glucoseDisplayFontSize.width = 100;
 			
 			timeAgoDisplayFontSize = new Slider();
@@ -82,7 +82,7 @@ package ui.screens.display.settings.chart
 			timeAgoDisplayFontSize.step = 50;
 			timeAgoDisplayFontSize.width = glucoseMarkerRadius.width;
 			timeAgoDisplayFontSize.pivotX = 10;
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				timeAgoDisplayFontSize.width = 100;
 			
 			axisFontSize = new Slider();
@@ -92,7 +92,7 @@ package ui.screens.display.settings.chart
 			axisFontSize.step = 50;
 			axisFontSize.width = glucoseMarkerRadius.width;
 			axisFontSize.pivotX = 10;
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				axisFontSize.width = 100;
 			
 			//Set Size Settings Item Renderer

@@ -189,7 +189,7 @@ package ui.screens.display.settings.treatments
 			loadInstructions.addEventListener(Event.TRIGGERED, onLoadInstructions);
 			
 			//Email configuration files
-			emailConfigurationFiles = LayoutFactory.createButton(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_label") : ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_iphone_x_label"));
+			emailConfigurationFiles = LayoutFactory.createButton(Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_label") : ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_iphone_x_label"));
 			emailConfigurationFiles.pivotX = -3;
 			emailConfigurationFiles.addEventListener(Event.TRIGGERED, onSendConfigurationFiles);
 			

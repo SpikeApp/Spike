@@ -223,13 +223,13 @@ package ui.screens.display.settings.integration
 			instructionsButton.addEventListener(Event.TRIGGERED, onShowInstructions);
 			
 			//Maker Key Input Field
-			makerKeyTextInput = LayoutFactory.createTextInput(false, false, DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? 160 : 130, HorizontalAlign.RIGHT);
+			makerKeyTextInput = LayoutFactory.createTextInput(false, false, Constants.deviceModel != DeviceInfo.IPHONE_X ? 160 : 130, HorizontalAlign.RIGHT);
 			makerKeyTextInput.fontStyles.size = 11;
 			makerKeyTextInput.text = makerKeyValue;
 			makerKeyTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Maker Key Description
-			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? 10 : 9);
+			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, Constants.deviceModel != DeviceInfo.IPHONE_X ? 10 : 9);
 			makerKeyDescriptionLabel.width = width - 10;
 			
 			//Glucose tresholds on/off switch
@@ -415,7 +415,7 @@ package ui.screens.display.settings.integration
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.accessoryField = "accessory";
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				{
 					itemRenderer.paddingRight = 2;
 					itemRenderer.paddingLeft = 3;

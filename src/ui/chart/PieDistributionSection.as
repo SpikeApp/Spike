@@ -10,6 +10,7 @@ package ui.chart
 	
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.Constants;
 	import utils.DeviceInfo;
 	
 	public class PieDistributionSection extends Sprite
@@ -31,35 +32,45 @@ package ui.chart
 			var titleFontSize:Number;
 			var messageFontSize:Number;
 			
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 			{
 				titleFontSize = 9;
 				messageFontSize = 9;
 			}
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 			{
 				titleFontSize = 8;
 				messageFontSize = 8;
 			}
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
 			{
 				titleFontSize = 12;
 				messageFontSize = 12;
 			}
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 			{
 				titleFontSize = 11;
 				messageFontSize = 11;
 			}
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
-				titleFontSize = 8.5;
-				messageFontSize = 8.5;
+				titleFontSize = 9.5;
+				messageFontSize = 9.5;
 			}
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_105 || DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_129)
+			else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 			{
-				titleFontSize = 14;
-				messageFontSize = 14;
+				titleFontSize = 13;
+				messageFontSize = 13;
+			}
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+			{
+				titleFontSize = 17;
+				messageFontSize = 17;
+			}
+			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+			{
+				titleFontSize = 20;
+				messageFontSize = 20;
 			}
 			else
 			{

@@ -38,6 +38,7 @@ package ui.screens.display.treatments
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
 	
@@ -185,7 +186,7 @@ package ui.screens.display.treatments
 			noteTextArea = new TextArea();
 			noteTextArea.width = 140;
 			noteTextArea.height = 120;
-			if ((treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS) && DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if ((treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS) && Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				noteTextArea.height = 50;
 			noteTextArea.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.RIGHT, VerticalAlign.TOP);
 			noteTextArea.paddingTop = noteTextArea.paddingBottom = 10;

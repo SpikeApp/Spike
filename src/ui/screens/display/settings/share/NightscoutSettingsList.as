@@ -81,7 +81,7 @@ package ui.screens.display.settings.share
 			
 			//URL
 			nsURL = LayoutFactory.createTextInput(false, false, 220, HorizontalAlign.RIGHT);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				nsURL.width = 190;
 			nsURL.text = selectedURL;
 			nsURL.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
@@ -89,7 +89,7 @@ package ui.screens.display.settings.share
 			
 			//API Secret
 			nsAPISecret = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				nsAPISecret.width = 120;
 			nsAPISecret.text = selectedAPISecret;
 			nsAPISecret.addEventListener( FeathersEventType.ENTER, onTextInputEnter );

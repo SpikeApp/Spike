@@ -102,19 +102,19 @@ package ui.screens.display.bugreport
 		{
 			//Calculate fields dimensions
 			var fieldWidth:int;
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				fieldWidth = 165;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 				fieldWidth = 200;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				fieldWidth = 155;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
 				fieldWidth = 400;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_105)
+			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
 				fieldWidth = 450;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_129)
+			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				fieldWidth = 550;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
+			else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 				fieldWidth = 300;
 			else
 				fieldWidth = 200;

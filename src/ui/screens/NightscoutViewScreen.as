@@ -89,7 +89,7 @@ package ui.screens
 			//Create web view
 			webView = new StageWebView();
 			webView.stage = Constants.appStage; 
-			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel != DeviceInfo.IPHONE_X)
 				webView.viewPort = new Rectangle( 0, 140, Constants.appStage.stageWidth, Constants.appStage.stageHeight - 140 ); 
 			else
 				webView.viewPort = new Rectangle( 0, 255, Constants.appStage.stageWidth, Constants.appStage.stageHeight - 255 ); //Statusbar iPhone X

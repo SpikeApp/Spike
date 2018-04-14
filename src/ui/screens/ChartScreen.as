@@ -72,6 +72,10 @@ package ui.screens
 		private var chartRequiresReload:Boolean = true;
 		private var appInBackground:Boolean = false;
 		private var queueTimeout:int = -1;
+		private var treatmentsEnabled:Boolean = false;
+		private var chartTreatmentsEnabled:Boolean = false;
+		private var displayIOBEnabled:Boolean = false;
+		private var displayCOBEnabled:Boolean = false;
 		
 		//Display Objects
 		private var glucoseChart:GlucoseChart;
@@ -99,6 +103,10 @@ package ui.screens
 			selectedTimelineRange = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE));
 			drawLineChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE) == "true";
 			displayPieChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_GLUCOSE_DISTRIBUTION) == "true";
+			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
+			chartTreatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
+			displayIOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
+			displayCOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
 			
 			//Event listeners
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
@@ -124,25 +132,51 @@ package ui.screens
 			availableScreenHeight = Constants.stageHeight - this.header.height;
 			scrollChartHeight = availableScreenHeight / 10; //10% of available screen size
 			
-			if (displayPieChart)
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (displayPieChart && !displayIOBEnabled && !displayCOBEnabled)
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 					mainChartHeight = availableScreenHeight * 0.39; //39% of available screen size
-				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 					mainChartHeight = availableScreenHeight * 0.5; //50% of available screen size
-				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 					mainChartHeight = availableScreenHeight * 0.51; //51% of available screen size
-				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 					mainChartHeight = availableScreenHeight * 0.55; //55% of available screen size
-				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
 					mainChartHeight = availableScreenHeight * 0.615; //61.5% of available screen size
-				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_105)
+				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
 					mainChartHeight = availableScreenHeight * 0.62; //62% of available screen size
-				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_PRO_129)
+				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 					mainChartHeight = availableScreenHeight * 0.66; //66% of available screen size
-				else if (DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
+				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 					mainChartHeight = availableScreenHeight * 0.52; //52% of available screen size
 				else
 					mainChartHeight = availableScreenHeight * 0.5; //50% of available screen size
+			}
+			else if (displayPieChart && (displayIOBEnabled || displayCOBEnabled))
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				{
+					mainChartHeight = availableScreenHeight * 0.31; //30% of available screen size
+					scrollChartHeight = availableScreenHeight / 11; //8% of available screen size
+				}
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+					mainChartHeight = availableScreenHeight * 0.39; //39% of available screen size
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+					mainChartHeight = availableScreenHeight * 0.41; //41% of available screen size
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					mainChartHeight = availableScreenHeight * 0.43; //43% of available screen size
+				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+					mainChartHeight = availableScreenHeight * 0.46; //46% of available screen size
+				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+					mainChartHeight = availableScreenHeight * 0.48; //48% of available screen size
+				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+					mainChartHeight = availableScreenHeight * 0.53; //53% of available screen size
+				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
+					mainChartHeight = availableScreenHeight * 0.39; //39% of available screen size
+				else
+					mainChartHeight = availableScreenHeight * 0.41; //41% of available screen size
+			}
 			else
 				mainChartHeight = calculateChartHeight();
 			
@@ -158,8 +192,9 @@ package ui.screens
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
 			glucoseChart.addAllTreatments();
-			glucoseChart.calculateTotalIOB(new Date().valueOf());
-			glucoseChart.calculateTotalCOB(new Date().valueOf());
+			var now:Number = new Date().valueOf();
+			glucoseChart.calculateTotalIOB(now);
+			glucoseChart.calculateTotalCOB(now);
 			addChild(glucoseChart);
 			
 			//Prevents Starling Line Mask Bug
@@ -174,8 +209,10 @@ package ui.screens
 		{
 			/* Line Settings */
 			displayLines = LayoutFactory.createCheckMark(false, ModelLocator.resourceManagerInstance.getString('chartscreen','check_box_line_title'));
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				displayLines.scale = 0.8;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				displayLines.scale = 1.4;
 			displayLines.isSelected = drawLineChart;
 			displayLines.addEventListener( Event.CHANGE, onDisplayLine );
 			addChild( displayLines );
@@ -185,24 +222,34 @@ package ui.screens
 			
 			//Create Radios
 			h1 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_1h_title'), timeRangeGroup);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				h1.scale = 0.8;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				h1.scale = 1.4;
 			addChild( h1 );
 			h3 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_3h_title'), timeRangeGroup);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				h3.scale = 0.8;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				h3.scale = 1.4;
 			addChild( h3 );
 			h6 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_6h_title'), timeRangeGroup);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				h6.scale = 0.8;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				h6.scale = 1.4;
 			addChild( h6 );
 			h12 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_12h_title'), timeRangeGroup);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				h12.scale = 0.8;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				h12.scale = 1.4;
 			addChild( h12 );
 			h24 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_24h_title'), timeRangeGroup);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				h24.scale = 0.8;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				h24.scale = 1.4;
 			h24.addEventListener(FeathersEventType.CREATION_COMPLETE, onRadioCreation);
 			addChild( h24 );
 			
@@ -259,26 +306,63 @@ package ui.screens
 			var topMargin:int = Math.round(glucoseChartTopPadding);
 			
 			//Main Chart Internal Top Padding
-			var chartDisplayMargin:Number = 50 * higherMultiplier;
+			var chartDisplayMargin:Number;
+			if (!displayIOBEnabled && !displayCOBEnabled)
+				chartDisplayMargin = 50 * higherMultiplier;
+			else if (displayIOBEnabled || displayCOBEnabled)
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+					chartDisplayMargin = 97 * higherMultiplier;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+					chartDisplayMargin = 95 * higherMultiplier;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
+					chartDisplayMargin = 98 * higherMultiplier; 
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+					chartDisplayMargin = 87 * higherMultiplier; 
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					chartDisplayMargin = 62 * higherMultiplier; 
+				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
+					chartDisplayMargin = 86 * higherMultiplier; 
+				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+					chartDisplayMargin = 140 * higherMultiplier; 
+				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+					chartDisplayMargin = 150 * higherMultiplier;
+				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+					chartDisplayMargin = 125 * higherMultiplier;
+				else
+					chartDisplayMargin = 100 * higherMultiplier;
+			}
+			else
+				chartDisplayMargin = 50 * higherMultiplier;
 			
 			//Scroller Internal Top Padding
 			var scrollerTopPadding:int = 5;
 			
 			//Settings (Radio Buttons Height)
 			var settingsHeight:int = 20;
+			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				settingsHeight *= 1.4;
 			
 			//Calculate Device Specific Adjustment
 			var deviceAdjustement:Number;
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				deviceAdjustement = 0;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				deviceAdjustement = 6 * higherMultiplier;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
 				deviceAdjustement = 12 * higherMultiplier;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 				deviceAdjustement = 20 * higherMultiplier;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				deviceAdjustement = 35 * higherMultiplier;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
+				deviceAdjustement = 40 * higherMultiplier;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+				deviceAdjustement = 40 * higherMultiplier;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				deviceAdjustement = 40 * higherMultiplier;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+				deviceAdjustement = 40 * higherMultiplier;
 			
 			//Return Calculated Chart Height
 			return availableScreenHeight - topMargin - chartDisplayMargin - scrollerTopPadding - scrollChartHeight - chartSettingsTopPadding - settingsHeight - deviceAdjustement;

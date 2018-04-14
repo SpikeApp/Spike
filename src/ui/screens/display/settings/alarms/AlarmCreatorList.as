@@ -37,6 +37,7 @@ package ui.screens.display.settings.alarms
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.MathHelper;
 	
@@ -216,19 +217,19 @@ package ui.screens.display.settings.alarms
 			startTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 0);
 			startTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 58);
 			startTime.value = startDate;
-			if(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6_6S_7_8 && DeviceInfo.getDeviceType() != DeviceInfo.IPAD_MINI_1_2_3_4)
+			if(Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && Constants.deviceModel != DeviceInfo.IPHONE_X && Constants.deviceModel != DeviceInfo.IPHONE_6_6S_7_8 && Constants.deviceModel != DeviceInfo.IPAD_MINI_1_2_3_4)
 				startTime.height = 160;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
+			else if(Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 				startTime.height = 150;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
 				startTime.height = 140;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 				startTime.height = 130;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				startTime.height = 100;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				startTime.height = 60;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				startTime.height = 60;
 			startTime.paddingTop = 5;
 			startTime.paddingBottom = 5;
@@ -245,19 +246,19 @@ package ui.screens.display.settings.alarms
 			endTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 1);
 			endTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 59);
 			endTime.value = endDate;
-			if(DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_6_6S_7_8 && DeviceInfo.getDeviceType() != DeviceInfo.IPAD_MINI_1_2_3_4)
+			if(Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && Constants.deviceModel != DeviceInfo.IPHONE_X && Constants.deviceModel != DeviceInfo.IPHONE_6_6S_7_8 && Constants.deviceModel != DeviceInfo.IPAD_MINI_1_2_3_4)
 				endTime.height = 160;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPAD_MINI_1_2_3_4)
+			else if(Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 				endTime.height = 150;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6_6S_7_8)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
 				endTime.height = 140;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 				endTime.height = 130;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				endTime.height = 100;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				endTime.height = 60;
-			else if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				endTime.height = 60;
 			endTime.paddingTop = 5;
 			endTime.paddingBottom = 5;
@@ -310,7 +311,7 @@ package ui.screens.display.settings.alarms
 				
 				return list;
 			};
-			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
 				alertTypeList.buttonFactory = function():Button
 				{
@@ -341,7 +342,7 @@ package ui.screens.display.settings.alarms
 			var screenDataContent:Array = [];
 			
 			var infoSection:Object = {};
-			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				infoSection.header = { label: headerLabelValue };
 			
 			var infoSectionChildren:Array = [];
@@ -470,11 +471,11 @@ package ui.screens.display.settings.alarms
 				alertCreator.addEventListener(Event.COMPLETE, onAlertCreatorClose);
 				alertCreatorCallout = new Callout();
 				alertCreatorCallout.content = alertCreator;
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 					alertCreatorCallout.padding = 18;
 				else
 				{
-					if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+					if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 						alertCreatorCallout.padding = 18;
 					
 					setupCalloutPosition();

@@ -91,7 +91,7 @@ package ui.screens
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_alert_title'),
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_alert_message')
 			);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
 				alert.maxWidth = 270;
 				alert.height = 320;
@@ -201,7 +201,7 @@ package ui.screens
 				onBackButtonTriggered
 			);
 			alert.height = 425;
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
 				alert.maxWidth = 270;
 				alert.height = 490;

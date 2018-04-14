@@ -295,7 +295,7 @@ package ui.screens.display.settings.widget
 				dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','main_line'), accessory: mainLineColorPicker });
 			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','grid_lines'), accessory: gridLinesColorPicker });
 			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background'), accessory: backgroundColorPicker });
-			dataList.push({ text: DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer });
+			dataList.push({ text: Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer });
 			dataList.push({ text: "", accessory: resetColors });
 			dataList.push({ text: "", accessory: copyColors });
 			

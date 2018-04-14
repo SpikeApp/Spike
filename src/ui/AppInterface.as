@@ -46,6 +46,9 @@ package ui
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.menu.MenuList;
 	
+	import utils.Constants;
+	import utils.DeviceInfo;
+	
 	public class AppInterface extends Sprite 
 	{
 		/* Display Objetcts */
@@ -62,6 +65,8 @@ package ui
 		
 		public function start():void 
 		{
+			Constants.deviceModel = DeviceInfo.getDeviceType();
+			
 			InterfaceController.init();
 		}
 		

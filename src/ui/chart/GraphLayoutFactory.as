@@ -5,6 +5,7 @@ package ui.chart
     import starling.display.Shape;
     import starling.text.TextFormat;
     
+    import utils.Constants;
     import utils.DeviceInfo;
 
 
@@ -96,8 +97,7 @@ public class GraphLayoutFactory
 		{
 			/* Calculate Font Size */
 			var fontSize:Number;
-			var deviceType:String = DeviceInfo.getDeviceType();
-			if (deviceType == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				fontSize = 9.5;
 			else 
 				fontSize = 11;

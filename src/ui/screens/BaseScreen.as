@@ -115,7 +115,7 @@ package ui.screens
 		{
 			treatmentsList = new TreatmentsList();
 			treatmentsList.addEventListener(TreatmentsList.CLOSE, onCloseCallOut);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatmentsEnabled)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatmentsEnabled)
 			{
 				iphone4DummyMarker = new Sprite();
 				var globalpoint:Point = treatmentsButton.localToGlobal(new Point(treatmentsButton.width / 2, treatmentsButton.height / 2));

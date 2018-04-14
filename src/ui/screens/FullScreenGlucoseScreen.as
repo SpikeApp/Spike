@@ -367,16 +367,14 @@ package ui.screens
 		
 		private function calculateFontSize ():void
 		{
-			var deviceType:String = DeviceInfo.getDeviceType();
-			
-			if(deviceType == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || deviceType == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 			{
 				if(latestGlucoseOutput.length == 2) glucoseFontSize = 260;	
 				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 175;
 				else if(latestGlucoseOutput.length == 4) glucoseFontSize = 150;
 				else if(latestGlucoseOutput.length == 5) glucoseFontSize = 120;
 			}
-			else if(deviceType == DeviceInfo.IPHONE_6_6S_7_8)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
 			{
 				if(latestGlucoseOutput.length == 2) glucoseFontSize = 310;	
 				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 210;
@@ -384,7 +382,7 @@ package ui.screens
 				else if(latestGlucoseOutput.length == 5) glucoseFontSize = 145;
 				
 			}
-			else if(deviceType == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 			{
 				if(latestGlucoseOutput.length == 2) glucoseFontSize = 300;	
 				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 200;
@@ -392,7 +390,7 @@ package ui.screens
 				else if(latestGlucoseOutput.length == 5) glucoseFontSize = 135;
 				
 			}
-			else if(deviceType == DeviceInfo.IPHONE_X)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
 				if(latestGlucoseOutput.length == 2) glucoseFontSize = 230;	
 				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 155;

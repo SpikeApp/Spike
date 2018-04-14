@@ -52,7 +52,7 @@ package ui.screens.display.menu
 		 */
 		private function setupProperties():void
 		{
-			if (DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel != DeviceInfo.IPHONE_X)
 				paddingTop = 20; //Statusbar Size
 			else
 				paddingTop = 50; //Statusbar Size

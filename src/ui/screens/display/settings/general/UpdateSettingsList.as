@@ -60,7 +60,7 @@ package ui.screens.display.settings.general
 		{
 			///Notifications On/Off Toggle
 			updatesToggle = LayoutFactory.createToggleSwitch(false);
-			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				updatesToggle.pivotX = -8;
 			
 			//Define Notifications Settings Data
