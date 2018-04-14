@@ -52,6 +52,7 @@ package services
 	
 	[ResourceBundle("nightscoutservice")]
 	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class NightscoutService extends EventDispatcher
 	{
@@ -133,9 +134,10 @@ package services
 		
 		private static var _instance:NightscoutService = new NightscoutService();
 
-		private static var nightscoutTreatmentsSyncEnabled:Boolean;
-
-		private static var treatmentsEnabled:Boolean;
+		/* Treatments */
+		private static var nightscoutTreatmentsSyncEnabled:Boolean = true;
+		private static var treatmentsEnabled:Boolean = true;
+		private static var profileAlertShown:Boolean = false;
 
 		public function NightscoutService()
 		{
@@ -378,6 +380,24 @@ package services
 					var profileProperties:Object = JSON.parse(response);
 					if (profileProperties != null)
 					{
+						if (profileProperties[0].store[profileProperties[0].defaultProfile].dia == null && profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr == null)
+						{
+							Trace.myTrace("NightscoutService.as", "User has not yet set a profile in Nightscout!");
+							
+							if (!profileAlertShown)
+							{
+								AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+									ModelLocator.resourceManagerInstance.getString("treatments","nightscout_profile_not_set")
+								);
+									
+								profileAlertShown = true;
+							}
+							
+							return;
+						}
+						
 						var dia:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].dia);
 						var carbAbsorptionRate:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr);
 						if (!isNaN(dia) && !isNaN(carbAbsorptionRate))
@@ -387,7 +407,7 @@ package services
 							isNSProfileSet = true; //Mark profile as downloaded
 							
 							//Add nightscout insulin to Spike and don't save it to DB
-							ProfileManager.addInsulin("Nightscout Insulin", dia, "", BlueToothDevice.isFollower() ? true : false, "000000", false);
+							ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", BlueToothDevice.isFollower() ? true : false, "000000", false);
 							
 							//Add nightscout carbs absorption rate and don't save it to DB
 							ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);

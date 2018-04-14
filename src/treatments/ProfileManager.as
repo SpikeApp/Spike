@@ -5,6 +5,8 @@ package treatments
 	import database.BlueToothDevice;
 	import database.Database;
 	
+	import model.ModelLocator;
+	
 	import utils.UniqueId;
 
 	public class ProfileManager
@@ -22,86 +24,89 @@ package treatments
 		
 		public static function init():void
 		{
-			//Common variables
-			var i:int;
-			
-			//Get insulins
-			var dbInsulines:Array = Database.getInsulinsSynchronous();
-			if (dbInsulines != null && dbInsulines.length > 0)
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
-				for (i = 0; i < dbInsulines.length; i++) 
+				//Common variables
+				var i:int;
+				
+				//Get insulins
+				var dbInsulines:Array = Database.getInsulinsSynchronous();
+				if (dbInsulines != null && dbInsulines.length > 0)
 				{
-					var dbInsulin:Object = dbInsulines[i] as Object;
-					if (dbInsulin == null)
-						continue;
-					
-					var insulin:Insulin = new Insulin
+					for (i = 0; i < dbInsulines.length; i++) 
+					{
+						var dbInsulin:Object = dbInsulines[i] as Object;
+						if (dbInsulin == null)
+							continue;
+						
+						var insulin:Insulin = new Insulin
+						(
+							dbInsulin.id,
+							dbInsulin.name,
+							dbInsulin.dia,
+							dbInsulin.type,
+							dbInsulin.isdefault == "true" ? true : false,
+							dbInsulin.lastmodifiedtimestamp
+						);
+						
+						insulinsList.push(insulin);
+						insulinsMap[dbInsulin.id] = insulin;
+					}
+					insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
+				}
+				
+				//Get Profiles
+				var dbProfiles:Array = Database.getProfilesSynchronous();
+				if (dbProfiles != null && dbProfiles.length > 0)
+				{
+					for (i = 0; i < dbProfiles.length; i++) 
+					{
+						var dbProfile:Object = dbProfiles[i] as Object;
+						if (dbProfile == null)
+							continue;
+						
+						var profile:Profile = new Profile
+						(
+							dbProfile.id,
+							dbProfile.time,
+							dbProfile.name,
+							dbProfile.insulintocarbratios,
+							dbProfile.insulinsensitivityfactors,
+							dbProfile.carbsabsorptionrate,
+							dbProfile.basalrates,
+							dbProfile.targetglucoserates,
+							Number(dbProfile.lastmodifiedtimestamp)
+						);
+						
+						profilesList.push(profile);
+						profilesMap[dbProfile.id] = profile;
+					}
+					profilesList.sortOn(["name"], Array.CASEINSENSITIVE);
+				}
+				
+				if (profilesList.length == 0)
+				{
+					//Create default profile
+					var defaultProfile:Profile = new Profile
 					(
-						dbInsulin.id,
-						dbInsulin.name,
-						dbInsulin.dia,
-						dbInsulin.type,
-						dbInsulin.isdefault == "true" ? true : false,
-						dbInsulin.lastmodifiedtimestamp
+						UniqueId.createEventId(),
+						"00:00",
+						"Default",
+						"",
+						"",
+						30,
+						"",
+						"",
+						new Date().valueOf()
 					);
 					
-					insulinsList.push(insulin);
-					insulinsMap[dbInsulin.id] = insulin;
-				}
-				insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
-			}
-			
-			//Get Profiles
-			var dbProfiles:Array = Database.getProfilesSynchronous();
-			if (dbProfiles != null && dbProfiles.length > 0)
-			{
-				for (i = 0; i < dbProfiles.length; i++) 
-				{
-					var dbProfile:Object = dbProfiles[i] as Object;
-					if (dbProfile == null)
-						continue;
+					//Push to memory
+					profilesList.push(defaultProfile);
+					profilesMap[defaultProfile.ID] = defaultProfile;
 					
-					var profile:Profile = new Profile
-					(
-						dbProfile.id,
-						dbProfile.time,
-						dbProfile.name,
-						dbProfile.insulintocarbratios,
-						dbProfile.insulinsensitivityfactors,
-						dbProfile.carbsabsorptionrate,
-						dbProfile.basalrates,
-						dbProfile.targetglucoserates,
-						Number(dbProfile.lastmodifiedtimestamp)
-					);
-					
-					profilesList.push(profile);
-					profilesMap[dbProfile.id] = profile;
+					//Save to Database
+					Database.insertProfileSynchronous(defaultProfile);
 				}
-				profilesList.sortOn(["name"], Array.CASEINSENSITIVE);
-			}
-			
-			if (profilesList.length == 0)
-			{
-				//Create default profile
-				var defaultProfile:Profile = new Profile
-				(
-					UniqueId.createEventId(),
-					"00:00",
-					"Default",
-					"",
-					"",
-					30,
-					"",
-					"",
-					new Date().valueOf()
-				);
-				
-				//Push to memory
-				profilesList.push(defaultProfile);
-				profilesMap[defaultProfile.ID] = defaultProfile;
-				
-				//Save to Database
-				Database.insertProfileSynchronous(defaultProfile);
 			}
 		}
 		

@@ -16,7 +16,7 @@ package ui.chart
 	public class InsulinMarker extends ChartTreatment
 	{
 		/* Constants */
-		private const FONT_SIZE:int = 10;
+		private const FONT_SIZE:int = 11;
 		
 		/* Display Objects */
 		private var label:Label;

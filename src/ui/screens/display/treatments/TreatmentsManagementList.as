@@ -197,7 +197,7 @@ package ui.screens.display.treatments
 				itemRenderer.paddingRight = -25;
 				itemRenderer.accessoryOffsetX = -30;
 				itemRenderer.labelField = "label";
-				if (!BlueToothDevice.isFollower())
+				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				{
 					itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
 					{

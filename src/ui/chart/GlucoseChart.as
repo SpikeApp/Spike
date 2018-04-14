@@ -57,6 +57,7 @@ package ui.chart
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class GlucoseChart extends Sprite
 	{
@@ -816,12 +817,21 @@ package ui.chart
 			//Setup initial timeline/mask properties
 			if (treatmentsFirstRun && treatmentsContainer == null)
 			{
+				treatmentsFirstRun = false;
+				treatmentsContainer = new Sprite();
+				treatmentsContainer.x = mainChart.x;
+				treatmentsContainer.y = mainChart.y;
+				mainChartContainer.addChild(treatmentsContainer);
+				
+				//Repeat to mitigate bug in starling
+				mainChartContainer.removeChild(treatmentsContainer);
+				treatmentsContainer.dispose();
+				treatmentsContainer = null;
 				treatmentsContainer = new Sprite();
 				treatmentsContainer.x = mainChart.x;
 				treatmentsContainer.y = mainChart.y;
 				mainChartContainer.addChild(treatmentsContainer);
 				mainChartContainer.addChild(mainChart);
-				treatmentsFirstRun = false;
 			}
 			
 			//Validations
@@ -897,7 +907,7 @@ package ui.chart
 				//Create treatment marker and add it to the chart
 				var noteMarker:NoteMarker = new NoteMarker(treatment);
 				noteMarker.x = (((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
-				noteMarker.y = (_graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3)) + 5;
+				noteMarker.y = (_graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3)) + 8;
 				noteMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 				treatmentsContainer.addChild(noteMarker);
 				
@@ -965,15 +975,15 @@ package ui.chart
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 				{
-					treatmentValue = "Carbs\n" + treatment.treatment.carbs + "g";
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + "\n" + treatment.treatment.carbs + "g";
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 				{
-					treatmentValue += "Meal\n" + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + " / " + treatment.treatment.carbs + "g";
+					treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal') + "\n" + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + " / " + treatment.treatment.carbs + "g";
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 				{
-					treatmentValue = "Note";
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 				{
@@ -983,7 +993,7 @@ package ui.chart
 					else
 						glucoseValue = Math.round(((BgReading.mgdlToMmol((treatment.treatment.glucose))) * 10)) / 10; 
 					
-					treatmentValue = "BG Check\n" + glucoseValue + " " + glucoseUnit;
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check') + "\n" + glucoseValue + " " + glucoseUnit;
 				}
 				
 				if (treatmentValue != "")
@@ -1015,20 +1025,23 @@ package ui.chart
 				}
 				
 				//Action Buttons
-				if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				{
-					var actionsLayout:HorizontalLayout = new HorizontalLayout();
-					actionsLayout.gap = 5;
-					var actionsContainer:LayoutGroup = new LayoutGroup();
-					actionsContainer.layout = actionsLayout;
-					
-					var moveBtn:Button = LayoutFactory.createButton("Move");
-					moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
-					actionsContainer.addChild(moveBtn);
-					var deleteBtn:Button = LayoutFactory.createButton("Delete");
-					deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
-					actionsContainer.addChild(deleteBtn);
-					treatmentContainer.addChild(actionsContainer);
+					if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+					{
+						var actionsLayout:HorizontalLayout = new HorizontalLayout();
+						actionsLayout.gap = 5;
+						var actionsContainer:LayoutGroup = new LayoutGroup();
+						actionsContainer.layout = actionsLayout;
+						
+						var moveBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
+						moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+						actionsContainer.addChild(moveBtn);
+						var deleteBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
+						deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+						actionsContainer.addChild(deleteBtn);
+						treatmentContainer.addChild(actionsContainer);
+					}
 				}
 				
 				treatmentCallout = Callout.show(treatmentContainer, treatment, null, true);
@@ -1060,8 +1073,8 @@ package ui.chart
 					{
 						AlertManager.showSimpleAlert
 						(
-							"Warning",
-							"Selected time is outside of your first or last reading in the chart! Please choose a different time."
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('treatments','out_of_bounds_treatment')
 						);
 					}
 					else
@@ -1134,7 +1147,7 @@ package ui.chart
 						else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 						{
 							treatment.x = (((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
-							treatment.y = (_graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 5;
+							treatment.y = (_graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 8;
 						}
 						
 						//Reposition out of bounds treatments

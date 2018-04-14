@@ -61,6 +61,8 @@ package ui.screens.display.treatments
 		/* Properties */
 		private var treatment:Treatment;
 		private var isMgDl:Boolean;
+
+		private var treatmentTimeConatiner:LayoutGroup;
 		
 		public function TreatmentEditorList(treatment:Treatment)
 		{
@@ -174,13 +176,18 @@ package ui.screens.display.treatments
 				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_note"); //Treatment Type
 			
 			//Treatment Time
+			var treatmentTimeLayout:VerticalLayout = new VerticalLayout();
+			treatmentTimeLayout.verticalAlign = VerticalAlign.MIDDLE;
+			treatmentTimeConatiner = new LayoutGroup();
+			treatmentTimeConatiner.height = 60;
+			treatmentTimeConatiner.layout = treatmentTimeLayout;
+			
 			treatmentTime = new DateTimeSpinner();
 			treatmentTime.editingMode = DateTimeMode.TIME;
 			treatmentTime.value = new Date(treatment.timestamp);
 			treatmentTime.height = 40;
-			treatmentTime.paddingTop = 5;
-			treatmentTime.paddingBottom = 5;
 			treatmentTime.addEventListener(Event.CHANGE, onSettingsChanged);
+			treatmentTimeConatiner.addChild(treatmentTime);
 			
 			/* Treatment Note */
 			noteTextArea = new TextArea();
@@ -218,7 +225,7 @@ package ui.screens.display.treatments
 			infoSection.header = { label: treatmentType };
 			
 			var infoSectionChildren:Array = [];
-			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_time_label"), accessory: treatmentTime });
+			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_time_label"), accessory: treatmentTimeConatiner });
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
@@ -332,9 +339,16 @@ package ui.screens.display.treatments
 		{	
 			if (treatmentTime != null)
 			{
+				treatmentTime.removeFromParent();
 				treatmentTime.removeEventListener(Event.CHANGE, onSettingsChanged);
 				treatmentTime.dispose();
 				treatmentTime = null;
+			}
+			
+			if (treatmentTimeConatiner != null)
+			{
+				treatmentTimeConatiner.dispose();
+				treatmentTimeConatiner = null;
 			}
 			
 			if (saveTreatment != null)

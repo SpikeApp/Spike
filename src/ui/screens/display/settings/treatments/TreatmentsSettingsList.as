@@ -3,6 +3,7 @@ package ui.screens.display.settings.treatments
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
@@ -215,7 +216,8 @@ package ui.screens.display.settings.treatments
 			/* Data */
 			var data:Array = [];
 			
-			data.push({ screen: Screens.SETTINGS_PROFILE, label: ModelLocator.resourceManagerInstance.getString('treatments',"profile_menu_label"), accessory: profileIconImage, selectable: true });
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				data.push({ screen: Screens.SETTINGS_PROFILE, label: ModelLocator.resourceManagerInstance.getString('treatments',"profile_menu_label"), accessory: profileIconImage, selectable: true });
 			data.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"enabled"), accessory: treatmentsEnabled, selectable: false });
 			if (treatmentsEnabledValue)
 			{
@@ -232,8 +234,11 @@ package ui.screens.display.settings.treatments
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"pill_color_label"), accessory: treatmentPillColorPicker, selectable: false });
 					data.push({ label: "", accessory: resetColors, selectable: false });
 				}
-				data.push({ label: "", accessory: loadInstructions, selectable: false });
-				data.push({ label: "", accessory: emailConfigurationFiles, selectable: false });
+				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				{
+					data.push({ label: "", accessory: loadInstructions, selectable: false });
+					data.push({ label: "", accessory: emailConfigurationFiles, selectable: false });
+				}
 			}
 			
 			dataProvider = new ListCollection(data);

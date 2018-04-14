@@ -41,12 +41,14 @@ package treatments
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
+	
+	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
 
 	public class TreatmentsManager extends EventDispatcher
 	{
 		/* Constants */
 		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
-		public static const TREATMENT_TYPE_BOLUS:String = "bolus";
 		
 		/* Instance */
 		private static var _instance:TreatmentsManager = new TreatmentsManager();
@@ -63,32 +65,35 @@ package treatments
 		
 		public static function init():void
 		{
-			var now:Number = new Date().valueOf();
-			var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TIME_24_HOURS, now);
-			
-			if (dbTreatments != null && dbTreatments.length > 0)
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
-				for (var i:int = 0; i < dbTreatments.length; i++) 
+				var now:Number = new Date().valueOf();
+				var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TIME_24_HOURS, now);
+				
+				if (dbTreatments != null && dbTreatments.length > 0)
 				{
-					var dbTreatment:Object = dbTreatments[i] as Object;
-					if (dbTreatment == null)
-						continue;
-					
-					var treatment:Treatment = new Treatment
-					(
-						dbTreatment.type,
-						dbTreatment.lastmodifiedtimestamp,
-						dbTreatment.insulinamount,
-						dbTreatment.insulinid,
-						dbTreatment.carbs,
-						dbTreatment.glucose,
-						dbTreatment.glucoseestimated,
-						dbTreatment.note
-					);
-					treatment.ID = dbTreatment.id;
-					
-					treatmentsList.push(treatment);
-					treatmentsMap[treatment.ID] = treatment;
+					for (var i:int = 0; i < dbTreatments.length; i++) 
+					{
+						var dbTreatment:Object = dbTreatments[i] as Object;
+						if (dbTreatment == null)
+							continue;
+						
+						var treatment:Treatment = new Treatment
+						(
+							dbTreatment.type,
+							dbTreatment.lastmodifiedtimestamp,
+							dbTreatment.insulinamount,
+							dbTreatment.insulinid,
+							dbTreatment.carbs,
+							dbTreatment.glucose,
+							dbTreatment.glucoseestimated,
+							dbTreatment.note
+						);
+						treatment.ID = dbTreatment.id;
+						
+						treatmentsList.push(treatment);
+						treatmentsMap[treatment.ID] = treatment;
+					}
 				}
 			}
 		}
@@ -271,7 +276,7 @@ package treatments
 				NightscoutService.deleteTreatment(treatment);
 			
 			//Delete from databse
-			if (!BlueToothDevice.isFollower())
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				Database.deleteTreatmentSynchronous(treatment);
 		}
 		
@@ -281,7 +286,7 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			
 			//Update in Database
-			if (!BlueToothDevice.isFollower())
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				Database.updateTreatmentSynchronous(treatment);
 			
 			//Update Nightscout
@@ -299,7 +304,7 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 			
 			//Insert in Database
-			if (!BlueToothDevice.isFollower())
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				Database.insertTreatmentSynchronous(treatment);
 			
 			//Upload to Nightscout
@@ -331,7 +336,7 @@ package treatments
 				insulinTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				insulinTextInput.maxChars = 5;
 				if (type == Treatment.TYPE_MEAL_BOLUS)
-					insulinTextInput.prompt = "Insulin";
+					insulinTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','insulin_text_input_prompt');
 				displayContainer.addChild(insulinTextInput);
 				var insulinSpacer:Sprite = new Sprite();
 				insulinSpacer.height = 10;
@@ -357,11 +362,18 @@ package treatments
 				carbsTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				carbsTextInput.maxChars = 4;
 				if (type == Treatment.TYPE_MEAL_BOLUS)
-					carbsTextInput.prompt = "Carbs";
+					carbsTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','carbs_text_input_prompt');
 				displayContainer.addChild(carbsTextInput);
 				var carbSpacer:Sprite = new Sprite();
 				carbSpacer.height = 10;
 				displayContainer.addChild(carbSpacer);
+			}
+			
+			if (type == Treatment.TYPE_NOTE)
+			{
+				var noteSpacer:Sprite = new Sprite();
+				noteSpacer.height = 10;
+				displayContainer.addChild(noteSpacer);
 			}
 			
 			//Treatment Time
@@ -425,7 +437,7 @@ package treatments
 				
 				if (askForInsulinConfiguration)
 				{
-					var createInsulinButton:Button = LayoutFactory.createButton("Configure Insulins");
+					var createInsulinButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','configure_insulins_button_label'));
 					createInsulinButton.addEventListener(Event.TRIGGERED, onConfigureInsulins);
 					otherFieldsConstainer.addChild(createInsulinButton);
 					canAddInsulin = false;
@@ -434,7 +446,7 @@ package treatments
 			
 			var notes:TextInput = LayoutFactory.createTextInput(false, false, treatmentTime.width, HorizontalAlign.CENTER);
 			notes.addEventListener(FeathersEventType.ENTER, onClearFocus);
-			notes.prompt = "Note";
+			notes.prompt = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
 			notes.maxChars = 50;
 			otherFieldsConstainer.addChild(notes);
 			
@@ -452,32 +464,32 @@ package treatments
 				actionFunction = onMealEntered;
 			
 			var actionButtons:Array = [];
-			actionButtons.push( { label: "CANCEL" } );
+			actionButtons.push( { label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() } );
 			if (((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION)
-				actionButtons.push( { label: "ADD", triggered: actionFunction } );
+				actionButtons.push( { label: ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase(), triggered: actionFunction } );
 			
 			//Popup
 			var treatmentTitle:String;
 			if (type == Treatment.TYPE_BOLUS)
-				treatmentTitle = "Enter Units";
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_units_label');
 			else if (type == Treatment.TYPE_NOTE)
-				treatmentTitle = "Enter Note";
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_note_label');
 			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
-				treatmentTitle = "Enter Blood Glucose";
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_bg_label');
 			else if (type == Treatment.TYPE_CARBS_CORRECTION)
-				treatmentTitle = "Enter Grams";
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_grams_label');
 			else if (type == Treatment.TYPE_MEAL_BOLUS)
-				treatmentTitle = "Enter Meal";
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_meal_label');
 				
 			var treatmentPopup:Alert = AlertManager.showActionAlert
-				(
-					treatmentTitle,
-					"",
-					Number.NaN,
-					actionButtons,
-					HorizontalAlign.JUSTIFY,
-					displayContainer
-				);
+			(
+				treatmentTitle,
+				"",
+				Number.NaN,
+				actionButtons,
+				HorizontalAlign.JUSTIFY,
+				displayContainer
+			);
 			treatmentPopup.gap = 5;
 			treatmentPopup.headerProperties.maxHeight = 30;
 			treatmentPopup.buttonGroupProperties.paddingTop = -10;
@@ -504,12 +516,12 @@ package treatments
 				if (isNaN(insulinValue) || insulinTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
-						(
-							"Alert",
-							"Insulin amount needs to be numeric!",
-							Number.NaN,
-							onAskNewBolus
-						);
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_insulin'),
+						Number.NaN,
+						onAskNewBolus
+					);
 					
 					function onAskNewBolus():void
 					{
@@ -538,7 +550,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower())
+					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -557,8 +569,8 @@ package treatments
 				{
 					AlertManager.showSimpleAlert
 					(
-						"Alert",
-						"Carbs amount needs to be numeric!",
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_carbs'),
 						Number.NaN,
 						onAskNewCarbs
 					);
@@ -590,7 +602,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower())
+					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -611,12 +623,12 @@ package treatments
 				if (isNaN(insulinValue) || insulinTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
-						(
-							"Alert",
-							"Insulin amount needs to be numeric!",
-							Number.NaN,
-							onAskNewBolus
-						);
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_insulin'),
+						Number.NaN,
+						onAskNewBolus
+					);
 					
 					function onAskNewBolus():void
 					{
@@ -626,12 +638,12 @@ package treatments
 				else if (isNaN(carbsValue) || carbsTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
-						(
-							"Alert",
-							"Carbs amount needs to be numeric!",
-							Number.NaN,
-							onAskNewCarbs
-						);
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_carbs'),
+						Number.NaN,
+						onAskNewCarbs
+					);
 					
 					function onAskNewCarbs():void
 					{
@@ -641,16 +653,16 @@ package treatments
 				else
 				{
 					var treatment:Treatment = new Treatment
-						(
-							Treatment.TYPE_MEAL_BOLUS,
-							treatmentTime.value.valueOf(),
-							insulinValue,
-							insulinList.selectedItem.id,
-							carbsValue,
-							0,
-							getEstimatedGlucose(treatmentTime.value.valueOf()),
-							notes.text
-						);
+					(
+						Treatment.TYPE_MEAL_BOLUS,
+						treatmentTime.value.valueOf(),
+						insulinValue,
+						insulinList.selectedItem.id,
+						carbsValue,
+						0,
+						getEstimatedGlucose(treatmentTime.value.valueOf()),
+						notes.text
+					);
 					
 					//Add to list
 					treatmentsList.push(treatment);
@@ -660,7 +672,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower())
+					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -679,8 +691,8 @@ package treatments
 				{
 					AlertManager.showSimpleAlert
 						(
-							"Alert",
-							"Glucose amount needs to be numeric!",
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_glucose'),
 							Number.NaN,
 							onAskNewGlucose
 						);
@@ -719,7 +731,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower())
+					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -736,8 +748,8 @@ package treatments
 				{
 					AlertManager.showSimpleAlert
 						(
-							"Alert",
-							"Note cannot be empty!",
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('treatments','empty_note'),
 							Number.NaN,
 							onAskNewNote
 						);
@@ -750,16 +762,16 @@ package treatments
 				else
 				{
 					var treatment:Treatment = new Treatment
-						(
-							Treatment.TYPE_NOTE,
-							treatmentTime.value.valueOf(),
-							0,
-							"",
-							0,
-							0,
-							getEstimatedGlucose(treatmentTime.value.valueOf()),
-							notes.text
-						)
+					(
+						Treatment.TYPE_NOTE,
+						treatmentTime.value.valueOf(),
+						0,
+						"",
+						0,
+						0,
+						getEstimatedGlucose(treatmentTime.value.valueOf()),
+						notes.text
+					)
 					
 					//Add to list
 					treatmentsList.push(treatment);
@@ -769,7 +781,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower())
+					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -816,7 +828,7 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 			
 			//Insert in DB
-			if (!BlueToothDevice.isFollower())
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				Database.insertTreatmentSynchronous(treatment);
 			
 			//Upload to Nightscout
@@ -834,7 +846,7 @@ package treatments
 				0,
 				glucoseValue,
 				glucoseValue,
-				"Sensor Calibration",
+				ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'),
 				treatmentID
 			);
 			

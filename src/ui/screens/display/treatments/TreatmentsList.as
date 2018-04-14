@@ -87,9 +87,12 @@ package ui.screens.display.treatments
 			numBgReadings = ModelLocator.bgReadings.length;
 			
 			//Images & Textures
-			calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
-			calibrationImage = new Image(calibrationTexture);
-			if (treatmentsEnabled)
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			{
+				calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
+				calibrationImage = new Image(calibrationTexture);
+			}
+			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 			{
 				bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
 				bolusImage = new Image(bolusTexture);
@@ -101,6 +104,9 @@ package ui.screens.display.treatments
 				bgCheckImage = new Image(bgCheckTexture);
 				noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
 				noteImage = new Image(noteTexture);
+			}
+			if (treatmentsEnabled)
+			{
 				treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.treatmentsTexture;
 				treatmentsImage = new Image(treatmentsTexture);
 			}
@@ -109,18 +115,22 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			/* Content */
-			if (Calibration.allForSensor().length > 1 && !BlueToothDevice.isFollower())
+			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
 			var menuData:Array = [];
-			menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
-			if (treatmentsEnabled)
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
+			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 			{
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: treatmentsEnabled, id: 2 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: treatmentsEnabled, id: 3 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: treatmentsEnabled, id: 4 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: treatmentsEnabled, id: 5 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: treatmentsEnabled, id: 6 } );
+			}
+			if (treatmentsEnabled)
+			{
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: treatmentsEnabled, id: 7 } );
 			}
 			
@@ -162,15 +172,25 @@ package ui.screens.display.treatments
 			setItemRendererFactoryWithID( "treatment-item", treatmentItemFactory );
 			
 			//Menu Factory
-			factoryIDFunction = function( item:Object, index:int ):String
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
-				if(index === 0)
-					return "calibration-item";
-				else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6)
+				factoryIDFunction = function( item:Object, index:int ):String
+				{
+					if(index === 0)
+						return "calibration-item";
+					else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6)
+						return "treatment-item";
+					
+					return "default-item";
+				};
+			}
+			else
+			{
+				factoryIDFunction = function( item:Object, index:int ):String
+				{
 					return "treatment-item";
-				
-				return "default-item";
-			};
+				};
+			}
 			
 			//Menu Layout
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );

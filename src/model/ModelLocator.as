@@ -73,7 +73,7 @@ package model
 		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 60 * 60 * 1000 + Constants.READING_OFFSET;
 		public static const DEBUG_MODE:Boolean = true;
 
-		public static const TEST_FLIGHT_MODE:Boolean = false;
+		public static const TEST_FLIGHT_MODE:Boolean = true;
 		public static const INTERNAL_TESTING:Boolean = true;
 		
 		public static function get instance():ModelLocator
