@@ -16,18 +16,18 @@ package model
 			return _timeStamp;
 		}
 		
-		private var _sensorBatteryLevel:Number;
+		private var _bluereaderBatteryLevel:Number;
 		
-		public function get sensorBatteryLevel():Number
+		public function get bluereaderBatteryLevel():Number
 		{
-			return _sensorBatteryLevel;
+			return _bluereaderBatteryLevel;
 		}
 		
-		private var _bridgeBatteryLevel:Number;
+		private var _fslBatteryLevel:Number;
 		
-		public function get bridgeBatteryLevel():Number
+		public function get fslBatteryLevel():Number
 		{
-			return _bridgeBatteryLevel;
+			return _fslBatteryLevel;
 		}
 		
 		/**
@@ -41,11 +41,11 @@ package model
 		}
 		
 		
-		public function TransmitterDataBlueReaderPacket(rawData:Number, sensorBatteryLevel:Number, bridgeBatteryLevel:Number, sensorAge:Number, timestamp:Number)
+		public function TransmitterDataBlueReaderPacket(rawData:Number, bluereaderBatteryLevel:Number, fslBatteryLevel:Number, sensorAge:Number, timestamp:Number)
 		{
 			_bgValue = rawData;
-			_sensorBatteryLevel = sensorBatteryLevel;
-			_bridgeBatteryLevel = bridgeBatteryLevel;
+			_bluereaderBatteryLevel = bluereaderBatteryLevel;
+			_fslBatteryLevel = fslBatteryLevel;
 			_timeStamp = timestamp;
 			_sensorAge = sensorAge;
 		}

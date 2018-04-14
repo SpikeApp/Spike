@@ -110,7 +110,7 @@ package services
 			var value:ByteArray;
 			var transmitterServiceEvent:TransmitterServiceEvent;
 			var notificationBuilderG5BatteryInfo:NotificationBuilder;
-			var lastBgRading:BgReading;
+			var lastBgReading:BgReading;
 			
 			if (be.data == null)
 				return;//should never be null actually
@@ -314,15 +314,19 @@ package services
 					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderPacket) {
+					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderPacket");
 					var transmitterDataBlueReaderPacket:TransmitterDataBlueReaderPacket = be.data as TransmitterDataBlueReaderPacket;
-					if (!isNaN(transmitterDataBlueReaderPacket.bridgeBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, transmitterDataBlueReaderPacket.bridgeBatteryLevel.toString());
+					if (!isNaN(transmitterDataBlueReaderPacket.bluereaderBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, (getBlueReaderBatteryLevel(transmitterDataBlueReaderPacket.bluereaderBatteryLevel)).toString());
+						myTrace("in transmitterDataReceived, setting COMMON_SETTING_BLUEREADER_BATTERY_LEVEL to " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL));
 					}
-					if (!isNaN(transmitterDataBlueReaderPacket.sensorBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBlueReaderPacket.sensorBatteryLevel.toString());
+					if (!isNaN(transmitterDataBlueReaderPacket.fslBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBlueReaderPacket.fslBatteryLevel.toString());
+						myTrace("in transmitterDataReceived, setting COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL to " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL));
 					}
 					if (!isNaN(transmitterDataBlueReaderPacket.sensorAge)) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBlueReaderPacket.sensorAge.toString());
+						myTrace("in transmitterDataReceived, setting COMMON_SETTING_FSL_SENSOR_AGE to " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
 					}
 					BgReading.
 						create(transmitterDataBlueReaderPacket.bgValue, transmitterDataBlueReaderPacket.bgValue)
@@ -333,15 +337,15 @@ package services
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderBatteryPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket");
-					lastBgRading = BgReading.lastNoSensor();
-					if (lastBgRading == null || lastBgRading.timestamp + 4 * 60 * 1000 < (new Date()).valueOf()) {
-						myTrace("in transmitterDataReceived,  is TransmitterDataBlueReaderBatteryPacket, sending 6C");
+					lastBgReading = BgReading.lastNoSensor();
+					if (lastBgReading == null || lastBgReading.timestamp + 4 * 60 * 1000 < (new Date()).valueOf()) {
+						myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket, sending 6C");
 						BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 					}
 				} else if (be.data is TransmitterDataBluKonPacket) {
-					lastBgRading = BgReading.lastNoSensor();
-					if (lastBgRading != null) {
-						if (lastBgRading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
+					lastBgReading = BgReading.lastNoSensor();
+					if (lastBgReading != null) {
+						if (lastBgReading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
 							myTrace("in transmitterDataReceived,  is TransmitterDataBluConPacket, but lastbgReading less than 255 seconds old, ignoring");
 							return;
 						}
@@ -424,6 +428,22 @@ package services
 				BluetoothService.writeG4Characteristic(value);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDTextInput.text.toUpperCase());
 			}
+		}
+		
+		private static function getBlueReaderBatteryLevel(transmitterDataBatteryLevel:Number):Number {
+			myTrace("in getBlueReaderBatteryLevel, transmitterDataBatteryLevel = "+ transmitterDataBatteryLevel);
+			var blueReaderFullBattery:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_FULL_BATTERY));
+			if(blueReaderFullBattery <3000 ) {
+				blueReaderFullBattery = 4100;
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_FULL_BATTERY, blueReaderFullBattery.toString());
+			}
+			
+			if (transmitterDataBatteryLevel > blueReaderFullBattery) {
+				blueReaderFullBattery = transmitterDataBatteryLevel;
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_FULL_BATTERY, blueReaderFullBattery.toString());
+			}
+			myTrace("in getBlueReaderBatteryLevel, returnValue = "+ ((transmitterDataBatteryLevel - 3300) * 100 / (blueReaderFullBattery-3300)).toString());
+			return ((transmitterDataBatteryLevel - 3300) * 100 / (blueReaderFullBattery-3300));
 		}
 		
 		private static function myTrace(log:String):void {
