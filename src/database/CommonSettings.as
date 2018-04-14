@@ -346,6 +346,11 @@
 		 * Healthkit
 		 */
 		 public static const COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP:int = 121;
+		 
+		 /**
+		  * bluereader battery management
+		  */
+		 public static const COMMON_SETTING_BLUEREADER_FULL_BATTERY:int = 122;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -469,7 +474,8 @@
 			 "0",//COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL
 			 "",//COMMON_SETTING_MIAOMIAO_HARDWARE
 			 "",//COMMON_SETTING_MIAOMIAO_FW
-			 "0"//COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP
+			 "0",//COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP
+			 "0"//COMMON_SETTING_BLUEREADER_FULL_BATTERY
 		 ];
 
 		 public function CommonSettings()
