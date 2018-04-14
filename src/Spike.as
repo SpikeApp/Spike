@@ -60,10 +60,6 @@ package
 			
 			stage.addEventListener( flash.events.Event.RESIZE, onStageResize );
 			
-			/* Handle Application Activation & Deactivation */
-			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
-			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
-			
 			/* Global Exceptions Handling */
 			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
 			
@@ -87,6 +83,15 @@ package
 		
 		private function sendError(error:String):void
 		{
+			//Things we don't want to report
+			if ( 
+				error.indexOf("ioError") != -1 ||
+				error.indexOf("Unexpected < encountered") != -1 
+				)
+			{
+				return;
+			}
+			
 			var now:Number = new Date().valueOf();
 			
 			if (now - lastCrashReportTimestamp < TIME_1_MINUTE)
@@ -144,6 +149,10 @@ package
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
+			
+			/* Handle Application Activation & Deactivation */
+			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
+			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
 		}
 		
 		private function onContextCreated(event:flash.events.Event):void
