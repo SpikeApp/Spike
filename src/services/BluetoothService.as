@@ -1964,25 +1964,25 @@ package services
 			}
 			myTrace("in processBlueReaderTransmitterData, raw_data = " + raw_data.toString())
 			
-			var sensor_battery_level:Number; 
-			var bridge_battery_level:Number;
+			var blueReaderBatteryLevel:Number = Number.NaN; 
+			var fslBatteryLevel:Number = Number.NaN;
+			var sensorAge:Number = Number.NaN;
 			if (bufferAsStringSplitted.length > 1) {
-				sensor_battery_level = new Number(bufferAsStringSplitted[1]);
-				myTrace("in processBlueReaderTransmitterData, sensor_battery_level = " + sensor_battery_level.toString());
+				blueReaderBatteryLevel = new Number(bufferAsStringSplitted[1]);
+				myTrace("in processBlueReaderTransmitterData, blueReaderBatteryLevel = " + blueReaderBatteryLevel.toString());
 				if (bufferAsStringSplitted.length > 2) {
-					bridge_battery_level = new Number(bufferAsStringSplitted[2]);
-					myTrace("in processBlueReaderTransmitterData, fsl_battery_level = " + bridge_battery_level.toString());
+					fslBatteryLevel = new Number(bufferAsStringSplitted[2]);
+					myTrace("in processBlueReaderTransmitterData, fslBatteryLevel = " + fslBatteryLevel.toString());
 					if (bufferAsStringSplitted.length > 3) {
-						FSLSensorAGe = new Number(bufferAsStringSplitted[3]);
-						myTrace("in processBlueReaderTransmitterData, sensorAge = " + FSLSensorAGe.toString());
+						sensorAge = new Number(bufferAsStringSplitted[3]);
+						myTrace("in processBlueReaderTransmitterData, sensorAge = " + sensorAge.toString());
 					}
 				}
 			}
-			myTrace("in processBlueReaderTransmitterData, dispatching transmitter data");
+			myTrace("in processBlueReaderTransmitterData, dispatching transmitter data with blueReaderBatteryLevel = " + blueReaderBatteryLevel + ", fslBatteryLevel = " + fslBatteryLevel);
 			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-			blueToothServiceEvent.data = new TransmitterDataBlueReaderPacket(raw_data, sensor_battery_level, bridge_battery_level, FSLSensorAGe, (new Date()).valueOf());
+			blueToothServiceEvent.data = new TransmitterDataBlueReaderPacket(raw_data, blueReaderBatteryLevel, fslBatteryLevel, sensorAge, (new Date()).valueOf());
 			_instance.dispatchEvent(blueToothServiceEvent);
-			FSLSensorAGe = Number.NaN;
 		}
 		
 		private static function processG4TransmitterData(buffer:ByteArray):void {
