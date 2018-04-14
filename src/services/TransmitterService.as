@@ -328,18 +328,14 @@ package services
 				} else if (be.data is TransmitterDataBlueReaderBatteryPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket");
 					lastBgReading = BgReading.lastNoSensor();
-					if (lastBgReading == null || lastBgReading.timestamp + 4 * 60 * 1000 < (new Date()).valueOf()) {
-						myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket, sending 6C");
-						BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
-					}
-				} else if (be.data is TransmitterDataBluKonPacket) {
-					lastBgReading = BgReading.lastNoSensor();
 					if (lastBgReading != null) {
 						if (lastBgReading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
-							myTrace("in transmitterDataReceived,  is TransmitterDataBluConPacket, but lastbgReading less than 255 seconds old, ignoring");
+							myTrace("in transmitterDataReceived,  is TransmitterDataBlueReaderBatteryPacket, but lastbgReading less than 255 seconds old, ignoring");
 							return;
 						}
 					}
+					BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));				
+				} else if (be.data is TransmitterDataBluKonPacket) {
 					var transmitterDataBluKonPacket:TransmitterDataBluKonPacket = be.data as TransmitterDataBluKonPacket;
 					if (!isNaN(transmitterDataBluKonPacket.bridgeBatteryLevel)) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, transmitterDataBluKonPacket.bridgeBatteryLevel.toString());
