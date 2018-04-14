@@ -334,6 +334,16 @@ package services
 							return;
 						}
 					}
+					BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
+				} else if (be.data is TransmitterDataBluKonPacket) {
+					lastBgReading = BgReading.lastNoSensor();
+					if (lastBgReading != null) {
+						if (lastBgReading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
+							myTrace("in transmitterDataReceived,  is TransmitterDataBluConPacket, but lastbgReading less than 255 seconds old, ignoring");
+
+							return;
+						}
+					}
 					BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));				
 				} else if (be.data is TransmitterDataBluKonPacket) {
 					var transmitterDataBluKonPacket:TransmitterDataBluKonPacket = be.data as TransmitterDataBluKonPacket;
