@@ -334,13 +334,10 @@ package services
 				} else if (be.data is TransmitterDataBlueReaderBatteryPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket");
 					lastBgRading = BgReading.lastNoSensor();
-					if (lastBgRading != null) {
-						if (lastBgRading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
-							myTrace("in transmitterDataReceived,  is TransmitterDataBlueReaderBatteryPacket, but lastbgReading less than 255 seconds old, ignoring");
-							return;
-						}
+					if (lastBgRading == null || lastBgRading.timestamp + 4 * 60 * 1000 < (new Date()).valueOf()) {
+						myTrace("in transmitterDataReceived,  is TransmitterDataBlueReaderBatteryPacket, sending 6C");
+						BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 					}
-					BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 				} else if (be.data is TransmitterDataBluKonPacket) {
 					lastBgRading = BgReading.lastNoSensor();
 					if (lastBgRading != null) {
