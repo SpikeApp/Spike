@@ -33,6 +33,9 @@ package ui.chart
 	
 	import services.CalibrationService;
 	
+	import starling.animation.Transitions;
+	import starling.animation.Tween;
+	import starling.core.Starling;
 	import starling.display.Quad;
 	import starling.display.Shape;
 	import starling.display.Sprite;
@@ -851,8 +854,6 @@ package ui.chart
 				var insulinMarker:InsulinMarker = new InsulinMarker(treatment);
 				insulinMarker.x = (insulinMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				insulinMarker.y = _graphHeight - (insulinMarker.radius * 1.66) - ((insulinMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
-				insulinMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
-				treatmentsContainer.addChild(insulinMarker);
 				
 				insulinMarker.index = treatmentsList.length;
 				treatmentsList.push(insulinMarker);
@@ -869,8 +870,6 @@ package ui.chart
 				var carbsMarker:CarbsMarker = new CarbsMarker(treatment);
 				carbsMarker.x = (carbsMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				carbsMarker.y = _graphHeight - (carbsMarker.radius * 1.66) - ((carbsMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
-				carbsMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
-				treatmentsContainer.addChild(carbsMarker);
 				
 				carbsMarker.index = treatmentsList.length;
 				treatmentsList.push(carbsMarker);
@@ -887,8 +886,6 @@ package ui.chart
 				var mealMarker:MealMarker = new MealMarker(treatment);
 				mealMarker.x = (mealMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				mealMarker.y = _graphHeight - (mealMarker.radius * 1.66) - ((mealMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
-				mealMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
-				treatmentsContainer.addChild(mealMarker);
 				
 				mealMarker.index = treatmentsList.length;
 				treatmentsList.push(mealMarker);
@@ -908,8 +905,6 @@ package ui.chart
 				var noteMarker:NoteMarker = new NoteMarker(treatment);
 				noteMarker.x = (((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
 				noteMarker.y = (_graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3)) + 8;
-				noteMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
-				treatmentsContainer.addChild(noteMarker);
 				
 				noteMarker.index = treatmentsList.length;
 				treatmentsList.push(noteMarker);
@@ -923,8 +918,6 @@ package ui.chart
 				var glucoseCheckMarker:BGCheckMarker = new BGCheckMarker(treatment);
 				glucoseCheckMarker.x = (glucoseCheckMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				glucoseCheckMarker.y = _graphHeight - (glucoseCheckMarker.radius * 1.66) - ((glucoseCheckMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
-				glucoseCheckMarker.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
-				treatmentsContainer.addChild(glucoseCheckMarker);
 				
 				glucoseCheckMarker.index = treatmentsList.length;
 				treatmentsList.push(glucoseCheckMarker);
@@ -946,6 +939,10 @@ package ui.chart
 			
 			if (chartTreatment.y < -2) //Upper Area
 				chartTreatment.y = -2;
+			
+			//Add treatment
+			chartTreatment.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+			treatmentsContainer.addChild(chartTreatment);
 		}
 		
 		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
