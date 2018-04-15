@@ -8,9 +8,11 @@ package treatments
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
+	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
 	
+	import events.CalibrationServiceEvent;
 	import events.TreatmentsEvent;
 	
 	import feathers.controls.Alert;
@@ -29,6 +31,7 @@ package treatments
 	
 	import model.ModelLocator;
 	
+	import services.CalibrationService;
 	import services.NightscoutService;
 	
 	import starling.animation.Transitions;
@@ -41,6 +44,8 @@ package treatments
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
+	
+	import utils.UniqueId;
 	
 	[ResourceBundle("treatments")]
 	[ResourceBundle("globaltranslations")]
@@ -65,6 +70,11 @@ package treatments
 		
 		public static function init():void
 		{
+			//Event Listeners
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
+			
+			//Fetch Data From Database
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				var now:Number = new Date().valueOf();
@@ -96,6 +106,21 @@ package treatments
 					}
 				}
 			}
+		}
+		
+		private static function onCalibrationReceived(e:CalibrationServiceEvent):void 
+		{
+			//Ensures compatibility with the new method of only one initial calibration
+			if (Calibration.allForSensor().length == 1) 
+				return;
+			
+			//No need to do anything. Nightscout service will take care of it
+			if (NightscoutService.serviceActive) 
+				return;
+			
+			//Add calibration treatment to Spike
+			var lastCalibration:Calibration = Calibration.last();
+			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, UniqueId.createEventId());
 		}
 		
 		public static function getTotalIOB(time:Number):Number

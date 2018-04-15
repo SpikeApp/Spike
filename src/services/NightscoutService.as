@@ -80,7 +80,7 @@ package services
 		
 		/* Logical Variables */
 		private static var serviceStarted:Boolean = false;
-		private static var serviceActive:Boolean = false;
+		public static var serviceActive:Boolean = false;
 		private static var _syncGlucoseReadingsActive:Boolean = false;
 		private static var syncGlucoseReadingsActiveLastChange:Number = (new Date()).valueOf();
 		private static var _syncCalibrationsActive:Boolean = false;
@@ -768,6 +768,9 @@ package services
 		
 		public static function uploadTreatment(treatment:Treatment):void
 		{
+			if (!serviceActive)
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "in uploadTreatment.");
 			
 			//Check if the treatment is already present in another queue and delete it.
@@ -1091,6 +1094,9 @@ package services
 		
 		private static function onCalibrationReceived(e:CalibrationServiceEvent):void 
 		{
+			if (Calibration.allForSensor().length == 1) //Ensures compatibility with the new method of only one initial calibration
+				return;
+			
 			var lastCalibration:Calibration = Calibration.last();
 			
 			activeCalibrations.push(createCalibrationObject(lastCalibration));
@@ -1178,7 +1184,7 @@ package services
 		 */
 		private static function syncSensorStart():void
 		{
-			if (activeSensorStarts.length == 0 || syncSensorStartActive || !NetworkInfo.networkInfo.isReachable())
+			if (activeSensorStarts.length == 0 || syncSensorStartActive || !NetworkInfo.networkInfo.isReachable() || !serviceActive)
 				return;
 			
 			syncSensorStartActive = true;
