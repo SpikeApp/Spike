@@ -87,7 +87,8 @@ package
 			if ( 
 				error.indexOf("ioError") != -1 ||
 				error.indexOf("Unexpected < encountered") != -1 ||
-				error.indexOf("Unexpected T encountered") != -1
+				error.indexOf("Unexpected T encountered") != -1 ||
+				error.indexOf("PickerList/closeList()") != -1
 				)
 			{
 				return;
@@ -95,6 +96,7 @@ package
 			
 			var now:Number = new Date().valueOf();
 			
+			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life
 			if (now - lastCrashReportTimestamp < TIME_1_MINUTE)
 				return;
 			

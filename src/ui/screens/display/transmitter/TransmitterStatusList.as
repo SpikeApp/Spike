@@ -599,7 +599,7 @@ package ui.screens.display.transmitter
 			var touch:Touch = e.getTouch(stage);
 			
 			//If a click was recorded, show callout with status info
-			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			if(touch != null && e != null && e.currentTarget != null && touch != null && touch.phase == TouchPhase.BEGAN && BlueToothDevice.isDexcomG5())
 			{
 				var listItem:Object = (e.currentTarget as Object);
 				if (listItem == null)
