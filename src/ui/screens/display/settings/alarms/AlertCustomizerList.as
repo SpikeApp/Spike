@@ -155,7 +155,7 @@ package ui.screens.display.settings.alarms
 			enableSnoozeInNotification = LayoutFactory.createCheckMark(enableSnoozeInNotificationValue);
 			enableSnoozeInNotification.addEventListener(Event.CHANGE, onSettingsChanged);
 			
-			snoozeMinutes = LayoutFactory.createNumericStepper(0, 999, snoozeMinutesValue);
+			snoozeMinutes = LayoutFactory.createNumericStepper(0, 9999, snoozeMinutesValue);
 			snoozeMinutes.pivotX = -12;
 			snoozeMinutes.addEventListener(Event.CHANGE, onSettingsChanged);
 			
