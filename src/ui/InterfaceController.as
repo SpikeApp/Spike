@@ -10,7 +10,6 @@ package ui
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-
 	import flash.system.Capabilities;
 	import flash.text.TextField;
 	import flash.text.TextFormat;

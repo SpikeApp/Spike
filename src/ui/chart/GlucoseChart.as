@@ -33,9 +33,6 @@ package ui.chart
 	
 	import services.CalibrationService;
 	
-	import starling.animation.Transitions;
-	import starling.animation.Tween;
-	import starling.core.Starling;
 	import starling.display.Quad;
 	import starling.display.Shape;
 	import starling.display.Sprite;
@@ -1124,7 +1121,7 @@ package ui.chart
 					var treatment:ChartTreatment = treatmentsList[i];
 					if (treatment.treatment.timestamp < firstBGReadingTimeStamp)
 					{
-						//Treatment has expired (>24H). Discart it
+						//Treatment has expired (>24H). Dispose it
 						treatmentsContainer.removeChild(treatment);
 						treatmentsList.removeAt(i);
 						TreatmentsManager.removeTreatmentFromMemory(treatment.treatment);
@@ -2916,6 +2913,63 @@ package ui.chart
 			}
 			scrollChartGlucoseMarkersList.length = 0;
 			scrollChartGlucoseMarkersList = null;
+			
+			//Treatments
+			if (treatmentsList != null && treatmentsList.length > 0)
+			{
+				for (i = 0; i < treatmentsList.length; i++) 
+				{
+					var chartTreatment:ChartTreatment = treatmentsList[i] as ChartTreatment;
+					if (chartTreatment != null)
+					{
+						chartTreatment.removeEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+						chartTreatment.removeFromParent();
+						chartTreatment.dispose();
+						chartTreatment = null;
+					}
+				}
+				treatmentsList.length = 0;
+				treatmentsList = null;
+			}
+			
+			if (treatmentsMap != null)
+				treatmentsMap = null;
+			
+			if (treatmentCallout != null)
+			{
+				treatmentCallout.dispose();
+				treatmentCallout = null;
+			}
+			
+			if (IOBPill != null)
+			{
+				IOBPill.dispose();
+				IOBPill = null;
+			}
+			
+			if (COBPill != null)
+			{
+				COBPill.dispose();
+				COBPill = null;
+			}
+			
+			if (glucoseSlopePill != null)
+			{
+				glucoseSlopePill.dispose();
+				glucoseSlopePill = null;
+			}
+			
+			if (glucoseTimeAgoPill != null)
+			{
+				glucoseTimeAgoPill.dispose();
+				glucoseTimeAgoPill = null;
+			}
+			
+			if (treatmentsContainer != null)
+			{
+				treatmentsContainer.dispose();
+				treatmentsContainer = null;
+			}
 			
 			/* Chart Display Objects */
 			removeChild(glucoseTimelineContainer);

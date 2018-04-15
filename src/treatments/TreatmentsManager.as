@@ -276,33 +276,34 @@ package treatments
 			}*/
 		}
 		
-		
-		
 		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
 		{
-			//Notify listeners
-			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, treatment));
-			
-			//Delete from Spike
-			for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+			if (treatmentsMap[treatment.ID] != null) //treatment exists
 			{
-				var spikeTreatment:Treatment = treatmentsList[i] as Treatment;
-				if (treatment.ID == spikeTreatment.ID)
+				//Delete from Spike
+				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
 				{
-					treatmentsList.removeAt(i);
-					spikeTreatment = null;
-					break;
+					var spikeTreatment:Treatment = treatmentsList[i] as Treatment;
+					if (treatment.ID == spikeTreatment.ID)
+					{
+						treatmentsList.removeAt(i);
+						spikeTreatment = null;
+						break;
+					}
 				}
+				treatmentsMap[treatment.ID] = null;
+				
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, treatment));
+				
+				//Delete from Nightscout
+				if (updateNightscout)
+					NightscoutService.deleteTreatment(treatment);
+				
+				//Delete from databse
+				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					Database.deleteTreatmentSynchronous(treatment);
 			}
-			treatmentsMap[treatment.ID] = null;
-			
-			//Delete from Nightscout
-			if (updateNightscout)
-				NightscoutService.deleteTreatment(treatment);
-			
-			//Delete from databse
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-				Database.deleteTreatmentSynchronous(treatment);
 		}
 		
 		public static function updateTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
@@ -320,21 +321,27 @@ package treatments
 		}
 		
 		public static function addNightscoutTreatment(treatment:Treatment, uploadToNightscout:Boolean = false):void
-		{
-			//Add treatment to Spike
-			treatmentsList.push(treatment);
-			treatmentsMap[treatment.ID] = treatment;
-			
-			//Notify listeners
-			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-			
+		{	
 			//Insert in Database
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-				Database.insertTreatmentSynchronous(treatment);
+			{
+				if (treatmentsMap[treatment.ID] == null) //new treatment
+					Database.insertTreatmentSynchronous(treatment);
+			}
 			
-			//Upload to Nightscout
-			if (uploadToNightscout)
-				NightscoutService.uploadTreatment(treatment);
+			if (treatmentsMap[treatment.ID] == null) //new treatment
+			{
+				//Add treatment to Spike
+				treatmentsList.push(treatment);
+				treatmentsMap[treatment.ID] = treatment;
+				
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				
+				//Upload to Nightscout
+				if (uploadToNightscout)
+					NightscoutService.uploadTreatment(treatment);
+			}
 		}
 		
 		public static function addTreatment(type:String):void
@@ -845,19 +852,25 @@ package treatments
 		
 		public static function addExternalTreatment(treatment:Treatment):void
 		{
-			//Add to list
-			treatmentsList.push(treatment);
-			treatmentsMap[treatment.ID] = treatment;
-			
-			//Notify listeners
-			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-			
 			//Insert in DB
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-				Database.insertTreatmentSynchronous(treatment);
+			{
+				if (treatmentsMap[treatment.ID] == null) //new treatment
+					Database.insertTreatmentSynchronous(treatment);
+			}
 			
-			//Upload to Nightscout
-			NightscoutService.uploadTreatment(treatment);
+			if (treatmentsMap[treatment.ID] == null) //new treatment
+			{
+				//Add to list
+				treatmentsList.push(treatment);
+				treatmentsMap[treatment.ID] = treatment;
+				
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				
+				//Upload to Nightscout
+				NightscoutService.uploadTreatment(treatment);
+			}
 		}
 		
 		public static function addInternalCalibrationTreatment(glucoseValue:Number, timestamp:Number, treatmentID:String):void
@@ -875,26 +888,48 @@ package treatments
 				treatmentID
 			);
 			
-			//Add to list
-			treatmentsList.push(treatment);
-			treatmentsMap[treatment.ID] = treatment;
-			
-			//Notify listeners
-			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-			
-			//Insert in DB
-			Database.insertTreatmentSynchronous(treatment);
+			if (treatmentsMap[treatment.ID] == null) //New treatment
+			{
+				//Insert in DB
+				Database.insertTreatmentSynchronous(treatment);
+				
+				//Add to list
+				treatmentsList.push(treatment);
+				treatmentsMap[treatment.ID] = treatment;
+				
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+			}
 		}
 		
 		public static function processNightscoutTreatments(nsTreatments:Array):void
 		{
 			var nightscoutTreatmentsMap:Dictionary = new Dictionary();
 			var numNightscoutTreatments:int = nsTreatments.length;
+			var firstReadingTimestamp:Number;
+			var lastReadingTimestamp:Number;
+			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+			{
+				firstReadingTimestamp = (ModelLocator.bgReadings[0] as BgReading).timestamp;
+				lastReadingTimestamp = (ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).timestamp;
+			}
+			else
+			{
+				//There's still no readings in Spike. Abort!
+				return
+			}
+				
 			for (var i:int = 0; i < numNightscoutTreatments; i++) 
 			{
 				//Define initial treatment properties
 				var nsTreatment:Object = nsTreatments[i];
 				var treatmentTimestamp:Number = DateUtil.parseW3CDTF(nsTreatment.created_at).valueOf();
+				if (treatmentTimestamp < firstReadingTimestamp || treatmentTimestamp > lastReadingTimestamp)
+				{
+					//Treatment is outside timespan of first/last bg readings in spike. Let's ignore it
+					continue;
+				}
+				
 				var treatmentID:String = nsTreatment._id;
 				nightscoutTreatmentsMap[treatmentID] = nsTreatment;
 				var treatmentEventType:String = nsTreatment.eventType;

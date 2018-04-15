@@ -178,29 +178,44 @@ package
 		private function onActivate( event:flash.events.Event ):void 
 		{
 			//Restart stage framerate
-			stage.frameRate = 60;
-			Starling.current.nativeStage.frameRate = 60;
+			if (stage != null)
+				stage.frameRate = 60;
 			
-			//Start Starling
-			starling.start();
+			if (Starling.current.nativeStage != null)
+				Starling.current.nativeStage.frameRate = 60;
 			
-			//Start Starling
-			NativeApplication.nativeApplication.executeInBackground = false;
-			SystemUtil.executeWhenApplicationIsActive( starling.start );
+			if (starling != null)
+			{
+				//Start Starling
+				starling.start();
+				
+				//Start Starling
+				NativeApplication.nativeApplication.executeInBackground = false;
+				SystemUtil.executeWhenApplicationIsActive( starling.start );
+			}
+			else
+			{
+				initStarling();
+				NativeApplication.nativeApplication.executeInBackground = false;
+			}
 			
 			//Update Variables
 			Constants.appInForeground = true;
 			
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
-			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
+			if (_instance == null)
+				_instance = this
+			_instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
 		{
 			//Decrease framerate almost to a halt
-			Starling.current.nativeStage.frameRate = 0.5;
-			stage.frameRate = 0.5;
+			if (Starling.current.nativeStage != null)
+				Starling.current.nativeStage.frameRate = 0.5;
+			if (stage != null)
+				stage.frameRate = 0.5;
 			
 			//Update Variables
 			Constants.noLockEnabled = false;
@@ -208,11 +223,14 @@ package
 			
 			//Stop Starling 
 			NativeApplication.nativeApplication.executeInBackground = true;
-			starling.stop( true );
+			if (starling != null)
+				starling.stop( true );
 			
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_BACKGROUND");
-			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
+			if (_instance == null)
+				_instance = this;
+			_instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
 
 			//Call Garbage Collector
 			System.pauseForGCIfCollectionImminent(0);

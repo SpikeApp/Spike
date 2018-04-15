@@ -1101,7 +1101,7 @@ package services
 		
 		private static function onCalibrationReceived(e:CalibrationServiceEvent):void 
 		{
-			if (Calibration.allForSensor().length == 1) //Ensures compatibility with the new method of only one initial calibration
+			if (Calibration.allForSensor().length == 1) //Ensures compatibility with the new method of only one initial calibration (ignores the first one)
 				return;
 			
 			var lastCalibration:Calibration = Calibration.last();

@@ -189,6 +189,9 @@ package services
 						);
 					}
 					
+					if (!serviceActive)
+						activateService();
+					
 					//Perform next steps
 					if (nextFunctionToCall != null)
 					{
@@ -199,6 +202,9 @@ package services
 				else
 				{
 					Trace.myTrace("DexcomShareService.as", "Authentication error! Trying to parse error...");
+					
+					if (serviceActive)
+						deactivateService();
 					
 					var responseInfo:Object = parseDexcomError(response, null);
 					

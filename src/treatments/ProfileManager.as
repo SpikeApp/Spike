@@ -147,25 +147,29 @@ package treatments
 		
 		public static function updateInsulin(insulin:Insulin):void
 		{
-			Database.updateInsulinSynchronous(insulin);
+			if (insulinsMap[insulin.ID] != null)
+				Database.updateInsulinSynchronous(insulin);
 		}
 		
 		public static function deleteInsulin(insulin:Insulin):void
 		{
-			//Find insulin
-			for (var i:int = 0; i < insulinsList.length; i++) 
+			if (insulinsMap[insulin.ID] != null)
 			{
-				var userInsulin:Insulin = insulinsList[i];
-				if (userInsulin.ID == insulin.ID)
+				//Find insulin
+				for (var i:int = 0; i < insulinsList.length; i++) 
 				{
-					//Insulin found. Remove it from Spike.
-					insulinsList.removeAt(i);
-					insulinsMap[insulin.ID] = null;
-					
-					//Delete from database
-					Database.deleteInsulinSynchronous(userInsulin);
-					
-					break;
+					var userInsulin:Insulin = insulinsList[i];
+					if (userInsulin.ID == insulin.ID)
+					{
+						//Insulin found. Remove it from Spike.
+						insulinsList.removeAt(i);
+						insulinsMap[insulin.ID] = null;
+						
+						//Delete from database
+						Database.deleteInsulinSynchronous(userInsulin);
+						
+						break;
+					}
 				}
 			}
 		}

@@ -64,8 +64,6 @@ package database
 		private static const debugMode:Boolean = true;
 		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
 		
-		private static const TREATMENTS_DEBUG:Boolean = true;
-		
 		/**
 		 * create table to store the bluetooth device name and address<br>
 		 * At most one row should be stored
@@ -596,10 +594,7 @@ package database
 					insertAlertTypeSychronous(silentAlert);
 				}
 				
-				if (TREATMENTS_DEBUG == false)
-					finishedCreatingTables();
-				else
-					createTreatmentsTable();
+				createTreatmentsTable();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {

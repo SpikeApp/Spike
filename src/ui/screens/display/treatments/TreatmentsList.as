@@ -53,6 +53,7 @@ package ui.screens.display.treatments
 		private var calibrationButtonEnabled:Boolean = false;
 		private var treatmentsEnabled:Boolean = false;
 		private var numBgReadings:int = 0;
+		private var canAddTreatments:Boolean = false;
 		
 		public function TreatmentsList()
 		{
@@ -118,20 +119,23 @@ package ui.screens.display.treatments
 			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
+			if (numBgReadings > 2)
+				canAddTreatments = true;
+			
 			var menuData:Array = [];
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
 			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 			{
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: treatmentsEnabled, id: 2 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: treatmentsEnabled, id: 3 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: treatmentsEnabled, id: 4 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: treatmentsEnabled, id: 5 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: treatmentsEnabled, id: 6 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: canAddTreatments, id: 2 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: canAddTreatments, id: 3 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: canAddTreatments, id: 4 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: canAddTreatments, id: 5 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: canAddTreatments, id: 6 } );
 			}
 			if (treatmentsEnabled)
 			{
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: treatmentsEnabled, id: 7 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canAddTreatments, id: 7 } );
 			}
 			
 			dataProvider = new ListCollection(menuData);
