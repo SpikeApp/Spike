@@ -21,6 +21,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     @IBOutlet var lastUpdateDisplay: UILabel!
     @IBOutlet var openApp: UIButton!
     @IBOutlet var noData: UILabel!
+    @IBOutlet var treatmentsLabel: UILabel!
     
     //IBActions
     @IBAction func openApp(_ sender: Any)
@@ -75,6 +76,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var showGridLines:String = ""
     var lineThickness:NSString = ""
     var markerRadius:NSString = ""
+    var IOB:String = ""
+    var COB:String = ""
     
     //Constants
     let millisecondsInHour = 3600000
@@ -89,9 +92,9 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         super.viewDidLoad()
         
         //Dummy data
-        /*latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
+        latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
         latestGlucoseValue = "600"
-        latestGlucoseSlopeArrow = "->"
+        latestGlucoseSlopeArrow = "-"
         latestGlucoseDelta = "+0.5"
         latestGlucoseTime = String(Date().toTimestamp())
         glucoseUnit = "mg/dL"
@@ -124,7 +127,9 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         showMarkerLabel = "true"
         showGridLines = "false"
         lineThickness = "2"
-        markerRadius = "6"*/
+        markerRadius = "6"
+        IOB = "6.05"
+        COB = "25.4"
         
         
         //Widget Properties
@@ -138,7 +143,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             self.preferredContentSize = CGSize(width: mainView.frame.size.width, height: 300)
         }
         
-        if getExternalData()
+        /*if getExternalData()
         {
             if populateProperties()
             {
@@ -152,7 +157,12 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
                     }
                 }
             }
-        }
+        }*/
+        
+        //DEBUG
+        setBackground()
+        setLabels()
+        //setChart()
     }
     
     /**
@@ -218,7 +228,9 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             externalData["showMarkerLabel"] == nil ||
             externalData["showGridLines"] == nil ||
             externalData["lineThickness"] == nil ||
-            externalData["markerRadius"] == nil
+            externalData["markerRadius"] == nil ||
+            externalData["IOB"] == nil ||
+            externalData["COB"] == nil
         {
             print("Database file is corrupted!")
             noData.text = "Missing data in database!"
@@ -264,6 +276,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         showGridLines = (externalData["showGridLines"] as? String)!
         lineThickness = (externalData["lineThickness"] as? NSString)!
         markerRadius = (externalData["markerRadius"] as? NSString)!
+        IOB = (externalData["IOB"] as? String)!
+        COB = (externalData["COB"] as? String)!
         
         return true
     }
@@ -382,6 +396,9 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         lastUpdateDisplay.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
         openApp.setTitle(openSpike, for: .normal)
         openApp.setTitleColor(UIColor.colorFromHex(hexString: displayLabelsColor), for: .normal)
+        
+        treatmentsLabel.text = "COB:" + COB + "   IOB:" + IOB
+        treatmentsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
     }
     
     func parseChartData()->Bool

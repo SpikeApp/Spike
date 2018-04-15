@@ -53,7 +53,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" contentHorizontalAlignment="right" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GZn-9R-ICs" userLabel="Open Spike">
-                                <rect key="frame" x="272" y="78" width="30" height="24"/>
+                                <rect key="frame" x="16" y="80" width="30" height="24"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="10"/>
                                 <state key="normal">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -69,16 +69,24 @@
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Label" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bzA-gj-RS8">
+                                <rect key="frame" x="99" y="51" width="205" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <color key="textColor" red="0.99999600649999998" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="GZn-9R-ICs" firstAttribute="leading" secondItem="S3S-Oj-5AN" secondAttribute="leadingMargin" id="87r-l5-6wU"/>
+                            <constraint firstAttribute="trailing" secondItem="bzA-gj-RS8" secondAttribute="trailing" constant="18" id="AFE-6t-myI"/>
                             <constraint firstItem="aWz-C1-cub" firstAttribute="top" secondItem="fJ9-D8-I5P" secondAttribute="bottom" constant="30" id="BzV-jV-cLr"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="GZn-9R-ICs" secondAttribute="trailingMargin" constant="10" id="G1R-vy-Pfv"/>
                             <constraint firstAttribute="trailing" secondItem="bud-ho-sxk" secondAttribute="trailing" constant="16" id="I0z-Eu-fly"/>
+                            <constraint firstItem="bzA-gj-RS8" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="83" id="MjT-31-cgh"/>
                             <constraint firstItem="Ncz-p6-keM" firstAttribute="leading" secondItem="S3S-Oj-5AN" secondAttribute="leadingMargin" id="TF0-P0-3ly"/>
-                            <constraint firstItem="GZn-9R-ICs" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="topMargin" constant="78" id="W52-zK-47v"/>
                             <constraint firstItem="aWz-C1-cub" firstAttribute="leading" secondItem="S3S-Oj-5AN" secondAttribute="leadingMargin" id="dib-Z1-fKC"/>
                             <constraint firstItem="bud-ho-sxk" firstAttribute="top" secondItem="fJ9-D8-I5P" secondAttribute="bottom" constant="20" id="lE5-RK-ecp"/>
                             <constraint firstItem="Ncz-p6-keM" firstAttribute="top" secondItem="fJ9-D8-I5P" secondAttribute="bottom" constant="51" id="up5-De-syE"/>
+                            <constraint firstItem="GZn-9R-ICs" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="80" id="zNp-ai-ubd"/>
                         </constraints>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout"/>
@@ -93,6 +101,7 @@
                         <outlet property="noData" destination="DsU-Gy-Lf6" id="8LO-PO-mWZ"/>
                         <outlet property="openApp" destination="GZn-9R-ICs" id="oaY-nk-EuR"/>
                         <outlet property="timeDisplay" destination="aWz-C1-cub" id="1FC-N1-n0I"/>
+                        <outlet property="treatmentsLabel" destination="bzA-gj-RS8" id="oUZ-f2-Y6e"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="vXp-U4-Rya" userLabel="First Responder" sceneMemberID="firstResponder"/>
