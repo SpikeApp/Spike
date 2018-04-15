@@ -92,7 +92,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         super.viewDidLoad()
         
         //Dummy data
-        latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
+        /*latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
         latestGlucoseValue = "600"
         latestGlucoseSlopeArrow = "-"
         latestGlucoseDelta = "+0.5"
@@ -129,7 +129,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         lineThickness = "2"
         markerRadius = "6"
         IOB = "6.05"
-        COB = "25.4"
+        COB = "25.4"*/
         
         
         //Widget Properties
@@ -143,7 +143,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             self.preferredContentSize = CGSize(width: mainView.frame.size.width, height: 300)
         }
         
-        /*if getExternalData()
+        if getExternalData()
         {
             if populateProperties()
             {
@@ -157,11 +157,11 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
                     }
                 }
             }
-        }*/
+        }
         
         //DEBUG
-        setBackground()
-        setLabels()
+        //setBackground()
+        //setLabels()
         //setChart()
     }
     
