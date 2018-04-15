@@ -30,6 +30,7 @@ package ui.screens.display.dexcomshare
 	
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.SpikeJSON;
 	import utils.Trace;
@@ -91,9 +92,9 @@ package ui.screens.display.dexcomshare
 			isSelectable = false;
 			autoHideBackground = true;
 			hasElasticEdges = false;
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				width = 250;
-			else if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				width = 240;
 			else
 				width = 300;

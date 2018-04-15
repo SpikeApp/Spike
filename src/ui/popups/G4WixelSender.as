@@ -90,7 +90,7 @@ package ui.popups
 			mainContainer.layout = mainLayout;
 			
 			/* Title */
-			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('wixelsender',"user_email_label"), HorizontalAlign.CENTER);
+			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label"), HorizontalAlign.CENTER);
 			mainContainer.addChild(emailLabel);
 			
 			/* Email Input */
@@ -111,7 +111,7 @@ package ui.popups
 			actionButtonsContainer.addChild(cancelButton);
 			
 			//Send Button
-			sendButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('wixelsender',"send_alert_button_label"));
+			sendButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"send_button_label_capitalized"));
 			sendButton.addEventListener(starling.events.Event.TRIGGERED, onClose);
 			actionButtonsContainer.addChild(sendButton);
 			
@@ -145,18 +145,18 @@ package ui.popups
 		private static function onClose(e:starling.events.Event):void
 		{
 			//Validation
-			emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"user_email_label");
+			emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label");
 			emailLabel.fontStyles.color = 0xEEEEEE;
 			
 			if (emailField.text == "")
 			{
-				emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_address_required");
+				emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_address_required");
 				emailLabel.fontStyles.color = 0xFF0000;
 				return;
 			}
 			else if (!DataValidator.validateEmail(emailField.text))
 			{
-				emailLabel.text = ModelLocator.resourceManagerInstance.getString('wixelsender',"email_address_invalid");
+				emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_address_invalid");
 				emailLabel.fontStyles.color = 0xFF0000;
 				return;
 			}

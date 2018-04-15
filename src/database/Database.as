@@ -39,6 +39,10 @@ package database
 	
 	import services.TransmitterService;
 	
+	import treatments.Insulin;
+	import treatments.Profile;
+	import treatments.Treatment;
+	
 	import utils.Trace;
 	
 	[ResourceBundle("alertsettingsscreen")]
@@ -60,7 +64,7 @@ package database
 		private static const debugMode:Boolean = true;
 		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
 		
-		private static const TREATMENTS_DEBUG:Boolean = false;
+		private static const TREATMENTS_DEBUG:Boolean = true;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
@@ -157,10 +161,11 @@ package database
 		private static const CREATE_TABLE_TREATMENTS:String = "CREATE TABLE IF NOT EXISTS treatments(" +
 			"id STRING PRIMARY KEY," +
 			"type STRING, " +
-			"insulin REAL, " +
-			"dia REAL, " +
+			"insulinamount REAL, " +
+			"insulinid STRING, " +
 			"carbs REAL, " +
 			"glucose REAL, " +
+			"glucoseestimated REAL, " +
 			"note STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
@@ -169,10 +174,12 @@ package database
 			"name STRING, " +
 			"dia REAL, " +
 			"type STRING, " +
+			"isdefault STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_PROFILE:String = "CREATE TABLE IF NOT EXISTS profiles(" +
 			"id STRING PRIMARY KEY," +
+			"time STRING, " +
 			"name STRING, " +
 			"insulintocarbratios STRING, " +
 			"insulinsensitivityfactors STRING, " +
@@ -1987,6 +1994,421 @@ package database
 			} finally {
 				if (conn.connected) conn.close();
 				return returnValue;
+			}
+		}
+		
+		/**
+		 * Get treatments synchronously
+		 * From: Starting timestamp.
+		 * Until: Ending timestamp.
+		 * Columns: Data columns to be retrieved from database.
+		 * MaxCount: Maximum of records returned from database (if applicable). 1 means all.
+		 */
+		public static function getTreatmentsSynchronous(from:Number, until:Number, columns:String = "*", maxCount:int = 1):Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				if (maxCount == 1)
+					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until + " ORDER BY lastmodifiedtimestamp DESC";
+				else
+					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until +  " ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_treatments', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_treatments',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		
+		/**
+		 * inserts a treatment in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertTreatmentSynchronous(treatment:Treatment):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO treatments (";
+				text += "id, ";
+				text += "type, ";
+				text += "insulinamount, ";
+				text += "insulinid, ";
+				text += "carbs, ";
+				text += "glucose, ";
+				text += "glucoseestimated, ";
+				text += "note, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + treatment.ID + "', ";
+				text += "'" + treatment.type + "', ";
+				text += treatment.insulinAmount + ", ";
+				text += "'" + treatment.insulinID + "', ";
+				text += treatment.carbs + ", ";
+				text += treatment.glucose + ", ";
+				text += treatment.glucoseEstimated + ", ";
+				text += "'" + treatment.note + "', ";
+				text += treatment.timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_treatment_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * updates a treatment in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function updateTreatmentSynchronous(treatment:Treatment):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE treatments SET " +
+				"id = '" + treatment.ID + "', " +
+				"type = '" + treatment.type + "', " +
+				"insulinamount = " + treatment.insulinAmount + ", " +
+				"insulinid = '" + treatment.insulinID + "', " +
+				"carbs = " + treatment.carbs + ", " +
+				"glucose = " + treatment.glucose + ", " +
+				"glucoseestimated = " + treatment.glucoseEstimated + ", " +
+				"note = '" + treatment.note + "', " +
+				"lastmodifiedtimestamp = " + treatment.timestamp + " " +
+				"WHERE id = '" + treatment.ID + "'";
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_treatment_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * deletes a treatment in the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteTreatmentSynchronous(treatment:Treatment):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from treatments where id = " + "'" + treatment.ID + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_treatment_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Get Insulins synchronously
+		 */
+		public static function getInsulinsSynchronous():Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text =  "SELECT * FROM insulins";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_insulins', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_insulins',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		/**
+		 * inserts an insulin in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertInsulinSynchronous(insulin:Insulin):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO insulins (";
+				text += "id, ";
+				text += "name, ";
+				text += "dia, ";
+				text += "type, ";
+				text += "isdefault, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + insulin.ID + "', ";
+				text += "'" + insulin.name + "', ";
+				text += insulin.dia + ", ";
+				text += "'" + insulin.type + "', ";
+				text += "'" + insulin.isDefault + "', ";
+				text += insulin.timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_insulin_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * updates an insulin in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function updateInsulinSynchronous(insulin:Insulin):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE insulins SET " +
+					"id = '" + insulin.ID + "', " +
+					"name = '" + insulin.name + "', " +
+					"dia = " + insulin.dia + ", " +
+					"type = '" + insulin.type + "', " +
+					"isdefault = '" + insulin.isDefault + "', " +
+					"lastmodifiedtimestamp = " + insulin.timestamp + " " +
+					"WHERE id = '" + insulin.ID + "'";
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_insulin_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * deletes an insulin in the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteInsulinSynchronous(insulin:Insulin):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from insulins WHERE id = " + "'" + insulin.ID + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_insulin_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Get Profile synchronously
+		 */
+		public static function getProfilesSynchronous():Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text =  "SELECT * FROM profiles";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		/**
+		 * inserts a profile in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertProfileSynchronous(profile:Profile):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO profiles (";
+				text += "id, ";
+				text += "time, ";
+				text += "name, ";
+				text += "insulintocarbratios, ";
+				text += "insulinsensitivityfactors, ";
+				text += "carbsabsorptionrate, ";
+				text += "basalrates, ";
+				text += "targetglucoserates, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + profile.ID + "', ";
+				text += "'" + profile.time + "', ";
+				text += "'" + profile.name + "', ";
+				text += "'" + profile.insulinToCarbRatios + "', ";
+				text += "'" + profile.insulinSensitivityFactors + "', ";
+				text += profile.carbsAbsorptionRate + ", ";
+				text += "'" + profile.basalRates + "', ";
+				text += "'" + profile.targetGlucoseRates + "', ";
+				text += profile.timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_profile_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * updates a profile in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function updateProfileSynchronous(profile:Profile):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE profiles SET " +
+					"id = '" + profile.ID + "', " +
+					"time = '" + profile.time + "', " +
+					"name = '" + profile.name + "', " +
+					"insulintocarbratios = '" + profile.insulinToCarbRatios + "', " +
+					"insulinsensitivityfactors = '" + profile.insulinSensitivityFactors + "', " +
+					"carbsabsorptionrate = " + profile.carbsAbsorptionRate + ", " +
+					"basalrates = '" + profile.basalRates + "', " +
+					"targetglucoserates = '" + profile.targetGlucoseRates + "', " +
+					"lastmodifiedtimestamp = " + profile.timestamp + " " +
+					"WHERE id = '" + profile.ID + "'";
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_profilr_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * deletes a profile in the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteProfileSynchronous(profile:Profile):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from profiles WHERE id = " + "'" + profile.ID + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_profile_in_db', error.message + " - " + error.details);
 			}
 		}
 		

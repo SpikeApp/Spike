@@ -143,7 +143,7 @@ package
 			starling = new Starling( AppInterface, stage, null, null, "auto", Context3DProfile.BASELINE_EXTENDED );
 			starling.enableErrorChecking = false;
 			starling.skipUnchangedFrames = true;
-			starling.antiAliasing = 1;
+			starling.antiAliasing = 6;
 			//Starling.current.showStatsAt("right", "bottom");
 			//Starling.current.showStatsAt("left", "bottom");
 			scaler = new ScreenDensityScaleFactorManager( starling );
@@ -177,8 +177,12 @@ package
 		
 		private function onActivate( event:flash.events.Event ):void 
 		{
-			//Resume normal framerate
+			//Restart stage framerate
+			stage.frameRate = 60;
 			Starling.current.nativeStage.frameRate = 60;
+			
+			//Start Starling
+			starling.start();
 			
 			//Start Starling
 			NativeApplication.nativeApplication.executeInBackground = false;
@@ -196,6 +200,7 @@ package
 		{
 			//Decrease framerate almost to a halt
 			Starling.current.nativeStage.frameRate = 0.5;
+			stage.frameRate = 0.5;
 			
 			//Update Variables
 			Constants.noLockEnabled = false;
@@ -208,7 +213,7 @@ package
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_BACKGROUND");
 			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
-			
+
 			//Call Garbage Collector
 			System.pauseForGCIfCollectionImminent(0);
 		}

@@ -134,11 +134,11 @@ package ui.screens.display.settings.alarms
 			alertCreatorCallout = new Callout();
 			alertCreatorCallout.content = alertCreatorList;
 			
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				alertCreatorCallout.padding = 18;
 			else
 			{
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 					alertCreatorCallout.padding = 18;
 				
 				setupCalloutPosition();

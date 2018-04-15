@@ -6,6 +6,7 @@ package ui.chart
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.system.System;
+	import flash.utils.Dictionary;
 	import flash.utils.Timer;
 	
 	import database.BgReading;
@@ -16,29 +17,50 @@ package ui.chart
 	import events.CalibrationServiceEvent;
 	import events.SpikeEvent;
 	
+	import feathers.controls.Button;
+	import feathers.controls.Callout;
+	import feathers.controls.DateTimeMode;
+	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
 	
 	import model.ModelLocator;
 	
 	import services.CalibrationService;
 	
+	import starling.animation.Transitions;
+	import starling.animation.Tween;
+	import starling.core.Starling;
 	import starling.display.Quad;
 	import starling.display.Shape;
 	import starling.display.Sprite;
+	import starling.events.Event;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.utils.Align;
 	
+	import treatments.Insulin;
+	import treatments.ProfileManager;
+	import treatments.Treatment;
+	import treatments.TreatmentsManager;
+	
 	import ui.AppInterface;
+	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.TimeSpan;
+	
+	[ResourceBundle("chartscreen")]
+	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class GlucoseChart extends Sprite
 	{
@@ -104,7 +126,7 @@ package ui.chart
 		private var graphDisplayTextSize:int = 20;
 		private var glucoseUnit:String = "mg/dL";
 		private var handPickerStrokeThickness:int = 1;
-		private var chartTopPadding:int = 50;
+		private var chartTopPadding:int = 90;
 		private var scrollerTopPadding:int = 5;
 		private var _displayLine:Boolean = false;
 		private var fakeChartMaskColor:uint = 0x20222a;
@@ -125,12 +147,11 @@ package ui.chart
 		private var scrollerChart:Sprite;
 		private var handPicker:Sprite;
 		private var glucoseValueDisplay:Label;
-		private var glucoseSlopeDisplay:Label;
-		private var glucoseTimeAgoDisplay:Label;
 		private var yAxisContainer:Sprite;
 		private var mainChartContainer:Sprite;
 		private var differenceInMinutesForAllTimestamps:Number;
 		private var mainChartMask:Quad;
+		private var dummySprite:Sprite;
 		
 		//Objects
 		private var statusUpdateTimer:Timer;
@@ -144,6 +165,7 @@ package ui.chart
 		//Movement
 		private var scrollMultiplier:Number;
 		private var mainChartXFactor:Number;
+		private var mainChartYFactor:Number;
 		private var displayLatestBGValue:Boolean = true;
 		private var selectedGlucoseMarkerIndex:int;
 		
@@ -163,6 +185,24 @@ package ui.chart
 		private var timelineContainer:Sprite;
 		private var timelineObjects:Array = [];
 		
+		//Treatments
+		private var treatmentsFirstRun:Boolean = true;
+		private var treatmentsActive:Boolean = true;
+		private var treatmentsContainer:Sprite;
+		private var treatmentsList:Array = [];
+		private var treatmentsMap:Dictionary = new Dictionary();
+		private var treatmentCallout:Callout;
+		private var IOBPill:ChartTreatmentPill;
+		private var glucoseSlopePill:ChartInfoPill;
+		private var glucoseTimeAgoPill:ChartInfoPill;
+		private var ago:String;
+		private var now:String;
+		private var COBPill:ChartTreatmentPill;
+		private var yAxisHeight:Number = 0;
+		private var allTreatmentsAdded:Boolean = false;
+		private var displayTreatmentsOnChart:Boolean;
+		private var displayCOBEnabled:Boolean;
+		private var displayIOBEnabled:Boolean;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -218,6 +258,44 @@ package ui.chart
 			
 			//Strings
 			retroOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','retro_title');
+			ago = ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
+			now = ModelLocator.resourceManagerInstance.getString('chartscreen','now');
+			
+			//Treatments
+			treatmentsActive = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
+			displayTreatmentsOnChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
+			displayIOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
+			displayCOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
+			
+			if (treatmentsActive && displayTreatmentsOnChart && (displayIOBEnabled || displayCOBEnabled))
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+					chartTopPadding = 93;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+					chartTopPadding = 95;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+					chartTopPadding = 92; 
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					chartTopPadding = 100; 
+				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
+					chartTopPadding = 87; 
+				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+					chartTopPadding = 80; 
+				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+					chartTopPadding = 77; 
+				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+					chartTopPadding = 82; 
+				else
+					chartTopPadding = 100;
+				
+				chartTopPadding += userTimeAgoFontMultiplier * 4;
+			}
+			else
+				chartTopPadding = 65;
+			
+			//Scroller Marker Radius
+			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				scrollerChartGlucoseMarkerRadius = 2;
 			
 			//Add timeline to display list
 			glucoseTimelineContainer = new Sprite();
@@ -239,6 +317,7 @@ package ui.chart
 			 */
 			mainChart = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
 			mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+			mainChart.touchable = false;
 			mainChartContainer = new Sprite();
 			mainChartContainer.addChild(mainChart);
 			
@@ -246,8 +325,10 @@ package ui.chart
 			glucoseTimelineContainer.addChild(mainChartContainer);
 			
 			//Mask (Only show markers before the delimiter)
-			mainChartMask = new Quad(yAxisMargin, _graphHeight, fakeChartMaskColor);
+			mainChartMask = new Quad(yAxisMargin, _graphHeight + (treatmentsActive ? 80 : 0), fakeChartMaskColor);
 			mainChartMask.x = _graphWidth - mainChartMask.width;
+			mainChartMask.y = treatmentsActive ? -40 : 0;
+			mainChartMask.touchable = false;
 			mainChartContainer.addChild(mainChartMask);
 			
 			/**
@@ -259,7 +340,13 @@ package ui.chart
 			 * yAxis Line
 			 */
 			yAxisContainer = drawYAxis();
+			yAxisContainer.touchable = false;
 			addChild(yAxisContainer);
+			
+			/**
+			 * Treatments
+			 */
+			addAllTreatments();
 			
 			/**
 			 * Scroller
@@ -483,6 +570,7 @@ package ui.chart
 							previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 						}
 					);
+				glucoseMarker.touchable = false;
 				
 				//Hide glucose marker if it is out of bounds (fixed size chart);
 				if (glucoseMarker.glucoseValue < lowestGlucoseValue || glucoseMarker.glucoseValue > highestGlucoseValue)
@@ -552,9 +640,9 @@ package ui.chart
 			{
 				if (lastBGreadingTimeStamp > Number(_dataSource[_dataSource.length - 1].timestamp) && lastBGreadingTimeStamp - Number(_dataSource[_dataSource.length - 1].timestamp) > (4.5 * 60 * 1000) && chartType == MAIN_CHART)
 				{
-					var dummy:Sprite = new Sprite();
-					dummy.x = (lastBGreadingTimeStamp - firstBGReadingTimeStamp) * scaleXFactor;
-					chartContainer.addChild(dummy);
+					dummySprite = new Sprite();
+					dummySprite.x = (lastBGreadingTimeStamp - firstBGReadingTimeStamp) * scaleXFactor;
+					chartContainer.addChild(dummySprite);
 				}
 			}
 			
@@ -580,7 +668,510 @@ package ui.chart
 					scrollerChartLineList.push(line);
 			}
 			
+			if(chartType == MAIN_CHART)
+				mainChartYFactor = scaleYFactor;
+			
 			return chartContainer;
+		}
+		
+		public function calculateTotalIOB(time:Number):void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
+				return;
+			
+			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
+			{
+				IOBPill.setValue(GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(time)));
+				repositionTreatmentPills();
+			}
+			
+			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
+			{
+				IOBPill.setValue(GlucoseFactory.formatIOB(0));
+				repositionTreatmentPills();
+			}
+		}
+		
+		public function calculateTotalCOB(time:Number):void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
+				return;
+			
+			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
+			{
+				COBPill.setValue(GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(time)));
+				repositionTreatmentPills();
+			}
+			
+			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
+			{
+				COBPill.setValue(GlucoseFactory.formatCOB(0));
+				repositionTreatmentPills();
+			}
+		}
+		
+		private function repositionTreatmentPills():void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			if (displayIOBEnabled)
+			{
+				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+				IOBPill.visible = true;
+			}
+			
+			if (displayCOBEnabled)
+			{
+				if (displayIOBEnabled)
+					COBPill.x = IOBPill.x - COBPill.width - 6;
+				else
+					COBPill.x = _graphWidth - COBPill.width -glucoseStatusLabelsMargin - 2;
+				
+				COBPill.visible = true;
+			}
+		}
+		
+		public function addAllTreatments():void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			if (TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && treatmentsActive && !dummyModeActive && !allTreatmentsAdded)
+			{
+				allTreatmentsAdded = true;
+				
+				for (var i:int = 0; i < TreatmentsManager.treatmentsList.length; i++) 
+				{
+					var treatment:Treatment = TreatmentsManager.treatmentsList[i] as Treatment;
+					if (treatment != null)
+						addTreatment(treatment);
+				}
+				
+				//Update Display Treatments Values
+				var now:Number = new Date().valueOf();
+				if (displayIOBEnabled)
+					calculateTotalIOB(now);
+				if (displayCOBEnabled)
+					calculateTotalCOB(now);
+			}
+		}
+		
+		public function updateExternallyModifiedTreatment(treatment:Treatment):void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			var modifiedTreatment:ChartTreatment = treatmentsMap[treatment.ID] as ChartTreatment;
+			if (modifiedTreatment != null)
+			{
+				//Update the treatment marker
+				modifiedTreatment.updateMarker(treatment);
+				
+				//Reposition all treatments
+				manageTreatments();
+				
+				//Recalculate total IOB and COB
+				var timelineTimestamp:Number = getTimelineTimestamp();
+				if (displayIOBEnabled)
+					calculateTotalIOB(timelineTimestamp);
+				if (displayCOBEnabled)
+					calculateTotalCOB(timelineTimestamp);
+			}
+		}
+		
+		public function updateExternallyDeletedTreatment(treatment:Treatment):void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			if (treatment != null)
+			{
+				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+				{
+					var chartTreatment:ChartTreatment = treatmentsList[i];
+					if (chartTreatment!= null && chartTreatment.treatment != null && chartTreatment.treatment.ID == treatment.ID)
+					{
+						//Dispose chart treatment
+						chartTreatment.removeFromParent();
+						chartTreatment.removeEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+						treatmentsList.removeAt(i);
+						chartTreatment.dispose();
+						chartTreatment = null;
+						treatmentsMap[treatment.ID] = null;
+						
+						//Recalculate IOB & COB
+						var timelineTimestamp:Number = getTimelineTimestamp();
+						if (displayIOBEnabled)
+							calculateTotalIOB(timelineTimestamp);
+						if (displayCOBEnabled)
+							calculateTotalCOB(timelineTimestamp);
+						break;
+					}
+				}
+			}
+		}
+		
+		public function addTreatment(treatment:Treatment):void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			//Setup initial timeline/mask properties
+			if (treatmentsFirstRun && treatmentsContainer == null)
+			{
+				treatmentsFirstRun = false;
+				treatmentsContainer = new Sprite();
+				treatmentsContainer.x = mainChart.x;
+				treatmentsContainer.y = mainChart.y;
+				mainChartContainer.addChild(treatmentsContainer);
+				
+				//Repeat to mitigate bug in starling
+				mainChartContainer.removeChild(treatmentsContainer);
+				treatmentsContainer.dispose();
+				treatmentsContainer = null;
+				treatmentsContainer = new Sprite();
+				treatmentsContainer.x = mainChart.x;
+				treatmentsContainer.y = mainChart.y;
+				mainChartContainer.addChild(treatmentsContainer);
+				mainChartContainer.addChild(mainChart);
+			}
+			
+			//Validations
+			if (treatment == null)
+				return;
+			
+			if (treatmentsMap[treatment.ID] != null)
+				return; //Treatment was already added previously
+			
+			//Common variables
+			var chartTreatment:ChartTreatment;
+			
+			//Check treatment type
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+			{
+				//Create treatment marker and add it to the chart
+				var insulinMarker:InsulinMarker = new InsulinMarker(treatment);
+				insulinMarker.x = (insulinMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				insulinMarker.y = _graphHeight - (insulinMarker.radius * 1.66) - ((insulinMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				
+				insulinMarker.index = treatmentsList.length;
+				treatmentsList.push(insulinMarker);
+				treatmentsMap[treatment.ID] = insulinMarker;
+				
+				if (displayIOBEnabled)
+					calculateTotalIOB(getTimelineTimestamp());
+				
+				chartTreatment = insulinMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+			{
+				//Create treatment marker and add it to the chart
+				var carbsMarker:CarbsMarker = new CarbsMarker(treatment);
+				carbsMarker.x = (carbsMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				carbsMarker.y = _graphHeight - (carbsMarker.radius * 1.66) - ((carbsMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				
+				carbsMarker.index = treatmentsList.length;
+				treatmentsList.push(carbsMarker);
+				treatmentsMap[treatment.ID] = carbsMarker;
+				
+				if (displayCOBEnabled)
+					calculateTotalCOB(getTimelineTimestamp());
+				
+				chartTreatment = carbsMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				//Create treatment marker and add it to the chart
+				var mealMarker:MealMarker = new MealMarker(treatment);
+				mealMarker.x = (mealMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				mealMarker.y = _graphHeight - (mealMarker.radius * 1.66) - ((mealMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				
+				mealMarker.index = treatmentsList.length;
+				treatmentsList.push(mealMarker);
+				treatmentsMap[treatment.ID] = mealMarker;
+				
+				var timelineTimestamp:Number = getTimelineTimestamp();
+				if (displayIOBEnabled)
+					calculateTotalIOB(timelineTimestamp);
+				if (displayCOBEnabled)
+					calculateTotalCOB(timelineTimestamp);
+				
+				chartTreatment = mealMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_NOTE)
+			{
+				//Create treatment marker and add it to the chart
+				var noteMarker:NoteMarker = new NoteMarker(treatment);
+				noteMarker.x = (((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+				noteMarker.y = (_graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3)) + 8;
+				
+				noteMarker.index = treatmentsList.length;
+				treatmentsList.push(noteMarker);
+				treatmentsMap[treatment.ID] = noteMarker;
+				
+				chartTreatment = noteMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+			{
+				//Create treatment marker and add it to the chart
+				var glucoseCheckMarker:BGCheckMarker = new BGCheckMarker(treatment);
+				glucoseCheckMarker.x = (glucoseCheckMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				glucoseCheckMarker.y = _graphHeight - (glucoseCheckMarker.radius * 1.66) - ((glucoseCheckMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				
+				glucoseCheckMarker.index = treatmentsList.length;
+				treatmentsList.push(glucoseCheckMarker);
+				treatmentsMap[treatment.ID] = glucoseCheckMarker;
+				
+				chartTreatment = glucoseCheckMarker;
+			}
+			
+			if (mainChartMask != null && mainChartContainer != null) //Make mask appear in front of everything except the timeline
+			{
+				mainChartContainer.addChild(mainChartMask);
+				if (timelineContainer != null)
+					mainChartContainer.addChild(timelineContainer);
+			}
+			
+			//Reposition out of bounds treatments
+			if (yAxisHeight > 0 && chartTreatment.y + chartTreatment.height > yAxisHeight - 5) //Lower Area
+				chartTreatment.labelUp();
+			
+			if (chartTreatment.y < -2) //Upper Area
+				chartTreatment.y = -2;
+			
+			//Add treatment
+			chartTreatment.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+			treatmentsContainer.addChild(chartTreatment);
+		}
+		
+		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				var treatment:ChartTreatment = e.currentTarget as ChartTreatment;
+				
+				var treatmentLayout:VerticalLayout = new VerticalLayout();
+				treatmentLayout.horizontalAlign = HorizontalAlign.CENTER;
+				treatmentLayout.gap = 10;
+				var treatmentContainer:LayoutGroup = new LayoutGroup();
+				treatmentContainer.layout = treatmentLayout;
+				
+				//Treatment Value
+				var treatmentValue:String = "";
+				var treatmentNotes:String = treatmentNotes = treatment.treatment.note;
+				if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+				{
+					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
+					treatmentValue = (insulin != null ? insulin.name + "\n" : "") + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount);
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + "\n" + treatment.treatment.carbs + "g";
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+				{
+					treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal') + "\n" + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + " / " + treatment.treatment.carbs + "g";
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_NOTE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+				{
+					var glucoseValue:Number;
+					if (glucoseUnit == "mg/dL")
+						glucoseValue = treatment.treatment.glucose;
+					else
+						glucoseValue = Math.round(((BgReading.mgdlToMmol((treatment.treatment.glucose))) * 10)) / 10; 
+					
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check') + "\n" + glucoseValue + " " + glucoseUnit;
+				}
+				
+				if (treatmentValue != "")
+				{
+					var value:Label = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+					value.paddingBottom = 12;
+					treatmentContainer.addChild(value);
+				}
+				
+				//Treatment Time
+				var time:DateTimeSpinner = new DateTimeSpinner();
+				time.editingMode = DateTimeMode.TIME;
+				time.value = new Date(treatment.treatment.timestamp);
+				time.height = 30;
+				time.paddingTop = time.paddingBottom = 0;
+				if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+					time.isEnabled = false;
+				var timeSpacer:Sprite = new Sprite();
+				timeSpacer.height = 10;
+				treatmentContainer.addChild(time);
+				treatmentContainer.addChild(timeSpacer);
+				
+				if (treatmentNotes != "")
+				{
+					var notes:Label = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
+					notes.wordWrap = true;
+					notes.maxWidth = 150;
+					treatmentContainer.addChild(notes);
+				}
+				
+				//Action Buttons
+				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				{
+					if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+					{
+						var actionsLayout:HorizontalLayout = new HorizontalLayout();
+						actionsLayout.gap = 5;
+						var actionsContainer:LayoutGroup = new LayoutGroup();
+						actionsContainer.layout = actionsLayout;
+						
+						var moveBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
+						moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+						actionsContainer.addChild(moveBtn);
+						var deleteBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
+						deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+						actionsContainer.addChild(deleteBtn);
+						treatmentContainer.addChild(actionsContainer);
+					}
+				}
+				
+				treatmentCallout = Callout.show(treatmentContainer, treatment, null, true);
+				
+				function onDelete(e:starling.events.Event):void
+				{
+					treatmentsContainer.removeChild(treatment);
+					treatmentsList.removeAt(treatment.index);
+					
+					treatmentCallout.close(true);
+					
+					TreatmentsManager.deleteTreatment(treatment.treatment);
+					
+					treatment.dispose();
+					treatment = null;
+					
+					var timelineTimestamp:Number = getTimelineTimestamp();
+					if (displayIOBEnabled)
+						calculateTotalIOB(timelineTimestamp);
+					if (displayCOBEnabled)
+						calculateTotalCOB(timelineTimestamp);
+				}
+				
+				function onMove(e:starling.events.Event):void
+				{
+					var movedTimestamp:Number = time.value.valueOf();
+					
+					if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > new Date().valueOf())
+					{
+						AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('treatments','out_of_bounds_treatment')
+						);
+					}
+					else
+					{
+						var estimatedGlucoseValue:Number;
+						if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK)
+							estimatedGlucoseValue = TreatmentsManager.getEstimatedGlucose(movedTimestamp);
+						else
+							estimatedGlucoseValue = treatment.treatment.glucoseEstimated;
+						treatment.treatment.timestamp = movedTimestamp;
+						treatment.treatment.glucoseEstimated = estimatedGlucoseValue;
+						manageTreatments();
+						
+						treatmentCallout.close(true);
+						
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+						{
+							if (displayIOBEnabled)
+								calculateTotalIOB(getTimelineTimestamp());
+							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && displayCOBEnabled)
+								calculateTotalCOB(getTimelineTimestamp());
+						}
+						else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION && displayCOBEnabled)
+							calculateTotalCOB(getTimelineTimestamp());
+						
+						//Update database
+						TreatmentsManager.updateTreatment(treatment.treatment);
+					}
+				}
+			}
+		}
+		
+		private function manageTreatments():void
+		{
+			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			if (treatmentsContainer == null || !treatmentsActive)
+				return;
+			
+			//Reposition Container
+			treatmentsContainer.x = mainChart.x;
+			treatmentsContainer.y = mainChart.y;
+			
+			if (treatmentsList != null && treatmentsList.length > 0)
+			{
+				//Loop through all treatments
+				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+				{
+					var treatment:ChartTreatment = treatmentsList[i];
+					if (treatment.treatment.timestamp < firstBGReadingTimeStamp)
+					{
+						//Treatment has expired (>24H). Discart it
+						treatmentsContainer.removeChild(treatment);
+						treatmentsList.removeAt(i);
+						TreatmentsManager.removeTreatmentFromMemory(treatment.treatment);
+						treatment.dispose();
+						treatment = null;
+					}
+					else
+					{
+						//Treatment is still valid. Reposition it.
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+						{
+							treatment.x = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+							treatment.y = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && treatment.y < -2)
+								treatment.y = -2;
+						}
+						else if (treatment.treatment.type == Treatment.TYPE_NOTE)
+						{
+							treatment.x = (((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+							treatment.y = (_graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 8;
+						}
+						
+						//Reposition out of bounds treatments
+						if (treatment != null && !isNaN(treatment.y) && !isNaN(treatment.height) && !isNaN(yAxisHeight))
+						{
+							if (yAxisHeight > 0 && treatment.y + treatment.height > yAxisHeight - 5) //Lower Area
+								treatment.labelUp();
+							else
+								treatment.labelDown();
+							
+							if (treatment.y < -2) //Upper Area
+								treatment.y = -2;
+						}
+					}
+				}
+			}
+		}
+		
+		private function getTimelineTimestamp():Number
+		{
+			var currentTimelineTimestamp:Number;
+			if (displayLatestBGValue)
+				currentTimelineTimestamp = new Date().valueOf();
+			else
+				currentTimelineTimestamp = firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin) + (mainChartGlucoseMarkerRadius * 2)) / mainChartXFactor);
+			
+			return currentTimelineTimestamp;
 		}
 		
 		private function drawTimeline():void
@@ -929,6 +1520,10 @@ package ui.chart
 				yAxis.addChild(lowUrgentGlucoseDashedLine);
 			}
 			
+			yAxisHeight = yAxis.height;
+			
+			yAxis.touchable = false;
+			
 			return yAxis;
 		}
 		
@@ -1001,6 +1596,14 @@ package ui.chart
 			{
 				//Dispose previous lines
 				destroyAllLines();
+			}
+			
+			//Destroy Dummy Sprite
+			if (dummySprite != null)
+			{
+				dummySprite.removeFromParent();
+				dummySprite.dispose();
+				dummySprite = null;
 			}
 			
 			//Add the new readings to the data array
@@ -1085,7 +1688,14 @@ package ui.chart
 			currentNumberOfMakers = _dataSource.length;
 			calculateDisplayLabels();
 			
-			drawTimeline()
+			drawTimeline();
+			addAllTreatments();
+			manageTreatments();
+			var timelineTimestamp:Number = getTimelineTimestamp();
+			if (displayIOBEnabled)
+				calculateTotalIOB(timelineTimestamp);
+			if (displayCOBEnabled)
+				calculateTotalCOB(timelineTimestamp);
 			
 			return true;
 		}
@@ -1133,6 +1743,7 @@ package ui.chart
 			
 			var lowestValue:Number = sortDataArray[0].calculatedValue as Number;
 			var highestValue:Number = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+			
 			if (!fixedSize)
 			{
 				lowestGlucoseValue = lowestValue;
@@ -1225,6 +1836,7 @@ package ui.chart
 								previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 							}
 						);
+					glucoseMarker.touchable = false;
 					
 					if(chartType == MAIN_CHART)
 					{
@@ -1318,6 +1930,9 @@ package ui.chart
 			//Chart Line
 			if(_displayLine)
 			{
+				//Remove touch events from line
+				line.touchable = false;
+				
 				//Add Line to the display list
 				if(chartType == MAIN_CHART)
 					mainChart.addChild(line);
@@ -1330,6 +1945,9 @@ package ui.chart
 				else if (chartType == SCROLLER_CHART)
 					scrollerChartLineList.push(line);
 			}
+			
+			if(chartType == MAIN_CHART)
+				mainChartYFactor = scaleYFactor;
 		}
 		
 		private function drawLine(chartType:String):void 
@@ -1401,6 +2019,9 @@ package ui.chart
 				previousGlucoseMarker = glucoseMarker;
 			}
 			
+			//Remove touch events from line
+			line.touchable = false;
+			
 			//Add line to display list
 			if(chartType == MAIN_CHART)
 				mainChart.addChild(line);
@@ -1421,6 +2042,8 @@ package ui.chart
 			
 			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 				return;
+
+			var timeAgoValue:String;
 			
 			if (!displayLatestBGValue && !dummyModeActive)
 			{
@@ -1460,18 +2083,10 @@ package ui.chart
 							glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						glucoseTimeAgoDisplay.text = retroOutput + " - " + currentMarker.timeFormatted;
-						if (differenceInMinutes <= 6)
-							glucoseTimeAgoDisplay.fontStyles.color = newColor;
-						else
-							glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+						glucoseTimeAgoPill.setValue(currentMarker.timeFormatted, retroOutput, differenceInMinutes <= 6 ? chartFontColor : oldColor);
 						
 						//Marker Slope
-						glucoseSlopeDisplay.text = currentMarker.slopeOutput;
-						if (differenceInMinutes <= 6)
-							glucoseSlopeDisplay.fontStyles.color = newColor;
-						else
-							glucoseSlopeDisplay.fontStyles.color = oldColor;
+						glucoseSlopePill.setValue(currentMarker.slopeOutput, glucoseUnit, differenceInMinutes <= 6 ? chartFontColor : oldColor);
 						
 						selectedGlucoseMarkerIndex = currentMarker.index;
 					}
@@ -1481,12 +2096,12 @@ package ui.chart
 						{
 							glucoseValueDisplay.text = "---";
 							glucoseValueDisplay.fontStyles.color = oldColor;
-							glucoseSlopeDisplay.text = "";
+							glucoseSlopePill.setValue("", "", oldColor);
 						}
 						else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
 						{
 							glucoseValueDisplay.fontStyles.color = oldColor;
-							glucoseSlopeDisplay.fontStyles.color = oldColor;
+							glucoseSlopePill.setValue(glucoseSlopePill.value, glucoseSlopePill.unit, oldColor);
 						}
 						
 						if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && !hitTestCurrent)
@@ -1501,8 +2116,7 @@ package ui.chart
 							else
 								currentTimelineOutput = TimeSpan.formatHoursMinutes(currentTimelineHours, currentTimelineMinutes, TimeSpan.TIME_FORMAT_12H);
 							
-							glucoseTimeAgoDisplay.text = retroOutput + " - " + (currentTimelineOutput);
-							glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+							glucoseTimeAgoPill.setValue(currentTimelineOutput, retroOutput, oldColor);
 						}
 					}
 				}
@@ -1513,12 +2127,10 @@ package ui.chart
 					glucoseValueDisplay.fontStyles.color = nextMarker.color;
 					
 					//Marker Date Time
-					glucoseTimeAgoDisplay.text = retroOutput + " - " + nextMarker.timeFormatted;
-					glucoseTimeAgoDisplay.fontStyles.color = newColor;
+					glucoseTimeAgoPill.setValue(nextMarker.timeFormatted, retroOutput, chartFontColor);
 					
 					//Marker Slope
-					glucoseSlopeDisplay.text = nextMarker.slopeOutput;
-					glucoseSlopeDisplay.fontStyles.color = newColor;
+					glucoseSlopePill.setValue(nextMarker.slopeOutput, glucoseUnit, chartFontColor);
 					
 					selectedGlucoseMarkerIndex = nextMarker.index;
 				}
@@ -1531,12 +2143,14 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
-						glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+						timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
+						if (timeAgoValue != now)
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
+						else
+							glucoseTimeAgoPill.setValue("0m", now, oldColor);
 						
 						//Marker Slope
-						glucoseSlopeDisplay.text = ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown');
-						glucoseSlopeDisplay.fontStyles.color = oldColor;
+						glucoseSlopePill.setValue(ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown'), "", oldColor);
 						
 						if (selectedGlucoseMarkerIndex > 0)
 							selectedGlucoseMarkerIndex -= 1;
@@ -1556,10 +2170,10 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 					
 					//Marker Date Time
-					glucoseTimeAgoDisplay.text = "";
+					glucoseTimeAgoPill.setValue("", "", oldColor);
 					
 					//Marker Slope
-					glucoseSlopeDisplay.text = "";
+					glucoseSlopePill.setValue("", "", oldColor)
 				}
 				else
 				{
@@ -1580,18 +2194,14 @@ package ui.chart
 							glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
-						if (timestampDifference <= TIME_6_MINUTES)
-							glucoseTimeAgoDisplay.fontStyles.color = newColor;
+						timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
+						if (timeAgoValue != now)
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
 						else
-							glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+							glucoseTimeAgoPill.setValue("0m", now, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
 						
 						//Marker Slope
-						glucoseSlopeDisplay.text = latestMarker.slopeOutput;
-						if (timestampDifference <= TIME_6_MINUTES)
-							glucoseSlopeDisplay.fontStyles.color = newColor;
-						else
-							glucoseSlopeDisplay.fontStyles.color = oldColor;
+						glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
 					}
 					else
 					{
@@ -1600,12 +2210,14 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
-						glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+						timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
+						if (timeAgoValue != now)
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
+						else
+							glucoseTimeAgoPill.setValue("0m", now, oldColor);
 						
 						//Marker Slope
-						glucoseSlopeDisplay.text = "";
-						glucoseSlopeDisplay.fontStyles.color = oldColor;
+						glucoseSlopePill.setValue("", "", oldColor)
 					}
 				}
 			}
@@ -1617,9 +2229,11 @@ package ui.chart
 		{
 			/* Calculate Font Sizes */
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
-			glucoseDisplayFont = 38 * deviceFontMultiplier * userBGFontMultiplier;
-			var timeDisplayFont:Number = 16 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-			var retroDisplayFont:Number = 16 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			glucoseDisplayFont = 44 * deviceFontMultiplier * userBGFontMultiplier;
+			/*var timeDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			var retroDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;*/
+			var timeDisplayFont:Number = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			var retroDisplayFont:Number = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			
 			/* Calculate Position & Padding */
 			chartTopPadding *= deviceFontMultiplier;
@@ -1628,29 +2242,75 @@ package ui.chart
 			else
 				chartTopPadding *= userTimeAgoFontMultiplier;
 			
-			var yPos:Number = 3 * DeviceInfo.getVerticalPaddingMultipier() * userBGFontMultiplier;
+			var yPos:Number = 6 * DeviceInfo.getVerticalPaddingMultipier() * userBGFontMultiplier;
 			
 			//Glucose Value Display
-			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
+			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("0", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
 			glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width -glucoseStatusLabelsMargin;
+			glucoseValueDisplay.validate();
+			var glucoseValueDisplayHeight:Number = glucoseValueDisplay.height;
+			glucoseValueDisplay.text = "";
+			glucoseValueDisplay.validate();
 			addChild(glucoseValueDisplay);
 			
 			//Glucose Retro Display
-			glucoseTimeAgoDisplay = GraphLayoutFactory.createChartStatusText(retroOutput, 0x20222a, retroDisplayFont, Align.LEFT, false);
-			glucoseTimeAgoDisplay.x = glucoseStatusLabelsMargin + 4;
-			glucoseTimeAgoDisplay.y = yPos;
-			addChild(glucoseTimeAgoDisplay);
-			glucoseTimeAgoDisplay.invalidate();
-			glucoseTimeAgoDisplay.validate();
-			glucoseTimeAgoDisplay.text = "";
-			glucoseTimeAgoDisplay.fontStyles.color = chartFontColor;
+			glucoseTimeAgoPill = new ChartInfoPill(retroDisplayFont);
+			glucoseTimeAgoPill.setValue("0", "mg/dL", chartFontColor);
+			glucoseTimeAgoPill.x = glucoseStatusLabelsMargin + 4;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				glucoseTimeAgoPill.y = yPos;
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				glucoseTimeAgoPill.y = yPos - 2;
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
+				glucoseTimeAgoPill.y = yPos;
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+				glucoseTimeAgoPill.y = yPos - 4;
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+				glucoseTimeAgoPill.y = yPos - 8;
+			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+				glucoseTimeAgoPill.y = yPos + 5;
+			else
+				glucoseTimeAgoPill.y = yPos;
+			addChild(glucoseTimeAgoPill);
 			
 			//Glucose Time Display
-			glucoseSlopeDisplay = GraphLayoutFactory.createChartStatusText("", chartFontColor, timeDisplayFont, Align.CENTER, false);
-			glucoseSlopeDisplay.x = glucoseTimeAgoDisplay.x;
-			glucoseSlopeDisplay.y = glucoseTimeAgoDisplay.y + glucoseTimeAgoDisplay.height + 2;
-			glucoseTimeAgoDisplay.text = "";
-			addChild(glucoseSlopeDisplay);
+			glucoseSlopePill = new ChartInfoPill(timeDisplayFont);
+			glucoseSlopePill.x = glucoseTimeAgoPill.x;
+			glucoseSlopePill.y = glucoseTimeAgoPill.y + glucoseTimeAgoPill.height + 6;
+			addChild(glucoseSlopePill);
+			
+			//IOB
+			if (treatmentsActive && displayTreatmentsOnChart)
+			{
+	
+				if (displayIOBEnabled)
+				{
+					IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
+					IOBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+					IOBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
+					IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+					
+					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
+						IOBPill.visible = false;
+					
+					addChild(IOBPill);
+				}
+				
+				if (displayCOBEnabled)
+				{
+					COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
+					COBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+					COBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
+					COBPill.setValue("0g");
+					
+					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
+						COBPill.visible = false;
+					
+					addChild(COBPill);
+				}
+			}
+			
+			glucoseTimeAgoPill.setValue("", "", chartFontColor);
 		}
 		
 		public function showLine():void
@@ -1754,25 +2414,28 @@ package ui.chart
 		 */
 		private function onHandPickerTouch (e:TouchEvent):void
 		{
+			if (handPicker == null || mainChart == null || isNaN(mainChart.width) || isNaN(mainChart.x) || isNaN(handPicker.width) || isNaN(handPicker.x) || glucoseDelimiter == null || isNaN(glucoseDelimiter.x) || mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0)
+				return;
+			
 			//Get touch data
 			var touch:Touch = e.getTouch(stage);
 			
 			/**
 			 * UI Menu
 			 */
-			if(touch != null && touch.phase == TouchPhase.ENDED) 
+			if(touch != null && touch.phase != null && touch.phase == TouchPhase.ENDED) 
 			{
 				//Activate menu drag gesture when drag finishes
 				AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
 			}
-			else if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			else if(touch != null && touch.phase != null &&  touch.phase == TouchPhase.BEGAN) 
 			{	
 				//Deactivate menu drag gesture when drag starts
 				AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			}
 			
 			//Dragging
-			if(touch != null && touch.phase == TouchPhase.MOVED)
+			if(touch != null && touch.phase != null && touch.phase == TouchPhase.MOVED)
 			{
 				displayLatestBGValue = false;
 				previousNumberOfMakers = currentNumberOfMakers;
@@ -1817,8 +2480,12 @@ package ui.chart
 				//displayLatestBGValue = true;
 				
 				//Timeline
-				if (timelineActive)
+				if (timelineActive && timelineContainer != null)
 					timelineContainer.x = mainChart.x;
+				
+				//Treatments
+				if (treatmentsActive && treatmentsContainer != null)
+					treatmentsContainer.x = mainChart.x;
 				
 				/**
 				 * Dummy Mode
@@ -1831,10 +2498,13 @@ package ui.chart
 				 */
 				/* Check if there are missed readings and we're in the future */
 				var latestMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1];
+				if (latestMarker == null)
+					return;
 				var latestMarkerGlobalX:Number = latestMarker.x + mainChart.x + (latestMarker.width) - glucoseDelimiter.x;
 				var futureTimeStamp:Number = latestMarker.timestamp + (Math.abs(latestMarkerGlobalX) / mainChartXFactor);
 				var nowTimestamp:Number;
 				var isFuture:Boolean = false;
+				var timelineTimestamp:Number;
 				
 				if (latestMarkerGlobalX < 0 - (TIME_6_MINUTES * mainChartXFactor)) //We are in the future and there are missing readings
 				{
@@ -1852,22 +2522,37 @@ package ui.chart
 						else
 							futureTimeOutput = TimeSpan.formatHoursMinutes(futureHours, futureMinutes, TimeSpan.TIME_FORMAT_12H);
 						
-						glucoseTimeAgoDisplay.text = retroOutput + " - " + (futureTimeOutput);
-						glucoseValueDisplay.fontStyles.color = oldColor;
+						if (glucoseTimeAgoPill != null)
+							glucoseTimeAgoPill.setValue(futureTimeOutput, retroOutput, oldColor);
+						if (glucoseValueDisplay != null)
+							glucoseValueDisplay.fontStyles.color = oldColor;
 					}
 					else
 					{
 						nowTimestamp = (new Date()).valueOf();
 						var lastTimestamp:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp);
 						var differenceInSec:Number = (nowTimestamp - lastTimestamp) / 1000;
-						glucoseTimeAgoDisplay.text = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
-						glucoseTimeAgoDisplay.fontStyles.color = newColor;
+						var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
+						if (timeAgoValue != now)
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, chartFontColor);
+						else
+							glucoseTimeAgoPill.setValue("0m", now, chartFontColor);
 					}
 					
-					glucoseTimeAgoDisplay.fontStyles.color = oldColor;	
-					glucoseSlopeDisplay.text = "";
-					glucoseValueDisplay.text = "---";
-					glucoseValueDisplay.fontStyles.color = oldColor;
+					if (glucoseTimeAgoPill != null)
+						glucoseTimeAgoPill.setValue(glucoseTimeAgoPill.value, glucoseTimeAgoPill.unit, oldColor);
+					
+					if (glucoseTimeAgoPill != null)
+					{
+						glucoseValueDisplay.text = "---";
+						glucoseValueDisplay.fontStyles.color = oldColor;
+					}
+					
+					timelineTimestamp = getTimelineTimestamp();
+					if (displayIOBEnabled)
+						calculateTotalIOB(getTimelineTimestamp());
+					if (displayCOBEnabled)
+						calculateTotalCOB(getTimelineTimestamp());
 					
 					return;
 				}
@@ -1878,20 +2563,32 @@ package ui.chart
 				{
 					//Get Current and Previous Glucose Markers
 					var currentMarker:GlucoseMarker = mainChartGlucoseMarkersList[i];
+					if (currentMarker == null)
+						continue;
 					var previousMaker:GlucoseMarker = null;
-					if (i > 0)
+					if (i > 0 &&  mainChartGlucoseMarkersList[i - 1] != null)
 						previousMaker = mainChartGlucoseMarkersList[i - 1];
 					
 					//Transform local coordinates to global
 					var currentMarkerGlobalX:Number = currentMarker.x + mainChart.x + currentMarker.width;
 					var previousMarkerGlobalX:Number;
 					if (i > 0)
-						previousMarkerGlobalX = previousMaker.x + mainChart.x + previousMaker.width;
+					{
+						if (previousMaker != null && mainChart != null)
+							previousMarkerGlobalX = previousMaker.x + mainChart.x + previousMaker.width;
+						else
+							previousMarkerGlobalX = 0;
+					}
 					else
-						previousMarkerGlobalX  = 0;
+						previousMarkerGlobalX = 0;
 					
 					// Get current timeline timestamp
-					var firstAvailableTimestamp:Number = (mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp;
+					var firstAvailableTimestamp:Number;
+					
+					if (mainChartGlucoseMarkersList[0] != null)
+						firstAvailableTimestamp= (mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp;
+					else
+						continue;
 					var currentTimelineTimestamp:Number = firstAvailableTimestamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin) + (mainChartGlucoseMarkerRadius * 2)) / mainChartXFactor);
 					var hitTestCurrent:Boolean = currentMarkerGlobalX - currentMarker.width < glucoseDelimiter.x;
 					
@@ -1901,7 +2598,11 @@ package ui.chart
 						if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || BlueToothDevice.isFollower()))
 						{
 							nowTimestamp = new Date().valueOf();
-							var latestTimestamp:Number = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).timestamp;
+							var latestTimestamp:Number;
+							if (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] != null)
+								latestTimestamp = (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).timestamp;
+							else
+								continue;
 							
 							//Display Glucose Value
 							if (!displayLatestBGValue)
@@ -1926,18 +2627,20 @@ package ui.chart
 							//Display Slope
 							if (!displayLatestBGValue)
 							{
-								glucoseSlopeDisplay.text = currentMarker.slopeOutput;
-								glucoseSlopeDisplay.fontStyles.color = newColor;
+								if (glucoseSlopePill != null)
+									glucoseSlopePill.setValue(currentMarker.slopeOutput, glucoseUnit, chartFontColor)
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
 									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
 									{
-										glucoseSlopeDisplay.text = "";
+										if (glucoseSlopePill != null)
+											glucoseSlopePill.setValue("", "", oldColor)
 									}
 									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
 									{
-										glucoseSlopeDisplay.fontStyles.color = oldColor;	
+										if (glucoseSlopePill != null)
+											glucoseSlopePill.setValue(glucoseSlopePill.value, glucoseSlopePill.unit, oldColor)
 									}
 								}
 							}
@@ -1946,8 +2649,8 @@ package ui.chart
 							//if (mainChart.x > -mainChart.width + _graphWidth - yAxisMargin) //Display time of BGReading
 							if (!displayLatestBGValue) //Display time of BGReading
 							{
-								glucoseTimeAgoDisplay.text = retroOutput + " - " + currentMarker.timeFormatted;
-								glucoseTimeAgoDisplay.fontStyles.color = newColor;
+								if (glucoseTimeAgoPill != null)
+									glucoseTimeAgoPill.setValue(currentMarker.timeFormatted, retroOutput, chartFontColor);
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
@@ -1963,8 +2666,8 @@ package ui.chart
 										else
 											currentTimelineOutput = TimeSpan.formatHoursMinutes(currentTimelineHours, currentTimelineMinutes, TimeSpan.TIME_FORMAT_12H);
 										
-										glucoseTimeAgoDisplay.text = retroOutput + " - " + (currentTimelineOutput);
-										glucoseTimeAgoDisplay.fontStyles.color = oldColor;
+										if (glucoseTimeAgoPill != null)
+											glucoseTimeAgoPill.setValue(currentTimelineOutput, retroOutput, oldColor);
 									}
 								}
 							}
@@ -1977,6 +2680,13 @@ package ui.chart
 							
 							if (i == mainChartGlucoseMarkersList.length - 1)
 								displayLatestBGValue = true;
+							
+							//Treatments
+							timelineTimestamp = getTimelineTimestamp();
+							if (displayIOBEnabled)
+								calculateTotalIOB(timelineTimestamp);
+							if (displayCOBEnabled)
+								calculateTotalCOB(timelineTimestamp);
 						}
 						
 						//We found a mach so we can break the loop to save CPU cycles
@@ -1998,7 +2708,14 @@ package ui.chart
 		private function onUpdateTimerRefresh(event:flash.events.Event = null):void
 		{
 			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+			{
 				calculateDisplayLabels();
+				var timelineTimestamp:Number = getTimelineTimestamp();
+				if (displayIOBEnabled)
+					calculateTotalIOB(timelineTimestamp);
+				if (displayCOBEnabled)
+					calculateTotalCOB(timelineTimestamp);
+			}
 		}
 		
 		private function onCaibrationReceived(e:CalibrationServiceEvent):void
@@ -2138,6 +2855,9 @@ package ui.chart
 						previousGlucoseMarker = glucoseMarker;
 					}
 					
+					//Remove touch events from line
+					line.touchable = false;
+					
 					mainChart.addChild(line);
 					mainChartLineList.push(line);
 				}
@@ -2145,8 +2865,7 @@ package ui.chart
 				// Update Display Fields	
 				glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
 				glucoseValueDisplay.fontStyles.color = latestMarker.color;
-				glucoseSlopeDisplay.text = latestMarker.slopeOutput;
-				glucoseSlopeDisplay.fontStyles.color = newColor;
+				glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, chartFontColor);
 				
 				//Deativate DummyMode
 				dummyModeActive = false;
@@ -2161,13 +2880,17 @@ package ui.chart
 			/* Event Listeners */
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived);
-			handPicker.removeEventListener(TouchEvent.TOUCH, onHandPickerTouch);
+			if (handPicker != null)
+				handPicker.removeEventListener(TouchEvent.TOUCH, onHandPickerTouch);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			
 			/* Update Timer */
-			statusUpdateTimer.stop();
-			statusUpdateTimer.removeEventListener(TimerEvent.TIMER, onUpdateTimerRefresh);
-			statusUpdateTimer = null;
+			if (statusUpdateTimer != null)
+			{
+				statusUpdateTimer.stop();
+				statusUpdateTimer.removeEventListener(TimerEvent.TIMER, onUpdateTimerRefresh);
+				statusUpdateTimer = null;
+			}
 			
 			/* Lines */
 			destroyAllLines();
@@ -2219,14 +2942,6 @@ package ui.chart
 			removeChild(glucoseValueDisplay);
 			glucoseValueDisplay.dispose();
 			glucoseValueDisplay = null;
-			
-			removeChild(glucoseSlopeDisplay);
-			glucoseSlopeDisplay.dispose();
-			glucoseSlopeDisplay = null;
-			
-			removeChild(glucoseTimeAgoDisplay);
-			glucoseTimeAgoDisplay.dispose();
-			glucoseTimeAgoDisplay = null;
 			
 			removeChild(yAxisContainer);
 			yAxisContainer.dispose();

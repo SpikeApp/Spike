@@ -39,6 +39,10 @@ package services
 	
 	import network.NetworkConnector;
 	
+	import treatments.ProfileManager;
+	import treatments.Treatment;
+	import treatments.TreatmentsManager;
+	
 	import ui.popups.AlertManager;
 	
 	import utils.SpikeJSON;
@@ -47,6 +51,8 @@ package services
 	import utils.UniqueId;
 	
 	[ResourceBundle("nightscoutservice")]
+	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class NightscoutService extends EventDispatcher
 	{
@@ -57,6 +63,10 @@ package services
 		private static const MODE_VISUAL_CALIBRATION:String = "visualCalibration";
 		private static const MODE_SENSOR_START:String = "sensorStart";
 		private static const MODE_TEST_CREDENTIALS:String = "testCredentials";
+		private static const MODE_TREATMENT_UPLOAD:String = "treatmentUpload";
+		private static const MODE_TREATMENT_DELETE:String = "treatmentDelete";
+		private static const MODE_PROFILE_GET:String = "profileGet";
+		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
@@ -82,6 +92,8 @@ package services
 		private static var externalAuthenticationCall:Boolean = false;
 		public static var ignoreSettingsChanged:Boolean = false;
 		public static var uploadSensorStart:Boolean = true;
+		private static var syncTreatmentsUploadActive:Boolean = false;
+		private static var syncTreatmentsDeleteActive:Boolean = false;
 		
 		/* Data Variables */
 		private static var apiSecret:String;
@@ -102,6 +114,8 @@ package services
 		private static var activeCalibrations:Array = [];
 		private static var activeVisualCalibrations:Array = [];
 		private static var activeSensorStarts:Array = [];
+		private static var activeTreatmentsUpload:Array = [];
+		private static var activeTreatmentsDelete:Array = [];
 		
 		/* Follower */
 		private static var nextFollowDownloadTime:Number = 0;
@@ -113,9 +127,18 @@ package services
 		private static var followerModeEnabled:Boolean = false;
 		private static var followerTimer:int = -1;
 		private static var nightscoutFollowAPISecret:String = "";
+		private static var nightscoutProfileURL:String = "";
+		private static var isNSProfileSet:Boolean = false;
+		private static var lastRemoteTreatmentsSync:Number = 0;
+		private static var lastRemoteProfileSync:Number = 0;
 		
 		private static var _instance:NightscoutService = new NightscoutService();
-		
+
+		/* Treatments */
+		private static var nightscoutTreatmentsSyncEnabled:Boolean = true;
+		private static var treatmentsEnabled:Boolean = true;
+		private static var profileAlertShown:Boolean = false;
+
 		public function NightscoutService()
 		{
 			if (_instance != null)
@@ -139,21 +162,7 @@ package services
 			//Event listener for settings changes
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" &&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" &&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "" &&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false")
-			{
-				setupNightscoutProperties();
-				testNightscoutCredentials();
-			}
-			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" &&
-					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" &&
-					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "" &&
-					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true")
-			{
-				activateService();
-			}
+			setupNightscoutProperties();
 			
 			if (BlueToothDevice.isFollower() && 
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
@@ -163,6 +172,21 @@ package services
 			{
 				setupFollowerProperties();
 				activateFollower();
+			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" &&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" &&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "" &&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false")
+			{
+				testNightscoutCredentials();
+			}
+			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" &&
+					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" &&
+					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "" &&
+					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true")
+			{
+				activateService();
 			}
 		}
 		
@@ -219,7 +243,7 @@ package services
 			if (activeGlucoseReadings.length == 0 || syncGlucoseReadingsActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (Calibration.allForSensor().length < 2) 
+			if (Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) 
 				return;
 			
 			syncGlucoseReadingsActive = true;
@@ -242,7 +266,7 @@ package services
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
 			
-			//Only start uploading bg reading if it's newer than 6 minutes. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last readings. The previous readings will still be uploaded because the reside in the queue array.
+			//Only start uploading bg reading if it's newer than 6 minutes. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last reading. The previous readings will still be uploaded because they reside in the queue array.
 			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_6_MINUTES)
 				syncGlucoseReadings();
 		}
@@ -283,6 +307,10 @@ package services
 					activeGlucoseReadings = activeGlucoseReadings.slice(0, initialGlucoseReadingsIndex);
 					initialGlucoseReadingsIndex = 0;
 				}
+				
+				//Get remote treatments
+				if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					getRemoteTreatments();
 			}
 			else
 			{
@@ -290,6 +318,136 @@ package services
 			}
 			
 			syncGlucoseReadingsActive = false;
+		}
+		
+		/**
+		 * PROFILE
+		 */
+		private static function getNightscoutProfile():void
+		{
+			Trace.myTrace("NightscoutService.as", "getNightscoutProfile called!");
+			
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastRemoteProfileSync < TIME_30_SECONDS)
+			{
+				Trace.myTrace("NightscoutService.as", "Fetched profile less than 30 seconds ago. Ignoring!");
+				return;
+			}
+			
+			lastRemoteProfileSync = now;
+			
+			if (!isNSProfileSet)
+			{
+				if (!NetworkInfo.networkInfo.isReachable())
+				{
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					{
+						Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
+						setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+					}
+					
+					return;
+				}
+				
+				//Define API secret
+				var profileAPISecret:String = "";
+				if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+					profileAPISecret = nightscoutFollowAPISecret;
+				else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+					profileAPISecret = apiSecret;
+				
+				//Fetch profile
+				NetworkConnector.createNSConnector(nightscoutProfileURL, profileAPISecret != "" ? profileAPISecret : null, URLRequestMethod.GET, null, MODE_PROFILE_GET, onGetProfileComplete, onConnectionFailed);
+			}
+		}
+		
+		private static function onGetProfileComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onGetProfileComplete called!");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate response
+			if (response.indexOf("defaultProfile") != -1)
+			{
+				try
+				{
+					var profileProperties:Object = JSON.parse(response);
+					if (profileProperties != null)
+					{
+						if (profileProperties[0].store[profileProperties[0].defaultProfile].dia == null && profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr == null)
+						{
+							Trace.myTrace("NightscoutService.as", "User has not yet set a profile in Nightscout!");
+							
+							if (!profileAlertShown)
+							{
+								AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+									ModelLocator.resourceManagerInstance.getString("treatments","nightscout_profile_not_set")
+								);
+									
+								profileAlertShown = true;
+							}
+							
+							return;
+						}
+						
+						var dia:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].dia);
+						var carbAbsorptionRate:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr);
+						if (!isNaN(dia) && !isNaN(carbAbsorptionRate))
+						{
+							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!");
+							
+							isNSProfileSet = true; //Mark profile as downloaded
+							
+							//Add nightscout insulin to Spike and don't save it to DB
+							ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", BlueToothDevice.isFollower() ? true : false, "000000", false);
+							
+							//Add nightscout carbs absorption rate and don't save it to DB
+							ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
+							
+							//Get treatmenents
+							if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+								getRemoteTreatments();
+						}
+						else
+						{
+							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+							{
+								Trace.myTrace("NightscoutService.as", "Error retrieving insulin. Retrying in 30 seconds! Response: " + response);
+								setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+							}
+						}
+					}
+				} 
+				catch(error:Error) 
+				{
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					{
+						Trace.myTrace("NightscoutService.as", "Error parsing profile properties. Retrying in 30 seconds! Response: " + response);
+						setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+					}
+				}
+			}
+			else
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Retrying in 30 seconds! Response: " + response);
+					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+				}
+			}
 		}
 		
 		/**
@@ -313,6 +471,9 @@ package services
 			
 			clearTimeout(followerTimer);
 			
+			setupNightscoutProperties();
+			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				getNightscoutProfile();
 			getRemoteReadings();
 			
 			activateTimer();
@@ -533,7 +694,12 @@ package services
 					
 					if (newData) 
 					{
+						//Notify Listeners
 						_instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
+						
+						//Get remote treatments
+						if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+							getRemoteTreatments();
 					}
 				} 
 				else 
@@ -545,6 +711,315 @@ package services
 			}
 			
 			setNextFollowerFetch();
+		}
+		
+		/**
+		 * TREATMENTS
+		 */
+		private static function createTreatmentObject(treatment:Treatment):Object
+		{
+			var newTreatment:Object = new Object();
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+			{
+				newTreatment["eventType"] = "Correction Bolus";	
+				newTreatment["insulin"] = treatment.insulinAmount;	
+			}
+			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+			{
+				newTreatment["eventType"] = "Carb Correction";	
+				newTreatment["carbs"] = treatment.carbs;	
+			}
+			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+			{
+				newTreatment["eventType"] = "BG Check";	
+				newTreatment["glucose"] = treatment.glucose;
+				newTreatment["glucoseType"] = "Finger";	
+			}
+			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				newTreatment["eventType"] = "Meal Bolus";
+				newTreatment["insulin"] = treatment.insulinAmount;
+				newTreatment["carbs"] = treatment.carbs;
+			}
+			else if (treatment.type == Treatment.TYPE_NOTE)
+			{
+				newTreatment["eventType"] = "Note";
+				newTreatment["duration"] = 45;
+			}
+			newTreatment["_id"] = treatment.ID;
+			newTreatment["created_at"] = formatter.format(treatment.timestamp);
+			newTreatment["enteredBy"] = "Spike";
+			newTreatment["notes"] = treatment.note;
+			
+			return newTreatment;
+		}
+		
+		private static function deleteInternalTreatment(arrayToDelete:Array, treatment:Treatment):Boolean
+		{
+			var treatmentDeleted:Boolean = false;
+			for (var i:int = 0; i < arrayToDelete.length; i++) 
+			{
+				var nsTreatment:Object = arrayToDelete[i] as Object;
+				if (nsTreatment["_id"] == treatment.ID)
+				{
+					arrayToDelete.removeAt(i);
+					nsTreatment = null;
+					treatmentDeleted = true;
+					break;
+				}
+			}
+			
+			return treatmentDeleted;
+		}
+		
+		public static function uploadTreatment(treatment:Treatment):void
+		{
+			if (!serviceActive)
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "in uploadTreatment.");
+			
+			//Check if the treatment is already present in another queue and delete it.
+			if (!deleteInternalTreatment(activeTreatmentsDelete, treatment))
+			{
+				//Add treatment to queue
+				activeTreatmentsUpload.push(createTreatmentObject(treatment));
+				
+				//Sync uploads
+				syncTreatmentsUpload();
+			}
+		}
+		
+		private static function syncTreatmentsUpload():void
+		{
+			if (activeTreatmentsUpload.length == 0 || syncTreatmentsUploadActive || !NetworkInfo.networkInfo.isReachable())
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to upload/update: " + activeTreatmentsUpload.length);
+			
+			syncTreatmentsUploadActive = true;
+			
+			//Upload Treatment
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, JSON.stringify(activeTreatmentsUpload[0]), MODE_TREATMENT_UPLOAD, onUploadTreatmentComplete, onConnectionFailed);
+		}
+		
+		private static function onUploadTreatmentComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "in onUploadTreatmentComplete.");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onUploadTreatmentComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onUploadTreatmentComplete);
+			loader = null;
+			
+			syncTreatmentsUploadActive = false;
+			
+			if (response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("ok") != -1)
+			{
+				Trace.myTrace("NightscoutService.as", "Treatment uploaded/updated successfully!");
+				
+				//Remove treatment from queue
+				activeTreatmentsUpload.shift() 
+				
+				if (activeTreatmentsUpload.length > 0)
+				{
+					Trace.myTrace("NightscoutService.as", "Uploading/updating next treatment in queue.");
+					syncTreatmentsUpload();
+				}
+			}
+			else
+				Trace.myTrace("NightscoutService.as", "Error uploading/updating treatment. Server response: " + response);
+		}
+		
+		public static function deleteTreatment(treatment:Treatment):void
+		{
+			Trace.myTrace("NightscoutService.as", "in deleteTreatment.");
+			
+			//Check if the treatment is already present in another queue and delete it.
+			if (!deleteInternalTreatment(activeTreatmentsUpload, treatment))
+			{
+				//Add treatment to queue
+				activeTreatmentsDelete.push(treatment);
+				
+				//Delete treatment
+				syncTreatmentsDelete();
+			}
+		}
+		
+		private static function syncTreatmentsDelete():void
+		{
+			if (activeTreatmentsDelete.length == 0 || syncTreatmentsDeleteActive || !NetworkInfo.networkInfo.isReachable())
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to delete: " + activeTreatmentsDelete.length);
+			
+			syncTreatmentsDeleteActive = true;
+			
+			//Delete Treatment
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + "/" + (activeTreatmentsDelete[0] as Treatment).ID, apiSecret, URLRequestMethod.DELETE, null, MODE_TREATMENT_DELETE, onDeleteTreatmentComplete, onConnectionFailed);
+		}
+		
+		private static function onDeleteTreatmentComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "in onTreatmentDelete.");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDeleteTreatmentComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDeleteTreatmentComplete);
+			loader = null;
+			
+			//Update Internal Variables
+			syncTreatmentsDeleteActive = false;
+			
+			if (response.indexOf("{}") != -1)
+			{
+				Trace.myTrace("NightscoutService.as", "Treatment deleted successfully!");
+				
+				//Remove treatment from queue
+				activeTreatmentsDelete.shift() 
+				
+				if (activeTreatmentsDelete.length > 0)
+				{
+					Trace.myTrace("NightscoutService.as", "Deleting next treatment in queue.");
+					syncTreatmentsDelete();
+				}
+			}
+			else
+				Trace.myTrace("NightscoutService.as", "Error deleting treatment. Server response: " + response);
+		}
+		
+		private static function getRemoteTreatments():void
+		{
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "getRemoteTreatments called!");
+			
+			//Validation
+			if (!isNSProfileSet)
+			{
+				if (nightscoutTreatmentsSyncEnabled && treatmentsEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Profile has not yet been downloaded. Will try to download now!");
+					getNightscoutProfile();
+				}
+				return;
+			}
+			
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				Trace.myTrace("NightscoutService.as", "There's no Internet connection.");
+				
+				return;
+			}
+			
+			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0)
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds");
+					
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				}
+				
+				return;
+			}
+			
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastRemoteTreatmentsSync < TIME_30_SECONDS)
+				return;
+			
+			lastRemoteTreatmentsSync = now;
+			
+			//Define request parameters
+			var parameters:URLVariables = new URLVariables();
+			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
+			
+			//API Secret
+			var treatmentAPISecret:String = "";
+			if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+				treatmentAPISecret = nightscoutFollowAPISecret;
+			else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+				treatmentAPISecret = apiSecret;
+			
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + ".json?" + parameters, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_TREATMENTS_GET, onGetTreatmentsComplete, onConnectionFailed);
+		}
+		
+		private static function onGetTreatmentsComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onGetTreatmentsComplete called!");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate if we can process treatments
+			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+			{
+				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
+				
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				
+				return;
+			}
+			
+			//Validate response
+			if (response.indexOf("created_at") != -1)
+			{
+				try
+				{
+					var nightscoutTreatments:Array = JSON.parse(response) as Array;
+					if (nightscoutTreatments!= null && nightscoutTreatments is Array)
+					{
+						//Send nightscout treatments to TreatmentsManager for further processing
+						TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
+					}
+					else
+					{
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+						{
+							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+							setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+						}
+					}
+				} 
+				catch(error:Error) 
+				{
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					{
+						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					}
+				}
+			}
+			else
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				}
+			}
 		}
 		
 		/**
@@ -573,12 +1048,13 @@ package services
 		private static function createVisualCalibrationObject(calibration:Calibration):Object
 		{
 			var newVisualCalibration:Object = new Object();
+			newVisualCalibration["_id"] = UniqueId.createEventId();	
 			newVisualCalibration["eventType"] = "BG Check";	
 			newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
 			newVisualCalibration["enteredBy"] = "Spike";	
 			newVisualCalibration["glucose"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? calibration.bg : Math.round(BgReading.mgdlToMmol(calibration.bg) * 10) / 10;
 			newVisualCalibration["glucoseType"] = "Finger";
-			newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("nightscoutservice","sensor_calibration");
+			newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note");
 			
 			return newVisualCalibration;
 		}
@@ -631,7 +1107,11 @@ package services
 			var lastCalibration:Calibration = Calibration.last();
 			
 			activeCalibrations.push(createCalibrationObject(lastCalibration));
-			activeVisualCalibrations.push(createVisualCalibrationObject(lastCalibration));
+			var visualCalibration:Object = createVisualCalibrationObject(lastCalibration);
+			activeVisualCalibrations.push(visualCalibration);
+			
+			//Add calibration treatment to Spike
+			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, visualCalibration._id);
 			
 			syncCalibrations();
 			syncVisualCalibrations();
@@ -715,7 +1195,7 @@ package services
 		 */
 		private static function syncSensorStart():void
 		{
-			if (activeSensorStarts.length == 0 || syncSensorStartActive || !NetworkInfo.networkInfo.isReachable())
+			if (activeSensorStarts.length == 0 || syncSensorStartActive || !NetworkInfo.networkInfo.isReachable() || !serviceActive)
 				return;
 			
 			syncSensorStartActive = true;
@@ -932,6 +1412,8 @@ package services
 			Trace.myTrace("NightscoutService.as", "Service activated!");
 			serviceActive = true;
 			setupNightscoutProperties();
+			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				getNightscoutProfile();
 			getInitialGlucoseReadings();
 			getInitialCalibrations();
 			activateEventListeners();
@@ -977,8 +1459,15 @@ package services
 			nightscoutEventsURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";
 			if (nightscoutEventsURL.indexOf('http') == -1) nightscoutEventsURL = "https://" + nightscoutEventsURL;
 			
-			nightscoutTreatmentsURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
+			nightscoutTreatmentsURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/treatments";
 			if (nightscoutTreatmentsURL.indexOf('http') == -1) nightscoutTreatmentsURL = "https://" + nightscoutTreatmentsURL;
+			
+			nightscoutProfileURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/profile.json" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/profile.json";
+			if (nightscoutProfileURL.indexOf('http') == -1) nightscoutProfileURL = "https://" + nightscoutProfileURL;
+			
+			nightscoutTreatmentsSyncEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
+			
+			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 		}
 		
 		private static function activateEventListeners():void
@@ -1013,6 +1502,8 @@ package services
 			if (activeSensorStarts.length > 0) syncSensorStart();
 			
 			if (BlueToothDevice.isFollower()) getRemoteReadings();
+			
+			if (activeTreatmentsUpload.length > 0) syncTreatmentsUpload();
 		}
 		
 		/**
@@ -1051,6 +1542,32 @@ package services
 				
 				setNextFollowerFetch(TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
 			}
+			else if (mode == MODE_TREATMENT_UPLOAD)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error uploading/updating treatment. Error: " + error.message);
+				syncTreatmentsUploadActive = false;
+			}
+			else if (mode == MODE_TREATMENT_DELETE)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error deleting treatment. Error: " + error.message);
+				syncTreatmentsDeleteActive = false;
+			}
+			else if (mode == MODE_TREATMENTS_GET)
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting treatments. Retrying in 30 seconds. Error: " + error.message);
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				}
+			}
+			else if (mode == MODE_PROFILE_GET)
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting profile. Retrying in 30 seconds. Error: " + error.message);
+					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+				}
+			}
 		}
 		
 		private static function onSettingChanged(e:SettingsServiceEvent):void
@@ -1065,6 +1582,8 @@ package services
 			{
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true")
 				{
+					setupNightscoutProperties();
+					
 					setupNightscoutProperties();
 					if (CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED, "false"))
 						testNightscoutCredentials();
@@ -1106,6 +1625,7 @@ package services
 				)
 				{
 					deactivateFollower();
+					setupNightscoutProperties();
 					setupFollowerProperties();
 					activateFollower();
 				}
@@ -1117,9 +1637,14 @@ package services
 				if (followerModeEnabled)
 				{
 					deactivateFollower();
+					setupNightscoutProperties();
 					setupFollowerProperties();
 					activateFollower();
 				}
+			}
+			else if (e.data == CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED || e.data == CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED)
+			{
+				setupNightscoutProperties();
 			}
 		}
 		
@@ -1133,7 +1658,12 @@ package services
 			if(NetworkInfo.networkInfo.isReachable() && networkChangeOcurrances > 0)
 			{
 				Trace.myTrace("NightscoutService.as", "Network is reachable again. Calling resync.");
+				
 				resync();
+				
+				//Update remote treatments so the user has updated data when returning to Spike
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					getRemoteTreatments();
 			}
 			else
 				networkChangeOcurrances++;
@@ -1142,7 +1672,12 @@ package services
 		private static function onAppActivated(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "App in foreground. Calling resync.");
+			
 			resync();
+			
+			//Update remote treatments so the user has updated data when returning to Spike
+			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				getRemoteTreatments();
 		}
 
 		/**

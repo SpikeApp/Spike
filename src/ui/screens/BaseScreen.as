@@ -1,9 +1,9 @@
 package ui.screens
 {	
+	import flash.geom.Point;
 	import flash.system.System;
 	
-	import ui.screens.display.extraoptions.ExtraOptionsList;
-	import ui.screens.display.treatments.TreatmentsList;
+	import database.CommonSettings;
 	
 	import events.ScreenEvent;
 	
@@ -14,13 +14,18 @@ package ui.screens
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
+	import starling.display.Sprite;
 	import starling.events.Event;
 	
 	import ui.AppInterface;
+	import ui.screens.display.extraoptions.ExtraOptionsList;
+	import ui.screens.display.treatments.TreatmentsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	public class BaseScreen extends PanelScreen
 	{
@@ -31,6 +36,8 @@ package ui.screens
 		protected var callout:Callout;
 		private var treatmentsList:List;
 		private var extraOptionsList:List;
+		private var iphone4DummyMarker:Sprite;
+		private var treatmentsEnabled:Boolean;
 		
 		public function BaseScreen()
 		{
@@ -52,6 +59,8 @@ package ui.screens
 		{
 			headerProperties.gap = -10;
 			headerProperties.disposeItems = true;
+			
+			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 		}
 		
 		private function setupContent():void
@@ -106,7 +115,17 @@ package ui.screens
 		{
 			treatmentsList = new TreatmentsList();
 			treatmentsList.addEventListener(TreatmentsList.CLOSE, onCloseCallOut);
-			callout = Callout.show( treatmentsList, treatmentsButton );
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatmentsEnabled)
+			{
+				iphone4DummyMarker = new Sprite();
+				var globalpoint:Point = treatmentsButton.localToGlobal(new Point(treatmentsButton.width / 2, treatmentsButton.height / 2));
+				iphone4DummyMarker.x = globalpoint.x;
+				iphone4DummyMarker.y = globalpoint.y + 15;
+				Starling.current.stage.addChild(iphone4DummyMarker);
+				callout = Callout.show( treatmentsList, iphone4DummyMarker );
+			}
+			else
+				callout = Callout.show( treatmentsList, treatmentsButton );
 		}
 		
 		protected function onMoreButtonTriggered():void 
@@ -167,6 +186,13 @@ package ui.screens
 				extraOptionsList.removeEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
 				extraOptionsList.dispose();
 				extraOptionsList = null;
+			}
+			
+			if (iphone4DummyMarker != null)
+			{
+				Starling.current.stage.removeChild(iphone4DummyMarker);
+				iphone4DummyMarker.dispose();
+				iphone4DummyMarker = null;
 			}
 			
 			System.pauseForGCIfCollectionImminent(0);

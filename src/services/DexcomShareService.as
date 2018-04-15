@@ -35,6 +35,7 @@ package services
 	
 	import ui.popups.AlertManager;
 	
+	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.SpikeJSON;
 	import utils.Trace;
@@ -140,7 +141,7 @@ package services
 			{
 				AlertManager.showSimpleAlert
 				(
-					DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
+					Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
 					ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_network_unreachable"),
 					60
 				);
@@ -180,7 +181,7 @@ package services
 					{
 						
 						AlertManager.showSimpleAlert(
-							DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
+							Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_ok"),
 							Number.NaN,
 							null,
@@ -217,7 +218,7 @@ package services
 									
 									AlertManager.showSimpleAlert
 										(
-											DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
+											Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
 											ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_account_name_not_found"),
 											60,
 											null,
@@ -233,7 +234,7 @@ package services
 									
 									AlertManager.showSimpleAlert
 										(
-											DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
+											Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
 											ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_invalid_password"),
 											60,
 											null,
@@ -250,7 +251,7 @@ package services
 									
 									AlertManager.showSimpleAlert
 										(
-											DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
+											Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
 											ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_max_login_attempts_excceded"),
 											60
 										);
@@ -275,7 +276,7 @@ package services
 							Trace.myTrace("DexcomShareService.as", "Displaying generic error message to the user.");
 							
 							AlertManager.showSimpleAlert(
-								DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
+								Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
 								ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_error") + " " + ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_error_unknown")
 							);
 						}
@@ -289,7 +290,7 @@ package services
 				{
 					//Alert User
 					AlertManager.showSimpleAlert(
-						DeviceInfo.getDeviceType() != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
+						Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title") : ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_title_x"),
 						ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_error") + " " + ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credential_test_alert_message_service_unavailable")
 					);
 				}

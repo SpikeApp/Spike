@@ -2,6 +2,7 @@ package ui.screens.display.treatments
 {
 	import database.BlueToothDevice;
 	import database.Calibration;
+	import database.CommonSettings;
 	
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
@@ -18,7 +19,14 @@ package ui.screens.display.treatments
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
+	import treatments.Treatment;
+	import treatments.TreatmentsManager;
+	
+	import ui.AppInterface;
+	import ui.screens.Screens;
+	
 	[ResourceBundle("chartscreen")]
+	[ResourceBundle("treatments")]
 
 	public class TreatmentsList extends List 
 	{
@@ -30,9 +38,21 @@ package ui.screens.display.treatments
 		private var calibrationImage:Image;
 		private var bolusTexture:Texture;
 		private var bolusImage:Image;
+		private var noteTexture:Texture;
+		private var noteImage:Image;
+		private var bgCheckTexture:Texture;
+		private var bgCheckImage:Image;
+		private var carbsTexture:Texture;
+		private var carbsImage:Image;
+		private var mealTexture:Texture;
+		private var mealImage:Image;
+		private var treatmentsTexture:Texture;
+		private var treatmentsImage:Image;
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
+		private var treatmentsEnabled:Boolean = false;
+		private var numBgReadings:int = 0;
 		
 		public function TreatmentsList()
 		{
@@ -44,6 +64,7 @@ package ui.screens.display.treatments
 			super.initialize();
 			
 			setupProperties();
+			setupInitialContent();
 			setupContent();
 		}
 		
@@ -57,34 +78,63 @@ package ui.screens.display.treatments
 			isSelectable = true;
 			autoHideBackground = true;
 			hasElasticEdges = false;
+		}
+		
+		private function setupInitialContent():void
+		{
+			//Properties
+			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
+			numBgReadings = ModelLocator.bgReadings.length;
 			
-			calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
-			calibrationImage = new Image(calibrationTexture);
-			bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.accountChildTexture;
-			bolusImage = new Image(bolusTexture);
+			//Images & Textures
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			{
+				calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
+				calibrationImage = new Image(calibrationTexture);
+			}
+			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
+			{
+				bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
+				bolusImage = new Image(bolusTexture);
+				carbsTexture = MaterialDeepGreyAmberMobileThemeIcons.carbsTexture;
+				carbsImage = new Image(carbsTexture);
+				mealTexture = MaterialDeepGreyAmberMobileThemeIcons.mealTexture;
+				mealImage = new Image(mealTexture);
+				bgCheckTexture = MaterialDeepGreyAmberMobileThemeIcons.bgCheckTexture;
+				bgCheckImage = new Image(bgCheckTexture);
+				noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
+				noteImage = new Image(noteTexture);
+			}
+			if (treatmentsEnabled)
+			{
+				treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.treatmentsTexture;
+				treatmentsImage = new Image(treatmentsTexture);
+			}
 		}
 		
 		private function setupContent():void
 		{
 			/* Content */
-			if (Calibration.allForSensor().length > 1 && !BlueToothDevice.isFollower())
+			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
-			//if (ModelLocator.INTERNAL_TESTING == false)
-			//{
-			dataProvider = new ListCollection(
-				[
-					{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable:calibrationButtonEnabled, id: 1 }
-				]);
-			/*}
-			else
+			var menuData:Array = [];
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
+			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 			{
-				dataProvider = new ListCollection(
-					[
-						{ label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable:calibrationButtonEnabled, id: 1 },
-						{ label: "Bolus", icon: bolusImage, selectable:calibrationButtonEnabled, id: 2 }
-					]);
-			}*/
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: treatmentsEnabled, id: 2 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: treatmentsEnabled, id: 3 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: treatmentsEnabled, id: 4 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: treatmentsEnabled, id: 5 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: treatmentsEnabled, id: 6 } );
+			}
+			if (treatmentsEnabled)
+			{
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: treatmentsEnabled, id: 7 } );
+			}
+			
+			dataProvider = new ListCollection(menuData);
 			
 			//Calibration Item Renderer Factory
 			function calibrationItemFactory():IListItemRenderer
@@ -104,14 +154,43 @@ package ui.screens.display.treatments
 			}
 			setItemRendererFactoryWithID( "calibration-item", calibrationItemFactory );
 			
-			//Menu Factory
-			factoryIDFunction = function( item:Object, index:int ):String
+			function treatmentItemFactory():IListItemRenderer
 			{
-				if(index === 0)
-					return "calibration-item";
-				
-				return "default-item";
-			};
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.iconField = "icon";
+				item.itemHasSelectable = true;
+				item.selectableField = "selectable";
+				item.gap = 5;
+				if(numBgReadings == 0)
+					item.alpha = 0.4;
+				item.paddingLeft = 8;
+				item.paddingRight = 14;
+				item.isQuickHitAreaEnabled = true;
+				return item;
+			}
+			setItemRendererFactoryWithID( "treatment-item", treatmentItemFactory );
+			
+			//Menu Factory
+			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			{
+				factoryIDFunction = function( item:Object, index:int ):String
+				{
+					if(index === 0)
+						return "calibration-item";
+					else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6)
+						return "treatment-item";
+					
+					return "default-item";
+				};
+			}
+			else
+			{
+				factoryIDFunction = function( item:Object, index:int ):String
+				{
+					return "treatment-item";
+				};
+			}
 			
 			//Menu Layout
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
@@ -133,6 +212,42 @@ package ui.screens.display.treatments
 				
 				dispatchEventWith(CLOSE); //Close Menu
 			}
+			else if(treatmentID == 2) //Bolus
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_BOLUS);
+			}
+			else if(treatmentID == 3) //Carbs
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_CARBS_CORRECTION);
+			}
+			else if(treatmentID == 4) //Meal
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_MEAL_BOLUS);
+			}
+			else if(treatmentID == 5) //BG Check
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_GLUCOSE_CHECK);
+			}
+			else if(treatmentID == 6) //Note
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_NOTE);
+			}
+			else if(treatmentID == 7) //All Treatments
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				AppInterface.instance.navigator.pushScreen( Screens.ALL_TREATMENTS ); //Push Treatments Management Screen
+			}
 		}
 		
 		/**
@@ -152,6 +267,78 @@ package ui.screens.display.treatments
 			{
 				calibrationImage.dispose();
 				calibrationImage = null;
+			}
+			
+			if (bolusTexture != null)
+			{
+				bolusTexture.dispose();
+				bolusTexture = null;
+			}
+			
+			if (bolusImage != null)
+			{
+				bolusImage.dispose();
+				bolusImage = null;
+			}
+			
+			if (noteTexture != null)
+			{
+				noteTexture.dispose();
+				noteTexture = null;
+			}
+			
+			if (noteImage != null)
+			{
+				noteImage.dispose();
+				noteImage = null;
+			}
+			
+			if (bgCheckTexture != null)
+			{
+				bgCheckTexture.dispose();
+				bgCheckTexture = null;
+			}
+			
+			if (bgCheckImage != null)
+			{
+				bgCheckImage.dispose();
+				bgCheckImage = null;
+			}
+			
+			if (carbsTexture != null)
+			{
+				carbsTexture.dispose();
+				carbsTexture = null;
+			}
+			
+			if (carbsImage != null)
+			{
+				carbsImage.dispose();
+				carbsImage = null;
+			}
+			
+			if (mealTexture != null)
+			{
+				mealTexture.dispose();
+				mealTexture = null;
+			}
+			
+			if (mealImage != null)
+			{
+				mealImage.dispose();
+				mealImage = null;
+			}
+			
+			if (treatmentsTexture != null)
+			{
+				treatmentsTexture.dispose();
+				treatmentsTexture = null;
+			}
+			
+			if (treatmentsImage != null)
+			{
+				treatmentsImage.dispose();
+				treatmentsImage = null;
 			}
 			
 			super.dispose();

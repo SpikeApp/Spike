@@ -21,6 +21,7 @@ package utils
 		private static var _appStage:Stage;
 		private static var _noLockEnabled:Boolean;
 		public static var appInForeground:Boolean = true;
+		public static var deviceModel:String;
 		
 		/* Tutorial */
 		public static var mainMenuButton:Button;

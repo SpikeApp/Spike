@@ -11,6 +11,8 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
+	import treatments.TreatmentsManager;
+	
 	import utils.BgGraphBuilder;
 	import utils.SpikeJSON;
 	import utils.Trace;
@@ -54,6 +56,8 @@ package network.httpserver.API
 				else
 					latestReading = BgReading.lastWithCalculatedValue();
 				
+				var now:Number = new Date().valueOf();
+				
 				responseObject.bgs =
 				[ 
 					{
@@ -65,8 +69,8 @@ package network.httpserver.API
 						unfiltered: !BlueToothDevice.isFollower() ? Math.round(latestReading.usedRaw() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
 						noise: latestReading.noiseValue(),
 						bgdelta: Number(BgGraphBuilder.unitizedDeltaString(false, false)),
-						iob: "0",
-						cob: 0
+						iob: String(TreatmentsManager.getTotalIOB(now)),
+						cob: TreatmentsManager.getTotalCOB(now)
 					} 
 				];
 				

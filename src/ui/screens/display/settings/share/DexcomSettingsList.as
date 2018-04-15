@@ -116,7 +116,7 @@ package ui.screens.display.settings.share
 			
 			//Username
 			dsUsername = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				dsUsername.width = 120;
 			dsUsername.text = selectedUsername;
 			dsUsername.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
@@ -124,7 +124,7 @@ package ui.screens.display.settings.share
 			
 			//Password
 			dsPassword = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				dsPassword.width = 120;
 			dsPassword.text = selectedPassword;
 			dsPassword.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
@@ -134,7 +134,7 @@ package ui.screens.display.settings.share
 			if (!BlueToothDevice.isDexcomG5())
 			{
 				dsSerial = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
-				if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 					dsSerial.width = 120;
 				dsSerial.text = selectedDexcomShareSerialNumber;
 				dsSerial.addEventListener( FeathersEventType.ENTER, onTextInputEnter );

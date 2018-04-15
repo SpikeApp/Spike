@@ -353,10 +353,8 @@ package ui.screens.display.sensor
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','stop_alert_button_label'), triggered: onStopSensorTriggered }
 				]
 			);
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
-			{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				alert.maxWidth = 270;
-			}
 		}
 		
 		private function onStopSensorTriggered(e:Event):void

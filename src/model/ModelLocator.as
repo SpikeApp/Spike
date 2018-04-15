@@ -52,6 +52,9 @@ package model
 	import services.WatchService;
 	import services.WidgetService;
 	
+	import treatments.ProfileManager;
+	import treatments.TreatmentsManager;
+	
 	import ui.AppInterface;
 	import ui.InterfaceController;
 	import ui.popups.AlarmSnoozer;
@@ -71,7 +74,7 @@ package model
 		public static const DEBUG_MODE:Boolean = true;
 
 		public static const TEST_FLIGHT_MODE:Boolean = true;
-		public static const INTERNAL_TESTING:Boolean = false;
+		public static const INTERNAL_TESTING:Boolean = true;
 		
 		public static function get instance():ModelLocator
 		{
@@ -145,6 +148,8 @@ package model
 				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
 				
 				_bgReadings = de.data as Array;
+				ProfileManager.init();
+				TreatmentsManager.init();
 				AppInterface.instance.init(); //Start rendering interface now that all data is available
 				AlertManager.init();
 				DeepSleepService.init();
@@ -157,7 +162,7 @@ package model
 				CalibrationService.init();
 				NetworkInfo.init(DistriqtKey.distriqtKey);
 				BackgroundFetch.setAvAudioSessionCategory(true);
-				BackgroundFetch.isVersion2_0_3();
+				BackgroundFetch.isVersion2_0_3();//to make sure the correct ANE is used
 				WidgetService.init();
 				WatchService.init();
 				AlarmService.init();

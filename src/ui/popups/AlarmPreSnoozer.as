@@ -139,7 +139,7 @@ package ui.popups
 			
 			snoozeStatusLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER);
 			
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
 				cancelButton.paddingLeft = cancelButton.paddingRight = 10;
 				preSnoozeButton.paddingLeft = preSnoozeButton.paddingRight = 10;
@@ -157,7 +157,7 @@ package ui.popups
 			snoozeCallout.content = mainContainer;
 			snoozeCallout.origin = positionHelper;
 			snoozeCallout.minWidth = 240;
-			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				snoozeCallout.paddingLeft = snoozeCallout.paddingRight = 12;
 		}
 		

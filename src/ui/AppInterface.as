@@ -32,6 +32,7 @@ package ui
 	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
 	import ui.screens.NightscoutViewScreen;
+	import ui.screens.ProfileSettingsScreen;
 	import ui.screens.Screens;
 	import ui.screens.SensorScreen;
 	import ui.screens.SensorStartScreen;
@@ -39,10 +40,15 @@ package ui
 	import ui.screens.SpeechSettingsScreen;
 	import ui.screens.TransmitterScreen;
 	import ui.screens.TransmitterSettingsScreen;
+	import ui.screens.TreatmentsManagementScreen;
+	import ui.screens.TreatmentsSettingsScreen;
 	import ui.screens.WatchSettingsScreen;
 	import ui.screens.WidgetSettingsScreen;
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.menu.MenuList;
+	
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	public class AppInterface extends Sprite 
 	{
@@ -60,6 +66,8 @@ package ui
 		
 		public function start():void 
 		{
+			Constants.deviceModel = DeviceInfo.getDeviceType();
+
 			SystemUtil.executeWhenApplicationIsActive( InterfaceController.init );
 		}
 		
@@ -135,6 +143,16 @@ package ui
 			var transmitterSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TransmitterSettingsScreen );
 			transmitterSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_TRANSMITTER, transmitterSettingsScreenItem );
+			
+			/* Treatments Settings Screen */
+			var treatmentsSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TreatmentsSettingsScreen );
+			treatmentsSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_TREATMENTS, treatmentsSettingsScreenItem );
+			
+			/* Profile Settings Screen */
+			var profileSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( ProfileSettingsScreen );
+			profileSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_PROFILE, profileSettingsScreenItem );
 			
 			/* Chart Settings Screen */
 			var chartSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( ChartSettingsScreen );
@@ -218,6 +236,13 @@ package ui
 			disclaimerScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
 			disclaimerScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.DISCLAIMER, disclaimerScreenItem );
+			
+			/* Treatments Management Screen */
+			var treatmentsManagementScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TreatmentsManagementScreen );
+			treatmentsManagementScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			treatmentsManagementScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			treatmentsManagementScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.ALL_TREATMENTS, treatmentsManagementScreenItem );
 			
 			/* Screen Navigator */
 			navigator.rootScreenID = Screens.GLUCOSE_CHART;

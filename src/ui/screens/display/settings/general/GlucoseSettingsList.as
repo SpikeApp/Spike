@@ -79,27 +79,27 @@ package ui.screens.display.settings.general
 			glucoseUnitsPicker.labelField = "label";
 			glucoseUnitsPicker.popUpContentManager = new DropDownPopUpContentManager();
 			glucoseUnitsPicker.dataProvider = glucoseUnits;
-			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				glucoseUnitsPicker.pivotX = 38;
 			
 			//Glucose Urgent High Value
 			glucoseUrgentHighStepper = new NumericStepper();
-			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				glucoseUrgentHighStepper.pivotX = 28;
 			
 			//Glucose High Value
 			glucoseHighStepper = new NumericStepper();
-			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				glucoseHighStepper.pivotX = 28;
 			
 			//Glucose Low Value
 			glucoseLowStepper = new NumericStepper();
-			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				glucoseLowStepper.pivotX = 28;
 			
 			//Glucose Urgent Low Value
 			glucoseUrgentLowStepper = new NumericStepper();
-			if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				glucoseUrgentLowStepper.pivotX = 28;
 			
 			//Define Glucose Settings Data
@@ -118,7 +118,7 @@ package ui.screens.display.settings.general
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.paddingRight = 0;
-				if(DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+				if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 					itemRenderer.paddingRight = -40;
 				return itemRenderer;
 			};

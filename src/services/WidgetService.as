@@ -4,6 +4,7 @@ package services
 	
 	import flash.events.Event;
 	import flash.utils.Dictionary;
+	import flash.utils.setInterval;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -14,10 +15,15 @@ package services
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
+	import events.TreatmentsEvent;
 	
 	import model.ModelLocator;
 	
 	import starling.core.Starling;
+	
+	import treatments.TreatmentsManager;
+	
+	import ui.chart.GlucoseFactory;
 	
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
@@ -34,6 +40,7 @@ package services
 		/* Constants */
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
 		private static const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
+		private static const TIME_1_MINUTE:int = 60 * 1000;
 		
 		/* Internal Variables */
 		private static var displayTrendEnabled:Boolean = true;
@@ -72,6 +79,11 @@ package services
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, setInitialGraphData);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentRefresh);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentRefresh);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentRefresh);
+			
+			setInterval(updateTreatments, TIME_1_MINUTE);
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
@@ -229,6 +241,10 @@ package services
 			else
 				BackgroundFetch.setUserDefaultsData("glucoseUnitInternal", "mmol");
 			
+			//IOB & COB
+			BackgroundFetch.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
+			BackgroundFetch.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+			
 			//Translations
 			BackgroundFetch.setUserDefaultsData("minAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','minute_ago'));
 			BackgroundFetch.setUserDefaultsData("hourAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','hour_ago'));
@@ -282,6 +298,21 @@ package services
 			return array;
 		}
 		
+		private static function updateTreatments():void
+		{
+			Trace.myTrace("WidgetService.as", "Sending updated IOB and COB values to widget!");
+			
+			var now:Number = new Date().valueOf();
+			
+			BackgroundFetch.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
+			BackgroundFetch.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+		}
+		
+		private static function onTreatmentRefresh(e:Event):void
+		{
+			updateTreatments();
+		}
+		
 		private static function onBloodGlucoseReceived(e:Event):void
 		{
 			if (!initialGraphDataSet) //Compatibility with follower mode because we get a new glucose event before Spike sends the initial chart data.
@@ -313,6 +344,8 @@ package services
 			activeGlucoseReadingsList.push( { value: latestGlucoseValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
 			processChartGlucoseValues();
 			
+			var now:Number = new Date().valueOf();
+			
 			//Save data to User Defaults
 			BackgroundFetch.setUserDefaultsData("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + getLastUpdate(currentReading.timestamp) + ", " + getGlucoseTimeFormatted(currentReading.timestamp, false));
 			BackgroundFetch.setUserDefaultsData("latestGlucoseValue", BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
@@ -321,6 +354,9 @@ package services
 			BackgroundFetch.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
 			//BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
 			BackgroundFetch.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
+			BackgroundFetch.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
+			BackgroundFetch.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+			BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
 		}
 		
 		/**

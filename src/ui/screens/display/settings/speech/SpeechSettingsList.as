@@ -248,7 +248,7 @@ package ui.screens.display.settings.speech
 							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','ok_alert_button_label') }
 						]
 					);
-					if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X)
+					if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 						alert.height = 320;
 					
 					initialInstructionsDisplayed = true;

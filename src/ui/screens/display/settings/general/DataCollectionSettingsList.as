@@ -205,11 +205,8 @@ package ui.screens.display.settings.general
 		 */
 		override protected function draw():void
 		{
-			try
-			{
+			if ((layout as VerticalLayout) != null)
 				(layout as VerticalLayout).hasVariableItemDimensions = true;
-			} 
-			catch(error:Error) {}
 			
 			super.draw();
 		}
