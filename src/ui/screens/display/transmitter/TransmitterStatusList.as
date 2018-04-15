@@ -602,6 +602,9 @@ package ui.screens.display.transmitter
 			if(touch != null && touch.phase == TouchPhase.BEGAN)
 			{
 				var listItem:Object = (e.currentTarget as Object);
+				if (listItem == null)
+					return;
+				
 				var message:String;
 				var target:DisplayObject;
 				
@@ -621,7 +624,7 @@ package ui.screens.display.transmitter
 					target = resistanceIcon;
 				}
 				
-				if (message != null)
+				if (message != null && target != null)
 				{
 					batteryStatusG5Callout = TextCallout.show(message, target, new <String>[RelativePosition.TOP], false);
 					batteryStatusG5Callout.textRendererFactory = function calloutTextRenderer():ITextRenderer

@@ -86,7 +86,8 @@ package
 			//Things we don't want to report
 			if ( 
 				error.indexOf("ioError") != -1 ||
-				error.indexOf("Unexpected < encountered") != -1 
+				error.indexOf("Unexpected < encountered") != -1 ||
+				error.indexOf("Unexpected T encountered") != -1
 				)
 			{
 				return;

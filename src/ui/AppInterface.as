@@ -13,6 +13,7 @@ package ui
 	import starling.animation.Transitions;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import ui.screens.AboutScreen;
 	import ui.screens.AdvancedSettingsScreen;
@@ -59,7 +60,7 @@ package ui
 		
 		public function start():void 
 		{
-			InterfaceController.init();
+			SystemUtil.executeWhenApplicationIsActive( InterfaceController.init );
 		}
 		
 		public function init():void

@@ -644,6 +644,9 @@ package services
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
+			if (loader == null || loader.data == null)
+				return;
+			
 			//Get response
 			var response:String = loader.data;
 			

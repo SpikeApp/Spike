@@ -6,6 +6,7 @@ package utils
 	import flash.utils.ByteArray;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.Database;
 	import database.LocalSettings;
@@ -89,7 +90,7 @@ package utils
 			
 			const firstReading:BgReading = ModelLocator.bgReadings[0] as BgReading;
 			
-			if (lastExportTimeStamp > firstReading.timestamp)
+			if (lastExportTimeStamp > firstReading.timestamp || BlueToothDevice.isFollower())
 			{
 				Trace.myTrace("SiDiary.as", "Using ModelLocator readings...");
 				
@@ -394,8 +395,8 @@ package utils
 		{
 			Trace.myTrace("SiDiary.as", "CSV file not sent! User cancelled!");
 			
-			dispose();	
 			closeCallout();
+			dispose();	
 		}
 
 		/**

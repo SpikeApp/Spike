@@ -86,7 +86,8 @@ package ui.screens.display.settings.integration
 		
 		private function onExportComplete(e:Event):void
 		{
-			exportBtn.label = ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen','export_button_label');
+			if (exportBtn != null && exportBtn.label != null)
+				exportBtn.label = ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen','export_button_label');
 		}
 		
 		/**
