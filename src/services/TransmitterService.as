@@ -27,6 +27,7 @@ package services
 	import flash.utils.Endian;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
 	
@@ -46,6 +47,7 @@ package services
 	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
+	import model.TransmitterDataXBridgeRDataPacket;
 	import model.TransmitterDataXdripDataPacket;
 	
 	import starling.events.Event;
@@ -163,9 +165,15 @@ package services
 							BluetoothService.writeG4Characteristic(value);
 						}
 					}
-				} else if (be.data is TransmitterDataXBridgeDataPacket) {
-					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
-					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
+				} else if ((be.data is TransmitterDataXBridgeDataPacket) || (be.data is TransmitterDataXBridgeRDataPacket)) {
+					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket;
+					if (be.data is TransmitterDataXBridgeDataPacket)
+						transmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
+					else 
+						transmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeRDataPacket;
+					
+					if (((new Date()).valueOf() - lastPacketTime) < 60000 && !(transmitterDataXBridgeDataPacket is TransmitterDataXBridgeRDataPacket)) {
+						//for TransmitterDataXBridgeRDataPacket , multiple packets can come
 						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeDataPacket but lastPacketTime < 60 seconds ago, ignoring");
 					} else {
 						lastPacketTime = (new Date()).valueOf();
@@ -194,23 +202,35 @@ package services
 							value.writeByte(0xF0);
 							BluetoothService.writeG4Characteristic(value);
 						}						
-						//store the transmitter battery level in the common settings (to be synchronized)
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
-						
-						//store the bridge battery level in the common settings (to be synchronized)
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
-						if (Sensor.getActiveSensor() != null) {
-							Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXBridgeDataPacket.transmitterBatteryVoltage;
-							//create and save bgreading
-							BgReading.
-								create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData)
-								.saveToDatabaseSynchronous();
-							
-							//dispatch the event that there's new data
-							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
-							_instance.dispatchEvent(transmitterServiceEvent);
+
+						if (BlueToothDevice.isDexcomG4()) {
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
+							if (Sensor.getActiveSensor() != null) {
+								Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXBridgeDataPacket.transmitterBatteryVoltage;
+								BgReading.
+									create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData)
+									.saveToDatabaseSynchronous();
+								
+								var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+								_instance.dispatchEvent(transmitterServiceEvent);
+							} else {
+								//TODO inform that bgreading is received but sensor not started ?
+							}
+						} else if (BlueToothDevice.isxBridgeR()) {
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
+							if (Sensor.getActiveSensor() != null) {
+								BgReading.
+									create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData, (transmitterDataXBridgeDataPacket as TransmitterDataXBridgeRDataPacket).timestamp)
+									.saveToDatabaseSynchronous();
+								
+								var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+								_instance.dispatchEvent(transmitterServiceEvent);
+							} else {
+								//TODO inform that bgreading is received but sensor not started ?
+							}
 						} else {
-							//TODO inform that bgreading is received but sensor not started ?
+							myTrace("in transmitterDataReceived, seems invalid device type");
 						}
 					}
 					

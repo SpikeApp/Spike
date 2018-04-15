@@ -372,6 +372,10 @@
 		  * bluereader battery management
 		  */
 		 public static const COMMON_SETTING_BLUEREADER_FULL_BATTERY:int = 134;
+		 /**
+		 * xbrdiger battery level
+		  */
+		 public static const COMMON_SETTING_XBRIDGER_BATTERY_LEVEL:int = 135;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -508,7 +512,8 @@
 			 "0xEEEEEE",//COMMON_SETTING_TREATMENTS_STROKE_COLOR
 			 "0x666666",//COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR
 			 "false",//COMMON_SETTING_CHART_ROUND_MGDL_ON
-			 "0"//COMMON_SETTING_BLUEREADER_FULL_BATTERY
+			 "0",//COMMON_SETTING_BLUEREADER_FULL_BATTERY
+			 ""//COMMON_SETTING_XBRIDGER_BATTERY_LEVEL
 		 ];
 
 		 public function CommonSettings()

@@ -70,6 +70,7 @@ package services
 	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
+	import model.TransmitterDataXBridgeRDataPacket;
 	import model.TransmitterDataXdripDataPacket;
 	
 	import starling.events.Event;
@@ -151,6 +152,10 @@ package services
 		private static const TRANSMITER_PL_RX_CHARACTERISTIC_UUID:String = "c97433f1-be8f-4dc8-b6f0-5343e6100eb4";
 		private static const TRANSMITER_PL_TX_CHARACTERISTIC_UUID:String = "c97433f2-be8f-4dc8-b6f0-5343e6100eb4";
 		private static const uuids_TRANSMITER_PL_Characteristics:Vector.<String> = new <String>[TRANSMITER_PL_RX_CHARACTERISTIC_UUID, TRANSMITER_PL_TX_CHARACTERISTIC_UUID];
+		
+		//xbridger
+		//xbridger uses the same uuid's as xdrip except for TX Characteristic
+		private static const XBRIDGER_TX_CHARACTERISTIC_UUID:String = "0000ffe2-0000-1000-8000-00805f9b34fb";
 		
 		private static var connectionAttemptTimeStamp:Number;
 		private static const maxTimeBetweenConnectAttemptAndConnectSuccess:Number = 3;
@@ -244,12 +249,12 @@ package services
 		
 		private static var _G4characteristic:Characteristic;
 		
-		private static function get G4characteristic():Characteristic
+		private static function get G4_Read_characteristic():Characteristic
 		{
 			return _G4characteristic;
 		}
 		
-		private static function set G4characteristic(value:Characteristic):void
+		private static function set G4_Read_characteristic(value:Characteristic):void
 		{
 			_G4characteristic = value;
 		}
@@ -271,6 +276,8 @@ package services
 		private static var TRANSMITER_PL_Tx_characteristic:Characteristic;
 		
 		private static var TRANSMITER_PL_Rx_characteristic:Characteristic;
+		
+		private static var G4_Write_Characteristic:Characteristic;
 		
 		//blukon global vars for backfill processing
 		private static var m_currentTrendIndex:int;
@@ -398,7 +405,7 @@ package services
 		
 		private static function commonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
-				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
+				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE");
 				if (ScanTimer != null) {
 					if (ScanTimer.running) {
 						ScanTimer.stop();
@@ -502,7 +509,7 @@ package services
 				myTrace("call startScanning");
 				startScanning();
 			} else {
-				myTrace("in bluetootbluetoothStatusIsOn but not restarting scan because it's not an alwaysScan peripheral or no device known");
+				myTrace("in bluetootbluetoothStatusIsOn but not restarting scan");
 			}
 		}
 		
@@ -522,8 +529,8 @@ package services
 				if (!BluetoothLE.service.centralManager.scanForPeripherals(
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Advertisement:
-					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Service:
-					(BlueToothDevice.isBlueReader() ? uuids_Bluereader_Advertisement :uuids_G4_Service)))))
+					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Service:					
+					(BlueToothDevice.isBlueReader() ? uuids_Bluereader_Advertisement :uuids_G4_Service)))))//xdrip, xbridge and xbridger all use uuids_G4_Service
 				{
 					myTrace("failed to start scanning for peripherals");
 					return;
@@ -909,8 +916,8 @@ package services
 						}
 						index++;
 					}
-				} else if (BlueToothDevice.isDexcomG4()) {
-					for each (o in activeBluetoothPeripheral.services) {
+				} else if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
+					for each (var o:Object in activeBluetoothPeripheral.services) {
 						if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
 							break;
 						}
@@ -938,7 +945,7 @@ package services
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Characteristics:
 					(BlueToothDevice.isBlueReader() ? uuids_BlueReader_Characteristics:
 					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Characteristics:
-					uuids_G4_Characteristics))));
+					uuids_G4_Characteristics))));//xdrip, xbridge and xbridgeR use uuids_G4_Characteristics
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
 				discoverServiceOrCharacteristicTimer.start();
@@ -961,9 +968,8 @@ package services
 			myTrace("Bluetooth peripheral characteristics discovered");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
-			//find the index of the service that has uuid = the one used by xdrip/xbridge
 			var servicesIndex:int = 0;
-			var G4CharacteristicsIndex:int = 0;
+			var G4_Read_CharacteristicsIndex:int = 0;
 			var G5AuthenticationCharacteristicsIndex:int = 0;
 			var G5CommunicationCharacteristicsIndex:int = 0;
 			var G5ControlCharacteristicsIndex:int = 0;
@@ -973,6 +979,7 @@ package services
 			var BlueReader_Tx_CharacteristicIndex:int = 0;
 			var TRANSMITER_PL_Rx_CharacteristicIndex:int = 0;
 			var TRANSMITER_PL_Tx_CharacteristicIndex:int = 0;
+			var G4_Write_CharacteristicsIndex:int = 0;
 			
 			var o:Object;
 			if (BlueToothDevice.isDexcomG5()) {
@@ -1043,7 +1050,7 @@ package services
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
-			} else if (BlueToothDevice.isDexcomG4()) {
+			} else if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
 				for each (o in activeBluetoothPeripheral.services) {
 					if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
 						myTrace("peripheral_discoverCharacteristicsHandler, found service " + HM_10_SERVICE_G4);
@@ -1056,11 +1063,26 @@ package services
 						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + HM_RX_TX_G4);
 						break;
 					}
-					G4CharacteristicsIndex++;
+					G4_Read_CharacteristicsIndex++;
 				}
-				G4characteristic = event.peripheral.services[servicesIndex].characteristics[G4CharacteristicsIndex];
+				G4_Read_characteristic = event.peripheral.services[servicesIndex].characteristics[G4_Read_CharacteristicsIndex];
+
+				if (BlueToothDevice.isxBridgeR()) {
+					for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
+						myTrace("in peripheral_discoverCharacteristicsHandler, found characteristic " + (o.uuid as String));
+						if (XBRIDGER_TX_CHARACTERISTIC_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
+							myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + XBRIDGER_TX_CHARACTERISTIC_UUID);
+							break;
+						}
+						G4_Write_CharacteristicsIndex++;
+					}
+					G4_Write_Characteristic = event.peripheral.services[servicesIndex].characteristics[G4_Write_CharacteristicsIndex];
+				} else {
+					G4_Write_Characteristic = G4_Read_characteristic;
+				}
+
 				myTrace("subscribing to G4characteristic");
-				if (!activeBluetoothPeripheral.subscribeToCharacteristic(G4characteristic))
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(G4_Read_characteristic))
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
@@ -1135,7 +1157,7 @@ package services
 		}
 		
 		public static function writeG4Characteristic(value:ByteArray):void {
-			if (!activeBluetoothPeripheral.writeValueForCharacteristic(G4characteristic, value)) {
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(G4_Read_characteristic, value)) {
 				myTrace("ackG4CharacteristicUpdate writeValueForCharacteristic failed");
 			}
 		}
@@ -1167,7 +1189,7 @@ package services
 					processG5TransmitterData(value, event.characteristic);
 				} else if (BlueToothDevice.isBluKon()) {
 					processBLUKONTransmitterData(value);
-				} else if (BlueToothDevice.isDexcomG4()) {
+				} else if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
 					processG4TransmitterData(value);
 				} else if (BlueToothDevice.isBlueReader()) {
 					processBlueReaderTransmitterData(value);
@@ -1181,7 +1203,7 @@ package services
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_writeHandler " + getCharacteristicName(event.characteristic.uuid));
-			if (BlueToothDevice.isDexcomG4()) {
+			if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			} else if (BlueToothDevice.isDexcomG5() && event.characteristic.uuid.toUpperCase() == G5_Authentication_Characteristic_UUID.toUpperCase()) {
 				awaitingAuthStatusRxMessage = true;
@@ -1241,7 +1263,7 @@ package services
 		
 		/**
 		 * Disconnects the active bluetooth peripheral if any and sets it to null(otherwise returns without doing anything)<br>
-		 * address only for miaomiao because the cancelMiaoMiaoConnection method needs that mac, otherwise it will forget the device
+		 * address only for miaomiao because the cancelMiaoMiaoConnection method needs that mac, otherwise it will not forget the device
 		 */
 		public static function forgetActiveBluetoothPeripheral(address:String = ""):void {
 			if (BlueToothDevice.isMiaoMiao()) {
@@ -1993,6 +2015,7 @@ package services
 			var txID:Number;
 			var xBridgeProtocolLevel:Number;
 			var blueToothServiceEvent:BlueToothServiceEvent;
+			var bridgeBatteryPercentage:Number;
 			switch (packetType) {
 				case 0:
 					//data packet
@@ -2000,10 +2023,21 @@ package services
 					var filteredData:Number = buffer.readInt();
 					var transmitterBatteryVoltage:Number = buffer.readUnsignedByte();
 					
-					//following only if the name of the device contains "bridge", if it' doesnt contain bridge, then it's an xdrip (old) and doesn't have those bytes' +
-					//or if packetlenth == 17, why ? because it could be a drip with xbridge software but still with a name xdrip, because it was originally an xdrip that was later on overwritten by the xbridge software, in that case the name will still by xdrip and not xbridge
-					if (BlueToothDevice.isXBridge() || packetLength == 17) {
-						var bridgeBatteryPercentage:Number = buffer.readUnsignedByte();
+					if (packetLength == 21) {//xbridge with protocol that has also the timestamp, example xbridger
+						//could also be for dexbridgewixel, however not yet tested for that
+						bridgeBatteryPercentage = buffer.readUnsignedByte();
+						txID = buffer.readInt();
+						var timestamp:Number = ((new Date()).valueOf() - buffer.readInt());
+						//xBridgeProtocolLevel = buffer.readUnsignedByte();
+						myTrace("in processG4TransmitterData, with bridgeBatteryPercentage = " + bridgeBatteryPercentage + ", txID = " + decodeTxID(txID) + ", timestamp = " + utils.DateTimeUtilities.createNSFormattedDateAndTime(new Date(timestamp)));
+						
+						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+						blueToothServiceEvent.data = new TransmitterDataXBridgeRDataPacket(rawData, filteredData, transmitterBatteryVoltage, bridgeBatteryPercentage, decodeTxID(txID), timestamp);
+						_instance.dispatchEvent(blueToothServiceEvent);
+					} else if (packetLength == 17) {//xbridge
+						//following only if the name of the device contains "bridge", if it' doesnt contain bridge, then it's an xdrip (old) and doesn't have those bytes' +
+						//or if packetlenth == 17, why ? because it could be a drip with xbridge software but still with a name xdrip, because it was originally an xdrip that was later on overwritten by the xbridge software, in that case the name will still by xdrip and not xbridge
+						bridgeBatteryPercentage = buffer.readUnsignedByte();
 						txID = buffer.readInt();
 						xBridgeProtocolLevel = buffer.readUnsignedByte();
 						
