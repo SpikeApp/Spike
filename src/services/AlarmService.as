@@ -39,6 +39,7 @@ package services
 	import utils.BgGraphBuilder;
 	import utils.DateTimeUtilities;
 	import utils.FromtimeAndValueArrayCollection;
+	import utils.GlucoseHelper;
 	import utils.Trace;
 	
 	public class AlarmService extends EventDispatcher
@@ -704,15 +705,24 @@ package services
 			{
 				AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, snoozePickerClosedHandler);
 				AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, canceledHandler);
-				if (snoozeText == "low_alert_notification_alert_text" ||
+				if 
+				(
+					snoozeText == "low_alert_notification_alert_text" ||
 					snoozeText == "verylow_alert_notification_alert_text" ||
 					snoozeText == "high_alert_notification_alert_text" ||
-					snoozeText == "veryhigh_alert_notification_alert_text")
+					snoozeText == "veryhigh_alert_notification_alert_text" ||
+					snoozeText == "snooze_text_low_alert" ||
+					snoozeText == "snooze_text_very_low_alert" ||
+					snoozeText == "snooze_text_high_alert" ||
+					snoozeText == "snooze_text_very_high_alert"
+				)
 				{
-					AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText) + " (" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + ")", snoozeValueStrings, index);
+					AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText) + "\n" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + GlucoseHelper.getGlucoseUnit(), snoozeValueStrings, index);
 				}
 				else
+				{
 					AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText), snoozeValueStrings, index);
+				}
 			} 
 			else if (notificationEvent.identifier == alertSnoozeIdentifier) {
 				snoozeValueSetter(alertType.defaultSnoozePeriodInMinutes);

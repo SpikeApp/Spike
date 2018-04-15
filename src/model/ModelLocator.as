@@ -147,7 +147,6 @@ package model
 				_bgReadings = de.data as Array;
 				AppInterface.instance.init(); //Start rendering interface now that all data is available
 				AlertManager.init();
-				AlarmSnoozer.init();
 				DeepSleepService.init();
 				Database.getBlueToothDevice();
 				TransmitterService.init();
