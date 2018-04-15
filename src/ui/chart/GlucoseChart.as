@@ -2542,7 +2542,7 @@ package ui.chart
 					if (currentMarker == null)
 						continue;
 					var previousMaker:GlucoseMarker = null;
-					if (i > 0)
+					if (i > 0 &&  mainChartGlucoseMarkersList[i - 1] != null)
 						previousMaker = mainChartGlucoseMarkersList[i - 1];
 					
 					//Transform local coordinates to global
