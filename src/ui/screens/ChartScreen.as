@@ -195,8 +195,8 @@ package ui.screens
 			glucoseChart.drawGraph();
 			glucoseChart.addAllTreatments();
 			var now:Number = new Date().valueOf();
-			glucoseChart.calculateTotalIOB(now);
-			glucoseChart.calculateTotalCOB(now);
+			SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalIOB, now );
+			SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalCOB, now );
 			addChild(glucoseChart);
 		}
 		
@@ -287,8 +287,9 @@ package ui.screens
 				glucoseChart.displayLine = drawLineChart;
 				glucoseChart.drawGraph();
 				glucoseChart.addAllTreatments();
-				glucoseChart.calculateTotalIOB(new Date().valueOf());
-				glucoseChart.calculateTotalCOB(new Date().valueOf());
+				var now:Number = new Date().valueOf();
+				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalIOB, now );
+				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalCOB, now );
 				glucoseChart.y = glucoseChartTopPadding;
 				addChild(glucoseChart);
 			}
@@ -494,12 +495,12 @@ package ui.screens
 		{
 			clearTimeout(queueTimeout);
 			
-			/*if(!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if(!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 			{
 				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
 				
 				return;
-			}*/
+			}
 			
 			try
 			{

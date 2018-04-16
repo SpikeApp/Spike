@@ -76,8 +76,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var showGridLines:String = ""
     var lineThickness:NSString = ""
     var markerRadius:NSString = ""
-    var IOB:String = ""
-    var COB:String = ""
+    var IOB:String = "0.00U"
+    var COB:String = "0.00g"
     
     //Constants
     let millisecondsInHour = 3600000
@@ -228,11 +228,9 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             externalData["showMarkerLabel"] == nil ||
             externalData["showGridLines"] == nil ||
             externalData["lineThickness"] == nil ||
-            externalData["markerRadius"] == nil ||
-            externalData["IOB"] == nil ||
-            externalData["COB"] == nil
+            externalData["markerRadius"] == nil
         {
-            print("Database file is corrupted!")
+            print("Missing data in database!")
             noData.text = "Missing data in database!"
             return false
         }
@@ -276,8 +274,14 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         showGridLines = (externalData["showGridLines"] as? String)!
         lineThickness = (externalData["lineThickness"] as? NSString)!
         markerRadius = (externalData["markerRadius"] as? NSString)!
-        IOB = (externalData["IOB"] as? String)!
-        COB = (externalData["COB"] as? String)!
+        if (externalData["IOB"] != nil)
+        {
+            IOB = (externalData["IOB"] as? String)!
+        }
+        if (externalData["COB"] != nil)
+        {
+            COB = (externalData["COB"] as? String)!
+        }
         
         return true
     }

@@ -8,6 +8,7 @@ package ui.chart
 	import flash.system.System;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
+	import flash.utils.setTimeout;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -41,6 +42,7 @@ package ui.chart
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.utils.Align;
+	import starling.utils.SystemUtil;
 	
 	import treatments.Insulin;
 	import treatments.ProfileManager;
@@ -673,43 +675,43 @@ package ui.chart
 		
 		public function calculateTotalIOB(time:Number):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
 				IOBPill.setValue(GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(time)));
-				repositionTreatmentPills();
+				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
 			
 			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
 			{
 				IOBPill.setValue(GlucoseFactory.formatIOB(0));
-				repositionTreatmentPills();
+				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
 		}
 		
 		public function calculateTotalCOB(time:Number):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
 				COBPill.setValue(GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(time)));
-				repositionTreatmentPills();
+				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
 			
 			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
 			{
 				COBPill.setValue(GlucoseFactory.formatCOB(0));
-				repositionTreatmentPills();
+				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
 		}
 		
 		private function repositionTreatmentPills():void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			if (displayIOBEnabled)
