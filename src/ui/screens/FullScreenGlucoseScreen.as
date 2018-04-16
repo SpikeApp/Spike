@@ -41,9 +41,11 @@ package ui.screens
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.GlucoseHelper;
 	import utils.TimeSpan;
 	
 	[ResourceBundle("fullscreenglucosescreen")]
+	[ResourceBundle("chartscreen")]
 
 	public class FullScreenGlucoseScreen extends BaseSubScreen
 	{
@@ -157,7 +159,7 @@ package ui.screens
 			addChild(timeAgoDisplay);
 			
 			/* Slope Display Label */
-			slopeDisplay = GraphLayoutFactory.createChartStatusText(latestGlucoseSlopeOutput, latestSlopeInfoColor, infoFontSize, Align.LEFT, false, 300);
+			slopeDisplay = GraphLayoutFactory.createChartStatusText(latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit(), latestSlopeInfoColor, infoFontSize, Align.LEFT, false, 300);
 			slopeDisplay.x = timeAgoDisplay.x;
 			slopeDisplay.y = timeAgoDisplay.y + timeAgoDisplay.height + 3;
 			addChild(slopeDisplay);
@@ -196,7 +198,7 @@ package ui.screens
 			timeAgoDisplay.fontStyles.color = timeAgoColor;
 			
 			/* Slope Display Label */
-			slopeDisplay.text = latestGlucoseSlopeOutput;
+			slopeDisplay.text = latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit();
 			slopeDisplay.fontStyles.color = latestSlopeInfoColor;
 			
 			/* Slope Arrow Display Label */
@@ -258,6 +260,7 @@ package ui.screens
 				
 				//Time Ago
 				timeAgoOutput = TimeSpan.formatHoursMinutesFromSeconds((nowTimestamp - latestGlucoseTimestamp)/1000);
+				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
 					timeAgoColor = newColor;
 				else
@@ -337,6 +340,7 @@ package ui.screens
 				nowTimestamp = new Date().valueOf();
 				var differenceInSec:Number = (nowTimestamp - latestGlucoseTimestamp) / 1000;
 				timeAgoOutput = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
+				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				
 				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
 					timeAgoColor = newColor;
@@ -467,6 +471,7 @@ package ui.screens
 				var nowTimestamp:Number = new Date().valueOf();
 				var differenceInSec:Number = (nowTimestamp - latestGlucoseTimestamp) / 1000;
 				timeAgoOutput = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
+				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				timeAgoDisplay.text = timeAgoOutput;
 				
 				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
@@ -485,7 +490,7 @@ package ui.screens
 					
 					/* Slope Display Label */
 					latestGlucoseSlopeOutput = "";
-					slopeDisplay.text = latestGlucoseSlopeOutput;
+					slopeDisplay.text = latestGlucoseSlopeOutput  + " " + GlucoseHelper.getGlucoseUnit();
 					
 					//Slope Arrow
 					latestGlucoseSlopeArrow = "";
