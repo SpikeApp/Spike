@@ -64,7 +64,7 @@ package
 			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
 			
 			/* Start Starling */
-			timeoutID = setTimeout( initStarling, 50 );
+			timeoutID = setTimeout( initStarling, 100 );
 		}
 		
 		private function onUncaughtError(e:UncaughtErrorEvent):void
