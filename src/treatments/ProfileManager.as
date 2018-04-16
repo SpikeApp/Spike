@@ -121,28 +121,39 @@ package treatments
 			var newInsulinID:String = insulinID == null ? UniqueId.createEventId() : insulinID;
 			
 			//Check duplicates
-			if (insulinsMap[newInsulinID] != null)
+			if (insulinsMap[newInsulinID] != null && insulinID != "000000")
 				return;
 			
-			//Create new insulin
-			var insulin:Insulin = new Insulin
-			(
-				newInsulinID,
-				name,
-				dia,
-				type,
-				isDefault,
-				new Date().valueOf()
-			);
-			
-			//Add to Spike
-			insulinsList.push(insulin);
-			insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
-			insulinsMap[newInsulinID] = insulin;
-			
-			//Save in database
-			if (saveToDatabase)
-				Database.insertInsulinSynchronous(insulin);
+			if (insulinID != "000000" || insulinsMap[newInsulinID] == null)
+			{
+				//Create new insulin
+				var insulin:Insulin = new Insulin
+				(
+					newInsulinID,
+					name,
+					dia,
+					type,
+					isDefault,
+					new Date().valueOf()
+				);
+				
+				//Add to Spike
+				insulinsList.push(insulin);
+				insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
+				insulinsMap[newInsulinID] = insulin;
+				
+				//Save in database
+				if (saveToDatabase)
+					Database.insertInsulinSynchronous(insulin);
+			}
+			else if (insulinID == "000000" && insulinsMap[newInsulinID] != null)
+			{
+				//Nightscout insulin already exists, let's update it
+				var existingNSInsulin:Insulin = insulinsMap[newInsulinID] as Insulin;
+				existingNSInsulin.dia = dia;
+				existingNSInsulin.timestamp = new Date().valueOf();
+				Database.updateInsulinSynchronous(existingNSInsulin);
+			}
 		}
 		
 		public static function updateInsulin(insulin:Insulin):void
