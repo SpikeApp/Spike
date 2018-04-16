@@ -34,6 +34,9 @@ package ui.chart
 	
 	import services.CalibrationService;
 	
+	import starling.animation.Transitions;
+	import starling.animation.Tween;
+	import starling.core.Starling;
 	import starling.display.Quad;
 	import starling.display.Shape;
 	import starling.display.Sprite;
@@ -820,7 +823,6 @@ package ui.chart
 			//Setup initial timeline/mask properties
 			if (treatmentsFirstRun && treatmentsContainer == null)
 			{
-				
 				treatmentsFirstRun = false;
 				treatmentsContainer = new Sprite();
 				treatmentsContainer.x = mainChart.x;
@@ -1043,15 +1045,24 @@ package ui.chart
 				
 				function onDelete(e:starling.events.Event):void
 				{
-					treatmentsContainer.removeChild(treatment);
-					treatmentsList.removeAt(treatment.index);
-					
 					treatmentCallout.close(true);
 					
-					TreatmentsManager.deleteTreatment(treatment.treatment);
-					
-					treatment.dispose();
-					treatment = null;
+					var deleteTreatmentTween:Tween = new Tween(treatment, 0.3, Transitions.EASE_IN_BACK);
+					var deleteX:Number = ((lastBGreadingTimeStamp - firstBGReadingTimeStamp) * mainChartXFactor) + treatment.width + 5;
+					deleteTreatmentTween.moveTo(deleteX, treatment.y);
+					deleteTreatmentTween.onComplete = function():void
+					{
+						treatmentsContainer.removeChild(treatment);
+						treatmentsList.removeAt(treatment.index);
+						
+						TreatmentsManager.deleteTreatment(treatment.treatment);
+						
+						treatment.dispose();
+						treatment = null;
+						
+						deleteTreatmentTween = null;
+					}
+					Starling.juggler.add(deleteTreatmentTween);
 					
 					var timelineTimestamp:Number = getTimelineTimestamp();
 					if (displayIOBEnabled)
@@ -1081,7 +1092,7 @@ package ui.chart
 							estimatedGlucoseValue = treatment.treatment.glucoseEstimated;
 						treatment.treatment.timestamp = movedTimestamp;
 						treatment.treatment.glucoseEstimated = estimatedGlucoseValue;
-						manageTreatments();
+						manageTreatments(true);
 						
 						treatmentCallout.close(true);
 						
@@ -1102,7 +1113,7 @@ package ui.chart
 			}
 		}
 		
-		private function manageTreatments():void
+		private function manageTreatments(animate:Boolean = false):void
 		{
 			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
@@ -1134,30 +1145,74 @@ package ui.chart
 						//Treatment is still valid. Reposition it.
 						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 						{
-							treatment.x = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
-							treatment.y = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
-							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && treatment.y < -2)
-								treatment.y = -2;
+							var generalTreatmentX:Number = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+							var generalTreatmentY:Number = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && generalTreatmentY < -2)
+								generalTreatmentY = -2;
+							
+							if (!animate)
+							{
+								treatment.x = generalTreatmentX;
+								treatment.y = generalTreatmentY;
+							}
+							else
+							{
+								var generalTreatmentTween:Tween = new Tween(treatment, 0.5, Transitions.EASE_OUT_BACK);
+								generalTreatmentTween.moveTo(generalTreatmentX, generalTreatmentY);
+								generalTreatmentTween.onComplete = function():void
+								{
+									repositionOutOfBounds();
+									generalTreatmentTween = null;
+								}
+								Starling.juggler.add(generalTreatmentTween);
+							}
 						}
 						else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 						{
+							var noteX:Number;
 							if (treatment.treatment.timestamp <= lastBGreadingTimeStamp)
-								treatment.x = (((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+								noteX = (((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
 							else
-								treatment.x = (((lastBGreadingTimeStamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 10;
-							treatment.y = (_graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 8;
+								noteX = (((lastBGreadingTimeStamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 10;
+							
+							var noteY:Number = (_graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 8;
+							
+							if (!animate)
+							{
+								treatment.x = noteX;
+								treatment.y = noteY;
+							}
+							else
+							{
+								var noteTween:Tween = new Tween(treatment, 0.5, Transitions.EASE_OUT_BACK);
+								noteTween.moveTo(noteX, noteY);
+								noteTween.onComplete = function():void
+								{
+									repositionOutOfBounds();
+									noteTween = null;
+								}
+								Starling.juggler.add(noteTween);
+							}
 						}
 						
-						//Reposition out of bounds treatments
-						if (treatment != null && !isNaN(treatment.y) && !isNaN(treatment.height) && !isNaN(yAxisHeight))
+						if (!animate)
 						{
-							if (yAxisHeight > 0 && treatment.y + treatment.height > yAxisHeight - 5) //Lower Area
-								treatment.labelUp();
-							else
-								treatment.labelDown();
-							
-							if (treatment.y < -2) //Upper Area
-								treatment.y = -2;
+							repositionOutOfBounds();
+						}
+						
+						function repositionOutOfBounds():void
+						{
+							//Reposition out of bounds treatments
+							if (treatment != null && !isNaN(treatment.y) && !isNaN(treatment.height) && !isNaN(yAxisHeight))
+							{
+								if (yAxisHeight > 0 && treatment.y + treatment.height > yAxisHeight - 5) //Lower Area
+									treatment.labelUp();
+								else
+									treatment.labelDown();
+								
+								if (treatment.y < -2) //Upper Area
+									treatment.y = -2;
+							}
 						}
 					}
 				}
