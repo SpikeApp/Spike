@@ -756,7 +756,7 @@ package ui.chart
 		
 		public function updateExternallyModifiedTreatment(treatment:Treatment):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			var modifiedTreatment:ChartTreatment = treatmentsMap[treatment.ID] as ChartTreatment;
@@ -811,22 +811,14 @@ package ui.chart
 		
 		public function addTreatment(treatment:Treatment):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			//Setup initial timeline/mask properties
 			if (treatmentsFirstRun && treatmentsContainer == null)
 			{
-				treatmentsFirstRun = false;
-				treatmentsContainer = new Sprite();
-				treatmentsContainer.x = mainChart.x;
-				treatmentsContainer.y = mainChart.y;
-				mainChartContainer.addChild(treatmentsContainer);
 				
-				//Repeat to mitigate bug in starling
-				mainChartContainer.removeChild(treatmentsContainer);
-				treatmentsContainer.dispose();
-				treatmentsContainer = null;
+				treatmentsFirstRun = false;
 				treatmentsContainer = new Sprite();
 				treatmentsContainer.x = mainChart.x;
 				treatmentsContainer.y = mainChart.y;

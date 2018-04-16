@@ -204,9 +204,9 @@ package
 			
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_FOREGROUND");
-			if (_instance == null)
+			if (instance == null)
 				_instance = this
-			_instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
+			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_FOREGROUND));
 		}
 		
 		private function onDeactivate( event:flash.events.Event ):void 
@@ -228,9 +228,9 @@ package
 			
 			//Notify Services
 			myTrace("dispatching event SpikeEvent.APP_IN_BACKGROUND");
-			if (_instance == null)
+			if (instance == null)
 				_instance = this;
-			_instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
+			instance.dispatchEvent(new SpikeEvent(SpikeEvent.APP_IN_BACKGROUND));
 
 			//Call Garbage Collector
 			System.pauseForGCIfCollectionImminent(0);

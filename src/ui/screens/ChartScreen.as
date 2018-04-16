@@ -32,7 +32,6 @@ package ui.screens
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
-	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.events.Event;
 	import starling.utils.SystemUtil;
@@ -199,13 +198,6 @@ package ui.screens
 			glucoseChart.calculateTotalIOB(now);
 			glucoseChart.calculateTotalCOB(now);
 			addChild(glucoseChart);
-			
-			//Prevents Starling Line Mask Bug
-			if(drawLineChart)
-			{
-				Starling.juggler.delayCall(redrawChart, 0.001);
-				chartRequiresReload = false;
-			}
 		}
 		
 		private function setChartSettings():void
@@ -272,26 +264,36 @@ package ui.screens
 			timeRangeGroup.addEventListener( Event.CHANGE, onTimeRangeChange );
 		}
 		
+		private function redrawChartForTreatmentsAndLine():void
+		{
+			setTimeout(redrawChart, 2000);
+		}
+		
 		private function redrawChart():void
 		{
-			//var previousData:Array = glucoseChart.dataSource.concat();
-			chartData = glucoseChart.dataSource;
-			
-			//Remove previous chart
-			removeChild(glucoseChart);
-			glucoseChart.dispose();
-			glucoseChart = null;
-			
-			//Create new chart
-			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
-			glucoseChart.dataSource = chartData;
-			glucoseChart.displayLine = drawLineChart;
-			glucoseChart.drawGraph();
-			glucoseChart.addAllTreatments();
-			glucoseChart.calculateTotalIOB(new Date().valueOf());
-			glucoseChart.calculateTotalCOB(new Date().valueOf());
-			glucoseChart.y = glucoseChartTopPadding;
-			addChild(glucoseChart);
+			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+			{
+				//var previousData:Array = glucoseChart.dataSource.concat();
+				chartData = glucoseChart.dataSource;
+				
+				//Remove previous chart
+				removeChild(glucoseChart);
+				glucoseChart.dispose();
+				glucoseChart = null;
+				
+				//Create new chart
+				glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
+				glucoseChart.dataSource = chartData;
+				glucoseChart.displayLine = drawLineChart;
+				glucoseChart.drawGraph();
+				glucoseChart.addAllTreatments();
+				glucoseChart.calculateTotalIOB(new Date().valueOf());
+				glucoseChart.calculateTotalCOB(new Date().valueOf());
+				glucoseChart.y = glucoseChartTopPadding;
+				addChild(glucoseChart);
+			}
+			else
+				SystemUtil.executeWhenApplicationIsActive( redrawChartForTreatmentsAndLine );
 		}
 		
 		private function calculateChartHeight():Number
@@ -492,12 +494,12 @@ package ui.screens
 		{
 			clearTimeout(queueTimeout);
 			
-			if(!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			/*if(!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 			{
 				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
 				
 				return;
-			}
+			}*/
 			
 			try
 			{
@@ -565,6 +567,7 @@ package ui.screens
 		{
 			setGlucoseChart();
 			setChartSettings();
+			redrawChartForTreatmentsAndLine();
 		}
 		
 		private function onTimeRangeChange(event:Event):void
@@ -655,11 +658,6 @@ package ui.screens
 			{
 				glucoseChart.showLine();
 				drawLineChart = true;
-				if(chartRequiresReload)
-				{
-					chartRequiresReload = false;
-					redrawChart();
-				}
 			}
 			else
 			{

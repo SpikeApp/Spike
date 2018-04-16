@@ -11,6 +11,7 @@ package services
 	import flash.net.URLLoader;
 	import flash.net.URLRequestMethod;
 	import flash.utils.Timer;
+	import flash.utils.setTimeout;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -70,6 +71,7 @@ package services
 		private static const RETRY_TIME_FOR_SERVER_ERRORS:Number = 4.5 * 60 * 1000; //4.5 minutes
 		private static const RETRY_TIME_FOR_MAX_AUTHENTICATION_RETRIES:Number = 10 * 60 * 1000;
 		private static const MAX_RETRIES_FOR_MONITORING_SESSION_NOT_ACTIVE:int = 5;
+		private static const MAX_RETRIES_FOR_SESSION_NOT_VALID:int = 10;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
 		
 		/* Data Objects */
@@ -97,6 +99,7 @@ package services
 		private static var timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived:Number = 0;
 		private static var timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed:Number = 0;
 		private static var retriesForSessionNotActive:int = 0;
+		private static var retriesForSessionNotValid:int = 0;
 		
 		public function DexcomShareService()
 		{
@@ -414,9 +417,13 @@ package services
 					}
 					else if (errorCode == "SessionNotValid" || errorCode == "SessionIdNotFound")
 					{
-						dexcomShareSessionID = "";
-						nextFunctionToCall = syncGlucoseReadings;
-						login();
+						if (retriesForSessionNotValid <= MAX_RETRIES_FOR_SESSION_NOT_VALID)
+						{
+							retriesForSessionNotValid++;
+							dexcomShareSessionID = "";
+							nextFunctionToCall = syncGlucoseReadings;
+							setTimeout(login, 5000); //5 seconds
+						}
 					}
 					else if (errorCode == "MonitoringSessionNotActive") 
 					{
