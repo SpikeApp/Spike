@@ -68,6 +68,7 @@ package ui.chart
 		private static const SCROLLER_CHART:String = "scrollerChart";
 		private static const ONE_DAY_IN_MINUTES:Number = 24 * 60;
 		private static const NUM_MINUTES_MISSED_READING_GAP:int = 6;
+		private static const TIME_30_SECONDS:int = 30 * 1000;
 		private static const TIME_75_SECONDS:int = 75 * 1000;
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
@@ -894,7 +895,13 @@ package ui.chart
 			{
 				//Create treatment marker and add it to the chart
 				var noteMarker:NoteMarker = new NoteMarker(treatment);
-				noteMarker.x = (((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+				
+				
+				if (noteMarker.treatment.timestamp <= lastBGreadingTimeStamp)
+					noteMarker.x = (((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+				else
+					noteMarker.x = (((lastBGreadingTimeStamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 10;
+				
 				noteMarker.y = (_graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3)) + 8;
 				
 				noteMarker.index = treatmentsList.length;
@@ -1134,7 +1141,10 @@ package ui.chart
 						}
 						else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 						{
-							treatment.x = (((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+							if (treatment.treatment.timestamp <= lastBGreadingTimeStamp)
+								treatment.x = (((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
+							else
+								treatment.x = (((lastBGreadingTimeStamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 10;
 							treatment.y = (_graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 8;
 						}
 						
