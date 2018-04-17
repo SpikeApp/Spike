@@ -54,6 +54,7 @@ package ui.screens.display.settings.treatments
 		private var bgCheckColorPicker:ColorPicker;
 		private var strokeColorPicker:ColorPicker;
 		private var treatmentPillColorPicker:ColorPicker;
+		private var newSensorColorPicker:ColorPicker;
 		private var _parent:PanelScreen;
 		private var resetColors:Button;
 		private var emailConfigurationFiles:Button;
@@ -71,6 +72,7 @@ package ui.screens.display.settings.treatments
 		private var bgCheckMarkerColorValue:uint;
 		private var treatmentPillColorValue:uint;
 		private var strokeMarkerColorValue:uint;
+		private var newSensorMarkerColorValue:uint;
 		private var colorPickers:Array = [];
 		
 		public function TreatmentsSettingsList(parentDisplayObject:PanelScreen)
@@ -113,6 +115,7 @@ package ui.screens.display.settings.treatments
 			bgCheckMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR));
 			strokeMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
 			treatmentPillColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR));
+			newSensorMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR));
 		}
 		
 		private function setupContent():void
@@ -163,6 +166,13 @@ package ui.screens.display.settings.treatments
 			bgCheckColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			bgCheckColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			bgCheckColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			
+			//New Sensor
+			newSensorColorPicker = new ColorPicker(20, newSensorMarkerColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
+			newSensorColorPicker.name = "sensorCheckColor";
+			newSensorColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			newSensorColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			newSensorColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 			
 			//Stroke Color Picker
 			strokeColorPicker = new ColorPicker(20, strokeMarkerColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
@@ -230,6 +240,7 @@ package ui.screens.display.settings.treatments
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"insulin_marker_color_label"), accessory: insulinColorPicker, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"carbs_marker_color_label"), accessory: carbsColorPicker, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"bg_check_marker_color_label"), accessory: bgCheckColorPicker, selectable: false });
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"sensor_check_marker_color_label"), accessory: newSensorColorPicker, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"stroke_marker_color_label"), accessory: strokeColorPicker, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"pill_color_label"), accessory: treatmentPillColorPicker, selectable: false });
 					data.push({ label: "", accessory: resetColors, selectable: false });
@@ -269,6 +280,9 @@ package ui.screens.display.settings.treatments
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR) != String(bgCheckMarkerColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR, String(bgCheckMarkerColorValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR) != String(newSensorMarkerColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR, String(newSensorMarkerColorValue));
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR) != String(strokeMarkerColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR, String(strokeMarkerColorValue));
@@ -350,6 +364,14 @@ package ui.screens.display.settings.treatments
 					needsSave = true;
 				}
 			}
+			else if(currentTargetName == "sensorCheckColor")
+			{
+				if(newSensorColorPicker.value != newSensorMarkerColorValue)
+				{
+					newSensorMarkerColorValue = newSensorColorPicker.value;
+					needsSave = true;
+				}
+			}
 			else if(currentTargetName == "treatmentPillColor")
 			{
 				if(treatmentPillColorPicker.value != treatmentPillColorValue)
@@ -381,6 +403,10 @@ package ui.screens.display.settings.treatments
 			//BG Check Color Picker
 			bgCheckColorPicker.setColor(0xFF0000);
 			bgCheckMarkerColorValue = 0xFF0000;
+			
+			//New Sensor Color Picker
+			newSensorColorPicker.setColor(0x666666);
+			newSensorMarkerColorValue = 0x666666;
 			
 			//Stroke Color Picker
 			strokeColorPicker.setColor(0xEEEEEE);
@@ -482,6 +508,15 @@ package ui.screens.display.settings.treatments
 				bgCheckColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				bgCheckColorPicker.dispose();
 				bgCheckColorPicker = null;
+			}
+			
+			if (newSensorColorPicker != null)
+			{
+				newSensorColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				newSensorColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				newSensorColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				newSensorColorPicker.dispose();
+				newSensorColorPicker = null;
 			}
 			
 			if (strokeColorPicker != null)

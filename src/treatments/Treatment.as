@@ -13,6 +13,7 @@ package treatments
 		public static const TYPE_CARBS_CORRECTION:String = "carbCorrection";
 		public static const TYPE_GLUCOSE_CHECK:String = "glucoseCheck";
 		public static const TYPE_NOTE:String = "note";
+		public static const TYPE_SENSOR_START:String = "sensorStart";
 		
 		/* Internal Constants */
 		private static const INSULIN_PEAK:uint = 75;

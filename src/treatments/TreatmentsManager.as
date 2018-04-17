@@ -11,8 +11,10 @@ package treatments
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
+	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
+	import events.SettingsServiceEvent;
 	import events.TreatmentsEvent;
 	
 	import feathers.controls.Alert;
@@ -73,6 +75,7 @@ package treatments
 			//Event Listeners
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 			
 			//Fetch Data From Database
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -105,6 +108,14 @@ package treatments
 						treatmentsMap[treatment.ID] = treatment;
 					}
 				}
+			}
+		}
+		
+		private static function onSettingChanged(e:SettingsServiceEvent):void
+		{
+			if (e.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR && Sensor.getActiveSensor() != null && !NightscoutService.serviceActive )
+			{
+				addInternalSensorStartTreatment(Sensor.getActiveSensor().startedAt, UniqueId.createEventId());
 			}
 		}
 		
@@ -887,6 +898,35 @@ package treatments
 				ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'),
 				treatmentID
 			);
+			
+			if (treatmentsMap[treatment.ID] == null) //New treatment
+			{
+				//Insert in DB
+				Database.insertTreatmentSynchronous(treatment);
+				
+				//Add to list
+				treatmentsList.push(treatment);
+				treatmentsMap[treatment.ID] = treatment;
+				
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+			}
+		}
+		
+		public static function addInternalSensorStartTreatment(timestamp:Number, treatmentID:String):void
+		{
+			var treatment:Treatment = new Treatment
+				(
+					Treatment.TYPE_SENSOR_START,
+					timestamp,
+					0,
+					"",
+					0,
+					0,
+					getEstimatedGlucose(timestamp),
+					"",
+					treatmentID
+				);
 			
 			if (treatmentsMap[treatment.ID] == null) //New treatment
 			{

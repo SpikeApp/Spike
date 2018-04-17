@@ -925,14 +925,11 @@ package services
 				return;
 			}
 			
-			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0)
-			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-				{
-					Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds");
+			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0)
+			{	
+				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds");
 					
-					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
-				}
+				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
 				
 				return;
 			}
@@ -960,6 +957,9 @@ package services
 		
 		private static function onGetTreatmentsComplete(e:Event):void
 		{
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "onGetTreatmentsComplete called!");
 			
 			//Get loader
@@ -974,7 +974,7 @@ package services
 			loader = null;
 			
 			//Validate if we can process treatments
-			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0)
 			{
 				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
 				
@@ -1210,9 +1210,14 @@ package services
 			Trace.myTrace("NightscoutService.as", "in getSensorStart.");
 			
 			var newSensor:Object = new Object();
+			var eventID:String = UniqueId.createEventId();
+			newSensor["_id"] = eventID;	
 			newSensor["eventType"] = "Sensor Start";	
 			newSensor["created_at"] = formatter.format(Sensor.getActiveSensor().startedAt);
 			newSensor["enteredBy"] = "Spike";
+			
+			//Add sensor start to Chart
+			TreatmentsManager.addInternalSensorStartTreatment(Sensor.getActiveSensor().startedAt, eventID);
 			
 			activeSensorStarts.push(newSensor);
 			

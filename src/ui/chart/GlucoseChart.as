@@ -925,6 +925,19 @@ package ui.chart
 				
 				chartTreatment = glucoseCheckMarker;
 			}
+			else if (treatment.type == Treatment.TYPE_SENSOR_START)
+			{
+				//Create treatment marker and add it to the chart
+				var sensorStartMarker:SensorMarker = new SensorMarker(treatment);
+				sensorStartMarker.x = (sensorStartMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				sensorStartMarker.y = _graphHeight - (sensorStartMarker.radius * 1.66) - ((sensorStartMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				
+				sensorStartMarker.index = treatmentsList.length;
+				treatmentsList.push(sensorStartMarker);
+				treatmentsMap[treatment.ID] = sensorStartMarker;
+				
+				chartTreatment = sensorStartMarker;
+			}
 			
 			if (mainChartMask != null && mainChartContainer != null) //Make mask appear in front of everything except the timeline
 			{
@@ -992,6 +1005,10 @@ package ui.chart
 					
 					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check') + "\n" + glucoseValue + " " + glucoseUnit;
 				}
+				else if (treatment.treatment.type == Treatment.TYPE_SENSOR_START)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_sensor_start');
+				}
 				
 				if (treatmentValue != "")
 				{
@@ -1013,6 +1030,9 @@ package ui.chart
 				treatmentContainer.addChild(time);
 				treatmentContainer.addChild(timeSpacer);
 				
+				if (treatment.treatment.type == Treatment.TYPE_SENSOR_START || (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note")))
+					time.isEnabled = false;
+					
 				if (treatmentNotes != "")
 				{
 					var notes:Label = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
@@ -1026,18 +1046,21 @@ package ui.chart
 				{
 					if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 					{
-						var actionsLayout:HorizontalLayout = new HorizontalLayout();
-						actionsLayout.gap = 5;
-						var actionsContainer:LayoutGroup = new LayoutGroup();
-						actionsContainer.layout = actionsLayout;
-						
-						var moveBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
-						moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
-						actionsContainer.addChild(moveBtn);
-						var deleteBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
-						deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
-						actionsContainer.addChild(deleteBtn);
-						treatmentContainer.addChild(actionsContainer);
+						if (treatment.treatment.type != Treatment.TYPE_SENSOR_START)
+						{
+							var actionsLayout:HorizontalLayout = new HorizontalLayout();
+							actionsLayout.gap = 5;
+							var actionsContainer:LayoutGroup = new LayoutGroup();
+							actionsContainer.layout = actionsLayout;
+							
+							var moveBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
+							moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+							actionsContainer.addChild(moveBtn);
+							var deleteBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
+							deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+							actionsContainer.addChild(deleteBtn);
+							treatmentContainer.addChild(actionsContainer);
+						}
 					}
 				}
 				
@@ -1143,7 +1166,7 @@ package ui.chart
 					else
 					{
 						//Treatment is still valid. Reposition it.
-						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_SENSOR_START || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 						{
 							var generalTreatmentX:Number = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 							var generalTreatmentY:Number = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
