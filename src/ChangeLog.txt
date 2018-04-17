@@ -1,4 +1,6 @@
 1.1.6
+FEATURE: CLick & hold the pie chart and No Lock + Fullscreen view will automatically activate.
+FEATURE: Ability to round mg/dL values on the chart view. Activate this option in Settings -> General.
 ENHANCEMENT: Added instructions in Settings -> Integration -> Internal HTTP Server for connecting FitBit watches to Spike.
 ENHANCEMENT: User email and name, when filling a bug report, will now be saved in database so the user doesn't have to fill them again on subsequent bug reports. (Johan)
 ENHANCEMENT: Ability to set default snooze time in alerts up to 9.999 minutes (165.65 hours)

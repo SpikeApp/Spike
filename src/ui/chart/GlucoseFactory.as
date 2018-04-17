@@ -31,7 +31,10 @@ package ui.chart
 			{
 				if (glucoseUnit == "mg/dL")
 				{
-					glucoseValueFormatted = Math.round(glucoseValue * 10) / 10;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON) != "true")
+						glucoseValueFormatted = Math.round(glucoseValue * 10) / 10;
+					else
+						glucoseValueFormatted = Math.round(glucoseValue);
 					glucoseOutput = String( glucoseValueFormatted );
 				}
 				else
@@ -47,7 +50,12 @@ package ui.chart
 			else
 			{
 				if (glucoseUnit == "mg/dL")
-					glucoseValueFormatted = Math.round(glucoseValue * 10) / 10;
+				{
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON) != "true")
+						glucoseValueFormatted = Math.round(glucoseValue * 10) / 10;
+					else
+						glucoseValueFormatted = Math.round(glucoseValue);
+				}
 				else
 					glucoseValueFormatted = Math.round(BgReading.mgdlToMmol(glucoseValue) * 10) / 10;
 				
