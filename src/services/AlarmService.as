@@ -1275,6 +1275,8 @@ package services
 						 ||
 						 (BlueToothDevice.isMiaoMiao() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) > 0))
 						 ||
+						 (BlueToothDevice.isxBridgeR() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL)) > 0))
+						 ||
 						 (BlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown"))) {
 						 myTrace("in checkAlarms, battery level is too low");
 						 fireAlert(
