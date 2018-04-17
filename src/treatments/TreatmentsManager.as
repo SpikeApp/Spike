@@ -308,7 +308,7 @@ package treatments
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, treatment));
 				
 				//Delete from Nightscout
-				if (updateNightscout)
+				if (updateNightscout && NightscoutService.serviceActive)
 					NightscoutService.deleteTreatment(treatment);
 				
 				//Delete from databse
@@ -352,6 +352,19 @@ package treatments
 				//Upload to Nightscout
 				if (uploadToNightscout)
 					NightscoutService.uploadTreatment(treatment);
+			}
+		}
+		
+		public static function deleteInternalCalibration(timestamp:Number):void
+		{
+			for (var i:int = 0; i < treatmentsList.length; i++) 
+			{
+				var treatment:Treatment = treatmentsList[i] as Treatment;
+				if (treatment.timestamp == timestamp && treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.note == ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
+				{
+					deleteTreatment(treatment);
+					break;
+				}
 			}
 		}
 		

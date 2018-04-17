@@ -32,6 +32,8 @@ package ui.screens.display.sensor
 	
 	import starling.events.Event;
 	
+	import treatments.TreatmentsManager;
+	
 	import ui.AppInterface;
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
@@ -397,6 +399,15 @@ package ui.screens.display.sensor
 			
 			function deleteAllCalibrations(e:Event):void
 			{
+				//Delete from treatments
+				var allCalibrations:Array = Calibration.allForSensor();
+				for (var i:int = 0; i < allCalibrations.length; i++) 
+				{
+					var calibration:Calibration = allCalibrations[i] as Calibration;
+					TreatmentsManager.deleteInternalCalibration(calibration.timestamp);
+				}
+				
+				//Restart the sensor (this will reset all current calibrations)
 				var currentSensorTimestamp:Number = Sensor.getActiveSensor().startedAt;
 				Sensor.stopSensor();
 				NightscoutService.uploadSensorStart = false;
@@ -427,6 +438,7 @@ package ui.screens.display.sensor
 			{
 				var lastCalibration:Calibration = Calibration.last();
 				Database.deleteCalibrationSynchronous(lastCalibration);
+				TreatmentsManager.deleteInternalCalibration(lastCalibration.timestamp);
 				setupInitialState();
 				setupContent();
 			}
