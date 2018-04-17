@@ -91,7 +91,8 @@ package
 				error.indexOf("PickerList/closeList()") != -1 ||
 				error.indexOf("JSONParseError") != -1 ||
 				error.indexOf("starling.display.graphics::Graphic/render()") != -1 ||
-				error.indexOf("starling.rendering::VertexData/createVertexBuffer()") != -1
+				error.indexOf("starling.rendering::VertexData/createVertexBuffer()") != -1 ||
+				error.indexOf("RangeError: Error #1125 at BatchProcessor/getBatchAt() at starling.rendering::Painter/drawFromCache()") != -1
 				)
 			{
 				return;
@@ -99,7 +100,7 @@ package
 			
 			var now:Number = new Date().valueOf();
 			
-			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life
+			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life and not SPAM our email
 			if (now - lastCrashReportTimestamp < TIME_1_MINUTE)
 				return;
 			

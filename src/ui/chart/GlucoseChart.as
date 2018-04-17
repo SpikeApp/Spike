@@ -2043,13 +2043,16 @@ package ui.chart
 			else if (chartType == SCROLLER_CHART)
 				sourceList = scrollChartGlucoseMarkersList;
 			
+			if (sourceList == null || sourceList.length == 0)
+				return;
+			
 			//Loop all markers, draw the line from their positions and also hide the markers
 			var previousGlucoseMarker:GlucoseMarker;
 			var dataLength:int = sourceList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var glucoseMarker:GlucoseMarker = sourceList[i];
-				if (glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !BlueToothDevice.isFollower()))
+				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !BlueToothDevice.isFollower()))
 					continue;
 				
 				var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
@@ -2101,15 +2104,15 @@ package ui.chart
 			line.touchable = false;
 			
 			//Add line to display list
-			if(chartType == MAIN_CHART)
+			if(chartType == MAIN_CHART && mainChart != null)
 				mainChart.addChild(line);
-			else if(chartType == SCROLLER_CHART)
+			else if(chartType == SCROLLER_CHART && scrollerChart != null)
 				scrollerChart.addChild(line);
 			
 			//Save line references for later use
-			if(chartType == MAIN_CHART)
+			if(chartType == MAIN_CHART && mainChartLineList != null)
 				mainChartLineList.push(line);
-			else if (chartType == SCROLLER_CHART)
+			else if (chartType == SCROLLER_CHART && scrollerChartLineList != null)
 				scrollerChartLineList.push(line);
 		}
 		
