@@ -88,7 +88,8 @@ package
 				error.indexOf("ioError") != -1 ||
 				error.indexOf("Unexpected < encountered") != -1 ||
 				error.indexOf("Unexpected T encountered") != -1 ||
-				error.indexOf("PickerList/closeList()") != -1
+				error.indexOf("PickerList/closeList()") != -1 ||
+				error.indexOf("JSONParseError") != -1
 				)
 			{
 				return;

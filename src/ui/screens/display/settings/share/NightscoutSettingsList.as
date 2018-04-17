@@ -84,6 +84,7 @@ package ui.screens.display.settings.share
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				nsURL.width = 190;
 			nsURL.text = selectedURL;
+			nsURL.prompt = "yoursite.example.com";
 			nsURL.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			nsURL.addEventListener(Event.CHANGE, onSettingsChanged);
 			
