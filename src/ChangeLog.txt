@@ -1,8 +1,10 @@
 1.1.6
 ENHANCEMENT: Added instructions in Settings -> Integration -> Internal HTTP Server for connecting FitBit watches to Spike.
-ENHANCEMENT: User email and name, when filling a bug report, will now be saved in databse so the user doesn't have to fill them again on subsequent bug reports. (Johan)
+ENHANCEMENT: User email and name, when filling a bug report, will now be saved in database so the user doesn't have to fill them again on subsequent bug reports. (Johan)
 ENHANCEMENT: Ability to set default snooze time in alerts up to 9.999 minutes (165.65 hours)
 ENHANCEMENT: You can now use Dexcom share even with non Dexcom transmitters like MiaoMiao, BluCon, etc... Read instructions in Settings -> Share -> Dexcom Share.
+ENHANCEMENT: Support for BlueReader battery info (Johan)
+ENHANCEMENT: Support for MiaoMiao, BlueReader and Transmiter PL low battery alarms.
 FIX: Bug introduced in version 1.1.5 that would not show the alarm snoozer when the user swiped the lock screen notification.
 FIX: Sometimes Dexcom Share service would not automatically start after setting it for the first time and would require the user to restart Spike. This is now fixed.
 FIX: Several overall fixes for small bugs that we were able to catch due to the Global Exception Handling feature intriduced in version 1.1.5.

@@ -8,7 +8,6 @@ package ui.chart
 	import flash.system.System;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
-	import flash.utils.setTimeout;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -2119,6 +2118,9 @@ package ui.chart
 			if (currentNumberOfMakers == previousNumberOfMakers && !displayLatestBGValue)
 				return;
 			
+			if (glucoseValueDisplay == null || glucoseTimeAgoPill == null || glucoseSlopePill == null || glucoseDelimiter == null)
+				return;
+			
 			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 				return;
 
@@ -2126,7 +2128,7 @@ package ui.chart
 			
 			if (!displayLatestBGValue && !dummyModeActive)
 			{
-				if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || selectedGlucoseMarkerIndex == mainChartGlucoseMarkersList.length - 1)
+				if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || selectedGlucoseMarkerIndex == mainChartGlucoseMarkersList.length - 1 || mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex + 1] == null || mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex] == null || mainChartGlucoseMarkersList[0] == null)
 					return;
 				
 				var nextMarker:GlucoseMarker = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex + 1] as GlucoseMarker;
@@ -2146,7 +2148,7 @@ package ui.chart
 					var firstAvailableTimestamp:Number = (mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp;
 					var currentTimelineTimestamp:Number = firstAvailableTimestamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin) + (mainChartGlucoseMarkerRadius * 2)) / mainChartXFactor);
 					var previousMaker:GlucoseMarker = null;
-					if (selectedGlucoseMarkerIndex > 0)
+					if (selectedGlucoseMarkerIndex > 0 && mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex - 1] != null)
 						previousMaker = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex - 1] as GlucoseMarker;
 				}
 				

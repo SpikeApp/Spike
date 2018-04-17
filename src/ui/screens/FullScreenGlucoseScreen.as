@@ -224,8 +224,22 @@ package ui.screens
 				timeAgoColor = oldColor
 				
 			}
-			else if (glucoseList == null || glucoseList.length == 1)
+			else if (glucoseList.length == 1)
 			{
+				if (glucoseList[0] == null)
+				{
+					//NO BGREADINGS AVAILABLE
+					latestGlucoseOutput = "---";
+					latestGlucoseColor = oldColor;
+					latestGlucoseSlopeArrow = "";
+					latestSlopeArrowColor = oldColor;
+					latestGlucoseSlopeOutput = "";
+					latestSlopeInfoColor = oldColor;
+					timeAgoOutput = "";
+					timeAgoColor = oldColor
+					return;
+				}
+				
 				//Timestamp
 				latestGlucoseTimestamp = glucoseList[0].timestamp;
 				
@@ -268,6 +282,9 @@ package ui.screens
 			}
 			else if (glucoseList.length > 1)
 			{
+				if (glucoseList[glucoseList.length - 2] == null || glucoseList[glucoseList.length - 1] == null)
+					return;
+				
 				//Timestamps
 				previousGlucoseTimestamp = glucoseList[glucoseList.length - 2].timestamp;
 				latestGlucoseTimestamp = glucoseList[glucoseList.length - 1].timestamp;

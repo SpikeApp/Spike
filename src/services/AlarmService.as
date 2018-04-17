@@ -1492,7 +1492,7 @@ package services
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
-			 if (alertType.enabled) {
+			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
 				 if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||

@@ -120,6 +120,9 @@ package utils
 		
 		private static function formatData():void
 		{
+			if (readingsList == null)
+				return;
+			
 			Trace.myTrace("SiDiary.as", "Formatting data...");
 			
 			//Process glucose output
@@ -129,6 +132,9 @@ package utils
 			var newData:Boolean = false;
 			for(var i:int = readingsList.length - 1 ; i >= 0; i--)
 			{
+				if (readingsList[i] == null)
+					continue;
+				
 				if (readingsList[i].timestamp > lastExportTimeStamp) 
 				{
 					if (readingsList[i].calculatedValue != 0) 
@@ -158,10 +164,17 @@ package utils
 			output = outputArray.join("");
 			
 			//Clean up memory
-			readingsList.length = 0;
-			readingsList = null;
-			outputArray.length = 0;
-			outputArray = null;
+			if (readingsList != null)
+			{
+				readingsList.length = 0;
+				readingsList = null;
+			}
+			
+			if (outputArray != null)
+			{
+				outputArray.length = 0;
+				outputArray = null;
+			}
 			
 			//Warn listeners
 			_instance.dispatchEventWith(starling.events.Event.COMPLETE);
@@ -250,6 +263,9 @@ package utils
 		
 		private static function closeCallout():void
 		{
+			if (siDiarySenderCallout == null)
+				return;
+			
 			//Close the callout
 			if (PopUpManager.isPopUp(siDiarySenderCallout))
 				PopUpManager.removePopUp(siDiarySenderCallout, true);
