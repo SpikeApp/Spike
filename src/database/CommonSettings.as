@@ -348,6 +348,7 @@
 		 public static const COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP:int = 121;
 		 
 		 /**
+<<<<<<< HEAD
 		  * Treatments
 		  */
 		 public static const COMMON_SETTING_TREATMENTS_ENABLED:int = 122;
@@ -376,7 +377,6 @@
 		  */
 		 public static const COMMON_SETTING_XBRIDGER_BATTERY_LEVEL:int = 135;
 		 
-
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
 			 "0",//COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE
@@ -514,6 +514,8 @@
 			 "false",//COMMON_SETTING_CHART_ROUND_MGDL_ON
 			 "0",//COMMON_SETTING_BLUEREADER_FULL_BATTERY
 			 "0"//COMMON_SETTING_XBRIDGER_BATTERY_LEVEL
+			 "0",//COMMON_SETTING_BLUEREADER_FULL_BATTERY
+			 ""//COMMON_SETTING_XBRIDGER_BATTERY_LEVEL
 		 ];
 
 		 public function CommonSettings()
