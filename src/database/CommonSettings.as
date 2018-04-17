@@ -374,7 +374,6 @@
 		  * xbrdiger battery level
 		  */
 		 public static const COMMON_SETTING_XBRIDGER_BATTERY_LEVEL:int = 135;
-		 
 
 		 /**
 		 * warning will be given after 14 days that sensor is about to expire, can still last for 12 hours after that 
