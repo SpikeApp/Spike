@@ -57,7 +57,6 @@ package model
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
-	import ui.popups.AlarmSnoozer;
 	import ui.popups.AlertManager;
 	
 	import utils.Constants;

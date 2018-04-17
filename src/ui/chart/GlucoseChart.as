@@ -950,8 +950,8 @@ package ui.chart
 			if (yAxisHeight > 0 && chartTreatment.y + chartTreatment.height > yAxisHeight - 5) //Lower Area
 				chartTreatment.labelUp();
 			
-			if (chartTreatment.y < -2) //Upper Area
-				chartTreatment.y = -2;
+			if (chartTreatment.y < 0) //Upper Area
+				chartTreatment.y = 0;
 			
 			//Add treatment
 			chartTreatment.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
@@ -1180,7 +1180,7 @@ package ui.chart
 							}
 							else
 							{
-								var generalTreatmentTween:Tween = new Tween(treatment, 0.5, Transitions.EASE_OUT_BACK);
+								var generalTreatmentTween:Tween = new Tween(treatment, 0.6, Transitions.EASE_OUT_BACK);
 								generalTreatmentTween.moveTo(generalTreatmentX, generalTreatmentY);
 								generalTreatmentTween.onComplete = function():void
 								{
@@ -1207,7 +1207,7 @@ package ui.chart
 							}
 							else
 							{
-								var noteTween:Tween = new Tween(treatment, 0.5, Transitions.EASE_OUT_BACK);
+								var noteTween:Tween = new Tween(treatment, 0.6, Transitions.EASE_OUT_BACK);
 								noteTween.moveTo(noteX, noteY);
 								noteTween.onComplete = function():void
 								{
@@ -1233,8 +1233,8 @@ package ui.chart
 								else
 									treatment.labelDown();
 								
-								if (treatment.y < -2) //Upper Area
-									treatment.y = -2;
+								if (treatment.y < 0) //Upper Area
+									treatment.y = 0;
 							}
 						}
 					}

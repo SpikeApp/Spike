@@ -159,15 +159,15 @@ package ui.screens
 			{
 				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				{
-					mainChartHeight = availableScreenHeight * 0.31; //30% of available screen size
-					scrollChartHeight = availableScreenHeight / 11; //8% of available screen size
+					mainChartHeight = availableScreenHeight * 0.31; //31% of available screen size
+					scrollChartHeight = availableScreenHeight / 11; //9% of available screen size
 				}
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-					mainChartHeight = availableScreenHeight * 0.39; //39% of available screen size
+					mainChartHeight = availableScreenHeight * 0.42; //42% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-					mainChartHeight = availableScreenHeight * 0.41; //41% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 					mainChartHeight = availableScreenHeight * 0.43; //43% of available screen size
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					mainChartHeight = availableScreenHeight * 0.45; //45% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
 					mainChartHeight = availableScreenHeight * 0.46; //46% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
