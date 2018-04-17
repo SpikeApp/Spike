@@ -376,6 +376,7 @@
 		  * xbrdiger battery level
 		  */
 		 public static const COMMON_SETTING_XBRIDGER_BATTERY_LEVEL:int = 135;
+		 
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR

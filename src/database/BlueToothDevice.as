@@ -206,6 +206,14 @@ package database
 		public static function alwaysScan():Boolean {
 			return (isDexcomG5() || isBluKon()); 
 		}
+
+		public static function needsTransmitterId():Boolean {
+			return (isDexcomG5() || isDexcomG4() || isBluKon() || isxBridgeR());
+		}
+		
+		public static function transmitterIdKnown():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
+		}
 		
 		/**
 		 * Determines if the transmitter is capable of backfilling data. Ex: MiaoMiao & Blucon.<br>
@@ -215,14 +223,6 @@ package database
 		public static function canDoBackfill():Boolean 
 		{
 			return (isBluKon() || isMiaoMiao());
-		}
-
-		public static function needsTransmitterId():Boolean {
-			return (isDexcomG5() || isDexcomG4() || isBluKon() || isxBridgeR());
-		}
-		
-		public static function transmitterIdKnown():Boolean {
-			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
 		}
 		
 		/**
