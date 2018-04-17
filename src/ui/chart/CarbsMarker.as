@@ -15,21 +15,23 @@ package ui.chart
 	
 	public class CarbsMarker extends ChartTreatment
 	{
-		/* Constants */
-		private const FONT_SIZE:int = 11;
-		
 		/* Display Objects */
 		private var label:Label;
 		
 		/* Properties */
+		private var fontSize:int = 11;
 		private var backgroundColor:uint;
 		private var strokeColor:uint;
+		private var initialRadius:Number = 4;
+		private var chartTimeline:Number;
 		
-		public function CarbsMarker(treatment:Treatment)
+		public function CarbsMarker(treatment:Treatment, timeline:Number)
 		{
 			this.treatment = treatment;
 			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			
+			chartTimeline = timeline;
 			
 			draw();
 		}
@@ -37,9 +39,25 @@ package ui.chart
 		private function draw():void
 		{
 			//Radius
-			this.radius = 4 + (treatment.carbs / 6);
+			this.radius = initialRadius + (treatment.carbs / 6);
 			if (radius > 15)
 				radius = 15;
+			
+			if (chartTimeline == GlucoseChart.TIMELINE_6H)
+			{
+				radius *= 0.8;
+				fontSize *= 0.8;
+			}
+			else if (chartTimeline == GlucoseChart.TIMELINE_12H)
+			{
+				radius *= 0.65;
+				fontSize *= 0.7;
+			}
+			else if (chartTimeline == GlucoseChart.TIMELINE_24H)
+			{
+				radius *= 0.5;
+				fontSize *= 0.6;
+			}
 			
 			//Background
 			var carbsMarker:NGon = new NGon(radius, 20, 0, 0, 360);
@@ -57,7 +75,7 @@ package ui.chart
 			addChild(stroke);
 			
 			//Label
-			label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, FONT_SIZE, true);
+			label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
 			label.validate();
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 4;
@@ -67,13 +85,13 @@ package ui.chart
 		override public function labelUp():void
 		{
 			if (label != null)
-				label.y = -label.height + 3;
+				label.y = -label.height + 4;
 		}
 		
 		override public function labelDown():void
 		{
 			if (label != null)
-				label.y = radius * 2 + 3;
+				label.y = radius * 2 + 4;
 		}
 		
 		override public function updateMarker(treatment:Treatment):void

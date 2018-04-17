@@ -15,25 +15,27 @@ package ui.chart
 	
 	public class MealMarker extends ChartTreatment
 	{
-		/* Constants */
-		private const FONT_SIZE:int = 11;
-		
 		/* Display Objects */
 		private var insulinLabel:Label;
 		private var carbsLabel:Label;
 		private var mainLabel:Label;
 		
 		/* Properties */
+		private var fontSize:int = 11;
 		private var backgroundInsulinColor:uint;
 		private var backgroundCarbsColor:uint;
 		private var strokeColor:uint;
+		private var initialRadius:Number = 8;
+		private var chartTimeline:Number;
 		
-		public function MealMarker(treatment:Treatment)
+		public function MealMarker(treatment:Treatment, timeline:Number)
 		{
 			this.treatment = treatment;
 			backgroundInsulinColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
 			backgroundCarbsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			
+			chartTimeline = timeline;
 			
 			draw();
 		}
@@ -41,9 +43,25 @@ package ui.chart
 		private function draw():void
 		{
 			//Radius
-			this.radius = 8 + treatment.insulinAmount;
+			this.radius = initialRadius + treatment.insulinAmount;
 			if (radius > 15)
 				radius = 15;
+			
+			if (chartTimeline == GlucoseChart.TIMELINE_6H)
+			{
+				radius *= 0.8;
+				fontSize *= 0.8;
+			}
+			else if (chartTimeline == GlucoseChart.TIMELINE_12H)
+			{
+				radius *= 0.65;
+				fontSize *= 0.7;
+			}
+			else if (chartTimeline == GlucoseChart.TIMELINE_24H)
+			{
+				radius *= 0.5;
+				fontSize *= 0.6;
+			}
 			
 			//Background
 			var insulinMarker:NGon = new NGon(radius, 20, 0, 90, 270);
@@ -67,19 +85,19 @@ package ui.chart
 			addChild(stroke);
 			
 			//Label
-			insulinLabel = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, FONT_SIZE, true);
+			insulinLabel = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
 			insulinLabel.validate();
 			insulinLabel.x = radius/3 - (insulinLabel.width / 2);
 			insulinLabel.y = radius * 2 + 4;
 			addChild(insulinLabel);
 			
-			carbsLabel = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, FONT_SIZE, true);
+			carbsLabel = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
 			carbsLabel.validate();
 			carbsLabel.x = radius/3 - (carbsLabel.width / 2);
 			carbsLabel.y = -carbsLabel.height + 1;
 			addChild(carbsLabel);
 			
-			mainLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, FONT_SIZE, true);
+			mainLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
 			mainLabel.y = carbsLabel.y;
 			mainLabel.visible = false;
 			addChild(mainLabel);

@@ -16,21 +16,22 @@ package ui.chart
 	
 	public class BGCheckMarker extends ChartTreatment
 	{
-		/* Constants */
-		private const FONT_SIZE:int = 11;
-		
 		/* Display Objects */
 		private var label:Label;
 		
 		/* Properties */
+		private var fontSize:int = 11;
 		private var backgroundColor:uint;
 		private var strokeColor:uint;
+		private var chartTimeline:Number;
 		
-		public function BGCheckMarker(treatment:Treatment)
+		public function BGCheckMarker(treatment:Treatment, timeline:Number)
 		{
 			this.treatment = treatment;
 			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			
+			chartTimeline = timeline;
 			
 			draw();
 		}
@@ -39,6 +40,14 @@ package ui.chart
 		{
 			//Radius
 			this.radius = 6;
+			
+			//Font
+			if (chartTimeline == GlucoseChart.TIMELINE_6H)
+				fontSize *= 0.8;
+			else if (chartTimeline == GlucoseChart.TIMELINE_12H)
+				fontSize *= 0.7;
+			else if (chartTimeline == GlucoseChart.TIMELINE_24H)
+				fontSize *= 0.6;
 			
 			//Background
 			var BGMarker:NGon = new NGon(radius, 20, 0, 0, 360);
@@ -62,7 +71,7 @@ package ui.chart
 			else
 				glucoseValue = Math.round(((BgReading.mgdlToMmol((treatment.glucose))) * 10)) / 10;
 			
-			label = LayoutFactory.createLabel(String(glucoseValue), HorizontalAlign.CENTER, VerticalAlign.TOP, FONT_SIZE, true);
+			label = LayoutFactory.createLabel(String(glucoseValue), HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
 			label.validate();
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 4;
@@ -72,13 +81,13 @@ package ui.chart
 		override public function labelUp():void
 		{
 			if (label != null)
-				label.y = -label.height + 3;
+				label.y = -label.height + 4;
 		}
 		
 		override public function labelDown():void
 		{
 			if (label != null)
-				label.y = radius * 2 + 3;
+				label.y = radius * 2 + 4;
 		}
 		
 		override public function updateMarker(treatment:Treatment):void

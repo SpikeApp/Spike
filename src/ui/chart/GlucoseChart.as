@@ -845,7 +845,7 @@ package ui.chart
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 			{
 				//Create treatment marker and add it to the chart
-				var insulinMarker:InsulinMarker = new InsulinMarker(treatment);
+				var insulinMarker:InsulinMarker = new InsulinMarker(treatment, timelineRange);
 				insulinMarker.x = (insulinMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				insulinMarker.y = _graphHeight - (insulinMarker.radius * 1.66) - ((insulinMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
 				
@@ -861,7 +861,7 @@ package ui.chart
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 			{
 				//Create treatment marker and add it to the chart
-				var carbsMarker:CarbsMarker = new CarbsMarker(treatment);
+				var carbsMarker:CarbsMarker = new CarbsMarker(treatment, timelineRange);
 				carbsMarker.x = (carbsMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				carbsMarker.y = _graphHeight - (carbsMarker.radius * 1.66) - ((carbsMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
 				
@@ -877,7 +877,7 @@ package ui.chart
 			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				//Create treatment marker and add it to the chart
-				var mealMarker:MealMarker = new MealMarker(treatment);
+				var mealMarker:MealMarker = new MealMarker(treatment, timelineRange);
 				mealMarker.x = (mealMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				mealMarker.y = _graphHeight - (mealMarker.radius * 1.66) - ((mealMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
 				
@@ -915,7 +915,7 @@ package ui.chart
 			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
 				//Create treatment marker and add it to the chart
-				var glucoseCheckMarker:BGCheckMarker = new BGCheckMarker(treatment);
+				var glucoseCheckMarker:BGCheckMarker = new BGCheckMarker(treatment, timelineRange);
 				glucoseCheckMarker.x = (glucoseCheckMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				glucoseCheckMarker.y = _graphHeight - (glucoseCheckMarker.radius * 1.66) - ((glucoseCheckMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
 				
