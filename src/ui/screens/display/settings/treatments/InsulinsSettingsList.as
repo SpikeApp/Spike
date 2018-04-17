@@ -1,5 +1,8 @@
 package ui.screens.display.settings.treatments
 {
+	import flash.net.URLRequest;
+	import flash.net.navigateToURL;
+	
 	import feathers.controls.Button;
 	import feathers.controls.Check;
 	import feathers.controls.Label;
@@ -45,6 +48,8 @@ package ui.screens.display.settings.treatments
 		private var cancelInsulinButton:Button;
 		private var actionsContainer:LayoutGroup;
 		private var modeLabel:Label;
+		private var guideContainer:LayoutGroup;
+		private var diaGuideButton:Button;
 		
 		/* Properties */
 		private var userInsulins:Array;
@@ -133,6 +138,16 @@ package ui.screens.display.settings.treatments
 			insulinSettingsExplanation.width = width;
 			insulinSettingsExplanation.paddingTop = insulinSettingsExplanation.paddingBottom = 10;
 			
+			//DIA Guide Button
+			var guideLayout:HorizontalLayout = new HorizontalLayout();
+			guideLayout.horizontalAlign = HorizontalAlign.CENTER;
+			guideContainer = new LayoutGroup();
+			guideContainer.layout = guideLayout;
+			guideContainer.width = width;
+			diaGuideButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','guide_button_label'));
+			diaGuideButton.addEventListener(Event.TRIGGERED, onGuide);
+			guideContainer.addChild(diaGuideButton);
+			
 			//Actions Container
 			var actionsLayout:HorizontalLayout = new HorizontalLayout();
 			actionsLayout.gap = 10;
@@ -194,6 +209,7 @@ package ui.screens.display.settings.treatments
 				data.push( { text: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','default_insulin_label'), accessory: defaultInsulinCheck } );
 				data.push( { text: "", accessory: actionsContainer } );
 				data.push( { text: "", accessory: insulinSettingsExplanation } );
+				data.push( { text: "", accessory: guideContainer } );
 			}
 			
 			dataProvider = new ArrayCollection(data);
@@ -351,6 +367,11 @@ package ui.screens.display.settings.treatments
 			refreshContent();
 		}
 		
+		private function onGuide(e:Event):void
+		{
+			navigateToURL(new URLRequest("https://www.waltzingthedragon.ca/diabetes/managing-bg/adjusting-insulin-pump-duration-of-insulin-action-dia/"));
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -451,6 +472,20 @@ package ui.screens.display.settings.treatments
 				defaultInsulinCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
 				defaultInsulinCheck.dispose();
 				defaultInsulinCheck = null;
+			}
+			
+			if (diaGuideButton != null)
+			{
+				diaGuideButton.removeFromParent();
+				diaGuideButton.removeEventListener(Event.TRIGGERED, onGuide);
+				diaGuideButton.dispose();
+				diaGuideButton = null;
+			}
+			
+			if (guideContainer != null)
+			{
+				guideContainer.dispose();
+				guideContainer = null;
 			}
 			
 			super.dispose();

@@ -91,7 +91,7 @@ package ui.screens.display.settings.treatments
 			actionContainer.layout = actionLayout;
 			actionContainer.width = width;
 			
-			guide = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','carb_absorption_rate_guide'));
+			guide = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','guide_button_label'));
 			guide.addEventListener(Event.TRIGGERED, onGuide);
 			actionContainer.addChild(guide);
 			
