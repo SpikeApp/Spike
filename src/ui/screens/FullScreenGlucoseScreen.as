@@ -6,6 +6,7 @@ package ui.screens
 	import flash.events.TimerEvent;
 	import flash.system.System;
 	import flash.utils.Timer;
+	import flash.utils.getTimer;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -32,6 +33,9 @@ package ui.screens
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.Touch;
+	import starling.events.TouchEvent;
+	import starling.events.TouchPhase;
 	import starling.utils.Align;
 	
 	import ui.AppInterface;
@@ -87,6 +91,7 @@ package ui.screens
 		private var latestGlucoseProperties:Object;
 		private var latestGlucoseValueFormatted:Number;
 		private var previousGlucoseValueFormatted:Number;
+		private var touchTimer:Number;
 		
 		public function FullScreenGlucoseScreen() 
 		{
@@ -181,6 +186,7 @@ package ui.screens
 		{
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived, false, 0, true);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, 0, true);
+			this.addEventListener(TouchEvent.TOUCH, onTouch);
 		}
 		
 		private function updateInfo():void
@@ -522,6 +528,37 @@ package ui.screens
 			}
 		}
 		
+		private function onTouch (e:TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				touchTimer = getTimer();
+				addEventListener(starling.events.Event.ENTER_FRAME, onHold);
+			}
+			
+			if(touch != null && touch.phase == TouchPhase.ENDED)
+			{
+				touchTimer = Number.NaN;
+				removeEventListener(starling.events.Event.ENTER_FRAME, onHold);
+			}
+		}
+		
+		private function onHold(e:starling.events.Event):void
+		{
+			if (isNaN(touchTimer))
+				return;
+			
+			if (getTimer() - touchTimer > 1000)
+			{
+				touchTimer = Number.NaN;
+				removeEventListener(starling.events.Event.ENTER_FRAME, onHold);
+				
+				//Pop screen
+				onBackButtonTriggered(null);
+			}
+		}
+		
 		override protected function onBackButtonTriggered(event:starling.events.Event):void
 		{
 			//Pop this screen off
@@ -548,6 +585,7 @@ package ui.screens
 		{
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
+			this.removeEventListener(TouchEvent.TOUCH, onTouch);
 			
 			if(glucoseDisplay != null)
 			{
