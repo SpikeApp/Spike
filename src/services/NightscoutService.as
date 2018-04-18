@@ -76,8 +76,10 @@ package services
 		private static const TIME_5_MINUTES_10_SECONDS:int = (5 * 60 * 1000) + 10000;
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		private static const TIME_4_MINUTES_30_SECONDS:int = (4 * 60 * 1000) + 30000;
+		private static const TIME_1_MINUTE:int = 60 * 1000;
 		private static const TIME_30_SECONDS:int = 30000;
 		private static const TIME_10_SECONDS:int = 10000;
+		private static const TIME_5_SECONDS:int = 6000;
 		
 		/* Logical Variables */
 		private static var serviceStarted:Boolean = false;
@@ -270,11 +272,17 @@ package services
 			if(latestGlucoseReading == null || (latestGlucoseReading.calculatedValue == 0 && latestGlucoseReading.calibration == null))
 				return;
 			
+			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
 			
-			//Only start uploading bg reading if it's newer than 6 minutes. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last reading. The previous readings will still be uploaded because they reside in the queue array.
-			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_6_MINUTES)
-				syncGlucoseReadings();
+			//Only start uploading bg reading if it's newer than 1 minute. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last reading. The previous readings will still be uploaded because they reside in the queue array.
+			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_1_MINUTE)
+			{
+				if (!BlueToothDevice.canDoBackfill()) //No backfill transmitter, sync immediately
+					syncGlucoseReadings();
+				else //Backfill transmitter. Wait 5 seconds to process all data
+					setTimeout(syncGlucoseReadings, TIME_5_SECONDS);
+			}
 		}
 		
 		private static function onUploadGlucoseReadingsComplete(e:Event):void

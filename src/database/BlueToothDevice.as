@@ -200,6 +200,16 @@ package database
 		public static function alwaysScan():Boolean {
 			return (isDexcomG5() || isBluKon()); 
 		}
+		
+		/**
+		 * Determines if the transmitter is capable of backfilling data. Ex: MiaoMiao & Blucon.<br>
+		 * Important when syncing data to online services so all readings are uploaded.
+		 *  
+		 */
+		public static function canDoBackfill():Boolean 
+		{
+			return (isBluKon() || isMiaoMiao());
+		}
 
 		/**
 		 * if name contains BRIDGE (case insensitive) then returns true<br>

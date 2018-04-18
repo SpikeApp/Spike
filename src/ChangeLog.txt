@@ -9,6 +9,7 @@ ENHANCEMENT: Support for BlueReader battery info. (Johan)
 ENHANCEMENT: Support for MiaoMiao, BlueReader and Transmiter PL low battery alarms.
 FIX: Bug introduced in version 1.1.5 that would not show the alarm snoozer when the user swiped the lock screen notification has been fixed. Sorry about that!
 FIX: Sometimes Dexcom Share service would not automatically start after setting it for the first time and would require the user to restart Spike. This is now fixed.
+FIX: After receiving backfill data (MiaoMiao & Blucon) the most recent reading was not uploaded to Nightscout / Dexcom Share.
 FIX: Several overall fixes for small bugs that we were able to catch due to the Global Exception Handling feature introduced in version 1.1.5.
 
 1.1.5

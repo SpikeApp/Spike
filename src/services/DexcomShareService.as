@@ -72,7 +72,8 @@ package services
 		private static const RETRY_TIME_FOR_MAX_AUTHENTICATION_RETRIES:Number = 10 * 60 * 1000;
 		private static const MAX_RETRIES_FOR_MONITORING_SESSION_NOT_ACTIVE:int = 5;
 		private static const MAX_RETRIES_FOR_SESSION_NOT_VALID:int = 10;
-		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
+		private static const TIME_1_MINUTE:int = 60 * 1000;
+		private static const TIME_5_SECONDS:int = 5000;
 		
 		/* Data Objects */
 		private static var activeGlucoseReadings:Array = [];
@@ -509,9 +510,14 @@ package services
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
 			
-			//Only start uploading bg reading if it's newer than 6 minutes. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last readings. The previous readings will still be uploaded because the reside in the queue array.
-			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_6_MINUTES)
-				syncGlucoseReadings();
+			//Only start uploading bg reading if it's newer than 1 minute. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last readings. The previous readings will still be uploaded because the reside in the queue array.
+			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_1_MINUTE)
+			{
+				if (!BlueToothDevice.canDoBackfill()) //No backfill transmitter, sync immediately
+					syncGlucoseReadings();
+				else //Backfill transmitter. Wait 5 seconds to process all data
+					setTimeout(syncGlucoseReadings, TIME_5_SECONDS);
+			}
 		}
 		
 		/**
