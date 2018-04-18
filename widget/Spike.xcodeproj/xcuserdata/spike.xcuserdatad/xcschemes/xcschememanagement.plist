@@ -11,6 +11,13 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>fswidget.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<true/>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
 		<key>widget.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -37,6 +44,11 @@
 			<true/>
 		</dict>
 		<key>1C510152202806D600872D37</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>9654C7F12087C35F0021B684</key>
 		<dict>
 			<key>primary</key>
 			<true/>

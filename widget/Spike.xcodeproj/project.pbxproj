@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1C1BF16920283AC200AFFCFE /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C1BF16820283AC200AFFCFE /* HealthKit.framework */; };
 		1C510122202806B400872D37 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C510121202806B400872D37 /* AppDelegate.swift */; };
 		1C510124202806B400872D37 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C510123202806B400872D37 /* ViewController.swift */; };
 		1C510127202806B400872D37 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1C510125202806B400872D37 /* Main.storyboard */; };
@@ -19,10 +18,17 @@
 		1C510159202806D600872D37 /* TodayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C510158202806D600872D37 /* TodayViewController.swift */; };
 		1C51015C202806D600872D37 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1C51015A202806D600872D37 /* MainInterface.storyboard */; };
 		1C510160202806D600872D37 /* widget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 1C510153202806D600872D37 /* widget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		1C64279620283B1500F768A5 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C1BF16820283AC200AFFCFE /* HealthKit.framework */; };
 		1CB729D72029FD3500965219 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
 		677BE12171EF0760555A41F4 /* Pods_widget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68C880EB4875714A3910DFCC /* Pods_widget.framework */; };
 		89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */; };
+		9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C510155202806D600872D37 /* NotificationCenter.framework */; };
+		9654C7F62087C35F0021B684 /* TodayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9654C7F52087C35F0021B684 /* TodayViewController.swift */; };
+		9654C7F92087C35F0021B684 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9654C7F72087C35F0021B684 /* MainInterface.storyboard */; };
+		9654C7FD2087C35F0021B684 /* fswidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9654C7F22087C35F0021B684 /* fswidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9654C8022087C8790021B684 /* Pods_widget.framework */; };
+		9654C8042087C8DB0021B684 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
+		9654C8072087CEE80021B684 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9654C8062087CEE80021B684 /* HealthKit.framework */; };
+		9662AEFC2087D10B00DCCEEE /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9654C8062087CEE80021B684 /* HealthKit.framework */; };
 		A9F0B0D10FA7E63562B1D19D /* Pods_SpikeTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */; };
 		DE6AF41AC6B6BE56B457596D /* Pods_SpikeUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4F850F9FEC9EE7AB5D05EB4 /* Pods_SpikeUITests.framework */; };
 /* End PBXBuildFile section */
@@ -49,6 +55,13 @@
 			remoteGlobalIDString = 1C510152202806D600872D37;
 			remoteInfo = widget;
 		};
+		9654C7FB2087C35F0021B684 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1C510116202806B400872D37 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9654C7F12087C35F0021B684;
+			remoteInfo = fswidget;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -59,6 +72,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				1C510160202806D600872D37 /* widget.appex in Embed App Extensions */,
+				9654C7FD2087C35F0021B684 /* fswidget.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -70,7 +84,6 @@
 		117E2791DB6229727B351CB0 /* Pods-SpikeUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SpikeUITests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SpikeUITests/Pods-SpikeUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		1C1BF16320283A0400AFFCFE /* Spike.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Spike.entitlements; sourceTree = "<group>"; };
 		1C1BF16620283A1200AFFCFE /* widget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = widget.entitlements; sourceTree = "<group>"; };
-		1C1BF16820283AC200AFFCFE /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		1C51011E202806B400872D37 /* Spike.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Spike.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C510121202806B400872D37 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1C510123202806B400872D37 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -99,6 +112,13 @@
 		68C880EB4875714A3910DFCC /* Pods_widget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_widget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SpikeTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		814206E8BCE86FF5796BA541 /* Pods-SpikeTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SpikeTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-SpikeTests/Pods-SpikeTests.release.xcconfig"; sourceTree = "<group>"; };
+		9654C7F22087C35F0021B684 /* fswidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = fswidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		9654C7F52087C35F0021B684 /* TodayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewController.swift; sourceTree = "<group>"; };
+		9654C7F82087C35F0021B684 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
+		9654C7FA2087C35F0021B684 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9654C8022087C8790021B684 /* Pods_widget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_widget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9654C8052087CED70021B684 /* fswidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = fswidget.entitlements; sourceTree = "<group>"; };
+		9654C8062087CEE80021B684 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		F4F850F9FEC9EE7AB5D05EB4 /* Pods_SpikeUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SpikeUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Spike.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -109,7 +129,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */,
-				1C64279620283B1500F768A5 /* HealthKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,9 +152,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C1BF16920283AC200AFFCFE /* HealthKit.framework in Frameworks */,
+				9662AEFC2087D10B00DCCEEE /* HealthKit.framework in Frameworks */,
 				1C510156202806D600872D37 /* NotificationCenter.framework in Frameworks */,
 				677BE12171EF0760555A41F4 /* Pods_widget.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9654C7EF2087C35F0021B684 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9654C8072087CEE80021B684 /* HealthKit.framework in Frameworks */,
+				9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */,
+				9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,6 +193,7 @@
 				1C510135202806B400872D37 /* SpikeTests */,
 				1C510140202806B500872D37 /* SpikeUITests */,
 				1C510157202806D600872D37 /* widget */,
+				9654C7F42087C35F0021B684 /* fswidget */,
 				1C510154202806D600872D37 /* Frameworks */,
 				1C51011F202806B400872D37 /* Products */,
 				159374CBD986CFFF1D3A83EF /* Pods */,
@@ -177,6 +207,7 @@
 				1C510132202806B400872D37 /* SpikeTests.xctest */,
 				1C51013D202806B500872D37 /* SpikeUITests.xctest */,
 				1C510153202806D600872D37 /* widget.appex */,
+				9654C7F22087C35F0021B684 /* fswidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -217,7 +248,8 @@
 		1C510154202806D600872D37 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1C1BF16820283AC200AFFCFE /* HealthKit.framework */,
+				9654C8062087CEE80021B684 /* HealthKit.framework */,
+				9654C8022087C8790021B684 /* Pods_widget.framework */,
 				1C510155202806D600872D37 /* NotificationCenter.framework */,
 				FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */,
 				6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */,
@@ -247,6 +279,17 @@
 			path = Classes;
 			sourceTree = "<group>";
 		};
+		9654C7F42087C35F0021B684 /* fswidget */ = {
+			isa = PBXGroup;
+			children = (
+				9654C8052087CED70021B684 /* fswidget.entitlements */,
+				9654C7F52087C35F0021B684 /* TodayViewController.swift */,
+				9654C7F72087C35F0021B684 /* MainInterface.storyboard */,
+				9654C7FA2087C35F0021B684 /* Info.plist */,
+			);
+			path = fswidget;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -267,6 +310,7 @@
 			);
 			dependencies = (
 				1C51015F202806D600872D37 /* PBXTargetDependency */,
+				9654C7FC2087C35F0021B684 /* PBXTargetDependency */,
 			);
 			name = Spike;
 			productName = Spike;
@@ -334,6 +378,23 @@
 			productReference = 1C510153202806D600872D37 /* widget.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		9654C7F12087C35F0021B684 /* fswidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9654C8002087C35F0021B684 /* Build configuration list for PBXNativeTarget "fswidget" */;
+			buildPhases = (
+				9654C7EE2087C35F0021B684 /* Sources */,
+				9654C7EF2087C35F0021B684 /* Frameworks */,
+				9654C7F02087C35F0021B684 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = fswidget;
+			productName = fswidget;
+			productReference = 9654C7F22087C35F0021B684 /* fswidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -378,6 +439,18 @@
 							};
 						};
 					};
+					9654C7F12087C35F0021B684 = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
+						};
+					};
 				};
 			};
 			buildConfigurationList = 1C510119202806B400872D37 /* Build configuration list for PBXProject "Spike" */;
@@ -397,6 +470,7 @@
 				1C510131202806B400872D37 /* SpikeTests */,
 				1C51013C202806B500872D37 /* SpikeUITests */,
 				1C510152202806D600872D37 /* widget */,
+				9654C7F12087C35F0021B684 /* fswidget */,
 			);
 		};
 /* End PBXProject section */
@@ -431,6 +505,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				1C51015C202806D600872D37 /* MainInterface.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9654C7F02087C35F0021B684 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9654C7F92087C35F0021B684 /* MainInterface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -669,6 +751,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9654C7EE2087C35F0021B684 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9654C7F62087C35F0021B684 /* TodayViewController.swift in Sources */,
+				9654C8042087C8DB0021B684 /* UIColor+colorFromHex.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -686,6 +777,11 @@
 			isa = PBXTargetDependency;
 			target = 1C510152202806D600872D37 /* widget */;
 			targetProxy = 1C51015E202806D600872D37 /* PBXContainerItemProxy */;
+		};
+		9654C7FC2087C35F0021B684 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9654C7F12087C35F0021B684 /* fswidget */;
+			targetProxy = 9654C7FB2087C35F0021B684 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -710,6 +806,14 @@
 			isa = PBXVariantGroup;
 			children = (
 				1C51015B202806D600872D37 /* Base */,
+			);
+			name = MainInterface.storyboard;
+			sourceTree = "<group>";
+		};
+		9654C7F72087C35F0021B684 /* MainInterface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9654C7F82087C35F0021B684 /* Base */,
 			);
 			name = MainInterface.storyboard;
 			sourceTree = "<group>";
@@ -970,6 +1074,42 @@
 			};
 			name = Release;
 		};
+		9654C7FE2087C35F0021B684 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				INFOPLIST_FILE = fswidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.fswidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9654C7FF2087C35F0021B684 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				INFOPLIST_FILE = fswidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.fswidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1014,6 +1154,15 @@
 			buildConfigurations = (
 				1C510162202806D600872D37 /* Debug */,
 				1C510163202806D600872D37 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9654C8002087C35F0021B684 /* Build configuration list for PBXNativeTarget "fswidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9654C7FE2087C35F0021B684 /* Debug */,
+				9654C7FF2087C35F0021B684 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
