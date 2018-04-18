@@ -7,6 +7,7 @@ package treatments
 	
 	import model.ModelLocator;
 	
+	import utils.Trace;
 	import utils.UniqueId;
 
 	public class ProfileManager
@@ -24,6 +25,8 @@ package treatments
 		
 		public static function init():void
 		{
+			Trace.myTrace("ProfileManager.as", "init called!");
+			
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				//Common variables
@@ -53,7 +56,11 @@ package treatments
 						insulinsMap[dbInsulin.id] = insulin;
 					}
 					insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
+					
+					Trace.myTrace("ProfileManager.as", "Got insulns from database!");
 				}
+				else
+					Trace.myTrace("ProfileManager.as", "No insulins stored in database!");
 				
 				//Get Profiles
 				var dbProfiles:Array = Database.getProfilesSynchronous();
@@ -82,10 +89,16 @@ package treatments
 						profilesMap[dbProfile.id] = profile;
 					}
 					profilesList.sortOn(["name"], Array.CASEINSENSITIVE);
+					
+					Trace.myTrace("ProfileManager.as", "Got profile from database!");
 				}
+				else
+					Trace.myTrace("ProfileManager.as", "No profiles stored in database!");
 				
 				if (profilesList.length == 0)
 				{
+					Trace.myTrace("ProfileManager.as", "Creating default profile...");
+					
 					//Create default profile
 					var defaultProfile:Profile = new Profile
 					(
@@ -117,6 +130,8 @@ package treatments
 		
 		public static function addInsulin(name:String, dia:Number, type:String, isDefault:Boolean = false, insulinID:String = null, saveToDatabase:Boolean = true):void
 		{
+			Trace.myTrace("ProfileManager.as", "addInsulin called!");
+			
 			//Generate insulin ID
 			var newInsulinID:String = insulinID == null ? UniqueId.createEventId() : insulinID;
 			
@@ -126,6 +141,8 @@ package treatments
 			
 			if (insulinID != "000000" || insulinsMap[newInsulinID] == null)
 			{
+				Trace.myTrace("ProfileManager.as", "Created new insulin. Name: " + name);
+				
 				//Create new insulin
 				var insulin:Insulin = new Insulin
 				(
@@ -148,6 +165,8 @@ package treatments
 			}
 			else if (insulinID == "000000" && insulinsMap[newInsulinID] != null)
 			{
+				Trace.myTrace("ProfileManager.as", "Updating Nightscout insulin");
+				
 				//Nightscout insulin already exists, let's update it
 				var existingNSInsulin:Insulin = insulinsMap[newInsulinID] as Insulin;
 				existingNSInsulin.dia = dia;
@@ -158,12 +177,21 @@ package treatments
 		
 		public static function updateInsulin(insulin:Insulin):void
 		{
+			Trace.myTrace("ProfileManager.as", "updateInsulin called!");
+			
 			if (insulinsMap[insulin.ID] != null)
+			{
+				Trace.myTrace("ProfileManager.as", "Updating insulin " + insulin.name);
 				Database.updateInsulinSynchronous(insulin);
+			}
+			else
+				Trace.myTrace("ProfileManager.as", "Can't update an insulin that doesn't exist!");
 		}
 		
 		public static function deleteInsulin(insulin:Insulin):void
 		{
+			Trace.myTrace("ProfileManager.as", "deleteInsulin called!");
+			
 			if (insulinsMap[insulin.ID] != null)
 			{
 				//Find insulin
@@ -172,6 +200,8 @@ package treatments
 					var userInsulin:Insulin = insulinsList[i];
 					if (userInsulin.ID == insulin.ID)
 					{
+						Trace.myTrace("ProfileManager.as", "Deleting insulin: " + userInsulin.name);
+						
 						//Insulin found. Remove it from Spike.
 						insulinsList.removeAt(i);
 						insulinsMap[insulin.ID] = null;
@@ -187,6 +217,8 @@ package treatments
 		
 		public static function getDefaultInsulinID():String
 		{
+			Trace.myTrace("ProfileManager.as", "getDefaultInsulinID called!");
+			
 			var insulinID:String = "";
 			var foundDefault:Boolean = false;
 			
@@ -205,24 +237,33 @@ package treatments
 			
 			if (!foundDefault && insulinsList.length > 0)
 			{
+				Trace.myTrace("ProfileManager.as", "Found default insulin: " + (insulinsList[0] as Insulin).name);
+				
 				insulinID = (insulinsList[0] as Insulin).ID;
 				foundDefault;
 			}
 			
 			if (insulinsList.length == 0 && !foundDefault)
+			{
+				Trace.myTrace("ProfileManager.as", "Can't find a default insulin. Returning Nightscout insulin.");
 				insulinID = "000000"; //Nightscout insulin
+			}
 			
 			return insulinID;
 		}
 		
 		public static function updateProfile(profile:Profile):void
 		{	
+			Trace.myTrace("ProfileManager.as", "updateProfile called!");
+			
 			//Update Database
 			Database.updateProfileSynchronous(profile);
 		}
 		
 		public static function addNightscoutCarbAbsorptionRate(rate:Number):void
 		{
+			Trace.myTrace("ProfileManager.as", "Adding Nightscout carbs absorption rate: " + rate);
+			
 			nightscoutCarbAbsorptionRate = rate;
 		}
 		

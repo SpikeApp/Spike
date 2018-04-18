@@ -47,6 +47,7 @@ package treatments
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.Trace;
 	import utils.UniqueId;
 	
 	[ResourceBundle("treatments")]
@@ -72,6 +73,8 @@ package treatments
 		
 		public static function init():void
 		{
+			Trace.myTrace("TreatmentsManager.as", "init called!");
+			
 			//Event Listeners
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
@@ -80,6 +83,8 @@ package treatments
 			//Fetch Data From Database
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
+				Trace.myTrace("TreatmentsManager.as", "Fetching treatments from database...");
+				
 				var now:Number = new Date().valueOf();
 				var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TIME_24_HOURS, now);
 				
@@ -108,6 +113,8 @@ package treatments
 						treatmentsMap[treatment.ID] = treatment;
 					}
 				}
+				
+				Trace.myTrace("TreatmentsManager.as", "Fetched " + treatmentsList.length + " treatment(s)");
 			}
 		}
 		
@@ -128,6 +135,8 @@ package treatments
 			//No need to do anything. Nightscout service will take care of it
 			if (NightscoutService.serviceActive) 
 				return;
+			
+			Trace.myTrace("TreatmentsManager.as", "onCalibrationReceived called! Creating new calibration treatment.");
 			
 			//Add calibration treatment to Spike
 			var lastCalibration:Calibration = Calibration.last();
@@ -289,6 +298,8 @@ package treatments
 		
 		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
 		{
+			Trace.myTrace("TreatmentsManager.as", "deleteTreatment called!");
+			
 			if (treatmentsMap[treatment.ID] != null) //treatment exists
 			{
 				//Delete from Spike
@@ -297,6 +308,8 @@ package treatments
 					var spikeTreatment:Treatment = treatmentsList[i] as Treatment;
 					if (treatment.ID == spikeTreatment.ID)
 					{
+						Trace.myTrace("TreatmentsManager.as", "Treatment deleted. Type: " + spikeTreatment.type);
+						
 						treatmentsList.removeAt(i);
 						spikeTreatment = null;
 						break;
@@ -319,6 +332,8 @@ package treatments
 		
 		public static function updateTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
 		{
+			Trace.myTrace("TreatmentsManager.as", "updateTreatment called! Treatment type: " + treatment.type);
+			
 			//Notify listeners
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			
@@ -333,6 +348,8 @@ package treatments
 		
 		public static function addNightscoutTreatment(treatment:Treatment, uploadToNightscout:Boolean = false):void
 		{	
+			Trace.myTrace("TreatmentsManager.as", "addNightscoutTreatment called! Treatment type: " + treatment.type);
+			
 			//Insert in Database
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
@@ -342,6 +359,8 @@ package treatments
 			
 			if (treatmentsMap[treatment.ID] == null) //new treatment
 			{
+				Trace.myTrace("TreatmentsManager.as", "Adding treatment to Spike...");
+				
 				//Add treatment to Spike
 				treatmentsList.push(treatment);
 				treatmentsMap[treatment.ID] = treatment;
@@ -357,11 +376,14 @@ package treatments
 		
 		public static function deleteInternalCalibration(timestamp:Number):void
 		{
+			Trace.myTrace("TreatmentsManager.as", "deleteInternalCalibration called!");
+			
 			for (var i:int = 0; i < treatmentsList.length; i++) 
 			{
 				var treatment:Treatment = treatmentsList[i] as Treatment;
 				if (treatment.timestamp == timestamp && treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.note == ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
 				{
+					Trace.myTrace("TreatmentsManager.as", "Calibration found. Deleting...");
 					deleteTreatment(treatment);
 					break;
 				}
@@ -370,6 +392,8 @@ package treatments
 		
 		public static function addTreatment(type:String):void
 		{	
+			Trace.myTrace("TreatmentsManager.as", "addTreatment called!");
+			
 			//Time
 			var now:Number = new Date().valueOf();
 			
@@ -611,6 +635,8 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
+					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -663,6 +689,8 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
+					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -733,6 +761,8 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
+					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -792,6 +822,8 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
+					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -842,6 +874,8 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
+					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -876,6 +910,8 @@ package treatments
 		
 		public static function addExternalTreatment(treatment:Treatment):void
 		{
+			Trace.myTrace("TreatmentsManager.as", "addExternalTreatment called! Type: " + treatment.type);
+			
 			//Insert in DB
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
@@ -894,11 +930,15 @@ package treatments
 				
 				//Upload to Nightscout
 				NightscoutService.uploadTreatment(treatment);
+				
+				Trace.myTrace("TreatmentsManager.as", "Treatment added to Spike");
 			}
 		}
 		
 		public static function addInternalCalibrationTreatment(glucoseValue:Number, timestamp:Number, treatmentID:String):void
 		{
+			Trace.myTrace("TreatmentsManager.as", "addInternalCalibrationTreatment called!");
+			
 			var treatment:Treatment = new Treatment
 			(
 				Treatment.TYPE_GLUCOSE_CHECK,
@@ -923,11 +963,15 @@ package treatments
 				
 				//Notify listeners
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				
+				Trace.myTrace("TreatmentsManager.as", "Added internal calibration to Spike!");
 			}
 		}
 		
 		public static function addInternalSensorStartTreatment(timestamp:Number, treatmentID:String):void
 		{
+			Trace.myTrace("TreatmentsManager.as", "addInternalSensorStartTreatment called!");
+			
 			var treatment:Treatment = new Treatment
 				(
 					Treatment.TYPE_SENSOR_START,
@@ -952,11 +996,15 @@ package treatments
 				
 				//Notify listeners
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				
+				Trace.myTrace("TreatmentsManager.as", "Added sensor start to Spike!");
 			}
 		}
 		
 		public static function processNightscoutTreatments(nsTreatments:Array):void
 		{
+			Trace.myTrace("TreatmentsManager.as", "processNightscoutTreatments called!");
+			
 			var nightscoutTreatmentsMap:Dictionary = new Dictionary();
 			var numNightscoutTreatments:int = nsTreatments.length;
 			var firstReadingTimestamp:Number;
@@ -1052,6 +1100,8 @@ package treatments
 						
 						//Add treatment to Spike and Databse
 						addNightscoutTreatment(treatment);
+						
+						Trace.myTrace("TreatmentsManager.as", "Added nightscout treatment. Type: " + treatmentType);
 					}
 					else
 					{
@@ -1090,6 +1140,8 @@ package treatments
 							//Treatment was modified. Update Spike and notify listeners
 							updateTreatment(spikeTreatment, false);
 							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, spikeTreatment));
+							
+							Trace.myTrace("TreatmentsManager.as", "Updated nightscout treatment. Type: " + spikeTreatment.type);
 						}
 					}
 				}
@@ -1104,6 +1156,8 @@ package treatments
 					var internalTreatment:Treatment = treatmentsList[j];
 					if (nightscoutTreatmentsMap[internalTreatment.ID] == null)
 					{
+						Trace.myTrace("TreatmentsManager.as", "User deleted treatment in Nightscout. Deleting in Spike as well. Type: " + internalTreatment.type);
+						
 						//Notify Listeners
 						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalTreatment));
 						
@@ -1119,6 +1173,8 @@ package treatments
 		
 		public static function removeTreatmentFromMemory(treatment:Treatment):void
 		{
+			Trace.myTrace("TreatmentsManager.as", "removeTreatmentFromMemory called!");
+			
 			//Validation
 			if (treatment == null)
 				return;
@@ -1129,6 +1185,7 @@ package treatments
 				var internalTreatment:Treatment = treatmentsList[i];
 				if (internalTreatment != null && internalTreatment.ID == treatment.ID)
 				{
+					Trace.myTrace("TreatmentsManager.as", "Removed expired treatment. Type: " + internalTreatment.type);
 					treatmentsList.removeAt(i);
 					break;
 				}
