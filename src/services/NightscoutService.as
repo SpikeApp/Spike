@@ -114,8 +114,6 @@ package services
 		private static var activeCalibrations:Array = [];
 		private static var activeVisualCalibrations:Array = [];
 		private static var activeSensorStarts:Array = [];
-		private static var activeTreatmentsUpload:Array = [];
-		private static var activeTreatmentsDelete:Array = [];
 		
 		/* Follower */
 		private static var nextFollowDownloadTime:Number = 0;
@@ -138,6 +136,8 @@ package services
 		private static var nightscoutTreatmentsSyncEnabled:Boolean = true;
 		private static var treatmentsEnabled:Boolean = true;
 		private static var profileAlertShown:Boolean = false;
+		private static var activeTreatmentsUpload:Array = [];
+		private static var activeTreatmentsDelete:Array = [];
 
 		public function NightscoutService()
 		{
@@ -790,6 +790,21 @@ package services
 			}
 		}
 		
+		private static function getInitialTreatments():void
+		{
+			Trace.myTrace("NightscoutService.as", "in getInitialTreatments");
+			
+			for (var i:int = 0; i < TreatmentsManager.treatmentsList.length; i++) 
+			{
+				//Add treatment to queue
+				var treatment:Treatment = TreatmentsManager.treatmentsList[i] as Treatment;
+				activeTreatmentsUpload.push(createTreatmentObject(treatment));
+			}
+			
+			//Sync uploads
+			syncTreatmentsUpload();
+		}
+		
 		private static function syncTreatmentsUpload():void
 		{
 			if (activeTreatmentsUpload.length == 0 || syncTreatmentsUploadActive || !NetworkInfo.networkInfo.isReachable())
@@ -832,6 +847,8 @@ package services
 					Trace.myTrace("NightscoutService.as", "Uploading/updating next treatment in queue.");
 					syncTreatmentsUpload();
 				}
+				else
+					getRemoteTreatments();
 			}
 			else
 				Trace.myTrace("NightscoutService.as", "Error uploading/updating treatment. Server response: " + response);
@@ -1417,10 +1434,12 @@ package services
 			Trace.myTrace("NightscoutService.as", "Service activated!");
 			serviceActive = true;
 			setupNightscoutProperties();
+			getInitialGlucoseReadings();
+			if (!BlueToothDevice.isFollower())
+				getInitialTreatments();
+			getInitialCalibrations();
 			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 				getNightscoutProfile();
-			getInitialGlucoseReadings();
-			getInitialCalibrations();
 			activateEventListeners();
 			activateTimer();
 		}
@@ -1435,6 +1454,8 @@ package services
 			activeCalibrations.length = 0;
 			activeVisualCalibrations.length = 0;
 			activeSensorStarts.length = 0;
+			activeTreatmentsUpload.length = 0;
+			activeTreatmentsDelete.length = 0;
 		}
 		
 		private static function activateTimer():void
