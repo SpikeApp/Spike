@@ -68,6 +68,7 @@ package services
 		private static const MODE_PROFILE_GET:String = "profileGet";
 		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
+		private static const MAX_RETRIES_FOR_TREATMENTS:int = 3;
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
@@ -92,8 +93,6 @@ package services
 		private static var externalAuthenticationCall:Boolean = false;
 		public static var ignoreSettingsChanged:Boolean = false;
 		public static var uploadSensorStart:Boolean = true;
-		private static var syncTreatmentsUploadActive:Boolean = false;
-		private static var syncTreatmentsDeleteActive:Boolean = false;
 		
 		/* Data Variables */
 		private static var apiSecret:String;
@@ -138,6 +137,13 @@ package services
 		private static var profileAlertShown:Boolean = false;
 		private static var activeTreatmentsUpload:Array = [];
 		private static var activeTreatmentsDelete:Array = [];
+		private static var retriesForTreatmentsDownload:int = 0;
+		private static var _syncTreatmentsUploadActive:Boolean = false;
+		private static var _syncTreatmentsDeleteActive:Boolean = false;
+		private static var _syncTreatmentsDownloadActive:Boolean = false;
+		private static var syncTreatmentsUploadActiveLastChange:Number = (new Date()).valueOf();
+		private static var syncTreatmentsDeleteActiveLastChange:Number = (new Date()).valueOf();
+		private static var syncTreatmentsDownloadActiveLastChange:Number = (new Date()).valueOf();
 
 		public function NightscoutService()
 		{
@@ -835,7 +841,7 @@ package services
 			
 			syncTreatmentsUploadActive = false;
 			
-			if (response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("ok") != -1)
+			if (response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("403") == -1 && response.indexOf("ok") != -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Treatment uploaded/updated successfully!");
 				
@@ -942,11 +948,22 @@ package services
 				return;
 			}
 			
-			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0)
+			if ((activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0) && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
 			{	
 				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds");
 					
+				if (activeTreatmentsDelete.length > 0 && !syncTreatmentsDeleteActive)
+					syncTreatmentsDelete();
+				else if (activeTreatmentsUpload.length > 0 && !syncTreatmentsUploadActive)
+					syncTreatmentsUpload();
+				else if (activeSensorStarts.length > 0 && !syncSensorStartActive)
+					syncSensorStart();
+				else if (activeVisualCalibrations.length > 0 && !syncVisualCalibrationsActive)
+					syncVisualCalibrations();
+				
 				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				
+				retriesForTreatmentsDownload++;
 				
 				return;
 			}
@@ -957,6 +974,8 @@ package services
 				return;
 			
 			lastRemoteTreatmentsSync = now;
+			
+			syncTreatmentsDownloadActive = true;
 			
 			//Define request parameters
 			var parameters:URLVariables = new URLVariables();
@@ -979,6 +998,8 @@ package services
 			
 			Trace.myTrace("NightscoutService.as", "onGetTreatmentsComplete called!");
 			
+			syncTreatmentsDownloadActive = false;
+			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
@@ -991,11 +1012,22 @@ package services
 			loader = null;
 			
 			//Validate if we can process treatments
-			if (activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0)
+			if ((activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0) && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
 			{
 				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
 				
+				if (activeTreatmentsDelete.length > 0 && !syncTreatmentsDeleteActive)
+					syncTreatmentsDelete();
+				else if (activeTreatmentsUpload.length > 0 && !syncTreatmentsUploadActive)
+					syncTreatmentsUpload();
+				else if (activeSensorStarts.length > 0 && !syncSensorStartActive)
+					syncSensorStart();
+				else if (activeVisualCalibrations.length > 0 && !syncVisualCalibrationsActive)
+					syncVisualCalibrations();
+				
 				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				
+				retriesForTreatmentsDownload++;
 				
 				return;
 			}
@@ -1010,31 +1042,36 @@ package services
 					{
 						//Send nightscout treatments to TreatmentsManager for further processing
 						TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
+						
+						retriesForTreatmentsDownload = 0;
 					}
 					else
 					{
-						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
 						{
 							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
 							setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+							retriesForTreatmentsDownload++;
 						}
 					}
 				} 
 				catch(error:Error) 
 				{
-					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
 					{
 						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
 						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+						retriesForTreatmentsDownload++;
 					}
 				}
 			}
 			else
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
 					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					retriesForTreatmentsDownload++;
 				}
 			}
 		}
@@ -1530,6 +1567,8 @@ package services
 			if (BlueToothDevice.isFollower()) getRemoteReadings();
 			
 			if (activeTreatmentsUpload.length > 0) syncTreatmentsUpload();
+			
+			if (activeTreatmentsDelete.length > 0) syncTreatmentsDelete();
 		}
 		
 		/**
@@ -1580,10 +1619,11 @@ package services
 			}
 			else if (mode == MODE_TREATMENTS_GET)
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting treatments. Retrying in 30 seconds. Error: " + error.message);
 					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					retriesForTreatmentsDownload++;
 				}
 			}
 			else if (mode == MODE_PROFILE_GET)
@@ -1801,10 +1841,78 @@ package services
 			_syncSensorStartActive = value;
 		}
 
+		public static function get syncTreatmentsUploadActive():Boolean
+		{
+			if (!_syncTreatmentsUploadActive)
+				return false;
+			
+			var now:Number = (new Date()).valueOf();
+			
+			if (now - syncTreatmentsUploadActiveLastChange > MAX_SYNC_TIME)
+			{
+				syncTreatmentsUploadActiveLastChange = now;
+				_syncTreatmentsUploadActive = false;
+				return false;
+			}
+			
+			return true;
+		}
+
+		public static function set syncTreatmentsUploadActive(value:Boolean):void
+		{
+			syncTreatmentsUploadActiveLastChange = new Date().valueOf();
+			_syncTreatmentsUploadActive = value;
+		}
+
+		public static function get syncTreatmentsDeleteActive():Boolean
+		{
+			if (!_syncTreatmentsDeleteActive)
+				return false;
+			
+			var now:Number = (new Date()).valueOf();
+			
+			if (now - syncTreatmentsDeleteActiveLastChange > MAX_SYNC_TIME)
+			{
+				syncTreatmentsDeleteActiveLastChange = now;
+				_syncTreatmentsDeleteActive = false;
+				return false;
+			}
+			
+			return true;
+		}
+
+		public static function set syncTreatmentsDeleteActive(value:Boolean):void
+		{
+			syncTreatmentsDeleteActiveLastChange = new Date().valueOf();
+			_syncTreatmentsDeleteActive = value;
+		}
+
+		public static function get syncTreatmentsDownloadActive():Boolean
+		{
+			if (!_syncTreatmentsDownloadActive)
+				return false;
+			
+			var now:Number = (new Date()).valueOf();
+			
+			if (now - syncTreatmentsDownloadActiveLastChange > MAX_SYNC_TIME)
+			{
+				syncTreatmentsDownloadActiveLastChange = now;
+				_syncTreatmentsDownloadActive = false;
+				return false;
+			}
+			
+			return true;
+		}
+
+		public static function set syncTreatmentsDownloadActive(value:Boolean):void
+		{
+			syncTreatmentsDownloadActiveLastChange = new Date().valueOf();
+			_syncTreatmentsDownloadActive = value;
+		}
+		
 		public static function get instance():NightscoutService
 		{
 			return _instance;
 		}
-
 	}
 }
