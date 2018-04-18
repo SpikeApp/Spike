@@ -5,6 +5,7 @@ package ui.screens.display.settings.share
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
+	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
@@ -19,6 +20,7 @@ package ui.screens.display.settings.share
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -54,6 +56,7 @@ package ui.screens.display.settings.share
 		private var followerManager:DexcomShareFollowersList;
 		private var followerManagerCallout:Callout;
 		private var followerManagerContainer:ScrollContainer;
+		private var nonDexcomInstructions:Label;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -188,6 +191,12 @@ package ui.screens.display.settings.share
 			dsLogin.addEventListener( Event.TRIGGERED, onDexcomShareLogin );
 			actionsContainer.addChild(dsLogin);
 			
+			//Non dexcom instructions
+			nonDexcomInstructions = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','non_dexcom_transmitter_instructions'), HorizontalAlign.JUSTIFY);
+			nonDexcomInstructions.wordWrap = true;
+			nonDexcomInstructions.width = width - 10;
+			nonDexcomInstructions.paddingTop = nonDexcomInstructions.paddingBottom = 10;
+			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
 			{
@@ -249,6 +258,8 @@ package ui.screens.display.settings.share
 					listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','serial_label'), accessory: dsSerial });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_label'), accessory: dsServer });
 				listDataProviderItems.push({ label: "", accessory: actionsContainer });
+				if (!BlueToothDevice.isDexcomG4() && !BlueToothDevice.isDexcomG5())
+					listDataProviderItems.push({ label: "", accessory: nonDexcomInstructions });
 				
 				dataProvider = new ArrayCollection(listDataProviderItems);
 			}
@@ -371,6 +382,14 @@ package ui.screens.display.settings.share
 		/**
 		 * Utility
 		 */
+		override protected function draw():void
+		{
+			if ((layout as VerticalLayout) != null)
+				(layout as VerticalLayout).hasVariableItemDimensions = true;
+			
+			super.draw();
+		}
+		
 		override public function dispose():void
 		{
 			if(dsUsername != null)
@@ -449,6 +468,12 @@ package ui.screens.display.settings.share
 			{
 				followerManagerCallout.dispose();
 				followerManagerCallout = null;
+			}
+			
+			if (nonDexcomInstructions != null)
+			{
+				nonDexcomInstructions.dispose();
+				nonDexcomInstructions = null;
 			}
 			
 			super.dispose();
