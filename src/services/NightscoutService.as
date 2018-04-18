@@ -906,7 +906,7 @@ package services
 			//Update Internal Variables
 			syncTreatmentsDeleteActive = false;
 			
-			if (response.indexOf("{}") != -1)
+			if (response.indexOf("{}") != -1 && response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("403") == -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Treatment deleted successfully!");
 				
@@ -1033,7 +1033,7 @@ package services
 			}
 			
 			//Validate response
-			if (response.indexOf("created_at") != -1)
+			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("403") == -1)
 			{
 				try
 				{
