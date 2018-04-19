@@ -1211,7 +1211,7 @@ package services
 			if (response.indexOf(BlueToothDevice.name) != -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Calibration upload was successful.");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP, String(activeCalibrations[activeCalibrations.length - 1].date));
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP, String(Calibration.last().timestamp));
 				activeCalibrations.length = 0;
 			}
 			else
