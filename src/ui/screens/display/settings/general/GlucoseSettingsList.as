@@ -58,8 +58,10 @@ package ui.screens.display.settings.general
 			/* Glucose Unit */
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
 				selectedUnit = "mg/dL";
-			else 
-				glucoseUnitsPicker.selectedIndex = 1;
+			else
+				selectedUnit = "mmol/L";
+			
+			roundMfDlValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON) == "true";
 			
 			setupContent();
 			setupInitialState();
@@ -79,7 +81,7 @@ package ui.screens.display.settings.general
 		}
 		
 		private function setupContent():void
-		{
+		{	
 			//Glucose Units Picker
 			glucoseUnitsPicker = LayoutFactory.createPickerList();
 			var glucoseUnits:ArrayCollection = new ArrayCollection(
@@ -92,9 +94,11 @@ package ui.screens.display.settings.general
 			glucoseUnitsPicker.dataProvider = glucoseUnits;
 			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				glucoseUnitsPicker.pivotX = 38;
+			if (selectedUnit == "mmol/L") 
+				glucoseUnitsPicker.selectedIndex = 1;
 			
 			//Round MGDL values
-			roundMgDlCheck = LayoutFactory.createCheckMark();
+			roundMgDlCheck = LayoutFactory.createCheckMark(roundMfDlValue);
 			roundMgDlCheck.pivotX = 3;
 			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				roundMgDlCheck.pivotX = 41;
@@ -153,7 +157,6 @@ package ui.screens.display.settings.general
 			convertSettpers();
 			
 			/* Set Up Round Values for MG/DL */
-			roundMfDlValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON) == "true";
 			roundMgDlCheck.isSelected = roundMfDlValue;
 				
 			/* Set Glucose Tresholds */

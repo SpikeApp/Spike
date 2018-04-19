@@ -68,7 +68,7 @@ package services
 		private static const MODE_PROFILE_GET:String = "profileGet";
 		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
-		private static const MAX_RETRIES_FOR_TREATMENTS:int = 3;
+		private static const MAX_RETRIES_FOR_TREATMENTS:int = 1;
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
@@ -341,6 +341,12 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "getNightscoutProfile called!");
 			
+			if (!BlueToothDevice.isFollower() && !serviceActive)
+				return;
+			
+			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+				return;
+			
 			var now:Number = new Date().valueOf();
 			
 			if (now - lastRemoteProfileSync < TIME_30_SECONDS)
@@ -436,32 +442,16 @@ package services
 								getRemoteTreatments();
 						}
 						else
-						{
-							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-							{
-								Trace.myTrace("NightscoutService.as", "Error retrieving insulin. Retrying in 30 seconds! Response: " + response);
-								setTimeout(getNightscoutProfile, TIME_30_SECONDS);
-							}
-						}
+							Trace.myTrace("NightscoutService.as", "Error retrieving insulin. Will try again on next transmitter reading! Response: " + response);
 					}
 				} 
 				catch(error:Error) 
 				{
-					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-					{
-						Trace.myTrace("NightscoutService.as", "Error parsing profile properties. Retrying in 30 seconds! Response: " + response);
-						setTimeout(getNightscoutProfile, TIME_30_SECONDS);
-					}
+					Trace.myTrace("NightscoutService.as", "Error parsing profile properties. Will try on next transmitter reading! Response: " + response);
 				}
 			}
 			else
-			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-				{
-					Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Retrying in 30 seconds! Response: " + response);
-					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
-				}
-			}
+				Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Will try on next transmitter reading! Response: " + response);
 		}
 		
 		/**
@@ -824,6 +814,12 @@ package services
 			if (activeTreatmentsUpload.length == 0 || syncTreatmentsUploadActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
+			if (!BlueToothDevice.isFollower() && !serviceActive)
+				return;
+			
+			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to upload/update: " + activeTreatmentsUpload.length);
 			
 			syncTreatmentsUploadActive = true;
@@ -886,6 +882,12 @@ package services
 		private static function syncTreatmentsDelete():void
 		{
 			if (activeTreatmentsDelete.length == 0 || syncTreatmentsDeleteActive || !NetworkInfo.networkInfo.isReachable())
+				return;
+			
+			if (!BlueToothDevice.isFollower() && !serviceActive)
+				return;
+			
+			if (BlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to delete: " + activeTreatmentsDelete.length);
@@ -956,7 +958,7 @@ package services
 				return;
 			}
 			
-			if ((activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0) && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
+			if ((activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0) && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 			{	
 				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds");
 					
@@ -1020,7 +1022,7 @@ package services
 			loader = null;
 			
 			//Validate if we can process treatments
-			if ((activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0) && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
+			if ((activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0) && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 			{
 				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
 				
@@ -1055,7 +1057,7 @@ package services
 					}
 					else
 					{
-						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 						{
 							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
 							setTimeout(getRemoteTreatments, TIME_30_SECONDS);
@@ -1065,7 +1067,7 @@ package services
 				} 
 				catch(error:Error) 
 				{
-					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 					{
 						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
 						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
@@ -1075,7 +1077,7 @@ package services
 			}
 			else
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
 					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
@@ -1124,6 +1126,12 @@ package services
 		private static function syncCalibrations():void
 		{
 			if (activeCalibrations.length == 0 || syncGlucoseReadingsActive || !NetworkInfo.networkInfo.isReachable())
+				return;
+			
+			if (!BlueToothDevice.isFollower() && !serviceActive)
+				return;
+			
+			if (BlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			syncCalibrationsActive = true;
@@ -1217,6 +1225,12 @@ package services
 			if (activeVisualCalibrations.length == 0 || syncVisualCalibrationsActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
+			if (!BlueToothDevice.isFollower() && !serviceActive)
+				return;
+			
+			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+				return;
+			
 			syncVisualCalibrationsActive = true;
 			
 			//Upload Glucose Readings
@@ -1258,6 +1272,12 @@ package services
 		private static function syncSensorStart():void
 		{
 			if (activeSensorStarts.length == 0 || syncSensorStartActive || !NetworkInfo.networkInfo.isReachable() || !serviceActive)
+				return;
+			
+			if (!BlueToothDevice.isFollower() && !serviceActive)
+				return;
+			
+			if (BlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			syncSensorStartActive = true;
@@ -1627,7 +1647,7 @@ package services
 			}
 			else if (mode == MODE_TREATMENTS_GET)
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload <= MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting treatments. Retrying in 30 seconds. Error: " + error.message);
 					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
