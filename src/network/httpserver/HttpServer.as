@@ -223,8 +223,15 @@ package network.httpserver
 					parameters = objectToURLVariables(postJSONResponse, param_string);
 				}
 				
+				//Determine if the call is to a .json file and notify endpoint
 				if (request.indexOf(".json") != -1)
 					parameters.extension = "json";
+				
+				//Determine if the request is GET or POST and notify endpoint
+				if (request.substring(0, 4).toUpperCase().indexOf("POST") != -1)
+					parameters.method = "POST";
+				else if (request.substring(0, 4).toUpperCase().indexOf("GET") != -1 ) 
+					parameters.method = "GET";
 				
 				var controller:ActionController = _controllers[controller_key];
                 

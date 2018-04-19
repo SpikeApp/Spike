@@ -16,11 +16,12 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
-	import utils.SpikeJSON;
+	import treatments.Profile;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
+	import utils.SpikeJSON;
 	import utils.Trace;
 	import utils.UniqueId;
 	
@@ -103,22 +104,20 @@ package network.httpserver.API
 							{
 								var glucoseValue:Number = Math.round(bgReading.calculatedValue);
 								var date:String = nsFormatter.format(bgReading.timestamp);
-								readingsCollection.push(
-									{
-										_id: bgReading.uniqueId,
-										unfiltered: !BlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : glucoseValue * 1000,
-										device: !BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower",
-										sysTime: date,
-										filtered: !BlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : glucoseValue * 1000,
-										type: "sgv",
-										date: bgReading.timestamp,
-										sgv: glucoseValue,
-										rssi: 100,
-										noise: 1,
-										direction: bgReading.slopeName(),
-										dateString: date
-									}
-								);
+								var readingObject:Object = {};
+								readingObject["_id"] = bgReading.uniqueId;
+								readingObject.unfiltered = !BlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : glucoseValue * 1000;
+								readingObject.device = !BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower";
+								readingObject.sysTime = date;
+								readingObject.filtered = !BlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : glucoseValue * 1000;
+								readingObject.type = "sgv";
+								readingObject.date = bgReading.timestamp;
+								readingObject.sgv = glucoseValue;
+								readingObject.rssi = 100;
+								readingObject.noise = 1;
+								readingObject.direction = bgReading.slopeName();
+								readingObject.dateString = date;
+								readingsCollection.push(readingObject);
 								itemParsed++;
 							}
 						}
@@ -166,7 +165,7 @@ package network.httpserver.API
 							continue;
 						
 						var calibrationObject:Object = {};
-						calibrationObject._id = calibration.uniqueId;
+						calibrationObject["_id"] = calibration.uniqueId;
 						calibrationObject.device = BlueToothDevice.name;
 						calibrationObject.type = "cal";
 						calibrationObject.scale = calibration.checkIn ? calibration.firstScale : 1;
@@ -185,7 +184,7 @@ package network.httpserver.API
 					for (i = 0; i < numCalibrations; i++) 
 					{
 						var dummyCalibrationObject:Object = {};
-						dummyCalibrationObject._id = UniqueId.createEventId();
+						dummyCalibrationObject["_id"] = UniqueId.createEventId();
 						dummyCalibrationObject.device = "SpikeFollower";
 						dummyCalibrationObject.type = "cal";
 						dummyCalibrationObject.scale = 1;
@@ -230,7 +229,7 @@ package network.httpserver.API
 					Trace.myTrace("NightscoutAPI1Controller.as", "getSGV returned error: " + error.message + ". Parameters: " + ObjectUtil.toString(params));
 				}
 				
-				return response;
+				return responseSuccess(response);
 			}
 			
 			try
@@ -453,6 +452,37 @@ package network.httpserver.API
 			return responseSuccess(response);
 		}
 		
+		public function profile(params:URLVariables):String
+		{
+			var upperProfileObject:Object = {};
+			upperProfileObject["_id"] = UniqueId.createEventId();
+			upperProfileObject.defaultProfile = "SpikeProfile";
+			upperProfileObject.startDate = nsFormatter.format(0);
+			upperProfileObject.mills = "0";
+			upperProfileObject.units = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mg/dl" : "mmol";
+			upperProfileObject.created_at = !BlueToothDevice.isFollower() && ProfileManager.profilesList.length > 0 ? nsFormatter.format((ProfileManager.profilesList[0] as Profile).timestamp) : nsFormatter.format(new Date().valueOf()); 
+			
+			var upperSpikeProfile:Object = {};
+			var spikeProfile:Object = {};
+			spikeProfile.dia = ProfileManager.getInsulin(ProfileManager.getDefaultInsulinID()).dia;
+			spikeProfile.carbratio = [ { time: "00:00", value: "30", timeAsSeconds: "0" } ];
+			spikeProfile["carbs_hr"] = String(ProfileManager.getCarbAbsorptionRate());
+			spikeProfile.delay = "20";
+			spikeProfile.sens = [ { time: "00:00", value: "10", timeAsSeconds: "0" } ];
+			spikeProfile.timezone = "Europe/Lisbon";
+			spikeProfile.basal = [ { time: "00:00", value: "0.5", timeAsSeconds: "0" } ];
+			spikeProfile["target_low"] = [ { time: "00:00", value: "0", timeAsSeconds: "0" } ];
+			spikeProfile["target_high"] = [ { time: "00:00", value: "0", timeAsSeconds: "0" } ];
+			spikeProfile.startDate = nsFormatter.format(0);
+			spikeProfile.units = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mg/dl" : "mmol";
+			
+			upperSpikeProfile.SpikeProfile = spikeProfile;
+			
+			upperProfileObject.store = upperSpikeProfile
+				
+			return responseSuccess(SpikeJSON.stringify([upperProfileObject]));
+		}
+		
 		public function devicestatus(params:URLVariables):String
 		{
 			Trace.myTrace("NightscoutAPI1Controller.as", "devicestatus endpoint called!");
@@ -464,113 +494,158 @@ package network.httpserver.API
 		{
 			Trace.myTrace("NightscoutAPI1Controller.as", "treatments endpoint called!");
 			
-			//Validation
-			if (BlueToothDevice.isFollower())
-				return responseSuccess("No treatments for follower!");
-			
 			var response:String = "";
 			
-			//Define initial treatment properties
-			var treatmentTimestamp:Number = new Date().valueOf();
-			if (params.eventTime != null && !isNaN(Number(params.eventTime)))
-				treatmentTimestamp = Number(params.eventTime);
-			var treatmentEventType:String = "";
-			if (params.eventType != null)
-				treatmentEventType = String(params.eventType);
-			var treatmentType:String = "";
-			var treatmentInsulinAmount:Number = 0;
-			var treatmentInsulinID:String = "";
-			var treatmentCarbs:Number = 0;
-			var treatmentGlucose:Number = 0;
-			var treatmentNote:String = "";
-			
-			if (treatmentEventType == "Correction Bolus" || treatmentEventType == "Bolus" || treatmentEventType == "Correction")
+			if (params.method == "POST") //Insert treatment in Spike
 			{
-				treatmentType = Treatment.TYPE_BOLUS;
-				if (params.insulin != null)
-					treatmentInsulinAmount = Number(params.insulin);
-				treatmentInsulinID = "000000";
-			}
-			else if (treatmentEventType == "Meal Bolus" || treatmentEventType == "Snack Bolus")
-			{
-				treatmentType = Treatment.TYPE_MEAL_BOLUS;
-				if (params.insulin != null)
-					treatmentInsulinAmount = Number(params.insulin);
-				treatmentInsulinID = "000000";
-				if (params.carbs != null)
-					treatmentCarbs = Number(params.carbs);
-			}
-			else if (treatmentEventType == "Carb Correction" || treatmentEventType == "Carbs")
-			{
-				treatmentType = Treatment.TYPE_CARBS_CORRECTION;
-				if (params.carbs != null)
-					treatmentCarbs = Number(params.carbs);
-			}
-			else if (treatmentEventType == "Note")
-			{
-				treatmentType = Treatment.TYPE_NOTE;
-				if (params.insulin != null && params.carbs != null)
+				//Validation
+				if (BlueToothDevice.isFollower())
+					return responseSuccess("No treatments for follower!");
+				
+				//Define initial treatment properties
+				var treatmentTimestamp:Number = new Date().valueOf();
+				if (params.eventTime != null && !isNaN(Number(params.eventTime)))
+					treatmentTimestamp = Number(params.eventTime);
+				var treatmentEventType:String = "";
+				if (params.eventType != null)
+					treatmentEventType = String(params.eventType);
+				var treatmentType:String = "";
+				var treatmentInsulinAmount:Number = 0;
+				var treatmentInsulinID:String = "";
+				var treatmentCarbs:Number = 0;
+				var treatmentGlucose:Number = 0;
+				var treatmentNote:String = "";
+				
+				if (treatmentEventType == "Correction Bolus" || treatmentEventType == "Bolus" || treatmentEventType == "Correction")
 				{
-					//It's not actually a note, it's a meal
-					treatmentType = Treatment.TYPE_MEAL_BOLUS;
-					treatmentInsulinAmount = Number(params.insulin);
-					treatmentInsulinID = ProfileManager.getDefaultInsulinID();
-					treatmentCarbs = Number(params.carbs);
-				}
-				else if (params.insulin != null)
-				{
-					//It's not actually a note, it's a bolus
 					treatmentType = Treatment.TYPE_BOLUS;
-					treatmentInsulinAmount = Number(params.insulin);
-					treatmentInsulinID = ProfileManager.getDefaultInsulinID();
+					if (params.insulin != null)
+						treatmentInsulinAmount = Number(params.insulin);
+					treatmentInsulinID = "000000";
 				}
-				else if (params.carbs != null)
+				else if (treatmentEventType == "Meal Bolus" || treatmentEventType == "Snack Bolus")
 				{
-					//It's not actually a note, it's a carb
+					treatmentType = Treatment.TYPE_MEAL_BOLUS;
+					if (params.insulin != null)
+						treatmentInsulinAmount = Number(params.insulin);
+					treatmentInsulinID = "000000";
+					if (params.carbs != null)
+						treatmentCarbs = Number(params.carbs);
+				}
+				else if (treatmentEventType == "Carb Correction" || treatmentEventType == "Carbs")
+				{
 					treatmentType = Treatment.TYPE_CARBS_CORRECTION;
-					treatmentCarbs = Number(params.carbs);
+					if (params.carbs != null)
+						treatmentCarbs = Number(params.carbs);
+				}
+				else if (treatmentEventType == "Note")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					if (params.insulin != null && params.carbs != null)
+					{
+						//It's not actually a note, it's a meal
+						treatmentType = Treatment.TYPE_MEAL_BOLUS;
+						treatmentInsulinAmount = Number(params.insulin);
+						treatmentInsulinID = ProfileManager.getDefaultInsulinID();
+						treatmentCarbs = Number(params.carbs);
+					}
+					else if (params.insulin != null)
+					{
+						//It's not actually a note, it's a bolus
+						treatmentType = Treatment.TYPE_BOLUS;
+						treatmentInsulinAmount = Number(params.insulin);
+						treatmentInsulinID = ProfileManager.getDefaultInsulinID();
+					}
+					else if (params.carbs != null)
+					{
+						//It's not actually a note, it's a carb
+						treatmentType = Treatment.TYPE_CARBS_CORRECTION;
+						treatmentCarbs = Number(params.carbs);
+					}
+				}
+				else if (treatmentEventType == "BG Check")
+				{
+					treatmentType = Treatment.TYPE_GLUCOSE_CHECK;
+					treatmentGlucose = Number(params.glucose);
+				}
+				
+				if (params.notes != null)
+					treatmentNote = params.notes;
+				
+				//Check if treatment is supported by Spike
+				if (treatmentType != "")
+				{
+					//It's a new treatment. Let's create it
+					var treatment:Treatment = new Treatment
+					(
+						treatmentType,
+						treatmentTimestamp,
+						treatmentInsulinAmount,
+						treatmentInsulinID,
+						treatmentCarbs,
+						treatmentGlucose,
+						treatmentEventType != "BG Check" ? TreatmentsManager.getEstimatedGlucose(treatmentTimestamp) : treatmentGlucose,
+						treatmentNote
+					);
+					
+					//Add treatment to Spike and Databse
+					TreatmentsManager.addNightscoutTreatment(treatment, true);
+					
+					//Format response
+					var responseArray:Array = [];
+					var responseObject:Object = {};
+					responseObject["_id"] = treatment.ID;
+					responseObject["created_at"] = nsFormatter.format(treatmentTimestamp);
+					responseObject.eventType = treatmentEventType;
+					responseObject.insulin = treatmentInsulinAmount;
+					responseObject.carbs = treatmentCarbs;
+					responseObject.glucose = treatmentGlucose;
+					responseObject.notes = treatmentNote;
+					responseArray.push(responseObject);
+					response = SpikeJSON.stringify(responseArray);
 				}
 			}
-			else if (treatmentEventType == "BG Check")
+			else if (params.method == "GET") //Return treatments. Useful for Spike to Spike follower mode
 			{
-				treatmentType = Treatment.TYPE_GLUCOSE_CHECK;
-				treatmentGlucose = Number(params.glucose);
-			}
-			
-			if (params.notes != null)
-				treatmentNote = params.notes;
-			
-			//Check if treatment is supported by Spike
-			if (treatmentType != "")
-			{
-				//It's a new treatment. Let's create it
-				var treatment:Treatment = new Treatment
-				(
-					treatmentType,
-					treatmentTimestamp,
-					treatmentInsulinAmount,
-					treatmentInsulinID,
-					treatmentCarbs,
-					treatmentGlucose,
-					treatmentEventType != "BG Check" ? TreatmentsManager.getEstimatedGlucose(treatmentTimestamp) : treatmentGlucose,
-					treatmentNote
-				);
+				//TODO: ACCEPT PARAMETERS. RIGHT NOW IT RETURNS ALL TREATMENTS IN MEMORY (24H)
+				var treatmentsList:Array = [];
+				var spikeTreatmentsList:Array = TreatmentsManager.treatmentsList.concat();
+				spikeTreatmentsList.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+				for (var i:int = 0; i < spikeTreatmentsList.length; i++) 
+				{
+					var spikeTreatment:Treatment = spikeTreatmentsList[i] as Treatment;
+					if (spikeTreatment != null)
+					{
+						var responseTreatmentType:String;
+						if (spikeTreatment.type == Treatment.TYPE_BOLUS)
+							responseTreatmentType = "Bolus";
+						else if (spikeTreatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+							responseTreatmentType = "Correction Bolus";
+						else if (spikeTreatment.type == Treatment.TYPE_CARBS_CORRECTION)
+							responseTreatmentType = "Carb Correction";
+						else if (spikeTreatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+							responseTreatmentType = "BG Check";
+						else if (spikeTreatment.type == Treatment.TYPE_MEAL_BOLUS)
+							responseTreatmentType = "Meal Bolus";
+						else if (spikeTreatment.type == Treatment.TYPE_NOTE)
+							responseTreatmentType = "Note";
+						else if (spikeTreatment.type == Treatment.TYPE_SENSOR_START)
+							responseTreatmentType = "Sensor Start";
+						
+						var responseTreatment:Object = {};
+						responseTreatment["_id"] = spikeTreatment.ID;
+						responseTreatment["created_at"] = nsFormatter.format(spikeTreatment.timestamp);
+						responseTreatment.eventType = responseTreatmentType;
+						responseTreatment.insulin = spikeTreatment.insulinAmount;
+						responseTreatment.carbs = spikeTreatment.carbs;
+						responseTreatment.glucose = spikeTreatment.glucose;
+						responseTreatment.notes = spikeTreatment.note;
+						
+						treatmentsList.push(responseTreatment);
+					}
+				}
 				
-				//Add treatment to Spike and Databse
-				TreatmentsManager.addNightscoutTreatment(treatment, true);
-				
-				//Format response
-				var responseArray:Array = [];
-				var responseObject:Object = {};
-				responseObject._id = treatment.ID;
-				responseObject.created_at = nsFormatter.format(treatmentTimestamp);
-				responseObject.eventType = treatmentEventType;
-				responseObject.insulin = treatmentInsulinAmount;
-				responseObject.carbs = treatmentCarbs;
-				responseObject.glucose = treatmentGlucose;
-				responseObject.notes = treatmentNote;
-				responseArray.push(responseObject);
-				response = JSON.stringify(responseArray);
+				response = SpikeJSON.stringify(treatmentsList);
 			}
 			
 			return responseSuccess(response);
