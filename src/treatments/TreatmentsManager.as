@@ -1065,6 +1065,8 @@ package treatments
 				}
 				else if (treatmentEventType == "Note")
 					treatmentType = Treatment.TYPE_NOTE;
+				else if (treatmentEventType == "Sensor Start")
+					treatmentType = Treatment.TYPE_SENSOR_START;
 				else if (treatmentEventType == "BG Check")
 				{
 					treatmentType = Treatment.TYPE_GLUCOSE_CHECK;
