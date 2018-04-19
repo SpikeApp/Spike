@@ -224,9 +224,9 @@
       					<key>NSAllowsArbitraryLoads</key><true/>
       				</dict>
       			<key>NSHealthUpdateUsageDescription</key>
-				<string>Stores CGM Glucose Readings</string>
+				<string>Stores CGM Glucose Readings, Carbohydrates and Insulin.</string>
       			<key>NSHealthShareUsageDescription</key>
-				<string>Stores CGM Glucose Readings</string>
+				<string>Stores CGM Glucose Readings, Carbohydrates and Insulin.</string>
 				<key>NSBluetoothPeripheralUsageDescription</key>
 				<string>Connects to CGM Transmitters</string>
       				
