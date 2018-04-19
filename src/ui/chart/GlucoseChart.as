@@ -903,7 +903,7 @@ package ui.chart
 				else
 					noteMarker.x = (((lastBGreadingTimeStamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 10;
 				
-				noteMarker.y = (_graphHeight - noteMarker.height - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) - (mainChartGlucoseMarkerRadius * 3)) + 8;
+				noteMarker.y = (_graphHeight - noteMarker.height - (mainChartGlucoseMarkerRadius * 3) - ((noteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 8;
 				
 				noteMarker.index = treatmentsList.length;
 				treatmentsList.push(noteMarker);

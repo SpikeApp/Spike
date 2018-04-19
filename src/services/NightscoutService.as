@@ -402,7 +402,7 @@ package services
 			{
 				try
 				{
-					var profileProperties:Object = JSON.parse(response);
+					var profileProperties:Object = SpikeJSON.parse(response);
 					if (profileProperties != null)
 					{
 						if (profileProperties[0].store[profileProperties[0].defaultProfile].dia == null && profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr == null)
@@ -825,7 +825,7 @@ package services
 			syncTreatmentsUploadActive = true;
 			
 			//Upload Treatment
-			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, JSON.stringify(activeTreatmentsUpload[0]), MODE_TREATMENT_UPLOAD, onUploadTreatmentComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, SpikeJSON.stringify(activeTreatmentsUpload[0]), MODE_TREATMENT_UPLOAD, onUploadTreatmentComplete, onConnectionFailed);
 		}
 		
 		private static function onUploadTreatmentComplete(e:Event):void
@@ -1047,7 +1047,7 @@ package services
 			{
 				try
 				{
-					var nightscoutTreatments:Array = JSON.parse(response) as Array;
+					var nightscoutTreatments:Array = SpikeJSON.parse(response) as Array;
 					if (nightscoutTreatments!= null && nightscoutTreatments is Array)
 					{
 						//Send nightscout treatments to TreatmentsManager for further processing
