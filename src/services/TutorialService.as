@@ -288,7 +288,6 @@ package services
 			
 			if (!BlueToothDevice.isDexcomG5())
 				tenthStepCallout.addEventListener(Event.CLOSE, onTutorialFinished);
-			else
 				
 			
 			Starling.juggler.delayCall( closeCallout, 35, tenthStepCallout );
@@ -296,6 +295,7 @@ package services
 		
 		public static function eleventhStep(e:Event = null):void
 		{
+			tenthStepActive = false;
 			eleventhStepActive = true;
 			
 			var eleventhAlert:Alert = AlertManager.showSimpleAlert
@@ -313,6 +313,7 @@ package services
 			
 			/* Clean Up */
 			tenthStepActive = false;
+			eleventhStepActive = false;
 			isActive = false;
 			
 			if (calloutLocationHelper != null)
