@@ -897,7 +897,6 @@ package ui.chart
 				//Create treatment marker and add it to the chart
 				var noteMarker:NoteMarker = new NoteMarker(treatment);
 				
-				
 				if (noteMarker.treatment.timestamp <= lastBGreadingTimeStamp)
 					noteMarker.x = (((noteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) + mainChartGlucoseMarkerRadius) - 5;
 				else
