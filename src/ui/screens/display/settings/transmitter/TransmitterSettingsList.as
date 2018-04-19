@@ -216,7 +216,7 @@ package ui.screens.display.settings.transmitter
 			else if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4'))
 				transmitterTypeToSave = "G4";
 			
-			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != transmitterTypeToSave)
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != transmitterTypeToSave && !warnUser)
 			{
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, transmitterTypeToSave);
 				updateAlarms(); //Update battery values in existing alarms or delete them in case it's not possible to get alarms for the selected transmitter type

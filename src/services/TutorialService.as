@@ -51,6 +51,7 @@ package services
 		private static var eighthStepCallout:TextCallout;
 		private static var ninethStepCallout:TextCallout;
 		private static var tenthStepCallout:TextCallout;
+		private static var eleventhStepCallout:TextCallout;
 		private static var calloutLocationHelper:Sprite;
 		
 		/* Internal Variables */
@@ -65,6 +66,7 @@ package services
 		public static var eighthStepActive:Boolean = false;
 		public static var ninethStepActive:Boolean = false;
 		public static var tenthStepActive:Boolean = false;
+		private static var eleventhStepActive:Boolean = false;
 		
 		public function TutorialService()
 		{
@@ -283,24 +285,45 @@ package services
 				tenthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','tenth_step_message_non_g5'), target, new <String>[RelativePosition.TOP], false);
 			
 			tenthStepCallout.textRendererFactory = calloutTextRenderer;
-			tenthStepCallout.addEventListener(Event.CLOSE, onTutorialFinished);
+			
+			if (!BlueToothDevice.isDexcomG5())
+				tenthStepCallout.addEventListener(Event.CLOSE, onTutorialFinished);
+			else
+				
 			
 			Starling.juggler.delayCall( closeCallout, 35, tenthStepCallout );
 		}
 		
-		private static function onTutorialFinished():void
+		public static function eleventhStep(e:Event = null):void
 		{
-			instance.dispatchEventWith(TUTORIAL_FINISHED);
+			eleventhStepActive = true;
+			
+			var eleventhAlert:Alert = AlertManager.showSimpleAlert
+			(
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+				ModelLocator.resourceManagerInstance.getString('tutorialservice','eleventh_step_message')
+			);
+			eleventhAlert.addEventListener(Event.CLOSE, onTutorialFinished);
+		}
+		
+		private static function onTutorialFinished(e:Event = null):void
+		{
+			if (instance != null)
+				instance.dispatchEventWith(TUTORIAL_FINISHED);
 			
 			/* Clean Up */
 			tenthStepActive = false;
 			isActive = false;
 			
-			Starling.current.stage.removeChild(calloutLocationHelper);
-			calloutLocationHelper.dispose();
-			calloutLocationHelper = null;
+			if (calloutLocationHelper != null)
+			{
+				Starling.current.stage.removeChild(calloutLocationHelper);
+				calloutLocationHelper.dispose();
+				calloutLocationHelper = null;
+			}
 			
-			instance = null;
+			if (instance != null)
+				instance = null;
 		}
 		
 		/**

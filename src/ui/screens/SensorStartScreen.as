@@ -206,6 +206,14 @@ package ui.screens
 				alert.maxWidth = 270;
 				alert.height = 490;
 			}
+			
+			alert.addEventListener(Event.CLOSE, onClose);
+			
+			function onClose(e:Event):void
+			{
+				if ((TutorialService.isActive || TutorialService.eleventhStep) && BlueToothDevice.isDexcomG5())
+					TutorialService.eleventhStep();
+			}
 		}	
 		
 		/**
