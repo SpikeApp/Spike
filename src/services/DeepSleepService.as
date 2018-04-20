@@ -170,7 +170,7 @@ package services
 						else
 						{
 							//Spike is suspended in memory. Let's try and play the sound with Backgroundfetch!
-							BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+							BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.01);
 						}
 					}
 					else
@@ -185,7 +185,7 @@ package services
 							else
 							{
 								//Spike is suspended in memory. Let's try and play the sound with Backgroundfetch!
-								BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+								BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.01);
 							}
 						}
 						else
@@ -198,7 +198,7 @@ package services
 							else
 							{
 								//Spike is suspended in memory. Let's try and play the sound with Backgroundfetch!
-								BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+								BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.01);
 							}
 						}
 					}
@@ -208,12 +208,12 @@ package services
 					if (hours >= 1 && hours <= 7)
 					{
 						//Night mode, play a bigger sound to try an further avoid suspension, also add some volume
-						BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+						BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.01);
 					}
 					else
 					{
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE_2) == "true")
-							BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.1);
+							BackgroundFetch.playSound("../assets/sounds/500ms-of-silence.mp3", 0.01);
 						else
 							BackgroundFetch.playSound("../assets/sounds/1-millisecond-of-silence.mp3", 0);
 					}
