@@ -1001,7 +1001,7 @@ package ui.chart
 					else
 						glucoseValue = Math.round(((BgReading.mgdlToMmol((treatment.treatment.glucose))) * 10)) / 10; 
 					
-					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check') + "\n" + glucoseValue + " " + glucoseUnit;
+					treatmentValue = (treatmentNotes != ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note') ? ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check') : ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_calibration')) + "\n" + glucoseValue + " " + glucoseUnit;
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_SENSOR_START)
 				{
@@ -1031,7 +1031,7 @@ package ui.chart
 				if (treatment.treatment.type == Treatment.TYPE_SENSOR_START || (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note")))
 					time.isEnabled = false;
 					
-				if (treatmentNotes != "")
+				if (treatmentNotes != "" && treatmentNotes != ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
 				{
 					var notes:Label = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
 					notes.wordWrap = true;

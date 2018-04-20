@@ -42,6 +42,7 @@ package ui.screens.display.treatments
 	import utils.TimeSpan;
 	
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("treatments")]
 
 	public class TreatmentsManagementList extends List 
 	{
@@ -201,6 +202,9 @@ package ui.screens.display.treatments
 				{
 					itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
 					{
+						if (item.treatment != null && item.treatment.note == ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note') && item.treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
+							return null;
+						
 						var actionsContainer:LayoutGroup = accessoryDictionary[ item ];
 						if(!actionsContainer)
 						{

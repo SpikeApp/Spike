@@ -1110,40 +1110,43 @@ package treatments
 						//Treatment exists... Lets check if it was modified
 						var wasTreatmentModified:Boolean = false;
 						var spikeTreatment:Treatment = treatmentsMap[treatmentID];
-						if (!isNaN(treatmentCarbs) && spikeTreatment.carbs != treatmentCarbs)
+						if (spikeTreatment.note != ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note')) //Don't check/update calibrations
 						{
-							spikeTreatment.carbs = treatmentCarbs;
-							wasTreatmentModified = true;
-						}
-						if (!isNaN(treatmentGlucose) && Math.abs(spikeTreatment.glucose - treatmentGlucose) >= 1) //Nightscout rounds values so we just check if the glucose value differnce is bigger than 1 to avoid triggering this on every treatment
-						{
-							spikeTreatment.glucose = treatmentGlucose;
-							wasTreatmentModified = true;
-						}
-						if (!isNaN(treatmentInsulinAmount) && spikeTreatment.insulinAmount != treatmentInsulinAmount)
-						{
-							spikeTreatment.insulinAmount = treatmentInsulinAmount;
-							wasTreatmentModified = true;
-						}
-						if (spikeTreatment.note != treatmentNote)
-						{
-							spikeTreatment.note = treatmentNote;
-							wasTreatmentModified = true;
-						}
-						if (Math.abs(spikeTreatment.timestamp - treatmentTimestamp) > 1000) //parseW3CDTF ignores ms so we just check if the time difference is bigger than 1 sec to determine if the user changed the treatment type. This avoids triggering this on every treatment.
-						{
-							spikeTreatment.timestamp = treatmentTimestamp;
-							spikeTreatment.glucoseEstimated = treatmentType != Treatment.TYPE_GLUCOSE_CHECK ? getEstimatedGlucose(treatmentTimestamp) : spikeTreatment.glucose;
-							wasTreatmentModified = true;
-						}
-						
-						if (wasTreatmentModified)
-						{
-							//Treatment was modified. Update Spike and notify listeners
-							updateTreatment(spikeTreatment, false);
-							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, spikeTreatment));
+							if (!isNaN(treatmentCarbs) && spikeTreatment.carbs != treatmentCarbs)
+							{
+								spikeTreatment.carbs = treatmentCarbs;
+								wasTreatmentModified = true;
+							}
+							if (!isNaN(treatmentGlucose) && Math.abs(spikeTreatment.glucose - treatmentGlucose) >= 1) //Nightscout rounds values so we just check if the glucose value differnce is bigger than 1 to avoid triggering this on every treatment
+							{
+								spikeTreatment.glucose = treatmentGlucose;
+								wasTreatmentModified = true;
+							}
+							if (!isNaN(treatmentInsulinAmount) && spikeTreatment.insulinAmount != treatmentInsulinAmount)
+							{
+								spikeTreatment.insulinAmount = treatmentInsulinAmount;
+								wasTreatmentModified = true;
+							}
+							if (spikeTreatment.note != treatmentNote)
+							{
+								spikeTreatment.note = treatmentNote;
+								wasTreatmentModified = true;
+							}
+							if (Math.abs(spikeTreatment.timestamp - treatmentTimestamp) > 1000) //parseW3CDTF ignores ms so we just check if the time difference is bigger than 1 sec to determine if the user changed the treatment type. This avoids triggering this on every treatment.
+							{
+								spikeTreatment.timestamp = treatmentTimestamp;
+								spikeTreatment.glucoseEstimated = treatmentType != Treatment.TYPE_GLUCOSE_CHECK ? getEstimatedGlucose(treatmentTimestamp) : spikeTreatment.glucose;
+								wasTreatmentModified = true;
+							}
 							
-							Trace.myTrace("TreatmentsManager.as", "Updated nightscout treatment. Type: " + spikeTreatment.type);
+							if (wasTreatmentModified)
+							{
+								//Treatment was modified. Update Spike and notify listeners
+								updateTreatment(spikeTreatment, false);
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, spikeTreatment));
+								
+								Trace.myTrace("TreatmentsManager.as", "Updated nightscout treatment. Type: " + spikeTreatment.type);
+							}
 						}
 					}
 				}
