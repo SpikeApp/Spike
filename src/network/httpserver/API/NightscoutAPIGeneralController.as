@@ -152,7 +152,16 @@ package network.httpserver.API
 					
 					var bgObject:Object = {};
 					if (i == 0)
+					{
 						bgObject.units_hint = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mgdl" : "mmol";
+						var now:Number = new Date().valueOf();
+						var currentIOB:Number = TreatmentsManager.getTotalIOB(now);
+						var currentCOB:Number = TreatmentsManager.getTotalCOB(now);
+						if (currentIOB > 0)
+							bgObject.IOB = currentIOB;
+						if (currentCOB > 0)
+							bgObject.COB = currentCOB;
+					}
 					bgObject.date = bgReading.timestamp;
 					bgObject.dateString = nsFormatter.format(bgReading.timestamp);
 					bgObject.sysTime = nsFormatter.format(bgReading.timestamp);

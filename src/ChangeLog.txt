@@ -1,4 +1,25 @@
+2.0.1
+ENHANCEMENT: Support for BlueReader battery info. (Johan)
+ENHANCEMENT: Support for BlueReader and Transmiter PL low battery alarms.
+
 2.0.0
+FEAUTURE: First version of treatments is here!
+1) Spike now supports the following treatments: Bolus (insulin), Carbs, Meal, BG Check, Notes, Calibration and Sensor Start. All treatments are displayed directly on the chart. Use the + menu to add a treatment.
+2) Use the "Treatments" option available on the same menu to have a detailed list of all your treatments. You will be able to edit all treatments with great granularity. Treatments can also be deleted and moved directly from the chart. Click the treatment to be presented with options.
+3) Ability to add treatments directly from a Today Widget, Apple Watch and Pebble Watch without unlocking your device. Check instructions in Settings -> Treatments
+4) Insulin and carbs are also added to HealthKit (Johan)
+5) All treatments are synced automatically to Nightscout. Add, edit, delete or move a treatment in Spike and it will sync changes to Nightcout instantanously.
+6) Add, delete, edit or move a treatment in Nightscout and it will be synced automatically to Spike (can take up to 5 minutes for changes to be synced in order to save battery life but it normally happens instantanously)
+7) Ability to add multiple insulins in Spike, as well as your carb absorption rate.
+8) Spike will calculate IOB (Insulin-On-Board) and COB (Carbs-On-board) automatically in real time. You can also scroll back on the chart and know exactly the IOB and COB amount at a specific time of the day.
+9) Ability to use multiple insulins with diferent DIA's (Duration of Insulin Action) and Spike will calculate the combined IOB of them all.
+10) Today Widget has been updated to display real time IOB and COB.
+11) IOB and COB can also be synced to your Apple Watch complication (activate in Settings -> Watch), Pebble Watch and Garmin Watch. Know exactly how much insulin/carbs are active in your body just by glancing at your watch.
+12) New chart screen layout. Spike now uses pills to display IOB, COB, time ago and delta.
+13) IFTTT support for all treatments. You can trigger treatment added, deleted, edited as well as IOB and COB.
+14) Ability to fine tune a lot of settings for treatments like colors, visibility of IOB and COB, etc. Head over to Settings -> Treatments.
+15) Follower will also be able to see master's treatments, IOB and COB. For obvious reason a follower can't add, edit or delete treatments. Spike to Spike follwer mode will also sync treatments.
+This is just the first version of treatments and is more focused on MDI (pen) users. Subsequent versions will bring more features and will also be more focused on pump users.
 FEATURE: A second Today Widget has been added that mimics the fullscreen view. Spike now comes bundled with 2 Today Widgets.
 FEATURE: Press & hold the pie chart for 1 second and No Lock + Fullscreen view will automatically activate. Press and hold anywhere on the Fullscreen view for 1 second and it will close it.
 FEATURE: Ability to round mg/dL values on the chart view. Activate this option in Settings -> General.
@@ -6,11 +27,10 @@ FEATURE: You can now use Dexcom Share even with non Dexcom transmitters like Mia
 ENHANCEMENT: Added instructions in Settings -> Integration -> Internal HTTP Server for connecting FitBit watches to Spike.
 ENHANCEMENT: User email and name, when filling a bug report, will now be saved in database so the user doesn't have to fill them again on subsequent bug reports. (Johan)
 ENHANCEMENT: Ability to set default snooze time in alerts up to 9.999 minutes (165.65 hours)
-ENHANCEMENT: Support for BlueReader battery info. (Johan)
-ENHANCEMENT: Support for MiaoMiao, BlueReader and Transmiter PL low battery alarms.
+ENHANCEMENT: Support for MiaoMiao low battery alarms.
 FIX: Bug introduced in version 1.1.5 that would not show the alarm snoozer when the user swiped the lock screen notification has been fixed. Sorry about that!
 FIX: Sometimes Dexcom Share service would not automatically start after setting it for the first time and would require the user to restart Spike. This is now fixed.
-FIX: After receiving backfill data (MiaoMiao & Blucon) the most recent reading was not uploaded to Nightscout / Dexcom Share.
+FIX: After receiving backfill data (MiaoMiao & Blucon) the most recent reading was not uploaded to Nightscout / Dexcom Share. It's fixed now.
 FIX: Several overall fixes for small bugs that we were able to catch due to the Global Exception Handling feature introduced in version 1.1.5.
 
 1.1.5
