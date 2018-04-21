@@ -381,12 +381,9 @@ package services
 		 * if override = true, then a check will be done if there was a calibration in the last 60 minutes and if so the last calibration will be overriden<br>
 		 * if override = false, then there's no calibration override, no matter the timing of the last calibration<br>
 		 * <br>
-		 * if checklast30minutes = true, then it will be checked if there were readings in the last 30 minutes<br>
-		 * if checklast30minutes = false, then it will not be checked if there were readings in the last 30 minutes<br>
-		 * <br>
 		 * if addSnoozeOption = true, then an action will be added to the dialog which allows snoozing, the snoozeFunction should be non null and is called when the user choses that action
 		 */
-		public static function calibrationOnRequest(override:Boolean = true, checklast30minutes:Boolean = true, addSnoozeOption:Boolean = false, snoozeFunction:Function = null):void 
+		public static function calibrationOnRequest(override:Boolean = true, addSnoozeOption:Boolean = false, snoozeFunction:Function = null):void 
 		{
 			myTrace(" in calibrationOnRequest");
 			

@@ -536,7 +536,7 @@ package services
 							}
 						}
 						if (notificationEvent.identifier == null) {
-							CalibrationService.calibrationOnRequest(false, false, true, snoozeCalibrationRequest);
+							CalibrationService.calibrationOnRequest(false, true, snoozeCalibrationRequest);
 						} else if (notificationEvent.identifier == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER) {
 							_calibrationRequestSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 							myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, snoozing the notification for " + _calibrationRequestSnoozePeriodInMinutes + " minutes");
