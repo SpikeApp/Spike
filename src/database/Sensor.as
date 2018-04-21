@@ -100,6 +100,7 @@ package database
 				Database.updateSensor(currentSensor);
 			}
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR, "0");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN, "false");
 		}
 		
 		public function print(indentation:String):String {

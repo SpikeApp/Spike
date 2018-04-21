@@ -366,6 +366,19 @@
 		 * Chart
 		 */
 		 public static const COMMON_SETTING_CHART_ROUND_MGDL_ON:int = 133;
+		 /** 
+		  * bluereader battery management
+		  */
+		 public static const COMMON_SETTING_BLUEREADER_FULL_BATTERY:int = 134;
+		 /**
+		  * xbrdiger battery level
+		  */
+		 public static const COMMON_SETTING_XBRIDGER_BATTERY_LEVEL:int = 135;
+
+		 /**
+		 * warning will be given after 14 days that sensor is about to expire, can still last for 12 hours after that 
+		  */
+		 public static const COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN:int = 136;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -501,7 +514,10 @@
 			 "0xEEEEEE",//COMMON_SETTING_TREATMENTS_PILL_COLOR
 			 "0xEEEEEE",//COMMON_SETTING_TREATMENTS_STROKE_COLOR
 			 "0x666666",//COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR
-			 "false"//COMMON_SETTING_CHART_ROUND_MGDL_ON
+			 "false",//COMMON_SETTING_CHART_ROUND_MGDL_ON
+			 "0",//COMMON_SETTING_BLUEREADER_FULL_BATTERY
+			 "0",//COMMON_SETTING_XBRIDGER_BATTERY_LEVEL
+			 "false"//COMMON_SETTING_MIAOMIAO_EXPIRY_WARNING_GIVEN
 		 ];
 
 		 public function CommonSettings()
