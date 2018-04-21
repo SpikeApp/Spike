@@ -120,42 +120,49 @@ package services
 			'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P',
 			'Q', 'R', 'S', 'T', 'U', 'W', 'X', 'Y' ];
 		
-		public static const HM_10_SERVICE_G4:String = "0000ffe0-0000-1000-8000-00805f9b34fb"; 
-		public static const HM_10_SERVICE_G5:String = "F8083532-849E-531C-C594-30F1F86A4EA5"; 
-		public static const HM_10_SERVICE_BLUKON:String = "436A62C0-082E-4CE8-A08B-01D81F195B24"; 
-		public static const HM_RX_TX_G4:String = "0000ffe1-0000-1000-8000-00805f9b34fb";
-		public static const G5_Communication_Characteristic_UUID:String = "F8083533-849E-531C-C594-30F1F86A4EA5";
-		public static const G5_Control_Characteristic_UUID:String = "F8083534-849E-531C-C594-30F1F86A4EA5";
-		public static const G5_Authentication_Characteristic_UUID:String = "F8083535-849E-531C-C594-30F1F86A4EA5";
-		public static const BC_desiredTransmitCharacteristicUUID:String = "436AA6E9-082E-4CE8-A08B-01D81F195B24";
-		public static const BC_desiredReceiveCharacteristicUUID:String = "436A0C82-082E-4CE8-A08B-01D81F195B24";
-		public static const BlueReader_SERVICE:String = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-		public static const BlueReader_TX_Characteristic_UUID:String = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
-		public static const BlueReader_RX_Characteristic_UUID:String = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
-		public static const uuids_BLUKON_Advertisement:String = "436A62C0-082E-4CE8-A08B-01D81F195B24";
-
-		private static const uuids_G4_Service:Vector.<String> = new <String>[HM_10_SERVICE_G4];
-		private static const uuids_G5_Service:Vector.<String> = new <String>["F8083532-849E-531C-C594-30F1F86A4EA5"];
-		private static const uuids_BLUKON_Service:Vector.<String> = new <String>[uuids_BLUKON_Advertisement];
-		private static const uuids_BlueReader_Service:Vector.<String> = new <String>[BlueReader_SERVICE];
-		private static const uuids_Bluereader_Advertisement:Vector.<String> = new <String>[""];//00001530-1212-EFDE-1523-785FEABCD123", "7905F431-B5CE-4E99-A40F-4B1E122D00D0"];
-			
-		private static const uuids_G5_Advertisement:Vector.<String> = new <String>["0000FEBC-0000-1000-8000-00805F9B34FB"];
-		private static const uuids_G4_Characteristics:Vector.<String> = new <String>[HM_RX_TX_G4];
-		private static const uuids_G5_Characteristics:Vector.<String> = new <String>[G5_Authentication_Characteristic_UUID, G5_Communication_Characteristic_UUID, G5_Control_Characteristic_UUID];
-		private static const uuids_BLUKON_Characteristics:Vector.<String> = new <String>[BC_desiredReceiveCharacteristicUUID, BC_desiredTransmitCharacteristicUUID];
-		private static const uuids_BlueReader_Characteristics:Vector.<String> = new <String>[BlueReader_TX_Characteristic_UUID, BlueReader_RX_Characteristic_UUID];
-
-		//Transmiter PL
-		private static const TRANSMITER_PL_SERVICE_UUID:String = "c97433f0-be8f-4dc8-b6f0-5343e6100eb4";
-		private static const uuids_TRANSMITER_PL_Service:Vector.<String> = new <String>[TRANSMITER_PL_SERVICE_UUID];
-		private static const TRANSMITER_PL_RX_CHARACTERISTIC_UUID:String = "c97433f1-be8f-4dc8-b6f0-5343e6100eb4";
-		private static const TRANSMITER_PL_TX_CHARACTERISTIC_UUID:String = "c97433f2-be8f-4dc8-b6f0-5343e6100eb4";
-		private static const uuids_TRANSMITER_PL_Characteristics:Vector.<String> = new <String>[TRANSMITER_PL_RX_CHARACTERISTIC_UUID, TRANSMITER_PL_TX_CHARACTERISTIC_UUID];
+		//xdrip
+		private static const G4_Service_UUID:String = "0000ffe0-0000-1000-8000-00805f9b34fb"; 
+		private static const G4_RX_Characteristic_UUID:String = "0000ffe1-0000-1000-8000-00805f9b34fb";
+		private static const G4_Service_UUID_Vector:Vector.<String> = new <String>[G4_Service_UUID];
+		private static const G4_Advertisement_UUID_Vector:Vector.<String> = new <String>[G4_Service_UUID];
+		private static const G4_Characteristics_UUID_Vector:Vector.<String> = new <String>[G4_RX_Characteristic_UUID];
 		
-		//xbridger
+		//G5
+		private static const G5_Service_UUID:String = "F8083532-849E-531C-C594-30F1F86A4EA5"; 
+		private static const G5_Communication_Characteristic_UUID:String = "F8083533-849E-531C-C594-30F1F86A4EA5";
+		private static const G5_Control_Characteristic_UUID:String = "F8083534-849E-531C-C594-30F1F86A4EA5";
+		private static const G5_Authentication_Characteristic_UUID:String = "F8083535-849E-531C-C594-30F1F86A4EA5";
+		private static const G5_Advertisement_UUID:String = "0000FEBC-0000-1000-8000-00805F9B34FB";
+		private static const G5_Service_UUID_Vector:Vector.<String> = new <String>[G5_Service_UUID];
+		private static const G5_Advertisement_UUID_Vector:Vector.<String> = new <String>[G5_Advertisement_UUID];
+		private static const G5_Characteristics_UUID_Vector:Vector.<String> = new <String>[G5_Authentication_Characteristic_UUID, G5_Communication_Characteristic_UUID, G5_Control_Characteristic_UUID];
+		
+		//Blucon
+		private static const Blucon_Service_UUID:String = "436A62C0-082E-4CE8-A08B-01D81F195B24"; 
+		private static const Blucon_TX_Characteristic_UUID:String = "436AA6E9-082E-4CE8-A08B-01D81F195B24";
+		private static const Blucon_RX_Characteristic_UUID:String = "436A0C82-082E-4CE8-A08B-01D81F195B24";
+		private static const Blucon_Advertisement_UUID:String = "436A62C0-082E-4CE8-A08B-01D81F195B24";
+		private static const Blucon_Service_UUID_Vector:Vector.<String> = new <String>[Blucon_Advertisement_UUID];
+		private static const Blucon_Advertisement_UUID_Vector:Vector.<String> = new <String>[Blucon_Advertisement_UUID];
+		private static const Blucon_Characteristics_UUID_Vector:Vector.<String> = new <String>[Blucon_RX_Characteristic_UUID, Blucon_TX_Characteristic_UUID];
+		
+		//Bluereader
+		private static const BlueReader_Service_UUID:String = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+		private static const BlueReader_TX_Characteristic_UUID:String = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
+		private static const BlueReader_RX_Characteristic_UUID:String = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+		private static const BlueReader_Service_UUID_Vector:Vector.<String> = new <String>[BlueReader_Service_UUID];
+		private static const BluReader_Advertisement_UUID_Vector:Vector.<String> = new <String>[""];
+		private static const BluReader_Characteristics_UUID_Vector:Vector.<String> = new <String>[BlueReader_TX_Characteristic_UUID, BlueReader_RX_Characteristic_UUID];
+		
+		//Transmiter PL
+		private static const Transmiter_PL_Service_UUID:String = "c97433f0-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const Transmiter_PL_RX_Characteristics_UUID:String = "c97433f1-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const Transmiter_PL_TX_Characteristic_UUID:String = "c97433f2-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const Transmiter_PL_Service_UUID_Vector:Vector.<String> = new <String>[Transmiter_PL_Service_UUID];
+		private static const Transmiter_PL_Characteristics_UUID_Vector:Vector.<String> = new <String>[Transmiter_PL_RX_Characteristics_UUID, Transmiter_PL_TX_Characteristic_UUID];
+		
 		//xbridger uses the same uuid's as xdrip except for TX Characteristic
-		private static const XBRIDGER_TX_CHARACTERISTIC_UUID:String = "0000ffe2-0000-1000-8000-00805f9b34fb";
+		private static const xBridgeR_TX_Characteristic_UUID:String = "0000ffe2-0000-1000-8000-00805f9b34fb";
 		
 		private static var connectionAttemptTimeStamp:Number;
 		private static const maxTimeBetweenConnectAttemptAndConnectSuccess:Number = 3;
@@ -166,7 +173,7 @@ package services
 		private static var authStatus:AuthStatusRxMessage = null;
 		private static var discoveryTimeStamp:Number;
 		
-		public static const BATTERY_READ_PERIOD_MS:Number = 1000 * 60 * 60 * 12; // how often to poll battery data (12 hours)
+		private static const BATTERY_READ_PERIOD_MS:Number = 1000 * 60 * 60 * 12; // how often to poll battery data (12 hours)
 		
 		private static var timeStampOfLastG5Reading:Number = 0;
 		
@@ -213,7 +220,7 @@ package services
 		 */
 		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5:int = 5;
 		
-		private static var _amountOfConsecutiveSensorNotDetectedForMiaoMiao:int = 0;
+		public static var _amountOfConsecutiveSensorNotDetectedForMiaoMiao:int = 0;
 		
 		/**
 		 * if miaomiao, this is the amount of times a sensorNotDetected was received consecutively without receiving a full data packet
@@ -527,10 +534,10 @@ package services
 
 			if (!BluetoothLE.service.centralManager.isScanning) {
 				if (!BluetoothLE.service.centralManager.scanForPeripherals(
-					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 
-					(BlueToothDevice.isDexcomG5() ? uuids_G5_Advertisement:
-					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Service:					
-					(BlueToothDevice.isBlueReader() ? uuids_Bluereader_Advertisement :uuids_G4_Service)))))//xdrip, xbridge and xbridger all use uuids_G4_Service
+					BlueToothDevice.isBluKon() ? Blucon_Service_UUID_Vector : 
+					(BlueToothDevice.isDexcomG5() ? G5_Advertisement_UUID_Vector:
+					(BlueToothDevice.isTransmiter_PL() ? Transmiter_PL_Service_UUID_Vector:					
+					(BlueToothDevice.isBlueReader() ? BluReader_Advertisement_UUID_Vector :G4_Service_UUID_Vector)))))//xdrip, xbridge and xbridger all use uuids_G4_Service
 				{
 					myTrace("failed to start scanning for peripherals");
 					return;
@@ -543,7 +550,7 @@ package services
 						ScanTimer.start();
 					}
 					if (BlueToothDevice.isBluKon()) {
-						startMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+						startMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 					}
 				}
 			} else {
@@ -560,7 +567,7 @@ package services
 					myTrace("in stopScanning, is scanning, call stopScan");
 					BluetoothLE.service.centralManager.stopScan();
 					if (BlueToothDevice.isBluKon()) {
-						stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+						stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 					}
 					_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 				}
@@ -571,7 +578,7 @@ package services
 			myTrace("in central_peripheralDiscoveredHandler, stop scanning. Device name = " + event.peripheral.name + ", Device address = " + event.peripheral.uuid);
 			BluetoothLE.service.centralManager.stopScan();
 			if (BlueToothDevice.isBluKon()) {
-				stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+				stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 			}
 
 			discoveryTimeStamp = (new Date()).valueOf();
@@ -669,7 +676,7 @@ package services
 					myTrace("in central_peripheralConnectHandler, blukon and scanning. Stop scanning");
 					BluetoothLE.service.centralManager.stopScan();
 					if (BlueToothDevice.isBluKon()) {
-						stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+						stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 					}
 				}
 			}
@@ -749,11 +756,11 @@ package services
 				
 				waitingForServicesDiscovered = true;
 				activeBluetoothPeripheral.discoverServices(
-					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 
-					(BlueToothDevice.isDexcomG5() ? uuids_G5_Service:
-					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Service:
-					(BlueToothDevice.isBlueReader() ? uuids_BlueReader_Service:
-					uuids_G4_Service))));
+					BlueToothDevice.isBluKon() ? Blucon_Service_UUID_Vector : 
+					(BlueToothDevice.isDexcomG5() ? G5_Service_UUID_Vector:
+					(BlueToothDevice.isTransmiter_PL() ? Transmiter_PL_Service_UUID_Vector:
+					(BlueToothDevice.isBlueReader() ? BlueReader_Service_UUID_Vector:
+					G4_Service_UUID_Vector))));
 				if (!BlueToothDevice.isBluKon()) {
 					discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 					discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
@@ -904,35 +911,35 @@ package services
 				var o:Object;
 				if (BlueToothDevice.isDexcomG5()) {
 					for each (o in activeBluetoothPeripheral.services) {
-						if (HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						if (G5_Service_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (BlueToothDevice.isBluKon()) {
 					for each (o in activeBluetoothPeripheral.services) {
-						if (HM_10_SERVICE_BLUKON.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
+						if (Blucon_Service_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
 					for each (var o:Object in activeBluetoothPeripheral.services) {
-						if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
+						if (G4_Service_UUID.indexOf(o.uuid as String) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (BlueToothDevice.isBlueReader()) {
 					for each (o in activeBluetoothPeripheral.services) {
-						if (BlueReader_SERVICE.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
+						if (BlueReader_Service_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (BlueToothDevice.isTransmiter_PL()) {
 					for each (o in activeBluetoothPeripheral.services) {
-						if (TRANSMITER_PL_SERVICE_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
+						if (Transmiter_PL_Service_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
@@ -941,11 +948,11 @@ package services
 				
 				waitingForPeripheralCharacteristicsDiscovered = true;
 				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], 
-					BlueToothDevice.isBluKon() ? uuids_BLUKON_Characteristics : 
-					(BlueToothDevice.isDexcomG5() ? uuids_G5_Characteristics:
-					(BlueToothDevice.isBlueReader() ? uuids_BlueReader_Characteristics:
-					(BlueToothDevice.isTransmiter_PL() ? uuids_TRANSMITER_PL_Characteristics:
-					uuids_G4_Characteristics))));//xdrip, xbridge and xbridgeR use uuids_G4_Characteristics
+					BlueToothDevice.isBluKon() ? Blucon_Characteristics_UUID_Vector : 
+					(BlueToothDevice.isDexcomG5() ? G5_Characteristics_UUID_Vector:
+					(BlueToothDevice.isBlueReader() ? BluReader_Characteristics_UUID_Vector:
+					(BlueToothDevice.isTransmiter_PL() ? Transmiter_PL_Characteristics_UUID_Vector:
+					G4_Characteristics_UUID_Vector))));//xdrip, xbridge and xbridgeR use uuids_G4_Characteristics
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
 				discoverServiceOrCharacteristicTimer.start();
@@ -985,7 +992,7 @@ package services
 			if (BlueToothDevice.isDexcomG5()) {
 				awaitingAuthStatusRxMessage = false;
 				for each (o in activeBluetoothPeripheral.services) {
-					if (HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
+					if (G5_Service_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
 					}
 					servicesIndex++;
@@ -1018,26 +1025,26 @@ package services
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
 			} else if (BlueToothDevice.isBluKon()) {
-				myTrace("looping through services to find service " + HM_10_SERVICE_BLUKON);
+				myTrace("looping through services to find service " + Blucon_Service_UUID);
 				for each (o in activeBluetoothPeripheral.services) {
-					if (HM_10_SERVICE_BLUKON.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + HM_10_SERVICE_BLUKON + ", index = " + servicesIndex);
+					if (Blucon_Service_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						myTrace("found service " + Blucon_Service_UUID + ", index = " + servicesIndex);
 						break;
 					}
 					servicesIndex++;
 				}
 				myTrace("looping through service to find BC_desiredReceiveCharacteristicUUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (BC_desiredReceiveCharacteristicUUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + BC_desiredReceiveCharacteristicUUID + ", index = " + BC_desiredReceiveCharacteristicIndex);
+					if (Blucon_RX_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						myTrace("found service " + Blucon_RX_Characteristic_UUID + ", index = " + BC_desiredReceiveCharacteristicIndex);
 						break;
 					}
 					BC_desiredReceiveCharacteristicIndex++;
 				}
 				myTrace("looping through service to find BC_desiredTransmitCharacteristicUUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (BC_desiredTransmitCharacteristicUUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + BC_desiredTransmitCharacteristicUUID + ", index = " + BC_desiredTransmitCharacteristicIndex);
+					if (Blucon_TX_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						myTrace("found service " + Blucon_TX_Characteristic_UUID + ", index = " + BC_desiredTransmitCharacteristicIndex);
 						break;
 					}
 					BC_desiredTransmitCharacteristicIndex++;
@@ -1052,15 +1059,15 @@ package services
 				}
 			} else if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
 				for each (o in activeBluetoothPeripheral.services) {
-					if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
-						myTrace("peripheral_discoverCharacteristicsHandler, found service " + HM_10_SERVICE_G4);
+					if (G4_Service_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found service " + G4_Service_UUID);
 						break;
 					}
 					servicesIndex++;
 				}
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (HM_RX_TX_G4.indexOf(o.uuid as String) > -1) {
-						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + HM_RX_TX_G4);
+					if (G4_RX_Characteristic_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + G4_RX_Characteristic_UUID);
 						break;
 					}
 					G4_Read_CharacteristicsIndex++;
@@ -1070,8 +1077,8 @@ package services
 				if (BlueToothDevice.isxBridgeR()) {
 					for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 						myTrace("in peripheral_discoverCharacteristicsHandler, found characteristic " + (o.uuid as String));
-						if (XBRIDGER_TX_CHARACTERISTIC_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
-							myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + XBRIDGER_TX_CHARACTERISTIC_UUID);
+						if (xBridgeR_TX_Characteristic_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
+							myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + xBridgeR_TX_Characteristic_UUID);
 							break;
 						}
 						G4_Write_CharacteristicsIndex++;
@@ -1088,16 +1095,16 @@ package services
 				}
 			} else if (BlueToothDevice.isTransmiter_PL()) {
 				for each (o in activeBluetoothPeripheral.services) {
-					if (TRANSMITER_PL_SERVICE_UUID.indexOf(o.uuid as String) > -1) {
-						myTrace("peripheral_discoverCharacteristicsHandler, found service " + TRANSMITER_PL_SERVICE_UUID);
+					if (Transmiter_PL_Service_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found service " + Transmiter_PL_Service_UUID);
 						break;
 					}
 					servicesIndex++;
 				}
 
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (TRANSMITER_PL_TX_CHARACTERISTIC_UUID.indexOf(o.uuid as String) > -1) {
-						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + TRANSMITER_PL_TX_CHARACTERISTIC_UUID);
+					if (Transmiter_PL_TX_Characteristic_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + Transmiter_PL_TX_Characteristic_UUID);
 						break;
 					}
 					TRANSMITER_PL_Tx_CharacteristicIndex++;
@@ -1105,8 +1112,8 @@ package services
 				TRANSMITER_PL_Tx_characteristic = event.peripheral.services[servicesIndex].characteristics[TRANSMITER_PL_Tx_CharacteristicIndex];
 
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (TRANSMITER_PL_RX_CHARACTERISTIC_UUID.indexOf(o.uuid as String) > -1) {
-						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + TRANSMITER_PL_RX_CHARACTERISTIC_UUID);
+					if (Transmiter_PL_RX_Characteristics_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + Transmiter_PL_RX_Characteristics_UUID);
 						break;
 					}
 					TRANSMITER_PL_Rx_CharacteristicIndex++;
@@ -1121,7 +1128,7 @@ package services
 			} else if (BlueToothDevice.isBlueReader()) {
 				myTrace("in peripheral_discoverCharacteristicsHandler, handling bluereader, search for servicesIndex");
 				for each (o in activeBluetoothPeripheral.services) {
-					if (uuids_BlueReader_Service.indexOf(o.uuid as String) > -1) {
+					if (BlueReader_Service_UUID_Vector.indexOf(o.uuid as String) > -1) {
 						break;
 					}
 					servicesIndex++;
@@ -1230,7 +1237,7 @@ package services
 					fullAuthenticateG5();
 				}
 			} else if (BlueToothDevice.isBluKon()) {
-				if (event.characteristic.uuid.toUpperCase() == BC_desiredReceiveCharacteristicUUID.toUpperCase()) {
+				if (event.characteristic.uuid.toUpperCase() == Blucon_RX_Characteristic_UUID.toUpperCase()) {
 				}
 			}
 			if (!BlueToothDevice.alwaysScan()) {
@@ -1244,7 +1251,7 @@ package services
 			myTrace("event.errorcode  = " + event.errorCode);
 			if ((new Date()).valueOf() - timeStampOfLastDeviceNotPairedForBlukon > 4.75 * 60 * 1000) {
 				if (BlueToothDevice.isBluKon()) {
-					if (event.characteristic.uuid.toUpperCase() == BC_desiredReceiveCharacteristicUUID.toUpperCase()
+					if (event.characteristic.uuid.toUpperCase() == Blucon_RX_Characteristic_UUID.toUpperCase()
 						&&
 						event.errorCode == 15 
 					) {
@@ -2189,19 +2196,19 @@ package services
 				return "G5_Authentication_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == G5_Control_Characteristic_UUID.toUpperCase()) {
 				return "G5_Control_Characteristic_UUID";
-			} else if (uuid.toUpperCase() == BC_desiredTransmitCharacteristicUUID.toUpperCase()) {
+			} else if (uuid.toUpperCase() == Blucon_TX_Characteristic_UUID.toUpperCase()) {
 				return "BC_desiredTransmitCharacteristicUUID";
-			} else if (uuid.toUpperCase() == BC_desiredReceiveCharacteristicUUID.toUpperCase()) {
+			} else if (uuid.toUpperCase() == Blucon_RX_Characteristic_UUID.toUpperCase()) {
 				return "BC_desiredReceiveCharacteristicUUID";
 			} else if (uuid.toUpperCase() == BlueReader_RX_Characteristic_UUID.toUpperCase()) {
 				return "BlueReader_RX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == BlueReader_TX_Characteristic_UUID.toUpperCase()) {
 				return "BlueReader_TX_Characteristic_UUID";
-			} else if (HM_RX_TX_G4.toUpperCase().indexOf(uuid.toUpperCase()) > -1) {
+			} else if (G4_RX_Characteristic_UUID.toUpperCase().indexOf(uuid.toUpperCase()) > -1) {
 				return "HM_RX_TX_G4";
-			} else if (uuid.toUpperCase() == TRANSMITER_PL_RX_CHARACTERISTIC_UUID.toUpperCase()) {
+			} else if (uuid.toUpperCase() == Transmiter_PL_RX_Characteristics_UUID.toUpperCase()) {
 				return "TRANSMITER_PL_RX_CHARACTERISTIC_UUID";
-			} else if (uuid.toUpperCase() == TRANSMITER_PL_TX_CHARACTERISTIC_UUID.toUpperCase()) {
+			} else if (uuid.toUpperCase() == Transmiter_PL_TX_Characteristic_UUID.toUpperCase()) {
 				return "TRANSMITER_PL_TX_CHARACTERISTIC_UUID";
 			} 
 			return uuid + ", unknown characteristic uuid";
