@@ -1064,21 +1064,23 @@ package ui.chart
 				{
 					if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 					{
+						var actionsLayout:HorizontalLayout = new HorizontalLayout();
+						actionsLayout.gap = 5;
+						actionsContainer = new LayoutGroup();
+						actionsContainer.layout = actionsLayout;
+							
 						if (treatment.treatment.type != Treatment.TYPE_SENSOR_START)
 						{
-							var actionsLayout:HorizontalLayout = new HorizontalLayout();
-							actionsLayout.gap = 5;
-							actionsContainer = new LayoutGroup();
-							actionsContainer.layout = actionsLayout;
-							
 							moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
 							moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
 							actionsContainer.addChild(moveBtn);
-							deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
-							deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
-							actionsContainer.addChild(deleteBtn);
-							treatmentContainer.addChild(actionsContainer);
 						}
+						
+						deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
+						deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+						actionsContainer.addChild(deleteBtn);
+					
+						treatmentContainer.addChild(actionsContainer);
 					}
 				}
 				

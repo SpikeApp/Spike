@@ -60,6 +60,8 @@ package ui.screens.display.treatments
 		private var treatmentEditorCallout:Callout;
 		private var positionHelper:Sprite;
 		private var treatmentEditor:TreatmentEditorList;
+		private var sensorStartCanvas:Canvas;
+		private var sensorStartTexture:RenderTexture;
 		
 		/* Objects */
 		private var allTreatments:Array;
@@ -68,6 +70,10 @@ package ui.screens.display.treatments
 		/* Properties */
 		private var dateFormat:String;
 		private var glucoseUnit:String;
+		private var bolusColor:uint;
+		private var carbsColor:uint;
+		private var bgCheckColor:uint;
+		private var sensorStartColor:uint;
 		
 		public function TreatmentsManagementList()
 		{
@@ -107,6 +113,12 @@ package ui.screens.display.treatments
 			
 			//Get glucose unit
 			glucoseUnit = GlucoseHelper.getGlucoseUnit();
+			
+			//Get treatment's colors
+			bolusColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
+			carbsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
+			bgCheckColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR));
+			sensorStartColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR));
 		}
 		
 		private function setupContent():void
@@ -126,6 +138,10 @@ package ui.screens.display.treatments
 			glucoseCanvas = createTreatmentIcon(Treatment.TYPE_GLUCOSE_CHECK);
 			glucoseTexture = new RenderTexture(glucoseCanvas.width, glucoseCanvas.height);
 			glucoseTexture.draw(glucoseCanvas);
+			
+			sensorStartCanvas = createTreatmentIcon(Treatment.TYPE_SENSOR_START);
+			sensorStartTexture = new RenderTexture(sensorStartCanvas.width, sensorStartCanvas.height);
+			sensorStartTexture.draw(sensorStartCanvas);
 			
 			noteCanvas = createTreatmentIcon(Treatment.TYPE_NOTE);
 			noteTexture = new RenderTexture(noteCanvas.width, noteCanvas.height);
@@ -155,7 +171,10 @@ package ui.screens.display.treatments
 				}
 				else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 				{
-					treatmentValue = (glucoseUnit == "mg/dL" ? treatment.glucose : Math.round(((BgReading.mgdlToMmol((treatment.glucose))) * 10)) / 10) + " " + glucoseUnit;
+					treatmentValue = "";
+					if (treatment.note == ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
+						treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_calibration') + " ";
+					treatmentValue += (glucoseUnit == "mg/dL" ? treatment.glucose : Math.round(((BgReading.mgdlToMmol((treatment.glucose))) * 10)) / 10) + " " + glucoseUnit;
 					icon = glucoseTexture;
 				}
 				else if (treatment.type == Treatment.TYPE_NOTE)
@@ -167,6 +186,11 @@ package ui.screens.display.treatments
 				{
 					treatmentValue = GlucoseFactory.formatIOB(treatment.insulinAmount) + "/" + GlucoseFactory.formatCOB(treatment.carbs);
 					icon = mealTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_SENSOR_START)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_sensor_start');
+					icon = sensorStartTexture;
 				}
 				
 				var treatmentTime:Date = new Date(treatment.timestamp);
@@ -215,12 +239,15 @@ package ui.screens.display.treatments
 							actionsContainer.pivotX = -10;
 							actionsContainer.layout = containerLayout;
 							
-							var editButton:Button = new Button();
-							editButton.name = "editButton";
-							editButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.editTexture);
-							editButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
-							editButton.addEventListener(Event.TRIGGERED, onEditTreatment);
-							actionsContainer.addChild(editButton);
+							if (item.treatment.type != Treatment.TYPE_SENSOR_START)
+							{
+								var editButton:Button = new Button();
+								editButton.name = "editButton";
+								editButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.editTexture);
+								editButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+								editButton.addEventListener(Event.TRIGGERED, onEditTreatment);
+								actionsContainer.addChild(editButton);
+							}
 							
 							var deleteButton:Button = new Button();
 							deleteButton.name = "deleteButton";
@@ -289,15 +316,17 @@ package ui.screens.display.treatments
 			var icon:Canvas = new Canvas();
 			var radius:int = 8;
 			
-			if (treatmentType == Treatment.TYPE_BOLUS || treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_CARBS_CORRECTION || treatmentType == Treatment.TYPE_GLUCOSE_CHECK)
+			if (treatmentType == Treatment.TYPE_BOLUS || treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_CARBS_CORRECTION || treatmentType == Treatment.TYPE_GLUCOSE_CHECK || treatmentType == Treatment.TYPE_SENSOR_START)
 			{
 				var marker:NGon = new NGon(radius, 20, 0, 0, 360);
 				if (treatmentType == Treatment.TYPE_BOLUS || treatmentType == Treatment.TYPE_CORRECTION_BOLUS)
-					marker.color = 0x0086ff;
+					marker.color = bolusColor;
 				else if (treatmentType == Treatment.TYPE_CARBS_CORRECTION)
-					marker.color = 0xf8a246;
+					marker.color = carbsColor;
 				else if (treatmentType == Treatment.TYPE_GLUCOSE_CHECK)
-					marker.color = 0xFF0000;
+					marker.color = bgCheckColor;
+				else if (treatmentType == Treatment.TYPE_SENSOR_START)
+					marker.color = sensorStartColor;
 				marker.x = marker.width / 2;
 				marker.y = marker.height / 2;
 				icon.addChild(marker);
@@ -307,13 +336,13 @@ package ui.screens.display.treatments
 				var insulinMarker:NGon = new NGon(radius, 20, 0, 90, 270);
 				insulinMarker.x = insulinMarker.width / 2;
 				insulinMarker.y = insulinMarker.height / 2;
-				insulinMarker.color = 0x0086ff;
+				insulinMarker.color = bolusColor;
 				icon.addChild(insulinMarker);
 				
 				var carbsMarker:NGon = new NGon(radius, 20, 0, -90, 90);
 				carbsMarker.x = carbsMarker.width / 2;
 				carbsMarker.y = carbsMarker.height / 2;
-				carbsMarker.color = 0xf8a246;
+				carbsMarker.color = carbsColor;
 				icon.addChild(carbsMarker);
 			}
 			else if (treatmentType == Treatment.TYPE_NOTE)
@@ -426,6 +455,18 @@ package ui.screens.display.treatments
 			{
 				glucoseTexture.dispose();
 				glucoseTexture = null;
+			}
+			
+			if (sensorStartCanvas != null)
+			{
+				sensorStartCanvas.dispose();
+				sensorStartCanvas = null;
+			}
+			
+			if (sensorStartTexture != null)
+			{
+				sensorStartTexture.dispose();
+				sensorStartTexture = null;
 			}
 			
 			if (noteCanvas != null)
