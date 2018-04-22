@@ -976,20 +976,19 @@ package services
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
 			var servicesIndex:int = 0;
-			var G4_Read_CharacteristicsIndex:int = 0;
-			var G5AuthenticationCharacteristicsIndex:int = 0;
-			var G5CommunicationCharacteristicsIndex:int = 0;
-			var G5ControlCharacteristicsIndex:int = 0;
-			var BC_desiredReceiveCharacteristicIndex:int = 0;
-			var BC_desiredTransmitCharacteristicIndex:int = 0;
-			var BlueReader_Rx_CharacteristicIndex:int = 0;
-			var BlueReader_Tx_CharacteristicIndex:int = 0;
-			var TRANSMITER_PL_Rx_CharacteristicIndex:int = 0;
-			var TRANSMITER_PL_Tx_CharacteristicIndex:int = 0;
-			var G4_Write_CharacteristicsIndex:int = 0;
+			
+			//used to loop through characteristics for all peripheral types except G5
+			var Read_CharacteristicsIndex:int = 0;
+			var Write_CharacteristicsIndex:int = 0;
 			
 			var o:Object;
 			if (BlueToothDevice.isDexcomG5()) {
+				
+				//used to loop through characteristics
+				var G5AuthenticationCharacteristicsIndex:int = 0;
+				var G5CommunicationCharacteristicsIndex:int = 0;
+				var G5ControlCharacteristicsIndex:int = 0;
+				
 				awaitingAuthStatusRxMessage = false;
 				for each (o in activeBluetoothPeripheral.services) {
 					if (G5_Service_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
@@ -1036,21 +1035,21 @@ package services
 				myTrace("looping through service to find BC_desiredReceiveCharacteristicUUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (Blucon_RX_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + Blucon_RX_Characteristic_UUID + ", index = " + BC_desiredReceiveCharacteristicIndex);
+						myTrace("found service " + Blucon_RX_Characteristic_UUID + ", index = " + Read_CharacteristicsIndex);
 						break;
 					}
-					BC_desiredReceiveCharacteristicIndex++;
+					Read_CharacteristicsIndex++;
 				}
 				myTrace("looping through service to find BC_desiredTransmitCharacteristicUUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (Blucon_TX_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + Blucon_TX_Characteristic_UUID + ", index = " + BC_desiredTransmitCharacteristicIndex);
+						myTrace("found service " + Blucon_TX_Characteristic_UUID + ", index = " + Write_CharacteristicsIndex);
 						break;
 					}
-					BC_desiredTransmitCharacteristicIndex++;
+					Write_CharacteristicsIndex++;
 				}
-				BC_desiredReceiveCharacteristic = event.peripheral.services[servicesIndex].characteristics[BC_desiredReceiveCharacteristicIndex];
-				BC_desiredTransmitCharacteristic = event.peripheral.services[servicesIndex].characteristics[BC_desiredTransmitCharacteristicIndex];
+				BC_desiredReceiveCharacteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
+				BC_desiredTransmitCharacteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
 				myTrace("subscribing to BC_desiredReceiveCharacteristic");
 				
 				if (!activeBluetoothPeripheral.subscribeToCharacteristic(BC_desiredReceiveCharacteristic))
@@ -1070,9 +1069,9 @@ package services
 						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + G4_RX_Characteristic_UUID);
 						break;
 					}
-					G4_Read_CharacteristicsIndex++;
+					Read_CharacteristicsIndex++;
 				}
-				G4_Read_characteristic = event.peripheral.services[servicesIndex].characteristics[G4_Read_CharacteristicsIndex];
+				G4_Read_characteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
 
 				if (BlueToothDevice.isxBridgeR()) {
 					for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
@@ -1081,9 +1080,9 @@ package services
 							myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + xBridgeR_TX_Characteristic_UUID);
 							break;
 						}
-						G4_Write_CharacteristicsIndex++;
+						Write_CharacteristicsIndex++;
 					}
-					G4_Write_Characteristic = event.peripheral.services[servicesIndex].characteristics[G4_Write_CharacteristicsIndex];
+					G4_Write_Characteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
 				} else {
 					G4_Write_Characteristic = G4_Read_characteristic;
 				}
@@ -1107,18 +1106,18 @@ package services
 						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + Transmiter_PL_TX_Characteristic_UUID);
 						break;
 					}
-					TRANSMITER_PL_Tx_CharacteristicIndex++;
+					Write_CharacteristicsIndex++;
 				}
-				TRANSMITER_PL_Tx_characteristic = event.peripheral.services[servicesIndex].characteristics[TRANSMITER_PL_Tx_CharacteristicIndex];
+				TRANSMITER_PL_Tx_characteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
 
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (Transmiter_PL_RX_Characteristics_UUID.indexOf(o.uuid as String) > -1) {
 						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + Transmiter_PL_RX_Characteristics_UUID);
 						break;
 					}
-					TRANSMITER_PL_Rx_CharacteristicIndex++;
+					Read_CharacteristicsIndex++;
 				}
-				TRANSMITER_PL_Rx_characteristic = event.peripheral.services[servicesIndex].characteristics[TRANSMITER_PL_Rx_CharacteristicIndex];
+				TRANSMITER_PL_Rx_characteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
 
 				myTrace("subscribing to TRANSMITER_PL_Rx_characteristic");
 				if (!activeBluetoothPeripheral.subscribeToCharacteristic(TRANSMITER_PL_Rx_characteristic))
@@ -1141,9 +1140,9 @@ package services
 						myTrace("found BlueReader_RX_Characteristic_UUID");
 						break;
 					}
-					BlueReader_Rx_CharacteristicIndex++;
+					Read_CharacteristicsIndex++;
 				}
-				BlueReader_RX_Characteristic = event.peripheral.services[servicesIndex].characteristics[BlueReader_Rx_CharacteristicIndex];
+				BlueReader_RX_Characteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
 
 				myTrace("trying to find BlueReader_TX_Characteristic_UUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
@@ -1151,9 +1150,9 @@ package services
 						myTrace("found BlueReader_TX_Characteristic_UUID");
 						break;
 					}
-					BlueReader_Tx_CharacteristicIndex++;
+					Write_CharacteristicsIndex++;
 				}
-				BlueReader_TX_Characteristic = event.peripheral.services[servicesIndex].characteristics[BlueReader_Tx_CharacteristicIndex];
+				BlueReader_TX_Characteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
 
 				myTrace("subscribing to BlueReader_RX_Characteristic");
 				if (!activeBluetoothPeripheral.subscribeToCharacteristic(BlueReader_RX_Characteristic))
