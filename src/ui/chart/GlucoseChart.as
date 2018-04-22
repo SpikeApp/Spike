@@ -154,6 +154,9 @@ package ui.chart
 		private var differenceInMinutesForAllTimestamps:Number;
 		private var mainChartMask:Quad;
 		private var dummySprite:Sprite;
+		private var scrollerBackground:Quad;
+		private var handPickerFill:Quad;
+		private var handpickerOutline:Shape;
 		
 		//Objects
 		private var statusUpdateTimer:Timer;
@@ -187,45 +190,33 @@ package ui.chart
 		private var timelineContainer:Sprite;
 		private var timelineObjects:Array = [];
 		
-		//Treatments
+		//Treatments Variables
 		private var treatmentsFirstRun:Boolean = true;
 		private var treatmentsActive:Boolean = true;
-		private var treatmentsContainer:Sprite;
 		private var treatmentsList:Array = [];
 		private var treatmentsMap:Dictionary = new Dictionary();
-		private var treatmentCallout:Callout;
-		private var IOBPill:ChartTreatmentPill;
-		private var glucoseSlopePill:ChartInfoPill;
-		private var glucoseTimeAgoPill:ChartInfoPill;
 		private var ago:String;
 		private var now:String;
-		private var COBPill:ChartTreatmentPill;
 		private var yAxisHeight:Number = 0;
 		private var allTreatmentsAdded:Boolean = false;
 		private var displayTreatmentsOnChart:Boolean;
 		private var displayCOBEnabled:Boolean;
 		private var displayIOBEnabled:Boolean;
-
-		private var scrollerBackground:Quad;
-
-		private var handPickerFill:Quad;
-
-		private var handpickerOutline:Shape;
-
+		
+		//Treatments Display Objects
+		private var treatmentsContainer:Sprite;
+		private var treatmentCallout:Callout;
+		private var IOBPill:ChartTreatmentPill;
+		private var glucoseSlopePill:ChartInfoPill;
+		private var glucoseTimeAgoPill:ChartInfoPill;
+		private var COBPill:ChartTreatmentPill;
 		private var treatmentContainer:LayoutGroup;
-
 		private var treatmentValueLabel:Label;
-
 		private var treatmentTimeSpinner:DateTimeSpinner;
-
 		private var timeSpacer:Sprite;
-
 		private var treatmentNoteLabel:Label;
-
 		private var actionsContainer:LayoutGroup;
-
 		private var moveBtn:Button;
-
 		private var deleteBtn:Button;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)

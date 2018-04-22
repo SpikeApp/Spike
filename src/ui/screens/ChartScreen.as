@@ -55,6 +55,7 @@ package ui.screens
 		private var chartData:Array;
 		private var newReadingsList:Array = [];
 		private var newReadingsListFollower:Array = [];
+		private var timeRangeGroup:ToggleGroup;
 		
 		//Visual variables
 		private var glucoseChartTopPadding:int = 7;
@@ -87,8 +88,6 @@ package ui.screens
 		private var h1:Radio;
 		private var displayLines:Check;
 		private var delimitter:Shape;
-
-		private var timeRangeGroup:ToggleGroup;
 		
 		public function ChartScreen() 
 		{
