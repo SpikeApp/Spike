@@ -613,11 +613,11 @@ package ui.chart
 						{
 						//	currentLineX = glucoseMarker.x + (glucoseMarker.width);
 						//	currentLineY = glucoseMarker.y + (glucoseMarker.height);
-							var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
+							//var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 							currentLineX = glucoseMarker.x + (glucoseMarker.width);
-							if (glucoseDifference > 0)
-								currentLineY = glucoseMarker.y;
-							else
+							//if (glucoseDifference > 0)
+								//currentLineY = glucoseMarker.y;
+							//else
 								currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						}
 						
@@ -1988,11 +1988,11 @@ package ui.chart
 						{
 						//	currentLineX = glucoseMarker.x + (glucoseMarker.width);
 						//	currentLineY = glucoseMarker.y + (glucoseMarker.height);
-							var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
+							//var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 							currentLineX = glucoseMarker.x + (glucoseMarker.width);
-							if (glucoseDifference > 0)
-								currentLineY = glucoseMarker.y;
-							else
+							//if (glucoseDifference > 0)
+								//currentLineY = glucoseMarker.y;
+							//else
 								currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						}
 						
@@ -2114,9 +2114,9 @@ package ui.chart
 					else if (i == dataLength -1)
 					{
 						currentLineX = glucoseMarker.x + (glucoseMarker.width);
-						if (glucoseDifference > 0)
-							currentLineY = glucoseMarker.y ;
-						else
+						//if (glucoseDifference > 0)
+							//currentLineY = glucoseMarker.y ;
+						//else
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						
 					//	currentLineX = glucoseMarker.x + (glucoseMarker.width);
