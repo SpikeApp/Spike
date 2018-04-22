@@ -6,6 +6,7 @@ package ui.screens.display.settings.transmitter
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
+	import feathers.controls.Check;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
@@ -38,6 +39,7 @@ package ui.screens.display.settings.transmitter
 		/* Display Objects */
 		private var transmitterID:TextInput;
 		private var transmitterType:PickerList;
+		private var useDefaultLibreAlgoCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -46,6 +48,7 @@ package ui.screens.display.settings.transmitter
 		private var transmitterIDValue:String;
 		private var currentTransmitterIndex:int;
 		private var transmitterIDisEnabled:Boolean;
+		private var useDefaultLibreAlgo:Boolean;
 		
 		public function TransmitterSettingsList()
 		{
@@ -93,6 +96,9 @@ package ui.screens.display.settings.transmitter
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
 			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO")
 				transmitterIDisEnabled = false;
+			
+			/* Get Default Libre Algo */
+			useDefaultLibreAlgo = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION) == "true";
 		}
 		
 		private function setupContent():void
@@ -147,6 +153,11 @@ package ui.screens.display.settings.transmitter
 			transmitterID.addEventListener(Event.CHANGE, onTransmitterIDChange);
 			transmitterID.addEventListener( FeathersEventType.FOCUS_OUT, onValidateTransmitterID );
 			
+			//Default Libre Algo
+			useDefaultLibreAlgoCheck = LayoutFactory.createCheckMark(useDefaultLibreAlgo);
+			useDefaultLibreAlgoCheck.pivotX = 3;
+			useDefaultLibreAlgoCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			//Set Item Renderer
 			itemRendererFactory = function():IListItemRenderer
 			{
@@ -158,12 +169,31 @@ package ui.screens.display.settings.transmitter
 				return itemRenderer;
 			};
 			
-			//Set Data Provider
-			dataProvider = new ArrayCollection(
-				[
-					{ label: ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','transmitter_type_settings_title'), accessory: transmitterType },
-					{ label: ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','transmitter_id_settings_title'), accessory: transmitterID },
-				]);
+			refreshContent();
+		}
+		
+		private function refreshContent():void
+		{
+			dataProvider = null;
+			
+			var dataList:Array = [];
+			dataList.push( { label: ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','transmitter_type_settings_title'), accessory: transmitterType } );
+			dataList.push( { label: ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','transmitter_id_settings_title'), accessory: transmitterID } );
+			
+			if 
+			(
+				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon') ||
+				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') ||
+				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl') ||
+				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') ||
+				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao')
+				
+			)
+			{
+				dataList.push( { label: ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','default_libre_algorithm_label'), accessory: useDefaultLibreAlgoCheck } );
+			}
+			
+			dataProvider = new ArrayCollection( dataList );
 			
 			checkWarn();
 		}
@@ -195,6 +225,11 @@ package ui.screens.display.settings.transmitter
 				transmitterIDisEnabled = transmitterID.isEnabled = false;
 				transmitterID.prompt = "";
 			}
+			else if ((!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO") && transmitterID.text == "")
+			{
+				transmitterIDisEnabled = transmitterID.isEnabled = false;
+				transmitterID.prompt = "";
+			}
 		}
 		
 		public function save():void
@@ -222,6 +257,9 @@ package ui.screens.display.settings.transmitter
 				updateAlarms(); //Update battery values in existing alarms or delete them in case it's not possible to get alarms for the selected transmitter type
 				needsReset = true;
 			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION) != String(useDefaultLibreAlgo))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION, String(useDefaultLibreAlgo));
 			
 			if (needsReset)
 			{
@@ -337,7 +375,7 @@ package ui.screens.display.settings.transmitter
 			}
 			else
 				warnUser = false;
-			}
+		}
 		
 		/**
 		 * Event Handlers
@@ -367,7 +405,7 @@ package ui.screens.display.settings.transmitter
 			
 			populateTransmitterIDPrompt();
 			
-			checkWarn();
+			refreshContent();
 			
 			needsSave = true;
 		}
@@ -377,6 +415,13 @@ package ui.screens.display.settings.transmitter
 			transmitterIDValue = transmitterID.text;
 			
 			checkWarn();
+			
+			needsSave = true;
+		}
+		
+		private function onSettingsChanged(e:Event):void
+		{
+			useDefaultLibreAlgo = useDefaultLibreAlgoCheck.isSelected;
 			
 			needsSave = true;
 		}
@@ -446,11 +491,19 @@ package ui.screens.display.settings.transmitter
 				transmitterID.dispose();
 				transmitterID = null;
 			}
+			
 			if(transmitterType != null)
 			{
 				transmitterType.removeEventListener(Event.CHANGE, onTransmitterTypeChange);
 				transmitterType.dispose();
 				transmitterType = null;
+			}
+			
+			if(useDefaultLibreAlgoCheck != null)
+			{
+				useDefaultLibreAlgoCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				useDefaultLibreAlgoCheck.dispose();
+				useDefaultLibreAlgoCheck = null;
 			}
 			
 			super.dispose();
