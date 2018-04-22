@@ -118,7 +118,10 @@ package ui.screens
 		private function setupHeader():void
 		{
 			/* Set Header Title */
-			title = ModelLocator.resourceManagerInstance.getString('fullscreenglucosescreen','screen_title');
+			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_X)
+				title = ModelLocator.resourceManagerInstance.getString('fullscreenglucosescreen','screen_title');
+			else
+				title = ModelLocator.resourceManagerInstance.getString('fullscreenglucosescreen','screen_title_small');
 			
 			/* Set Header Icon */
 			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.fullscreenTexture);
@@ -172,7 +175,7 @@ package ui.screens
 			/* Slope Arrow Display Label */
 			slopeArrowDisplay = GraphLayoutFactory.createChartStatusText(latestGlucoseSlopeArrow, latestSlopeArrowColor, deltaFontSize, Align.RIGHT, true, 300);
 			slopeArrowDisplay.validate();
-			slopeArrowDisplay.y = 10;
+			slopeArrowDisplay.y = 0;
 			slopeArrowDisplay.x = Constants.stageWidth - slopeArrowDisplay.width - 10;
 			addChild(slopeArrowDisplay);
 			
@@ -431,8 +434,9 @@ package ui.screens
 			}
 			
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
-			deltaFontSize = 40 * deviceFontMultiplier * userBGFontMultiplier;
-			infoFontSize = 16 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			//deltaFontSize = 60 * deviceFontMultiplier * userBGFontMultiplier;
+			deltaFontSize = 60;
+			infoFontSize = 18 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 		}
 		
 		/**
