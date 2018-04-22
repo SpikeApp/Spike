@@ -642,7 +642,7 @@ package database
 			
 			if (BlueToothDevice.isTypeLimitter() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION) == "true")) {
 				myTrace("in create,  isTypeLimitter and COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION = true, applying defaultcalibration");
-				bgReading.calculatedValue = 0.1134 * bgReading.calculatedValue - 22.05;
+				bgReading.calculatedValue = 0.1134 * bgReading.rawData / 117.64705 * 1000 - 22.05;
 				updateCalculatedValue(bgReading);
 			} else {
 				if (calibration == null) {

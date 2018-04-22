@@ -483,7 +483,7 @@ package services
 		
 		private static function onBgReading(e:Event):void
 		{
-			if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) 
+			if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower() || CommonSettings.libreUseDefaultCalibration()) 
 			{
 				var lastReading:BgReading;
 				if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();

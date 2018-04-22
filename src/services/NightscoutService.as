@@ -251,7 +251,7 @@ package services
 			if (activeGlucoseReadings.length == 0 || syncGlucoseReadingsActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) 
+			if (Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower() && !CommonSettings.libreUseDefaultCalibration()) 
 				return;
 			
 			syncGlucoseReadingsActive = true;

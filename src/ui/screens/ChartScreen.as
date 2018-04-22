@@ -421,7 +421,7 @@ package ui.screens
 			{
 				var reading:BgReading = BgReading.lastNoSensor();
 				
-				if(reading == null || reading.calculatedValue == 0 || Calibration.allForSensor().length < 2)
+				if(reading == null || reading.calculatedValue == 0 || (Calibration.allForSensor().length < 2 && !CommonSettings.libreUseDefaultCalibration()))
 				{
 					Trace.myTrace("ChartScreen.as", "Bad Reading or not enough calibrations. Not adding it to the chart.");
 					return;

@@ -1077,7 +1077,7 @@ package services
 			myTrace("in planApplicationStoppedAlert, planning alert for the future");
 			cancelInactiveAlert();
 			
-			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "" && Calibration.allForSensor().length >= 2) || BlueToothDevice.isFollower())
+			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "" && Calibration.allForSensor().length >= 2) || BlueToothDevice.isFollower() || CommonSettings.libreUseDefaultCalibration())
 			{
 				Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 				

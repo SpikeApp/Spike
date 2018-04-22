@@ -110,10 +110,11 @@ package services
 		 */
 		private static function requestInitialCalibration():void 
 		{
-			myTrace("in requestInitialCalibration");
-			
-			if (Calibration.allForSensor().length >= 2)
+			if (Calibration.allForSensor().length >= 2 || CommonSettings.libreUseDefaultCalibration()) {
+				myTrace("in requestInitialCalibration, Calibration.allForSensor().length >= 2 || CommonSettings.libreUseDefaultCalibration()");
 				return;
+			}
+			myTrace("in requestInitialCalibration");
 			
 			var latestReadings:Array = BgReading.latestBySize(2);
 			if (latestReadings.length < 2) {
@@ -173,7 +174,7 @@ package services
 		}
 		
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
-			if (BlueToothDevice.isTypeLimitter() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION) == "true")) {
+			if (CommonSettings.libreUseDefaultCalibration()) {
 				myTrace("in bgReadingReceived, but isTypeLimitter and COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION = true, no further processing");
 				return;
 			}

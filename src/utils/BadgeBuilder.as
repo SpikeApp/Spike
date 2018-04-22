@@ -19,7 +19,7 @@ package utils
 		{
 			var badgeNumber:int = 0;
 			
-			if ((Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
+			if ((Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower() || CommonSettings.libreUseDefaultCalibration()) && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
 			{
 				var latestReading:BgReading;
 				if (!BlueToothDevice.isFollower())

@@ -407,7 +407,7 @@ package services
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
-				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
+				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower() || CommonSettings.libreUseDefaultCalibration()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");
@@ -454,7 +454,7 @@ package services
 			{	
 				//App badge
 				myTrace("in updateBgNotification app badge on, local notifications off and not in foreground");
-				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
+				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower() || CommonSettings.libreUseDefaultCalibration()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
 					

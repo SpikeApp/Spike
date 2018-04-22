@@ -370,7 +370,7 @@ package services
 		 */
 		private static function onBloodGlucoseReceived(e:Event):void
 		{
-			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
+			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower() && !CommonSettings.libreUseDefaultCalibration()) || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
 				return;
 			
 			//Process Latest Glucose

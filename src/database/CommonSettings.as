@@ -665,6 +665,13 @@
 			 }
 		 }
 		 
+		 /**
+		 * just a short function to check if COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION == true or false && peripheraltype = limitter
+		  */
+		 public static function libreUseDefaultCalibration():Boolean {
+			 return (commonSettings[COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION] == "true" && BlueToothDevice.isTypeLimitter());
+		 }
+		 
 		 public static function getNumberOfSettings():int {
 			 return commonSettings.length;
 		 }

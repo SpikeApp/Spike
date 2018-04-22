@@ -116,7 +116,7 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			/* Content */
-			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
+			if (Calibration.allForSensor().length > 1 && ((!BlueToothDevice.isFollower() && !CommonSettings.libreUseDefaultCalibration())  || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
 			if (numBgReadings > 2)

@@ -129,7 +129,7 @@ package treatments
 		private static function onCalibrationReceived(e:CalibrationServiceEvent):void 
 		{
 			//Ensures compatibility with the new method of only one initial calibration
-			if (Calibration.allForSensor().length == 1) 
+			if (Calibration.allForSensor().length == 1 || CommonSettings.libreUseDefaultCalibration()) 
 				return;
 			
 			//No need to do anything. Nightscout service will take care of it

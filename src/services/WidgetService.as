@@ -326,7 +326,7 @@ package services
 			else
 				currentReading = BgReading.lastWithCalculatedValue();
 			
-			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0)
+			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower() && !CommonSettings.libreUseDefaultCalibration()) || currentReading == null || currentReading.calculatedValue == 0)
 				return;
 			
 			var latestGlucoseValue:Number = Number(BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
