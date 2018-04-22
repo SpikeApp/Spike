@@ -133,6 +133,7 @@ package ui.chart
 			pieContainer.addEventListener(TouchEvent.TOUCH, onPieTouch);
 			addChild(pieContainer);
 			statsContainer = new Sprite();
+			statsContainer.touchable = false;
 			addChild(statsContainer);
 			
 			/* Activate Dummy Mode if there's no bgreadings in data source */
@@ -152,6 +153,7 @@ package ui.chart
 			
 			/* PIE BACKGROUND */
 			pieBackground = new Quad((pieSize * 2) + (10 - sectionsGap), pieSize * 2, sectionColor);
+			pieBackground.touchable = false;
 			addChildAt(pieBackground, 0);
 			
 			/* LOW */
@@ -171,11 +173,13 @@ package ui.chart
 			}
 			
 			lowSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor, lowColor);
+			lowSection.touchable = false;
 			lowSection.title.text = lowOutput + " (<=" + lowThresholdOutput + ")";
 			statsContainer.addChild(lowSection);
 			
 			/* IN RANGE */
 			inRangeSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor, inRangeColor);
+			inRangeSection.touchable = false;
 			inRangeSection.x = lowSection.x + lowSection.width + sectionsGap;
 			inRangeSection.title.text = inRangeOutput;
 			statsContainer.addChild(inRangeSection);
@@ -196,18 +200,21 @@ package ui.chart
 					highThresholdOutput = String(highThresholdValue);
 			}
 			highSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor, highColor);
+			highSection.touchable = false;
 			highSection.x = inRangeSection.x + inRangeSection.width + sectionsGap;
 			highSection.title.text = highOutput + " (>=" + highThresholdOutput + ")";;
 			statsContainer.addChild(highSection);
 			
 			/* AVG GLUCOSE */
 			avgGlucoseSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
+			avgGlucoseSection.touchable = false;
 			avgGlucoseSection.y = lowSection.y + sectionHeight + sectionsGap;
 			avgGlucoseSection.title.text = avgGlucoseOutput;
 			statsContainer.addChild(avgGlucoseSection);
 			
 			/* A1C */
 			estA1CSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
+			estA1CSection.touchable = false;
 			estA1CSection.x = avgGlucoseSection.x + avgGlucoseSection.width + sectionsGap;;
 			estA1CSection.y = avgGlucoseSection.y;
 			estA1CSection.title.text = A1COutput;
@@ -215,6 +222,7 @@ package ui.chart
 			
 			/* NUM READINGS */
 			numReadingsSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
+			numReadingsSection.touchable = false;
 			numReadingsSection.x = estA1CSection.x + estA1CSection.width + sectionsGap;;
 			numReadingsSection.y = avgGlucoseSection.y;
 			numReadingsSection.title.text = readingsOutput;

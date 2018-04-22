@@ -368,6 +368,7 @@ package ui.chart
 			 */
 			//Create scroller
 			scrollerChart = drawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius);
+			scrollerChart.touchable = false;
 			
 			if(!_displayLine)
 				scrollerChart.y = _graphHeight + scrollerTopPadding;
@@ -453,6 +454,7 @@ package ui.chart
 		private function drawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):Sprite
 		{
 			var chartContainer:Sprite = new Sprite();
+			chartContainer.touchable = false;
 			
 			/**
 			 * Calculation of X Axis scale factor
@@ -543,6 +545,7 @@ package ui.chart
 			if(_displayLine)
 			{
 				var line:Shape = new Shape();
+				line.touchable = false;
 				line.graphics.lineStyle(1, 0xFFFFFF, 1);
 			}
 			
@@ -663,6 +666,7 @@ package ui.chart
 				if (lastBGreadingTimeStamp > Number(_dataSource[_dataSource.length - 1].timestamp) && lastBGreadingTimeStamp - Number(_dataSource[_dataSource.length - 1].timestamp) > (4.5 * 60 * 1000) && chartType == MAIN_CHART)
 				{
 					dummySprite = new Sprite();
+					dummySprite.touchable = false;
 					dummySprite.x = (lastBGreadingTimeStamp - firstBGReadingTimeStamp) * scaleXFactor;
 					chartContainer.addChild(dummySprite);
 				}
@@ -1345,10 +1349,12 @@ package ui.chart
 					fontSize = 10;
 				
 				var time:Label = LayoutFactory.createLabel(label, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, false, axisFontColor);
+				time.touchable = false;
 				time.validate();
 				
 				//Add marker to display list
 				var timeDisplayContainer:Sprite = new Sprite();
+				timeDisplayContainer.touchable = false;
 				timeDisplayContainer.addChild(time);
 				timeDisplayContainer.x =  currentX - (time.width / 2);
 				timelineContainer.addChild(timeDisplayContainer);
@@ -1895,6 +1901,7 @@ package ui.chart
 			if(_displayLine)
 			{
 				var line:Shape = new Shape();
+				line.touchable = false;
 				line.graphics.lineStyle(1, 0xFFFFFF, 1);
 			}
 			
@@ -2074,6 +2081,7 @@ package ui.chart
 			
 			//Line container
 			var line:Shape = new Shape();
+			line.touchable = false;
 			
 			//Define what chart needs line to be drawns
 			var sourceList:Array;
@@ -2144,9 +2152,6 @@ package ui.chart
 				glucoseMarker.alpha = 0;
 				previousGlucoseMarker = glucoseMarker;
 			}
-			
-			//Remove touch events from line
-			line.touchable = false;
 			
 			//Add line to display list
 			if(chartType == MAIN_CHART && mainChart != null)
@@ -2375,6 +2380,7 @@ package ui.chart
 			
 			//Glucose Value Display
 			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("0", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
+			glucoseValueDisplay.touchable = false;
 			glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width -glucoseStatusLabelsMargin;
 			glucoseValueDisplay.validate();
 			var glucoseValueDisplayHeight:Number = glucoseValueDisplay.height;
@@ -2384,6 +2390,7 @@ package ui.chart
 			
 			//Glucose Retro Display
 			glucoseTimeAgoPill = new ChartInfoPill(retroDisplayFont);
+			glucoseTimeAgoPill.touchable = false;
 			glucoseTimeAgoPill.setValue("0", "mg/dL", chartFontColor);
 			glucoseTimeAgoPill.x = glucoseStatusLabelsMargin + 4;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
@@ -2404,6 +2411,7 @@ package ui.chart
 			
 			//Glucose Time Display
 			glucoseSlopePill = new ChartInfoPill(timeDisplayFont);
+			glucoseSlopePill.touchable = false;
 			glucoseSlopePill.x = glucoseTimeAgoPill.x;
 			glucoseSlopePill.y = glucoseTimeAgoPill.y + glucoseTimeAgoPill.height + 6;
 			addChild(glucoseSlopePill);
@@ -2411,7 +2419,6 @@ package ui.chart
 			//IOB
 			if (treatmentsActive && displayTreatmentsOnChart)
 			{
-	
 				if (displayIOBEnabled)
 				{
 					IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);

@@ -80,16 +80,19 @@ package ui.chart
 			
 			//Background
 			background = new Quad(width, height, backgroundColor);
+			background.touchable = false;
 			background.name = "background";
 			addChild(background);
 			
 			//Title Background
 			titleBackground = new Quad(width, height / 2, 0xEEEEEE);
+			titleBackground.touchable = false;
 			titleBackground.alpha = 0.05;
 			addChild(titleBackground);
 			
 			//Title
 			title = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, titleFontSize, true, fontColor);
+			title.touchable = false;
 			title.name = "title";
 			title.text = "Title";
 			title.validate();
@@ -101,6 +104,7 @@ package ui.chart
 			//Message
 			var availableVerticalSpace:Number = height - titleBackground.height;
 			message = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, messageFontSize, false, fontColor);
+			message.touchable = false;
 			message.name = "message";
 			message.width = width;
 			message.text = "Message";
@@ -114,6 +118,7 @@ package ui.chart
 			{
 				var borderLineThickness:uint = 1;
 				border = new Shape();
+				border.touchable = false;
 				border.graphics.lineStyle(borderLineThickness, borderColor, 1);
 				border.graphics.moveTo(0, 0);
 				border.graphics.lineTo(width, 0);
