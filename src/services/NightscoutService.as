@@ -845,7 +845,7 @@ package services
 			
 			syncTreatmentsUploadActive = false;
 			
-			if (response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("403") == -1 && response.indexOf("ok") != -1)
+			if (response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1 && response.indexOf("ok") != -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Treatment uploaded/updated successfully!");
 				
@@ -916,7 +916,7 @@ package services
 			//Update Internal Variables
 			syncTreatmentsDeleteActive = false;
 			
-			if (response.indexOf("{}") != -1 && response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("403") == -1)
+			if (response.indexOf("{}") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Treatment deleted successfully!");
 				
@@ -1043,7 +1043,7 @@ package services
 			}
 			
 			//Validate response
-			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("500") == -1 && response.indexOf("403") == -1)
+			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
 			{
 				try
 				{
@@ -1069,7 +1069,7 @@ package services
 				{
 					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 					{
-						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
 						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
 						retriesForTreatmentsDownload++;
 					}
