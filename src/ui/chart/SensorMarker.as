@@ -16,6 +16,7 @@ package ui.chart
 		// Display Objects
 		private var sensorMarker:NGon;
 		private var stroke:Shape;
+		private var hitArea:Shape;
 		
 		public function SensorMarker(treatment:Treatment)
 		{
@@ -31,6 +32,16 @@ package ui.chart
 			//Radius
 			this.radius = 6;
 			
+			//Hit Area
+			hitArea = new Shape();
+			hitArea.graphics.beginFill(0xFF0000, 0);
+			hitArea.graphics.drawCircle(0, 0, radius * 2.5);
+			hitArea.graphics.endFill();
+			hitArea.x = radius / 2.5;
+			hitArea.y = radius * 1.25;
+			hitArea.alpha = 0;
+			addChild(hitArea);
+			
 			//Background
 			sensorMarker = new NGon(radius, 20, 0, 0, 360);
 			sensorMarker.x = radius / 3;
@@ -45,6 +56,8 @@ package ui.chart
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;
 			addChild(stroke);
+			
+			
 		}	
 		
 		override public function updateMarker(treatment:Treatment):void
@@ -70,6 +83,13 @@ package ui.chart
 				stroke.removeFromParent();
 				stroke.dispose();
 				stroke = null;
+			}
+			
+			if (hitArea != null)
+			{
+				hitArea.removeFromParent();
+				hitArea.dispose();
+				hitArea = null;
 			}
 			
 			super.dispose();
