@@ -24,6 +24,7 @@ FEATURE: A second Today Widget has been added that mimics the fullscreen view. S
 FEATURE: Press & hold the pie chart for 1 second and No Lock + Fullscreen view will automatically activate. Press and hold anywhere on the Fullscreen view for 1 second and it will close it.
 FEATURE: Ability to round mg/dL values on the chart view. Activate this option in Settings -> General.
 FEATURE: You can now use Dexcom Share even with non Dexcom transmitters like MiaoMiao, BluCon, etc. Read instructions in Settings -> Share -> Dexcom Share.
+FEATURE: User will receive a notification when the Libre sensor is about to expire (MiaoMiao only). (Johan)
 ENHANCEMENT: Added instructions in Settings -> Integration -> Internal HTTP Server for connecting FitBit watches to Spike.
 ENHANCEMENT: User email and name, when filling a bug report, will now be saved in database so the user doesn't have to fill them again on subsequent bug reports. (Johan)
 ENHANCEMENT: Ability to set default snooze time in alerts up to 9.999 minutes (165.65 hours)
