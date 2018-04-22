@@ -225,7 +225,7 @@ package ui.screens.display.settings.transmitter
 				transmitterIDisEnabled = transmitterID.isEnabled = false;
 				transmitterID.prompt = "";
 			}
-			else if ((!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO") && transmitterID.text == "")
+			else if ((!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao'))
 			{
 				transmitterIDisEnabled = transmitterID.isEnabled = false;
 				transmitterID.prompt = "";
@@ -259,7 +259,10 @@ package ui.screens.display.settings.transmitter
 			}
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION) != String(useDefaultLibreAlgo))
+			{
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION, String(useDefaultLibreAlgo));
+				needsReset = true;
+			}
 			
 			if (needsReset)
 			{
