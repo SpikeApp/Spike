@@ -211,7 +211,7 @@ package ui.screens
 			
 			function onClose(e:Event):void
 			{
-				if ((TutorialService.isActive || TutorialService.eleventhStep) && BlueToothDevice.isDexcomG5())
+				if ((TutorialService.isActive || TutorialService.eleventhStepActive) && BlueToothDevice.isDexcomG5())
 					TutorialService.eleventhStep();
 			}
 		}	

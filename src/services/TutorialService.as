@@ -66,7 +66,7 @@ package services
 		public static var eighthStepActive:Boolean = false;
 		public static var ninethStepActive:Boolean = false;
 		public static var tenthStepActive:Boolean = false;
-		private static var eleventhStepActive:Boolean = false;
+		public static var eleventhStepActive:Boolean = false;
 		
 		public function TutorialService()
 		{
