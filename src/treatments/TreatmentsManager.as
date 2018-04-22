@@ -1215,7 +1215,7 @@ package treatments
 		
 		public static function removeAllTreatmentsFromMemory():void
 		{
-			treatmentsList = [];
+			treatmentsList.length = 0;
 			treatmentsMap = new Dictionary();
 		}
 		

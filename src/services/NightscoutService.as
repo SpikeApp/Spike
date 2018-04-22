@@ -475,7 +475,7 @@ package services
 			
 			clearTimeout(followerTimer);
 			
-			TreatmentsManager.removeAllTreatmentsFromMemory();
+			clearTreatments();
 			
 			setupNightscoutProperties();
 			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
@@ -499,7 +499,21 @@ package services
 			
 			ModelLocator.bgReadings.length = 0;
 			
+			clearTreatments();
+		}
+		
+		private static function clearTreatments():void
+		{
 			TreatmentsManager.removeAllTreatmentsFromMemory();
+			activeCalibrations.length = 0;
+			activeSensorStarts.length = 0;
+			activeGlucoseReadings.length = 0;
+			activeTreatmentsDelete.length = 0;
+			activeTreatmentsUpload.length = 0;
+			activeVisualCalibrations.length = 0;
+			lastRemoteProfileSync = 0;
+			lastRemoteTreatmentsSync = 0;
+			isNSProfileSet = false;
 		}
 		
 		private static function calculateNextFollowDownloadTime():void 
@@ -952,6 +966,7 @@ package services
 					Trace.myTrace("NightscoutService.as", "Profile has not yet been downloaded. Will try to download now!");
 					getNightscoutProfile();
 				}
+				
 				return;
 			}
 			
