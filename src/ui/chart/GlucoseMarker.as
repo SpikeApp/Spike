@@ -33,6 +33,7 @@ package ui.chart
 		private var data:Object;
 		private var dateFormat:String;
 
+		// Display Objects
 		private var glucoseMarker:Canvas;
 
         public function GlucoseMarker(data:Object)
@@ -117,7 +118,6 @@ package ui.chart
             glucoseMarker.drawCircle(radius,radius,radius);
             glucoseMarker.endFill();
 			
-            
             addChild(glucoseMarker);
         }
 		
@@ -141,6 +141,18 @@ package ui.chart
 		public function setLocationY (newY:Number):void
 		{
 			data.y = newY;
+		}
+		
+		override public function dispose():void
+		{
+			if (glucoseMarker != null)
+			{
+				glucoseMarker.removeFromParent();
+				glucoseMarker.dispose();
+				glucoseMarker = null;
+			}
+			
+			super.dispose();
 		}
     }
 }

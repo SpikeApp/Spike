@@ -24,16 +24,14 @@ package ui.chart
 		public var unit:String = "";
 		private var fontSize:Number;
 		private var selectedColor:uint;
+		private var fontColor:uint;
+		private var oldColor:uint;
 
 		/* Display Objects */
 		private var pillBackground:Shape;
 		private var valueBackground:Shape;
 		private var unitLabel:Label;
 		private var valueLabel:Label;
-
-		private var fontColor:uint;
-
-		private var oldColor:uint;
 		
 		public function ChartInfoPill(fontSize:Number)
 		{
@@ -141,6 +139,39 @@ package ui.chart
 				valueBackground.dispose();
 				valueBackground = null;
 			}
+		}
+		
+		override public function dispose():void
+		{
+			if (pillBackground != null)
+			{
+				pillBackground.removeFromParent();
+				pillBackground.dispose();
+				pillBackground = null;
+			}
+			
+			if (valueBackground != null)
+			{
+				valueBackground.removeFromParent();
+				valueBackground.dispose();
+				valueBackground = null;
+			}
+			
+			if (unitLabel != null)
+			{
+				unitLabel.removeFromParent();
+				unitLabel.dispose();
+				unitLabel = null;
+			}
+			
+			if (valueLabel != null)
+			{
+				valueLabel.removeFromParent();
+				valueLabel.dispose();
+				valueLabel = null;
+			}
+			
+			super.dispose();
 		}
 	}
 }

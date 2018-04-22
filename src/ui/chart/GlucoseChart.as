@@ -205,6 +205,28 @@ package ui.chart
 		private var displayTreatmentsOnChart:Boolean;
 		private var displayCOBEnabled:Boolean;
 		private var displayIOBEnabled:Boolean;
+
+		private var scrollerBackground:Quad;
+
+		private var handPickerFill:Quad;
+
+		private var handpickerOutline:Shape;
+
+		private var treatmentContainer:LayoutGroup;
+
+		private var treatmentValueLabel:Label;
+
+		private var treatmentTimeSpinner:DateTimeSpinner;
+
+		private var timeSpacer:Sprite;
+
+		private var treatmentNoteLabel:Label;
+
+		private var actionsContainer:LayoutGroup;
+
+		private var moveBtn:Button;
+
+		private var deleteBtn:Button;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
 		{
@@ -365,7 +387,7 @@ package ui.chart
 				scrollerChart.y += 10;
 			
 			//Create scroller background
-			var scrollerBackground:Quad = new Quad(_scrollerWidth, _scrollerHeight, 0x282a32);
+			scrollerBackground = new Quad(_scrollerWidth, _scrollerHeight, 0x282a32);
 			scrollerBackground.y = scrollerChart.y;
 			scrollerBackground.touchable = false;
 			
@@ -378,7 +400,7 @@ package ui.chart
 			 */
 			//Create Hand Picker
 			handPicker = new Sprite();
-			var handPickerFill:Quad = new Quad(_graphWidth/timelineRange, _scrollerHeight, 0xFFFFFF);
+			handPickerFill = new Quad(_graphWidth/timelineRange, _scrollerHeight, 0xFFFFFF);
 			handPicker.addChild(handPickerFill);
 			handPicker.x = _graphWidth - handPicker.width;
 			handPicker.y = scrollerChart.y;
@@ -386,7 +408,7 @@ package ui.chart
 			handPickerWidth = handPicker.width;
 			
 			//Outline for hand picker
-			var handpickerOutline:Shape = GraphLayoutFactory.createOutline(handPicker.width, handPicker.height, handPickerStrokeThickness);
+			handpickerOutline = GraphLayoutFactory.createOutline(handPicker.width, handPicker.height, handPickerStrokeThickness);
 			handPicker.addChild(handpickerOutline);
 			glucoseTimelineContainer.addChild(handPicker);
 			
@@ -977,7 +999,7 @@ package ui.chart
 				var treatmentLayout:VerticalLayout = new VerticalLayout();
 				treatmentLayout.horizontalAlign = HorizontalAlign.CENTER;
 				treatmentLayout.gap = 10;
-				var treatmentContainer:LayoutGroup = new LayoutGroup();
+				treatmentContainer = new LayoutGroup();
 				treatmentContainer.layout = treatmentLayout;
 				
 				//Treatment Value
@@ -1017,33 +1039,33 @@ package ui.chart
 				
 				if (treatmentValue != "")
 				{
-					var value:Label = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
-					value.paddingBottom = 12;
-					treatmentContainer.addChild(value);
+					treatmentValueLabel = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+					treatmentValueLabel.paddingBottom = 12;
+					treatmentContainer.addChild(treatmentValueLabel);
 				}
 				
 				//Treatment Time
-				var time:DateTimeSpinner = new DateTimeSpinner();
-				time.editingMode = DateTimeMode.TIME;
-				time.value = new Date(treatment.treatment.timestamp);
-				time.height = 30;
-				time.paddingTop = time.paddingBottom = 0;
+				treatmentTimeSpinner = new DateTimeSpinner();
+				treatmentTimeSpinner.editingMode = DateTimeMode.TIME;
+				treatmentTimeSpinner.value = new Date(treatment.treatment.timestamp);
+				treatmentTimeSpinner.height = 30;
+				treatmentTimeSpinner.paddingTop = treatmentTimeSpinner.paddingBottom = 0;
 				if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
-					time.isEnabled = false;
-				var timeSpacer:Sprite = new Sprite();
+					treatmentTimeSpinner.isEnabled = false;
+				timeSpacer = new Sprite();
 				timeSpacer.height = 10;
-				treatmentContainer.addChild(time);
+				treatmentContainer.addChild(treatmentTimeSpinner);
 				treatmentContainer.addChild(timeSpacer);
 				
 				if (treatment.treatment.type == Treatment.TYPE_SENSOR_START || (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note")))
-					time.isEnabled = false;
+					treatmentTimeSpinner.isEnabled = false;
 					
 				if (treatmentNotes != "" && treatmentNotes != ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
 				{
-					var notes:Label = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
-					notes.wordWrap = true;
-					notes.maxWidth = 150;
-					treatmentContainer.addChild(notes);
+					treatmentNoteLabel = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
+					treatmentNoteLabel.wordWrap = true;
+					treatmentNoteLabel.maxWidth = 150;
+					treatmentContainer.addChild(treatmentNoteLabel);
 				}
 				
 				//Action Buttons
@@ -1055,13 +1077,13 @@ package ui.chart
 						{
 							var actionsLayout:HorizontalLayout = new HorizontalLayout();
 							actionsLayout.gap = 5;
-							var actionsContainer:LayoutGroup = new LayoutGroup();
+							actionsContainer = new LayoutGroup();
 							actionsContainer.layout = actionsLayout;
 							
-							var moveBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
+							moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
 							moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
 							actionsContainer.addChild(moveBtn);
-							var deleteBtn:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
+							deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
 							deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
 							actionsContainer.addChild(deleteBtn);
 							treatmentContainer.addChild(actionsContainer);
@@ -1101,7 +1123,7 @@ package ui.chart
 				
 				function onMove(e:starling.events.Event):void
 				{
-					var movedTimestamp:Number = time.value.valueOf();
+					var movedTimestamp:Number = treatmentTimeSpinner.value.valueOf();
 					
 					if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > new Date().valueOf())
 					{
@@ -2495,11 +2517,12 @@ package ui.chart
 			{
 				for (i = 0; i < mainChartLineList.length; i++) 
 				{
-					if (mainChartLineList[i] != null)
+					var mainLine:Shape = mainChartLineList[i];
+					if (mainLine != null)
 					{
-						mainChart.removeChild(mainChartLineList[i]);
-						mainChartLineList[i].dispose();
-						mainChartLineList[i] = null;
+						mainChart.removeChild(mainLine);
+						mainLine.dispose();
+						mainLine = null;
 					}
 				}
 				mainChartLineList.length = 0;
@@ -2511,11 +2534,12 @@ package ui.chart
 				{
 					for (i = 0; i < scrollerChartLineList.length; i++) 
 					{
-						if (scrollerChartLineList[i] != null)
+						var scrollerLine:Shape = scrollerChartLineList[i];
+						if (scrollerLine != null)
 						{
-							scrollerChart.removeChild(scrollerChartLineList[i]);
-							scrollerChartLineList[i].dispose();
-							scrollerChartLineList[i] = null;
+							scrollerChart.removeChild(scrollerLine);
+							scrollerLine.dispose();
+							scrollerLine = null;
 						}
 					}
 					scrollerChartLineList.length = 0;
@@ -3004,8 +3028,6 @@ package ui.chart
 			/* Event Listeners */
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived);
-			if (handPicker != null)
-				handPicker.removeEventListener(TouchEvent.TOUCH, onHandPickerTouch);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			
 			/* Update Timer */
@@ -3020,28 +3042,100 @@ package ui.chart
 			destroyAllLines();
 			
 			/* Glucose Markers */
-			var i:int;
-			var mainDataLength:int = mainChartGlucoseMarkersList.length;
-			for (i = 0; i < mainDataLength; i++) 
+			if (mainChartGlucoseMarkersList != null)
 			{
-				var mainGlucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList[i] as GlucoseMarker;
-				mainGlucoseMarker.dispose();
-				mainGlucoseMarker = null;
+				var i:int;
+				var mainDataLength:int = mainChartGlucoseMarkersList.length;
+				for (i = 0; i < mainDataLength; i++) 
+				{
+					var mainGlucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList[i] as GlucoseMarker;
+					if (mainGlucoseMarker != null)
+					{
+						mainGlucoseMarker.removeFromParent();
+						mainGlucoseMarker.dispose();
+						mainGlucoseMarker = null;
+					}
+				}
+				mainChartGlucoseMarkersList.length = 0;
+				mainChartGlucoseMarkersList = null;
 			}
-			mainChartGlucoseMarkersList.length = 0;
-			mainChartGlucoseMarkersList = null;
 			
-			var scrollerDataLength:int = scrollChartGlucoseMarkersList.length;
-			for (i = 0; i < scrollerDataLength; i++) 
+			if (scrollChartGlucoseMarkersList != null)
 			{
-				var scrollerGlucoseMarker:GlucoseMarker = scrollChartGlucoseMarkersList[i] as GlucoseMarker;
-				scrollerGlucoseMarker.dispose();
-				scrollerGlucoseMarker = null;
+				var scrollerDataLength:int = scrollChartGlucoseMarkersList.length;
+				for (i = 0; i < scrollerDataLength; i++) 
+				{
+					var scrollerGlucoseMarker:GlucoseMarker = scrollChartGlucoseMarkersList[i] as GlucoseMarker;
+					if (scrollerGlucoseMarker != null)
+					{
+						scrollerGlucoseMarker.removeFromParent();
+						scrollerGlucoseMarker.dispose();
+						scrollerGlucoseMarker = null;
+					}
+				}
+				scrollChartGlucoseMarkersList.length = 0;
+				scrollChartGlucoseMarkersList = null;
 			}
-			scrollChartGlucoseMarkersList.length = 0;
-			scrollChartGlucoseMarkersList = null;
 			
 			//Treatments
+			if (deleteBtn != null)
+			{
+				deleteBtn.removeEventListeners();
+				deleteBtn.removeFromParent();
+				deleteBtn.dispose();
+				deleteBtn = null;
+			}
+			
+			if (moveBtn != null)
+			{
+				moveBtn.removeEventListeners();
+				moveBtn.removeFromParent();
+				moveBtn.dispose();
+				moveBtn = null;
+			}
+			
+			if (treatmentNoteLabel != null)
+			{
+				treatmentNoteLabel.removeFromParent();
+				treatmentNoteLabel.dispose();
+				treatmentNoteLabel = null;
+			}
+			
+			if (timeSpacer != null)
+			{
+				timeSpacer.removeFromParent();
+				timeSpacer.dispose();
+				timeSpacer = null;
+			}
+			
+			if (treatmentTimeSpinner != null)
+			{
+				treatmentTimeSpinner.removeFromParent();
+				treatmentTimeSpinner.dispose();
+				treatmentTimeSpinner = null;
+			}
+			
+			if (treatmentValueLabel != null)
+			{
+				treatmentValueLabel.removeFromParent();
+				treatmentValueLabel.dispose();
+				treatmentValueLabel = null;
+			}
+			
+			if (actionsContainer != null)
+			{
+				actionsContainer.removeFromParent();
+				actionsContainer.dispose();
+				actionsContainer = null;
+			}
+			
+			if (treatmentContainer != null)
+			{
+				treatmentContainer.removeFromParent();
+				treatmentContainer.dispose();
+				treatmentContainer = null;
+			}
+			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
 				for (i = 0; i < treatmentsList.length; i++) 
@@ -3070,69 +3164,40 @@ package ui.chart
 			
 			if (IOBPill != null)
 			{
+				IOBPill.removeFromParent();
 				IOBPill.dispose();
 				IOBPill = null;
 			}
 			
 			if (COBPill != null)
 			{
+				COBPill.removeFromParent();
 				COBPill.dispose();
 				COBPill = null;
 			}
 			
 			if (glucoseSlopePill != null)
 			{
+				glucoseSlopePill.removeFromParent();
 				glucoseSlopePill.dispose();
 				glucoseSlopePill = null;
 			}
 			
 			if (glucoseTimeAgoPill != null)
 			{
+				glucoseTimeAgoPill.removeFromParent();
 				glucoseTimeAgoPill.dispose();
 				glucoseTimeAgoPill = null;
 			}
 			
 			if (treatmentsContainer != null)
 			{
+				treatmentsContainer.removeFromParent();
 				treatmentsContainer.dispose();
 				treatmentsContainer = null;
 			}
 			
 			/* Chart Display Objects */
-			removeChild(glucoseTimelineContainer);
-			glucoseTimelineContainer != null
-			glucoseTimelineContainer.dispose();
-			glucoseTimelineContainer = null;
-			
-			removeChild(mainChart);
-			mainChart.dispose();
-			mainChart = null;
-			
-			removeChild(glucoseDelimiter);
-			glucoseDelimiter.dispose();
-			glucoseDelimiter = null;
-			
-			removeChild(scrollerChart);
-			scrollerChart.dispose();
-			scrollerChart = null;
-			
-			removeChild(handPicker);
-			handPicker.dispose();
-			handPicker = null;
-			
-			removeChild(glucoseValueDisplay);
-			glucoseValueDisplay.dispose();
-			glucoseValueDisplay = null;
-			
-			removeChild(yAxisContainer);
-			yAxisContainer.dispose();
-			yAxisContainer = null;
-			
-			removeChild(mainChartContainer);
-			mainChartContainer.dispose();
-			mainChartContainer = null;
-			
-			//Timeline
 			if (timelineObjects != null && timelineObjects.length > 0)
 			{
 				for (i = 0; i < timelineObjects.length; i++) 
@@ -3140,9 +3205,9 @@ package ui.chart
 					var displayObject:Sprite = timelineObjects[i] as Sprite;
 					if (timelineContainer != null && displayObject != null)
 					{
-						timelineContainer.removeChild(displayObject);
+						displayObject.removeFromParent();
+						displayObject.removeChildren();
 						displayObject.dispose();
-						displayObject.removeChildren()
 						displayObject = null;
 					}
 				}
@@ -3151,8 +3216,96 @@ package ui.chart
 			
 			if (timelineContainer != null)
 			{
+				timelineContainer.removeFromParent();
 				timelineContainer.dispose();
 				timelineContainer = null;
+			}
+			
+			if (glucoseTimelineContainer != null)
+			{
+				glucoseTimelineContainer.removeFromParent();
+				glucoseTimelineContainer.dispose();
+				glucoseTimelineContainer = null;
+			}
+			
+			if (scrollerBackground != null)
+			{
+				scrollerBackground.dispose();
+				scrollerBackground = null;
+			}
+			
+			if (handPickerFill != null)
+			{
+				handPickerFill.dispose();
+				handPickerFill = null;
+			}
+			
+			if (handpickerOutline != null)
+			{
+				handpickerOutline.dispose();
+				handpickerOutline = null;
+			}
+			
+			if (glucoseDelimiter != null)
+			{
+				glucoseDelimiter.removeFromParent();
+				glucoseDelimiter.dispose();
+				glucoseDelimiter = null;
+			}
+			
+			if (handPicker != null)
+			{
+				handPicker.removeEventListener(TouchEvent.TOUCH, onHandPickerTouch);
+				handPicker.removeFromParent();
+				handPicker.dispose();
+				handPicker = null;
+			}
+			
+			if (glucoseValueDisplay != null)
+			{
+				glucoseValueDisplay.removeFromParent();
+				glucoseValueDisplay.dispose();
+				glucoseValueDisplay = null;
+			}
+			
+			if (yAxisContainer != null)
+			{
+				yAxisContainer.removeFromParent();
+				yAxisContainer.dispose();
+				yAxisContainer = null;
+			}
+			
+			if (mainChartMask != null)
+			{
+				mainChartMask.dispose();
+				mainChartMask = null;
+			}
+			
+			if (dummySprite != null)
+			{
+				dummySprite.dispose();
+				dummySprite = null;
+			}
+			
+			if (mainChart != null)
+			{
+				mainChart.removeFromParent();
+				mainChart.dispose();
+				mainChart = null;
+			}
+			
+			if (scrollerChart != null)
+			{
+				scrollerChart.removeFromParent();
+				scrollerChart.dispose();
+				scrollerChart = null;
+			}
+			
+			if (mainChartContainer != null)
+			{
+				mainChartContainer.removeFromParent();;
+				mainChartContainer.dispose();
+				mainChartContainer = null;
 			}
 			
 			super.dispose();

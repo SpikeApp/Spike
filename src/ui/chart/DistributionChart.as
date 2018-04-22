@@ -59,6 +59,7 @@ package ui.chart
 		private var glucoseUnit:String
 		private var dummyModeActive:Boolean = false;
 		private var pieSize:Number;
+		private var piePadding:int = 4;
 		
 		//Display Objects
 		private var pieContainer:Sprite;
@@ -70,7 +71,13 @@ package ui.chart
 		private var avgGlucoseSection:PieDistributionSection;
 		private var estA1CSection:PieDistributionSection;
 		private var numReadingsSection:PieDistributionSection;
-		private var piePadding:int = 4;
+		private var pieBackground:Quad;
+		private var lowNGon:NGon;
+		private var inRangeNGon:NGon;
+		private var highNGon:NGon;
+		private var innerNGon:NGon;
+		private var middleNGon:NGon;
+		private var outterNGon:NGon;
 		
 		[ResourceBundle("globaltranslations")]
 		
@@ -144,7 +151,7 @@ package ui.chart
 			var sectionColor:uint = 0x282a32; 
 			
 			/* PIE BACKGROUND */
-			var pieBackground:Quad = new Quad((pieSize * 2) + (10 - sectionsGap), pieSize * 2, sectionColor);
+			pieBackground = new Quad((pieSize * 2) + (10 - sectionsGap), pieSize * 2, sectionColor);
 			addChildAt(pieBackground, 0);
 			
 			/* LOW */
@@ -312,7 +319,7 @@ package ui.chart
 			//LOW PORTION
 			if (!dummyModeActive)
 			{
-				var lowNGon:NGon = new NGon(pieRadius, numSides, 0, 0, lowAngle);
+				lowNGon = new NGon(pieRadius, numSides, 0, 0, lowAngle);
 				lowNGon.color = lowColor;
 				lowNGon.x = lowNGon.y = pieRadius;
 				nGons.push(lowNGon);
@@ -326,7 +333,7 @@ package ui.chart
 			//Graphics
 			if (!dummyModeActive)
 			{
-				var inRangeNGon:NGon = new NGon(pieRadius, numSides, 0, lowAngle, lowAngle + inRangeAngle);
+				inRangeNGon = new NGon(pieRadius, numSides, 0, lowAngle, lowAngle + inRangeAngle);
 				inRangeNGon.color = inRangeColor;
 				inRangeNGon.x = inRangeNGon.y = pieRadius;
 				nGons.push(inRangeNGon);
@@ -339,7 +346,7 @@ package ui.chart
 			//Graphics
 			if (!dummyModeActive)
 			{
-				var highNGon:NGon = new NGon(pieRadius, numSides, 0, lowAngle + inRangeAngle, lowAngle + inRangeAngle + highAngle);
+				highNGon = new NGon(pieRadius, numSides, 0, lowAngle + inRangeAngle, lowAngle + inRangeAngle + highAngle);
 				highNGon.color = highColor;
 				highNGon.x = highNGon.y = pieRadius;
 				nGons.push(highNGon);
@@ -351,19 +358,19 @@ package ui.chart
 			//DUMMY NGON
 			if (dummyModeActive)
 			{
-				var innerNGon:NGon = new NGon(pieRadius, numSides, 0, 0, 360);
+				innerNGon = new NGon(pieRadius, numSides, 0, 0, 360);
 				innerNGon.color = lowColor;
 				innerNGon.x = innerNGon.y = pieRadius;
 				nGons.push(innerNGon);
 				pieGraphicContainer.addChild(innerNGon);
 				
-				var middleNGon:NGon = new NGon(pieRadius, numSides, pieRadius/3, 0, 360);
+				middleNGon = new NGon(pieRadius, numSides, pieRadius/3, 0, 360);
 				middleNGon.color = inRangeColor;
 				middleNGon.x = middleNGon.y = pieRadius;
 				nGons.push(middleNGon);
 				pieGraphicContainer.addChild(middleNGon);
 				
-				var outterNGon:NGon = new NGon(pieRadius, numSides, (pieRadius/3) * 2, 0, 360);
+				outterNGon = new NGon(pieRadius, numSides, (pieRadius/3) * 2, 0, 360);
 				outterNGon.color = highColor;
 				outterNGon.x = outterNGon.y = pieRadius;
 				nGons.push(outterNGon);
@@ -463,66 +470,119 @@ package ui.chart
 		 */
 		override public function dispose():void
 		{	
-			/* Dispose Display Objects */
+			//Event Listeners
+			removeEventListener(Event.ENTER_FRAME, onPieHold);
 			
+			/* Dispose Display Objects */
 			if (lowSection != null)
 			{
-				statsContainer.removeChild(lowSection);
+				lowSection.removeFromParent();
 				lowSection.dispose();
 				lowSection = null;
 			}
 			
 			if (inRangeSection != null)
 			{
-				statsContainer.removeChild(inRangeSection);
+				inRangeSection.removeFromParent();
 				inRangeSection.dispose();
 				inRangeSection = null;
 			}
 			
 			if (highSection != null)
 			{
-				statsContainer.removeChild(highSection);
+				highSection.removeFromParent();
 				highSection.dispose();
 				highSection = null;
 			}
 			
 			if (avgGlucoseSection != null)
 			{
-				statsContainer.removeChild(avgGlucoseSection);
+				avgGlucoseSection.removeFromParent();
 				avgGlucoseSection.dispose();
 				avgGlucoseSection = null;
 			}
 			
 			if (estA1CSection != null)
 			{
-				statsContainer.removeChild(estA1CSection);
+				estA1CSection.removeFromParent();
 				estA1CSection.dispose();
 				estA1CSection = null;
 			}
 			
 			if (numReadingsSection != null)
 			{
-				statsContainer.removeChild(numReadingsSection);
+				numReadingsSection.removeFromParent();
 				numReadingsSection.dispose();
 				numReadingsSection = null;
 			}
 			
+			if (pieBackground != null)
+			{
+				pieBackground.removeFromParent();
+				pieBackground.dispose();
+				pieBackground = null;
+			}
+			
+			if (lowNGon != null)
+			{
+				lowNGon.removeFromParent();
+				lowNGon.dispose();
+				lowNGon = null;
+			}
+			
+			if (inRangeNGon != null)
+			{
+				inRangeNGon.removeFromParent();
+				inRangeNGon.dispose();
+				inRangeNGon = null;
+			}
+			
+			if (highNGon != null)
+			{
+				highNGon.removeFromParent();
+				highNGon.dispose();
+				highNGon = null;
+			}
+			
+			if (innerNGon != null)
+			{
+				innerNGon.removeFromParent();
+				innerNGon.dispose();
+				innerNGon = null;
+			}
+			
+			if (middleNGon != null)
+			{
+				middleNGon.removeFromParent();
+				middleNGon.dispose();
+				middleNGon = null;
+			}
+			
+			if (outterNGon != null)
+			{
+				outterNGon.removeFromParent();
+				outterNGon.dispose();
+				outterNGon = null;
+			}
+			
 			if (statsContainer != null)
 			{
-				removeChild(statsContainer);
+				statsContainer.removeFromParent();
 				statsContainer.dispose();
 				statsContainer = null;
 			}
 			
 			if (pieContainer != null)
 			{
-				removeChild(pieContainer);
+				pieContainer.removeEventListener(TouchEvent.TOUCH, onPieTouch);
+				pieContainer.removeFromParent();
 				pieContainer.dispose();
 				pieContainer = null;
 			}
 			
 			if (pieGraphicContainer != null)
 			{
+				pieGraphicContainer.removeFromParent();
 				pieGraphicContainer.dispose();
 				pieGraphicContainer = null;
 			}

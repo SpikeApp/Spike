@@ -173,5 +173,38 @@ package ui.chart
 				valueBackground = null;
 			}
 		}
+		
+		override public function dispose():void
+		{
+			if (pillBackground != null)
+			{
+				pillBackground.removeFromParent();
+				pillBackground.dispose();
+				pillBackground = null;
+			}
+			
+			if (valueBackground != null)
+			{
+				valueBackground.removeFromParent();
+				valueBackground.dispose();
+				valueBackground = null;
+			}
+			
+			if (titleLabel != null)
+			{
+				titleLabel.removeFromParent();
+				titleLabel.dispose();
+				titleLabel = null;
+			}
+			
+			if (valueLabel != null)
+			{
+				valueLabel.removeFromParent();
+				valueLabel.dispose();
+				valueLabel = null;
+			}
+			
+			super.dispose();
+		}
 	}
 }

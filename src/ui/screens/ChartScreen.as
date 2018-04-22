@@ -21,7 +21,6 @@ package ui.screens
 	import feathers.controls.Radio;
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollPolicy;
-	import feathers.controls.TextInput;
 	import feathers.core.ToggleGroup;
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -81,13 +80,15 @@ package ui.screens
 		//Display Objects
 		private var glucoseChart:GlucoseChart;
 		private var pieChart:DistributionChart;
-		private var glucoseAmount:TextInput;
 		private var h24:Radio;
 		private var h12:Radio;
 		private var h6:Radio;
 		private var h3:Radio;
 		private var h1:Radio;
 		private var displayLines:Check;
+		private var delimitter:Shape;
+
+		private var timeRangeGroup:ToggleGroup;
 		
 		public function ChartScreen() 
 		{
@@ -213,7 +214,7 @@ package ui.screens
 			addChild( displayLines );
 			
 			/* Timeline Settings */
-			var timeRangeGroup:ToggleGroup = new ToggleGroup();
+			timeRangeGroup = new ToggleGroup();
 			
 			//Create Radios
 			h1 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_1h_title'), timeRangeGroup);
@@ -636,7 +637,7 @@ package ui.screens
 			//Add 24H Glucose distributon to the screen
 			if (displayPieChart)
 			{
-				var delimitter:Shape = GraphLayoutFactory.createHorizontalLine(Constants.stageWidth, 1, 0x282a32);
+				delimitter = GraphLayoutFactory.createHorizontalLine(Constants.stageWidth, 1, 0x282a32);
 				delimitter.y = h24.y + h24.height + delimitterTopPadding;
 				addChild(delimitter);
 				
@@ -689,59 +690,59 @@ package ui.screens
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
 			
-			/* Objects */
-			chartData.length = 0;
-			chartData = null;
-			newReadingsList.length = 0;
-			newReadingsList = null;
-			
 			/* Display Objects */
 			if (glucoseChart != null)
 			{
-				removeChild(glucoseChart);
+				glucoseChart.removeFromParent();
 				glucoseChart.dispose();
 				glucoseChart = null;
 			}
 			
 			if (pieChart != null)
 			{
-				removeChild(pieChart);
+				pieChart.removeFromParent();
 				pieChart.dispose();
 				pieChart = null;
+			}
+			
+			if (timeRangeGroup != null)
+			{
+				timeRangeGroup.removeEventListener( Event.CHANGE, onTimeRangeChange );
+				timeRangeGroup = null;
 			}
 			
 			if (h24 != null)
 			{
 				h24.removeEventListener(FeathersEventType.CREATION_COMPLETE, onRadioCreation);
-				removeChild(h24);
+				h24.removeFromParent();
 				h24.dispose();
 				h24 = null;
 			}
 			
 			if (h12 != null)
 			{
-				removeChild(h12);
+				h12.removeFromParent();
 				h12.dispose();
 				h12 = null;
 			}
 			
 			if (h6 != null)
 			{
-				removeChild(h6);
+				h6.removeFromParent();
 				h6.dispose();
 				h6 = null;
 			}
 			
 			if (h3 != null)
 			{
-				removeChild(h3);
+				h3.removeFromParent();
 				h3.dispose();
 				h3 = null;
 			}
 			
 			if (h1 != null)
 			{
-				removeChild(h1);
+				h1.removeFromParent();
 				h1.dispose();
 				h1 = null;
 			}
@@ -749,10 +750,23 @@ package ui.screens
 			if (displayLines != null)
 			{
 				displayLines.removeEventListener( Event.CHANGE, onDisplayLine );
-				removeChild(displayLines);
+				displayLines.removeFromParent();
 				displayLines.dispose();
 				displayLines = null;
 			}
+			
+			if (delimitter != null)
+			{
+				delimitter.removeFromParent();
+				delimitter.dispose();
+				delimitter = null;
+			}
+			
+			/* Objects */
+			chartData.length = 0;
+			chartData = null;
+			newReadingsList.length = 0;
+			newReadingsList = null;
 			
 			super.dispose();
 			

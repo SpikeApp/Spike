@@ -128,24 +128,28 @@ package ui.chart
 		{
 			if (title != null)
 			{
+				title.removeFromParent();
 				title.dispose();
 				title = null;
 			}
 			
 			if (message != null)
 			{
+				message.removeFromParent();
 				message.dispose();
 				message = null;
 			}
 			
 			if (border != null)
 			{
+				border.removeFromParent();
 				border.dispose();
 				border = null;
 			}
 			
 			if (background != null)
 			{
+				background.removeFromParent();
 				background.dispose();
 				background = null;
 			}

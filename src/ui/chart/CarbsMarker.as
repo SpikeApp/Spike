@@ -17,6 +17,8 @@ package ui.chart
 	{
 		/* Display Objects */
 		private var label:Label;
+		private var carbsMarker:NGon;
+		private var stroke:Shape;
 		
 		/* Properties */
 		private var fontSize:int = 11;
@@ -60,14 +62,14 @@ package ui.chart
 			}
 			
 			//Background
-			var carbsMarker:NGon = new NGon(radius, 20, 0, 0, 360);
+			carbsMarker = new NGon(radius, 20, 0, 0, 360);
 			carbsMarker.x = radius / 3;
 			carbsMarker.y = radius + radius/4;
 			carbsMarker.color = backgroundColor;
 			addChild(carbsMarker);
 			
 			//Stroke
-			var stroke:Shape = new Shape();
+			stroke = new Shape();
 			stroke.graphics.lineStyle(0.8, strokeColor, 1);
 			stroke.graphics.drawCircle(radius, radius, radius);
 			stroke.y = radius/4;
@@ -101,6 +103,32 @@ package ui.chart
 			removeChildren(0, 10, true);
 			
 			draw();
+		}
+		
+		override public function dispose():void
+		{
+			if (label != null)
+			{
+				label.removeFromParent();
+				label.dispose();
+				label = null;
+			}
+			
+			if (carbsMarker != null)
+			{
+				carbsMarker.removeFromParent();
+				carbsMarker.dispose();
+				carbsMarker = null;
+			}
+			
+			if (stroke != null)
+			{
+				stroke.removeFromParent();
+				stroke.dispose();
+				stroke = null;
+			}
+			
+			super.dispose();
 		}
 	}
 }

@@ -12,6 +12,10 @@ package ui.chart
 		/* Properties */
 		private var backgroundColor:uint;
 		private var strokeColor:uint;
+
+		// Display Objects
+		private var sensorMarker:NGon;
+		private var stroke:Shape;
 		
 		public function SensorMarker(treatment:Treatment)
 		{
@@ -28,14 +32,14 @@ package ui.chart
 			this.radius = 6;
 			
 			//Background
-			var sensorMarker:NGon = new NGon(radius, 20, 0, 0, 360);
+			sensorMarker = new NGon(radius, 20, 0, 0, 360);
 			sensorMarker.x = radius / 3;
 			sensorMarker.y = radius + radius/4;
 			sensorMarker.color = backgroundColor;
 			addChild(sensorMarker);
 			
 			//Stroke
-			var stroke:Shape = new Shape();
+			stroke = new Shape();
 			stroke.graphics.lineStyle(0.8, strokeColor, 1);
 			stroke.graphics.drawCircle(radius, radius, radius);
 			stroke.y = radius/4;
@@ -50,6 +54,25 @@ package ui.chart
 			removeChildren(0, 10, true);
 			
 			draw();
+		}
+		
+		override public function dispose():void
+		{
+			if (sensorMarker != null)
+			{
+				sensorMarker.removeFromParent();
+				sensorMarker.dispose();
+				sensorMarker = null;
+			}
+			
+			if (stroke != null)
+			{
+				stroke.removeFromParent();
+				stroke.dispose();
+				stroke = null;
+			}
+			
+			super.dispose();
 		}
 	}
 }

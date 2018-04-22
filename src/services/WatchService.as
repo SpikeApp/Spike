@@ -227,7 +227,6 @@ package services
 			return calendarEvent;
 		}
 		
-		
 		private static function adjustPreviousGlucose():void
 		{
 			if (queue.length < 2)
@@ -265,6 +264,8 @@ package services
 		
 		private static function processLatestGlucose(initialStart:Boolean = false):void
 		{
+			Trace.myTrace("WatchService.as", "Syncing glucose and treatments to watch.");
+			
 			//Get glucose output
 			var currentReading:BgReading;
 			if (!BlueToothDevice.isFollower())
@@ -359,9 +360,6 @@ package services
 			
 			//Add watch event to queue
 			queue.push(watchEvent);
-			
-			trace("start time:", new Date(now));
-			trace("end time:", new Date(future));
 			
 			//Adjust previous glucose
 			adjustPreviousGlucose();

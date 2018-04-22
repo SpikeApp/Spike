@@ -13,6 +13,12 @@ package ui.chart
 	{
 		private var chartTimeline:Number;
 		private var noteScale:Number = 1;
+
+		//Display Objects
+		private var noteTexture:Texture;
+		private var noteMarker:Image;
+		private var hitArea:Quad;
+		private var markerContainer:Sprite;
 		
 		public function NoteMarker(treatment:Treatment, timeline:Number)
 		{
@@ -33,16 +39,16 @@ package ui.chart
 				noteScale *= 0.5;
 			
 			//Note icon
-			var noteTexture:Texture = MaterialDeepGreyAmberMobileThemeIcons.noteChartTexture;
-			var noteMarker:Image = new Image(noteTexture);
+			noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteChartTexture;
+			noteMarker = new Image(noteTexture);
 			noteMarker.y = noteMarker.x = 5;
 			
 			//Note Mask
-			var hitArea:Quad = new Quad(30, 30, 0xFF0000);
+			hitArea = new Quad(30, 30, 0xFF0000);
 			hitArea.alpha = 0;
 			
 			//Note container
-			var markerContainer:Sprite = new Sprite();
+			markerContainer = new Sprite();
 			markerContainer.addChild(noteMarker);
 			markerContainer.addChild(hitArea);
 			
@@ -59,6 +65,38 @@ package ui.chart
 			removeChildren(0, 10, true);
 			
 			draw();
+		}
+		
+		override public function dispose():void
+		{
+			if (noteTexture != null)
+			{
+				noteTexture.dispose();
+				noteTexture = null;
+			}
+			
+			if (noteMarker != null)
+			{
+				noteMarker.removeFromParent();
+				noteMarker.dispose();
+				noteMarker = null;
+			}
+			
+			if (hitArea != null)
+			{
+				hitArea.removeFromParent();
+				hitArea.dispose();
+				hitArea = null;
+			}
+			
+			if (markerContainer != null)
+			{
+				markerContainer.removeFromParent();
+				markerContainer.dispose();
+				markerContainer = null;
+			}
+			
+			super.dispose();
 		}
 	}
 }

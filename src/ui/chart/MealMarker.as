@@ -19,6 +19,9 @@ package ui.chart
 		private var insulinLabel:Label;
 		private var carbsLabel:Label;
 		private var mainLabel:Label;
+		private var insulinMarker:NGon;
+		private var carbsMarker:NGon;
+		private var stroke:Shape;
 		
 		/* Properties */
 		private var fontSize:int = 11;
@@ -27,7 +30,7 @@ package ui.chart
 		private var strokeColor:uint;
 		private var initialRadius:Number = 8;
 		private var chartTimeline:Number;
-		
+
 		public function MealMarker(treatment:Treatment, timeline:Number)
 		{
 			this.treatment = treatment;
@@ -64,20 +67,20 @@ package ui.chart
 			}
 			
 			//Background
-			var insulinMarker:NGon = new NGon(radius, 20, 0, 90, 270);
+			insulinMarker = new NGon(radius, 20, 0, 90, 270);
 			insulinMarker.x = radius / 3;
 			insulinMarker.y = radius + radius/4;
 			insulinMarker.color = backgroundInsulinColor;
 			addChild(insulinMarker);
 			
-			var carbsMarker:NGon = new NGon(radius, 20, 0, -90, 90);
+			carbsMarker = new NGon(radius, 20, 0, -90, 90);
 			carbsMarker.x = radius / 3;
 			carbsMarker.y = radius + radius/4;
 			carbsMarker.color = backgroundCarbsColor;
 			addChild(carbsMarker);
 			
 			//Stroke
-			var stroke:Shape = new Shape();
+			stroke = new Shape();
 			stroke.graphics.lineStyle(0.8, strokeColor, 1);
 			stroke.graphics.drawCircle(radius, radius, radius);
 			stroke.y = radius/4;
@@ -131,6 +134,53 @@ package ui.chart
 			removeChildren(0, 10, true);
 			
 			draw();
+		}
+		
+		override public function dispose():void
+		{
+			if (insulinLabel != null)
+			{
+				insulinLabel.removeFromParent();
+				insulinLabel.dispose();
+				insulinLabel = null;
+			}
+			
+			if (carbsLabel != null)
+			{
+				carbsLabel.removeFromParent();
+				carbsLabel.dispose();
+				carbsLabel = null;
+			}
+			
+			if (mainLabel != null)
+			{
+				mainLabel.removeFromParent();
+				mainLabel.dispose();
+				mainLabel = null;
+			}
+			
+			if (insulinMarker != null)
+			{
+				insulinMarker.removeFromParent();
+				insulinMarker.dispose();
+				insulinMarker = null;
+			}
+			
+			if (carbsMarker != null)
+			{
+				carbsMarker.removeFromParent();
+				carbsMarker.dispose();
+				carbsMarker = null;
+			}
+			
+			if (stroke != null)
+			{
+				stroke.removeFromParent();
+				stroke.dispose();
+				stroke = null;
+			}
+			
+			super.dispose();
 		}
 	}
 }

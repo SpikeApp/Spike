@@ -18,6 +18,8 @@ package ui.chart
 	{
 		/* Display Objects */
 		private var label:Label;
+		private var BGMarker:NGon;
+		private var stroke:Shape;
 		
 		/* Properties */
 		private var fontSize:int = 11;
@@ -50,14 +52,14 @@ package ui.chart
 				fontSize *= 0.6;
 			
 			//Background
-			var BGMarker:NGon = new NGon(radius, 20, 0, 0, 360);
+			BGMarker = new NGon(radius, 20, 0, 0, 360);
 			BGMarker.x = radius / 3;
 			BGMarker.y = radius + radius/4;
 			BGMarker.color = backgroundColor;
 			addChild(BGMarker);
 			
 			//Stroke
-			var stroke:Shape = new Shape();
+			stroke = new Shape();
 			stroke.graphics.lineStyle(0.8, strokeColor, 1);
 			stroke.graphics.drawCircle(radius, radius, radius);
 			stroke.y = radius/4;
@@ -97,6 +99,32 @@ package ui.chart
 			removeChildren(0, 10, true);
 			
 			draw();
+		}
+		
+		override public function dispose():void
+		{
+			if (label != null)
+			{
+				label.removeFromParent();
+				label.dispose();
+				label = null;
+			}
+			
+			if (BGMarker != null)
+			{
+				BGMarker.removeFromParent();
+				BGMarker.dispose();
+				BGMarker = null;
+			}
+			
+			if (stroke != null)
+			{
+				stroke.removeFromParent();
+				stroke.dispose();
+				stroke = null;
+			}
+			
+			super.dispose();
 		}
 	}
 }
