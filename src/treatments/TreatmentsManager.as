@@ -1213,6 +1213,12 @@ package treatments
 			treatment = null;
 		}
 		
+		public static function removeAllTreatmentsFromMemory():void
+		{
+			treatmentsList = [];
+			treatmentsMap = new Dictionary();
+		}
+		
 		public static function getEstimatedGlucose(timestamp:Number):Number
 		{
 			var estimatedGlucose:Number = 100;

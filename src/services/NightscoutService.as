@@ -475,6 +475,8 @@ package services
 			
 			clearTimeout(followerTimer);
 			
+			TreatmentsManager.removeAllTreatmentsFromMemory();
+			
 			setupNightscoutProperties();
 			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 				getNightscoutProfile();
@@ -496,6 +498,8 @@ package services
 			nextFollowDownloadTime = 0;
 			
 			ModelLocator.bgReadings.length = 0;
+			
+			TreatmentsManager.removeAllTreatmentsFromMemory();
 		}
 		
 		private static function calculateNextFollowDownloadTime():void 
