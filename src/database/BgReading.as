@@ -639,37 +639,44 @@ package database
 			)).calculateAgeAdjustedRawValue();
 			
 			ModelLocator.addBGReading(bgReading);
-
-			if (calibration == null) {
-				//No calibration yet
-				
+			
+			if (BlueToothDevice.isTypeLimitter() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION) == "true")) {
+				myTrace("in create,  isTypeLimitter and COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION = true, applying defaultcalibration");
+				bgReading.calculatedValue = 0.1134 * bgReading.calculatedValue - 22.05;
+				updateCalculatedValue(bgReading);
 			} else {
-				if(calibration.checkIn) {
-					var firstAdjSlope:Number = calibration.firstSlope + (calibration.firstDecay * (Math.ceil((new Date()).valueOf() - calibration.timestamp)/(1000 * 60 * 10)));
-					var calSlope:Number = (calibration.firstScale / firstAdjSlope)*1000;
-					var calIntercept:Number = ((calibration.firstScale * calibration.firstIntercept) / firstAdjSlope)*-1;
-					bgReading.calculatedValue = (((calSlope * rawData) + calIntercept) - 5);
-					bgReading.filteredCalculatedValue = (((calSlope * bgReading.ageAdjustedRawValue) + calIntercept) -5);
+				if (calibration == null) {
+					//No calibration yet
 					
 				} else {
-					var lastBgReading:BgReading = null;
-					var lastBgReadings:Array = BgReading.latest(1);
-					if (lastBgReadings.length > 0) {
-						lastBgReading = (BgReading.latest(1))[0] as BgReading;
-						if (lastBgReading != null && lastBgReading.calibration != null) {
-							if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
-								lastBgReading.calibration
-									.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
-									.updateInDatabaseSynchronous();
+					if(calibration.checkIn) {
+						var firstAdjSlope:Number = calibration.firstSlope + (calibration.firstDecay * (Math.ceil((new Date()).valueOf() - calibration.timestamp)/(1000 * 60 * 10)));
+						var calSlope:Number = (calibration.firstScale / firstAdjSlope)*1000;
+						var calIntercept:Number = ((calibration.firstScale * calibration.firstIntercept) / firstAdjSlope)*-1;
+						bgReading.calculatedValue = (((calSlope * rawData) + calIntercept) - 5);
+						bgReading.filteredCalculatedValue = (((calSlope * bgReading.ageAdjustedRawValue) + calIntercept) -5);
+						
+					} else {
+						var lastBgReading:BgReading = null;
+						var lastBgReadings:Array = BgReading.latest(1);
+						if (lastBgReadings.length > 0) {
+							lastBgReading = (BgReading.latest(1))[0] as BgReading;
+							if (lastBgReading != null && lastBgReading.calibration != null) {
+								if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
+									lastBgReading.calibration
+										.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
+										.updateInDatabaseSynchronous();
+								}
 							}
 						}
+						
+						bgReading.calculatedValue = ((calibration.slope * bgReading.ageAdjustedRawValue) + calibration.intercept);
+						bgReading.filteredCalculatedValue = ((calibration.slope * bgReading.ageAdjustedFiltered()) + calibration.intercept);
 					}
-					
-					bgReading.calculatedValue = ((calibration.slope * bgReading.ageAdjustedRawValue) + calibration.intercept);
-					bgReading.filteredCalculatedValue = ((calibration.slope * bgReading.ageAdjustedFiltered()) + calibration.intercept);
+					updateCalculatedValue(bgReading);
 				}
-				updateCalculatedValue(bgReading);
 			}
+
 			bgReading.performCalculations();
 			return bgReading;
 		}

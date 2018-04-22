@@ -173,8 +173,13 @@ package services
 		}
 		
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
-			myTrace("in bgReadingReceived");
+			if (BlueToothDevice.isTypeLimitter() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION) == "true")) {
+				myTrace("in bgReadingReceived, but isTypeLimitter and COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION = true, no further processing");
+				return;
+			}
 
+			myTrace("in bgReadingReceived");
+			
 			var latestReadings:Array = BgReading.latestBySize(2);
 			if (latestReadings.length < 2) {
 				myTrace("in bgReadingReceived but latestReadings.length <2");
