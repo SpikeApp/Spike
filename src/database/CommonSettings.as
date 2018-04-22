@@ -379,6 +379,11 @@
 		 * warning will be given after 14 days that sensor is about to expire, can still last for 12 hours after that 
 		  */
 		 public static const COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN:int = 136;
+		 
+		 /**
+		 * if true, for any device type limitter, default calibration will be used<br>
+		  */
+		 public static const COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION:int = 137;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -517,7 +522,8 @@
 			 "false",//COMMON_SETTING_CHART_ROUND_MGDL_ON
 			 "0",//COMMON_SETTING_BLUEREADER_FULL_BATTERY
 			 "0",//COMMON_SETTING_XBRIDGER_BATTERY_LEVEL
-			 "false"//COMMON_SETTING_MIAOMIAO_EXPIRY_WARNING_GIVEN
+			 "false",//COMMON_SETTING_MIAOMIAO_EXPIRY_WARNING_GIVEN
+			 "false"//COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION
 		 ];
 
 		 public function CommonSettings()
