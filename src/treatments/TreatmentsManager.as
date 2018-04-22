@@ -626,6 +626,8 @@ package treatments
 					treatmentsList.push(treatment);
 					treatmentsMap[treatment.ID] = treatment;
 					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
@@ -635,8 +637,6 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
-					
-					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -680,6 +680,8 @@ package treatments
 					treatmentsList.push(treatment);
 					treatmentsMap[treatment.ID] = treatment;
 					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
@@ -689,8 +691,6 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
-					
-					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -752,6 +752,8 @@ package treatments
 					treatmentsList.push(treatment);
 					treatmentsMap[treatment.ID] = treatment;
 					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
@@ -761,8 +763,6 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
-					
-					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -813,6 +813,8 @@ package treatments
 					treatmentsList.push(treatment);
 					treatmentsMap[treatment.ID] = treatment;
 					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
@@ -822,8 +824,6 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
-					
-					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			
@@ -865,6 +865,8 @@ package treatments
 					treatmentsList.push(treatment);
 					treatmentsMap[treatment.ID] = treatment;
 					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
@@ -874,8 +876,6 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
-					
-					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
 				}
 			}
 			

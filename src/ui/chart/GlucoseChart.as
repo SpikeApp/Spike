@@ -1088,15 +1088,15 @@ package ui.chart
 						treatment.dispose();
 						treatment = null;
 						
+						var timelineTimestamp:Number = getTimelineTimestamp();
+						if (displayIOBEnabled)
+							calculateTotalIOB(timelineTimestamp);
+						if (displayCOBEnabled)
+							calculateTotalCOB(timelineTimestamp);
+						
 						deleteTreatmentTween = null;
 					}
 					Starling.juggler.add(deleteTreatmentTween);
-					
-					var timelineTimestamp:Number = getTimelineTimestamp();
-					if (displayIOBEnabled)
-						calculateTotalIOB(timelineTimestamp);
-					if (displayCOBEnabled)
-						calculateTotalCOB(timelineTimestamp);
 				}
 				
 				function onMove(e:starling.events.Event):void
