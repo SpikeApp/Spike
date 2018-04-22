@@ -189,9 +189,23 @@ package services
 					if (event != null && event.notes != null && lastEvent != null && lastEvent.notes != null && event.notes.indexOf(lastEvent.notes) != -1)
 					{
 						Calendar.service.removeEvent(event);
-						queue.pop();
+						removeEventFromQueue(event);
 						lastEvent = null;
 					}
+				}
+			}
+		}
+		
+		private static function removeEventFromQueue(event:EventObject):void
+		{
+			for(var i:int = queue.length - 1 ; i >= 0; i--)
+			{
+				var queueEvent:EventObject = queue[i];
+				if (queueEvent != null && queueEvent.notes == event.notes)
+				{
+					var removedEvent:EventObject = queue.removeAt(i);
+					removedEvent = null;
+					break;
 				}
 			}
 		}
@@ -209,7 +223,6 @@ package services
 					break;
 				}
 			}
-			
 			
 			return calendarEvent;
 		}
@@ -234,7 +247,7 @@ package services
 					editedEvent.title = event.title;
 					editedEvent.notes = event.notes;
 					editedEvent.startDate = event.startDate;
-					editedEvent.endDate = new Date(event.startDate.valueOf() + TIME_5_MINUTES);
+					editedEvent.endDate = new Date(lastEvent.startDate.valueOf() - 100); //minus 100ms
 					editedEvent.calendarId = calendarID;
 					
 					//Delete the Event
@@ -297,23 +310,7 @@ package services
 			var now:Number;
 			var previousEvent:EventObject;
 			if (!initialStart)
-			{
-				if (queue.length > 0)
-				{
-					if (!applyGapFix)
-					{
-						previousEvent = getLastEvent(queue[queue.length - 1]);
-						if (previousEvent != null)
-							now = previousEvent.endTimestamp;
-						else
-							now = (new Date()).valueOf();
-					}
-					else
-						now = (new Date()).valueOf();
-				}
-				else
-					now = (new Date()).valueOf();
-			}
+				now = (new Date()).valueOf();
 			else
 				now = currentReading.timestamp;	
 			
@@ -341,12 +338,13 @@ package services
 			if (displayIOBEnabled || displayCOBEnabled)
 			{
 				title += "\n";
+				var nowTreatments:Number = new Date().valueOf();
 				if (displayIOBEnabled && displayCOBEnabled)
-					title += "I:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + " " + "C:" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+					title += "I:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments)) + " " + "C:" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments));
 				else if (displayIOBEnabled)
-					title += "IOB:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now));
+					title += "IOB:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments));
 				else if (displayCOBEnabled)
-					title += "COB:" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+					title += "COB:" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments));
 			}
 			
 			//Create watch event
@@ -362,11 +360,11 @@ package services
 			//Add watch event to queue
 			queue.push(watchEvent);
 			
-			if (applyGapFix)
-			{
-				//Adjust previous glucose
-				adjustPreviousGlucose();
-			}
+			trace("start time:", new Date(now));
+			trace("end time:", new Date(future));
+			
+			//Adjust previous glucose
+			adjustPreviousGlucose();
 		}
 		
 		/**
