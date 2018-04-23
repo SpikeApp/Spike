@@ -1065,9 +1065,11 @@ package services
 					var pebbleProperties:Object = SpikeJSON.parse(response) as Object;
 					if (pebbleProperties != null && pebbleProperties.bgs != null)
 					{
+						var previousPumpIOB:Number = TreatmentsManager.pumpIOB;
 						var pumpIOB:Number = Number(pebbleProperties.bgs[0].iob);
 						TreatmentsManager.setPumpIOB(pumpIOB);
 						
+						var previousPumpCOB:Number = TreatmentsManager.pumpCOB;
 						var pumpCOB:Number = Number(pebbleProperties.bgs[0].cob);
 						TreatmentsManager.setPumpCOB(pumpCOB);
 						
@@ -1075,7 +1077,8 @@ package services
 							getRemoteTreatments();
 						
 						//Notify listeners of updated IOB/COB
-						TreatmentsManager.notifyIOBCOB();
+						if (previousPumpIOB != pumpIOB || previousPumpCOB != pumpCOB)
+							TreatmentsManager.notifyIOBCOB();
 						
 						retriesForPebbleDownload = 0;
 					}

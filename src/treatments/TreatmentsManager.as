@@ -66,8 +66,8 @@ package treatments
 		private static var treatmentsMap:Dictionary = new Dictionary();
 		
 		/* Internal Properties */
-		private static var pumpIOB:Number = 0;
-		private static var pumpCOB:Number = 0;
+		public static var pumpIOB:Number = 0;
+		public static var pumpCOB:Number = 0;
 		
 		public function TreatmentsManager()
 		{
