@@ -982,8 +982,14 @@ package services
 		
 		private static function getPebbleEndpoint():void
 		{
-			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !pumpUserEnabled)
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
 				return;
+			
+			if (!pumpUserEnabled)
+			{
+				getRemoteTreatments();
+				return;
+			}
 			
 			Trace.myTrace("NightscoutService.as", "getPebbleEndpoint called!");
 			
@@ -1027,8 +1033,14 @@ package services
 		
 		private static function onGetPebbleComplete(e:Event):void
 		{
-			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !pumpUserEnabled)
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
 				return;
+			
+			if (!pumpUserEnabled)
+			{
+				getRemoteTreatments();
+				return;
+			}
 			
 			Trace.myTrace("NightscoutService.as", "onGetPebbleComplete called!");
 			
@@ -1064,6 +1076,8 @@ package services
 						
 						//Notify listeners of updated IOB/COB
 						TreatmentsManager.notifyIOBCOB();
+						
+						retriesForPebbleDownload = 0;
 					}
 					else
 					{
@@ -1094,50 +1108,6 @@ package services
 					retriesForPebbleDownload++;
 				}
 			}
-			
-			/*
-			//Validate response
-			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
-			{
-				try
-				{
-					var nightscoutTreatments:Array = SpikeJSON.parse(response) as Array;
-					if (nightscoutTreatments!= null && nightscoutTreatments is Array)
-					{
-						//Send nightscout treatments to TreatmentsManager for further processing
-						TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
-						
-						retriesForTreatmentsDownload = 0;
-					}
-					else
-					{
-						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
-						{
-							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-							setTimeout(getRemoteTreatments, TIME_30_SECONDS);
-							retriesForTreatmentsDownload++;
-						}
-					}
-				} 
-				catch(error:Error) 
-				{
-					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
-					{
-						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
-						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
-						retriesForTreatmentsDownload++;
-					}
-				}
-			}
-			else
-			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
-				{
-					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
-					retriesForTreatmentsDownload++;
-				}
-			}*/
 		}
 		
 		private static function getRemoteTreatments():void
