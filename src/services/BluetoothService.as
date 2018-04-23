@@ -156,10 +156,10 @@ package services
 		
 		//Transmiter PL
 		private static const Transmiter_PL_Service_UUID:String = "c97433f0-be8f-4dc8-b6f0-5343e6100eb4";
-		private static const Transmiter_PL_RX_Characteristics_UUID:String = "c97433f1-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const Transmiter_PL_RX_Characteristic_UUID:String = "c97433f1-be8f-4dc8-b6f0-5343e6100eb4";
 		private static const Transmiter_PL_TX_Characteristic_UUID:String = "c97433f2-be8f-4dc8-b6f0-5343e6100eb4";
 		private static const Transmiter_PL_Service_UUID_Vector:Vector.<String> = new <String>[Transmiter_PL_Service_UUID];
-		private static const Transmiter_PL_Characteristics_UUID_Vector:Vector.<String> = new <String>[Transmiter_PL_RX_Characteristics_UUID, Transmiter_PL_TX_Characteristic_UUID];
+		private static const Transmiter_PL_Characteristics_UUID_Vector:Vector.<String> = new <String>[Transmiter_PL_RX_Characteristic_UUID, Transmiter_PL_TX_Characteristic_UUID];
 		
 		//xbridger uses the same uuid's as xdrip except for TX Characteristic
 		private static const xBridgeR_TX_Characteristic_UUID:String = "0000ffe2-0000-1000-8000-00805f9b34fb";
@@ -254,35 +254,13 @@ package services
 			return _activeBluetoothPeripheral;
 		}
 		
-		private static var _G4characteristic:Characteristic;
+		private static var ReadCharacteristic:Characteristic;
 		
-		private static function get G4_Read_characteristic():Characteristic
-		{
-			return _G4characteristic;
-		}
-		
-		private static function set G4_Read_characteristic(value:Characteristic):void
-		{
-			_G4characteristic = value;
-		}
-		
+		private static var WriteCharacteristic:Characteristic;
+
 		private static var G5AuthenticationCharacteristic:Characteristic;
 		
-		private static var G5ControlCharacteristic:Characteristic;
-		
-		private static var BC_desiredTransmitCharacteristic:Characteristic;
-
-		private static var BC_desiredReceiveCharacteristic:Characteristic;
-		
-		private static var BlueReader_RX_Characteristic:Characteristic;
-		
-		private static var BlueReader_TX_Characteristic:Characteristic;
-		
-		private static var TRANSMITER_PL_Tx_characteristic:Characteristic;
-		
-		private static var TRANSMITER_PL_Rx_characteristic:Characteristic;
-		
-		private static var G4_Write_Characteristic:Characteristic;
+		private static var G5ControlCharacteristic:Characteristic;		
 		
 		//blukon global vars for backfill processing
 		private static var m_currentTrendIndex:int;
@@ -1032,11 +1010,11 @@ package services
 					}
 					Write_CharacteristicsIndex++;
 				}
-				BC_desiredReceiveCharacteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
-				BC_desiredTransmitCharacteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
-				myTrace("subscribing to BC_desiredReceiveCharacteristic");
+				ReadCharacteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
+				WriteCharacteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
+				myTrace("subscribing to ReadCharacteristic");
 				
-				if (!activeBluetoothPeripheral.subscribeToCharacteristic(BC_desiredReceiveCharacteristic))
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(ReadCharacteristic))
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
@@ -1055,7 +1033,7 @@ package services
 					}
 					Read_CharacteristicsIndex++;
 				}
-				G4_Read_characteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
+				ReadCharacteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
 
 				if (BlueToothDevice.isxBridgeR()) {
 					for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
@@ -1066,13 +1044,13 @@ package services
 						}
 						Write_CharacteristicsIndex++;
 					}
-					G4_Write_Characteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
+					WriteCharacteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
 				} else {
-					G4_Write_Characteristic = G4_Read_characteristic;
+					WriteCharacteristic = ReadCharacteristic;
 				}
 
-				myTrace("subscribing to G4characteristic");
-				if (!activeBluetoothPeripheral.subscribeToCharacteristic(G4_Read_characteristic))
+				myTrace("subscribing to ReadCharacteristic");
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(ReadCharacteristic))
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
@@ -1092,19 +1070,19 @@ package services
 					}
 					Write_CharacteristicsIndex++;
 				}
-				TRANSMITER_PL_Tx_characteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
+				WriteCharacteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
 
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (Transmiter_PL_RX_Characteristics_UUID.indexOf(o.uuid as String) > -1) {
-						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + Transmiter_PL_RX_Characteristics_UUID);
+					if (Transmiter_PL_RX_Characteristic_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + Transmiter_PL_RX_Characteristic_UUID);
 						break;
 					}
 					Read_CharacteristicsIndex++;
 				}
-				TRANSMITER_PL_Rx_characteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
+				ReadCharacteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
 
-				myTrace("subscribing to TRANSMITER_PL_Rx_characteristic");
-				if (!activeBluetoothPeripheral.subscribeToCharacteristic(TRANSMITER_PL_Rx_characteristic))
+				myTrace("subscribing to ReadCharacteristic");
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(ReadCharacteristic))
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
@@ -1118,7 +1096,6 @@ package services
 				}
 				myTrace("in peripheral_discoverCharacteristicsHandler handling bluereader, servicesIndex = " + servicesIndex);
 
-				myTrace("trying to find BlueReader_RX_Characteristic_UUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (BlueReader_RX_Characteristic_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
 						myTrace("found BlueReader_RX_Characteristic_UUID");
@@ -1126,9 +1103,8 @@ package services
 					}
 					Read_CharacteristicsIndex++;
 				}
-				BlueReader_RX_Characteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
+				ReadCharacteristic = event.peripheral.services[servicesIndex].characteristics[Read_CharacteristicsIndex];
 
-				myTrace("trying to find BlueReader_TX_Characteristic_UUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (BlueReader_TX_Characteristic_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
 						myTrace("found BlueReader_TX_Characteristic_UUID");
@@ -1136,24 +1112,24 @@ package services
 					}
 					Write_CharacteristicsIndex++;
 				}
-				BlueReader_TX_Characteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
+				WriteCharacteristic = event.peripheral.services[servicesIndex].characteristics[Write_CharacteristicsIndex];
 
-				myTrace("subscribing to BlueReader_RX_Characteristic");
-				if (!activeBluetoothPeripheral.subscribeToCharacteristic(BlueReader_RX_Characteristic))
+				myTrace("subscribing to ReadCharacteristic");
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(ReadCharacteristic))
 				{
-					myTrace("Subscribe to BlueReader_RX_Characteristic failed due to invalid adapter state.");
+					myTrace("Subscribe to ReadCharacteristic failed due to invalid adapter state.");
 				}
 			}
 		}
 		
 		public static function writeG4Characteristic(value:ByteArray):void {
-			if (!activeBluetoothPeripheral.writeValueForCharacteristic(G4_Read_characteristic, value)) {
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(WriteCharacteristic, value)) {
 				myTrace("ackG4CharacteristicUpdate writeValueForCharacteristic failed");
 			}
 		}
 		
 		public static function writeBlueReaderCharacteristic(value:ByteArray):void {
-			if (!activeBluetoothPeripheral.writeValueForCharacteristic(BlueReader_TX_Characteristic, value)) {
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(WriteCharacteristic, value)) {
 				myTrace("writeBlueReacherCharacteristic writeValueForCharacteristic failed");
 			}
 		}
@@ -1835,10 +1811,10 @@ package services
 
 		
 		/**
-		 * sends the command to  BC_desiredTransmitCharacteristic and also assigns blukonCurrentCommand to command
+		 * sends the command to  WriteCharacteristic and also assigns blukonCurrentCommand to command
 		 */
 		private static function sendCommand(command:String):void {
-			if (!activeBluetoothPeripheral.writeValueForCharacteristic(BC_desiredTransmitCharacteristic, utils.UniqueId.hexStringToByteArray(command))) {
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(WriteCharacteristic, utils.UniqueId.hexStringToByteArray(command))) {
 				myTrace("send " + command + " failed");
 			} else {
 				myTrace("send " + command + " succesfull");
@@ -2174,19 +2150,19 @@ package services
 			} else if (uuid.toUpperCase() == G5_Control_Characteristic_UUID.toUpperCase()) {
 				return "G5_Control_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == Blucon_TX_Characteristic_UUID.toUpperCase()) {
-				return "BC_desiredTransmitCharacteristicUUID";
+				return "Blucon_TX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == Blucon_RX_Characteristic_UUID.toUpperCase()) {
-				return "BC_desiredReceiveCharacteristicUUID";
+				return "Blucon_RX_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == Transmiter_PL_RX_Characteristic_UUID.toUpperCase()) {
+				return "Transmiter_PL_RX_Characteristics_UUID";
+			} else if (uuid.toUpperCase() == Transmiter_PL_TX_Characteristic_UUID.toUpperCase()) {
+				return "Transmiter_PL_TX_Characteristics_UUID";
+			} else if (G4_RX_Characteristic_UUID.toUpperCase().indexOf(uuid.toUpperCase()) > -1) {
+				return "G4_RX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == BlueReader_RX_Characteristic_UUID.toUpperCase()) {
 				return "BlueReader_RX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == BlueReader_TX_Characteristic_UUID.toUpperCase()) {
 				return "BlueReader_TX_Characteristic_UUID";
-			} else if (G4_RX_Characteristic_UUID.toUpperCase().indexOf(uuid.toUpperCase()) > -1) {
-				return "HM_RX_TX_G4";
-			} else if (uuid.toUpperCase() == Transmiter_PL_RX_Characteristics_UUID.toUpperCase()) {
-				return "TRANSMITER_PL_RX_CHARACTERISTIC_UUID";
-			} else if (uuid.toUpperCase() == Transmiter_PL_TX_Characteristic_UUID.toUpperCase()) {
-				return "TRANSMITER_PL_TX_CHARACTERISTIC_UUID";
 			} 
 			return uuid + ", unknown characteristic uuid";
 		}
