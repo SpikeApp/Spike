@@ -2850,7 +2850,14 @@ package ui.chart
 		private function onAppInForeground (e:SpikeEvent):void
 		{
 			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+			{
 				calculateDisplayLabels();
+				var timelineTimestamp:Number = getTimelineTimestamp();
+				if (displayIOBEnabled)
+					calculateTotalIOB(timelineTimestamp);
+				if (displayCOBEnabled)
+					calculateTotalCOB(timelineTimestamp);
+			}
 		}
 		
 		private function onUpdateTimerRefresh(event:flash.events.Event = null):void

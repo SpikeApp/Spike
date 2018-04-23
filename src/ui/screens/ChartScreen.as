@@ -454,7 +454,7 @@ package ui.screens
 		
 		private function onUpdateIOBCOB(e:TreatmentsEvent):void
 		{
-			if (glucoseChart == null)
+			if (glucoseChart == null || !BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
 				return;
 			
 			Trace.myTrace("ChartScreen.as", "Updating IOB/COB");
