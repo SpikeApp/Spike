@@ -67,6 +67,7 @@ package services
 		private static const MODE_TREATMENT_DELETE:String = "treatmentDelete";
 		private static const MODE_PROFILE_GET:String = "profileGet";
 		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
+		private static const MODE_PEBBLE_GET:String = "pebbleGet";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
 		private static const MAX_RETRIES_FOR_TREATMENTS:int = 1;
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
@@ -128,8 +129,6 @@ package services
 		private static var nightscoutFollowAPISecret:String = "";
 		private static var nightscoutProfileURL:String = "";
 		private static var isNSProfileSet:Boolean = false;
-		private static var lastRemoteTreatmentsSync:Number = 0;
-		private static var lastRemoteProfileSync:Number = 0;
 		
 		private static var _instance:NightscoutService = new NightscoutService();
 
@@ -140,12 +139,22 @@ package services
 		private static var activeTreatmentsUpload:Array = [];
 		private static var activeTreatmentsDelete:Array = [];
 		private static var retriesForTreatmentsDownload:int = 0;
+		private static var retriesForPebbleDownload:int = 0;
 		private static var _syncTreatmentsUploadActive:Boolean = false;
 		private static var _syncTreatmentsDeleteActive:Boolean = false;
 		private static var _syncTreatmentsDownloadActive:Boolean = false;
+		private static var _syncPebbleActive:Boolean = false;
 		private static var syncTreatmentsUploadActiveLastChange:Number = (new Date()).valueOf();
 		private static var syncTreatmentsDeleteActiveLastChange:Number = (new Date()).valueOf();
 		private static var syncTreatmentsDownloadActiveLastChange:Number = (new Date()).valueOf();
+		private static var syncPebbleActiveLastChange:Number = (new Date()).valueOf();
+		private static var lastRemoteTreatmentsSync:Number = 0;
+		private static var lastRemoteProfileSync:Number = 0;
+		private static var lastRemotePebbleSync:Number = 0;
+
+		private static var pumpUserEnabled:Boolean;
+
+		private static var nightscoutPebbleURL:String;
 
 		public function NightscoutService()
 		{
@@ -322,9 +331,14 @@ package services
 					initialGlucoseReadingsIndex = 0;
 				}
 				
-				//Get remote treatments
+				//Get remote treatments/IOB-COB
 				if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-					getRemoteTreatments();
+				{
+					if (!pumpUserEnabled)
+						getRemoteTreatments();
+					else
+						getPebbleEndpoint();
+				}
 			}
 			else
 			{
@@ -439,7 +453,12 @@ package services
 							
 							//Get treatmenents
 							if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-								getRemoteTreatments();
+							{
+								if (!pumpUserEnabled)
+									getRemoteTreatments();
+								else
+									getPebbleEndpoint();
+							}
 						}
 						else
 							Trace.myTrace("NightscoutService.as", "Error retrieving insulin. Will try again on next transmitter reading! Response: " + response);
@@ -719,9 +738,14 @@ package services
 						//Notify Listeners
 						_instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
 						
-						//Get remote treatments
+						//Get remote treatments/pebble
 						if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-							getRemoteTreatments();
+						{
+							if (!pumpUserEnabled)
+								getRemoteTreatments();
+							else
+								getPebbleEndpoint();
+						}
 					}
 				} 
 				else 
@@ -876,7 +900,12 @@ package services
 					syncTreatmentsUpload();
 				}
 				else
-					getRemoteTreatments();
+				{
+					if (!pumpUserEnabled)
+						getRemoteTreatments();
+					else
+						getPebbleEndpoint();
+				}
 			}
 			else
 				Trace.myTrace("NightscoutService.as", "Error uploading/updating treatment. Server response: " + response);
@@ -949,6 +978,163 @@ package services
 			}
 			else
 				Trace.myTrace("NightscoutService.as", "Error deleting treatment. Server response: " + response);
+		}
+		
+		private static function getPebbleEndpoint():void
+		{
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !pumpUserEnabled)
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "getPebbleEndpoint called!");
+			
+			//Validation
+			if (!isNSProfileSet)
+			{
+				if (nightscoutTreatmentsSyncEnabled && treatmentsEnabled)
+				{
+					Trace.myTrace("NightscoutService.as", "Profile has not yet been downloaded. Will try to download now!");
+					getNightscoutProfile();
+				}
+				
+				return;
+			}
+			
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				Trace.myTrace("NightscoutService.as", "There's no Internet connection.");
+				
+				return;
+			}
+			
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastRemotePebbleSync < TIME_30_SECONDS)
+				return;
+			
+			lastRemotePebbleSync = now;
+			
+			syncPebbleActive = true;
+			
+			//API Secret
+			var treatmentAPISecret:String = "";
+			if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+				treatmentAPISecret = nightscoutFollowAPISecret;
+			else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+				treatmentAPISecret = apiSecret;
+			
+			NetworkConnector.createNSConnector(nightscoutPebbleURL, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_PEBBLE_GET, onGetPebbleComplete, onConnectionFailed);
+		}
+		
+		private static function onGetPebbleComplete(e:Event):void
+		{
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !pumpUserEnabled)
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "onGetPebbleComplete called!");
+			
+			syncPebbleActive = false;
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate response
+			if (response.indexOf("bgs") != -1 && response.indexOf("DOCTYPE") == -1)
+			{
+				try
+				{
+					var pebbleProperties:Object = SpikeJSON.parse(response) as Object;
+					if (pebbleProperties != null && pebbleProperties.bgs != null)
+					{
+						var pumpIOB:Number = Number(pebbleProperties.bgs[0].iob);
+						TreatmentsManager.setPumpIOB(pumpIOB);
+						
+						var pumpCOB:Number = Number(pebbleProperties.bgs[0].cob);
+						TreatmentsManager.setPumpCOB(pumpCOB);
+						
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+							getRemoteTreatments();
+					}
+					else
+					{
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+						{
+							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new pebble fetch in 30 seconds. Responder: " + response);
+							setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
+							retriesForPebbleDownload++;
+						}
+					}
+				} 
+				catch(error:Error) 
+				{
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+					{
+						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new pebble fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
+						setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
+						retriesForPebbleDownload++;
+					}
+				}
+			}
+			else
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+				{
+					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new pebble's fetch in 30 seconds. Responder: " + response);
+					setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
+					retriesForPebbleDownload++;
+				}
+			}
+			
+			/*
+			//Validate response
+			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
+			{
+				try
+				{
+					var nightscoutTreatments:Array = SpikeJSON.parse(response) as Array;
+					if (nightscoutTreatments!= null && nightscoutTreatments is Array)
+					{
+						//Send nightscout treatments to TreatmentsManager for further processing
+						TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
+						
+						retriesForTreatmentsDownload = 0;
+					}
+					else
+					{
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
+						{
+							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+							setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+							retriesForTreatmentsDownload++;
+						}
+					}
+				} 
+				catch(error:Error) 
+				{
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
+					{
+						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
+						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+						retriesForTreatmentsDownload++;
+					}
+				}
+			}
+			else
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				{
+					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					retriesForTreatmentsDownload++;
+				}
+			}*/
 		}
 		
 		private static function getRemoteTreatments():void
@@ -1575,9 +1761,12 @@ package services
 			nightscoutProfileURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/profile.json" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/profile.json";
 			if (nightscoutProfileURL.indexOf('http') == -1) nightscoutProfileURL = "https://" + nightscoutProfileURL;
 			
-			nightscoutTreatmentsSyncEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
+			nightscoutPebbleURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/pebble" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/pebble";
+			if (nightscoutPebbleURL.indexOf('http') == -1) nightscoutPebbleURL = "https://" + nightscoutPebbleURL;
 			
 			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
+			nightscoutTreatmentsSyncEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
+			pumpUserEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true";
 		}
 		
 		private static function activateEventListeners():void
@@ -1681,6 +1870,15 @@ package services
 					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
 				}
 			}
+			else if (mode == MODE_PEBBLE_GET)
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+				{
+					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting pebble endpoint. Retrying in 30 seconds. Error: " + error.message);
+					setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
+					retriesForPebbleDownload++;
+				}
+			}
 		}
 		
 		private static function onSettingChanged(e:SettingsServiceEvent):void
@@ -1755,7 +1953,7 @@ package services
 					activateFollower();
 				}
 			}
-			else if (e.data == CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED || e.data == CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED)
+			else if (e.data == CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED || e.data == CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED || e.data == CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED)
 			{
 				setupNightscoutProperties();
 			}
@@ -1776,7 +1974,12 @@ package services
 				
 				//Update remote treatments so the user has updated data when returning to Spike
 				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-					getRemoteTreatments();
+				{
+					if (!pumpUserEnabled)
+						getRemoteTreatments();
+					else
+						getPebbleEndpoint();
+				}
 			}
 			else
 				networkChangeOcurrances++;
@@ -1790,7 +1993,12 @@ package services
 			
 			//Update remote treatments so the user has updated data when returning to Spike
 			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-				getRemoteTreatments();
+			{
+				if (!pumpUserEnabled)
+					getRemoteTreatments();
+				else
+					getPebbleEndpoint();
+			}
 		}
 
 		/**
@@ -1955,6 +2163,29 @@ package services
 		{
 			syncTreatmentsDownloadActiveLastChange = new Date().valueOf();
 			_syncTreatmentsDownloadActive = value;
+		}
+		
+		public static function get syncPebbleActive():Boolean
+		{
+			if (!_syncPebbleActive)
+				return false;
+			
+			var now:Number = (new Date()).valueOf();
+			
+			if (now - syncPebbleActiveLastChange > MAX_SYNC_TIME)
+			{
+				syncPebbleActiveLastChange = now;
+				_syncPebbleActive = false;
+				return false;
+			}
+			
+			return true;
+		}
+		
+		public static function set syncPebbleActive(value:Boolean):void
+		{
+			syncPebbleActiveLastChange = new Date().valueOf();
+			_syncPebbleActive = value;
 		}
 		
 		public static function get instance():NightscoutService

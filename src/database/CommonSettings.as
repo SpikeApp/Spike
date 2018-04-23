@@ -384,6 +384,11 @@
 		 * if true, for any device type limitter, default calibration will be used<br>
 		  */
 		 public static const COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION:int = 137;
+		 
+		 /**
+		  * Treatments #2
+		  */
+		 public static const COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED:int = 138;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -523,7 +528,8 @@
 			 "0",//COMMON_SETTING_BLUEREADER_FULL_BATTERY
 			 "0",//COMMON_SETTING_XBRIDGER_BATTERY_LEVEL
 			 "false",//COMMON_SETTING_MIAOMIAO_EXPIRY_WARNING_GIVEN
-			 "false"//COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION
+			 "false",//COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION
+			 "false"//COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED
 		 ];
 
 		 public function CommonSettings()

@@ -59,6 +59,7 @@ package ui.screens.display.settings.treatments
 		private var resetColors:Button;
 		private var emailConfigurationFiles:Button;
 		private var loadInstructions:Button;
+		private var pumpUserEnabled:Check;
 		
 		/* Internal Variables */
 		public var needsSave:Boolean = false;
@@ -73,6 +74,7 @@ package ui.screens.display.settings.treatments
 		private var treatmentPillColorValue:uint;
 		private var strokeMarkerColorValue:uint;
 		private var newSensorMarkerColorValue:uint;
+		private var pumpUserEnabledValue:Boolean;
 		private var colorPickers:Array = [];
 		
 		public function TreatmentsSettingsList(parentDisplayObject:PanelScreen)
@@ -116,6 +118,7 @@ package ui.screens.display.settings.treatments
 			strokeMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
 			treatmentPillColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR));
 			newSensorMarkerColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR));
+			pumpUserEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true";
 		}
 		
 		private function setupContent():void
@@ -143,6 +146,10 @@ package ui.screens.display.settings.treatments
 			/* Enable/Disable Nightscout Sync */
 			nightscoutSyncEnabled = LayoutFactory.createCheckMark(nightscoutSyncEnabledValue);
 			nightscoutSyncEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			/* Enable/Disable Pump User */
+			pumpUserEnabled = LayoutFactory.createCheckMark(pumpUserEnabledValue);
+			pumpUserEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Insulin Color Picker
 			insulinColorPicker = new ColorPicker(20, insulinMarkerColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
@@ -237,6 +244,8 @@ package ui.screens.display.settings.treatments
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"display_iob_label"), accessory: displayIOBEnabled, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"display_cob_label"), accessory: displayCOBEnabled, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"download_ns_treatments_label"), accessory: nightscoutSyncEnabled, selectable: false });
+					if (nightscoutSyncEnabledValue)
+						data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"loop_openaps_user_label"), accessory: pumpUserEnabled, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"insulin_marker_color_label"), accessory: insulinColorPicker, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"carbs_marker_color_label"), accessory: carbsColorPicker, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"bg_check_marker_color_label"), accessory: bgCheckColorPicker, selectable: false });
@@ -290,6 +299,9 @@ package ui.screens.display.settings.treatments
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR) != String(treatmentPillColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR, String(treatmentPillColorValue));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != String(pumpUserEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED, String(pumpUserEnabledValue));
+			
 			needsSave = false;
 		}
 		
@@ -303,6 +315,7 @@ package ui.screens.display.settings.treatments
 			nightscoutSyncEnabledValue = nightscoutSyncEnabled.isSelected;
 			displayIOBEnabledValue = displayIOBEnabled.isSelected;
 			displayCOBEnabledValue = displayCOBEnabled.isSelected;
+			pumpUserEnabledValue = pumpUserEnabled.isSelected;
 			
 			refreshContent();
 			
@@ -556,6 +569,13 @@ package ui.screens.display.settings.treatments
 				emailConfigurationFiles.removeEventListener(Event.TRIGGERED, onSendConfigurationFiles);
 				emailConfigurationFiles.dispose();
 				emailConfigurationFiles = null;
+			}
+			
+			if (pumpUserEnabled != null)
+			{
+				pumpUserEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
+				pumpUserEnabled.dispose();
+				pumpUserEnabled = null;
 			}
 			
 			super.dispose();

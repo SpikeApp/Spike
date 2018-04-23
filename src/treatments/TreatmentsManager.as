@@ -61,9 +61,13 @@ package treatments
 		/* Instance */
 		private static var _instance:TreatmentsManager = new TreatmentsManager();
 		
-		/* Internal variables/objects */
+		/* Internal objects */
 		public static var treatmentsList:Array = [];
 		private static var treatmentsMap:Dictionary = new Dictionary();
+		
+		/* Internal Properties */
+		private static var pumpIOB:Number = 0;
+		private static var pumpCOB:Number = 0;
 		
 		public function TreatmentsManager()
 		{
@@ -145,6 +149,10 @@ package treatments
 		
 		public static function getTotalIOB(time:Number):Number
 		{
+			//OpenAPS/Loop Support. Return value fetched from NS.
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+				return pumpIOB;
+			
 			var totalIOB:Number = 0;
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
@@ -168,8 +176,17 @@ package treatments
 			return totalIOB;
 		}
 		
+		public static function setPumpIOB(value:Number):void
+		{
+			pumpIOB = value;
+		}
+		
 		public static function getTotalCOB(time:Number):Number 
 		{
+			//OpenAPS/Loop Support. Return value fetched from NS.
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+				return pumpCOB;
+			
 			var carbsAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate();
 			var now:Number = new Date().valueOf();
 			
@@ -294,6 +311,11 @@ package treatments
 					}
 				}
 			}*/
+		}
+		
+		public static function setPumpCOB(value:Number):void
+		{
+			pumpCOB = value;
 		}
 		
 		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
