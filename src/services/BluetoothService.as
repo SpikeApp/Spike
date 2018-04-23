@@ -129,7 +129,7 @@ package services
 		
 		//G5
 		private static const G5_Service_UUID:String = "F8083532-849E-531C-C594-30F1F86A4EA5"; 
-		private static const G5_Communication_Characteristic_UUID:String = "F8083533-849E-531C-C594-30F1F86A4EA5";
+		private static const G5_Communication_Characteristic_UUID:String = "F8083533-849E-531C-C594-30F1F86A4EA5";//not used for the moment
 		private static const G5_Control_Characteristic_UUID:String = "F8083534-849E-531C-C594-30F1F86A4EA5";
 		private static const G5_Authentication_Characteristic_UUID:String = "F8083535-849E-531C-C594-30F1F86A4EA5";
 		private static const G5_Advertisement_UUID:String = "0000FEBC-0000-1000-8000-00805F9B34FB";
@@ -1014,26 +1014,20 @@ package services
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
 			} else if (BlueToothDevice.isBluKon()) {
-				myTrace("looping through services to find service " + Blucon_Service_UUID);
 				for each (o in activeBluetoothPeripheral.services) {
 					if (Blucon_Service_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + Blucon_Service_UUID + ", index = " + servicesIndex);
 						break;
 					}
 					servicesIndex++;
 				}
-				myTrace("looping through service to find BC_desiredReceiveCharacteristicUUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (Blucon_RX_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + Blucon_RX_Characteristic_UUID + ", index = " + Read_CharacteristicsIndex);
 						break;
 					}
 					Read_CharacteristicsIndex++;
 				}
-				myTrace("looping through service to find BC_desiredTransmitCharacteristicUUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (Blucon_TX_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + Blucon_TX_Characteristic_UUID + ", index = " + Write_CharacteristicsIndex);
 						break;
 					}
 					Write_CharacteristicsIndex++;
@@ -1465,9 +1459,6 @@ package services
 			
 			var cmdFound:int = 0;
 			
-			//BluKon code by gregorybel
-			myTrace("in processBLUKONTransmitterData, BluKon data: " + strRecCmd);
-			
 			if (strRecCmd == "cb010000") {
 				myTrace("in processBLUKONTransmitterData, Reset currentCommand");
 				blukonCurrentCommand = "";
@@ -1794,10 +1785,7 @@ package services
 			// calculate offset of the 2 bytes in the block
 			nowGlucoseOffset = nowGlucoseIndex2 % 8;
 			
-			myTrace("in blockNumberForNowGlucoseData, nowGlucoseOffset = " + nowGlucoseOffset);
-			
 			var nowGlucoseDataAsHexString:String = nowGlucoseIndex3.toString(16);
-			myTrace("in blockNumberForNowGlucoseData, nowGlucoseDataAsHexString =  " + nowGlucoseDataAsHexString);
 			return nowGlucoseDataAsHexString;
 		}
 		
