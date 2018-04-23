@@ -40,6 +40,10 @@ package ui.chart
 		
 		private function draw():void
 		{
+			//OpenAPS/Loop support
+			if (treatment.insulinAmount <= 1.2)
+				initialRadius = 6;
+			
 			//Radius
 			this.radius = initialRadius + treatment.insulinAmount;
 			if (radius > 15)
@@ -60,6 +64,10 @@ package ui.chart
 				radius *= 0.5;
 				fontSize *= 0.6;
 			}
+			
+			//OpenAPS/Loop support
+			if (treatment.insulinAmount < 1)
+				fontSize -= 1.5;
 			
 			//Background
 			insulinMarker = new NGon(radius, 20, 0, 0, 360);

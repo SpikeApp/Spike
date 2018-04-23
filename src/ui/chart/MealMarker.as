@@ -45,8 +45,13 @@ package ui.chart
 		
 		private function draw():void
 		{
+			//OpenAPS/Loop support
+			if (treatment.insulinAmount <= 1.2)
+				initialRadius = 6;
+			
 			//Radius
-			this.radius = initialRadius + treatment.insulinAmount;
+			//this.radius = initialRadius + treatment.insulinAmount;
+			this.radius = initialRadius + (treatment.carbs / 6);
 			if (radius > 15)
 				radius = 15;
 			
@@ -65,6 +70,10 @@ package ui.chart
 				radius *= 0.5;
 				fontSize *= 0.6;
 			}
+			
+			//OpenAPS/Loop support
+			if (treatment.insulinAmount < 1)
+				fontSize -= 1.5;
 			
 			//Background
 			insulinMarker = new NGon(radius, 20, 0, 90, 270);
@@ -88,13 +97,13 @@ package ui.chart
 			addChild(stroke);
 			
 			//Label
-			insulinLabel = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
+			insulinLabel = LayoutFactory.createLabel(treatment.insulinAmount != 0 ? treatment.insulinAmount + "U" : "", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
 			insulinLabel.validate();
 			insulinLabel.x = radius/3 - (insulinLabel.width / 2);
 			insulinLabel.y = radius * 2 + 4;
 			addChild(insulinLabel);
 			
-			carbsLabel = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
+			carbsLabel = LayoutFactory.createLabel(treatment.carbs != 0 ? treatment.carbs + "g" : "", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
 			carbsLabel.validate();
 			carbsLabel.x = radius/3 - (carbsLabel.width / 2);
 			carbsLabel.y = -carbsLabel.height + 1;
@@ -112,7 +121,7 @@ package ui.chart
 			{
 				insulinLabel.visible = false;
 				carbsLabel.visible = false;
-				mainLabel.text = insulinLabel.text + " / " + carbsLabel.text;
+				mainLabel.text = insulinLabel.text + (insulinLabel.text != "" ? " / " : "") + carbsLabel.text;
 				mainLabel.validate();
 				mainLabel.y = carbsLabel.y;
 				mainLabel.x = radius/3 - (mainLabel.width / 2);

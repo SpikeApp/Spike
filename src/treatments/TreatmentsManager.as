@@ -1020,7 +1020,7 @@ package treatments
 				return
 			}
 				
-			for (var i:int = 0; i < numNightscoutTreatments; i++) 
+			for(var i:int = nsTreatments.length - 1 ; i >= 0; i--)
 			{
 				//Define initial treatment properties
 				var nsTreatment:Object = nsTreatments[i];
@@ -1083,8 +1083,11 @@ package treatments
 					treatmentGlucose = glucoseValue;
 				}
 				
-				if (nsTreatment.notes != null)
-					treatmentNote = nsTreatment.notes;
+				if (nsTreatment.foodType != null && nsTreatment.foodType != "")
+					treatmentNote += nsTreatment.foodType + "\n";
+				
+				if (nsTreatment.notes != null && nsTreatment.notes != "")
+					treatmentNote += nsTreatment.notes;
 				
 				//Check if treatment is supported by Spike
 				if (treatmentType != "")
