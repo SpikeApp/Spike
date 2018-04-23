@@ -1084,10 +1084,10 @@ package treatments
 				}
 				
 				if (nsTreatment.foodType != null && nsTreatment.foodType != "")
-					treatmentNote += nsTreatment.foodType + "\n";
+					treatmentNote += nsTreatment.foodType;
 				
 				if (nsTreatment.notes != null && nsTreatment.notes != "")
-					treatmentNote += nsTreatment.notes;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + nsTreatment.notes;
 				
 				//Check if treatment is supported by Spike
 				if (treatmentType != "")
