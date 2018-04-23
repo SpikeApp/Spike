@@ -308,6 +308,11 @@ package services
 				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentUpdated);
 			else
 				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentUpdated);
+			
+			if ((isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onIOBCOBUpdated);
+			else
+				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onIOBCOBUpdated);
 		}
 		
 		private static function onTreatmentAdded(e:TreatmentsEvent):void
@@ -437,6 +442,16 @@ package services
 				var key:String = makerKeyList[i] as String;
 				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", triggerName).replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
 			}
+		}
+		
+		private static function onIOBCOBUpdated(e:TreatmentsEvent):void
+		{
+			if (isIFTTTiobUpdatedEnabled && isIFTTTcobUpdatedEnabled)
+				triggerIOBCOB();
+			else if (isIFTTTiobUpdatedEnabled)
+				triggerIOB();
+			else if (isIFTTTcobUpdatedEnabled)
+				triggerCOB();
 		}
 		
 		private static function triggerIOB():void

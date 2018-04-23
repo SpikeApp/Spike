@@ -178,7 +178,15 @@ package treatments
 		
 		public static function setPumpIOB(value:Number):void
 		{
+			if (isNaN(value))
+				value = 0;
+			
 			pumpIOB = value;
+		}
+		
+		public static function notifyIOBCOB():void
+		{
+			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.IOB_COB_UPDATED));
 		}
 		
 		public static function getTotalCOB(time:Number):Number 
@@ -315,6 +323,9 @@ package treatments
 		
 		public static function setPumpCOB(value:Number):void
 		{
+			if (isNaN(value))
+				value = 0;
+			
 			pumpCOB = value;
 		}
 		

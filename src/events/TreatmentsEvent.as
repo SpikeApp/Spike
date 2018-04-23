@@ -11,12 +11,14 @@ package events
 		[Event(name="treatmentUpdated",type="events.TreatmentsEvent")]
 		[Event(name="treatmentExternallyModified",type="events.TreatmentsEvent")]
 		[Event(name="treatmentExternallyDeleted",type="events.TreatmentsEvent")]
+		[Event(name="IOBCOBUpdated",type="events.TreatmentsEvent")]
 		
 		public static const TREATMENT_ADDED:String = "treatmentAdded";
 		public static const TREATMENT_DELETED:String = "treatmentDeleted";
 		public static const TREATMENT_UPDATED:String = "treatmentUpdated";
 		public static const TREATMENT_EXTERNALLY_MODIFIED:String = "treatmentExternallyModified";
 		public static const TREATMENT_EXTERNALLY_DELETED:String = "treatmentExternallyDeleted";
+		public static const IOB_COB_UPDATED:String = "IOBCOBUpdated";
 		
 		public var treatment:Treatment;
 		

@@ -119,6 +119,7 @@ package ui.screens
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -451,6 +452,18 @@ package ui.screens
 			onBgReadingReceived(null);
 		}
 		
+		private function onUpdateIOBCOB(e:TreatmentsEvent):void
+		{
+			if (glucoseChart == null)
+				return;
+			
+			Trace.myTrace("ChartScreen.as", "Updating IOB/COB");
+			
+			var now:Number = new Date().valueOf();
+			SystemUtil.executeWhenApplicationIsActive(glucoseChart.calculateTotalIOB, now);
+			SystemUtil.executeWhenApplicationIsActive(glucoseChart.calculateTotalCOB, now);
+		}
+		
 		private function onTreatmentAdded(e:TreatmentsEvent):void
 		{
 			var treatment:Treatment = e.treatment;
@@ -688,6 +701,7 @@ package ui.screens
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
 			
 			/* Display Objects */
 			if (glucoseChart != null)

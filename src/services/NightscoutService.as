@@ -1061,6 +1061,9 @@ package services
 						
 						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 							getRemoteTreatments();
+						
+						//Notify listeners of updated IOB/COB
+						TreatmentsManager.notifyIOBCOB();
 					}
 					else
 					{
