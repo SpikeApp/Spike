@@ -266,7 +266,7 @@ package ui.screens
 		
 		private function redrawChartForTreatmentsAndLine():void
 		{
-			setTimeout(redrawChart, 2000);
+			setTimeout(redrawChart, 1000);
 		}
 		
 		private function redrawChart():void
