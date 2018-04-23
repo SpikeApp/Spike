@@ -268,8 +268,6 @@ package services
 		
 		private static var G5AuthenticationCharacteristic:Characteristic;
 		
-		private static var G5CommunicationCharacteristic:Characteristic;
-		
 		private static var G5ControlCharacteristic:Characteristic;
 		
 		private static var BC_desiredTransmitCharacteristic:Characteristic;
@@ -986,7 +984,6 @@ package services
 				
 				//used to loop through characteristics
 				var G5AuthenticationCharacteristicsIndex:int = 0;
-				var G5CommunicationCharacteristicsIndex:int = 0;
 				var G5ControlCharacteristicsIndex:int = 0;
 				
 				awaitingAuthStatusRxMessage = false;
@@ -1003,19 +1000,12 @@ package services
 					G5AuthenticationCharacteristicsIndex++;
 				}
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (G5_Communication_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						break;
-					}
-					G5CommunicationCharacteristicsIndex++;
-				}
-				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (G5_Control_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
 					}
 					G5ControlCharacteristicsIndex++;
 				}
 				G5AuthenticationCharacteristic = event.peripheral.services[servicesIndex].characteristics[G5AuthenticationCharacteristicsIndex];
-				G5CommunicationCharacteristic = event.peripheral.services[servicesIndex].characteristics[G5CommunicationCharacteristicsIndex];
 				G5ControlCharacteristic = event.peripheral.services[servicesIndex].characteristics[G5ControlCharacteristicsIndex];
 				myTrace("subscribing to G5AuthenticationCharacteristic");
 				
