@@ -1058,12 +1058,6 @@ package treatments
 				//Define initial treatment properties
 				var nsTreatment:Object = nsTreatments[i];
 				var treatmentTimestamp:Number = DateUtil.parseW3CDTF(nsTreatment.created_at).valueOf();
-				if (treatmentTimestamp < firstReadingTimestamp || treatmentTimestamp > lastReadingTimestamp)
-				{
-					//Treatment is outside timespan of first/last bg readings in spike. Let's ignore it
-					continue;
-				}
-				
 				var treatmentID:String = nsTreatment._id;
 				nightscoutTreatmentsMap[treatmentID] = nsTreatment;
 				var treatmentEventType:String = nsTreatment.eventType;
@@ -1073,6 +1067,12 @@ package treatments
 				var treatmentCarbs:Number = 0;
 				var treatmentGlucose:Number = 0;
 				var treatmentNote:String = "";
+				
+				if (treatmentTimestamp < firstReadingTimestamp || treatmentTimestamp > lastReadingTimestamp)
+				{
+					//Treatment is outside timespan of first/last bg readings in spike. Let's ignore it
+					continue;
+				}
 				
 				if (nsTreatment.note == ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note') && treatmentEventType == "BG Check")
 				{
