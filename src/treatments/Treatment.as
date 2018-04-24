@@ -120,7 +120,6 @@ package treatments
 					thisCobCalc.isDecaying = 0;
 				}
 				
-				trace("XDRIP", ObjectUtil.toString(thisCobCalc));
 				
 				return thisCobCalc;
 			} 
@@ -170,8 +169,6 @@ package treatments
 				{
 					thisCobCalc.isDecaying = 0;
 				}
-				
-				//trace("NS", ObjectUtil.toString(thisCobCalc));
 				
 				return thisCobCalc;
 			}

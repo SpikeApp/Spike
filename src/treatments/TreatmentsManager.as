@@ -248,7 +248,8 @@ package treatments
 									treatmentCOB = 0;
 								totalCOB += treatmentCOB;
 								isDecaying = cCalc.isDecaying;
-							} else 
+							} 
+							else 
 								totalCOB += 0;
 						}
 						else
