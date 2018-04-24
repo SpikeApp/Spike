@@ -34,7 +34,7 @@ package network.httpserver.API
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")
 				return responseSuccess("Treatments are not enabled in Spike!");
 			
-			var response:String = "Treatment added!";
+			var response:String = "OK";
 			var treatmentType:String = "";
 			try
 			{
