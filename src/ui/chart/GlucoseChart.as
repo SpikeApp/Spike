@@ -2140,9 +2140,12 @@ package ui.chart
 					line.graphics.lineStyle(1, glucoseMarker.color, 1);
 					if(i > 0)
 					{
-						var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
-						if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-							line.graphics.lineStyle(1, oldColor, 1);
+						if (previousGlucoseMarker != null && glucoseMarker != null)
+						{
+							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
+							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
+								line.graphics.lineStyle(1, oldColor, 1);
+						}
 					}	
 					
 					line.graphics.lineTo(currentLineX, currentLineY);
