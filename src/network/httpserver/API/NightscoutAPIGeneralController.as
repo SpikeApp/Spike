@@ -14,6 +14,7 @@ package network.httpserver.API
 	import treatments.TreatmentsManager;
 	
 	import utils.BgGraphBuilder;
+	import utils.GlucoseHelper;
 	import utils.SpikeJSON;
 	import utils.Trace;
 	
@@ -184,6 +185,34 @@ package network.httpserver.API
 			{
 				Trace.myTrace("NightscoutAPIGeneralController.as", "Error performing sgv endpoint call. Error: " + error.message);
 			}
+			
+			return responseSuccess(response);
+		}
+		
+		public function watchsettings(params:URLVariables):String
+		{
+			Trace.myTrace("NightscoutAPIGeneralController.as", "watchsettings endpoint called!");
+			
+			var response:String = "{}";
+			
+			var settingsContainer:Array = [];
+			
+			var settings:Object = {};
+			settings.unit = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mgdl" : "mmol";
+			settings.urgent_high_threshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+			settings.high_threshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+			settings.low_threshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+			settings.urgent_low_threshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
+			settings.urgent_high_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_HIGH_COLOR)).toString(16).toUpperCase();
+			settings.high_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_HIGH_COLOR)).toString(16).toUpperCase();
+			settings.in_range_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_IN_RANGE_COLOR)).toString(16).toUpperCase();
+			settings.low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR)).toString(16).toUpperCase();
+			settings.urgent_low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)).toString(16).toUpperCase();
+			settingsContainer.push(settings);
+			
+			response = SpikeJSON.stringify(settingsContainer);
+			
+			trace("response", response)
 			
 			return responseSuccess(response);
 		}
