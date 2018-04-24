@@ -29,9 +29,12 @@ package network.httpserver.API
 			Trace.myTrace("SpikeTreatmentsController.as", "AddTreatment endpoint called!");
 			
 			if (BlueToothDevice.isFollower())
-				return responseSuccess("No treatments for follower!");
+				return responseSuccess("Followers can't add treatments!");
 			
-			var response:String = "OK";
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")
+				return responseSuccess("Treatments are not enabled in Spike!");
+			
+			var response:String = "Treatment added!";
 			var treatmentType:String = "";
 			try
 			{

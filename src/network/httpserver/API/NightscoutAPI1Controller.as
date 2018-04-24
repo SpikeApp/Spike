@@ -500,7 +500,10 @@ package network.httpserver.API
 			{
 				//Validation
 				if (BlueToothDevice.isFollower())
-					return responseSuccess("No treatments for follower!");
+					return responseSuccess("Followers can't add treatments!");
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")
+					return responseSuccess("Treatments are not enabled in Spike!");
 				
 				//Define initial treatment properties
 				var treatmentTimestamp:Number = new Date().valueOf();
@@ -608,6 +611,10 @@ package network.httpserver.API
 			else if (params.method == "GET") //Return treatments. Useful for Spike to Spike follower mode
 			{
 				//TODO: ACCEPT PARAMETERS. RIGHT NOW IT RETURNS ALL TREATMENTS IN MEMORY (24H)
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")
+					return responseSuccess("[]");
+				
 				var treatmentsList:Array = [];
 				var spikeTreatmentsList:Array = TreatmentsManager.treatmentsList.concat();
 				spikeTreatmentsList.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
