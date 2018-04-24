@@ -803,10 +803,14 @@ package services
 		private static function deleteInternalTreatment(arrayToDelete:Array, treatment:Treatment):Boolean
 		{
 			var treatmentDeleted:Boolean = false;
+			
+			if (arrayToDelete == null || treatment == null)
+				return treatmentDeleted;
+			
 			for (var i:int = 0; i < arrayToDelete.length; i++) 
 			{
 				var nsTreatment:Object = arrayToDelete[i] as Object;
-				if (nsTreatment["_id"] == treatment.ID)
+				if (nsTreatment != null && nsTreatment["_id"] != null && nsTreatment["_id"] == treatment.ID)
 				{
 					arrayToDelete.removeAt(i);
 					nsTreatment = null;
