@@ -1045,7 +1045,7 @@ package treatments
 			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
 			{
 				firstReadingTimestamp = (ModelLocator.bgReadings[0] as BgReading).timestamp;
-				lastReadingTimestamp = (ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).timestamp;
+				lastReadingTimestamp = new Date().valueOf();
 			}
 			else
 			{
