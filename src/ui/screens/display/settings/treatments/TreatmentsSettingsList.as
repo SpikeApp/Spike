@@ -253,12 +253,10 @@ package ui.screens.display.settings.treatments
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"stroke_marker_color_label"), accessory: strokeColorPicker, selectable: false });
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"pill_color_label"), accessory: treatmentPillColorPicker, selectable: false });
 					data.push({ label: "", accessory: resetColors, selectable: false });
+					data.push({ label: "", accessory: loadInstructions, selectable: false });
 				}
 				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-				{
-					data.push({ label: "", accessory: loadInstructions, selectable: false });
 					data.push({ label: "", accessory: emailConfigurationFiles, selectable: false });
-				}
 			}
 			
 			dataProvider = new ListCollection(data);
