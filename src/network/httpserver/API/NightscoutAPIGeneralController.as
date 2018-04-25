@@ -9,17 +9,21 @@ package network.httpserver.API
 	import database.Calibration;
 	import database.CommonSettings;
 	
+	import model.ModelLocator;
+	
 	import network.httpserver.ActionController;
 	
 	import treatments.TreatmentsManager;
 	
 	import utils.BgGraphBuilder;
-	import utils.GlucoseHelper;
 	import utils.SpikeJSON;
 	import utils.Trace;
 	
 	public class NightscoutAPIGeneralController extends ActionController
 	{
+		/* Constants */
+		private static const TIME_24_HOURS_6_MINUTES:int = (24 * 60 * 60 * 1000) + 6000;
+		
 		/* Objects */
 		private var nsFormatter:DateTimeFormatter;
 		
@@ -213,6 +217,70 @@ package network.httpserver.API
 			response = SpikeJSON.stringify(settingsContainer);
 			
 			trace("response", response)
+			
+			return responseSuccess(response);
+		}
+		
+		public function spikewatch(params:URLVariables):String
+		{
+			Trace.myTrace("NightscoutAPIGeneralController.as", "spikewatch endpoint called!");
+			
+			var response:String = "[]";
+			
+			try
+			{
+				var numReadings:int = 1;
+				if (params.count != null)	
+					numReadings = int(params.count);
+				
+				var now:Number = new Date().valueOf();
+				var startTime:Number;
+				
+				if (params["startoffset"] != null)
+					startTime = now - Number(params["startoffset"]);
+				else
+					startTime = now - TIME_24_HOURS_6_MINUTES;
+				
+				var readingsCollection:Array = [];
+				var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
+				
+				if (currentSensorId != "0" || BlueToothDevice.isFollower()) 
+				{
+					var cntr:int = ModelLocator.bgReadings.length - 1;
+					var itemParsed:int = 0;
+					while (cntr > -1 && itemParsed < numReadings) 
+					{
+						var bgReading:BgReading = ModelLocator.bgReadings[cntr];
+						
+						if (bgReading.timestamp < startTime)
+							break;
+						
+						if (bgReading.sensor != null || BlueToothDevice.isFollower()) 
+						{
+							if ((BlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
+							{
+								var readingObject:Object = {}
+								readingObject.date = bgReading.timestamp;
+								readingObject.sgv = Math.round(bgReading.calculatedValue);
+								readingObject.direction = bgReading.slopeName();
+								readingsCollection.push(readingObject);
+								itemParsed++;
+							}
+						}
+						cntr--;
+					}
+				}
+				
+				//response = JSON.stringify(readingsCollection);
+				response = SpikeJSON.stringify(readingsCollection);
+				
+				readingsCollection = null;
+				params = null;
+			} 
+			catch(error:Error) 
+			{
+				Trace.myTrace("NightscoutAPI1Controller.as", "Error performing sgv endpoint call. Error: " + error.message);
+			}
 			
 			return responseSuccess(response);
 		}
