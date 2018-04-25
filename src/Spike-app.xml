@@ -467,10 +467,6 @@
 		<array>
 		<string>AGW6KV7M2W.*</string>
 		</array>
-		<key>get-task-allow</key>
-		<false/>
-		<key>beta-reports-active</key>
-		<true/>
 			 ]]></Entitlements>
 		<!-- 
 		TEST FLIGHT
