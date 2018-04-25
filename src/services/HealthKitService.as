@@ -52,6 +52,9 @@ package services
 		
 		private static function onTreatmentAdded(e:TreatmentsEvent):void
 		{
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false")
+				return;
+			
 			var treatment:Treatment = e.treatment;
 			if (treatment != null)
 			{
