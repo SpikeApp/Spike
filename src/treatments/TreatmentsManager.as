@@ -462,7 +462,7 @@ package treatments
 				//Glucose Amout
 				var glucoseTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
 				glucoseTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
-				glucoseTextInput.maxChars = 3;
+				glucoseTextInput.maxChars = 4;
 				displayContainer.addChild(glucoseTextInput);
 				var glucoseSpacer:Sprite = new Sprite();
 				glucoseSpacer.height = 10;
