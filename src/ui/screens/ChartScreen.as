@@ -135,14 +135,14 @@ package ui.screens
 			availableScreenHeight = Constants.stageHeight - this.header.height;
 			scrollChartHeight = availableScreenHeight / 10; //10% of available screen size
 			
-			if (displayPieChart && !displayIOBEnabled && !displayCOBEnabled)
+			if (displayPieChart && (!displayIOBEnabled && !displayCOBEnabled) || !treatmentsEnabled)
 			{
 				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-					mainChartHeight = availableScreenHeight * 0.39; //39% of available screen size
+					mainChartHeight = availableScreenHeight * 0.35; //35% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-					mainChartHeight = availableScreenHeight * 0.5; //50% of available screen size
+					mainChartHeight = availableScreenHeight * 0.48; //48% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-					mainChartHeight = availableScreenHeight * 0.51; //51% of available screen size
+					mainChartHeight = availableScreenHeight * 0.49; //49% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 					mainChartHeight = availableScreenHeight * 0.55; //55% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
@@ -168,7 +168,7 @@ package ui.screens
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 					mainChartHeight = availableScreenHeight * 0.43; //43% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					mainChartHeight = availableScreenHeight * 0.45; //45% of available screen size
+					mainChartHeight = availableScreenHeight * 0.48; //45% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
 					mainChartHeight = availableScreenHeight * 0.46; //46% of available screen size
 				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
