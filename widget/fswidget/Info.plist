@@ -17,9 +17,9 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0.1</string>
+	<string>2.0.3</string>
 	<key>CFBundleVersion</key>
-	<string>2.0.1</string>
+	<string>2.0.3</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionMainStoryboard</key>
@@ -27,5 +27,7 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widget-extension</string>
 	</dict>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Access to your location is required to improve accuracy</string>
 </dict>
 </plist>

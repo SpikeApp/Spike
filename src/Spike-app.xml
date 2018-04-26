@@ -25,7 +25,7 @@
 		can also be 1-part or 2-part. It is not necessary to have a 3-part value. 
 		An updated version of application must have a versionNumber value higher 
 		than the previous version. Required for namespace >= 2.5 . -->
-	<versionNumber>2.0.1</versionNumber>
+	<versionNumber>2.0.3</versionNumber>
 
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents 
 		the version of the application, as it should be shown to users. Optional. -->
@@ -237,6 +237,8 @@
 				<key>ITSAppUsesNonExemptEncryption</key><false/>
 				<key>NSCalendarsUsageDescription</key>
 				<string>Access to calendar is required.</string>
+				<key>NSLocationAlwaysUsageDescription</key>
+				<string>Access to your location is required to improve accuracy</string>
 				<key>CFBundleURLTypes</key>
 				<array>
 					<dict>
