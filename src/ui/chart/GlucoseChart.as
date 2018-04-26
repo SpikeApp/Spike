@@ -291,7 +291,7 @@ package ui.chart
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 					chartTopPadding = 92; 
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					chartTopPadding = 100; 
+					chartTopPadding = 104; 
 				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 					chartTopPadding = 87; 
 				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
@@ -306,7 +306,11 @@ package ui.chart
 				chartTopPadding += userTimeAgoFontMultiplier * 4;
 			}
 			else
+			{
 				chartTopPadding = 65;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					chartTopPadding += 12;
+			}
 			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
@@ -2371,6 +2375,11 @@ package ui.chart
 			var retroDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;*/
 			var timeDisplayFont:Number = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			var retroDisplayFont:Number = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			{
+				timeDisplayFont += 1;
+				retroDisplayFont += 1;
+			}
 			
 			/* Calculate Position & Padding */
 			chartTopPadding *= deviceFontMultiplier;
