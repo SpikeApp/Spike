@@ -1685,7 +1685,7 @@ package services
 			serviceActive = true;
 			setupNightscoutProperties();
 			getInitialGlucoseReadings();
-			if (!BlueToothDevice.isFollower())
+			if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED != "true" && treatmentsEnabled)
 				getInitialTreatments();
 			getInitialCalibrations();
 			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
