@@ -82,7 +82,8 @@ package ui.popups
 					_instance = new AlarmSnoozer();
 				
 				//Create objects
-				createDisplayObjects();
+				SystemUtil.executeWhenApplicationIsActive( createDisplayObjects );
+				//createDisplayObjects();
 			}
 			else
 			{
