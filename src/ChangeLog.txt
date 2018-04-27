@@ -1,9 +1,9 @@
-2.0.3
+2.0.4
 ENHANCEMENT: Support for BlueReader battery info. (Johan)
 ENHANCEMENT: Support for BlueReader and Transmiter PL low battery alarms.
-ENHANCEMENT: Input field for BG Check treatments now supports max 4 characters. Useful for mmol/L users.
+FIX: As usual, several small fixes and improvements.
 
-2.0.2
+2.0.3
 FIX: Fixes an issue where Spike would incorrectly make changes to Nightscout treatments for Loop/OpenAPS users which would result in Nightscout reporting incorrect values for IOB and COB. With this update Spike will not make any changes to existing Nightscout treatments. If you're a Loop/OpenAPS user be sure to enable the "Loop/OpenAPS User" option in Settings -> Treatments.
 FIX: BG Check treatment added directly from Spike now accepts up to 4 characters to make it compatible with mmol/L users.
 ENHANCEMENT: Small layout adjustments for the chart screen on iPhone X. Might need further improvements depending on user feedback.
