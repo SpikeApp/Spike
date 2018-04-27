@@ -17,8 +17,6 @@
  */
 package database
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import services.BluetoothService;
 	
 	import utils.Trace;
@@ -38,7 +36,7 @@ package database
 	 * - BlueReader : similar to G4, except that no scanning UUID is known. App will scan without specifying a UUID. As a result scanning doesn't work when in background<br>. First connection must happen while the app is in the foreground.<br>
 	 * Once a successful connection is done, the app will only reconnect to this device. For transmitter types without known scanning UUID (bluereader and miaomaio) reconnection strategy is different.<br>
 	 * <br>
-	 * - MiaoMiao  similar to Bluereader.
+	 * - MiaoMiao  similar to Bluereader. Handled by backgroundfetch ANE
 	 * <br>
 	 * - xbridgr : requested by Marek Macner. Uses an adapted version of the xbridge protocol, for FSL
 	 */
