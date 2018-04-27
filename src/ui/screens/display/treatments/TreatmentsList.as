@@ -3,6 +3,7 @@ package ui.screens.display.treatments
 	import database.BlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	import database.Sensor;
 	
 	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
@@ -119,7 +120,7 @@ package ui.screens.display.treatments
 			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
-			if (numBgReadings > 2)
+			if (numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null)
 				canAddTreatments = true;
 			
 			var menuData:Array = [];
@@ -166,7 +167,7 @@ package ui.screens.display.treatments
 				item.itemHasSelectable = true;
 				item.selectableField = "selectable";
 				item.gap = 5;
-				if(numBgReadings == 0)
+				if(!canAddTreatments)
 					item.alpha = 0.4;
 				item.paddingLeft = 8;
 				item.paddingRight = 14;
