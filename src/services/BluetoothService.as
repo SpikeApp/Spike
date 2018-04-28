@@ -330,7 +330,6 @@ package services
 			m_blockNumber = 0;
 			
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
 			
 			if (BlueToothDevice.isMiaoMiao()) {
@@ -1313,7 +1312,6 @@ package services
 				cmdFound = 1;
 				myTrace("in processBLUKONTransmitterData, Patch Info received");
 				
-				//decodeSerialNumber(buffer);
 				buffer.position = 17;
 				if (isSensorReady(buffer.readByte())) {
 					blukonCurrentCommand = "810a00";
