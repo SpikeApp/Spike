@@ -197,7 +197,7 @@ package services
 			initialCalibrationActive = false;
 			
 			var warmupTimeInMs:Number = 2 * 3600 * 1000;
-			if (BlueToothDevice.isMiaoMiao()) {
+			if (BlueToothDevice.isTypeLimitter()) {
 				warmupTimeInMs = 1 * 3600 * 1000;
 			}
 			
