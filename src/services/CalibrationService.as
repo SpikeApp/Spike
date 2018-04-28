@@ -16,6 +16,7 @@ package services
 	
 	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
+	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -60,6 +61,8 @@ package services
 		
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		
+		//calibration service will monitor fsl sensora age, if it changes from a higher to a lower value, then sensor will be restarted
+		private static var previousFSLSensorAgeInMinutes:int;
 		
 		public static function get instance():CalibrationService {
 			return _instance;
@@ -76,6 +79,7 @@ package services
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 			myTrace("finished init");
 		}
@@ -197,7 +201,7 @@ package services
 			initialCalibrationActive = false;
 			
 			var warmupTimeInMs:Number = 2 * 3600 * 1000;
-			if (BlueToothDevice.isMiaoMiao()) {
+			if (BlueToothDevice.isTypeLimitter()) {
 				warmupTimeInMs = 1 * 3600 * 1000;
 			}
 			
@@ -592,6 +596,24 @@ package services
 			}
 		}
 		
+		private static function commonSettingChanged(event:SettingsServiceEvent):void {
+			if (event.data == CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE) {
+				var currentSensorAgeInMinutes:int = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
+				if (currentSensorAgeInMinutes > 14.5 * 24 * 60) {
+					myTrace("in commonSettingChanged, sensorage more than 14.5 * 24 * 60 minutes, no further processing. Stop sensor if sensor is active");
+					if (Sensor.getActiveSensor() != null) {
+						//start sensor without user intervention 
+						Sensor.stopSensor();
+					}
+				} else if (currentSensorAgeInMinutes < previousFSLSensorAgeInMinutes && Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao()) {
+					//not doing this for miaomiao because sensorstart for miaomiao is already handled in LibreAlarmReceiver
+					myTrace("in commonSettingChanged, sensorage changed to smaller value, starting sensor");
+					Sensor.startSensor(((new Date()).valueOf() - currentSensorAgeInMinutes * 60 * 1000));
+				}
+				previousFSLSensorAgeInMinutes = currentSensorAgeInMinutes;			
+			}
+		}
+
 		private static function myTrace(log:String):void {
 			Trace.myTrace("CalibrationService.as", log);
 		}

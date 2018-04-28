@@ -285,7 +285,7 @@ package ui.screens.display.transmitter
 				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
 					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				else
-					batteryLevelValue = String((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000);
+					batteryLevelValue = String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))  + "%";
 			}
 			else if (BlueToothDevice.isTransmiter_PL())
 			{
@@ -688,7 +688,7 @@ package ui.screens.display.transmitter
 			BluetoothService.stopScanning(null);
 			InterfaceController.peripheralConnected = false;
 			
-			if (BlueToothDevice.isMiaoMiao() && Calibration.allForSensor().length < 2)
+			if (BlueToothDevice.isTypeLimitter() && Calibration.allForSensor().length < 2)
 				Sensor.stopSensor();
 			
 			AlertManager.showSimpleAlert

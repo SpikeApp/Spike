@@ -35,13 +35,6 @@ package model
 			return _filteredData;
 		}
 		
-		private var _transmitterBatteryVoltage:Number;
-		
-		public function get transmitterBatteryVoltage():Number
-		{
-			return _transmitterBatteryVoltage;
-		}
-		
 		private var _timeStamp:Number;
 
 		public function get timeStamp():Number
@@ -60,10 +53,9 @@ package model
 		 * G5 data packet<br>
 		 * There's no relation with database class, just ust for passing transmitter data from one to another<br>
 		 */
-		public function TransmitterDataG5Packet(rawData:Number, filteredData:Number, transmitterBatteryVoltage:Number, timeStamp:Number, transmitter:TransmitterStatus) {
+		public function TransmitterDataG5Packet(rawData:Number, filteredData:Number, timeStamp:Number, transmitter:TransmitterStatus) {
 			_rawData = rawData;
 			_filteredData = filteredData;
-			_transmitterBatteryVoltage = transmitterBatteryVoltage;
 			_timeStamp = timeStamp;
 			_transmitterStatus = transmitterStatus;
 		}

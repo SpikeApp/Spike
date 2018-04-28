@@ -27,6 +27,7 @@ package services
 	import flash.utils.Endian;
 	
 	import database.BgReading;
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
 	
@@ -46,6 +47,7 @@ package services
 	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
+	import model.TransmitterDataXBridgeRDataPacket;
 	import model.TransmitterDataXdripDataPacket;
 	
 	import starling.events.Event;
@@ -75,9 +77,9 @@ package services
 		
 		private static var initialStart:Boolean = true;
 		/**
-		 * timestamp of last received packet, in ms 
+		 * timestamp of last received xdrip packet, in ms. Not for xbridge.
 		 */
-		private static var lastPacketTime:Number = 0;
+		private static var lastxDripPacketTime:Number = 0;
 		
 		private static var timeStampSinceLastG5BadlyPlacedBatteriesInfo:Number = 0;
 
@@ -110,124 +112,114 @@ package services
 			var value:ByteArray;
 			var transmitterServiceEvent:TransmitterServiceEvent;
 			var notificationBuilderG5BatteryInfo:NotificationBuilder;
-			var lastBgRading:BgReading;
+			var lastBgReading:BgReading;
 			
 			if (be.data == null)
 				return;//should never be null actually
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
 					myTrace("in transmitterDataReceived, received TransmitterDataXBridgeBeaconPacket");
-					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
-						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeBeaconPacket but lastPacketTime < 60 seconds ago, ignoring");
+					var transmitterDataBeaconPacket:TransmitterDataXBridgeBeaconPacket = be.data as TransmitterDataXBridgeBeaconPacket;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
+						&&
+						transmitterDataBeaconPacket.TxID == "00000") {
+						myTrace("in transmitterDataReceived, no transmitter id stored in xbridge and no transmitter id set in app, requesting transmitter id to user");
+						Notifications.service.cancel(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID);
+						Notifications.service.notify(
+							new NotificationBuilder()
+							.setCount(BadgeBuilder.getAppBadge())
+							.setId(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID)
+							.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
+							.setBody(" ")
+							.enableVibration(true)
+							.enableLights(true)
+							.build());
+					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
+						&&
+						transmitterDataBeaconPacket.TxID != "00000") {
+						myTrace("storing transmitter id received from xbridge = " + transmitterDataBeaconPacket.TxID);
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID.toUpperCase());
+						value = new ByteArray();
+						value.writeByte(0x02);
+						value.writeByte(0xF0);
+						BluetoothService.writeToCharacteristic(value);
+					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
+						&&
+						transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
+						value = new ByteArray();
+						value.endian = Endian.LITTLE_ENDIAN;
+						value.writeByte(0x06);
+						value.writeByte(0x01);
+						value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+						myTrace("calling BluetoothService.ackCharacteristicUpdate");
+						BluetoothService.writeToCharacteristic(value);
 					} else {
-						lastPacketTime = (new Date()).valueOf();
-						var transmitterDataBeaconPacket:TransmitterDataXBridgeBeaconPacket = be.data as TransmitterDataXBridgeBeaconPacket;
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
-							&&
-							transmitterDataBeaconPacket.TxID == "00000") {
-							myTrace("in transmitterDataReceived, no transmitter id stored in xbridge and no transmitter id set in app, requesting transmitter id to user");
-							Notifications.service.cancel(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID);
-							Notifications.service.notify(
-								new NotificationBuilder()
-								.setCount(BadgeBuilder.getAppBadge())
-								.setId(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID)
-								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
-								.setBody(" ")
-								.enableVibration(true)
-								.enableLights(true)
-								.build());
-						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
-							&&
-							transmitterDataBeaconPacket.TxID != "00000") {
-							myTrace("storing transmitter id received from xbridge = " + transmitterDataBeaconPacket.TxID);
-							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID.toUpperCase());
-							value = new ByteArray();
-							value.writeByte(0x02);
-							value.writeByte(0xF0);
-							BluetoothService.writeG4Characteristic(value);
-						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
-							&&
-							transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
-							value = new ByteArray();
-							value.endian = Endian.LITTLE_ENDIAN;
-							value.writeByte(0x06);
-							value.writeByte(0x01);
-							value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
-							myTrace("calling BluetoothService.ackCharacteristicUpdate");
-							BluetoothService.writeG4Characteristic(value);
-						} else {
-							value = new ByteArray();
-							value.writeByte(0x02);
-							value.writeByte(0xF0);
-							BluetoothService.writeG4Characteristic(value);
-						}
+						value = new ByteArray();
+						value.writeByte(0x02);
+						value.writeByte(0xF0);
+						BluetoothService.writeToCharacteristic(value);
 					}
-				} else if (be.data is TransmitterDataXBridgeDataPacket) {
-					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
-					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
-						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeDataPacket but lastPacketTime < 60 seconds ago, ignoring");
-					} else {
-						lastPacketTime = (new Date()).valueOf();
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
-							&&
-							transmitterDataXBridgeDataPacket.TxID != "00000") {
-							myTrace("storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID);
-							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataXBridgeDataPacket.TxID.toUpperCase());
-							value = new ByteArray();
-							value.writeByte(0x02);
-							value.writeByte(0xF0);
-							BluetoothService.writeG4Characteristic(value);
-						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
-							&&
-							transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
-							value = new ByteArray();
-							value.endian = Endian.LITTLE_ENDIAN;
-							value.writeByte(0x06);
-							value.writeByte(0x01);
-							value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
-							myTrace("calling BluetoothService.ackCharacteristicUpdate");
-							BluetoothService.writeG4Characteristic(value);
-						} else {
-							value = new ByteArray();
-							value.writeByte(0x02);
-							value.writeByte(0xF0);
-							BluetoothService.writeG4Characteristic(value);
-						}						
-						//store the transmitter battery level in the common settings (to be synchronized)
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
-						
-						//store the bridge battery level in the common settings (to be synchronized)
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
-						if (Sensor.getActiveSensor() != null) {
-							Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXBridgeDataPacket.transmitterBatteryVoltage;
-							//create and save bgreading
-							BgReading.
-								create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData)
-								.saveToDatabaseSynchronous();
-							
-							//dispatch the event that there's new data
-							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
-							_instance.dispatchEvent(transmitterServiceEvent);
-						} else {
-							//TODO inform that bgreading is received but sensor not started ?
-						}
-					}
+				} else if ((be.data is TransmitterDataXBridgeDataPacket) || (be.data is TransmitterDataXBridgeRDataPacket)) {
+					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket;
+					if (be.data is TransmitterDataXBridgeDataPacket)
+						transmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
+					else 
+						transmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeRDataPacket;
 					
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
+						&&
+						transmitterDataXBridgeDataPacket.TxID != "00000") {
+						myTrace("storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID);
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataXBridgeDataPacket.TxID.toUpperCase());
+						value = new ByteArray();
+						value.writeByte(0x02);
+						value.writeByte(0xF0);
+						BluetoothService.writeToCharacteristic(value);
+					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
+						&&
+						transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
+						value = new ByteArray();
+						value.endian = Endian.LITTLE_ENDIAN;
+						value.writeByte(0x06);
+						value.writeByte(0x01);
+						value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+						myTrace("calling BluetoothService.ackCharacteristicUpdate");
+						BluetoothService.writeToCharacteristic(value);
+					} else {
+						value = new ByteArray();
+						value.writeByte(0x02);
+						value.writeByte(0xF0);
+						BluetoothService.writeToCharacteristic(value);
+					}						
+
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
+					var readingTimeStamp:Number = (new Date()).valueOf();
+					if (transmitterDataXBridgeDataPacket is TransmitterDataXBridgeRDataPacket) {
+						readingTimeStamp = (transmitterDataXBridgeDataPacket as TransmitterDataXBridgeRDataPacket).timestamp;
+					}
+					BgReading.
+						create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData, readingTimeStamp)
+						.saveToDatabaseSynchronous();
+					
+					var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					_instance.dispatchEvent(transmitterServiceEvent);
+
+					if (BlueToothDevice.isDexcomG4()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
+					}
 				} else if (be.data is TransmitterDataXdripDataPacket) {
 					var transmitterDataXdripDataPacket:TransmitterDataXdripDataPacket = be.data as TransmitterDataXdripDataPacket;
-					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
+					if (((new Date()).valueOf() - lastxDripPacketTime) < 60000) {
 						myTrace("in transmitterDataReceived , is TransmitterDataXdripDataPacket but lastPacketTime < 60 seconds ago, ignoring");
 					} else {//it's an xdrip, with old software, 
-						lastPacketTime = (new Date()).valueOf();
+						lastxDripPacketTime = (new Date()).valueOf();
 						
 						//store as bridge battery level value 0 in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE, "0");
 						
 						//store the transmitter battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataXdripDataPacket.transmitterBatteryVoltage.toString());
-						if (Sensor.getActiveSensor() != null)
-							Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXdripDataPacket.transmitterBatteryVoltage;
 						//create and save bgreading
 						BgReading.
 							create(transmitterDataXdripDataPacket.rawData, transmitterDataXdripDataPacket.filteredData)
@@ -239,12 +231,6 @@ package services
 					}
 				} else if (be.data is TransmitterDataG5Packet) {
 					var transmitterDataG5Packet:TransmitterDataG5Packet = be.data as TransmitterDataG5Packet;
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE, "0");
-					
-					//store the transmitter battery level in the common settings (to be synchronized)
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataG5Packet.transmitterBatteryVoltage.toString());
-					if (Sensor.getActiveSensor() != null)
-						Sensor.getActiveSensor().latestBatteryLevel = transmitterDataG5Packet.transmitterBatteryVoltage;
 					
 					//check special values filtered and unfiltered to detect dead battery
 					if (transmitterDataG5Packet.filteredData == 2096896) {
@@ -314,15 +300,19 @@ package services
 					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderPacket) {
+					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderPacket");
 					var transmitterDataBlueReaderPacket:TransmitterDataBlueReaderPacket = be.data as TransmitterDataBlueReaderPacket;
-					if (!isNaN(transmitterDataBlueReaderPacket.bridgeBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, transmitterDataBlueReaderPacket.bridgeBatteryLevel.toString());
+					if (!isNaN(transmitterDataBlueReaderPacket.bluereaderBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, (getBlueReaderBatteryLevel(transmitterDataBlueReaderPacket.bluereaderBatteryLevel)).toString());
+						myTrace("in transmitterDataReceived, setting COMMON_SETTING_BLUEREADER_BATTERY_LEVEL to " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL));
 					}
-					if (!isNaN(transmitterDataBlueReaderPacket.sensorBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBlueReaderPacket.sensorBatteryLevel.toString());
+					if (!isNaN(transmitterDataBlueReaderPacket.fslBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBlueReaderPacket.fslBatteryLevel.toString());
+						myTrace("in transmitterDataReceived, setting COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL to " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL));
 					}
 					if (!isNaN(transmitterDataBlueReaderPacket.sensorAge)) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBlueReaderPacket.sensorAge.toString());
+						myTrace("in transmitterDataReceived, setting COMMON_SETTING_FSL_SENSOR_AGE to " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
 					}
 					BgReading.
 						create(transmitterDataBlueReaderPacket.bgValue, transmitterDataBlueReaderPacket.bgValue)
@@ -333,18 +323,15 @@ package services
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderBatteryPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket");
-					lastBgRading = BgReading.lastNoSensor();
-					if (lastBgRading != null) {
-						if (lastBgRading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
-							myTrace("in transmitterDataReceived,  is TransmitterDataBlueReaderBatteryPacket, but lastbgReading less than 255 seconds old, ignoring");
-							return;
-						}
+					lastBgReading = BgReading.lastNoSensor();
+					if (lastBgReading == null || lastBgReading.timestamp + 4 * 60 * 1000 < (new Date()).valueOf()) {
+						myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket, sending 6C");
+						BluetoothService.writeToCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 					}
-					BluetoothService.writeBlueReaderCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 				} else if (be.data is TransmitterDataBluKonPacket) {
-					lastBgRading = BgReading.lastNoSensor();
-					if (lastBgRading != null) {
-						if (lastBgRading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
+					lastBgReading = BgReading.lastNoSensor();
+					if (lastBgReading != null) {
+						if (lastBgReading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
 							myTrace("in transmitterDataReceived,  is TransmitterDataBluConPacket, but lastbgReading less than 255 seconds old, ignoring");
 							return;
 						}
@@ -424,9 +411,25 @@ package services
 				value.writeByte(0x01);
 				value.writeInt(BluetoothService.encodeTxID(transmitterIDTextInput.text));
 				myTrace("calling BluetoothService.ackCharacteristicUpdate");
-				BluetoothService.writeG4Characteristic(value);
+				BluetoothService.writeToCharacteristic(value);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDTextInput.text.toUpperCase());
 			}
+		}
+		
+		private static function getBlueReaderBatteryLevel(transmitterDataBatteryLevel:Number):Number {
+			myTrace("in getBlueReaderBatteryLevel, transmitterDataBatteryLevel = "+ transmitterDataBatteryLevel);
+			var blueReaderFullBattery:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_FULL_BATTERY));
+			if(blueReaderFullBattery <3000 ) {
+				blueReaderFullBattery = 4100;
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_FULL_BATTERY, blueReaderFullBattery.toString());
+			}
+			
+			if (transmitterDataBatteryLevel > blueReaderFullBattery) {
+				blueReaderFullBattery = transmitterDataBatteryLevel;
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_FULL_BATTERY, blueReaderFullBattery.toString());
+			}
+			myTrace("in getBlueReaderBatteryLevel, returnValue = "+ ((transmitterDataBatteryLevel - 3300) * 100 / (blueReaderFullBattery-3300)).toString());
+			return Math.round(((transmitterDataBatteryLevel - 3300) * 100 / (blueReaderFullBattery-3300)));
 		}
 		
 		private static function myTrace(log:String):void {

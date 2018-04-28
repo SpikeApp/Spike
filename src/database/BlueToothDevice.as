@@ -17,8 +17,6 @@
  */
 package database
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import services.BluetoothService;
 	
 	import utils.Trace;
@@ -38,7 +36,9 @@ package database
 	 * - BlueReader : similar to G4, except that no scanning UUID is known. App will scan without specifying a UUID. As a result scanning doesn't work when in background<br>. First connection must happen while the app is in the foreground.<br>
 	 * Once a successful connection is done, the app will only reconnect to this device. For transmitter types without known scanning UUID (bluereader and miaomaio) reconnection strategy is different.<br>
 	 * <br>
-	 * - MiaoMiao  similar to Bluereader.
+	 * - MiaoMiao  similar to Bluereader. Handled by backgroundfetch ANE
+	 * <br>
+	 * - xbridgr : requested by Marek Macner. Uses an adapted version of the xbridge protocol, for FSL
 	 */
 	public class BlueToothDevice extends SuperDatabaseClass
 	{
@@ -177,6 +177,10 @@ package database
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "MIAOMIAO");
 		}
 		
+		public static function isxBridgeR():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "XBRIDGER");
+		}
+		
 		/**
 		 * Follower mode, not really a bluetoothdevice but it comes in handy to put it here also
 		 */
@@ -190,7 +194,7 @@ package database
 		 *  
 		 */
 		public static function isTypeLimitter():Boolean {
-			return (isBlueReader() || isBluKon() || isLimitter() || isTransmiter_PL() || isMiaoMiao());
+			return (isBlueReader() || isBluKon() || isLimitter() || isTransmiter_PL() || isMiaoMiao() || isxBridgeR());
 		}
 		
 		/**
@@ -199,6 +203,14 @@ package database
 		 */
 		public static function alwaysScan():Boolean {
 			return (isDexcomG5() || isBluKon()); 
+		}
+
+		public static function needsTransmitterId():Boolean {
+			return (isDexcomG5() || isDexcomG4() || isBluKon() || isxBridgeR());
+		}
+		
+		public static function transmitterIdKnown():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
 		}
 		
 		/**
@@ -210,27 +222,9 @@ package database
 		{
 			return (isBluKon() || isMiaoMiao());
 		}
-
-		/**
-		 * if name contains BRIDGE (case insensitive) then returns true<br>
-		 * otherwise false<br><br>
-		 * THIS DOES NOT NECESSARILY MEAN THAT IT DOES NOT HAVE THE XBRIDGE SOFTWARE, IT MIGHT BE AN XDRIP THAT IS LATER ON UPGRADED TO XBRIDGE<BR>
-		 * To be really sure if it's an 
-		 */
-		public static function isXBridge():Boolean {
-			return _name.toUpperCase().indexOf("BRIDGE") > -1;
-		}
-		
-		public static function needsTransmitterId():Boolean {
-			return (isDexcomG5() || isDexcomG4() || isBluKon());
-		}
-		
-		public static function transmitterIdKnown():Boolean {
-			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
-		}
 		
 		/**
-		 * possible values : G4, G5, BlueReader, BluKon, Limitter, Follow 
+		 * possible values : G4, G5, BlueReader, BluKon, Limitter, xBridgeR, Follow 
 		 */
 		public static function deviceType():String {
 			if (isDexcomG4()) 
@@ -249,6 +243,8 @@ package database
 				return "Transmiter PL";
 			if (isMiaoMiao())
 				return "MiaoMiao";
+			if (isxBridgeR())
+				return "xBridgeR";
 			return "unknown";
 		}
 
