@@ -61,14 +61,6 @@ package utils.libre
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
 					}
 					
-					if (sensorAge > 14.5 * 24 * 60) {
-						myTrace("in CalculateFromDataTransferObject, sensorage more than 14.5 * 24 * 60 minutes, no further processing");
-						if (Sensor.getActiveSensor() != null) {
-							//start sensor without user intervention 
-							Sensor.stopSensor();
-						}
-					}
-					
 					if (Sensor.getActiveSensor() == null) {
 						//start sensor without user intervention 
 						Sensor.startSensor(((new Date()).valueOf() - sensorAge * 60 * 1000));

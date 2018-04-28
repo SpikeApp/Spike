@@ -112,7 +112,7 @@ package ui.screens.display.sensor
 		private function setupInitialState():void
 		{
 			/* Warmup Time */
-			warmupTime = BlueToothDevice.isMiaoMiao() ? TIME_1_HOUR : TIME_2_HOURS;
+			warmupTime = BlueToothDevice.isTypeLimitter() ? TIME_1_HOUR : TIME_2_HOURS;
 			
 			/* Sensor Start Date */
 			if (Sensor.getActiveSensor() != null)
@@ -290,7 +290,7 @@ package ui.screens.display.sensor
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel });
 			if (inSensorCountdown)
 				sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','warmup_countdown'), accessory: sensorCountdownLabel });
-			if (!BlueToothDevice.isMiaoMiao() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
+			if (!BlueToothDevice.isTypeLimitter() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
 				sensorChildrenContent.push({ label: "", accessory: actionButton });
 			
 			dataProvider = new HierarchicalCollection(
