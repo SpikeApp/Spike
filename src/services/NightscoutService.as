@@ -778,7 +778,7 @@ package services
 			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
 				newTreatment["eventType"] = "BG Check";	
-				newTreatment["glucose"] = treatment.glucose;
+				newTreatment["glucose"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? treatment.glucose : Math.round(BgReading.mgdlToMmol(treatment.glucose) * 10) / 10;
 				newTreatment["glucoseType"] = "Finger";	
 			}
 			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)

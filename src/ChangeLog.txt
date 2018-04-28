@@ -1,6 +1,8 @@
 2.0.4
 ENHANCEMENT: Support for BlueReader battery info. (Johan)
-ENHANCEMENT: Support for BlueReader and Transmiter PL low battery alarms.
+ENHANCEMENT: Support for BlueReader and Transmiter PL low battery alarms. (Johan)
+ENHANCEMENT: Complete revamp of the Bluetooth code to make it more readable and efficient. (Johan)
+FIX: BG Check treatments for mmol/L users were being uploaded to Nightscout as mg/dL. It's fixed now.
 FIX: As usual, several small fixes and improvements.
 
 2.0.3
