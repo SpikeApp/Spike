@@ -412,14 +412,28 @@ package services
 			loader = null;
 			
 			//Validate response
-			if (response.indexOf("defaultProfile") != -1)
+			if (response.indexOf("defaultProfile") != -1 || response.indexOf("created_at") != -1)
 			{
 				try
 				{
 					var profileProperties:Object = SpikeJSON.parse(response);
 					if (profileProperties != null)
 					{
-						if (profileProperties[0].store[profileProperties[0].defaultProfile].dia == null && profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr == null)
+						var dia:Number = Number.NaN;
+						var carbAbsorptionRate:Number = Number.NaN;
+						
+						if (profileProperties[0].dia)
+							dia = Number(profileProperties[0].dia);
+						else if (profileProperties[0].store && profileProperties[0].defaultProfile && profileProperties[0].store[profileProperties[0].defaultProfile].dia)
+							dia = Number(profileProperties[0].store[profileProperties[0].defaultProfile].dia);
+						
+						if (profileProperties[0].carbs_hr)
+							carbAbsorptionRate = Number(profileProperties[0].carbs_hr);
+						else if (profileProperties[0].store && profileProperties[0].defaultProfile && profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr)
+							carbAbsorptionRate = Number(profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr);
+						
+						
+						if (isNaN(dia) || isNaN(carbAbsorptionRate))
 						{
 							Trace.myTrace("NightscoutService.as", "User has not yet set a profile in Nightscout!");
 							
@@ -437,31 +451,21 @@ package services
 							return;
 						}
 						
-						var dia:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].dia);
-						var carbAbsorptionRate:Number = Number(profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr);
-						if (!isNaN(dia) && !isNaN(carbAbsorptionRate))
-						{
-							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!");
+						Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully! DIA: " + dia + " CAR: " + carbAbsorptionRate);
+						
+						isNSProfileSet = true; //Mark profile as downloaded
 							
-							isNSProfileSet = true; //Mark profile as downloaded
+						//Add nightscout insulin to Spike and don't save it to DB
+						ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", BlueToothDevice.isFollower() ? true : false, "000000", !BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING ? true : false);
 							
-							//Add nightscout insulin to Spike and don't save it to DB
-							ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", BlueToothDevice.isFollower() ? true : false, "000000", !BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING ? true : false);
+						//Add nightscout carbs absorption rate and don't save it to DB
+						ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
 							
-							//Add nightscout carbs absorption rate and don't save it to DB
-							ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
-							
-							//Get treatmenents
-							if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-							{
-								if (!pumpUserEnabled)
-									getRemoteTreatments();
-								else
-									getPebbleEndpoint();
-							}
-						}
+						//Get treatmenents
+						if (!pumpUserEnabled)
+							getRemoteTreatments();
 						else
-							Trace.myTrace("NightscoutService.as", "Error retrieving insulin. Will try again on next transmitter reading! Response: " + response);
+							getPebbleEndpoint();
 					}
 				} 
 				catch(error:Error) 
@@ -497,9 +501,9 @@ package services
 			clearTreatments();
 			
 			setupNightscoutProperties();
-			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-				getNightscoutProfile();
 			getRemoteReadings();
+			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+				setTimeout(getNightscoutProfile, 1000);
 			
 			activateTimer();
 		}
@@ -1200,6 +1204,8 @@ package services
 			
 			//Get response
 			var response:String = loader.data;
+			
+			trace("response", response);
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);

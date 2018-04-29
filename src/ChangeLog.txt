@@ -3,6 +3,7 @@ ENHANCEMENT: Support for BlueReader battery info. (Johan)
 ENHANCEMENT: Support for BlueReader and Transmiter PL low battery alarms. (Johan)
 ENHANCEMENT: Complete revamp of the Bluetooth code to make it more readable and efficient. (Johan)
 FIX: BG Check treatments for mmol/L users were being uploaded to Nightscout as mg/dL. It's fixed now.
+FIX: Old versions of Nightscout's mongo database return the user's profile data in a different format and would make Spike not display treatments. Spike now supports both the old and new format and treatments should display correctly.
 FIX: As usual, several small fixes and improvements.
 
 2.0.3
