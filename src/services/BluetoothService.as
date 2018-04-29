@@ -487,16 +487,11 @@ package services
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("in bluetoothStatusIsOn, Trying to connect to known device.");
-			} else if (activeBluetoothPeripheral != null && BlueToothDevice.isBluKon()) {
+			} else if (activeBluetoothPeripheral != null && (BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5() || BlueToothDevice.isBluKon())) {
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
-				myTrace("in bluetoothStatusIsOn, Trying to connect to blukon.");
-			} else if (activeBluetoothPeripheral != null && BlueToothDevice.isBlueReader()) {
-				awaitingConnect = true;
-				connectionAttemptTimeStamp = (new Date()).valueOf();
-				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
-				myTrace("in bluetoothStatusIsOn, Trying to connect to bluereader.");
+				myTrace("in bluetoothStatusIsOn, Trying to connect.");
 			} else if (BlueToothDevice.isMiaoMiao()) {
 				if (BlueToothDevice.known()) {
 					myTrace("in bluetoothStatusIsOn, isMiaoMiao");
@@ -703,7 +698,7 @@ package services
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
 			
-			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader())
+			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5())
 				activeBluetoothPeripheral = event.peripheral;
 
 			discoverServices();
@@ -800,7 +795,7 @@ package services
 				//try to reconnect and also restart scanning, to cover reconnect issue. Because maybe the transmitter starts re-advertising
 				tryReconnect();
 				startScanning();
-			} else if (BlueToothDevice.isBlueReader()) {
+			} else if (BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5()) {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
@@ -1183,11 +1178,10 @@ package services
 			myTrace("in doDisconnectMessageG5");
 			if (activeBluetoothPeripheral != null) {
 				if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
-					myTrace("in doDisconnectMessageG5 failed");
+					myTrace("in doDisconnectMessageG5, failed");
 				}
 			}
-			forgetActiveBluetoothPeripheral();
-			myTrace("in doDisconnectMessageG5 finished");
+			myTrace("in doDisconnectMessageG5, finished");
 		}
 		
 		private static function doBatteryInfoRequestMessage(characteristic:Characteristic):void {
