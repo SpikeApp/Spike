@@ -1205,8 +1205,6 @@ package services
 			//Get response
 			var response:String = loader.data;
 			
-			trace("response", response);
-			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
 			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
