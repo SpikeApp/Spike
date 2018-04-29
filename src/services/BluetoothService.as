@@ -798,7 +798,7 @@ package services
 				//try to reconnect and also restart scanning, to cover reconnect issue. Because maybe the transmitter starts re-advertising
 				tryReconnect();
 				startScanning();
-			} else if (BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5()) {
+			} else if (BlueToothDevice.isBlueReader()) {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
