@@ -131,7 +131,7 @@ package treatments
 		
 		public function calculateCOB(lastDecayedBy:Number, time:Number):CobCalc
 		{
-			var absorptionRate:int = 30;
+			var absorptionRate:int = ProfileManager.getCarbAbsorptionRate();
 			var delay:int = 20;
 			var isDecaying:int = 0;
 			
