@@ -7,6 +7,7 @@ FIX: BG Check treatments for mmol/L users were being uploaded to Nightscout as m
 FIX: Old versions of Nightscout's mongo database return the user's profile data in a different format and would make Spike not display treatments. Spike now supports both the old and new format and treatments should display correctly.
 FIX: COB now displays correctly when not using the default carb absorption rate of 30g per hour.
 FIX: Sometimes the alarm snoozer popup would crash Spike after unlocking the device to perform a snooze. It's fixed now. 
+FIX: Full screen Today Widget was not displaying correctly on small screen size devices.
 FIX: As usual, several other small fixes and improvements.
 
 2.0.3
