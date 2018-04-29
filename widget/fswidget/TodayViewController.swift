@@ -20,6 +20,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
     @IBOutlet var openApp: UIButton!
     @IBOutlet var noData: UILabel!
     @IBOutlet var treatmentsLabel: UILabel!
+    @IBOutlet var treatmentsConstrain: NSLayoutConstraint!
     
     //IBActions
     @IBAction func openApp(_ sender: Any)
@@ -81,11 +82,9 @@ class TodayViewController: UIViewController, NCWidgetProviding
         /*latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
         latestGlucoseValue = "600"
         latestGlucoseSlopeArrow = "-"
-        latestGlucoseDelta = "+0.5"
+        latestGlucoseDelta = "+4"
         latestGlucoseTime = String(Date().toTimestamp())
         glucoseUnit = "mg/dL"
-        //chartData = (externalData["chartData"] as? String)!
-        //externalDataEncoded = chartData.data(using: String.Encoding.utf8, allowLossyConversion: false)!
         urgenLowThreshold = "50"
         lowThreshold = "60"
         highThreshold = "110"
@@ -96,10 +95,6 @@ class TodayViewController: UIViewController, NCWidgetProviding
         highColor = "#0000FF"
         urgentHighColor = "#FF0000"
         oldDataColor = "#CCCCCC"
-        markerColor = "#FFFFFF"
-        axisColor = "#FFFFFF"
-        axisFontColor = "#FFFFFF"
-        gridLinesColor = "#FFFFFF"
         backgroundColor = "#FF0000"
         backgroundOpacity = "0.2"
         displayLabelsColor = "#FFFFFF"
@@ -108,15 +103,8 @@ class TodayViewController: UIViewController, NCWidgetProviding
         ago = "ago"
         now = "now"
         openSpike = "open spike"
-        smoothLine = "true"
-        showMarkers = "true"
-        showMarkerLabel = "true"
-        showGridLines = "false"
-        lineThickness = "2"
-        markerRadius = "6"
         IOB = "6.05"
         COB = "25.4"*/
-        
         
         //Widget Properties
         if #available(iOSApplicationExtension 10.0, *)
@@ -146,7 +134,6 @@ class TodayViewController: UIViewController, NCWidgetProviding
         //DEBUG
         //setBackground()
         //setLabels()
-        //setChart()
     }
     
     /**
@@ -261,10 +248,6 @@ class TodayViewController: UIViewController, NCWidgetProviding
     func setLabels()
     {
         glucoseDisplay.text = latestGlucoseValue + " " + latestGlucoseSlopeArrow
-        if screenWidth <= 320
-        {
-            glucoseDisplay.font = glucoseDisplay.font.withSize(40)
-        }
         
         if glucoseUnitInternal == "mgdl"
         {
@@ -338,6 +321,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
         }
         
         timeDisplay.text = getTimeAgo(latestTimestamp: Int64(latestGlucoseTime)!, hourAgo: hourAgo, minAgo: minAgo, ago: ago, now: now)
+        
         if getTotalMinutes(latestTimestamp: Int64(latestGlucoseTime)!) >= 6
         {
             timeDisplay.textColor = UIColor.colorFromHex(hexString: oldDataColor)
@@ -362,6 +346,13 @@ class TodayViewController: UIViewController, NCWidgetProviding
         
         treatmentsLabel.text = "COB:" + COB + "   IOB:" + IOB
         treatmentsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
+        
+        if phone.isSmallScreen
+        {
+            treatmentsConstrain.constant = 39
+            mainView.layoutIfNeeded()
+            treatmentsLabel.font = treatmentsLabel.font.withSize(14)
+        }
     }
     
     /**
@@ -472,6 +463,19 @@ class TodayViewController: UIViewController, NCWidgetProviding
                 completionHandler(NCUpdateResult.newData)
             }
         }
+    }
+}
+
+public struct phone {
+    
+    public static var screenWidth: CGFloat
+    {
+        return UIScreen.main.bounds.width
+    }
+    
+    public static var isSmallScreen: Bool
+    {
+        return screenWidth == 320
     }
 }
 
