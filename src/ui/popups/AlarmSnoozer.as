@@ -1,7 +1,5 @@
 package ui.popups
 {	
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import flash.errors.IllegalOperationError;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
@@ -83,7 +81,6 @@ package ui.popups
 				
 				//Create objects
 				SystemUtil.executeWhenApplicationIsActive( createDisplayObjects );
-				//createDisplayObjects();
 			}
 			else
 			{
@@ -103,12 +100,12 @@ package ui.popups
 		{
 			//Close the callout in case it was already opened
 			if (PopUpManager.isPopUp(snoozeCallout))
-				PopUpManager.removePopUp(snoozeCallout);
+				SystemUtil.executeWhenApplicationIsActive(PopUpManager.removePopUp, snoozeCallout);
 			else if (snoozeCallout != null)
-				snoozeCallout.close();
+				SystemUtil.executeWhenApplicationIsActive( snoozeCallout.close );
 			
 			//Display callout
-			PopUpManager.addPopUp(snoozeCallout, true, false);
+			SystemUtil.executeWhenApplicationIsActive( PopUpManager.addPopUp, snoozeCallout, true, false );
 			
 			//Create close timer
 			closeTimeout = setTimeout(closeCallout, TIME_4_MINUTES);
@@ -182,18 +179,11 @@ package ui.popups
 			//Stop the timer
 			clearTimeout(closeTimeout);
 			
-			if (!Constants.appInForeground || !BackgroundFetch.appIsInForeground())
-			{
-				//queuedAction = closeCallout;
-				SystemUtil.executeWhenApplicationIsActive( closeCallout );
-				return;
-			}
-			
 			//Close the callout
 			if (PopUpManager.isPopUp(snoozeCallout))
-				PopUpManager.removePopUp(snoozeCallout);
+				SystemUtil.executeWhenApplicationIsActive (PopUpManager.removePopUp, snoozeCallout );
 			else if(snoozeCallout != null)
-					snoozeCallout.close();
+				SystemUtil.executeWhenApplicationIsActive (snoozeCallout.close );
 		}
 		
 		/**
@@ -201,9 +191,10 @@ package ui.popups
 		 */
 		private static function onClose(e:Event):void
 		{
+			
 			_instance.dispatchEventWith(CLOSED, false, { index: snoozePickerList.selectedIndex });
 			
-			closeCallout();
+			SystemUtil.executeWhenApplicationIsActive (closeCallout );
 			
 			//Notify Services (ex: IFTTT)
 			if (snoozeTitle.indexOf(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert")) != -1)
@@ -226,7 +217,8 @@ package ui.popups
 		
 		private static function onCancel(e:Event):void
 		{
-			closeCallout();
+			SystemUtil.executeWhenApplicationIsActive (closeCallout );
+			
 			_instance.dispatchEventWith(CANCELLED);
 		}
 

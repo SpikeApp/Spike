@@ -5,7 +5,8 @@ ENHANCEMENT: Complete revamp of the Bluetooth code to make it more readable and 
 FIX: BG Check treatments for mmol/L users were being uploaded to Nightscout as mg/dL. It's fixed now.
 FIX: Old versions of Nightscout's mongo database return the user's profile data in a different format and would make Spike not display treatments. Spike now supports both the old and new format and treatments should display correctly.
 FIX: COB now displays correctly when not using the default carb absorption rate of 30g per hour.
-FIX: As usual, several small fixes and improvements.
+FIX: Sometimes the alarm snoozer popup would crash Spike after unlocking the device to perform a snooze. It's fixed now. 
+FIX: As usual, several other small fixes and improvements.
 
 2.0.3
 FIX: Fixes an issue where Spike would incorrectly make changes to Nightscout treatments for Loop/OpenAPS users which would result in Nightscout reporting incorrect values for IOB and COB. With this update Spike will not make any changes to existing Nightscout treatments. If you're a Loop/OpenAPS user be sure to enable the "Loop/OpenAPS User" option in Settings -> Treatments.

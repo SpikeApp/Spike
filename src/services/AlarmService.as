@@ -32,6 +32,7 @@ package services
 	import model.ModelLocator;
 	
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlarmSnoozer;
 	
@@ -501,7 +502,13 @@ package services
 						{
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, batteryLevelSnoozePicker_closedHandler);
 							AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
-							AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert"), snoozeValueStrings, index);
+							SystemUtil.executeWhenApplicationIsActive
+							(
+								AlarmSnoozer.displaySnoozer,
+								ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert"),
+								snoozeValueStrings,
+								index
+							);
 						} else if (notificationEvent.identifier == NotificationService.ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER) {
 							_batteryLevelAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 							myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, snoozing the notification for " + _batteryLevelAlertSnoozePeriodInMinutes + " minutes");
@@ -555,7 +562,13 @@ package services
 				myTrace("in snoozeCalibrationRequest");
 				AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CLOSED, calibrationRequestSnoozePicker_closedHandler);
 				AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, snoozePickerChangedOrCanceledHandler);
-				AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert"), snoozeValueStrings, index);
+				SystemUtil.executeWhenApplicationIsActive
+				(
+					AlarmSnoozer.displaySnoozer,
+					ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert"),
+					snoozeValueStrings,
+					index
+				);
 			}
 			
 			function calibrationRequestSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -717,11 +730,23 @@ package services
 					snoozeText == "snooze_text_very_high_alert"
 				)
 				{
-					AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText) + "\n" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + GlucoseHelper.getGlucoseUnit(), snoozeValueStrings, index);
+					SystemUtil.executeWhenApplicationIsActive
+					(
+						AlarmSnoozer.displaySnoozer,
+						ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText) + "\n" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + GlucoseHelper.getGlucoseUnit(),
+						snoozeValueStrings,
+						index
+					);
 				}
 				else
 				{
-					AlarmSnoozer.displaySnoozer(ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText), snoozeValueStrings, index);
+					SystemUtil.executeWhenApplicationIsActive
+					(
+						AlarmSnoozer.displaySnoozer,
+						ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText),
+						snoozeValueStrings,
+						index
+					);
 				}
 			} 
 			else if (notificationEvent.identifier == alertSnoozeIdentifier) {
@@ -1733,7 +1758,7 @@ package services
 							Notifications.service.cancel(repeatAlertsNotificationIds[cntr]);//remove any notification that may already exist
 							
 							//remove also any open pickerdialog
-							AlarmSnoozer.closeCallout();
+							SystemUtil.executeWhenApplicationIsActive( AlarmSnoozer.closeCallout );
 							
 							//fire the alert again
 							fireAlert(
