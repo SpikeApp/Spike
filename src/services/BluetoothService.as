@@ -203,6 +203,8 @@ package services
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		private static var awaitingConnect:Boolean = false;
 		private static var scanTimer:Timer;//only for peripheral types of type not always scan
+		private static var reconnectTimer:Timer;	
+
 		/**
 		 * is the peripheral connected or not, not applicable to MiaoMiao which is handled by BackgroundFetch ANE 
 		 */
@@ -222,6 +224,7 @@ package services
 		 * Therefore the amount of notifications will be reduced, this setting counts the number
 		 */
 		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5:int = 5;
+		private static var G5_RECONNECT_TIME_IN_SECONDS:int = 15
 				
 		//Dexcom G4 variables
 		private static var timeStampOfLastWarningUnknownG4Command:Number = 0;
@@ -799,12 +802,21 @@ package services
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
+			} else if (BlueToothDevice.isDexcomG5()) {
+				startReconnectTimer(G5_RECONNECT_TIME_IN_SECONDS);
 			} else {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				forgetActiveBluetoothPeripheral();
 				startRescan(null);
 			}
+		}
+		
+		private static function startReconnectTimer(timerInSeconds:int):void {
+			myTrace("in startReconnectTime with timer =" + timerInSeconds);
+			reconnectTimer = new Timer(timerInSeconds * 1000, 1);
+			reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
+			reconnectTimer.start();
 		}
 		
 		private static function tryReconnect(event:flash.events.Event = null):void {
