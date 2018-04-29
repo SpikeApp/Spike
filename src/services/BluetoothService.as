@@ -1048,6 +1048,8 @@ package services
 				BackgroundFetch.forgetMiaoMiaoPeripheral();
 			} else {
 				myTrace("in forgetActiveBluetoothPeripheral");
+				writeCharacteristic = null;
+				readCharacteristic = null;
 				if (activeBluetoothPeripheral == null)
 					return;
 				
