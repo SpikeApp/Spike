@@ -668,6 +668,14 @@ package services
 					}
 					return;
 				}
+				if (readCharacteristic != null) {
+					myTrace("in central_peripheralConnectHandler, G5 and readCharacteristic not null, trying subscribe");
+					if (!activeBluetoothPeripheral.subscribeToCharacteristic(readCharacteristic))
+					{
+						myTrace("Subscribe to characteristic failed due to invalid adapter state.");
+					}
+					return;
+				}
 			}
 			
 			if (scanTimer != null) {
@@ -1037,6 +1045,7 @@ package services
 					}
 				}
 			}
+			forgetActiveBluetoothPeripheral();
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
@@ -1055,6 +1064,8 @@ package services
 				BackgroundFetch.forgetMiaoMiaoPeripheral();
 			} else {
 				myTrace("in forgetActiveBluetoothPeripheral");
+				writeCharacteristic = null;
+				readCharacteristic = null;
 				if (activeBluetoothPeripheral == null)
 					return;
 				

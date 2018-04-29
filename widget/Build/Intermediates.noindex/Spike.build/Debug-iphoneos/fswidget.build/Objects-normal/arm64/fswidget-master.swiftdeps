@@ -1,0 +1,6 @@
+version: "Apple Swift version 4.0.3 (swiftlang-900.0.74.1 clang-900.0.39.2)"
+options: "ff2d363629cf7962c39b7f03c600123c"
+build_time: [1525018715, 313723000]
+inputs:
+  "/Volumes/Data HD/Development/GitHub/Spike/widget/fswidget/TodayViewController.swift": [1524760893, 0]
+  "/Volumes/Data HD/Development/GitHub/Spike/widget/widget/Classes/UIColor+colorFromHex.swift": [1518789143, 0]

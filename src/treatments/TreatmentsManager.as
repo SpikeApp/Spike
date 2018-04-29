@@ -6,6 +6,8 @@ package treatments
 	import flash.events.EventDispatcher;
 	import flash.utils.Dictionary;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -526,10 +528,11 @@ package treatments
 				{
 					var insulinList:PickerList = LayoutFactory.createPickerList();
 					var insulinDataProvider:ArrayCollection = new ArrayCollection();
-					var numInsulins:int = ProfileManager.insulinsList.length
+					var userInsulins:Array = sortInsulinsByDefault(ProfileManager.insulinsList.concat());
+					var numInsulins:int = userInsulins.length
 					for (var i:int = 0; i < numInsulins; i++) 
 					{
-						var insulin:Insulin = ProfileManager.insulinsList[i];
+						var insulin:Insulin = userInsulins[i];
 						if (insulin.name.indexOf("Nightscout") == -1)
 						{
 							insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
@@ -940,6 +943,28 @@ package treatments
 				if (notes != null)
 					notes.clearFocus();
 			}
+		}
+		
+		private static function sortInsulinsByDefault(insulins:Array):Array
+		{
+			insulins.sortOn(["name"], Array.CASEINSENSITIVE);
+			
+			for (var i:int = 0; i < insulins.length; i++) 
+			{
+				var insulin:Insulin = insulins[i];
+				if (insulin.isDefault)
+				{
+					//Remove it from the array
+					insulins.removeAt(i);
+					
+					//Add it to the beginning
+					insulins.unshift(insulin);
+					
+					break;
+				}
+			}
+			
+			return insulins;
 		}
 		
 		public static function addExternalTreatment(treatment:Treatment):void
