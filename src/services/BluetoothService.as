@@ -46,7 +46,6 @@ package services
 	import G5Model.BatteryInfoTxMessage;
 	import G5Model.SensorRxMessage;
 	import G5Model.SensorTxMessage;
-	import G5Model.TransmitterStatus;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -116,8 +115,6 @@ package services
 		private static const G4_RX_Characteristic_UUID:String = "0000FFE1-0000-1000-8000-00805F9B34Fb";
 		private static const G4_TX_Characteristic_UUID:String = G4_RX_Characteristic_UUID;
 		private static const G4_Advertisement_UUID:String = G4_Service_UUID;
-		private static const G4_Service_UUID_Vector:Vector.<String> = new <String>[G4_Service_UUID];
-		private static const G4_Advertisement_UUID_Vector:Vector.<String> = new <String>[G4_Advertisement_UUID];
 		private static const G4_Characteristics_UUID_Vector:Vector.<String> = new <String>[G4_RX_Characteristic_UUID];
 		
 		//G5 UUID's
@@ -126,8 +123,6 @@ package services
 		private static const G5_Control_Characteristic_UUID:String = "F8083534-849E-531C-C594-30F1F86A4EA5";
 		private static const G5_Authentication_Characteristic_UUID:String = "F8083535-849E-531C-C594-30F1F86A4EA5";
 		private static const G5_Advertisement_UUID:String = "0000FEBC-0000-1000-8000-00805F9B34FB";
-		private static const G5_Service_UUID_Vector:Vector.<String> = new <String>[G5_Service_UUID];
-		private static const G5_Advertisement_UUID_Vector:Vector.<String> = new <String>[G5_Advertisement_UUID];
 		private static const G5_Characteristics_UUID_Vector:Vector.<String> = new <String>[G5_Authentication_Characteristic_UUID, G5_Control_Characteristic_UUID];
 		
 		//Blucon UUID's
@@ -135,8 +130,6 @@ package services
 		private static const Blucon_RX_Characteristic_UUID:String = "436A0C82-082E-4CE8-A08B-01D81F195B24";
 		private static const Blucon_TX_Characteristic_UUID:String = "436AA6E9-082E-4CE8-A08B-01D81F195B24";
 		private static const Blucon_Advertisement_UUID:String = Blucon_Service_UUID;
-		private static const Blucon_Service_UUID_Vector:Vector.<String> = new <String>[Blucon_Advertisement_UUID];
-		private static const Blucon_Advertisement_UUID_Vector:Vector.<String> = new <String>[Blucon_Advertisement_UUID];
 		private static const Blucon_Characteristics_UUID_Vector:Vector.<String> = new <String>[Blucon_RX_Characteristic_UUID, Blucon_TX_Characteristic_UUID];
 		
 		//Bluereader UUID's
@@ -144,8 +137,6 @@ package services
 		private static const BlueReader_RX_Characteristic_UUID:String = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
 		private static const BlueReader_TX_Characteristic_UUID:String = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
 		private static const BlueReader_Advertisement_UUID:String = "";
-		private static const BlueReader_Service_UUID_Vector:Vector.<String> = new <String>[BlueReader_Service_UUID];
-		private static const BlueReader_Advertisement_UUID_Vector:Vector.<String> = new <String>[BlueReader_Advertisement_UUID];
 		private static const BlueReader_Characteristics_UUID_Vector:Vector.<String> = new <String>[BlueReader_TX_Characteristic_UUID, BlueReader_RX_Characteristic_UUID];
 		
 		//Transmiter PL UUID's
@@ -153,8 +144,6 @@ package services
 		private static const Transmiter_PL_RX_Characteristic_UUID:String = "C97433F1-BE8F-4DC8-B6F0-5343E6100EB4";
 		private static const Transmiter_PL_TX_Characteristic_UUID:String = "C97433F2-BE8F-4DC8-B6F0-5343E6100EB4";
 		private static const Transmiter_PL_Advertisement_UUID:String = Transmiter_PL_Service_UUID;
-		private static const Transmiter_PL_Service_UUID_Vector:Vector.<String> = new <String>[Transmiter_PL_Service_UUID];
-		private static const Transmiter_PL_Advertisement_UUID_Vector:Vector.<String> = new <String>[Transmiter_PL_Advertisement_UUID];
 		private static const Transmiter_PL_Characteristics_UUID_Vector:Vector.<String> = new <String>[Transmiter_PL_RX_Characteristic_UUID, Transmiter_PL_TX_Characteristic_UUID];
 		
 		//xbridger uses the same uuid's as xdrip except for TX Characteristic
@@ -162,10 +151,7 @@ package services
 		private static const xBridgeR_RX_Characteristic_UUID:String = "0000FFE1-0000-1000-8000-00805F9B34FB";
 		private static const xBridgeR_TX_Characteristic_UUID:String = "0000FFE2-0000-1000-8000-00805F9B34FB";
 		private static const xBridgeR_Advertisement_UUID:String = xBridgeR_Service_UUID;
-		private static const xBridgeR_Service_UUID_Vector:Vector.<String> = new <String>[xBridgeR_Service_UUID];
-		private static const xBridgeR_Advertisement_UUID_Vector:Vector.<String> = new <String>[xBridgeR_Advertisement_UUID];
 		private static const xBridgeR_Characteristics_UUID_Vector:Vector.<String> = new <String>[xBridgeR_RX_Characteristic_UUID];
-
 		
 		//Following variables with get value which is dependent on peripheral type
 		/**
@@ -2110,37 +2096,37 @@ package services
 		private static function setPeripheralUUIDs():void {
 			if (BlueToothDevice.isDexcomG4()) {
 				service_UUID = G4_Service_UUID;
-				advertisement_UUID_Vector = G4_Advertisement_UUID_Vector;
+				advertisement_UUID_Vector = new <String>[G4_Advertisement_UUID];
 				characteristics_UUID_Vector = G4_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = G4_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = G4_TX_Characteristic_UUID;
 			} else if (BlueToothDevice.isDexcomG5()) {
 				service_UUID = G5_Service_UUID;
-				advertisement_UUID_Vector = G5_Advertisement_UUID_Vector;
+				advertisement_UUID_Vector = new <String>[G5_Advertisement_UUID];
 				characteristics_UUID_Vector = G5_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = G5_Authentication_Characteristic_UUID;
 				TX_Characteristic_UUID = G5_Control_Characteristic_UUID;
 			} else if (BlueToothDevice.isBlueReader()) {
 				service_UUID = BlueReader_Service_UUID;
-				advertisement_UUID_Vector = BlueReader_Advertisement_UUID_Vector;
+				advertisement_UUID_Vector = new <String>[BlueReader_Advertisement_UUID];
 				characteristics_UUID_Vector = BlueReader_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = BlueReader_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = BlueReader_TX_Characteristic_UUID;
 			} else if (BlueToothDevice.isBluKon()) {
 				service_UUID = Blucon_Service_UUID;
-				advertisement_UUID_Vector = Blucon_Advertisement_UUID_Vector;
+				advertisement_UUID_Vector = new <String>[Blucon_Advertisement_UUID];
 				characteristics_UUID_Vector = Blucon_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = Blucon_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = Blucon_TX_Characteristic_UUID;
 			} else if (BlueToothDevice.isTransmiter_PL()) {
 				service_UUID = Transmiter_PL_Service_UUID;
-				advertisement_UUID_Vector = Transmiter_PL_Advertisement_UUID_Vector;
+				advertisement_UUID_Vector = new <String>[Transmiter_PL_Advertisement_UUID];
 				characteristics_UUID_Vector = Transmiter_PL_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = Transmiter_PL_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = Transmiter_PL_TX_Characteristic_UUID;
 			} else if (BlueToothDevice.isxBridgeR()) {
 				service_UUID = xBridgeR_Service_UUID;
-				advertisement_UUID_Vector = xBridgeR_Advertisement_UUID_Vector;
+				advertisement_UUID_Vector = new <String>[xBridgeR_Advertisement_UUID];
 				characteristics_UUID_Vector = xBridgeR_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = xBridgeR_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = xBridgeR_TX_Characteristic_UUID;
