@@ -8,6 +8,7 @@ FIX: Old versions of Nightscout's mongo database return the user's profile data 
 FIX: COB now displays correctly when not using the default carb absorption rate of 30g per hour.
 FIX: Sometimes the alarm snoozer popup would crash Spike after unlocking the device to perform a snooze. It's fixed now. 
 FIX: Full screen Today Widget was not displaying correctly on small screen size devices.
+FIX: Layout fixes for the chart screen, especially when treatments are disabled.
 FIX: As usual, several other small fixes and improvements.
 
 2.0.3

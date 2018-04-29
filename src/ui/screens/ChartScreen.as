@@ -135,7 +135,7 @@ package ui.screens
 			availableScreenHeight = Constants.stageHeight - this.header.height;
 			scrollChartHeight = availableScreenHeight / 10; //10% of available screen size
 			
-			if (displayPieChart && (!displayIOBEnabled && !displayCOBEnabled) || !treatmentsEnabled)
+			if (displayPieChart && ((!displayIOBEnabled && !displayCOBEnabled) || !treatmentsEnabled || !chartTreatmentsEnabled))
 			{
 				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 					mainChartHeight = availableScreenHeight * 0.35; //35% of available screen size
@@ -156,7 +156,7 @@ package ui.screens
 				else
 					mainChartHeight = availableScreenHeight * 0.5; //50% of available screen size
 			}
-			else if (displayPieChart && (displayIOBEnabled || displayCOBEnabled))
+			else if (displayPieChart && chartTreatmentsEnabled && treatmentsEnabled && (displayIOBEnabled || displayCOBEnabled))
 			{
 				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				{
@@ -314,18 +314,31 @@ package ui.screens
 			
 			//Main Chart Internal Top Padding
 			var chartDisplayMargin:Number;
-			if (!displayIOBEnabled && !displayCOBEnabled)
-				chartDisplayMargin = 50 * higherMultiplier;
-			else if (displayIOBEnabled || displayCOBEnabled)
+			if ((!displayIOBEnabled && !displayCOBEnabled) || !chartTreatmentsEnabled || !treatmentsEnabled)
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+					chartDisplayMargin = 68 * higherMultiplier;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+					chartDisplayMargin = 60 * higherMultiplier;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
+					chartDisplayMargin = 69 * higherMultiplier;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+					chartDisplayMargin = 58 * higherMultiplier;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					chartDisplayMargin = 40 * higherMultiplier;
+				else
+					chartDisplayMargin = 60 * higherMultiplier;
+			}
+			else if ((displayIOBEnabled || displayCOBEnabled ) && chartTreatmentsEnabled && treatmentsEnabled)
 			{
 				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 					chartDisplayMargin = 97 * higherMultiplier;
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 					chartDisplayMargin = 95 * higherMultiplier;
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-					chartDisplayMargin = 98 * higherMultiplier; 
+					chartDisplayMargin = 103 * higherMultiplier; 
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-					chartDisplayMargin = 87 * higherMultiplier; 
+					chartDisplayMargin = 90 * higherMultiplier; 
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 					chartDisplayMargin = 62 * higherMultiplier; 
 				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
