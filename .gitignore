@@ -6,6 +6,6 @@
 /libs/
 /src/assets/theme/
 /src/distriqtkey/
-/widget/Spike.xcworkspace/xcuserdata/spike.xcuserdatad/UserInterfaceState.xcuserstate
+*.xcuserstate
 .actionScriptProperties
 .project
