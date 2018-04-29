@@ -108,7 +108,7 @@ package
 			
 			lastCrashReportTimestamp = now;
 			
-			error = "Spike Version: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) "\n\n" + error;
+			error = "Spike Version: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) + "\n\n" + error;
 			
 			//Create URL Request 
 			var vars:URLVariables = new URLVariables();
