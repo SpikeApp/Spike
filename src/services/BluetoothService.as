@@ -664,15 +664,7 @@ package services
 				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
 					myTrace("in central_peripheralConnectHandler, G5 but last reading was less than 1 minute ago, disconnecting");
 					if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
-						myTrace("in central_peripheralConnectHandler, doDisconnectMessageG5 failed");
-					}
-					return;
-				}
-				if (readCharacteristic != null) {
-					myTrace("in central_peripheralConnectHandler, G5 and readCharacteristic not null, trying subscribe");
-					if (!activeBluetoothPeripheral.subscribeToCharacteristic(readCharacteristic))
-					{
-						myTrace("Subscribe to characteristic failed due to invalid adapter state.");
+						myTrace("in central_peripheralConnectHandler, disconnect failed");
 					}
 					return;
 				}
@@ -1045,7 +1037,6 @@ package services
 					}
 				}
 			}
-			forgetActiveBluetoothPeripheral();
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
