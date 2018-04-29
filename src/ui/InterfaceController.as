@@ -172,7 +172,7 @@ package ui
 				} 
 				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 				{
-					if (BlueToothDevice.isTypeLimitter())
+					if (BlueToothDevice.knowsFSLAge())
 					{
 						//variables are named miaomiao but this is used for all FSL peripherals, ie all type limitter
 						var alertMiaoMiao:Alert = AlertManager.showSimpleAlert

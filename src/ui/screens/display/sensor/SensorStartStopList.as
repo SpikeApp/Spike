@@ -290,7 +290,7 @@ package ui.screens.display.sensor
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel });
 			if (inSensorCountdown)
 				sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','warmup_countdown'), accessory: sensorCountdownLabel });
-			if (!BlueToothDevice.isTypeLimitter() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
+			if (!BlueToothDevice.knowsFSLAge() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
 				sensorChildrenContent.push({ label: "", accessory: actionButton });
 			
 			dataProvider = new HierarchicalCollection(

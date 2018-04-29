@@ -688,7 +688,7 @@ package ui.screens.display.transmitter
 			BluetoothService.stopScanning(null);
 			InterfaceController.peripheralConnected = false;
 			
-			if (BlueToothDevice.isTypeLimitter() && Calibration.allForSensor().length < 2)
+			if (BlueToothDevice.knowsFSLAge() && Calibration.allForSensor().length < 2)
 				Sensor.stopSensor();
 			
 			AlertManager.showSimpleAlert

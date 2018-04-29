@@ -198,6 +198,13 @@ package database
 		}
 		
 		/**
+		 * devices that set COMMON_SETTING_FSL_SENSOR_AGE 
+		 */
+		public static function knowsFSLAge():Boolean {
+			return (isBluKon() || isTransmiter_PL() || isMiaoMiao() || isxBridgeR());
+		}
+		
+		/**
 		 * If true, then scanning can start as soon as transmitter id is chosen. For the moment this is only the case for Dexcom G5 and Blukon<br>
 		 * For others like xdrip, bluereader, etc... scanning can only start if user initiates it, once a device is known by it' address, then scanning will always happen for those devices<br>
 		 */
