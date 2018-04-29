@@ -120,7 +120,7 @@ package ui.screens.display.treatments
 			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
-			if (numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null)
+			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || ModelLocator.INTERNAL_TESTING == true)
 				canAddTreatments = true;
 			
 			var menuData:Array = [];
