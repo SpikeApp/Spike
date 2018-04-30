@@ -206,17 +206,21 @@ package network.httpserver.API
 			
 			try
 			{
+				var now:Number = new Date().valueOf();
+				
 				var numReadings:int = 1;
 				if (params.count != null)	
 					numReadings = int(params.count);
 				
-				var now:Number = new Date().valueOf();
 				var startTime:Number;
-				
 				if (params["startoffset"] != null)
 					startTime = now - Number(params["startoffset"]);
 				else
 					startTime = now - TIME_24_HOURS_6_MINUTES;
+				
+				var lightMode:Boolean = false;
+				if (params["lightMode"] != null && params["lightMode"] == "true")
+					lightMode = true;
 				
 				var readingsCollection:Array = [];
 				var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
@@ -255,10 +259,13 @@ package network.httpserver.API
 									readingObject.urgent_low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)).toString(16).toUpperCase();
 									
 									//Stats
-									var userStats:Object = getUserStats();
 									readingObject.status_one = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + " | COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
-									readingObject.status_two = "L: " + userStats.lowPercentage + " | " + "R: " + userStats.inRangePercentage + " | " + "H: " + userStats.highPercentage;
-									readingObject.status_three = "AVG: " + userStats.averageGlucose + " | " + "A1C: " + userStats.a1c;
+									if (!lightMode)
+									{
+										var userStats:Object = getUserStats();
+										readingObject.status_two = "L: " + userStats.lowPercentage + " | " + "R: " + userStats.inRangePercentage + " | " + "H: " + userStats.highPercentage;
+										readingObject.status_three = "AVG: " + userStats.averageGlucose + " | " + "A1C: " + userStats.a1c;
+									}
 								}
 								readingsCollection.push(readingObject);
 								itemParsed++;
