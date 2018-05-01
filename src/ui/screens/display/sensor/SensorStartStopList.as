@@ -140,7 +140,7 @@ package ui.screens.display.sensor
 						sensorDays = TimeSpan.fromMinutes(Number(sensorAgeInMinutes)).days.toString();
 						sensorHours = TimeSpan.fromMinutes(Number(sensorAgeInMinutes)).hours.toString();
 						
-						sensorAgeValue = sensorDays + "d" + sensorHours + "h";
+						sensorAgeValue = sensorDays + "d " + sensorHours + "h";
 					}
 				}
 				else
@@ -149,12 +149,12 @@ package ui.screens.display.sensor
 					sensorDays = TimeSpan.fromDates(sensorStartDate, nowDate).days.toString();
 					sensorHours = TimeSpan.fromDates(sensorStartDate, nowDate).hours.toString();
 					
-					if (sensorDays.length == 1)
+					/*if (sensorDays.length == 1)
 						sensorDays = "0" + sensorDays;
 					if (sensorHours.length == 1)
-						sensorHours = "0" + sensorHours;
+						sensorHours = "0" + sensorHours;*/
 					
-					sensorAgeValue = sensorDays + "d" + sensorHours + "h";
+					sensorAgeValue = sensorDays + "d " + sensorHours + "h";
 				}
 				
 				//Calculate number of calibrations
