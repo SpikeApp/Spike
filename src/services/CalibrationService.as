@@ -61,9 +61,7 @@ package services
 		
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		
-		//calibration service will monitor fsl sensora age, if it changes from a higher to a lower value, then sensor will be restarted
-		private static var previousFSLSensorAgeInMinutes:int;
-		
+
 		public static function get instance():CalibrationService {
 			return _instance;
 		}
@@ -605,12 +603,11 @@ package services
 						//start sensor without user intervention 
 						Sensor.stopSensor();
 					}
-				} else if (currentSensorAgeInMinutes < previousFSLSensorAgeInMinutes && Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao()) {
+				} else if (currentSensorAgeInMinutes > 0 && Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao() && BlueToothDevice.knowsFSLAge()) {
 					//not doing this for miaomiao because sensorstart for miaomiao is already handled in LibreAlarmReceiver
 					myTrace("in commonSettingChanged, sensorage changed to smaller value, starting sensor");
 					Sensor.startSensor(((new Date()).valueOf() - currentSensorAgeInMinutes * 60 * 1000));
 				}
-				previousFSLSensorAgeInMinutes = currentSensorAgeInMinutes;			
 			}
 		}
 
