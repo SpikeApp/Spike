@@ -2922,16 +2922,6 @@ package ui.chart
 						highestGlucoseValue = latestCalibrationGlucose
 				}
 				
-				//Redraw YAxis if needed
-				if(highestGlucoseValue != previousHighestGlucoseValue || lowestGlucoseValue != previousLowestGlucoseValue)
-				{
-					//Dispose YAxis
-					yAxisContainer.dispose();
-					
-					//Redraw YAxis
-					yAxisContainer.addChild(drawYAxis());
-				}
-				
 				//Calculate positions
 				var totalGlucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 				scaleYFactor = (_graphHeight - (mainChartGlucoseMarkerRadius*2))/totalGlucoseDifference;
@@ -3036,6 +3026,12 @@ package ui.chart
 				
 				//Deativate DummyMode
 				dummyModeActive = false;
+				
+				//Dispose YAxis
+				yAxisContainer.dispose();
+				
+				//Redraw YAxis
+				yAxisContainer.addChild(drawYAxis());
 			}
 		}
 		
