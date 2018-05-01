@@ -2901,9 +2901,6 @@ package ui.chart
 				else if (latestCalibrationGlucose > 400)
 					latestCalibrationGlucose = 400;
 				
-				var previousLowestGlucoseValue:Number = lowestGlucoseValue;
-				var previousHighestGlucoseValue:Number = highestGlucoseValue;
-				
 				if (!fixedSize) //Dynamic Chart
 				{
 					if (latestCalibrationGlucose < lowestGlucoseValue)
