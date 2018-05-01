@@ -130,7 +130,7 @@
                     <menu key="menu" id="jXz-v6-c3a">
                         <items>
                             <menuItem title="Refresh" icon="resume" id="0Tc-W7-moi"/>
-                            <menuItem title="Fullscreen" icon="more" id="3Jl-Ay-ESs">
+                            <menuItem title="Fullscreen" image="FullScreenContextMenu" id="3Jl-Ay-ESs">
                                 <connections>
                                     <action selector="onFullScreenTap" destination="AgC-eL-Hgc" id="eFe-Lv-O6x"/>
                                 </connections>
@@ -199,7 +199,7 @@
                     <menu key="menu" id="U2N-ev-P0T">
                         <items>
                             <menuItem title="Refresh" icon="resume" id="0qO-UI-Gwr"/>
-                            <menuItem title="Chart" icon="more" id="bCF-5B-nvd">
+                            <menuItem title="Chart" image="ChartContextMenu" id="bCF-5B-nvd">
                                 <connections>
                                     <action selector="onChartTap" destination="fe6-hF-q5I" id="ybS-CW-hfn"/>
                                 </connections>
