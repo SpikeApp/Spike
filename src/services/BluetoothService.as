@@ -248,7 +248,7 @@ package services
 		private static var nowGlucoseOffset:int = 0;
 		private static var timeStampOfLastDeviceNotPairedForBlukon:Number = 0;
 		private static var blukonCurrentCommand:String="";
-		private static var GET_SENSOR_AGE_DELAY_IN_SECONDS:int =  3 * 3600;
+		private static var GET_SENSOR_AGE_DELAY_IN_SECONDS:int =  1 * 3600;
 		private static var FSLSensorAGe:Number;
 		private static var startedMonitoringAndRangingBeaconsInRegion:Boolean = false;//only for Blucon
 						
@@ -314,8 +314,10 @@ package services
 			m_getNowGlucoseDataIndexCommand = false;
 			m_getOlderReading = false;
 			m_blockNumber = 0;
-			
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, "0");
+			
+			//Miaomiao
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
 			
 			if (BlueToothDevice.isMiaoMiao()) {
