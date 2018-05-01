@@ -20,7 +20,6 @@ class TodayViewController: UIViewController, NCWidgetProviding
     @IBOutlet var openApp: UIButton!
     @IBOutlet var noData: UILabel!
     @IBOutlet var treatmentsLabel: UILabel!
-    @IBOutlet var treatmentsConstrain: NSLayoutConstraint!
     
     //IBActions
     @IBAction func openApp(_ sender: Any)
@@ -80,31 +79,44 @@ class TodayViewController: UIViewController, NCWidgetProviding
         
         //Dummy data
         /*latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
-        latestGlucoseValue = "600"
-        latestGlucoseSlopeArrow = "-"
-        latestGlucoseDelta = "+4"
-        latestGlucoseTime = String(Date().toTimestamp())
-        glucoseUnit = "mg/dL"
-        urgenLowThreshold = "50"
-        lowThreshold = "60"
-        highThreshold = "110"
-        urgentHighThreshold = "130"
-        urgenLowColor = "#FF0000"
-        lowColor = "#FFFF00"
-        inRangeColor = "#00FF00"
-        highColor = "#0000FF"
-        urgentHighColor = "#FF0000"
-        oldDataColor = "#CCCCCC"
-        backgroundColor = "#FF0000"
-        backgroundOpacity = "0.2"
-        displayLabelsColor = "#FFFFFF"
-        hourAgo = "h"
-        minAgo = "m"
-        ago = "ago"
-        now = "now"
-        openSpike = "open spike"
-        IOB = "6.05"
-        COB = "25.4"*/
+         latestGlucoseValue = "600"
+         latestGlucoseSlopeArrow = "-"
+         latestGlucoseDelta = "+0.5"
+         latestGlucoseTime = String(Date().toTimestamp())
+         glucoseUnit = "mg/dL"
+         //chartData = (externalData["chartData"] as? String)!
+         //externalDataEncoded = chartData.data(using: String.Encoding.utf8, allowLossyConversion: false)!
+         urgenLowThreshold = "50"
+         lowThreshold = "60"
+         highThreshold = "110"
+         urgentHighThreshold = "130"
+         urgenLowColor = "#FF0000"
+         lowColor = "#FFFF00"
+         inRangeColor = "#00FF00"
+         highColor = "#0000FF"
+         urgentHighColor = "#FF0000"
+         oldDataColor = "#CCCCCC"
+         markerColor = "#FFFFFF"
+         axisColor = "#FFFFFF"
+         axisFontColor = "#FFFFFF"
+         gridLinesColor = "#FFFFFF"
+         backgroundColor = "#FF0000"
+         backgroundOpacity = "0.2"
+         displayLabelsColor = "#FFFFFF"
+         hourAgo = "h"
+         minAgo = "m"
+         ago = "ago"
+         now = "now"
+         openSpike = "open spike"
+         smoothLine = "true"
+         showMarkers = "true"
+         showMarkerLabel = "true"
+         showGridLines = "false"
+         lineThickness = "2"
+         markerRadius = "6"
+         IOB = "6.05"
+         COB = "25.4"*/
+        
         
         //Widget Properties
         if #available(iOSApplicationExtension 10.0, *)
@@ -127,18 +139,19 @@ class TodayViewController: UIViewController, NCWidgetProviding
             if populateProperties()
             {
                 setBackground()
-                setLabels()  
+                setLabels()
             }
         }
         
         //DEBUG
         //setBackground()
         //setLabels()
+        //setChart()
     }
     
     /**
-    *  Loads UsersDefaults External Data
-    */
+     *  Loads UsersDefaults External Data
+     */
     func getExternalData()->Bool
     {
         //External Data
@@ -248,6 +261,10 @@ class TodayViewController: UIViewController, NCWidgetProviding
     func setLabels()
     {
         glucoseDisplay.text = latestGlucoseValue + " " + latestGlucoseSlopeArrow
+        if screenWidth <= 320
+        {
+            glucoseDisplay.font = glucoseDisplay.font.withSize(40)
+        }
         
         if glucoseUnitInternal == "mgdl"
         {
@@ -321,7 +338,6 @@ class TodayViewController: UIViewController, NCWidgetProviding
         }
         
         timeDisplay.text = getTimeAgo(latestTimestamp: Int64(latestGlucoseTime)!, hourAgo: hourAgo, minAgo: minAgo, ago: ago, now: now)
-        
         if getTotalMinutes(latestTimestamp: Int64(latestGlucoseTime)!) >= 6
         {
             timeDisplay.textColor = UIColor.colorFromHex(hexString: oldDataColor)
@@ -346,18 +362,11 @@ class TodayViewController: UIViewController, NCWidgetProviding
         
         treatmentsLabel.text = "COB:" + COB + "   IOB:" + IOB
         treatmentsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
-        
-        if phone.isSmallScreen
-        {
-            treatmentsConstrain.constant = 39
-            mainView.layoutIfNeeded()
-            treatmentsLabel.font = treatmentsLabel.font.withSize(14)
-        }
     }
     
     /**
-    *  Gets the amount of minutes since last glucose reading
-    */
+     *  Gets the amount of minutes since last glucose reading
+     */
     func getTotalMinutes (latestTimestamp:Int64) -> Int
     {
         let nowTimestamp = Date().toTimestamp()
@@ -375,7 +384,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
         let differenceInMills = nowTimestamp! - latestTimestamp
         let hours = Int(Int(differenceInMills) / millisecondsInHour) % 24;
         let minutes = Int(Int(differenceInMills) / millisecondsInMinute) % 60
-
+        
         var output : String = ""
         var hoursFormatted : String
         var minutesFormatted : String = ""
@@ -451,7 +460,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
         {
             if NSDictionary(dictionary: currentData).isEqual(to: externalData)
             {
-               completionHandler(NCUpdateResult.noData)
+                completionHandler(NCUpdateResult.noData)
             }
             else
             {
@@ -466,19 +475,6 @@ class TodayViewController: UIViewController, NCWidgetProviding
     }
 }
 
-public struct phone {
-    
-    public static var screenWidth: CGFloat
-    {
-        return UIScreen.main.bounds.width
-    }
-    
-    public static var isSmallScreen: Bool
-    {
-        return screenWidth == 320
-    }
-}
-
 /**
  *  Extension to get timestamp from date
  */
@@ -489,3 +485,4 @@ extension Date
         return Int64(self.timeIntervalSince1970 * 1000)
     }
 }
+

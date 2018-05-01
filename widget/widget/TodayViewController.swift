@@ -93,43 +93,43 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         
         //Dummy data
         /*latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
-        latestGlucoseValue = "600"
-        latestGlucoseSlopeArrow = "-"
-        latestGlucoseDelta = "+0.5"
-        latestGlucoseTime = String(Date().toTimestamp())
-        glucoseUnit = "mg/dL"
-        //chartData = (externalData["chartData"] as? String)!
-        //externalDataEncoded = chartData.data(using: String.Encoding.utf8, allowLossyConversion: false)!
-        urgenLowThreshold = "50"
-        lowThreshold = "60"
-        highThreshold = "110"
-        urgentHighThreshold = "130"
-        urgenLowColor = "#FF0000"
-        lowColor = "#FFFF00"
-        inRangeColor = "#00FF00"
-        highColor = "#0000FF"
-        urgentHighColor = "#FF0000"
-        oldDataColor = "#CCCCCC"
-        markerColor = "#FFFFFF"
-        axisColor = "#FFFFFF"
-        axisFontColor = "#FFFFFF"
-        gridLinesColor = "#FFFFFF"
-        backgroundColor = "#FF0000"
-        backgroundOpacity = "0.2"
-        displayLabelsColor = "#FFFFFF"
-        hourAgo = "h"
-        minAgo = "m"
-        ago = "ago"
-        now = "now"
-        openSpike = "open spike"
-        smoothLine = "true"
-        showMarkers = "true"
-        showMarkerLabel = "true"
-        showGridLines = "false"
-        lineThickness = "2"
-        markerRadius = "6"
-        IOB = "6.05"
-        COB = "25.4"*/
+         latestGlucoseValue = "600"
+         latestGlucoseSlopeArrow = "-"
+         latestGlucoseDelta = "+0.5"
+         latestGlucoseTime = String(Date().toTimestamp())
+         glucoseUnit = "mg/dL"
+         //chartData = (externalData["chartData"] as? String)!
+         //externalDataEncoded = chartData.data(using: String.Encoding.utf8, allowLossyConversion: false)!
+         urgenLowThreshold = "50"
+         lowThreshold = "60"
+         highThreshold = "110"
+         urgentHighThreshold = "130"
+         urgenLowColor = "#FF0000"
+         lowColor = "#FFFF00"
+         inRangeColor = "#00FF00"
+         highColor = "#0000FF"
+         urgentHighColor = "#FF0000"
+         oldDataColor = "#CCCCCC"
+         markerColor = "#FFFFFF"
+         axisColor = "#FFFFFF"
+         axisFontColor = "#FFFFFF"
+         gridLinesColor = "#FFFFFF"
+         backgroundColor = "#FF0000"
+         backgroundOpacity = "0.2"
+         displayLabelsColor = "#FFFFFF"
+         hourAgo = "h"
+         minAgo = "m"
+         ago = "ago"
+         now = "now"
+         openSpike = "open spike"
+         smoothLine = "true"
+         showMarkers = "true"
+         showMarkerLabel = "true"
+         showGridLines = "false"
+         lineThickness = "2"
+         markerRadius = "6"
+         IOB = "6.05"
+         COB = "25.4"*/
         
         
         //Widget Properties
@@ -166,8 +166,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     }
     
     /**
-    *  Loads UsersDefaults External Data
-    */
+     *  Loads UsersDefaults External Data
+     */
     func getExternalData()->Bool
     {
         //External Data
@@ -551,7 +551,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         {
             data.color = UIColor.colorFromHex(hexString: mainLineColor)
         }
-            
+        
         //Data Settings
         if showMarkers == "true"
         {
@@ -585,16 +585,16 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             let item = PNLineChartDataItem(y: yValue)
             return item!
         })
-            
+        
         chart.chartData = [data]
         chart.stroke()
-            
+        
         chartView?.addSubview(chart)
     }
     
     /**
-    *  Gets the amount of minutes since last glucose reading
-    */
+     *  Gets the amount of minutes since last glucose reading
+     */
     func getTotalMinutes (latestTimestamp:Int64) -> Int
     {
         let nowTimestamp = Date().toTimestamp()
@@ -612,7 +612,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         let differenceInMills = nowTimestamp! - latestTimestamp
         let hours = Int(Int(differenceInMills) / millisecondsInHour) % 24;
         let minutes = Int(Int(differenceInMills) / millisecondsInMinute) % 60
-
+        
         var output : String = ""
         var hoursFormatted : String
         var minutesFormatted : String = ""
@@ -688,7 +688,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         {
             if NSDictionary(dictionary: currentData).isEqual(to: externalData)
             {
-               completionHandler(NCUpdateResult.noData)
+                completionHandler(NCUpdateResult.noData)
             }
             else
             {
@@ -720,3 +720,4 @@ extension Date
         return Int64(self.timeIntervalSince1970 * 1000)
     }
 }
+
