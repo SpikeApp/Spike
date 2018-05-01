@@ -254,6 +254,9 @@ package ui.screens
 				
 				
 				//BG Value
+				if (glucoseList[1] == null)
+					return;
+				
 				latestGlucoseValue = glucoseList[1].calculatedValue;
 				
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;

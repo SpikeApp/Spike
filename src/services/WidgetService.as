@@ -159,6 +159,10 @@ package services
 				
 				if (now - timestamp <= widgetHistory)
 				{
+					var currentReading:BgReading = startupGlucoseReadingsList[i] as BgReading;
+					if (currentReading == null || currentReading.calculatedValue == 0 || currentReading.calibration == null)
+						continue;
+					
 					var glucoseValue:Number = Number(BgGraphBuilder.unitizedString((startupGlucoseReadingsList[i] as BgReading).calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 					{
@@ -327,7 +331,7 @@ package services
 			else
 				currentReading = BgReading.lastWithCalculatedValue();
 			
-			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0)
+			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || currentReading.calibration == null)
 				return;
 			
 			var latestGlucoseValue:Number = Number(BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));

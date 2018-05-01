@@ -203,6 +203,8 @@ package services
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		private static var awaitingConnect:Boolean = false;
 		private static var scanTimer:Timer;//only for peripheral types of type not always scan
+		private static var reconnectTimer:Timer;	
+
 		/**
 		 * is the peripheral connected or not, not applicable to MiaoMiao which is handled by BackgroundFetch ANE 
 		 */
@@ -222,6 +224,7 @@ package services
 		 * Therefore the amount of notifications will be reduced, this setting counts the number
 		 */
 		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5:int = 5;
+		private static var G5_RECONNECT_TIME_IN_SECONDS:int = 15
 				
 		//Dexcom G4 variables
 		private static var timeStampOfLastWarningUnknownG4Command:Number = 0;
@@ -487,16 +490,11 @@ package services
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("in bluetoothStatusIsOn, Trying to connect to known device.");
-			} else if (activeBluetoothPeripheral != null && BlueToothDevice.isBluKon()) {
+			} else if (activeBluetoothPeripheral != null && (BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5() || BlueToothDevice.isBluKon())) {
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
-				myTrace("in bluetoothStatusIsOn, Trying to connect to blukon.");
-			} else if (activeBluetoothPeripheral != null && BlueToothDevice.isBlueReader()) {
-				awaitingConnect = true;
-				connectionAttemptTimeStamp = (new Date()).valueOf();
-				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
-				myTrace("in bluetoothStatusIsOn, Trying to connect to bluereader.");
+				myTrace("in bluetoothStatusIsOn, Trying to connect.");
 			} else if (BlueToothDevice.isMiaoMiao()) {
 				if (BlueToothDevice.known()) {
 					myTrace("in bluetoothStatusIsOn, isMiaoMiao");
@@ -666,7 +664,7 @@ package services
 				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
 					myTrace("in central_peripheralConnectHandler, G5 but last reading was less than 1 minute ago, disconnecting");
 					if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
-						myTrace("in central_peripheralConnectHandler, doDisconnectMessageG5 failed");
+						myTrace("in central_peripheralConnectHandler, disconnect failed");
 					}
 					return;
 				}
@@ -703,7 +701,7 @@ package services
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
 			
-			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader())
+			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5())
 				activeBluetoothPeripheral = event.peripheral;
 
 			discoverServices();
@@ -804,12 +802,21 @@ package services
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
+			} else if (BlueToothDevice.isDexcomG5()) {
+				startReconnectTimer(G5_RECONNECT_TIME_IN_SECONDS);
 			} else {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				forgetActiveBluetoothPeripheral();
 				startRescan(null);
 			}
+		}
+		
+		private static function startReconnectTimer(timerInSeconds:int):void {
+			myTrace("in startReconnectTime with timer =" + timerInSeconds);
+			reconnectTimer = new Timer(timerInSeconds * 1000, 1);
+			reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
+			reconnectTimer.start();
 		}
 		
 		private static function tryReconnect(event:flash.events.Event = null):void {
@@ -1185,11 +1192,10 @@ package services
 			myTrace("in doDisconnectMessageG5");
 			if (activeBluetoothPeripheral != null) {
 				if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
-					myTrace("in doDisconnectMessageG5 failed");
+					myTrace("in doDisconnectMessageG5, failed");
 				}
 			}
-			forgetActiveBluetoothPeripheral();
-			myTrace("in doDisconnectMessageG5 finished");
+			myTrace("in doDisconnectMessageG5, finished");
 		}
 		
 		private static function doBatteryInfoRequestMessage(characteristic:Characteristic):void {

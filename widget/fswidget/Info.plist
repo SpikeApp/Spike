@@ -27,7 +27,5 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widget-extension</string>
 	</dict>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Access to your location is required to improve accuracy</string>
 </dict>
 </plist>
