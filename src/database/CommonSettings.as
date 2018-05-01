@@ -193,6 +193,9 @@
 		  */
 		 public static const COMMON_SETTING_BLUKON_BATTERY_LEVEL:int = 39;
 		 
+		 /**
+		 * For blucon only, sensor age check is done only every x hours (constant in Bluetoothservice)
+		  */
 		 public static const COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS:int = 40;
 		 
 		 /**
