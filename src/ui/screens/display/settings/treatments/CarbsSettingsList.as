@@ -70,6 +70,12 @@ package ui.screens.display.settings.treatments
 			/* Get Values From Database */
 			userProfiles = ProfileManager.profilesList;
 			currentProfile = userProfiles[0];
+			if (currentProfile == null || isNaN(currentProfile.carbsAbsorptionRate))
+			{
+				ProfileManager.createDefaultProfile();
+				userProfiles = ProfileManager.profilesList;
+				currentProfile = userProfiles[0];
+			}
 		}
 		
 		private function setupContent():void

@@ -99,28 +99,35 @@ package treatments
 				{
 					Trace.myTrace("ProfileManager.as", "Creating default profile...");
 					
-					//Create default profile
-					var defaultProfile:Profile = new Profile
-					(
-						UniqueId.createEventId(),
-						"00:00",
-						"Default",
-						"",
-						"",
-						30,
-						"",
-						"",
-						new Date().valueOf()
-					);
-					
-					//Push to memory
-					profilesList.push(defaultProfile);
-					profilesMap[defaultProfile.ID] = defaultProfile;
-					
-					//Save to Database
-					Database.insertProfileSynchronous(defaultProfile);
+					createDefaultProfile();
 				}
 			}
+		}
+		
+		public static function createDefaultProfile():void
+		{
+			profilesList.length = 0;
+			
+			//Create default profile
+			var defaultProfile:Profile = new Profile
+				(
+					UniqueId.createEventId(),
+					"00:00",
+					"Default",
+					"",
+					"",
+					30,
+					"",
+					"",
+					new Date().valueOf()
+				);
+			
+			//Push to memory
+			profilesList.push(defaultProfile);
+			profilesMap[defaultProfile.ID] = defaultProfile;
+			
+			//Save to Database
+			Database.insertProfileSynchronous(defaultProfile);
 		}
 		
 		public static function getInsulin(ID:String):Insulin
