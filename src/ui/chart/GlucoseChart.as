@@ -2284,11 +2284,17 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
+						/*timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
 						if (timeAgoValue != now)
 							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
 						else
-							glucoseTimeAgoPill.setValue("0m", now, oldColor);
+							glucoseTimeAgoPill.setValue("0m", now, oldColor);*/
+						
+						timeAgoValue = TimeSpan.formatHoursMinutesFromSecondsChart(differenceInSeconds, false, false);
+						if (timeAgoValue != now)
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
+						else
+							glucoseTimeAgoPill.setValue("0 min", now, oldColor);
 						
 						//Marker Slope
 						glucoseSlopePill.setValue(ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown'), "", oldColor);
@@ -2335,11 +2341,17 @@ package ui.chart
 							glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
+						/*timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
 						if (timeAgoValue != now)
 							glucoseTimeAgoPill.setValue(timeAgoValue, ago, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
 						else
-							glucoseTimeAgoPill.setValue("0m", now, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
+							glucoseTimeAgoPill.setValue("0m", now, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);*/
+						
+						timeAgoValue = TimeSpan.formatHoursMinutesFromSecondsChart(timestampDifferenceInSeconds, false, false);
+						if (timeAgoValue != now)
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
+						else
+							glucoseTimeAgoPill.setValue("0 min", now, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
 						
 						//Marker Slope
 						glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
@@ -2351,11 +2363,17 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
+						/*timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
 						if (timeAgoValue != now)
 							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
 						else
-							glucoseTimeAgoPill.setValue("0m", now, oldColor);
+							glucoseTimeAgoPill.setValue("0m", now, oldColor);*/
+						
+						timeAgoValue = TimeSpan.formatHoursMinutesFromSecondsChart(timestampDifferenceInSeconds, false, false);
+						if (timeAgoValue != now)
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
+						else
+							glucoseTimeAgoPill.setValue("0 min", now, oldColor);
 						
 						//Marker Slope
 						glucoseSlopePill.setValue("", "", oldColor)
@@ -2682,11 +2700,17 @@ package ui.chart
 						nowTimestamp = (new Date()).valueOf();
 						var lastTimestamp:Number = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp);
 						var differenceInSec:Number = (nowTimestamp - lastTimestamp) / 1000;
-						var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
+						/*var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
 						if (timeAgoValue != now)
 							glucoseTimeAgoPill.setValue(timeAgoValue, ago, chartFontColor);
 						else
-							glucoseTimeAgoPill.setValue("0m", now, chartFontColor);
+							glucoseTimeAgoPill.setValue("0m", now, chartFontColor);*/
+						
+						var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSecondsChart(differenceInSec, false, false);
+						if (timeAgoValue != now)
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, chartFontColor);
+						else
+							glucoseTimeAgoPill.setValue("0 min", now, chartFontColor);
 					}
 					
 					if (glucoseTimeAgoPill != null)

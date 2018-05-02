@@ -70,6 +70,22 @@ package utils
 			return(h==0?"":(h<10 && prefixInHours?"0"+h.toString()+"h":h.toString()+"h"))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+"m":m.toString()+"m");
 		}
 		
+		public static function formatHoursMinutesFromSecondsChart(secs:Number, prefixInHours:Boolean = true, prefixInMinutes:Boolean = true):String
+		{
+			var time:String;
+			var h:Number=Math.floor(secs/3600);
+			var m:Number=Math.floor((secs%3600)/60);
+			var s:Number=Math.floor((secs%3600)%60);
+			var agoSuffix:String = " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
+			
+			if (h == 0)
+				time = (h==0?"":(h<10 && prefixInHours?"0"+h.toString()+"h":h.toString()+"h"))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+" min":m.toString()+" min");
+			else 
+				time = (h==0?"":(h<10 && prefixInHours?"0"+h.toString()+"h":h.toString()+"h"))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+"m" + agoSuffix:m.toString()+"m"+ agoSuffix);
+			
+			return time;
+		}
+		
 		/**
 		 * Formats hours plus minutes into a reabale hours plus minutes string. Supports 24H/12H TimeFormat
 		 */

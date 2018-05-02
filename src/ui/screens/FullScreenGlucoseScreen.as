@@ -38,6 +38,8 @@ package ui.screens
 	import starling.events.TouchPhase;
 	import starling.utils.Align;
 	
+	import treatments.TreatmentsManager;
+	
 	import ui.AppInterface;
 	import ui.chart.GlucoseFactory;
 	import ui.chart.GraphLayoutFactory;
@@ -59,17 +61,16 @@ package ui.screens
 		
 		/* Display Objects */
 		private var glucoseDisplay:Label;
-		private var slopeArrowDisplay:Label;
 		private var timeAgoDisplay:Label;
 		private var slopeDisplay:Label;
 		private var container:LayoutGroup;
+		private var IOBCOBDisplay:Label;
 
 		/* Properties */
 		private var oldColor:uint = 0xababab;
 		private var newColor:uint = 0xEEEEEE;
 		private var glucoseFontSize:Number;
 		private var infoFontSize:Number;
-		private var deltaFontSize:Number;
 		private var glucoseList:Array;
 		private var latestGlucoseValue:Number;
 		private var latestGlucoseOutput:String;
@@ -86,7 +87,6 @@ package ui.screens
 		private var timeAgoOutput:String;
 		private var timeAgoColor:uint;
 		private var latestSlopeInfoColor:uint;
-		private var latestSlopeArrowColor:uint;
 		private var nowTimestamp:Number;
 		private var latestGlucoseProperties:Object;
 		private var latestGlucoseValueFormatted:Number;
@@ -141,8 +141,8 @@ package ui.screens
 			userBGFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_BG_FONT_SIZE));
 			userTimeAgoFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
 		
-			//Latest 2 BgReadings
-			glucoseList = BgReading.latest(2, BlueToothDevice.isFollower()).reverse();
+			//User's Readings
+			glucoseList = ModelLocator.bgReadings;
 			
 			//Calculate Values
 			calculateValues();
@@ -157,27 +157,32 @@ package ui.screens
 			/* Glucose Display Label */
 			glucoseDisplay = LayoutFactory.createLabel(latestGlucoseOutput, HorizontalAlign.CENTER, VerticalAlign.MIDDLE, glucoseFontSize, true);
 			glucoseDisplay.fontStyles.color = latestGlucoseColor;
+			glucoseDisplay.fontStyles.leading = getLeading(latestGlucoseSlopeArrow);
 			container.addChild(glucoseDisplay);
 			
 			/* TimeAgo Display Label */
-			timeAgoDisplay = GraphLayoutFactory.createChartStatusText(timeAgoOutput, timeAgoColor, infoFontSize, Align.LEFT, false, 300);
+			timeAgoDisplay = LayoutFactory.createLabel(timeAgoOutput, HorizontalAlign.LEFT, VerticalAlign.MIDDLE, infoFontSize, false, timeAgoColor);
+			timeAgoDisplay.width = 300;
 			timeAgoDisplay.y = 10;
 			timeAgoDisplay.x = 10;
 			timeAgoDisplay.validate();
 			addChild(timeAgoDisplay);
 			
 			/* Slope Display Label */
-			slopeDisplay = GraphLayoutFactory.createChartStatusText(latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit(), latestSlopeInfoColor, infoFontSize, Align.LEFT, false, 300);
-			slopeDisplay.x = timeAgoDisplay.x;
-			slopeDisplay.y = timeAgoDisplay.y + timeAgoDisplay.height + 3;
+			slopeDisplay = LayoutFactory.createLabel(latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit() : "", HorizontalAlign.RIGHT, VerticalAlign.MIDDLE, infoFontSize, false, latestSlopeInfoColor);
+			slopeDisplay.width = 300;
+			slopeDisplay.validate();
+			slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - 10;
+			slopeDisplay.y = timeAgoDisplay.y;
 			addChild(slopeDisplay);
 			
-			/* Slope Arrow Display Label */
-			slopeArrowDisplay = GraphLayoutFactory.createChartStatusText(latestGlucoseSlopeArrow, latestSlopeArrowColor, deltaFontSize, Align.RIGHT, true, 300);
-			slopeArrowDisplay.validate();
-			slopeArrowDisplay.y = 0;
-			slopeArrowDisplay.x = Constants.stageWidth - slopeArrowDisplay.width - 10;
-			addChild(slopeArrowDisplay);
+			/* IOB/COB Display Label */
+			var now:Number = new Date().valueOf();
+			IOBCOBDisplay = GraphLayoutFactory.createChartStatusText(timeAgoColor != 0 ? "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) : "", timeAgoColor, infoFontSize, Align.CENTER, false, Constants.stageWidth);
+			var IOBCOBLayoutData:AnchorLayoutData = new AnchorLayoutData();
+			IOBCOBLayoutData.bottom = 10;
+			IOBCOBDisplay.layoutData = IOBCOBLayoutData;
+			addChild(IOBCOBDisplay);
 			
 			/* Setup Timer */
 			updateTimer = new Timer(15 * 1000);
@@ -199,6 +204,7 @@ package ui.screens
 			
 			/* Glucose Display Label */
 			glucoseDisplay.text = latestGlucoseOutput;
+			glucoseDisplay.fontStyles.leading = getLeading(latestGlucoseSlopeArrow);
 			glucoseDisplay.fontStyles.color = latestGlucoseColor;
 			glucoseDisplay.fontStyles.size = glucoseFontSize;
 			
@@ -207,12 +213,13 @@ package ui.screens
 			timeAgoDisplay.fontStyles.color = timeAgoColor;
 			
 			/* Slope Display Label */
-			slopeDisplay.text = latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit();
+			slopeDisplay.text = latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit() : "";
 			slopeDisplay.fontStyles.color = latestSlopeInfoColor;
 			
-			/* Slope Arrow Display Label */
-			slopeArrowDisplay.text = latestGlucoseSlopeArrow;
-			slopeArrowDisplay.fontStyles.color = newColor;
+			/* IOB / COB Display Label */
+			var now:Number = new Date().valueOf();
+			IOBCOBDisplay.fontStyles.color = timeAgoColor;
+			IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
 		}
 		
 		private function calculateValues():void
@@ -226,7 +233,6 @@ package ui.screens
 				latestGlucoseOutput = "---";
 				latestGlucoseColor = oldColor;
 				latestGlucoseSlopeArrow = "";
-				latestSlopeArrowColor = oldColor;
 				latestGlucoseSlopeOutput = "";
 				latestSlopeInfoColor = oldColor;
 				timeAgoOutput = "";
@@ -235,13 +241,12 @@ package ui.screens
 			}
 			else if (glucoseList.length == 1)
 			{
-				if (glucoseList[0] == null)
+				if (glucoseList[glucoseList.length - 1] == null)
 				{
 					//NO BGREADINGS AVAILABLE
 					latestGlucoseOutput = "---";
 					latestGlucoseColor = oldColor;
 					latestGlucoseSlopeArrow = "";
-					latestSlopeArrowColor = oldColor;
 					latestGlucoseSlopeOutput = "";
 					latestSlopeInfoColor = oldColor;
 					timeAgoOutput = "";
@@ -250,14 +255,13 @@ package ui.screens
 				}
 				
 				//Timestamp
-				latestGlucoseTimestamp = glucoseList[0].timestamp;
-				
+				latestGlucoseTimestamp = glucoseList[glucoseList.length - 1].timestamp;
 				
 				//BG Value
-				if (glucoseList[1] == null)
+				if (glucoseList[glucoseList.length - 1] == null)
 					return;
 				
-				latestGlucoseValue = glucoseList[1].calculatedValue;
+				latestGlucoseValue = glucoseList[glucoseList.length - 1].calculatedValue;
 				
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
 				else if (latestGlucoseValue > 400) latestGlucoseValue = 400;
@@ -280,12 +284,11 @@ package ui.screens
 				
 				//Slope
 				latestGlucoseSlopeArrow = "";
-				latestSlopeArrowColor = oldColor;
 				latestGlucoseSlopeOutput = "";
 				latestSlopeInfoColor = oldColor;
 				
 				//Time Ago
-				timeAgoOutput = TimeSpan.formatHoursMinutesFromSeconds((nowTimestamp - latestGlucoseTimestamp)/1000);
+				timeAgoOutput = TimeSpan.formatHoursMinutesFromSecondsChart((nowTimestamp - latestGlucoseTimestamp)/1000, false, false);
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
 					timeAgoColor = newColor;
@@ -325,7 +328,6 @@ package ui.screens
 				}
 				else
 				{
-					
 					latestGlucoseOutput = "---";
 					latestGlucoseColor = oldColor;
 				}
@@ -343,7 +345,7 @@ package ui.screens
 							latestGlucoseValueFormatted
 						);
 					
-					if (latestGlucoseTimestamp - previousGlucoseTimestamp < TIME_6_MINUTES && nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+					if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
 						latestSlopeInfoColor = newColor;
 					else
 						latestSlopeInfoColor = oldColor;
@@ -354,21 +356,16 @@ package ui.screens
 					latestGlucoseSlopeArrow = "";
 				else if (latestGlucoseTimestamp - previousGlucoseTimestamp <= TIME_16_MINUTES)
 				{
-					if ((glucoseList[1] as BgReading).hideSlope)
+					if ((glucoseList[glucoseList.length - 1] as BgReading).hideSlope)
 						latestGlucoseSlopeArrow = "\u21C4";
 					else 
-						latestGlucoseSlopeArrow = (glucoseList[1] as BgReading).slopeArrow();
-						
-					if (latestGlucoseTimestamp - previousGlucoseTimestamp < TIME_6_MINUTES && nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
-						latestSlopeArrowColor = newColor;
-					else
-						latestSlopeArrowColor = oldColor;
+						latestGlucoseSlopeArrow = (glucoseList[glucoseList.length - 1] as BgReading).slopeArrow();
 				}
 				
 				/* TIMEAGO */
 				nowTimestamp = new Date().valueOf();
 				var differenceInSec:Number = (nowTimestamp - latestGlucoseTimestamp) / 1000;
-				timeAgoOutput = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
+				timeAgoOutput = TimeSpan.formatHoursMinutesFromSecondsChart(differenceInSec, false, false);
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				
 				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
@@ -376,6 +373,35 @@ package ui.screens
 				else
 					timeAgoColor = oldColor;
 			}
+			
+			latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+			
+			/* IOB / COB Display Label */
+			if (IOBCOBDisplay != null)
+			{
+				var now:Number = new Date().valueOf();
+				IOBCOBDisplay.fontStyles.color = timeAgoColor;
+				IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+			}
+		}
+		
+		private function getLeading(arrow:String):Number
+		{
+			var leading:Number = -150 / 2.5;
+			
+			if (arrow != null)
+			{
+				if (arrow.indexOf("\u21C4") != -1 || arrow.indexOf("\u2192") != -1) //FLAT
+					leading = -glucoseFontSize / 2;
+				else if (arrow.indexOf("\u2198") != -1) //45º Down
+					leading = -glucoseFontSize / 3;
+				else if (arrow.indexOf("\u2197") != -1) //45º Up
+					leading = -glucoseFontSize / 1.5;
+				else if (arrow.indexOf("\u2193") != -1 || arrow.indexOf("\u2191") != -1) //Down/Up
+					leading = -glucoseFontSize / 2.5;
+			}
+			
+			return leading;
 		}
 		
 		private function setupLayout():void
@@ -404,42 +430,44 @@ package ui.screens
 		
 		private function calculateFontSize ():void
 		{
+			if (latestGlucoseOutput == null)
+				return;
+			
+			var formattedGlucoseOutput:String = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n"));
+			
 			if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 			{
-				if(latestGlucoseOutput.length == 2) glucoseFontSize = 260;	
-				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 175;
-				else if(latestGlucoseOutput.length == 4) glucoseFontSize = 150;
-				else if(latestGlucoseOutput.length == 5) glucoseFontSize = 120;
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 160;	
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 150;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 120;
 			}
 			else if(Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
 			{
-				if(latestGlucoseOutput.length == 2) glucoseFontSize = 310;	
-				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 210;
-				else if(latestGlucoseOutput.length == 4) glucoseFontSize = 175;
-				else if(latestGlucoseOutput.length == 5) glucoseFontSize = 145;
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 210;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 175;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 145;
 				
 			}
 			else if(Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 			{
-				if(latestGlucoseOutput.length == 2) glucoseFontSize = 300;	
-				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 200;
-				else if(latestGlucoseOutput.length == 4) glucoseFontSize = 170;
-				else if(latestGlucoseOutput.length == 5) glucoseFontSize = 135;
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 200;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 170;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 135;
 				
 			}
 			else if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
-				if(latestGlucoseOutput.length == 2) glucoseFontSize = 230;	
-				else if(latestGlucoseOutput.length == 3) glucoseFontSize = 155;
-				else if(latestGlucoseOutput.length == 4) glucoseFontSize = 135;
-				else if(latestGlucoseOutput.length == 5) glucoseFontSize = 105;
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 155;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 135;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 105;
 				
 			}
 			
+			if (isNaN(glucoseFontSize))
+				glucoseFontSize = 130;
+			
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
-			//deltaFontSize = 60 * deviceFontMultiplier * userBGFontMultiplier;
-			deltaFontSize = 60;
-			infoFontSize = 18 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 		}
 		
 		/**
@@ -457,23 +485,6 @@ package ui.screens
 			//If the latest BGReading is null, stop execution
 			if (latestBgReading == null)
 				return;
-			
-			//Add BGReading to the glucoseList array
-			if (glucoseList == null || glucoseList.length == 0)
-				glucoseList = [latestBgReading];
-			else
-			{
-				if (latestBgReading.timestamp < latestGlucoseTimestamp)
-					return;
-				
-				if (glucoseList != null && glucoseList.length == 1)
-					glucoseList.push(latestBgReading);
-				else if (glucoseList != null && glucoseList.length > 1)
-				{
-					glucoseList.shift();
-					glucoseList.push(latestBgReading);
-				}
-			}
 			
 			//Reset Update Timer
 			if (updateTimer == null)
@@ -500,7 +511,7 @@ package ui.screens
 				/* Time Ago */
 				var nowTimestamp:Number = new Date().valueOf();
 				var differenceInSec:Number = (nowTimestamp - latestGlucoseTimestamp) / 1000;
-				timeAgoOutput = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
+				timeAgoOutput = TimeSpan.formatHoursMinutesFromSecondsChart(differenceInSec, false, false);
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				timeAgoDisplay.text = timeAgoOutput;
 				
@@ -520,18 +531,28 @@ package ui.screens
 					
 					/* Slope Display Label */
 					latestGlucoseSlopeOutput = "";
-					slopeDisplay.text = latestGlucoseSlopeOutput  + " " + GlucoseHelper.getGlucoseUnit();
+					slopeDisplay.text = latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput  + " " + GlucoseHelper.getGlucoseUnit() : "";
 					
 					//Slope Arrow
 					latestGlucoseSlopeArrow = "";
-					slopeArrowDisplay.text = latestGlucoseSlopeArrow;
+					
+					glucoseDisplay.fontStyles.leading = getLeading(latestGlucoseSlopeArrow);
 				}
 				else if ( nowTimestamp - latestGlucoseTimestamp > TIME_6_MINUTES )
 				{
 					glucoseDisplay.fontStyles.color = oldColor;
 					slopeDisplay.fontStyles.color = oldColor;
-					slopeArrowDisplay.fontStyles.color = oldColor;
 				}
+				
+				latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+			}
+			
+			/* IOB / COB Display Label */
+			if (IOBCOBDisplay != null)
+			{
+				var now:Number = new Date().valueOf();
+				IOBCOBDisplay.fontStyles.color = timeAgoColor;
+				IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
 			}
 		}
 		
@@ -606,16 +627,16 @@ package ui.screens
 				slopeDisplay = null;
 			}
 			
-			if(slopeArrowDisplay != null)
-			{
-				slopeArrowDisplay.dispose();
-				slopeArrowDisplay = null;
-			}
-			
 			if(timeAgoDisplay != null)
 			{
 				timeAgoDisplay.dispose();
 				timeAgoDisplay = null;
+			}
+			
+			if (IOBCOBDisplay != null)
+			{
+				IOBCOBDisplay.dispose();
+				IOBCOBDisplay = null;
 			}
 			
 			if(container != null)
