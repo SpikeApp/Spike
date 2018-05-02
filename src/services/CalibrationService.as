@@ -602,12 +602,38 @@ package services
 					if (Sensor.getActiveSensor() != null) {
 						//start sensor without user intervention 
 						Sensor.stopSensor();
+						giveSensorWarning("libre_14_dot_5_days_warning");
+					}
+				} else if (currentSensorAgeInMinutes > 14 * 24 * 60 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN) == "false") {
+					myTrace("in commonSettingChanged, sensorage more than 14 * 24 * 60 minutes, give warning that sensor will expiry in half a day ");
+					if (Sensor.getActiveSensor() != null) {
+						giveSensorWarning("libre_14days_warning");
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN,"true");
 					}
 				} else if (currentSensorAgeInMinutes > 0 && Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao() && BlueToothDevice.knowsFSLAge()) {
 					//not doing this for miaomiao because sensorstart for miaomiao is already handled in LibreAlarmReceiver
 					myTrace("in commonSettingChanged, sensorage changed to smaller value, starting sensor");
 					Sensor.startSensor(((new Date()).valueOf() - currentSensorAgeInMinutes * 60 * 1000));
 				}
+			}
+		}
+		
+		private static function giveSensorWarning(warning:String):void {
+			if (BackgroundFetch.appIsInForeground()) {
+				AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"),
+						ModelLocator.resourceManagerInstance.getString("transmitterservice",warning)
+					);
+			} else {
+				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+					.setId(NotificationService.ID_FOR_LIBRE_SENSOR_14DAYS)
+					.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"))
+					.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"))
+					.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice",warning))
+					.enableVibration(false)
+					.setSound("");
+				Notifications.service.notify(notificationBuilder.build());
 			}
 		}
 
