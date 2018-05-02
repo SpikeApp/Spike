@@ -393,6 +393,11 @@
 		  */
 		 public static const COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED:int = 138;
 
+		 /**
+		  * warning will be given when Libresensor is 14.5 days old, for those type of transmitters that give the sensorage 
+		  */
+		 public static const COMMON_SETTING_LIBRE_SENSOR_14_DOT_5_DAYS_WARNING_GIVEN:int = 139;
+		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
 			 "0",//COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE
@@ -530,9 +535,10 @@
 			 "false",//COMMON_SETTING_CHART_ROUND_MGDL_ON
 			 "0",//COMMON_SETTING_BLUEREADER_FULL_BATTERY
 			 "0",//COMMON_SETTING_XBRIDGER_BATTERY_LEVEL
-			 "false",//COMMON_SETTING_MIAOMIAO_EXPIRY_WARNING_GIVEN
+			 "false",//COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN
 			 "false",//COMMON_SETTTING_LIBRE_USE_DEFAULT_CALIBRATION
-			 "false"//COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED
+			 "false",//COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED
+			 "false"//COMMON_SETTING_LIBRE_SENSOR_14_DOT_5_DAYS_WARNING_GIVEN
 		 ];
 
 		 public function CommonSettings()
