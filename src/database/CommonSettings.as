@@ -182,7 +182,9 @@
 		  */
 		 public static const COMMON_SETTING_BLUEREADER_BATTERY_LEVEL:int = 37;
 		 /**
-		  * For any device that reads Freestyle (bluerader, blukon, transmiter pl, miaomiao)<br>
+		  * For any device that reads Freestyle and that gets the sensorage from the Freestyle sensor<br>
+		  * This is not the case for Bluereader, bluereader doesn't read the sensorage from the sensor, COMMON_SETTING_FSL_SENSOR_AGE will remain 0<br>
+		  * <br>
 		  * value 0 means level not known<br>
 		  * time in minutes<br>
 		  */
