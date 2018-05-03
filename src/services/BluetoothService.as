@@ -55,6 +55,7 @@ package services
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
+	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	
@@ -1362,6 +1363,11 @@ package services
 				FSLSensorAGe = sensorAge(buffer);
 				
 				if ((FSLSensorAGe > 0) && (FSLSensorAGe < 200000)) {
+					if (FSLSensorAGe < new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE))) {
+						myTrace("in processBLUKONTransmitterData, new sensor detected");
+						var event:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED);
+						_instance.dispatchEvent(event);
+					}
 				} else {
 					myTrace("in processBLUKONTransmitterData, setting sensor age to Number.NAN");
 					FSLSensorAGe = Number.NaN;
@@ -1718,6 +1724,12 @@ package services
 				}
 			}
 			previousSensorAgeValue_Transmiter_PL = sensorAge;
+
+			if (sensorAge < new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE))) {
+				myTrace("in processTRANSMITER_PLTransmitterData, new sensor detected");
+				var event:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED);
+				_instance.dispatchEvent(event);
+			}
 
 			myTrace("in processTRANSMITER_PLTransmitterData, dispatching transmitter data");
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);

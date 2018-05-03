@@ -80,6 +80,11 @@ package events
 		 * Dispatched when successfully subscribed to characteristics - this is the final step in the process of connecting to a device<br> 
 		 */
 		public static const BLUETOOTH_DEVICE_CONNECTION_COMPLETED:String = "BluetoothDeviceConnectionCompleted";
+		
+		/**
+		 * for FSL, new sensor has been detected
+		 */
+		public static const SENSOR_CHANGED_DETECTED:String = "SensorChangedDetected";
 
 		public var data:*;
 
