@@ -7,10 +7,11 @@ ENHANCEMENT: Default insulin will now show as first option on the "Add Treatment
 ENHANCEMENT: Default calibration alarm for new users. 1 request every 24h from 8AM till 11PM. (Johan)
 ENHANCEMENT: Revamped Fullscreen View layout. Now includes IOB/COB, bigger fonts and bigger delta arrow.
 ENHANCEMENT: New formatting for time ago label on the chart and sensor age on the Sensor Screen.
+ENHANCEMENT: Internal HTTP Server now comes enabled by default for new users.
 FIX: BG Check treatments for mmol/L users were being uploaded to Nightscout as mg/dL. It's fixed now.
 FIX: Old versions of Nightscout's mongo database return the user's profile data in a different format and would make Spike not display treatments. Spike now supports both the old and new format and treatments should display correctly.
 FIX: COB now displays correctly when not using the default carb absorption rate of 30g per hour.
-FIX: Sometimes the alarm snoozer popup would crash Spike after unlocking the device to perform a snooze. It's fixed now. 
+FIX: Sometimes the alarm snoozer popup would crash Spike after unlocking the device to perform a snooze.
 FIX: Full screen Today Widget was not displaying correctly on small screen size devices.
 FIX: Layout fixes for the chart screen, especially when treatments are disabled.
 FIX: Readings without calibration are ignored and not added to the Today Widget.
