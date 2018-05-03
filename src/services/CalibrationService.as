@@ -4,6 +4,7 @@ package services
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -14,6 +15,7 @@ package services
 	import database.CommonSettings;
 	import database.Sensor;
 	
+	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
@@ -78,6 +80,7 @@ package services
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED, receivedSensorChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 			myTrace("finished init");
 		}
@@ -634,6 +637,15 @@ package services
 					.enableVibration(false)
 					.setSound("");
 				Notifications.service.notify(notificationBuilder.build());
+			}
+		}
+		
+		private static function receivedSensorChanged(be:BlueToothServiceEvent):void {
+			if (Sensor.getActiveSensor() != null) {
+				myTrace("in receivedSensorChanged, Stopping the sensor"); 
+				Sensor.stopSensor();
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
+				giveSensorWarning("new_fsl_sensor_detected");
 			}
 		}
 
