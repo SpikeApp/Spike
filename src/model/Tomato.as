@@ -12,32 +12,13 @@ package model
 	import database.CommonSettings;
 	import database.Sensor;
 	
-	import services.TransmitterService;
-	
 	import utils.Crc;
 	import utils.Trace;
 	import utils.libre.LibreAlarmReceiver;
 	
 	public class Tomato extends EventDispatcher
 	{
-		/**
-		 * possible status miaomiao 
-		 */
-		private static const TOMATO_STATES_REQUEST_DATA_SENT:String = "REQUEST_DATA_SENT";
-		/**
-		 * possible status miaomiao 
-		 */
-		private static const TOMATO_STATES_RECIEVING_DATA:String = "RECIEVING_DATA";
-		public static const MINIMUM_TIME_BETWEEN_TWO_MIAO_MIAO_READINGS_IN_SECONDS:int = 10;
-		public static const MAXIMUM_AMOUNT_OF_PACKETS_NEEDED:int = 19;
-		/**
-		 * miaomiao status, one of  TOMATO_STATES_REQUEST_DATA_SENT or TOMATO_STATES_RECIEVING_DATA or empty string
-		 */
-		private static var s_state:String;
-		private static var TOMATO_HEADER_LENGTH:int = 18;
-		//other Tomato Variables
-		private static var s_lastReceiveTimestamp:Number = 0;
-		
+		private static var TOMATO_HEADER_LENGTH:int = 18;		
 		private static var resendPakcetTimer:Timer;
 		private static var resendPacketCounter:int = 0;
 		private static const MAX_PACKET_RESEND_REQUESTS:int = 3;

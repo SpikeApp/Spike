@@ -3,10 +3,6 @@
  */
 package utils.libre
 {
-	import com.distriqt.extension.notifications.Notifications;
-	import com.distriqt.extension.notifications.builders.NotificationBuilder;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import flash.events.EventDispatcher;
 	import flash.utils.ByteArray;
 	
@@ -16,10 +12,7 @@ package utils.libre
 	
 	import model.ModelLocator;
 	
-	import services.NotificationService;
 	import services.TransmitterService;
-	
-	import ui.popups.AlertManager;
 	
 	import utils.Trace;
 	
@@ -66,11 +59,6 @@ package utils.libre
 						myTrace("in CalculateFromDataTransferObject, Sensor age has gone backwards!!! " + sensorAge);
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, thisSensorAge.toString());
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
-					}
-					
-					//if sensorage has reached 14 days give warning to user
-					if ((sensorAge > 14 * 24 * 60) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN) == "false")) {
-						giveSensor14DaysWarning();
 					}
 					
 					if (Sensor.getActiveSensor() == null) {
@@ -222,26 +210,6 @@ package utils.libre
 		private static function getByteAt(buffer:ByteArray, position:int):int {
 			buffer.position = position;
 			return buffer.readByte();
-		}
-		
-		private static function giveSensor14DaysWarning():void {
-			if (BackgroundFetch.appIsInForeground()) {
-				AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"),
-						ModelLocator.resourceManagerInstance.getString("transmitterservice","libre_14days_warning")
-					);
-			} else {
-				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
-					.setId(NotificationService.ID_FOR_LIBRE_SENSOR_14DAYS)
-					.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"))
-					.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"))
-					.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","libre_14days_warning"))
-					.enableVibration(false)
-					.setSound("");
-				Notifications.service.notify(notificationBuilder.build());
-			}
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN,"true");
 		}
 		
 		/**
