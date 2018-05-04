@@ -12,6 +12,7 @@ package ui.chart
 	
 	import model.ModelLocator;
 	
+	import starling.display.DisplayObject;
 	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
@@ -320,13 +321,14 @@ package ui.chart
 			 */
 			
 			if (pieGraphicContainer != null)
-				pieContainer.removeChild(pieGraphicContainer);
+				pieGraphicContainer.removeFromParent(true);
 			
 			pieGraphicContainer = new Sprite();
 			
 			//LOW PORTION
 			if (!dummyModeActive)
 			{
+				if (lowNGon != null) lowNGon.removeFromParent(true);
 				lowNGon = new NGon(pieRadius, numSides, 0, 0, lowAngle);
 				lowNGon.color = lowColor;
 				lowNGon.x = lowNGon.y = pieRadius;
@@ -335,12 +337,12 @@ package ui.chart
 			}
 			//Legend
 			lowSection.message.text = !dummyModeActive ? percentageLowRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				
 			
 			//IN RANGE PORTION
 			//Graphics
 			if (!dummyModeActive)
 			{
+				if (inRangeNGon != null) inRangeNGon.removeFromParent(true);
 				inRangeNGon = new NGon(pieRadius, numSides, 0, lowAngle, lowAngle + inRangeAngle);
 				inRangeNGon.color = inRangeColor;
 				inRangeNGon.x = inRangeNGon.y = pieRadius;
@@ -354,6 +356,7 @@ package ui.chart
 			//Graphics
 			if (!dummyModeActive)
 			{
+				if (highNGon != null) highNGon.removeFromParent(true);
 				highNGon = new NGon(pieRadius, numSides, 0, lowAngle + inRangeAngle, lowAngle + inRangeAngle + highAngle);
 				highNGon.color = highColor;
 				highNGon.x = highNGon.y = pieRadius;
@@ -366,18 +369,21 @@ package ui.chart
 			//DUMMY NGON
 			if (dummyModeActive)
 			{
+				if (innerNGon != null) innerNGon.removeFromParent(true);
 				innerNGon = new NGon(pieRadius, numSides, 0, 0, 360);
 				innerNGon.color = lowColor;
 				innerNGon.x = innerNGon.y = pieRadius;
 				nGons.push(innerNGon);
 				pieGraphicContainer.addChild(innerNGon);
 				
+				if (middleNGon != null) middleNGon.removeFromParent(true);
 				middleNGon = new NGon(pieRadius, numSides, pieRadius/3, 0, 360);
 				middleNGon.color = inRangeColor;
 				middleNGon.x = middleNGon.y = pieRadius;
 				nGons.push(middleNGon);
 				pieGraphicContainer.addChild(middleNGon);
 				
+				if (outterNGon != null) outterNGon.removeFromParent(true);
 				outterNGon = new NGon(pieRadius, numSides, (pieRadius/3) * 2, 0, 360);
 				outterNGon.color = highColor;
 				outterNGon.x = outterNGon.y = pieRadius;
@@ -482,6 +488,18 @@ package ui.chart
 			removeEventListener(Event.ENTER_FRAME, onPieHold);
 			
 			/* Dispose Display Objects */
+			for (var i:int = 0; i < nGons.length; i++) 
+			{
+				var nGon:DisplayObject = nGons[i] as DisplayObject;
+				if (nGon != null)
+				{
+					nGon.dispose();
+					nGon = null;
+				}
+			}
+			nGons.length = 0;
+			nGons = null;
+			
 			if (lowSection != null)
 			{
 				lowSection.removeFromParent();

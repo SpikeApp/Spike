@@ -56,15 +56,13 @@ package ui.chart
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;
 			addChild(stroke);
-			
-			
 		}	
 		
 		override public function updateMarker(treatment:Treatment):void
 		{
 			this.treatment = treatment;
 			
-			removeChildren(0, 10, true);
+			removeChildren(0, -1, true);
 			
 			draw();
 		}

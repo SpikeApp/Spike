@@ -100,7 +100,7 @@ package ui.chart
 		{
 			this.treatment = treatment;
 			
-			removeChildren(0, 10, true);
+			removeChildren(0, -1, true);
 			
 			draw();
 		}

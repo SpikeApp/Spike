@@ -267,6 +267,11 @@ package  ui.chart
 			if (palette != null)
 			{
 				palette.removeEventListener(TouchEvent.TOUCH, onTouchPalette);
+				if (palette.texture != null)
+				{
+					palette.texture.dispose();
+					palette.texture = null;
+				}
 				palette.dispose();
 				palette = null;
 			}
@@ -283,6 +288,9 @@ package  ui.chart
 				baseButton.dispose();
 				baseButton = null;
 			}
+			
+			if (bitmap != null)
+				bitmap = null;
 			
 			System.pauseForGCIfCollectionImminent(0);
 			

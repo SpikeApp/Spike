@@ -123,7 +123,7 @@ package ui.chart
 		
 		public function updateColor():void
 		{
-			removeChild(glucoseMarker);
+			glucoseMarker.removeFromParent(true);
 			
 			glucoseMarker = new Canvas();
 			glucoseMarker.beginFill(color);

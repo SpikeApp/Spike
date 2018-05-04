@@ -19,6 +19,7 @@ package ui.screens
 	import starling.display.Image;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.textures.Texture;
 	
 	import ui.AppInterface;
 	import ui.screens.display.extraoptions.ExtraOptionsList;
@@ -38,6 +39,12 @@ package ui.screens
 		private var extraOptionsList:List;
 		private var iphone4DummyMarker:Sprite;
 		private var treatmentsEnabled:Boolean;
+		private var menuButtonTexture:Texture;
+		private var menuButtonImage:Image;
+		private var moreButtonImage:Image;
+		private var moreButtonTexture:Texture;
+		private var treatmentsTexture:Texture;
+		private var treatmentsImage:Image;
 		
 		public function BaseScreen()
 		{
@@ -66,8 +73,10 @@ package ui.screens
 		private function setupContent():void
 		{
 			/* Add default menu button to the header */
+			menuButtonTexture = MaterialDeepGreyAmberMobileThemeIcons.menuTexture;
+			menuButtonImage = new Image(menuButtonTexture);
 			menuButton = new Button();
-			menuButton.defaultIcon = new Image( MaterialDeepGreyAmberMobileThemeIcons.menuTexture );
+			menuButton.defaultIcon = menuButtonImage;
 			menuButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
 			menuButton.addEventListener( Event.TRIGGERED, onMenuButtonTriggered );
 			headerProperties.leftItems = new <DisplayObject>[
@@ -78,15 +87,19 @@ package ui.screens
 			
 			
 			/* Add more options to the header */
+			moreButtonTexture = MaterialDeepGreyAmberMobileThemeIcons.moreVerticalTexture;
+			moreButtonImage = new Image(moreButtonTexture);
 			moreButton = new Button();
-			moreButton.defaultIcon = new Image( MaterialDeepGreyAmberMobileThemeIcons.moreVerticalTexture );
+			moreButton.defaultIcon = moreButtonImage;
 			moreButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
 			moreButton.addEventListener( Event.TRIGGERED, onMoreButtonTriggered );
 			moreButton.validate();
 			
 			/* Add treatments to the header */
+			treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.addTexture;
+			treatmentsImage = new Image(treatmentsTexture);
 			treatmentsButton = new Button();
-			treatmentsButton.defaultIcon = new Image( MaterialDeepGreyAmberMobileThemeIcons.addTexture );
+			treatmentsButton.defaultIcon = treatmentsImage;
 			treatmentsButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
 			treatmentsButton.addEventListener( Event.TRIGGERED, onTreatmentButtonTriggered );
 			treatmentsButton.validate();
@@ -140,6 +153,8 @@ package ui.screens
 		private function onCloseCallOut(e:Event):void
 		{
 			callout.close(true);
+			callout.dispose();
+			callout = null;
 		}
 		
 		private function toggleMenu():void 
@@ -153,6 +168,48 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
+			if (callout != null)
+			{
+				callout.dispose();
+				callout = null;
+			}
+			
+			if (menuButtonTexture != null)
+			{
+				menuButtonTexture.dispose();
+				menuButtonTexture = null;
+			}
+			
+			if (menuButtonImage != null)
+			{
+				menuButtonImage.dispose();
+				menuButtonImage = null;
+			}
+			
+			if (moreButtonTexture != null)
+			{
+				moreButtonTexture.dispose();
+				moreButtonTexture = null;
+			}
+			
+			if (moreButtonImage != null)
+			{
+				moreButtonImage.dispose();
+				moreButtonImage = null;
+			}
+			
+			if (treatmentsTexture != null)
+			{
+				treatmentsTexture.dispose();
+				treatmentsTexture = null;
+			}
+			
+			if (treatmentsImage != null)
+			{
+				treatmentsImage.dispose();
+				treatmentsImage = null;
+			}
+			
 			if (menuButton != null)
 			{
 				menuButton.removeEventListener( Event.TRIGGERED, onMenuButtonTriggered );

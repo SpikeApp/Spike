@@ -41,7 +41,6 @@ package ui.screens.display.extraoptions
 	
 	import utils.Constants;
 	import utils.Trace;
-	import utils.libre.LibreAlarmReceiver;
 	
 	[ResourceBundle("chartscreen")]
 

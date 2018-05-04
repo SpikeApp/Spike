@@ -11,6 +11,7 @@ package ui.screens
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.textures.Texture;
 	
 	import ui.AppInterface;
 	import ui.screens.display.readings.ReadingsManagementList;
@@ -23,6 +24,7 @@ package ui.screens
 	{
 		/* Display Objects */
 		private var readingsSection:ReadingsManagementList;
+		private var iconTexture:Texture;
 		
 		public function GlucoseManagementScreen() 
 		{
@@ -47,7 +49,8 @@ package ui.screens
 			title = ModelLocator.resourceManagerInstance.getString('glucosemanagementscreen','screen_title');
 			
 			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.readingsTexture);
+			iconTexture = MaterialDeepGreyAmberMobileThemeIcons.readingsTexture;
+			icon = getScreenIcon(iconTexture);
 			iconContainer = new <DisplayObject>[icon];
 			headerProperties.rightItems = iconContainer;
 		}
@@ -84,6 +87,18 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
+			if (iconTexture != null)
+			{
+				iconTexture.dispose();
+				iconTexture = null;
+			}
+			
+			if (icon != null)
+			{
+				icon.dispose();
+				icon = null;
+			}
+			
 			if (readingsSection != null)
 			{
 				readingsSection.dispose();
