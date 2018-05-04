@@ -1033,6 +1033,7 @@ package ui.chart
 				var treatmentLayout:VerticalLayout = new VerticalLayout();
 				treatmentLayout.horizontalAlign = HorizontalAlign.CENTER;
 				treatmentLayout.gap = 10;
+				if (treatmentContainer != null) treatmentContainer.removeFromParent(true);
 				treatmentContainer = new LayoutGroup();
 				treatmentContainer.layout = treatmentLayout;
 				
@@ -1073,12 +1074,14 @@ package ui.chart
 				
 				if (treatmentValue != "")
 				{
+					if (treatmentValueLabel != null) treatmentValueLabel.removeFromParent(true);
 					treatmentValueLabel = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
 					treatmentValueLabel.paddingBottom = 12;
 					treatmentContainer.addChild(treatmentValueLabel);
 				}
 				
 				//Treatment Time
+				if (treatmentTimeSpinner != null) treatmentTimeSpinner.removeFromParent(true);
 				treatmentTimeSpinner = new DateTimeSpinner();
 				treatmentTimeSpinner.editingMode = DateTimeMode.TIME;
 				treatmentTimeSpinner.value = new Date(treatment.treatment.timestamp);
@@ -1086,6 +1089,7 @@ package ui.chart
 				treatmentTimeSpinner.paddingTop = treatmentTimeSpinner.paddingBottom = 0;
 				if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 					treatmentTimeSpinner.isEnabled = false;
+				if (timeSpacer != null) timeSpacer.removeFromParent(true);
 				timeSpacer = new Sprite();
 				timeSpacer.height = 10;
 				treatmentContainer.addChild(treatmentTimeSpinner);
@@ -1096,6 +1100,7 @@ package ui.chart
 					
 				if (treatmentNotes != "" && treatmentNotes != ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
 				{
+					if (treatmentNoteLabel != null) treatmentNoteLabel.removeFromParent(true);
 					treatmentNoteLabel = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
 					treatmentNoteLabel.wordWrap = true;
 					treatmentNoteLabel.maxWidth = 150;
@@ -1107,8 +1112,11 @@ package ui.chart
 				{
 					if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 					{
+						if (moveBtn != null) moveBtn.removeFromParent(true);
+						if (deleteBtn != null) deleteBtn.removeFromParent(true);
 						var actionsLayout:HorizontalLayout = new HorizontalLayout();
 						actionsLayout.gap = 5;
+						if (actionsContainer != null) actionsContainer.removeFromParent(true);
 						actionsContainer = new LayoutGroup();
 						actionsContainer.layout = actionsLayout;
 							
@@ -1127,6 +1135,7 @@ package ui.chart
 					}
 				}
 				
+				if (treatmentCallout != null) treatmentCallout.dispose();
 				treatmentCallout = Callout.show(treatmentContainer, treatment, null, true);
 				
 				function onDelete(e:starling.events.Event):void
@@ -1816,12 +1825,15 @@ package ui.chart
 			//Get previous chart width for later use in case of less than 24H data
 			var previousChartWidth:Number = mainChart.width;
 			
+			//Destroy all previous lines
+			if (_displayLine)
+				destroyAllLines(true);
+			
 			//Redraw main chart and scroller chart
 			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, numAddedReadings);
 			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, numAddedReadings);
 			
 			//Recalculate first and last timestamp
-			
 			if(mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
 				firstTimestamp = Number(mainChartGlucoseMarkersList[0].timestamp);
@@ -2119,7 +2131,7 @@ package ui.chart
 			}
 			//Chart Line
 			if(_displayLine)
-			{
+			{	
 				//Remove touch events from line
 				line.touchable = false;
 				
