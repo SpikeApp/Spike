@@ -13,6 +13,9 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
+	import stats.BasicUserStats;
+	import stats.StatsManager;
+	
 	import treatments.TreatmentsManager;
 	
 	import ui.chart.GlucoseFactory;
@@ -262,9 +265,9 @@ package network.httpserver.API
 									readingObject.status_one = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + " | COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
 									if (!lightMode)
 									{
-										var userStats:Object = getUserStats();
-										readingObject.status_two = "L: " + userStats.lowPercentage + " | " + "R: " + userStats.inRangePercentage + " | " + "H: " + userStats.highPercentage;
-										readingObject.status_three = "AVG: " + userStats.averageGlucose + " | " + "A1C: " + userStats.a1c;
+										var userStats:BasicUserStats = StatsManager.getBasicUserStats();
+										readingObject.status_two = "L: " + userStats.percentageLowRounded + "% | " + "R: " + userStats.percentageInRangeRounded + "% | " + "H: " + userStats.percentageHighRounded + "%";
+										readingObject.status_three = "AVG: " + userStats.averageGlucose + GlucoseHelper.getGlucoseUnit() + " | " + "A1C: " + userStats.a1c + "%";
 									}
 								}
 								readingsCollection.push(readingObject);
@@ -287,109 +290,6 @@ package network.httpserver.API
 			}
 			
 			return responseSuccess(response);
-		}
-		
-		private function getUserStats():Object
-		{
-			/**
-			 * VARIABLES
-			 */
-			var high:int = 0;
-			var percentageHigh:Number;
-			var percentageHighRounded:Number;
-			var inRange:int = 0;
-			var percentageInRange:Number;
-			var percentageInRangeRounded:Number
-			var low:int = 0;
-			var percentageLow:Number;
-			var percentageLowRounded:Number;
-			var dataLength:int = ModelLocator.bgReadings.length;
-			var realReadingsNumber:int = 0;
-			var totalGlucose:Number = 0;
-			var dummyModeActive:Boolean = false;
-			var lowTreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
-			var highTreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
-			
-			/**
-			 * GLUCOSE DISTRIBUTION CALCULATION
-			 */
-			var glucoseValue:Number;
-			var i:int;
-			var nowTimestamp:Number = (new Date()).valueOf();
-			for (i = 0; i < dataLength; i++) 
-			{
-				var bgReading:BgReading = ModelLocator.bgReadings[i];
-				
-				if (nowTimestamp - bgReading.timestamp > TIME_24H - TIME_30SEC || (bgReading.calibration == null && bgReading.calculatedValue == 0))
-					continue;
-				
-				glucoseValue = Number(bgReading.calculatedValue);
-				if(glucoseValue >= highTreshold)
-					high += 1;
-				else if (glucoseValue > lowTreshold && glucoseValue < highTreshold)
-					inRange += 1;
-				else if (glucoseValue <= lowTreshold)
-					low += 1;
-				
-				totalGlucose += glucoseValue;
-				
-				realReadingsNumber++;
-			}
-			
-			//If there's no good readings then activate dummy mode.
-			if (realReadingsNumber == 0)
-				dummyModeActive = true;
-			
-			//Glucose Distribution Percentages
-			percentageHigh = (high * 100) / realReadingsNumber;
-			percentageHighRounded = (( percentageHigh * 10 + 0.5)  >> 0) / 10;
-			
-			percentageInRange = (inRange * 100) / realReadingsNumber;
-			percentageInRangeRounded = (( percentageInRange * 10 + 0.5)  >> 0) / 10;
-			
-			var preLow:Number = Math.round((low * 100) / realReadingsNumber) * 10 / 10;
-			if ( preLow != 0 && !isNaN(preLow))
-			{
-				percentageLow = 100 - percentageInRange - percentageHigh;
-				percentageLowRounded = Math.round ((100 - percentageInRangeRounded - percentageHighRounded) * 10) / 10;
-			}
-			else
-			{
-				percentageLow = 0;
-				percentageLowRounded = 0;
-			}
-			
-			//Calculate Average Glucose & A1C
-			var averageGlucose:Number = (( (totalGlucose / realReadingsNumber) * 10 + 0.5)  >> 0) / 10;
-			var averageGlucoseValue:Number = averageGlucose;
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
-				averageGlucoseValue = Math.round(((BgReading.mgdlToMmol((averageGlucoseValue))) * 10)) / 10;
-			
-			var averageGlucoseValueOutput:String
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
-				averageGlucoseValueOutput = String(averageGlucoseValue);
-			else
-			{
-				if ( averageGlucoseValue % 1 == 0)
-					averageGlucoseValueOutput = String(averageGlucoseValue) + ".0";
-				else
-					averageGlucoseValueOutput = String(averageGlucoseValue);
-			}
-			
-			var A1C:Number;
-			if (!dummyModeActive)
-				A1C = (( ((46.7 + averageGlucose) / 28.7) * 10 + 0.5)  >> 0) / 10;
-			else
-				A1C = 0;
-			
-			var status:Object = {};
-			status.lowPercentage = percentageLowRounded + "%";
-			status.inRangePercentage = percentageInRangeRounded + "%";
-			status.highPercentage = percentageHighRounded + "%";
-			status.averageGlucose = !dummyModeActive ? averageGlucoseValueOutput + GlucoseHelper.getGlucoseUnit() : "N/A";
-			status.a1c = !dummyModeActive ? A1C + "%" : "N/A";
-			
-			return status;
 		}
 	}
 }

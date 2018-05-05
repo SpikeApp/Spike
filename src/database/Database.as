@@ -28,7 +28,6 @@ package database
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
-	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -39,6 +38,8 @@ package database
 	import model.ModelLocator;
 	
 	import services.TransmitterService;
+	
+	import stats.BasicUserStats;
 	
 	import treatments.Insulin;
 	import treatments.Profile;
@@ -2416,24 +2417,15 @@ package database
 		 * Between two dates, in a combined query for faster processing.<br>
 		 * Readings without calibration are ignored.
 		 */
-		public static function getBasicUserStats(lowThreshold:Number, highThreshold:Number, from:Number, until:Number, now:Number):Object 
+		public static function getBasicUserStats():BasicUserStats 
 		{
-			var stats:Object = 
-			{
-				averageGlucose: 0,
-				numReadingsDay: 0,
-				numReadingsTotal: 0,
-				numReadingsLow: 0,
-				numReadingsInRange: 0,
-				numReadingsHigh: 0,
-				percentageLow: 0,
-				percentageLowRounded: 0,
-				percentageInRange: 0,
-				percentageInRangeRounded: 0,
-				percentageHigh: 0,
-				percentageHighRounded: 0,
-				a1c: 0
-			};
+			var userStats:BasicUserStats = new BasicUserStats();
+			var a1cOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_OFFSET));
+			var avgOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_AVG_OFFSET));
+			var rangesOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_RANGES_OFFSET));
+			var lowThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
+			var highThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+			var now:Number = new Date().valueOf();
 			
 			try 
 			{
@@ -2444,12 +2436,13 @@ package database
 				getRequest.sqlConnection = conn;
 				var sqlQuery:String = "";
 				sqlQuery += "SELECT AVG(calculatedValue) AS `averageGlucose`, "
+				sqlQuery +=	"(SELECT AVG(calculatedValue) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - a1cOffset) + " AND " + now + ") AS `averageGlucoseA1C`, ";
 				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - TIME_24_HOURS) + " AND " + now + ") AS `numReadingsDay`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + from + " AND " + until + ") AS `numReadingsTotal`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + from + " AND " + until + ") AS `numReadingsLow`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + from + " AND " + until + ") AS `numReadingsInRange`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue >= " + highThreshold + " AND timestamp BETWEEN " + from + " AND " + until + ") AS `numReadingsHigh` ";
-				sqlQuery +=	"FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + from + " AND " + until;
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsTotal`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsLow`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsInRange`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue >= " + highThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsHigh` ";
+				sqlQuery +=	"FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - avgOffset) + " AND " + now;
 				getRequest.text = sqlQuery;
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
@@ -2465,28 +2458,31 @@ package database
 					(result.data[0]["numReadingsTotal"] != null && !isNaN(result.data[0]["numReadingsTotal"])) &&    
 					(result.data[0]["numReadingsLow"] != null && !isNaN(result.data[0]["numReadingsLow"])) &&    
 					(result.data[0]["numReadingsInRange"] != null && !isNaN(result.data[0]["numReadingsInRange"])) &&    
-					(result.data[0]["numReadingsHigh"] != null && !isNaN(result.data[0]["numReadingsHigh"]))  
+					(result.data[0]["numReadingsHigh"] != null && !isNaN(result.data[0]["numReadingsHigh"])) && 
+					(result.data[0]["averageGlucoseA1C"] != null && !isNaN(result.data[0]["averageGlucoseA1C"]))  
 				)
 				{
-					stats.averageGlucose = ((Number(result.data[0]["averageGlucose"]) * 10 + 0.5)  >> 0) / 10;
-					stats.numReadingsDay = int(result.data[0]["numReadingsDay"]);
-					stats.numReadingsTotal = int(result.data[0]["numReadingsTotal"]);
-					stats.numReadingsLow = int(result.data[0]["numReadingsLow"]);
-					stats.numReadingsInRange = int(result.data[0]["numReadingsInRange"]);
-					stats.numReadingsHigh = int(result.data[0]["numReadingsHigh"]);
-					stats.a1c = ((((46.7 + stats.averageGlucose) / 28.7) * 10 + 0.5)  >> 0) / 10;
-					stats.percentageHigh = (stats.numReadingsHigh * 100) / stats.numReadingsTotal;
-					stats.percentageHighRounded = ((stats.percentageHigh * 10 + 0.5)  >> 0) / 10;
-					stats.percentageInRange = (stats.numReadingsInRange * 100) / stats.numReadingsTotal;
-					stats.percentageInRangeRounded = ((stats.percentageInRange * 10 + 0.5)  >> 0) / 10;
-					var preLow:Number = Math.round((stats.numReadingsLow * 100) / stats.numReadingsTotal) * 10 / 10;
+					userStats.averageGlucose = ((Number(result.data[0]["averageGlucose"]) * 10 + 0.5)  >> 0) / 10;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") userStats.averageGlucose = Math.round(((BgReading.mgdlToMmol((userStats.averageGlucose))) * 10)) / 10;
+					userStats.numReadingsDay = Number(result.data[0]["numReadingsDay"]);
+					userStats.numReadingsTotal = Number(result.data[0]["numReadingsTotal"]);
+					userStats.numReadingsLow = Number(result.data[0]["numReadingsLow"]);
+					userStats.numReadingsInRange = Number(result.data[0]["numReadingsInRange"]);
+					userStats.numReadingsHigh = Number(result.data[0]["numReadingsHigh"]);
+					userStats.a1c = ((((46.7 + (((Number(result.data[0]["averageGlucoseA1C"]) * 10 + 0.5)  >> 0) / 10)) / 28.7) * 10 + 0.5)  >> 0) / 10;
+					userStats.percentageHigh = (userStats.numReadingsHigh * 100) / userStats.numReadingsTotal;
+					userStats.percentageHighRounded = ((userStats.percentageHigh * 10 + 0.5)  >> 0) / 10;
+					userStats.percentageInRange = (userStats.numReadingsInRange * 100) / userStats.numReadingsTotal;
+					userStats.percentageInRangeRounded = ((userStats.percentageInRange * 10 + 0.5)  >> 0) / 10;
+					var preLow:Number = Math.round((userStats.numReadingsLow * 100) / userStats.numReadingsTotal) * 10 / 10;
 					var percentageLow:Number;
 					var percentageLowRounded:Number;
 					if (preLow != 0 && !isNaN(preLow))
 					{
-						stats.percentageLow = 100 - stats.percentageInRange - stats.percentageHigh;
-						stats.percentageLowRounded = Math.round ((100 - stats.percentageInRangeRounded - stats.percentageHighRounded) * 10) / 10;
+						userStats.percentageLow = 100 - userStats.percentageInRange - userStats.percentageHigh;
+						userStats.percentageLowRounded = Math.round ((100 - userStats.percentageInRangeRounded - userStats.percentageHighRounded) * 10) / 10;
 					}
+					userStats.captureRate = ((((userStats.numReadingsDay * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 				}
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();
@@ -2496,7 +2492,7 @@ package database
 				dispatchInformation('error_while_getting_bgreadings_for_spike_server',other.getStackTrace().toString());
 			} finally {
 				if (conn.connected) conn.close();
-				return stats;
+				return userStats;
 			}
 		}
 		

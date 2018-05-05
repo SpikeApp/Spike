@@ -23,6 +23,8 @@ package ui.screens
 	import feathers.controls.ScrollPolicy;
 	import feathers.core.ToggleGroup;
 	import feathers.events.FeathersEventType;
+	import feathers.motion.Cover;
+	import feathers.motion.Reveal;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -31,6 +33,7 @@ package ui.screens
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
+	import starling.animation.Transitions;
 	import starling.display.Shape;
 	import starling.events.Event;
 	import starling.utils.SystemUtil;
@@ -38,6 +41,7 @@ package ui.screens
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
+	import ui.AppInterface;
 	import ui.chart.DistributionChart;
 	import ui.chart.GlucoseChart;
 	import ui.chart.GraphLayoutFactory;
@@ -125,6 +129,13 @@ package ui.screens
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
 			horizontalScrollPolicy = ScrollPolicy.OFF;
 			verticalScrollPolicy = ScrollPolicy.OFF;
+			
+			//Reset Transitions
+			AppInterface.instance.chartSettingsScreenItem.pushTransition = null;
+			AppInterface.instance.chartSettingsScreenItem.popTransition = null;
+			
+			//Reset Menu
+			AppInterface.instance.menu.selectedIndex = 0;
 		}
 		
 		/**
