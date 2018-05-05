@@ -44,6 +44,7 @@ package services
 	import G5Model.AuthStatusRxMessage;
 	import G5Model.BatteryInfoRxMessage;
 	import G5Model.BatteryInfoTxMessage;
+	import G5Model.ResetTxMessage;
 	import G5Model.SensorRxMessage;
 	import G5Model.SensorTxMessage;
 	
@@ -225,7 +226,13 @@ package services
 		 * Therefore the amount of notifications will be reduced, this setting counts the number
 		 */
 		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5:int = 5;
-		private static var G5_RECONNECT_TIME_IN_SECONDS:int = 15
+		private static var G5_RECONNECT_TIME_IN_SECONDS:int = 15;
+		/**
+		 * If true, G5_Reset will be sent next time the G5 connects<br>
+		 * After sending reset, the variable is reset to false;<br>
+		 * Use G5_RequestReset to set to true
+		 */
+		private static var G5_RESET_REQUESTED:Boolean = false;
 				
 		//Dexcom G4 variables
 		private static var timeStampOfLastWarningUnknownG4Command:Number = 0;
@@ -1013,7 +1020,12 @@ package services
 			myTrace("in peripheral_characteristic_subscribeHandler success: " + getCharacteristicName(event.characteristic.uuid));
 			if (BlueToothDevice.isDexcomG5()) {
 				if (event.characteristic.uuid.toUpperCase() == G5_Control_Characteristic_UUID.toUpperCase()) {
-					getSensorData();
+					if (G5_RESET_REQUESTED) {
+						doG5Reset();
+						G5_RESET_REQUESTED = false;
+					} else {
+						getSensorData();
+					}
 				} else {
 					fullAuthenticateG5();
 				}
@@ -1933,15 +1945,23 @@ package services
 			return 8;
 		}
 		
-		public static function getSensorData():void {
-			myTrace("getSensorData");
+		private static function getSensorData():void {
+			myTrace("in getSensorData");
 			var sensorTx:SensorTxMessage = new SensorTxMessage();
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(writeCharacteristic, sensorTx.byteSequence)) {
 				myTrace("getSensorData writeValueForCharacteristic G5CommunicationCharacteristic failed");
 			}
 		}
 		
-		public static function startRescan(event:flash.events.Event):void {
+		private static function doG5Reset():void {
+			myTrace("in doG5Reset");
+			var resetTx:ResetTxMessage = new ResetTxMessage();
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(writeCharacteristic, resetTx.byteSequence)) {
+				myTrace("doG5Reset writeValueForCharacteristic G5CommunicationCharacteristic failed");
+			}
+		}
+		
+		private static function startRescan(event:flash.events.Event):void {
 			if (!(BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				myTrace("In startRescan but bluetooth is not on");
 				return;
@@ -1961,7 +1981,7 @@ package services
 			}
 		}
 		
-		public static function getCharacteristicName(uuid:String):String {
+		private static function getCharacteristicName(uuid:String):String {
 			if (uuid.toUpperCase() == G5_Authentication_Characteristic_UUID.toUpperCase()) {
 				return "G5_Authentication_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == G5_Control_Characteristic_UUID.toUpperCase()) {
@@ -2113,6 +2133,14 @@ package services
 			} else {
 				Tomato.decodeTomatoPacket(utils.UniqueId.hexStringToByteArray(event.data.packet as String));
 			}
+		}
+		
+		/**
+		 * sets  G5_RESET_REQUESTED to true<br>
+		 * this will initiate a G5 reset next time the G5 connects
+		 */
+		public static function G5_RequestReset():void {
+			G5_RESET_REQUESTED = true;
 		}
 		
 		private static function setPeripheralUUIDs():void {
