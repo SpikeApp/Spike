@@ -1,4 +1,5 @@
 2.0.5
+FEATURE: Time ranges for glucose distribution stats (pie chart) as requested by many users. You can now select stats for 1 day, 2 days, 3 days, 1 week, 2 weeks, 1 month and 3 months. Time ranges can be different (independent) between A1C, average glucose and thresholds (% high, in range, low). Ex: You can request A1C for the last 3 months but average glucose for the last week. Set ranges by going to Settings -> Chart or just press and hold for 1 second on the stats at the bottom of the chart screen.
 ENHANCEMENT: Lower GPU memory footprint.
 FIX: Chart time ago formatting when hours > 0.
 
