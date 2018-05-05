@@ -57,6 +57,7 @@ package ui
 		public var menu:MenuList;
 		public var drawers:Drawers;
 		public var navigator:StackScreenNavigator;
+		public var chartSettingsScreenItem:StackScreenNavigatorItem;
 		
 		public function AppInterface() 
 		{
@@ -155,7 +156,7 @@ package ui
 			navigator.addScreen( Screens.SETTINGS_PROFILE, profileSettingsScreenItem );
 			
 			/* Chart Settings Screen */
-			var chartSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( ChartSettingsScreen );
+			chartSettingsScreenItem = new StackScreenNavigatorItem( ChartSettingsScreen );
 			chartSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_CHART, chartSettingsScreenItem );
 			

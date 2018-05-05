@@ -39,6 +39,8 @@ package database
 	
 	import services.TransmitterService;
 	
+	import stats.BasicUserStats;
+	
 	import treatments.Insulin;
 	import treatments.Profile;
 	import treatments.Treatment;
@@ -63,6 +65,9 @@ package database
 		private static var databaseWasCopiedFromSampleFile:Boolean = true;
 		private static const debugMode:Boolean = true;
 		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
+		
+		//Time constants
+		private static const TIME_24_HOURS:Number = 24 * 60 * 60 * 1000;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
@@ -2407,6 +2412,90 @@ package database
 			}
 		}
 		
+		/**
+		 * Returns pie chart stats: Average Glucose, Number Low Readings, Number In Range Readings, Number High Readings and Number Total Readings.<br>
+		 * Between two dates, in a combined query for faster processing.<br>
+		 * Readings without calibration are ignored.
+		 */
+		public static function getBasicUserStats():BasicUserStats 
+		{
+			var userStats:BasicUserStats = new BasicUserStats();
+			var a1cOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_OFFSET));
+			var avgOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_AVG_OFFSET));
+			var rangesOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_RANGES_OFFSET));
+			var lowThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
+			var highThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+			var now:Number = new Date().valueOf();
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery += "SELECT AVG(calculatedValue) AS `averageGlucose`, "
+				sqlQuery +=	"(SELECT AVG(calculatedValue) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - a1cOffset) + " AND " + now + ") AS `averageGlucoseA1C`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - TIME_24_HOURS) + " AND " + now + ") AS `numReadingsDay`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsTotal`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsLow`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsInRange`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue >= " + highThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsHigh` ";
+				sqlQuery +=	"FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - avgOffset) + " AND " + now;
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				
+				if 
+				(
+					result.data != null && 
+					result.data is Array && 
+					result.data[0] != null && 
+					(result.data[0]["averageGlucose"] != null && !isNaN(result.data[0]["averageGlucose"])) &&    
+					(result.data[0]["numReadingsDay"] != null && !isNaN(result.data[0]["numReadingsDay"])) &&    
+					(result.data[0]["numReadingsTotal"] != null && !isNaN(result.data[0]["numReadingsTotal"])) &&    
+					(result.data[0]["numReadingsLow"] != null && !isNaN(result.data[0]["numReadingsLow"])) &&    
+					(result.data[0]["numReadingsInRange"] != null && !isNaN(result.data[0]["numReadingsInRange"])) &&    
+					(result.data[0]["numReadingsHigh"] != null && !isNaN(result.data[0]["numReadingsHigh"])) && 
+					(result.data[0]["averageGlucoseA1C"] != null && !isNaN(result.data[0]["averageGlucoseA1C"]))  
+				)
+				{
+					userStats.averageGlucose = ((Number(result.data[0]["averageGlucose"]) * 10 + 0.5)  >> 0) / 10;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") userStats.averageGlucose = Math.round(((BgReading.mgdlToMmol((userStats.averageGlucose))) * 10)) / 10;
+					userStats.numReadingsDay = Number(result.data[0]["numReadingsDay"]);
+					userStats.numReadingsTotal = Number(result.data[0]["numReadingsTotal"]);
+					userStats.numReadingsLow = Number(result.data[0]["numReadingsLow"]);
+					userStats.numReadingsInRange = Number(result.data[0]["numReadingsInRange"]);
+					userStats.numReadingsHigh = Number(result.data[0]["numReadingsHigh"]);
+					userStats.a1c = ((((46.7 + (((Number(result.data[0]["averageGlucoseA1C"]) * 10 + 0.5)  >> 0) / 10)) / 28.7) * 10 + 0.5)  >> 0) / 10;
+					userStats.percentageHigh = (userStats.numReadingsHigh * 100) / userStats.numReadingsTotal;
+					userStats.percentageHighRounded = ((userStats.percentageHigh * 10 + 0.5)  >> 0) / 10;
+					userStats.percentageInRange = (userStats.numReadingsInRange * 100) / userStats.numReadingsTotal;
+					userStats.percentageInRangeRounded = ((userStats.percentageInRange * 10 + 0.5)  >> 0) / 10;
+					var preLow:Number = Math.round((userStats.numReadingsLow * 100) / userStats.numReadingsTotal) * 10 / 10;
+					var percentageLow:Number;
+					var percentageLowRounded:Number;
+					if (preLow != 0 && !isNaN(preLow))
+					{
+						userStats.percentageLow = 100 - userStats.percentageInRange - userStats.percentageHigh;
+						userStats.percentageLowRounded = Math.round ((100 - userStats.percentageInRangeRounded - userStats.percentageHighRounded) * 10) / 10;
+					}
+					userStats.captureRate = ((((userStats.numReadingsDay * 100) / 288) * 10 + 0.5)  >> 0) / 10;
+				}
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_bgreadings_for_spike_server', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_bgreadings_for_spike_server',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return userStats;
+			}
+		}
+		
 		public static function updateCommonSetting(settingId:int,newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
 			if (newValue == null || newValue == "") newValue = "-";
 			try {
@@ -2551,6 +2640,5 @@ package database
 		private static function myTrace(log:String):void {
 			Trace.myTrace("Database.as", log);
 		}
-		
 	}
 }

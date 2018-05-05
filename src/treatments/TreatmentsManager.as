@@ -6,8 +6,6 @@ package treatments
 	import flash.events.EventDispatcher;
 	import flash.utils.Dictionary;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;

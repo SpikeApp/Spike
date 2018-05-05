@@ -10,8 +10,12 @@ package ui.chart
 	import database.BgReading;
 	import database.CommonSettings;
 	
+	import feathers.motion.Cover;
+	import feathers.motion.Reveal;
+	
 	import model.ModelLocator;
 	
+	import starling.animation.Transitions;
 	import starling.display.DisplayObject;
 	import starling.display.Quad;
 	import starling.display.Sprite;
@@ -20,6 +24,9 @@ package ui.chart
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
+	
+	import stats.BasicUserStats;
+	import stats.StatsManager;
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
@@ -30,18 +37,12 @@ package ui.chart
 	
 	public class DistributionChart extends Sprite
 	{
-		//Constants
-		private static const TIME_24H:int = 24 * 60 * 60 * 1000;
-		private static const TIME_30SEC:int = 30 * 1000;
-		
 		//Variables and Objects
 		private var nGons:Array;
 		private var _dataSource:Array;
 		private var pieRadius:Number;
 		private var highTreshold:Number;
 		private var lowTreshold:Number;
-		private var averageGlucose:Number;
-		private var A1C:Number;
 		private var pieTimer:Number;
 		
 		//Display Variables
@@ -79,6 +80,7 @@ package ui.chart
 		private var innerNGon:NGon;
 		private var middleNGon:NGon;
 		private var outterNGon:NGon;
+		private var statsHitArea:Quad;
 		
 		[ResourceBundle("globaltranslations")]
 		
@@ -228,6 +230,14 @@ package ui.chart
 			numReadingsSection.y = avgGlucoseSection.y;
 			numReadingsSection.title.text = readingsOutput;
 			statsContainer.addChild(numReadingsSection);
+			
+			/* STATS HIT AREA */
+			statsHitArea = new Quad(statsContainer.width, statsContainer.height, 0xFF0000);
+			statsHitArea.x = statsContainer.x;
+			statsHitArea.y = statsContainer.y;
+			statsHitArea.alpha = 0;
+			statsHitArea.addEventListener(TouchEvent.TOUCH, onStatsTouch);
+			addChild(statsHitArea);
 		}
 		
 		public function drawChart():Boolean
@@ -238,87 +248,16 @@ package ui.chart
 			if (!BackgroundFetch.appIsInForeground())
 				return false;
 			
-			/**
-			 * VARIABLES
-			 */
-			var high:int = 0;
-			var percentageHigh:Number;
-			var percentageHighRounded:Number;
-			var highAngle:Number;
-			var inRange:int = 0;
-			var percentageInRange:Number;
-			var percentageInRangeRounded:Number
-			var inRangeAngle:Number
-			var low:int = 0;
-			var percentageLow:Number;
-			var percentageLowRounded:Number;
-			var lowAngle:Number
-			var dataLength:int = _dataSource.length;
-			var realReadingsNumber:int = 0;
-			var totalGlucose:Number = 0;
-			
-			/**
-			 * GLUCOSE DISTRIBUTION CALCULATION
-			 */
-			var glucoseValue:Number;
-			var i:int;
-			var nowTimestamp:Number = (new Date()).valueOf();
-			for (i = 0; i < dataLength; i++) 
-			{
-				var bgReading:BgReading = _dataSource[i];
-				
-				if (nowTimestamp - bgReading.timestamp > TIME_24H - TIME_30SEC || (bgReading.calibration == null && bgReading.calculatedValue == 0))
-					continue;
-				
-				glucoseValue = Number(bgReading.calculatedValue);
-				if(glucoseValue >= highTreshold)
-				{
-					high += 1;
-				}
-				else if (glucoseValue > lowTreshold && glucoseValue < highTreshold)
-				{
-					inRange += 1;
-				}
-				else if (glucoseValue <= lowTreshold)
-				{
-					low += 1;
-				}
-				totalGlucose += glucoseValue;
-				
-				realReadingsNumber++;
-			}
+			var userStats:BasicUserStats = StatsManager.getBasicUserStats();
 			
 			//If there's no good readings then activate dummy mode.
-			if (realReadingsNumber == 0)
+			if (userStats.numReadingsDay == 0)
 				dummyModeActive = true;
 			
-			//Glucose Distribution Percentages
-			percentageHigh = (high * 100) / realReadingsNumber;
-			percentageHighRounded = (( percentageHigh * 10 + 0.5)  >> 0) / 10;
-			
-			percentageInRange = (inRange * 100) / realReadingsNumber;
-			percentageInRangeRounded = (( percentageInRange * 10 + 0.5)  >> 0) / 10;
-			
-			var preLow:Number = Math.round((low * 100) / realReadingsNumber) * 10 / 10;
-			if ( preLow != 0 && !isNaN(preLow))
-			{
-				percentageLow = 100 - percentageInRange - percentageHigh;
-				percentageLowRounded = Math.round ((100 - percentageInRangeRounded - percentageHighRounded) * 10) / 10;
-			}
-			else
-			{
-				percentageLow = 0;
-				percentageLowRounded = 0;
-			}
-			
 			//Angles
-			highAngle = (percentageHigh * 360) / 100;
-			inRangeAngle = (percentageInRange * 360) / 100;
-			lowAngle = (percentageLow * 360) / 100;
-			
-			/**
-			 * GRAPH DRAWING
-			 */
+			var highAngle:Number = (userStats.percentageHigh * 360) / 100;
+			var inRangeAngle:Number = (userStats.percentageInRange * 360) / 100;
+			var lowAngle:Number = (userStats.percentageLow * 360) / 100;
 			
 			if (pieGraphicContainer != null)
 				pieGraphicContainer.removeFromParent(true);
@@ -336,7 +275,7 @@ package ui.chart
 				pieGraphicContainer.addChild(lowNGon);
 			}
 			//Legend
-			lowSection.message.text = !dummyModeActive ? percentageLowRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			lowSection.message.text = !dummyModeActive ? userStats.percentageLowRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			
 			//IN RANGE PORTION
 			//Graphics
@@ -350,7 +289,7 @@ package ui.chart
 				pieGraphicContainer.addChild(inRangeNGon);
 			}
 			//Legend
-			inRangeSection.message.text = !dummyModeActive ? percentageInRangeRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			inRangeSection.message.text = !dummyModeActive ? userStats.percentageInRangeRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			
 			//HIGH PORTION
 			//Graphics
@@ -364,7 +303,7 @@ package ui.chart
 				pieGraphicContainer.addChild(highNGon);
 			}
 			//Legend
-			highSection.message.text = !dummyModeActive ? percentageHighRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			highSection.message.text = !dummyModeActive ? userStats.percentageHighRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			
 			//DUMMY NGON
 			if (dummyModeActive)
@@ -391,38 +330,24 @@ package ui.chart
 				pieGraphicContainer.addChild(outterNGon);
 			}
 			
-			/* Add pie to display list */
+			//Add pie to display list
 			pieContainer.addChild(pieGraphicContainer);
-			
-			//Calculate Average Glucose & A1C
-			averageGlucose = (( (totalGlucose / realReadingsNumber) * 10 + 0.5)  >> 0) / 10;
-			var averageGlucoseValue:Number = averageGlucose;
-			if (glucoseUnit != "mg/dL")
-				averageGlucoseValue = Math.round(((BgReading.mgdlToMmol((averageGlucoseValue))) * 10)) / 10;
 			
 			var averageGlucoseValueOutput:String
 			if (glucoseUnit == "mg/dL")
-				averageGlucoseValueOutput = String(averageGlucoseValue);
+				averageGlucoseValueOutput = String(userStats.averageGlucose);
 			else
 			{
-				if ( averageGlucoseValue % 1 == 0)
-					averageGlucoseValueOutput = String(averageGlucoseValue) + ".0";
+				if ( userStats.averageGlucose % 1 == 0)
+					averageGlucoseValueOutput = String(userStats.averageGlucose) + ".0";
 				else
-					averageGlucoseValueOutput = String(averageGlucoseValue);
+					averageGlucoseValueOutput = String(userStats.averageGlucose);
 			}
 			
-			if (!dummyModeActive)
-				A1C = (( ((46.7 + averageGlucose) / 28.7) * 10 + 0.5)  >> 0) / 10;
-			else
-				A1C = 0;
-			
-			//Calculate readings percentage
-			var percentageReadings:Number = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
-			
 			//Populate Stats
-			numReadingsSection.message.text = !dummyModeActive ? realReadingsNumber + " (" + percentageReadings + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			numReadingsSection.message.text = !dummyModeActive ? userStats.numReadingsDay + " (" + userStats.captureRate + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			avgGlucoseSection.message.text = !dummyModeActive ? averageGlucoseValueOutput + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-			estA1CSection.message.text = !dummyModeActive ? A1C + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			estA1CSection.message.text = !dummyModeActive ? userStats.a1c + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			
 			return true;
 		}
@@ -476,6 +401,39 @@ package ui.chart
 				
 				//Vibrate Device
 				BackgroundFetch.vibrate();
+			}
+		}
+		
+		private function onStatsTouch (e:TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				pieTimer = getTimer();
+				addEventListener(Event.ENTER_FRAME, onStatsHold);
+			}
+			
+			if(touch != null && touch.phase == TouchPhase.ENDED)
+			{
+				pieTimer = Number.NaN;
+				removeEventListener(Event.ENTER_FRAME, onStatsHold);
+			}
+		}
+		
+		private function onStatsHold(e:Event):void
+		{
+			if (isNaN(pieTimer))
+				return;
+			
+			if (getTimer() - pieTimer > 1000)
+			{
+				pieTimer = Number.NaN;
+				removeEventListener(Event.ENTER_FRAME, onStatsHold);
+				
+				//Push Chart Settings Screen
+				AppInterface.instance.chartSettingsScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+				AppInterface.instance.chartSettingsScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+				AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_CHART );
 			}
 		}
 		
@@ -611,6 +569,14 @@ package ui.chart
 				pieGraphicContainer.removeFromParent();
 				pieGraphicContainer.dispose();
 				pieGraphicContainer = null;
+			}
+			
+			if (statsHitArea != null)
+			{
+				statsHitArea.addEventListener(TouchEvent.TOUCH, onStatsTouch);
+				statsHitArea.removeFromParent();
+				statsHitArea.dispose();
+				statsHitArea = null;
 			}
 			
 			System.pauseForGCIfCollectionImminent(0);

@@ -2,6 +2,8 @@ package ui.screens
 {
 	import flash.system.System;
 	
+	import database.BlueToothDevice;
+	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -70,7 +72,10 @@ package ui.screens
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
 			//24H Distribution Section Label
-			chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title'), true);
+			if (!BlueToothDevice.isFollower())
+				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title_master'), true);
+			else
+				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title_follower'), true);
 			screenRenderer.addChild(chartGlucoseDistributionLabel);
 			
 			//24H Distribution Settings
