@@ -76,12 +76,11 @@ package utils
 			var h:Number=Math.floor(secs/3600);
 			var m:Number=Math.floor((secs%3600)/60);
 			var s:Number=Math.floor((secs%3600)%60);
-			var agoSuffix:String = " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
 			
 			if (h == 0)
 				time = (h==0?"":(h<10 && prefixInHours?"0"+h.toString()+"h":h.toString()+"h"))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+" min":m.toString()+" min");
 			else 
-				time = (h==0?"":(h<10 && prefixInHours?"0"+h.toString()+"h":h.toString()+"h"))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+"m" + agoSuffix:m.toString()+"m"+ agoSuffix);
+				time = (h==0?"":(h<10 && prefixInHours?"0"+h.toString()+"h":h.toString()+"h"))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+"m":m.toString()+"m");
 			
 			return time;
 		}
