@@ -1,7 +1,5 @@
 package stats
 {
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.CommonSettings;
@@ -28,7 +26,11 @@ package stats
 			
 			if (!BlueToothDevice.isFollower())
 			{
-				return Database.getBasicUserStats();
+				var masterUserStats:BasicUserStats = Database.getBasicUserStats();
+				if (masterUserStats == null)
+					masterUserStats = new BasicUserStats();
+				
+				return masterUserStats;
 			}
 			else
 			{
