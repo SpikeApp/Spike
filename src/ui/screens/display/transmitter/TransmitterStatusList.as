@@ -98,6 +98,8 @@ package ui.screens.display.transmitter
 		private var transmitterRuntimeLabel:Label;
 		private var screenRefreshLabel:Label;
 		private var transmitterFirmwareLabel:Label;
+		private var resetG5TransmitterButton:Button;
+		private var g5ActionContainer:LayoutGroup;
 		
 		/* Properties */
 		private var transmitterNameValue:String;
@@ -432,10 +434,21 @@ package ui.screens.display.transmitter
 				resistanceLabel = LayoutFactory.createLabel(resistanceValue, HorizontalAlign.RIGHT);
 				temperatureLabel = LayoutFactory.createLabel(temperatureValue, HorizontalAlign.RIGHT);
 				lastG5BatteryUpdateLabel = LayoutFactory.createLabel(lastG5BatteryUpdateValue, HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
+				
+				/* G5 Action Buttons */
+				var g5ActionLayout:HorizontalLayout = new HorizontalLayout();
+				g5ActionLayout.gap = 5;
+				g5ActionContainer = new LayoutGroup();
+				g5ActionContainer.pivotX = -15;
+				g5ActionContainer.layout = g5ActionLayout;
+				
+				resetG5TransmitterButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('transmitterscreen',"reset_g5_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.undoTexture);
+				resetG5TransmitterButton.addEventListener(Event.TRIGGERED, onResetG5);
+				g5ActionContainer.addChild(resetG5TransmitterButton);
+				
 				refreshG5BatteryButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('transmitterscreen',"refresh_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
-				refreshG5BatteryButton.gap = 5;
-				refreshG5BatteryButton.pivotX = -15;
 				refreshG5BatteryButton.addEventListener(Event.TRIGGERED, onRefreshG5BatteyInfo);
+				g5ActionContainer.addChild(refreshG5BatteryButton);
 			}
 			else
 			{
@@ -473,7 +486,7 @@ package ui.screens.display.transmitter
 					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_label'), accessory: resistanceLabel, icon: resistanceIcon },
 					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','temperature_label'), accessory: temperatureLabel },
 					{ label: "", accessory: lastG5BatteryUpdateLabel },
-					{ label: "", accessory: refreshG5BatteryButton }
+					{ label: "", accessory: g5ActionContainer }
 				];
 			}
 			else
@@ -644,6 +657,31 @@ package ui.screens.display.transmitter
 			{
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, String(timestampForRefresh));
 				lastG5BatteryUpdateLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen',"updating_message");
+			}
+		}
+		
+		private function onResetG5(e:Event):void
+		{
+			AlertManager.showActionAlert
+			(
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+				ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_g5_warning_message'),
+				Number.NaN,
+				[
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','no_uppercase') },
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','yes_uppercase'), triggered: onResetTransmitter }
+				]
+			);
+			
+			function onResetTransmitter(e:Event):void
+			{
+				BluetoothService.G5_RequestReset();
+				
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','info_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_g5_confirmation_message')
+				);
 			}
 		}
 		
@@ -862,8 +900,23 @@ package ui.screens.display.transmitter
 			if(refreshG5BatteryButton != null)
 			{
 				refreshG5BatteryButton.removeEventListener(Event.TRIGGERED, onRefreshG5BatteyInfo)
+				refreshG5BatteryButton.removeFromParent();
 				refreshG5BatteryButton.dispose();
 				refreshG5BatteryButton = null;
+			}
+			
+			if (resetG5TransmitterButton != null)
+			{
+				resetG5TransmitterButton.removeEventListener(Event.TRIGGERED, onResetG5);
+				resetG5TransmitterButton.removeFromParent();
+				resetG5TransmitterButton.dispose();
+				resetG5TransmitterButton = null;
+			}
+			
+			if (g5ActionContainer != null)
+			{
+				g5ActionContainer.dispose();
+				g5ActionContainer = null;
 			}
 			
 			if (screenRefreshLabel != null)

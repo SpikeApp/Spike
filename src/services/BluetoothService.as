@@ -56,7 +56,6 @@ package services
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
-	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	

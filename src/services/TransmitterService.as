@@ -67,6 +67,8 @@ package services
 	public class TransmitterService extends EventDispatcher
 	{
 		[ResourceBundle("transmitterservice")]
+		[ResourceBundle("transmitterscreen")]
+		[ResourceBundle("globaltranslations")]
 		
 		private static var _instance:TransmitterService = new TransmitterService();
 		
@@ -257,11 +259,28 @@ package services
 						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000 && Sensor.getActiveSensor() != null) {
 							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
 							if (BackgroundFetch.appIsInForeground()) {
-								AlertManager.showSimpleAlert
+								AlertManager.showActionAlert
 								(
 									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
-									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info")
+									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"),
+									Number.NaN,
+									[
+										{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','no_uppercase') },
+										{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','yes_uppercase'), triggered: onResetTransmitter }
+									]
 								);
+								
+								function onResetTransmitter(e:Event):void
+								{
+									BluetoothService.G5_RequestReset();
+									
+									AlertManager.showSimpleAlert
+									(
+										ModelLocator.resourceManagerInstance.getString('globaltranslations','info_alert_title'),
+										ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_g5_confirmation_message')
+									);
+								}
+								
 								BackgroundFetch.vibrate();
 							} else {
 								notificationBuilderG5BatteryInfo = new NotificationBuilder()
