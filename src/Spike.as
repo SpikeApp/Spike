@@ -200,9 +200,6 @@ package
 			if (starling != null)
 			{
 				//Start Starling
-				starling.start();
-				
-				//Start Starling
 				NativeApplication.nativeApplication.executeInBackground = false;
 				SystemUtil.executeWhenApplicationIsActive( starling.start );
 			}
