@@ -141,7 +141,10 @@ package
 			stage.removeEventListener( flash.events.Event.RESIZE, onStageResize );
 			if( timeoutID != -1 ) 
 				clearInterval( timeoutID );
-			timeoutID = setTimeout( initStarling, 100 );
+			
+			timeoutID = setTimeout( function():void {
+				SystemUtil.executeWhenApplicationIsActive(initStarling);
+			}, 200 );
 		}
 		
 		/**
