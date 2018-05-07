@@ -47,7 +47,7 @@ package stats
 				{
 					var bgReading:BgReading = ModelLocator.bgReadings[i];
 					
-					if (now - bgReading.timestamp > TIME_24_HOURS - TIME_30_SECONDS || (bgReading.calibration == null && bgReading.calculatedValue == 0))
+					if (now - bgReading.timestamp > TIME_24_HOURS - TIME_30_SECONDS || bgReading.calculatedValue == 0)
 						continue;
 					
 					var glucoseValue:Number = Number(bgReading.calculatedValue);
