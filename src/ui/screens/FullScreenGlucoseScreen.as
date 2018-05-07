@@ -393,12 +393,15 @@ package ui.screens
 			{
 				if (arrow.indexOf("\u21C4") != -1 || arrow.indexOf("\u2192") != -1) //FLAT
 					leading = -glucoseFontSize / 2;
-				else if (arrow.indexOf("\u2198") != -1) //45º Down
+				else if (arrow.indexOf("\u2198") != -1 || arrow.indexOf("\u2197") != -1) //45º Up/Down
 					leading = -glucoseFontSize / 3;
-				else if (arrow.indexOf("\u2197") != -1) //45º Up
-					leading = -glucoseFontSize / 1.5;
 				else if (arrow.indexOf("\u2193") != -1 || arrow.indexOf("\u2191") != -1) //Down/Up
-					leading = -glucoseFontSize / 2.5;
+				{
+					if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+						leading = -glucoseFontSize / 2.5;
+					else
+						leading = -glucoseFontSize / 3;
+				}
 			}
 			
 			return leading;
