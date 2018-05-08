@@ -119,7 +119,7 @@
 		<!-- Whether or not to pan when a soft keyboard is raised or lowered (either 
 			"pan" or "none"). Optional. Defaults "pan." -->
 		<!-- <softKeyboardBehavior></softKeyboardBehavior> -->
-		<aspectRatio>portrait</aspectRatio>
+		<aspectRatio>any</aspectRatio>
 		<autoOrients>true</autoOrients>
 		<fullScreen>false</fullScreen>
 		<visible>true</visible>
