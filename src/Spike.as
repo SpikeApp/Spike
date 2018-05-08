@@ -26,6 +26,7 @@ package
 	
 	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
@@ -59,8 +60,6 @@ package
 			//stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
 			
 			_instance = this;
-			
-			stage.addEventListener( flash.events.Event.RESIZE, onStageResize );
 			
 			/* Global Exceptions Handling */
 			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
@@ -136,17 +135,6 @@ package
 			loader = null;
 		}
 		
-		private function onStageResize( event:flash.events.Event ):void 
-		{
-			stage.removeEventListener( flash.events.Event.RESIZE, onStageResize );
-			if( timeoutID != -1 ) 
-				clearInterval( timeoutID );
-			
-			timeoutID = setTimeout( function():void {
-				SystemUtil.executeWhenApplicationIsActive(initStarling);
-			}, 200 );
-		}
-		
 		/**
 		 * Initialization
 		 */
@@ -165,6 +153,7 @@ package
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			/* Handle Application Activation & Deactivation */
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
@@ -174,6 +163,24 @@ package
 		private function onContextCreated(event:flash.events.Event):void
 		{
 			Trace.myTrace("Spike.as", "onContextCreated! Event Debug: " + ObjectUtil.toString(event));
+		}
+		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			Trace.myTrace("Spike.as", "Stage has resized. Width: " + starling.stage.stageWidth + ", Height: " + starling.stage.stageHeight));
+			
+			if (starling != null)
+			{
+				starling.stop();
+				
+				Constants.stageWidth = starling.stage.stageWidth;
+				Constants.stageHeight = starling.stage.stageHeight;
+				
+				Starling.current.viewPort.width  = stage.stageWidth;
+				Starling.current.viewPort.height = stage.stageHeight;
+				
+				starling.start();
+			}
 		}
 		
 		/**
