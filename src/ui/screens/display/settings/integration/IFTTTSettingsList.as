@@ -25,7 +25,9 @@ package ui.screens.display.settings.integration
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -136,6 +138,8 @@ package ui.screens.display.settings.integration
 		{
 			super.initialize();
 			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			setupProperties();
 			setupInitialContent();
 			setupContent();
@@ -224,6 +228,7 @@ package ui.screens.display.settings.integration
 			
 			//Maker Key Input Field
 			makerKeyTextInput = LayoutFactory.createTextInput(false, false, Constants.deviceModel != DeviceInfo.IPHONE_X ? 160 : 130, HorizontalAlign.RIGHT);
+			if (!Constants.isPortrait) makerKeyTextInput.width += 100;
 			makerKeyTextInput.fontStyles.size = 11;
 			makerKeyTextInput.text = makerKeyValue;
 			makerKeyTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -684,11 +689,37 @@ package ui.screens.display.settings.integration
 			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/IFTTT"));
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (instructionsContainer != null)
+				instructionsContainer.width = width - 20;
+			
+			if (makerKeyDescriptionLabel != null)
+				makerKeyDescriptionLabel.width = width - 10;
+			
+			if (alarmsLabel != null)
+				alarmsLabel.width = width - 20;
+			
+			if (treatmentsLabel != null)
+				treatmentsLabel.width = width - 20;
+			
+			if (makerKeyTextInput != null)
+			{
+				makerKeyTextInput.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? 160 : 130;
+				if (!Constants.isPortrait)
+					makerKeyTextInput.width += 100;
+			}
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if(IFTTTToggle != null)
 			{
 				IFTTTToggle.removeEventListener( Event.CHANGE, onSettingsReload );
