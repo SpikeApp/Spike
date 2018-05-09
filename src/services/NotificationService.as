@@ -118,6 +118,7 @@ package services
 		public static const ID_FOR_HTTP_SERVER_DOWN:int = 21;
 		public static const ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO:int = 22;
 		public static const ID_FOR_LIBRE_SENSOR_14DAYS:int = 23;
+		public static const ID_FOR_G5_RESET_DONE:int = 24;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";

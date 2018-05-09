@@ -232,6 +232,7 @@ package services
 		 * Use G5_RequestReset to set to true
 		 */
 		private static var G5_RESET_REQUESTED:Boolean = false;
+		private static var G5ResetTimeStamp:Number =0;
 				
 		//Dexcom G4 variables
 		private static var timeStampOfLastWarningUnknownG4Command:Number = 0;
@@ -1161,14 +1162,19 @@ package services
 						doDisconnectMessageG5(characteristic);
 					}
 					
-					//SPIKE: Save Sensor RX Timestmp for transmitter runtime display
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP) != String(sensorRx.timestamp))
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP, String(sensorRx.timestamp));
-					
-					timeStampOfLastG5Reading = (new Date()).valueOf();
-					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-					blueToothServiceEvent.data = new TransmitterDataG5Packet(sensorRx.unfiltered, sensorRx.filtered, sensorRx.timestamp, sensorRx.transmitterStatus);
-					_instance.dispatchEvent(blueToothServiceEvent);
+					//if G5Reset was done less than 5 minutes ago, then ignore the reading
+					if ((new Date()).valueOf() - G5ResetTimeStamp < 5 * 60 * 1000) {
+						myTrace("in processG5TransmitterData, resettimestamp was less than 5 minutes ago, ignoring this reading");
+					} else {
+						//SPIKE: Save Sensor RX Timestmp for transmitter runtime display
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP) != String(sensorRx.timestamp))
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP, String(sensorRx.timestamp));
+						
+						timeStampOfLastG5Reading = (new Date()).valueOf();
+						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+						blueToothServiceEvent.data = new TransmitterDataG5Packet(sensorRx.unfiltered, sensorRx.filtered, sensorRx.timestamp, sensorRx.transmitterStatus);
+						_instance.dispatchEvent(blueToothServiceEvent);
+					}
 					break;
 				case 35:
 					buffer.position = 0;
@@ -1179,6 +1185,34 @@ package services
 					break;
 				case 75:
 					doDisconnectMessageG5(characteristic);
+					break;
+				case 67:
+					//G5 reset acknowledge
+					if ((new Date()).valueOf() - G5ResetTimeStamp > 2 * 1000) {
+						myTrace(" in processG5TransmitterData, received G5 Reset message, but more than 2 seconds ago since reset was sent, ignoring");
+					} else {
+						if (buffer.length !== 4) {
+							myTrace(" in processG5TransmitterData, received G5 Reset message, but length != 4, ignoring");
+						} else {
+							if (BackgroundFetch.appIsInForeground()) 
+							{
+								AlertManager.showSimpleAlert
+									(
+										ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"),
+										ModelLocator.resourceManagerInstance.getString("bluetoothservice","g5_reset_done")
+									);
+								BackgroundFetch.vibrate();
+							} else {
+								var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+									.setId(NotificationService.ID_FOR_G5_RESET_DONE)
+									.setAlert(ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"))
+									.setTitle(ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"))
+									.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","g5_reset_done"))
+									.enableVibration(true)
+								Notifications.service.notify(notificationBuilder.build());
+							}
+						}
+					}
 					break;
 				default:
 					myTrace("in processG5TransmitterData unknown code received : " + code);
@@ -1959,6 +1993,7 @@ package services
 				myTrace("doG5Reset writeValueForCharacteristic G5CommunicationCharacteristic failed");
 			}
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, "0");
+			G5ResetTimeStamp = (new Date()).valueOf();
 		}
 		
 		private static function startRescan(event:flash.events.Event):void {
