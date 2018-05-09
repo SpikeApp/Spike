@@ -141,48 +141,56 @@ package ui.screens
 		{
 			if (chartColorSettings != null)
 			{
+				chartColorSettings.removeFromParent();
 				chartColorSettings.dispose();
 				chartColorSettings = null;
 			}
 			
 			if (chartSizeSettings != null)
 			{
+				chartSizeSettings.removeFromParent();
 				chartSizeSettings.dispose();
 				chartSizeSettings = null;
 			}
 			
 			if (chartGlucoseDistributionSettings != null)
 			{
+				chartGlucoseDistributionSettings.removeFromParent();
 				chartGlucoseDistributionSettings.dispose();
 				chartGlucoseDistributionSettings = null;
 			}
 			
 			if (chartColorLabel != null)
 			{
+				chartColorLabel.removeFromParent();
 				chartColorLabel.dispose();
 				chartColorLabel = null;
 			}
 			
 			if (chartSizeLabel != null)
 			{
+				chartSizeLabel.removeFromParent();
 				chartSizeLabel.dispose();
 				chartSizeLabel = null;
 			}
 			
 			if (chartGlucoseDistributionLabel != null)
 			{
+				chartGlucoseDistributionLabel.removeFromParent();
 				chartGlucoseDistributionLabel.dispose();
 				chartGlucoseDistributionLabel = null;
 			}
 			
 			if (chartModeLabel != null)
 			{
+				chartModeLabel.removeFromParent();
 				chartModeLabel.dispose();
 				chartModeLabel = null;
 			}
 			
 			if (chartModeSettings != null)
 			{
+				chartModeSettings.removeFromParent();
 				chartModeSettings.dispose();
 				chartModeSettings = null;
 			}

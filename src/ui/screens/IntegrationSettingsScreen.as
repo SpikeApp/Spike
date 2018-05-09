@@ -126,30 +126,35 @@ package ui.screens
 		{
 			if (httpServerSettings != null)
 			{
+				httpServerSettings.removeFromParent();
 				httpServerSettings.dispose();
 				httpServerSettings = null;
 			}
 			
 			if (httpServerSectionLabel != null)
 			{
+				httpServerSectionLabel.removeFromParent();
 				httpServerSectionLabel.dispose();
 				httpServerSectionLabel = null;
 			}
 			
 			if (siDiaryLabel != null)
 			{
+				siDiaryLabel.removeFromParent();
 				siDiaryLabel.dispose();
 				siDiaryLabel = null;
 			}
 			
 			if (siDiarySettings != null)
 			{
+				siDiarySettings.removeFromParent();
 				siDiarySettings.dispose();
 				siDiarySettings = null;
 			}
 			
 			if (iFTTTLabel != null)
 			{
+				iFTTTLabel.removeFromParent();
 				iFTTTLabel.dispose();
 				iFTTTLabel = null;
 			}

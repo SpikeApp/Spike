@@ -106,6 +106,7 @@ package ui.screens
 			
 			if (iconImage != null)
 			{
+				iconImage.removeFromParent();
 				iconImage.dispose();
 				iconImage = null;
 			}
@@ -118,18 +119,21 @@ package ui.screens
 			if (backButton != null)
 			{
 				backButton.addEventListener(Event.TRIGGERED, onBackButtonTriggered);
+				backButton.removeFromParent();
 				backButton.dispose();
 				backButton = null;
 			}
 			
 			if (icon != null)
 			{
+				icon.removeFromParent();
 				icon.dispose();
 				icon = null;
 			}
 			
 			if (screenRenderer != null)
 			{
+				screenRenderer.removeFromParent();
 				screenRenderer.dispose();
 				screenRenderer = null;
 			}

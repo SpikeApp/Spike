@@ -94,12 +94,14 @@ package ui.screens
 		{
 			if (alertTypesLabel != null)
 			{
+				alertTypesLabel.removeFromParent();
 				alertTypesLabel.dispose();
 				alertTypesLabel = null;
 			}
 			
 			if (alertTypesList != null)
 			{
+				alertTypesList.removeFromParent();
 				alertTypesList.dispose();
 				alertTypesList = null;
 			}

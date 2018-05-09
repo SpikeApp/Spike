@@ -83,6 +83,7 @@ package ui.screens
 		{
 			if (treatmentsSettings != null)
 			{
+				treatmentsSettings.removeFromParent();
 				treatmentsSettings.dispose();
 				treatmentsSettings = null;
 			}

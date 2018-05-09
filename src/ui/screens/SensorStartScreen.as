@@ -229,6 +229,7 @@ package ui.screens
 			
 			if (dateSpinner != null)
 			{
+				dateSpinner.removeFromParent();
 				dateSpinner.dispose();
 				dateSpinner = null;
 			}
@@ -236,12 +237,14 @@ package ui.screens
 			if (startButton != null)
 			{
 				startButton.removeEventListener(Event.TRIGGERED, onSensorStarted);
+				startButton.removeFromParent();
 				startButton.dispose();
 				startButton = null;
 			}
 			
 			if (container != null)
 			{
+				container.removeFromParent();
 				container.dispose();
 				container = null;
 			}

@@ -23,8 +23,6 @@ package ui.screens
 	import feathers.controls.ScrollPolicy;
 	import feathers.core.ToggleGroup;
 	import feathers.events.FeathersEventType;
-	import feathers.motion.Cover;
-	import feathers.motion.Reveal;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -33,9 +31,10 @@ package ui.screens
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
-	import starling.animation.Transitions;
+	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
 	import treatments.Treatment;
@@ -72,6 +71,7 @@ package ui.screens
 		private var chartSettingsTopPadding:int = 10;
 		private var delimitterTopPadding:int = 10;
 		private var displayPieChart:Boolean;
+		private var isPortrait:Boolean;
 		
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
@@ -124,6 +124,7 @@ package ui.screens
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -604,7 +605,8 @@ package ui.screens
 		private function onCreation(event:Event):void
 		{
 			setGlucoseChart();
-			setChartSettings();
+			if (Constants.isPortrait)
+				setChartSettings();
 			redrawChartForTreatmentsAndLine();
 		}
 		
@@ -710,24 +712,17 @@ package ui.screens
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "false");
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			disposeDisplayObjects();
+			onCreation(null);
+		}
+		
 		/**
 		 * Utility
 		 */
-		override public function dispose():void
+		private function disposeDisplayObjects():void
 		{
-			/* Event Listeners */
-			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
-			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
-			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onInitialCalibrationReceived);
-			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
-			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
-			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
-			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
-			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
-			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
-			
-			/* Display Objects */
 			if (glucoseChart != null)
 			{
 				glucoseChart.removeFromParent();
@@ -798,6 +793,25 @@ package ui.screens
 				delimitter.dispose();
 				delimitter = null;
 			}
+		}
+		
+		override public function dispose():void
+		{
+			/* Event Listeners */
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onInitialCalibrationReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
+			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
+			/* Display Objects */
+			disposeDisplayObjects();
 			
 			/* Objects */
 			chartData.length = 0;

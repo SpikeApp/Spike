@@ -170,6 +170,7 @@ package ui.screens
 		{
 			if (callout != null)
 			{
+				callout.removeFromParent();
 				callout.dispose();
 				callout = null;
 			}
@@ -182,6 +183,7 @@ package ui.screens
 			
 			if (menuButtonImage != null)
 			{
+				menuButtonImage.removeFromParent();
 				menuButtonImage.dispose();
 				menuButtonImage = null;
 			}
@@ -194,6 +196,7 @@ package ui.screens
 			
 			if (moreButtonImage != null)
 			{
+				moreButtonImage.removeFromParent();
 				moreButtonImage.dispose();
 				moreButtonImage = null;
 			}
@@ -206,6 +209,7 @@ package ui.screens
 			
 			if (treatmentsImage != null)
 			{
+				treatmentsImage.removeFromParent();
 				treatmentsImage.dispose();
 				treatmentsImage = null;
 			}
@@ -213,6 +217,7 @@ package ui.screens
 			if (menuButton != null)
 			{
 				menuButton.removeEventListener( Event.TRIGGERED, onMenuButtonTriggered );
+				menuButton.removeFromParent();
 				menuButton.dispose();
 				menuButton = null;
 			}
@@ -220,6 +225,7 @@ package ui.screens
 			if (treatmentsButton != null)
 			{
 				treatmentsButton.removeEventListener( Event.TRIGGERED, onTreatmentButtonTriggered );
+				treatmentsButton.removeFromParent();
 				treatmentsButton.dispose();
 				treatmentsButton = null;
 			}
@@ -227,6 +233,7 @@ package ui.screens
 			if (moreButton != null)
 			{
 				moreButton.removeEventListener( Event.TRIGGERED, onMoreButtonTriggered );
+				moreButton.removeFromParent();
 				moreButton.dispose();
 				moreButton = null;
 			}
@@ -234,6 +241,7 @@ package ui.screens
 			if (treatmentsList != null)
 			{
 				treatmentsList.removeEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
+				treatmentsList.removeFromParent();
 				treatmentsList.dispose();
 				treatmentsList = null;
 			}
@@ -241,6 +249,7 @@ package ui.screens
 			if (extraOptionsList != null)
 			{
 				extraOptionsList.removeEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
+				extraOptionsList.removeFromParent();
 				extraOptionsList.dispose();
 				extraOptionsList = null;
 			}
@@ -248,6 +257,7 @@ package ui.screens
 			if (iphone4DummyMarker != null)
 			{
 				Starling.current.stage.removeChild(iphone4DummyMarker);
+				iphone4DummyMarker.removeFromParent();
 				iphone4DummyMarker.dispose();
 				iphone4DummyMarker = null;
 			}

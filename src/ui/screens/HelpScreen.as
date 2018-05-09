@@ -89,12 +89,14 @@ package ui.screens
 		{
 			if (tutorialSection != null)
 			{
+				tutorialSection.removeFromParent();
 				tutorialSection.dispose();
 				tutorialSection = null;
 			}
 			
 			if (generalHelpSection != null)
 			{
+				generalHelpSection.removeFromParent();
 				generalHelpSection.dispose();
 				generalHelpSection = null;
 			}

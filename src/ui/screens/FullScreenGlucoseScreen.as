@@ -618,41 +618,46 @@ package ui.screens
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 			this.removeEventListener(TouchEvent.TOUCH, onTouch);
 			
+			if(updateTimer != null)
+			{
+				updateTimer.stop();
+				updateTimer.removeEventListener(TimerEvent.TIMER, onUpdateTimer);
+				updateTimer = null;
+			}
+			
 			if(glucoseDisplay != null)
 			{
+				glucoseDisplay.removeFromParent();
 				glucoseDisplay.dispose();
 				glucoseDisplay = null;
 			}
 			
 			if (slopeDisplay != null)
 			{
+				slopeDisplay.removeFromParent();
 				slopeDisplay.dispose();
 				slopeDisplay = null;
 			}
 			
 			if(timeAgoDisplay != null)
 			{
+				timeAgoDisplay.removeFromParent();
 				timeAgoDisplay.dispose();
 				timeAgoDisplay = null;
 			}
 			
 			if (IOBCOBDisplay != null)
 			{
+				IOBCOBDisplay.removeFromParent();
 				IOBCOBDisplay.dispose();
 				IOBCOBDisplay = null;
 			}
 			
 			if(container != null)
 			{
+				container.removeFromParent();
 				container.dispose();
 				container = null;
-			}
-			
-			if(updateTimer != null)
-			{
-				updateTimer.stop();
-				updateTimer.removeEventListener(TimerEvent.TIMER, onUpdateTimer);
-				updateTimer = null;
 			}
 			
 			super.dispose();

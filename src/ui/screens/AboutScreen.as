@@ -80,6 +80,7 @@ package ui.screens
 		{
 			if (aboutSection != null)
 			{
+				aboutSection.removeFromParent();
 				aboutSection.dispose();
 				aboutSection = null;
 			}

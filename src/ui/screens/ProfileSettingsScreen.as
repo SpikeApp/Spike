@@ -100,24 +100,28 @@ package ui.screens
 		{
 			if (insulinsLabel != null)
 			{
+				insulinsLabel.removeFromParent();
 				insulinsLabel.dispose();
 				insulinsLabel = null;
 			}
 			
 			if (insulinsSettings != null)
 			{
+				insulinsSettings.removeFromParent();
 				insulinsSettings.dispose();
 				insulinsSettings = null;
 			}
 			
 			if (carbsLabel != null)
 			{
+				carbsLabel.removeFromParent();
 				carbsLabel.dispose();
 				carbsLabel = null;
 			}
 			
 			if (carbsSettings != null)
 			{
+				carbsSettings.removeFromParent();
 				carbsSettings.dispose();
 				carbsSettings = null;
 			}

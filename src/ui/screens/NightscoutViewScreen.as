@@ -167,15 +167,14 @@ package ui.screens
 		{
 			if (errorLabel != null)
 			{
-				if (errorContainer != null)
-					errorContainer.removeChild(errorLabel);
-				
+				errorLabel.removeFromParent();
 				errorLabel.dispose();
 				errorLabel = null;
 			}
 			
 			if (errorContainer != null)
 			{
+				errorContainer.removeFromParent();
 				errorContainer.dispose();
 				errorContainer = null;
 			}

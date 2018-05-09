@@ -81,12 +81,14 @@ package ui.screens
 		{
 			if (bugReportSettings != null)
 			{
+				bugReportSettings.removeFromParent();
 				bugReportSettings.dispose();
 				bugReportSettings = null;
 			}
 			
 			if (bugReportLabel != null)
 			{
+				bugReportLabel.removeFromParent();
 				bugReportLabel.dispose();
 				bugReportLabel = null;
 			}

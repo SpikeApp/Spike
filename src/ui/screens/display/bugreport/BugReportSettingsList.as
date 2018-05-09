@@ -36,7 +36,9 @@ package ui.screens.display.bugreport
 	
 	import network.EmailSender;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.text.TextFormat;
 	
 	import ui.popups.AlertManager;
@@ -73,6 +75,8 @@ package ui.screens.display.bugreport
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -120,6 +124,9 @@ package ui.screens.display.bugreport
 			else
 				fieldWidth = 200;
 			
+			if (!Constants.isPortrait)
+				fieldWidth += 100;
+			
 			//On/Off Toggle
 			traceToggle = LayoutFactory.createToggleSwitch(isTraceEnabled);
 			traceToggle.pivotX = 6;
@@ -158,7 +165,7 @@ package ui.screens.display.bugreport
 			//Instructions Description Label
 			warningDescriptionLabel = new Label();
 			warningDescriptionLabel.text = ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','warning_description');
-			warningDescriptionLabel.width = width - 20;
+			warningDescriptionLabel.width = width;
 			warningDescriptionLabel.wordWrap = true;
 			warningDescriptionLabel.paddingTop = 10;
 			warningDescriptionLabel.isQuickHitAreaEnabled = false;
@@ -464,11 +471,19 @@ package ui.screens.display.bugreport
 			messageField.clearFocus();
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			setupContent();
+		}
+		
 		/**
 		 * Utilty
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if(traceToggle != null)
 			{
 				traceToggle.removeEventListener( starling.events.Event.CHANGE, onTraceOnOff );

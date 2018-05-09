@@ -30,7 +30,10 @@ package ui.screens.display.sensor
 	import services.NightscoutService;
 	import services.NotificationService;
 	
+	import starling.core.Starling;
+	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import treatments.TreatmentsManager;
 	
@@ -82,6 +85,8 @@ package ui.screens.display.sensor
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -444,6 +449,16 @@ package ui.screens.display.sensor
 			}
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			AppInterface.instance.navigator.replaceScreen(Screens.SENSOR_STATUS, noTransition);
+			
+			function noTransition( oldScreen:DisplayObject, newScreen:DisplayObject, completeCallback:Function ):void
+			{
+				completeCallback();
+			};
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -462,29 +477,35 @@ package ui.screens.display.sensor
 		{
 			clearInterval(intervalID);
 			
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			/* Dispose Controls */
 			if(actionButton != null)
 			{
 				actionButton.removeEventListener(Event.TRIGGERED, onStopSensor);
 				actionButton.removeEventListener(Event.TRIGGERED, onStartSensor);
+				actionButton.removeFromParent();
 				actionButton.dispose();
 				actionButton = null;
 			}
 			
 			if(sensorStartDateLabel != null)
 			{
+				sensorStartDateLabel.removeFromParent();
 				sensorStartDateLabel.dispose();
 				sensorStartDateLabel = null;
 			}
 			
 			if(totalCalibrationsLabel != null)
 			{
+				totalCalibrationsLabel.removeFromParent();
 				totalCalibrationsLabel.dispose();
 				totalCalibrationsLabel = null;
 			}
 			
 			if(lastCalibrationDateLabel != null)
 			{
+				lastCalibrationDateLabel.removeFromParent();
 				lastCalibrationDateLabel.dispose();
 				lastCalibrationDateLabel = null;
 			}
@@ -492,7 +513,7 @@ package ui.screens.display.sensor
 			if(deleteAllCalibrationsButton != null)
 			{
 				deleteAllCalibrationsButton.removeEventListener(Event.TRIGGERED, onDeleteAllCalibrations);
-				calibrationActionsContainer.removeChild(deleteAllCalibrationsButton);
+				deleteAllCalibrationsButton.removeFromParent();
 				deleteAllCalibrationsButton.dispose();
 				deleteAllCalibrationsButton = null;
 			}
@@ -500,19 +521,21 @@ package ui.screens.display.sensor
 			if(deleteLastCalibrationButton != null)
 			{
 				deleteLastCalibrationButton.removeEventListener(Event.TRIGGERED, onDeleteLastCalibration);
-				calibrationActionsContainer.removeChild(deleteLastCalibrationButton);
+				deleteLastCalibrationButton.removeFromParent();
 				deleteLastCalibrationButton.dispose();
 				deleteLastCalibrationButton = null;
 			}
 			
 			if(calibrationActionsContainer != null)
 			{
+				calibrationActionsContainer.removeFromParent();
 				calibrationActionsContainer.dispose();
 				calibrationActionsContainer = null;
 			}
 			
 			if(sensorCountdownLabel != null)
 			{
+				sensorCountdownLabel.removeFromParent();
 				sensorCountdownLabel.dispose();
 				sensorCountdownLabel = null;
 			}

@@ -93,6 +93,7 @@ package ui.screens
 		{
 			if (statusList != null)
 			{
+				statusList.removeFromParent();
 				statusList.dispose();
 				statusList = null;
 			}

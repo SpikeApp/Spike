@@ -97,12 +97,14 @@ package ui.screens
 		{
 			if (speechSettings != null)
 			{
+				speechSettings.removeFromParent();
 				speechSettings.dispose();
 				speechSettings = null;
 			}
 			
 			if (speechLabel != null)
 			{
+				speechLabel.removeFromParent();
 				speechLabel.dispose();
 				speechLabel = null;
 			}

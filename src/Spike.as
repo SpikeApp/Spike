@@ -151,6 +151,7 @@ package
 			
 			/* Initialize Constants */
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
+			Constants.isPortrait = starling.stage.stageWidth < starling.stage.stageHeight;
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
@@ -167,7 +168,7 @@ package
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			Trace.myTrace("Spike.as", "Stage has resized. Width: " + starling.stage.stageWidth + ", Height: " + starling.stage.stageHeight));
+			Trace.myTrace("Spike.as", "Stage has been resized. Width: " + stage.stageWidth + ", Height: " + stage.stageHeight);
 			
 			if (starling != null)
 			{
@@ -178,6 +179,8 @@ package
 				
 				Starling.current.viewPort.width  = stage.stageWidth;
 				Starling.current.viewPort.height = stage.stageHeight;
+				
+				Constants.isPortrait = stage.stageWidth < stage.stageHeight;
 				
 				starling.start();
 			}

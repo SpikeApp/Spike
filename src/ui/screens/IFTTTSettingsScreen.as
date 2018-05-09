@@ -97,12 +97,14 @@ package ui.screens
 		{
 			if (iFTTTSettings != null)
 			{
+				iFTTTSettings.removeFromParent();
 				iFTTTSettings.dispose();
 				iFTTTSettings = null;
 			}
 			
 			if (iFTTTLabel != null)
 			{
+				iFTTTLabel.removeFromParent();
 				iFTTTLabel.dispose();
 				iFTTTLabel = null;
 			}
