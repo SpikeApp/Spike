@@ -76,12 +76,13 @@ package stats
 					followerUserStats.percentageLowRounded = Math.round ((100 - followerUserStats.percentageInRangeRounded - followerUserStats.percentageHighRounded) * 10) / 10;
 				}
 				followerUserStats.averageGlucose = (( (totalGlucose / realReadingsNumber) * 10 + 0.5)  >> 0) / 10;
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") followerUserStats.averageGlucose = Math.round(((BgReading.mgdlToMmol((followerUserStats.averageGlucose))) * 10)) / 10;
 				if (realReadingsNumber != 0)
 					followerUserStats.a1c = (( ((46.7 + followerUserStats.averageGlucose) / 28.7) * 10 + 0.5)  >> 0) / 10;
 				followerUserStats.captureRate = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 				followerUserStats.numReadingsTotal = realReadingsNumber;
 				followerUserStats.numReadingsDay = realReadingsNumber;
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") followerUserStats.averageGlucose = Math.round(((BgReading.mgdlToMmol((followerUserStats.averageGlucose))) * 10)) / 10;
 
 				return followerUserStats;
 			}
