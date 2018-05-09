@@ -1958,6 +1958,7 @@ package services
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(writeCharacteristic, resetTx.byteSequence)) {
 				myTrace("doG5Reset writeValueForCharacteristic G5CommunicationCharacteristic failed");
 			}
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, "0");
 		}
 		
 		private static function startRescan(event:flash.events.Event):void {
