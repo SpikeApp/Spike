@@ -105,6 +105,9 @@ package services
 		
 		private static function firstStep():void
 		{
+			if (Constants.mainMenuButton == null || Constants.mainMenuButton.parent == null)
+				return;
+			
 			firstStepActive = true;
 			
 			firstStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','first_step_message'), Constants.mainMenuButton, null, false);

@@ -72,6 +72,7 @@ package ui.screens
 		private var chartSettingsTopPadding:int = 10;
 		private var delimitterTopPadding:int = 10;
 		private var displayPieChart:Boolean;
+		private var redrawChartTimeoutID:int;
 		
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
@@ -278,13 +279,18 @@ package ui.screens
 		
 		private function redrawChartForTreatmentsAndLine():void
 		{
-			setTimeout(redrawChart, 1500);
+			redrawChartTimeoutID = setTimeout(redrawChart, 1500);
 		}
 		
 		private function redrawChart():void
 		{
+			clearTimeout(redrawChartTimeoutID);
+			
 			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
 			{
+				if (glucoseChart == null)
+					return;
+				
 				//var previousData:Array = glucoseChart.dataSource.concat();
 				chartData = glucoseChart.dataSource;
 				
@@ -715,6 +721,9 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
+			/* Timers */
+			clearTimeout(redrawChartTimeoutID);
+			
 			/* Event Listeners */
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);

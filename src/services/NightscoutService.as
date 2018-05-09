@@ -301,6 +301,9 @@ package services
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
+			if (loader == null || loader.data == null)
+				return;
+			
 			//Get response
 			var response:String = loader.data;
 			
@@ -1400,7 +1403,14 @@ package services
 			if (response.indexOf(BlueToothDevice.name) != -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Calibration upload was successful.");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP, String(Calibration.last().timestamp));
+				
+				var calibrationUploadTimestamp:Number;
+				if (Calibration.last() != null && !isNaN(Calibration.last().timestamp))
+					calibrationUploadTimestamp = Calibration.last().timestamp;
+				else
+					calibrationUploadTimestamp = new Date().valueOf();
+				
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP, String(calibrationUploadTimestamp));
 				activeCalibrations.length = 0;
 			}
 			else

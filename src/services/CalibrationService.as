@@ -4,7 +4,6 @@ package services
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -34,7 +33,6 @@ package services
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.dexcomshare.DexcomShareFollowersList;
 	
 	import utils.BadgeBuilder;
 	import utils.Trace;
