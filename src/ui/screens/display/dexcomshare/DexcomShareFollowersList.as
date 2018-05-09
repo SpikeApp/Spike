@@ -18,6 +18,7 @@ package ui.screens.display.dexcomshare
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
+	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
@@ -27,6 +28,7 @@ package ui.screens.display.dexcomshare
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -76,6 +78,8 @@ package ui.screens.display.dexcomshare
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupPreloader();
@@ -416,11 +420,22 @@ package ui.screens.display.dexcomshare
 			return responseInfo;
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			if (positionHelper != null)
+				positionHelper.x = this.width / 2;
+			
+			if (errorLabel != null)
+				errorLabel.width = width - 20;
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (followerManagmentAccessoriesList != null && followerManagmentAccessoriesList.length > 0)
 			{
 				var loopLength:uint = followerManagmentAccessoriesList.length;

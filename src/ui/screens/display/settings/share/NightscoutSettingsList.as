@@ -17,7 +17,9 @@ package ui.screens.display.settings.share
 	
 	import services.NightscoutService;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -48,6 +50,8 @@ package ui.screens.display.settings.share
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -80,18 +84,18 @@ package ui.screens.display.settings.share
 			nsToggle.addEventListener( Event.CHANGE, onNightscoutOnOff );
 			
 			//URL
-			nsURL = LayoutFactory.createTextInput(false, false, 220, HorizontalAlign.RIGHT);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				nsURL.width = 190;
+			nsURL = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 190 : 220, HorizontalAlign.RIGHT);
+			if (!Constants.isPortrait)
+				nsURL.width += 100;
 			nsURL.text = selectedURL;
 			nsURL.prompt = "yoursite.example.com";
 			nsURL.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			nsURL.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//API Secret
-			nsAPISecret = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				nsAPISecret.width = 120;
+			nsAPISecret = LayoutFactory.createTextInput(true, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
+			if (!Constants.isPortrait)
+				nsAPISecret.width += 100;
 			nsAPISecret.text = selectedAPISecret;
 			nsAPISecret.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			nsAPISecret.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -210,8 +214,34 @@ package ui.screens.display.settings.share
 			NightscoutService.ignoreSettingsChanged = false;
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (nsURL != null)
+			{
+				nsURL.clearFocus();
+				nsURL.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 190 : 220;
+				if (!Constants.isPortrait)
+					nsURL.width += 100;
+			}
+			
+			if (nsAPISecret != null)
+			{
+				nsAPISecret.clearFocus();
+				nsAPISecret.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
+				if (!Constants.isPortrait)
+					nsAPISecret.width += 100;
+			}
+		}
+		
+		/**
+		 * Utility
+		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if(nsToggle != null)
 			{
 				nsToggle.removeEventListener( Event.CHANGE, onNightscoutOnOff );
