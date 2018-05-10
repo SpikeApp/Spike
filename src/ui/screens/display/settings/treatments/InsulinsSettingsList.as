@@ -23,7 +23,9 @@ package ui.screens.display.settings.treatments
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import treatments.Insulin;
 	import treatments.ProfileManager;
@@ -63,6 +65,8 @@ package ui.screens.display.settings.treatments
 		{
 			super();
 			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			setupProperties();
 			setupInitialContent();	
 			setupContent();
@@ -100,7 +104,7 @@ package ui.screens.display.settings.treatments
 			modeLabel.width = width;
 			
 			//New Insulin Name
-			insulinName = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
+			insulinName = LayoutFactory.createTextInput(false, false, Constants.isPortrait ? 140: 240, HorizontalAlign.RIGHT);
 			insulinName.addEventListener(Event.CHANGE, onInsulinNameChanged);
 			
 			//New Insulin Type
@@ -389,8 +393,26 @@ package ui.screens.display.settings.treatments
 			super.draw();
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (modeLabel != null)
+				modeLabel.width = width;
+			
+			if (insulinSettingsExplanation != null)
+				insulinSettingsExplanation.width = width;
+			
+			if (insulinSettingsExplanation != null)
+				guideContainer.width = width;
+			
+			if (insulinName != null)
+				insulinName.width = Constants.isPortrait ? 140: 240;
+		}
+		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			if (accessoryList != null)
 			{
