@@ -15,7 +15,9 @@ package ui.screens.display.settings.chart
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.chart.ColorPicker;
 	import ui.screens.display.LayoutFactory;
@@ -65,6 +67,8 @@ package ui.screens.display.settings.chart
 			super();
 			
 			this._parent = parentDisplayObject;
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -490,6 +494,11 @@ package ui.screens.display.settings.chart
 			}
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -501,6 +510,8 @@ package ui.screens.display.settings.chart
 		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if(urgentHighColorPicker != null)
 			{
 				urgentHighColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);

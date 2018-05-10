@@ -12,7 +12,9 @@ package ui.screens.display.settings.chart
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -39,6 +41,8 @@ package ui.screens.display.settings.chart
 		public function SizeSettingsList()
 		{
 			super();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -70,30 +74,30 @@ package ui.screens.display.settings.chart
 			glucoseDisplayFontSize.maximum = 100;
 			glucoseDisplayFontSize.value = 50;
 			glucoseDisplayFontSize.step = 50;
-			glucoseDisplayFontSize.width = glucoseMarkerRadius.width;
+			glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			if (!Constants.isPortrait)
+				glucoseDisplayFontSize.width += 100;
 			glucoseDisplayFontSize.pivotX = 10;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				glucoseDisplayFontSize.width = 100;
 			
 			timeAgoDisplayFontSize = new Slider();
 			timeAgoDisplayFontSize.minimum = 0;
 			timeAgoDisplayFontSize.maximum = 100;
 			timeAgoDisplayFontSize.value = 50;
 			timeAgoDisplayFontSize.step = 50;
-			timeAgoDisplayFontSize.width = glucoseMarkerRadius.width;
+			timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			if (!Constants.isPortrait)
+				timeAgoDisplayFontSize.width += 100;
 			timeAgoDisplayFontSize.pivotX = 10;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				timeAgoDisplayFontSize.width = 100;
 			
 			axisFontSize = new Slider();
 			axisFontSize.minimum = 0;
 			axisFontSize.maximum = 100;
 			axisFontSize.value = 50;
 			axisFontSize.step = 50;
-			axisFontSize.width = glucoseMarkerRadius.width;
+			axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			if (!Constants.isPortrait)
+				axisFontSize.width += 100;
 			axisFontSize.pivotX = 10;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				axisFontSize.width = 100;
 			
 			//Set Size Settings Item Renderer
 			itemRendererFactory = function():IListItemRenderer
@@ -203,11 +207,42 @@ package ui.screens.display.settings.chart
 			needsSave = true;
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (glucoseMarkerRadius != null)
+			{
+				if (glucoseDisplayFontSize != null)
+				{
+					glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					if (!Constants.isPortrait)
+						glucoseDisplayFontSize.width += 100;
+				}
+				
+				if (timeAgoDisplayFontSize != null)
+				{
+					timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					if (!Constants.isPortrait)
+						timeAgoDisplayFontSize.width += 100;
+				}
+				
+				if (axisFontSize != null)
+				{
+					axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					if (!Constants.isPortrait)
+						axisFontSize.width += 100;
+				}
+			}
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (glucoseMarkerRadius != null)
 			{
 				glucoseMarkerRadius.removeEventListener(Event.CHANGE, onSizeChange);
