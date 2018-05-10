@@ -152,9 +152,12 @@ package ui.screens
 		
 		private function onCloseCallOut(e:Event):void
 		{
-			callout.close(true);
-			callout.dispose();
-			callout = null;
+			if (callout != null)
+			{
+				callout.close();
+				callout.dispose();
+				callout = null;
+			}
 		}
 		
 		private function toggleMenu():void 
