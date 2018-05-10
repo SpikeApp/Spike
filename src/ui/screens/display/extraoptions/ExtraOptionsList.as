@@ -416,6 +416,13 @@ package ui.screens.display.extraoptions
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
 			removeEventListener( starling.events.Event.CHANGE, onMenuChanged );
 			
+			if (timeoutTimer != null)
+			{
+				timeoutTimer.stop();
+				timeoutTimer.removeEventListener(TimerEvent.TIMER, onTimeoutActivated);
+				timeoutTimer = null;
+			}
+			
 			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || !SystemUtil.isApplicationActive)
 			{
 				return;
@@ -503,13 +510,6 @@ package ui.screens.display.extraoptions
 			{
 				readingOnDemandIconImage.dispose();
 				readingOnDemandIconImage = null;;
-			}
-			
-			if (timeoutTimer != null)
-			{
-				timeoutTimer.stop();
-				timeoutTimer.removeEventListener(TimerEvent.TIMER, onTimeoutActivated);
-				timeoutTimer = null;
 			}
 			
 			super.dispose();
