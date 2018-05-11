@@ -19,7 +19,9 @@ package ui.screens.display.settings.transmitter
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.text.TextFormat;
 	
 	import ui.AppInterface;
@@ -54,6 +56,8 @@ package ui.screens.display.settings.transmitter
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -140,7 +144,7 @@ package ui.screens.display.settings.transmitter
 			transmitterType.addEventListener(Event.CHANGE, onTransmitterTypeChange);
 			
 			//Transmitter ID
-			transmitterID = LayoutFactory.createTextInput(false, false, 100, HorizontalAlign.RIGHT);
+			transmitterID = LayoutFactory.createTextInput(false, false, Constants.isPortrait ? 100 : 150, HorizontalAlign.RIGHT);
 			transmitterID.text = transmitterIDValue;
 			populateTransmitterIDPrompt();
 			transmitterID.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
@@ -430,11 +434,20 @@ package ui.screens.display.settings.transmitter
 			populateTransmitterIDPrompt();
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (transmitterID != null)
+				transmitterID.width = Constants.isPortrait ? 100 : 150;
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			
 			if(transmitterID != null)
