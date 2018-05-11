@@ -1,4 +1,5 @@
 2.0.7
+ENHANCEMENT: Support for older versions of xDrip wxl (Dexom G4). For instance: xDrip delivered by xdripkit.co.uk
 FIX: Treatments where not displaying correctly on Nightscout reports when using some specific browsers. Spike now uses a different date format that should display correctly on all browsers. Thank you Sulka Haro for pointing me in the right direction.
 
 2.0.6
