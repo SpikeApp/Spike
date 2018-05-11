@@ -158,6 +158,23 @@ package ui.chart
 		private var scrollerBackground:Quad;
 		private var handPickerFill:Quad;
 		private var handpickerOutline:Shape;
+		private var yAxisLine:Shape;
+		private var highestGlucoseLineMarker:Shape;
+		private var highestGlucoseLegend:Label;
+		private var lowestGlucoseLineMarker:Shape;
+		private var lowestGlucoseLegend:Label;
+		private var highUrgentGlucoseLineMarker:Shape;
+		private var highUrgentGlucoseDashedLine:Shape;
+		private var highGlucoseLineMarker:Shape;
+		private var highGlucoseLegend:Label;
+		private var highGlucoseDashedLine:Shape;
+		private var lowGlucoseLineMarker:Shape;
+		private var lowGlucoseLegend:Label;
+		private var lowGlucoseDashedLine:Shape;
+		private var lowUrgentGlucoseLineMarker:Shape;
+		private var lowUrgentGlucoseLegend:Label;
+		private var lowUrgentGlucoseDashedLine:Shape;
+		private var yAxis:Sprite;
 		
 		//Objects
 		private var statusUpdateTimer:Timer;
@@ -220,53 +237,16 @@ package ui.chart
 		private var moveBtn:Button;
 		private var deleteBtn:Button;
 
-		private var yAxisLine:Shape;
+		private var deviceFontMultiplier:Number;
 
-		private var highestGlucoseLineMarker:Shape;
+		private var timeDisplayFont:Number;
 
-		private var highestGlucoseLegend:Label;
+		private var retroDisplayFont:Number;
 
-		private var lowestGlucoseLineMarker:Shape;
-
-		private var lowestGlucoseLegend:Label;
-
-		private var highUrgentGlucoseLineMarker:Shape;
-
-		private var highUrgentGlucoseDashedLine:Shape;
-
-		private var highGlucoseLineMarker:Shape;
-
-		private var highGlucoseLegend:Label;
-
-		private var highGlucoseDashedLine:Shape;
-
-		private var lowGlucoseLineMarker:Shape;
-
-		private var lowGlucoseLegend:Label;
-
-		private var lowGlucoseDashedLine:Shape;
-
-		private var lowUrgentGlucoseLineMarker:Shape;
-
-		private var lowUrgentGlucoseLegend:Label;
-
-		private var lowUrgentGlucoseDashedLine:Shape;
-
-		private var yAxis:Sprite;
+		private var labelsYPos:Number;
 		
-		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, scrollerWidth:Number, scrollerHeight:Number)
+		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number)
 		{
-			//Set properties
-			this.timelineRange = timelineRange;
-			this._graphWidth = chartWidth;
-			this._graphHeight = chartHeight;
-			this._scrollerWidth = scrollerWidth;
-			this._scrollerHeight = scrollerHeight;
-			this.mainChartGlucoseMarkersList = [];
-			this.scrollChartGlucoseMarkersList = [];
-			this.mainChartLineList = [];
-			this.scrollerChartLineList = [];
-			
 			//Unit
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
 				glucoseUnit = "mg/dL";
@@ -359,6 +339,20 @@ package ui.chart
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
+			
+			//Calculate chartTopPadding
+			calculateTopPadding();
+			
+			//Set properties
+			this.timelineRange = timelineRange;
+			this._graphWidth = chartWidth;
+			this._scrollerWidth = chartWidth;
+			this._scrollerHeight = 50;
+			this._graphHeight = chartHeight - chartTopPadding - _scrollerHeight - scrollerTopPadding - (timelineActive ? 10 : 0);
+			this.mainChartGlucoseMarkersList = [];
+			this.scrollChartGlucoseMarkersList = [];
+			this.mainChartLineList = [];
+			this.scrollerChartLineList = [];
 		}
 		
 		/**
@@ -2458,15 +2452,15 @@ package ui.chart
 			currentNumberOfMakers == previousNumberOfMakers
 		}
 		
-		private function createStatusTextDisplays():void
+		private function calculateTopPadding():void
 		{
 			/* Calculate Font Sizes */
-			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
+			deviceFontMultiplier = DeviceInfo.getFontMultipier();
 			glucoseDisplayFont = 44 * deviceFontMultiplier * userBGFontMultiplier;
 			/*var timeDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			var retroDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;*/
-			var timeDisplayFont:Number = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-			var retroDisplayFont:Number = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			timeDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			retroDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
 				timeDisplayFont += 1;
@@ -2480,8 +2474,11 @@ package ui.chart
 			else
 				chartTopPadding *= userTimeAgoFontMultiplier;
 			
-			var yPos:Number = 6 * DeviceInfo.getVerticalPaddingMultipier() * userBGFontMultiplier;
-			
+			labelsYPos = 6 * DeviceInfo.getVerticalPaddingMultipier() * userBGFontMultiplier;
+		}
+		
+		private function createStatusTextDisplays():void
+		{
 			//Glucose Value Display
 			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("0", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
 			glucoseValueDisplay.touchable = false;
@@ -2498,19 +2495,19 @@ package ui.chart
 			glucoseTimeAgoPill.setValue("0", "mg/dL", chartFontColor);
 			glucoseTimeAgoPill.x = glucoseStatusLabelsMargin + 4;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-				glucoseTimeAgoPill.y = yPos;
+				glucoseTimeAgoPill.y = labelsYPos;
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-				glucoseTimeAgoPill.y = yPos - 2;
+				glucoseTimeAgoPill.y = labelsYPos - 2;
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-				glucoseTimeAgoPill.y = yPos;
+				glucoseTimeAgoPill.y = labelsYPos;
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-				glucoseTimeAgoPill.y = yPos - 4;
+				glucoseTimeAgoPill.y = labelsYPos - 4;
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				glucoseTimeAgoPill.y = yPos - 8;
+				glucoseTimeAgoPill.y = labelsYPos - 8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-				glucoseTimeAgoPill.y = yPos + 5;
+				glucoseTimeAgoPill.y = labelsYPos + 5;
 			else
-				glucoseTimeAgoPill.y = yPos;
+				glucoseTimeAgoPill.y = labelsYPos;
 			addChild(glucoseTimeAgoPill);
 			
 			//Glucose Time Display
