@@ -1,5 +1,7 @@
-2.0.6
+2.0.7
+FIX: Treatments where not displaying correctly on Nightscout reports when using some specific browsers. Spike now uses a different date format that should display correctly on all browsers.
 
+2.0.6
 FIX: The annoying bug in the Today Widget (introduced in version 2.0.4) that was making it not display readings on the graph for followers was only partially fixed. It's 100% fixed now.
 FIX: A1C % was not being correctly calculated for followers when using mmol/L. Spike should now calculate everything correctly.
 

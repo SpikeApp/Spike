@@ -460,7 +460,7 @@ package network.httpserver.API
 			upperProfileObject.startDate = nsFormatter.format(0);
 			upperProfileObject.mills = "0";
 			upperProfileObject.units = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mg/dl" : "mmol";
-			upperProfileObject.created_at = !BlueToothDevice.isFollower() && ProfileManager.profilesList.length > 0 ? nsFormatter.format((ProfileManager.profilesList[0] as Profile).timestamp) : nsFormatter.format(new Date().valueOf()); 
+			upperProfileObject.created_at = !BlueToothDevice.isFollower() && ProfileManager.profilesList.length > 0 ? nsFormatter.format((ProfileManager.profilesList[0] as Profile).timestamp).replace("000+0000", "000Z") : nsFormatter.format(new Date().valueOf()).replace("000+0000", "000Z"); 
 			
 			var upperSpikeProfile:Object = {};
 			var spikeProfile:Object = {};
@@ -598,7 +598,7 @@ package network.httpserver.API
 					var responseArray:Array = [];
 					var responseObject:Object = {};
 					responseObject["_id"] = treatment.ID;
-					responseObject["created_at"] = nsFormatter.format(treatmentTimestamp);
+					responseObject["created_at"] = nsFormatter.format(treatmentTimestamp).replace("000+0000", "000Z");
 					responseObject.eventType = treatmentEventType;
 					responseObject.insulin = treatmentInsulinAmount;
 					responseObject.carbs = treatmentCarbs;
@@ -641,7 +641,7 @@ package network.httpserver.API
 						
 						var responseTreatment:Object = {};
 						responseTreatment["_id"] = spikeTreatment.ID;
-						responseTreatment["created_at"] = nsFormatter.format(spikeTreatment.timestamp);
+						responseTreatment["created_at"] = nsFormatter.format(spikeTreatment.timestamp).replace("000+0000", "000Z");
 						responseTreatment.eventType = responseTreatmentType;
 						responseTreatment.insulin = spikeTreatment.insulinAmount;
 						responseTreatment.carbs = spikeTreatment.carbs;

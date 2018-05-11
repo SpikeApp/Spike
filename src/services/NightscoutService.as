@@ -800,7 +800,7 @@ package services
 				newTreatment["duration"] = 45;
 			}
 			newTreatment["_id"] = treatment.ID;
-			newTreatment["created_at"] = formatter.format(treatment.timestamp);
+			newTreatment["created_at"] = formatter.format(treatment.timestamp).replace("000+0000", "000Z");
 			newTreatment["enteredBy"] = "Spike";
 			newTreatment["notes"] = treatment.note;
 			
@@ -1306,7 +1306,7 @@ package services
 			var newVisualCalibration:Object = new Object();
 			newVisualCalibration["_id"] = UniqueId.createEventId();	
 			newVisualCalibration["eventType"] = "BG Check";	
-			newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
+			newVisualCalibration["created_at"] = formatter.format(calibration.timestamp).replace("000+0000", "000Z");
 			newVisualCalibration["enteredBy"] = "Spike";	
 			newVisualCalibration["glucose"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? calibration.bg : Math.round(BgReading.mgdlToMmol(calibration.bg) * 10) / 10;
 			newVisualCalibration["glucoseType"] = "Finger";
@@ -1494,7 +1494,7 @@ package services
 			var eventID:String = UniqueId.createEventId();
 			newSensor["_id"] = eventID;	
 			newSensor["eventType"] = "Sensor Start";	
-			newSensor["created_at"] = formatter.format(Sensor.getActiveSensor().startedAt);
+			newSensor["created_at"] = formatter.format(Sensor.getActiveSensor().startedAt).replace("000+0000", "000Z");
 			newSensor["enteredBy"] = "Spike";
 			
 			//Add sensor start to Chart
