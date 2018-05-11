@@ -94,8 +94,16 @@ package database
 		public static const LOCAL_SETTING_HEALTHKIT_STORE_ON:int = 22;
 		public static const LOCAL_SETTING_LICENSE_INFO_ACCEPTED:int = 23;
 		public static const LOCAL_SETTING_SELECTION_UNIT_DONE:int = 24;
-		public static const LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE:int = 25;
-		public static const LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE:int = 26;
+		/**
+		 * for G4. in case xdrip has wxl code which doesn't support writing transmitter id from app to xdrip, then Spike can give info and propose user to send
+		 * new wxl code that supports this.
+		 */
+		public static const LOCAL_SETTING_TIMESTAMP_SINCE_LAST_WARNING_OLD_WXL_CODE_USED:int = 25;
+		/**
+		 * for G4. in case xdrip has wxl code which doesn't support writing transmitter id from app to xdrip, then Spike can give info and propose user to send
+		 * new wxl code that supports this.
+		 */
+		public static const LOCAL_SETTING_DONTASKAGAIN_ABOUT_OLD_WXL_CODE_USED:int = 26;
 		public static const LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED:int = 27;
 		public static const LOCAL_SETTING_OVERRIDE_MUTE:int = 28;
 		public static const LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK:int = 29;
