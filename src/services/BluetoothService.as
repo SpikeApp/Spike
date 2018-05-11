@@ -95,6 +95,7 @@ package services
 	{
 		[ResourceBundle("globaltranslations")]
 		[ResourceBundle("bluetoothservice")]
+		[ResourceBundle("transmitterservice")]
 		
 		private static var _instance:BluetoothService = new BluetoothService();
 		public static function get instance():BluetoothService
@@ -234,12 +235,6 @@ package services
 		private static var G5_RESET_REQUESTED:Boolean = false;
 		private static var G5ResetTimeStamp:Number =0;
 				
-		//Dexcom G4 variables
-		private static var timeStampOfLastWarningUnknownG4Command:Number = 0;
-		//list of packet types seen in logs for xdrips from xdripkit.co.uk
-		private static var listOfSeenInvalidPacketTypes:Array = [49, 50, 51, 52, 53, 54, 55, 56, 57, 84];
-		private static var unsupportedPacketType:int = 0;
-
 		//Transmiter_PL variables
 		private static var timeStampSinceLastSensorAgeUpdate_Transmiter_PL:Number = 0;
 		private static var previousSensorAgeValue_Transmiter_PL:Number = 0;
@@ -1840,14 +1835,16 @@ package services
 			var xBridgeProtocolLevel:Number;
 			var blueToothServiceEvent:BlueToothServiceEvent;
 			var bridgeBatteryPercentage:Number;
+			var rawData:Number;
+			var transmitterBatteryVoltage:Number;
 			switch (packetType) {
 				case 0:
 					//data packet
-					var rawData:Number = buffer.readInt();
+					rawData = buffer.readInt();
 					var filteredData:Number = buffer.readInt();
-					var transmitterBatteryVoltage:Number = buffer.readUnsignedByte();
+					transmitterBatteryVoltage = buffer.readUnsignedByte();
 					
-					if (packetLength == 21) {//xbridge with protocol that has also the timestamp, example xbridger
+					if (packetLength == 21) {//0x15 xbridge with protocol that has also the timestamp, example xbridger
 						//could also be for dexbridgewixel, however not yet tested for that
 						bridgeBatteryPercentage = buffer.readUnsignedByte();
 						txID = buffer.readInt();
@@ -1858,7 +1855,7 @@ package services
 						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 						blueToothServiceEvent.data = new TransmitterDataXBridgeRDataPacket(rawData, filteredData, transmitterBatteryVoltage, bridgeBatteryPercentage, decodeTxID(txID), timestamp);
 						_instance.dispatchEvent(blueToothServiceEvent);
-					} else if (packetLength == 17) {//xbridge
+					} else if (packetLength == 17) {//0x11 xbridge
 						//following only if the name of the device contains "bridge", if it' doesnt contain bridge, then it's an xdrip (old) and doesn't have those bytes' +
 						//or if packetlenth == 17, why ? because it could be a drip with xbridge software but still with a name xdrip, because it was originally an xdrip that was later on overwritten by the xbridge software, in that case the name will still by xdrip and not xbridge
 						bridgeBatteryPercentage = buffer.readUnsignedByte();
@@ -1890,40 +1887,65 @@ package services
 					xBridgeProtocolLevel = buffer.readUnsignedByte();//not needed for the moment
 					break;
 				default:
-					myTrace("processG4TransmitterData unknown packetType received : " + packetType);
-					warnUnknownG4PacketType(packetType);
+					myTrace("in processG4TransmitterData, unknown packet type, looks like an xdrip with old wxl code which starts with the raw_data encoded.");
+					//Supports for example xdrip delivered by xdripkit.co.uk
+					//Expected format is \"raw_data transmitter_battery_level bridge_battery_level with bridge_battery_level always 0" 
+					//Example 123632.218.0
+					//Those packets don't start with a fixed packet length and packet type, as they start with representation of an Integer
+					buffer.position = 0;
+					var bufferAsString:String = buffer.readUTFBytes(buffer.length);
+					var bufferAsStringSplitted:Array = bufferAsString.split(/\s/);
+					rawData = new Number(bufferAsStringSplitted[0]);
+					
+					if (isNaN(rawData)) {
+						myTrace("in processG4TransmitterData, data doesn't start with an Integer, no further processing");
+						return;
+					}
+					myTrace("in processG4TransmitterData, raw_data = " + rawData.toString())
+					
+					transmitterBatteryVoltage = Number.NaN; 
+					if (bufferAsStringSplitted.length > 1) {
+						transmitterBatteryVoltage = new Number(bufferAsStringSplitted[1]);
+						myTrace("in processG4TransmitterData, transmitterBatteryVoltage = " + transmitterBatteryVoltage.toString());
+					}
+					myTrace("in processG4TransmitterData, dispatching transmitter data with transmitterBatteryVoltage = " + transmitterBatteryVoltage);
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent.data = new TransmitterDataXdripDataPacket(rawData, rawData, transmitterBatteryVoltage);
+					_instance.dispatchEvent(blueToothServiceEvent);
+					warnOldWxlCodeUsed(packetType);
 			}
 		}
 		
-		public static function warnUnknownG4PacketType(packetType:int):void {
+		public static function warnOldWxlCodeUsed(packetType:int):void {
 			if (BackgroundFetch.appIsInBackground()) {
 				return;
 			}
-			if ((new Date()).valueOf() - new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE)) < 30 * 60 * 1000)
+			
+			//give the info no more than once every 24 hours
+			if ((new Date()).valueOf() - new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_WARNING_OLD_WXL_CODE_USED)) < 24 * 60 * 60 * 1000)
 				return;
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE) ==  "true") {
+			
+			//check if user has chosen not to receive this warning again
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_OLD_WXL_CODE_USED) ==  "true") {
 				return;
 			}
-			if (listOfSeenInvalidPacketTypes.indexOf(packetType) > -1) {
-				unsupportedPacketType = packetType;
-				
-				var alert:Alert = AlertManager.showActionAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('bluetoothservice', "xdrip_alert_title"),
-						ModelLocator.resourceManagerInstance.getString('bluetoothservice', "unknownpackettypeinfo"),
-						Number.NaN,
-						[
-							{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","cancel_button_label").toUpperCase() },
-							{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "dontaskagain") },
-							{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "notnow") },
-							{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "sendemail") }
-						]
-					)
-				alert.height = 320;
-				alert.buttonGroupProperties.gap = -5;
-				alert.width = 310;
-				alert.addEventListener( starling.events.Event.CLOSE, sendemail );
-			}
+			
+			var alert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('transmitterservice', "warning"),
+					ModelLocator.resourceManagerInstance.getString('bluetoothservice', "oldwxlused"),
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","cancel_button_label").toUpperCase() },
+						{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "dontaskagain") },
+						{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "notnow") },
+						{ label: ModelLocator.resourceManagerInstance.getString('bluetoothservice', "sendemail") }
+					]
+				)
+			alert.height = 320;
+			alert.buttonGroupProperties.gap = -5;
+			alert.width = 310;
+			alert.addEventListener( starling.events.Event.CLOSE, sendemail );
 		}
 		
 		private static function sendemail(e:starling.events.Event, data:Object):void {
@@ -1931,19 +1953,18 @@ package services
 				if (data.label == ModelLocator.resourceManagerInstance.getString("globaltranslations","cancel_button_label").toUpperCase()) {
 					return;
 				} else if (data.label == ModelLocator.resourceManagerInstance.getString('bluetoothservice', "notnow")) {
-					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE, (new Date()).valueOf().toString());
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_WARNING_OLD_WXL_CODE_USED, (new Date()).valueOf().toString());
 					return;
 				} else if (data.label == ModelLocator.resourceManagerInstance.getString('bluetoothservice', "dontaskagain")) {
-					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE, "true");
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_OLD_WXL_CODE_USED, "true");
 					return;
 				}
 			}
 			
-			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE, (new Date()).valueOf().toString());
-			var body:String = "Hi,\n\nRequest for support wxl. Unsupported packetType =  " + unsupportedPacketType + ".\n\nregards.";
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_WARNING_OLD_WXL_CODE_USED, (new Date()).valueOf().toString());
+			var body:String = "Hi,\n\nRequest for support wxl.\n\nregards.";
 			G4WixelSender.displayWixelSender();
 		}
-
 		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("BluetoothService.as", log);
