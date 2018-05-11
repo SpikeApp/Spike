@@ -33,6 +33,7 @@ package ui.screens
 	
 	import starling.core.Starling;
 	import starling.display.Shape;
+	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
@@ -72,6 +73,7 @@ package ui.screens
 		private var delimitterTopPadding:int = 10;
 		private var displayPieChart:Boolean;
 		private var isPortrait:Boolean;
+		private var scrollerTopPadding:int = 5;
 		
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
@@ -145,7 +147,8 @@ package ui.screens
 		private function setGlucoseChart():void
 		{
 			availableScreenHeight = Constants.stageHeight - this.header.height;
-			scrollChartHeight = availableScreenHeight / 10; //10% of available screen size
+			if (Constants.isPortrait)
+				scrollChartHeight = availableScreenHeight / 10; //10% of available screen size
 			
 			if (displayPieChart && ((!displayIOBEnabled && !displayCOBEnabled) || !treatmentsEnabled || !chartTreatmentsEnabled))
 			{
@@ -195,12 +198,52 @@ package ui.screens
 			else
 				mainChartHeight = calculateChartHeight();
 			
+			
+			if (!Constants.isPortrait)
+			{
+				var chartTopPadding:Number = 100;
+				var userTimeAgoFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
+				if (treatmentsEnabled && chartTreatmentsEnabled && (displayIOBEnabled || displayCOBEnabled))
+				{
+					if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+						chartTopPadding = 93;
+					else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+						chartTopPadding = 95;
+					else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+						chartTopPadding = 92; 
+					else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+						chartTopPadding = 104; 
+					else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
+						chartTopPadding = 87; 
+					else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+						chartTopPadding = 80; 
+					else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+						chartTopPadding = 77; 
+					else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+						chartTopPadding = 82; 
+					else
+						chartTopPadding = 100;
+					
+					chartTopPadding += userTimeAgoFontMultiplier * 4;
+				}
+				else
+				{
+					chartTopPadding = 65;
+					if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+						chartTopPadding += 12;
+				}
+				
+				var scrollerTopPadding:int = 5;
+				var statusBarHeight:int = 20;
+				
+				scrollChartHeight = availableScreenHeight - statusBarHeight - Math.round(glucoseChartTopPadding) - chartTopPadding - mainChartHeight - (scrollerTopPadding * 4);
+			}
+			
 			//CHART
 			//Get glucose data;
 			chartData = ModelLocator.bgReadings.concat();
 			
 			//Create and setup glucose chart
-			//3h
 			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
 			glucoseChart.y = Math.round(glucoseChartTopPadding);
 			glucoseChart.dataSource = chartData;
@@ -366,9 +409,6 @@ package ui.screens
 			}
 			else
 				chartDisplayMargin = 50 * higherMultiplier;
-			
-			//Scroller Internal Top Padding
-			var scrollerTopPadding:int = 5;
 			
 			//Settings (Radio Buttons Height)
 			var settingsHeight:int = 20;
