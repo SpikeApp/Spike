@@ -1184,9 +1184,6 @@ package services
 					}
 					doDisconnectMessageG5(characteristic);
 					break;
-				case 75:
-					doDisconnectMessageG5(characteristic);
-					break;
 				case 67:
 					//G5 reset acknowledge
 					if ((new Date()).valueOf() - G5ResetTimeStamp > 2 * 1000) {
@@ -1215,11 +1212,12 @@ package services
 						}
 					}
 					break;
-				case 74://0x4A
+				case 75://0x4B
 					//Version request response message received
 					//store the complete buffer as string in the settings
-					myTrace("in processG5TransmitterData, received version info");
+					myTrace("in processG5TransmitterData, received version info, storing info and disconnecting");
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO, UniqueId.bytesToHex(buffer));
+					doDisconnectMessageG5(characteristic);
 					break;
 				default:
 					myTrace("in processG5TransmitterData unknown code received : " + code);
