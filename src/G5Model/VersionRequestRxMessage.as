@@ -20,10 +20,10 @@ package G5Model
 				data.position = 0;
 				data.endian = Endian.LITTLE_ENDIAN;
 				if (data.readByte() == opcode) {
-					status = data.readByte();
+					status = data.readUnsignedByte();
 					firmware_version_string = dottedStringFromData(data, 4);
 					bluetooth_firmware_version_string = dottedStringFromData(data, 4);
-					hardwarev = data.readByte();
+					hardwarev = data.readUnsignedByte();
 					other_firmware_version = dottedStringFromData(data, 3);
 					asic = getUnsignedShort(data);
 				}
@@ -37,8 +37,8 @@ package G5Model
 		private static function dottedStringFromData(data:ByteArray, length:int):String {
 			var sb:String = "";
 			for (var cntr:int = 0; cntr < length;cntr++) {
-				if (sb.length() > 0) sb += ".";
-				sb += data.readInt();
+				if (sb.length > 0) sb += ".";
+				sb += data.readUnsignedByte();
 			}
 			return sb.toString();
 		}

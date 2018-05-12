@@ -1,5 +1,7 @@
 package G5Model
 {
+	import flash.utils.ByteArray;
+	
 	import database.CommonSettings;
 	
 	import utils.UniqueId;
@@ -11,7 +13,7 @@ package G5Model
 		}
 		
 		public static function getG5VersionInfo():VersionRequestRxMessage {
-			return new (VersionRequestRxMessage(utils.UniqueId.hexStringToByteArray(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO))));
+			return new VersionRequestRxMessage(utils.UniqueId.hexStringToByteArray(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO)));
 		}
 	}
 }
