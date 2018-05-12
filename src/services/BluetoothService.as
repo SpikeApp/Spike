@@ -47,6 +47,7 @@ package services
 	import G5Model.ResetTxMessage;
 	import G5Model.SensorRxMessage;
 	import G5Model.SensorTxMessage;
+	import G5Model.VersionRequestTxMessage;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -1148,13 +1149,18 @@ package services
 						myTrace("in processG5TransmitterData, challengehash == null");
 					}
 					break;
-				case 47:
+				case 47://0x2f
 					var sensorRx:SensorRxMessage = new SensorRxMessage(buffer);
 					
-					if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER)) > BluetoothService.G5_BATTERY_READ_PERIOD_MS) {
-						doBatteryInfoRequestMessage(characteristic);
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO) == "") {
+						myTrace("in processG5TransmitterData, firmare version unknown, will request it");
+						doG5FirmwareVersionRequestMessage(characteristic);
 					} else {
-						doDisconnectMessageG5(characteristic);
+						if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER)) > BluetoothService.G5_BATTERY_READ_PERIOD_MS) {
+							doBatteryInfoRequestMessage(characteristic);
+						} else {
+							doDisconnectMessageG5(characteristic);
+						}
 					}
 					
 					//if G5Reset was done less than 5 minutes ago, then ignore the reading
@@ -1176,9 +1182,6 @@ package services
 					if (!setStoredBatteryBytesG5(buffer)) {
 						myTrace("in processG5TransmitterData , Could not save out battery data!");
 					}
-					doDisconnectMessageG5(characteristic);
-					break;
-				case 75:
 					doDisconnectMessageG5(characteristic);
 					break;
 				case 67:
@@ -1208,6 +1211,13 @@ package services
 							}
 						}
 					}
+					break;
+				case 75://0x4B
+					//Version request response message received
+					//store the complete buffer as string in the settings
+					myTrace("in processG5TransmitterData, received version info, storing info and disconnecting");
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO, UniqueId.bytesToHex(buffer));
+					doDisconnectMessageG5(characteristic);
 					break;
 				default:
 					myTrace("in processG5TransmitterData unknown code received : " + code);
@@ -1246,6 +1256,14 @@ package services
 			var batteryInfoTxMessage:BatteryInfoTxMessage =  new BatteryInfoTxMessage();
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, batteryInfoTxMessage.byteSequence)) {
 				myTrace("in doBatteryInfoRequestMessage writeValueForCharacteristic failed");
+			}
+		}
+		
+		private static function doG5FirmwareVersionRequestMessage(characteristic:Characteristic):void {
+			myTrace("in doG5FirmwareVersionRequestMessage");
+			var firmWareVersionTxMessage:VersionRequestTxMessage =  new VersionRequestTxMessage();
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, firmWareVersionTxMessage.byteSequence)) {
+				myTrace("in doG5FirmwareVersionRequestMessage writeValueForCharacteristic failed");
 			}
 		}
 		

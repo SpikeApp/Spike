@@ -52,7 +52,7 @@ package ui.screens
 	import utils.Trace;
 	
 	[ResourceBundle("chartscreen")]
-
+	
 	public class ChartScreen extends BaseScreen
 	{
 		//Objects
@@ -414,7 +414,7 @@ package ui.screens
 			
 			if (!BlueToothDevice.isFollower())
 				Trace.myTrace("ChartScreen.as", "User is not a follower. Ignoring");
-				
+			
 			try
 			{
 				var readings:Array = e.data;

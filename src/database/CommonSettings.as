@@ -401,6 +401,13 @@
 		 public static const COMMON_SETTING_PIE_CHART_A1C_OFFSET:int = 139;
 		 public static const COMMON_SETTING_PIE_CHART_AVG_OFFSET:int = 140;
 		 public static const COMMON_SETTING_PIE_CHART_RANGES_OFFSET:int = 141;
+		 
+		 /**
+		 * G5 firmware info, empty string means not known<br>
+		 * The contents is the hex string as received from G5<br>
+		 * To read the contents, G5VersionInfo.getG5VersionInfo
+		  */
+		 public static const COMMON_SETTING_G5_VERSION_INFO:int = 142;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -544,7 +551,8 @@
 			 "false",//COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED
 			 "86400000",//COMMON_SETTING_PIE_CHART_A1C_OFFSET (1 DAY)
 			 "86400000",//COMMON_SETTING_PIE_CHART_AVG_OFFSET (1 DAY)
-			 "86400000"//COMMON_SETTING_PIE_CHART_RANGES_OFFSET (1 DAY)
+			 "86400000",//COMMON_SETTING_PIE_CHART_RANGES_OFFSET (1 DAY)
+			 ""//COMMON_SETTING_G5_VERSION_INFO
 		 ];
 
 		 public function CommonSettings()

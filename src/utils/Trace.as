@@ -11,6 +11,9 @@ package utils
 	
 	import spark.formatters.DateTimeFormatter;
 	
+	import G5Model.G5VersionInfo;
+	import G5Model.VersionRequestRxMessage;
+	
 	import database.AlertType;
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -136,8 +139,17 @@ package utils
 				BackgroundFetch.writeTraceToFile(filePath, "Device Info = " + Capabilities.os);
 				var additionalInfoToWrite:String = "";
 				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
+				additionalInfoToWrite += "Device MAC = " + BlueToothDevice.address + ".\n";
+				if (BlueToothDevice.isDexcomG5())
+				{
+					var dexcomG5TransmitterInfo:VersionRequestRxMessage = G5VersionInfo.getG5VersionInfo();
+					additionalInfoToWrite += "Firmware Version = " + dexcomG5TransmitterInfo.firmware_version_string + ".\n";
+					additionalInfoToWrite += "Other Firmware Version = " + dexcomG5TransmitterInfo.other_firmware_version + ".\n";
+					additionalInfoToWrite += "BT Firmware Version = " + dexcomG5TransmitterInfo.bluetooth_firmware_version_string + ".\n";
+					dexcomG5TransmitterInfo = null;
+				}
 				if (BlueToothDevice.isMiaoMiao())
-					additionalInfoToWrite += "Firmware = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ".\n";
+					additionalInfoToWrite += "Firmware Version = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ".\n";
 				additionalInfoToWrite += "Transmitterid = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) + ".\n";
 				additionalInfoToWrite += "Sensor " + (Sensor.getActiveSensor() == null ? "not":"") + " started ";
 				additionalInfoToWrite += (Sensor.getActiveSensor() == null ? ".\n": dateFormatter.format(new Date(Sensor.getActiveSensor().startedAt)) + ".\n" + "\n");
