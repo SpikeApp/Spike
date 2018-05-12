@@ -16,7 +16,7 @@ package G5Model
 		
 		public function VersionRequestRxMessage(data:ByteArray)
 		{
-			if (data.length >= 18) {
+			if (data != null && data.length >= 18) {
 				data.position = 0;
 				data.endian = Endian.LITTLE_ENDIAN;
 				if (data.readByte() == opcode) {
