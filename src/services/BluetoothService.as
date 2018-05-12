@@ -496,7 +496,7 @@ package services
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("in bluetoothStatusIsOn, Trying to connect to known device.");
-			} else if (activeBluetoothPeripheral != null && (BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5() || BlueToothDevice.isBluKon())) {
+			} else if (activeBluetoothPeripheral != null && (BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5() || BlueToothDevice.isBluKon() || BlueToothDevice.isDexcomG4())) {
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
@@ -707,7 +707,7 @@ package services
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
 			
-			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5())
+			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5() || BlueToothDevice.isDexcomG4())
 				activeBluetoothPeripheral = event.peripheral;
 
 			discoverServices();
@@ -763,9 +763,9 @@ package services
 		
 		private static function central_peripheralDisconnectHandler(event:flash.events.Event = null):void {
 			myTrace('in central_peripheralDisconnectHandler');
-			if (BlueToothDevice.isDexcomG5()) {
-				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-			}
+			
+			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+			
 			if (BlueToothDevice.isDexcomG5() && awaitingAuthStatusRxMessage) {
 				myTrace('in central_peripheralDisconnectHandler, Dexcom G5 and awaitingAuthStatusRxMessage, seems another app is trying to connecto to the G5');
 				awaitingAuthStatusRxMessage = false;
@@ -805,6 +805,10 @@ package services
 				tryReconnect();
 				startScanning();
 			} else if (BlueToothDevice.isBlueReader()) {
+				peripheralConnected = false;
+				awaitingConnect = false;
+				tryReconnect();
+			}  else if (BlueToothDevice.isDexcomG4()) {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
