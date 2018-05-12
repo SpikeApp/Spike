@@ -86,11 +86,7 @@ package services
 	
 	/**
 	 * all functionality related to bluetooth connectivity<br>
-	 * init function must be called once immediately at start of the application<br>
-	 * <br>
-	 * to get info about connectivity status, new transmitter data ... check BluetoothServiceEvent  create listeners for the events<br>
-	 * BluetoothService itself is not doing anything with the data received from the bluetoothdevice, also not checking the transmit id, it just passes the information via 
-	 * dispatching<br>
+	 * Only for CGM transmitters.
 	 */
 	public class BluetoothService extends EventDispatcher
 	{
@@ -650,6 +646,10 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
+			if (event.peripheral.name != BlueToothDevice.name) {
+				myTrace("in central_peripheralConnectHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+				return;
+			}
 			myTrace("in central_peripheralConnectHandler");
 			peripheralConnected = true;
 			
@@ -762,6 +762,11 @@ package services
 		}
 		
 		private static function central_peripheralDisconnectHandler(event:flash.events.Event = null):void {
+			/*if (event.peripheral.name != BlueToothDevice.name) {
+				myTrace("in central_peripheralDisconnectHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+				return;
+			}*/
+
 			myTrace('in central_peripheralDisconnectHandler');
 			if (BlueToothDevice.isDexcomG5()) {
 				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
@@ -834,6 +839,11 @@ package services
 		}
 		
 		private static function peripheral_discoverServicesHandler(event:PeripheralEvent):void {
+			if (event.peripheral.name != BlueToothDevice.name) {
+				myTrace("in peripheral_discoverServicesHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+				return;
+			}
+
 			if (!waitingForServicesDiscovered && !(BlueToothDevice.alwaysScan())) {
 				myTrace("in peripheral_discoverServicesHandler but not waitingForServicesDiscovered and not alwaysscan device, ignoring");
 				return;
@@ -900,6 +910,11 @@ package services
 		}
 		
 		private static function peripheral_discoverCharacteristicsHandler(event:PeripheralEvent):void {
+			if (event.peripheral.name != BlueToothDevice.name) {
+				myTrace("in peripheral_discoverCharacteristicsHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+				return;
+			}
+
 			myTrace("in peripheral_discoverCharacteristicsHandler");
 			if (!waitingForPeripheralCharacteristicsDiscovered && !BlueToothDevice.isBluKon()) {
 				myTrace("in peripheral_discoverCharacteristicsHandler but not waitingForPeripheralCharacteristicsDiscovered");
@@ -960,6 +975,11 @@ package services
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
+			if (event.peripheral.name != BlueToothDevice.name) {
+				myTrace("in peripheral_characteristic_updatedHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+				return;
+			}
+
 			myTrace("in peripheral_characteristic_updatedHandler characteristic uuid = " + getCharacteristicName(event.characteristic.uuid) +
 				" with byte 0 = " + event.characteristic.value[0] + " decimal.");
 			
@@ -993,6 +1013,11 @@ package services
 		}
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
+			if (event.peripheral.name != BlueToothDevice.name) {
+				myTrace("in peripheral_characteristic_writeHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+				return;
+			}
+
 			myTrace("in peripheral_characteristic_writeHandler " + getCharacteristicName(event.characteristic.uuid));
 			if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
@@ -1013,6 +1038,11 @@ package services
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
+			if (event.peripheral.name != BlueToothDevice.name) {
+				myTrace("in peripheral_characteristic_subscribeHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+				return;
+			}
+
 			myTrace("in peripheral_characteristic_subscribeHandler success: " + getCharacteristicName(event.characteristic.uuid));
 			if (BlueToothDevice.isDexcomG5()) {
 				if (event.characteristic.uuid.toUpperCase() == G5_Control_Characteristic_UUID.toUpperCase()) {
@@ -1032,6 +1062,11 @@ package services
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
+			if (event.peripheral.name != BlueToothDevice.name) {
+				myTrace("in peripheral_characteristic_subscribeErrorHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+				return;
+			}
+
 			myTrace("in peripheral_characteristic_subscribeErrorHandler: " + getCharacteristicName(event.characteristic.uuid));
 			myTrace("in peripheral_characteristic_subscribeErrorHandler, event.error = " + event.error);
 			myTrace("in peripheral_characteristic_subscribeErrorHandler, event.errorcode  = " + event.errorCode);
