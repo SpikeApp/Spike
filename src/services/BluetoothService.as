@@ -203,6 +203,7 @@ package services
 		private static var awaitingConnect:Boolean = false;
 		private static var scanTimer:Timer;//only for peripheral types of type not always scan
 		private static var reconnectTimer:Timer;	
+		private static var peripheralUUID:String = "";
 
 		/**
 		 * is the peripheral connected or not, not applicable to MiaoMiao which is handled by BackgroundFetch ANE 
@@ -638,6 +639,7 @@ package services
 				myTrace("in central_peripheralDiscoveredHandler, try to connect");
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
+				peripheralUUID = event.peripheral.uuid;
 				BluetoothLE.service.centralManager.connect(event.peripheral);
 			} else {
 				myTrace("in central_peripheralDiscoveredHandler, doesn't seem to be a device we are interested in. Restart scan");
@@ -646,8 +648,8 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
-			if (event.peripheral.name != BlueToothDevice.name) {
-				myTrace("in central_peripheralConnectHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+			if (event.peripheral.uuid != peripheralUUID) {
+				myTrace("in central_peripheralConnectHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
 				return;
 			}
 			myTrace("in central_peripheralConnectHandler");
@@ -761,11 +763,13 @@ package services
 			}
 		}
 		
-		private static function central_peripheralDisconnectHandler(event:flash.events.Event = null):void {
-			/*if (event.peripheral.name != BlueToothDevice.name) {
-				myTrace("in central_peripheralDisconnectHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
-				return;
-			}*/
+		private static function central_peripheralDisconnectHandler(event:PeripheralEvent = null):void {
+			if (event != null) {
+				if (event.peripheral.uuid != peripheralUUID) {
+					myTrace("in central_peripheralDisconnectHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
+					return;
+				}
+			}
 
 			myTrace('in central_peripheralDisconnectHandler');
 			if (BlueToothDevice.isDexcomG5()) {
@@ -839,8 +843,8 @@ package services
 		}
 		
 		private static function peripheral_discoverServicesHandler(event:PeripheralEvent):void {
-			if (event.peripheral.name != BlueToothDevice.name) {
-				myTrace("in peripheral_discoverServicesHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+			if (event.peripheral.uuid != peripheralUUID) {
+				myTrace("in peripheral_discoverServicesHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
 				return;
 			}
 
@@ -910,8 +914,8 @@ package services
 		}
 		
 		private static function peripheral_discoverCharacteristicsHandler(event:PeripheralEvent):void {
-			if (event.peripheral.name != BlueToothDevice.name) {
-				myTrace("in peripheral_discoverCharacteristicsHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+			if (event.peripheral.uuid != peripheralUUID) {
+				myTrace("in peripheral_discoverCharacteristicsHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
 				return;
 			}
 
@@ -975,8 +979,8 @@ package services
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
-			if (event.peripheral.name != BlueToothDevice.name) {
-				myTrace("in peripheral_characteristic_updatedHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+			if (event.peripheral.uuid != peripheralUUID) {
+				myTrace("in peripheral_characteristic_updatedHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
 				return;
 			}
 
@@ -1013,8 +1017,8 @@ package services
 		}
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
-			if (event.peripheral.name != BlueToothDevice.name) {
-				myTrace("in peripheral_characteristic_writeHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+			if (event.peripheral.uuid != peripheralUUID) {
+				myTrace("in peripheral_characteristic_writeHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
 				return;
 			}
 
@@ -1038,8 +1042,8 @@ package services
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
-			if (event.peripheral.name != BlueToothDevice.name) {
-				myTrace("in peripheral_characteristic_subscribeHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+			if (event.peripheral.uuid != peripheralUUID) {
+				myTrace("in peripheral_characteristic_subscribeHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
 				return;
 			}
 
@@ -1062,8 +1066,8 @@ package services
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
-			if (event.peripheral.name != BlueToothDevice.name) {
-				myTrace("in peripheral_characteristic_subscribeErrorHandler, but event.peripheral.name != BlueToothDevice.name, ignoring");
+			if (event.peripheral.uuid != peripheralUUID) {
+				myTrace("in peripheral_characteristic_subscribeErrorHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
 				return;
 			}
 
