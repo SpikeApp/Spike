@@ -347,7 +347,7 @@ package ui.chart
 			this.timelineRange = timelineRange;
 			this._graphWidth = chartWidth;
 			this._scrollerWidth = chartWidth;
-			this._scrollerHeight = 50;
+			this._scrollerHeight = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 ? 50 : 35;
 			this._graphHeight = chartHeight - chartTopPadding - _scrollerHeight - scrollerTopPadding - (timelineActive ? 10 : 0);
 			this.mainChartGlucoseMarkersList = [];
 			this.scrollChartGlucoseMarkersList = [];

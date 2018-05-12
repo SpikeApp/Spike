@@ -43,8 +43,8 @@ package ui.chart
 			
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 			{
-				fontSize = 11;
-				pillHeight = 20;
+				fontSize = 10;
+				pillHeight = 18;
 			}
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 			{

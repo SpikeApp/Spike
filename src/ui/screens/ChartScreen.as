@@ -46,6 +46,7 @@ package ui.screens
 	import ui.chart.DistributionChart;
 	import ui.chart.GlucoseChart;
 	import ui.chart.GraphLayoutFactory;
+	import ui.chart.PieDistributionSection;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
@@ -72,6 +73,7 @@ package ui.screens
 		private var chartSettingsLeftRightPadding:int = 10;
 		private var chartSettingsTopPadding:int = 10;
 		private var delimitterTopPadding:int = 10;
+		private var pieTopPadding:int = 15;
 		private var displayPieChart:Boolean;
 		private var isPortrait:Boolean;
 		private var scrollerTopPadding:int = 5;
@@ -249,14 +251,31 @@ package ui.screens
 		{
 			var pieChartTotalHeight:Number = 0;
 			
-			delimitter = GraphLayoutFactory.createHorizontalLine(Constants.stageWidth, 1, 0x282a32);
-			pieChartTotalHeight += delimitter.height;
-			pieChartTotalHeight += delimitterTopPadding;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				pieTopPadding = 10;
 			
-			pieChartHeight = 65;
+			pieChartTotalHeight += pieTopPadding * 2;
+			
+			/*pieChartHeight = 65;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-				pieChartHeight = 100;
+				pieChartHeight = 100;*/
 			
+			
+			var dummy:PieDistributionSection = new PieDistributionSection(100, 30, 0x000000, 0x000000, 0x000000);
+			dummy.title.text = "N/A";
+			dummy.title.validate();
+			dummy.message.text = "N/A";
+			dummy.message.validate();
+			
+			var sectionMultiplier:Number = 3;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				sectionMultiplier = 2.5;
+			
+			pieChartHeight = (sectionMultiplier * dummy.title.height) + (sectionMultiplier * dummy.message.height);
+			
+			dummy.dispose();
+			
+			trace("pieChartHeight", pieChartHeight);
 			
 			
 			pieChartTotalHeight += pieChartHeight;
@@ -266,11 +285,12 @@ package ui.screens
 		
 		private function createPieChart():void
 		{
+			delimitter = GraphLayoutFactory.createHorizontalLine(Constants.stageWidth, 1, 0x282a32);
 			delimitter.y = h24.y + h24.height + delimitterTopPadding;
 			addChild(delimitter);
 			
-			pieChart = new DistributionChart((pieChartHeight / 2) - (delimitterTopPadding / 2), chartData);
-			pieChart.y = Math.round(h24.y + h24.height + delimitterTopPadding + delimitter.height + delimitterTopPadding);
+			pieChart = new DistributionChart((pieChartHeight / 2), chartData);
+			pieChart.y = Math.round(delimitter.y + delimitter.height + pieTopPadding);
 			pieChart.x = 10;
 			addChild(pieChart);
 		}
@@ -403,7 +423,7 @@ package ui.screens
 			
 			/* Line Settings */
 			displayLines = LayoutFactory.createCheckMark(false, ModelLocator.resourceManagerInstance.getString('chartscreen','check_box_line_title'));
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				displayLines.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				displayLines.scale = 1.4;
@@ -420,35 +440,35 @@ package ui.screens
 			
 			//Create Radios
 			h1 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_1h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h1.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h1.scale = 1.4;
 			h1.validate();
 			
 			h3 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_3h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h3.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h3.scale = 1.4;
 			h3.validate();
 			
 			h6 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_6h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h6.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h6.scale = 1.4;
 			h6.validate();
 			
 			h12 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_12h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h12.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h12.scale = 1.4;
 			h12.validate();
 			
 			h24 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_24h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h24.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h24.scale = 1.4;
