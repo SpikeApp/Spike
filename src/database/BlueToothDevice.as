@@ -22,6 +22,8 @@ package database
 	import utils.Trace;
 	
 	/**
+	 * This is for CGM transmitters only<br
+	 * <br>
 	 * Overview of currently known device types<br>
 	 * <br>
 	 * - G4 with xbridge or xdrip. Not an always scan device, needs a transmitter id however scanning will happen even without knowing a transmitter id because the the bridge itself doesn't have a transmitter id.<br>
