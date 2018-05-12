@@ -241,6 +241,7 @@ package ui.screens.display.settings.transmitter
 				
 				//Reset Firmware version
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW, "");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO, "");
 				
 				//Set collection mode to host
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE, "Host");
