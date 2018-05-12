@@ -1,7 +1,5 @@
 package G5Model
 {
-	import flash.utils.ByteArray;
-	
 	import database.CommonSettings;
 	
 	import utils.UniqueId;

@@ -18,7 +18,9 @@ package ui.screens.display.transmitter
 	
 	import G4Model.TransmitterStatus;
 	
+	import G5Model.G5VersionInfo;
 	import G5Model.TransmitterStatus;
+	import G5Model.VersionRequestRxMessage;
 	
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -100,6 +102,9 @@ package ui.screens.display.transmitter
 		private var transmitterFirmwareLabel:Label;
 		private var resetG5TransmitterButton:Button;
 		private var g5ActionContainer:LayoutGroup;
+		private var otherFirmwareLabel:Label;
+		private var bluetoothFirmwareLabel:Label;
+		private var transmitterMACAddressLabel:Label;
 		
 		/* Properties */
 		private var transmitterNameValue:String;
@@ -120,6 +125,8 @@ package ui.screens.display.transmitter
 		private var sensorRxTimestamp:Number;
 		private var refreshSecondsElapsed:int = 4;
 		private var transmitterFirmwareValue:String = "";
+		private var transmitterOtherFirmwareValue:String = "";
+		private var transmitterBTFirmwareValue:String = "";
 
 		/* Objects */
 		private var refreshTimer:Timer;
@@ -172,6 +179,23 @@ package ui.screens.display.transmitter
 			{
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
+				
+				/* Transmitter Firmware */
+				var dexcomG5TransmitterInfo:VersionRequestRxMessage = G5VersionInfo.getG5VersionInfo();
+				
+				transmitterFirmwareValue = dexcomG5TransmitterInfo.firmware_version_string;
+				if (transmitterFirmwareValue == "")
+					transmitterFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
+				
+				transmitterOtherFirmwareValue = dexcomG5TransmitterInfo.other_firmware_version;
+				if (transmitterOtherFirmwareValue == "")
+					transmitterOtherFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
+				
+				transmitterBTFirmwareValue = dexcomG5TransmitterInfo.bluetooth_firmware_version_string;
+				if (transmitterBTFirmwareValue == "")
+					transmitterBTFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
+				
+				dexcomG5TransmitterInfo = null;
 				
 				/* Transmitter Runtime */
 				transmitterRuntimeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME);
@@ -310,7 +334,7 @@ package ui.screens.display.transmitter
 				/* Transmitter Firmware */
 				transmitterFirmwareValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW);
 				if (transmitterFirmwareValue == "" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
-					transmitterFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');;
+					transmitterFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 				
 				/* Battery Level */
 				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);
@@ -418,13 +442,21 @@ package ui.screens.display.transmitter
 			/* Define Info & Battery/Connection Status Labels */
 			transmitterTypeLabel = LayoutFactory.createLabel(transmitterTypeValue, HorizontalAlign.RIGHT);
 			transmitterNameLabel = LayoutFactory.createLabel(transmitterNameValue, HorizontalAlign.RIGHT);
+			transmitterMACAddressLabel = LayoutFactory.createLabel(BlueToothDevice.address != "" ? BlueToothDevice.address : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'), HorizontalAlign.RIGHT);
+			transmitterMACAddressLabel.width = 140;
+			transmitterMACAddressLabel.wordWrap = true;
 			if (BlueToothDevice.isMiaoMiao())
 				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);
 			
 			if (transmitterConnectionStatusValue != null)
 				transmitterConnectionStatusLabel = LayoutFactory.createLabel(transmitterConnectionStatusValue, HorizontalAlign.RIGHT);
 			if (BlueToothDevice.isDexcomG5())
+			{
+				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);
+				otherFirmwareLabel = LayoutFactory.createLabel(transmitterOtherFirmwareValue, HorizontalAlign.RIGHT);
+				bluetoothFirmwareLabel = LayoutFactory.createLabel(transmitterBTFirmwareValue, HorizontalAlign.RIGHT);
 				transmitterRuntimeLabel = LayoutFactory.createLabel(transmitterRuntimeValue, HorizontalAlign.RIGHT);
+			}
 			
 			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
 			{
@@ -464,12 +496,18 @@ package ui.screens.display.transmitter
 			var infoSectionChildren:Array = [];
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','data_source_label'), accessory: transmitterTypeLabel });
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_name_label'), accessory: transmitterNameLabel });
+			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','mac_address_label'), accessory: transmitterMACAddressLabel });
 			if (BlueToothDevice.isMiaoMiao())
-				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_label'), accessory: transmitterFirmwareLabel });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_version_label'), accessory: transmitterFirmwareLabel });
 			if (transmitterConnectionStatusValue != null)
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_connection_status_label'), accessory: transmitterConnectionStatusLabel });
 			if (BlueToothDevice.isDexcomG5())
+			{
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_version_label'), accessory: transmitterFirmwareLabel });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','other_firmware_version_label'), accessory: otherFirmwareLabel });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','bluetooth_firmware_version_label'), accessory: bluetoothFirmwareLabel });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','transmitter_runtime_label'), accessory: transmitterRuntimeLabel });
+			}
 			
 			infoSection.children = infoSectionChildren;
 			
@@ -793,6 +831,8 @@ package ui.screens.display.transmitter
 			BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
 			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
 			
+			disposeRefreshTimer();
+			
 			if(voltageAIconTexture != null)
 			{
 				voltageAIconTexture.dispose();
@@ -931,7 +971,23 @@ package ui.screens.display.transmitter
 				transmitterFirmwareLabel = null;
 			}
 			
-			disposeRefreshTimer();
+			if (otherFirmwareLabel != null)
+			{
+				otherFirmwareLabel.dispose();
+				otherFirmwareLabel = null;
+			}
+			
+			if (bluetoothFirmwareLabel != null)
+			{
+				bluetoothFirmwareLabel.dispose();
+				bluetoothFirmwareLabel = null;
+			}
+			
+			if (transmitterMACAddressLabel != null)
+			{
+				transmitterMACAddressLabel.dispose();
+				transmitterMACAddressLabel = null;
+			}
 			
 			super.dispose();
 		}
