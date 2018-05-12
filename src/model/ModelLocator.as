@@ -25,11 +25,7 @@ package model
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
 	
-	import G5Model.G5VersionInfo;
-	import G5Model.VersionRequestRxMessage;
-	
 	import database.BgReading;
-	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
 	
@@ -177,10 +173,6 @@ package model
 				RemoteAlertService.init();
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				updateApplicationVersion();
-				
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO, "4B000100040ADF2900000000037000F00035C8");
-				var test:VersionRequestRxMessage = G5VersionInfo.getG5VersionInfo();
-				trace("hello");
 			}
 		}
 		
