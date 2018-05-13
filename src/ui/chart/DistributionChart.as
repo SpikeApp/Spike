@@ -30,6 +30,7 @@ package ui.chart
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
+	import ui.shapes.SpikeDisplayObject;
 	
 	import utils.Constants;
 	
@@ -81,6 +82,7 @@ package ui.chart
 		private var middleNGon:NGon;
 		private var outterNGon:NGon;
 		private var statsHitArea:Quad;
+		private var pieGraphicImage:SpikeDisplayObject;
 		
 		[ResourceBundle("globaltranslations")]
 		
@@ -330,8 +332,17 @@ package ui.chart
 				pieGraphicContainer.addChild(outterNGon);
 			}
 			
+			//Create pie chart texture representation
+			if (pieGraphicImage != null)
+			{
+				pieGraphicImage.removeFromParent();
+				pieGraphicImage.dispose();
+				pieGraphicImage = null;
+			}
+			pieGraphicImage = GraphLayoutFactory.createImageFromShape(pieGraphicContainer);
+			
 			//Add pie to display list
-			pieContainer.addChild(pieGraphicContainer);
+			pieContainer.addChild(pieGraphicImage);
 			
 			var averageGlucoseValueOutput:String
 			if (glucoseUnit == "mg/dL")
@@ -554,6 +565,13 @@ package ui.chart
 				statsContainer.removeFromParent();
 				statsContainer.dispose();
 				statsContainer = null;
+			}
+			
+			if (pieGraphicImage != null)
+			{
+				pieGraphicImage.removeFromParent();
+				pieGraphicImage.dispose();
+				pieGraphicImage = null;
 			}
 			
 			if (pieContainer != null)
