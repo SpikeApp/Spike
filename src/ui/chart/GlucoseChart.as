@@ -635,7 +635,7 @@ package ui.chart
 				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
-						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
+						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.width / 2));
 					else
 					{
 						var currentLineX:Number;
@@ -648,14 +648,8 @@ package ui.chart
 						}
 						else if (i == dataLength -1)
 						{
-						//	currentLineX = glucoseMarker.x + (glucoseMarker.width);
-						//	currentLineY = glucoseMarker.y + (glucoseMarker.height);
-							//var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 							currentLineX = glucoseMarker.x + (glucoseMarker.width);
-							//if (glucoseDifference > 0)
-								//currentLineY = glucoseMarker.y;
-							//else
-								currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
+							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						}
 						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
@@ -2183,10 +2177,7 @@ package ui.chart
 				
 				if(i == 0)
 				{
-					if (glucoseDifference > 0)
-						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
-					else
-						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.height/2));
+					line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.height/2));
 				}
 				else
 				{
@@ -2201,16 +2192,7 @@ package ui.chart
 					else if (i == dataLength -1)
 					{
 						currentLineX = glucoseMarker.x + (glucoseMarker.width);
-						//if (glucoseDifference > 0)
-							//currentLineY = glucoseMarker.y ;
-						//else
-							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
-						
-					//	currentLineX = glucoseMarker.x + (glucoseMarker.width);
-					//	if (glucoseDifference > 0)
-					//		currentLineY = glucoseMarker.y + (glucoseMarker.height);
-					//	else
-					//		currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
+						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 					}
 						
 					//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
@@ -2623,7 +2605,7 @@ package ui.chart
 			{
 				for (i = 0; i < mainChartLineList.length; i++) 
 				{
-					var mainLine:Shape = mainChartLineList[i];
+					var mainLine:DisplayObject = mainChartLineList[i];
 					if (mainLine != null)
 					{
 						mainLine.removeFromParent();
@@ -2640,7 +2622,7 @@ package ui.chart
 				{
 					for (i = 0; i < scrollerChartLineList.length; i++) 
 					{
-						var scrollerLine:Shape = scrollerChartLineList[i];
+						var scrollerLine:DisplayObject = scrollerChartLineList[i];
 						if (scrollerLine != null)
 						{
 							scrollerLine.removeFromParent();
