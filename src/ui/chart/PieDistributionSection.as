@@ -20,7 +20,6 @@ package ui.chart
 		public var message:Label;
 		private var border:SpikeLine;
 		private var background:Quad;
-
 		private var titleBackground:Quad;
 		
 		public function PieDistributionSection(width:Number, height:Number, backgroundColor:uint, fontColor:uint = Number.NaN, borderColor:Number = Number.NaN)

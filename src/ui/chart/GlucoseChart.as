@@ -1534,7 +1534,7 @@ package ui.chart
 				if (highUrgentGlucoseLineMarker != null) highUrgentGlucoseLineMarker.dispose();
 				highUrgentGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 				highUrgentGlucoseLineMarker.x = _graphWidth - legendSize;
-				highUrgentGlucoseLineMarker.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - (lineThickness / 2);
+				highUrgentGlucoseLineMarker.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - (lineThickness * 1.25);
 				highUrgentGlucoseLineMarker.touchable = false;
 				yAxis.addChild(highUrgentGlucoseLineMarker);
 				
@@ -1560,13 +1560,14 @@ package ui.chart
 					highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - ((highUrgentGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((highUrgentGlucoseLegend.height / userAxisFontMultiplier) / 15);
 				else
 					highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - ((highUrgentGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((highUrgentGlucoseLegend.height * userAxisFontMultiplier) / 15);
+				highUrgentGlucoseLegend.y -= lineThickness;
 				highUrgentGlucoseLegend.x = Math.round(_graphWidth - highestGlucoseLineMarker.width - highUrgentGlucoseLegend.width - legendMargin);
 				yAxis.addChild(highUrgentGlucoseLegend);
 				
 				//Dashed Line
 				if (highUrgentGlucoseDashedLine != null) highUrgentGlucoseDashedLine.dispose();
 				highUrgentGlucoseDashedLine = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
-				highUrgentGlucoseDashedLine.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor);
+				highUrgentGlucoseDashedLine.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				highUrgentGlucoseDashedLine.touchable = false;
 				yAxis.addChild(highUrgentGlucoseDashedLine);
 			}
@@ -1580,7 +1581,7 @@ package ui.chart
 				if (highGlucoseLineMarker != null) highGlucoseLineMarker.dispose();
 				highGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 				highGlucoseLineMarker.x = _graphWidth - legendSize;
-				highGlucoseLineMarker.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - (lineThickness / 2);
+				highGlucoseLineMarker.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - (lineThickness * 1.25);
 				highGlucoseLineMarker.touchable = false;
 				yAxis.addChild(highGlucoseLineMarker);
 				
@@ -1606,13 +1607,14 @@ package ui.chart
 					highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - ((highGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((highGlucoseLegend.height / userAxisFontMultiplier) / 15);
 				else
 					highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - ((highGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((highGlucoseLegend.height * userAxisFontMultiplier) / 15);
+				highGlucoseLegend.y -= lineThickness;
 				highGlucoseLegend.x = Math.round(_graphWidth - highestGlucoseLineMarker.width - highGlucoseLegend.width - legendMargin);
 				yAxis.addChild(highGlucoseLegend);
 				
 				//Dashed Line
 				if (highGlucoseDashedLine != null) highGlucoseDashedLine.dispose();
 				highGlucoseDashedLine = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
-				highGlucoseDashedLine.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor);
+				highGlucoseDashedLine.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				highGlucoseDashedLine.touchable = false;
 				yAxis.addChild(highGlucoseDashedLine);
 			}
@@ -1626,7 +1628,7 @@ package ui.chart
 				if (lowGlucoseLineMarker != null) lowGlucoseLineMarker.dispose();
 				lowGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 				lowGlucoseLineMarker.x = _graphWidth - legendSize;
-				lowGlucoseLineMarker.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - (lineThickness / 2);
+				lowGlucoseLineMarker.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - (lineThickness * 1.25);
 				lowGlucoseLineMarker.touchable = false;
 				yAxis.addChild(lowGlucoseLineMarker);
 				
@@ -1652,13 +1654,14 @@ package ui.chart
 					lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - ((lowGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((lowGlucoseLegend.height / userAxisFontMultiplier) / 15);
 				else
 					lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - ((lowGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((lowGlucoseLegend.height * userAxisFontMultiplier) / 15);
+				lowGlucoseLegend.y -= lineThickness;
 				lowGlucoseLegend.x = Math.round(_graphWidth - lowGlucoseLineMarker.width - lowGlucoseLegend.width - legendMargin);
 				yAxis.addChild(lowGlucoseLegend);
 				
 				//Dashed Line
 				if (lowGlucoseDashedLine != null) lowGlucoseDashedLine.dispose();
 				lowGlucoseDashedLine = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
-				lowGlucoseDashedLine.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor);
+				lowGlucoseDashedLine.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				lowGlucoseDashedLine.touchable = false;
 				yAxis.addChild(lowGlucoseDashedLine);
 			}
@@ -1672,7 +1675,7 @@ package ui.chart
 				if (lowUrgentGlucoseLineMarker != null) lowUrgentGlucoseLineMarker.dispose();
 				lowUrgentGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 				lowUrgentGlucoseLineMarker.x = _graphWidth - legendSize;
-				lowUrgentGlucoseLineMarker.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - (lineThickness / 2);
+				lowUrgentGlucoseLineMarker.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - (lineThickness * 1.25);
 				lowUrgentGlucoseLineMarker.touchable = false;
 				yAxis.addChild(lowUrgentGlucoseLineMarker);
 				
@@ -1698,13 +1701,14 @@ package ui.chart
 					lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - ((lowUrgentGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((lowUrgentGlucoseLegend.height / userAxisFontMultiplier) / 15);
 				else
 					lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - ((lowUrgentGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((lowUrgentGlucoseLegend.height * userAxisFontMultiplier) / 15);
+				lowUrgentGlucoseLegend.y -= lineThickness;
 				lowUrgentGlucoseLegend.x = Math.round(_graphWidth - lowUrgentGlucoseLineMarker.width - lowUrgentGlucoseLegend.width - legendMargin);
 				yAxis.addChild(lowUrgentGlucoseLegend);
 				
 				//Dashed Line
 				if (lowUrgentGlucoseDashedLine != null) lowUrgentGlucoseDashedLine.dispose();
 				lowUrgentGlucoseDashedLine = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, lineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
-				lowUrgentGlucoseDashedLine.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor);
+				lowUrgentGlucoseDashedLine.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				lowUrgentGlucoseDashedLine.touchable = false;
 				yAxis.addChild(lowUrgentGlucoseDashedLine);
 			}
