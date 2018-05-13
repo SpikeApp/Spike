@@ -32,9 +32,7 @@ package ui.screens
 	import services.TransmitterService;
 	
 	import starling.core.Starling;
-	import starling.display.Quad;
 	import starling.display.Shape;
-	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
@@ -54,7 +52,7 @@ package ui.screens
 	import utils.Trace;
 	
 	[ResourceBundle("chartscreen")]
-
+	
 	public class ChartScreen extends BaseScreen
 	{
 		//Objects
@@ -68,15 +66,14 @@ package ui.screens
 		private var selectedTimelineRange:Number;
 		private var drawLineChart:Boolean;
 		private var mainChartHeight:Number;
-		private var scrollChartHeight:Number;
 		private var availableScreenHeight:Number;
 		private var chartSettingsLeftRightPadding:int = 10;
 		private var chartSettingsTopPadding:int = 10;
 		private var delimitterTopPadding:int = 10;
 		private var pieTopPadding:int = 15;
+		private var pieChartHeight:Number;
 		private var displayPieChart:Boolean;
 		private var isPortrait:Boolean;
-		private var scrollerTopPadding:int = 5;
 		
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
@@ -97,8 +94,6 @@ package ui.screens
 		private var h1:Radio;
 		private var displayLines:Check;
 		private var delimitter:Shape;
-
-		private var pieChartHeight:Number;
 		
 		public function ChartScreen() 
 		{
@@ -122,7 +117,7 @@ package ui.screens
 			
 			//Event listeners
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
-			/*Spike.instance.addEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
@@ -131,7 +126,7 @@ package ui.screens
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);*/
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			//Scroll Policies
 			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
@@ -144,40 +139,34 @@ package ui.screens
 			
 			//Reset Menu
 			AppInterface.instance.menu.selectedIndex = 0;
-			
-			setTimeout(calculateChartHeight, 1000);
 		}
 		
-		private function calculateChartHeight():Number
+		/**
+		 * Display Objects Creation and Positioning
+		 */
+		private function createChart():void
 		{
-			trace("calculateSizes");
-			
-			var chartHeight:Number = 0;
-			
 			var availableScreenHeight:Number = Constants.stageHeight - this.header.height;
-			var availableScreenWidth:Number = Constants.stageWidth;
-			
-			//Add to chart height
-			chartHeight += availableScreenHeight;
+			mainChartHeight = availableScreenHeight;
 			
 			if (Constants.isPortrait)
 			{
 				//Calculate timeline ranges and display line height
-				chartHeight -= chartSettingsTopPadding; //Top padding for settings
-				chartHeight -= setChartSettings(); //Height of settings components
-				chartHeight -= delimitterTopPadding; //Bottom padding for settings
+				mainChartHeight -= chartSettingsTopPadding; //Top padding for settings
+				mainChartHeight -= calculateChartSettingsSize(); //Height of settings components
+				mainChartHeight -= delimitterTopPadding; //Bottom padding for settings
 				
 				if (displayPieChart)
-					chartHeight -= setPieChartSettings();
+					mainChartHeight -= calculatePieChartSize();
 			}
 			
-			
-			
+			//Get glucose data;
+			chartData = ModelLocator.bgReadings.concat();
 			
 			//Create and setup glucose chart
-			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, chartHeight);
+			glucoseChart = new GlucoseChart(selectedTimelineRange, Constants.stageWidth, mainChartHeight);
 			glucoseChart.y = Math.round(glucoseChartTopPadding);
-			glucoseChart.dataSource = ModelLocator.bgReadings;
+			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
 			glucoseChart.addAllTreatments();
@@ -193,15 +182,11 @@ package ui.screens
 				if (displayPieChart)
 					createPieChart();
 			}
-			
-			return chartHeight;
 		}
-		
-		
 		
 		private function createSettings():void
 		{
-			//Position Radio Buttons
+			//Position Radio/Check Buttons
 			var paddingMultiplier:Number = DeviceInfo.getHorizontalPaddingMultipier();
 			
 			h24.x = stage.stageWidth - h24.width - chartSettingsLeftRightPadding;
@@ -228,59 +213,20 @@ package ui.screens
 			displayLines.y = h24.y;
 			addChild(displayLines);
 			
-			//Add 24H Glucose distributon to the screen
-			/*if (displayPieChart)
-			{
-			delimitter = GraphLayoutFactory.createHorizontalLine(Constants.stageWidth, 1, 0x282a32);
-			delimitter.y = h24.y + h24.height + delimitterTopPadding;
-			addChild(delimitter);
+			//Radio Buttons Group
+			if (selectedTimelineRange == GlucoseChart.TIMELINE_1H)
+				timeRangeGroup.selectedItem = h1;
+			else if (selectedTimelineRange == GlucoseChart.TIMELINE_3H)
+				timeRangeGroup.selectedItem = h3;
+			else if (selectedTimelineRange == GlucoseChart.TIMELINE_6H)
+				timeRangeGroup.selectedItem = h6;
+			else if (selectedTimelineRange == GlucoseChart.TIMELINE_12H)
+				timeRangeGroup.selectedItem = h12;
+			else if (selectedTimelineRange == GlucoseChart.TIMELINE_24H)
+				timeRangeGroup.selectedItem = h24;
 			
-			var lastAvailableSpace:Number = availableScreenHeight - glucoseChartTopPadding - glucoseChart.height - chartSettingsTopPadding - h24.height - delimitterTopPadding - delimitter.height;
-			var pieHeight:Number = (lastAvailableSpace * 0.8) / 2; //80% of availables space
-			var pieTopPadding:Number = Math.round((lastAvailableSpace * 0.3) / 2);
-			
-			//Pie Chart
-			pieChart = new DistributionChart(pieHeight, chartData);
-			pieChart.y = Math.round(h24.y + h24.height + delimitterTopPadding + delimitter.height + pieTopPadding);
-			pieChart.x = 10;
-			addChild(pieChart);
-			}*/
-		}
-		
-		private function setPieChartSettings():Number
-		{
-			var pieChartTotalHeight:Number = 0;
-			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-				pieTopPadding = 10;
-			
-			pieChartTotalHeight += pieTopPadding * 2;
-			
-			/*pieChartHeight = 65;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-				pieChartHeight = 100;*/
-			
-			
-			var dummy:PieDistributionSection = new PieDistributionSection(100, 30, 0x000000, 0x000000, 0x000000);
-			dummy.title.text = "N/A";
-			dummy.title.validate();
-			dummy.message.text = "N/A";
-			dummy.message.validate();
-			
-			var sectionMultiplier:Number = 3;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-				sectionMultiplier = 2.5;
-			
-			pieChartHeight = (sectionMultiplier * dummy.title.height) + (sectionMultiplier * dummy.message.height);
-			
-			dummy.dispose();
-			
-			trace("pieChartHeight", pieChartHeight);
-			
-			
-			pieChartTotalHeight += pieChartHeight;
-			
-			return pieChartTotalHeight;
+			//Add Event Listener For Radios
+			timeRangeGroup.addEventListener( Event.CHANGE, onTimeRangeChange );
 		}
 		
 		private function createPieChart():void
@@ -295,129 +241,42 @@ package ui.screens
 			addChild(pieChart);
 		}
 		
-		
-		
-		
-		
-		
-		
-		
-		/**
-		 * Functionality
-		 */
-		private function setGlucoseChart():void
+		private function redrawChartForTreatmentsAndLine():void
 		{
-			/*availableScreenHeight = Constants.stageHeight - this.header.height;
-			if (Constants.isPortrait)
-				scrollChartHeight = availableScreenHeight / 10; //10% of available screen size
-			
-			if (displayPieChart && ((!displayIOBEnabled && !displayCOBEnabled) || !treatmentsEnabled || !chartTreatmentsEnabled))
-			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-					mainChartHeight = availableScreenHeight * 0.35; //35% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-					mainChartHeight = availableScreenHeight * 0.48; //48% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-					mainChartHeight = availableScreenHeight * 0.49; //49% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					mainChartHeight = availableScreenHeight * 0.51; //55% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
-					mainChartHeight = availableScreenHeight * 0.615; //61.5% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
-					mainChartHeight = availableScreenHeight * 0.62; //62% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-					mainChartHeight = availableScreenHeight * 0.66; //66% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
-					mainChartHeight = availableScreenHeight * 0.52; //52% of available screen size
-				else
-					mainChartHeight = availableScreenHeight * 0.5; //50% of available screen size
-			}
-			else if (displayPieChart && chartTreatmentsEnabled && treatmentsEnabled && (displayIOBEnabled || displayCOBEnabled))
-			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-				{
-					mainChartHeight = availableScreenHeight * 0.31; //31% of available screen size
-					scrollChartHeight = availableScreenHeight / 11; //9% of available screen size
-				}
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-					mainChartHeight = availableScreenHeight * 0.42; //42% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-					mainChartHeight = availableScreenHeight * 0.43; //43% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					mainChartHeight = availableScreenHeight * 0.45; //45% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
-					mainChartHeight = availableScreenHeight * 0.46; //46% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
-					mainChartHeight = availableScreenHeight * 0.48; //48% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-					mainChartHeight = availableScreenHeight * 0.53; //53% of available screen size
-				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
-					mainChartHeight = availableScreenHeight * 0.39; //39% of available screen size
-				else
-					mainChartHeight = availableScreenHeight * 0.41; //41% of available screen size
-			}
-			else
-				mainChartHeight = calculateChartHeight();
-			
-			
-			if (!Constants.isPortrait)
-			{
-				var chartTopPadding:Number = 100;
-				var userTimeAgoFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
-				if (treatmentsEnabled && chartTreatmentsEnabled && (displayIOBEnabled || displayCOBEnabled))
-				{
-					if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-						chartTopPadding = 93;
-					else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-						chartTopPadding = 95;
-					else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-						chartTopPadding = 92; 
-					else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-						chartTopPadding = 104; 
-					else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
-						chartTopPadding = 87; 
-					else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
-						chartTopPadding = 80; 
-					else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-						chartTopPadding = 77; 
-					else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
-						chartTopPadding = 82; 
-					else
-						chartTopPadding = 100;
-					
-					chartTopPadding += userTimeAgoFontMultiplier * 4;
-				}
-				else
-				{
-					chartTopPadding = 65;
-					if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-						chartTopPadding += 12;
-				}
-				
-				var scrollerTopPadding:int = 5;
-				var statusBarHeight:int = 20;
-				
-				scrollChartHeight = availableScreenHeight - statusBarHeight - Math.round(glucoseChartTopPadding) - chartTopPadding - mainChartHeight - (scrollerTopPadding * 4);
-			}
-			
-			//CHART
-			//Get glucose data;
-			chartData = ModelLocator.bgReadings.concat();
-			
-			//Create and setup glucose chart
-			glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
-			glucoseChart.y = Math.round(glucoseChartTopPadding);
-			glucoseChart.dataSource = chartData;
-			glucoseChart.displayLine = drawLineChart;
-			glucoseChart.drawGraph();
-			glucoseChart.addAllTreatments();
-			var now:Number = new Date().valueOf();
-			SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalIOB, now );
-			SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalCOB, now );
-			addChild(glucoseChart);*/
+			setTimeout(redrawChart, 1500);
 		}
 		
-		private function setChartSettings():Number
+		private function redrawChart():void
+		{
+			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+			{
+				chartData = glucoseChart.dataSource;
+				
+				//Remove previous chart
+				removeChild(glucoseChart);
+				glucoseChart.dispose();
+				glucoseChart = null;
+				
+				//Create new chart
+				glucoseChart = new GlucoseChart(selectedTimelineRange, Constants.stageWidth, mainChartHeight);
+				glucoseChart.dataSource = chartData;
+				glucoseChart.displayLine = drawLineChart;
+				glucoseChart.drawGraph();
+				glucoseChart.addAllTreatments();
+				var now:Number = new Date().valueOf();
+				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalIOB, now );
+				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalCOB, now );
+				glucoseChart.y = glucoseChartTopPadding;
+				addChild(glucoseChart);
+			}
+			else
+				SystemUtil.executeWhenApplicationIsActive( redrawChartForTreatmentsAndLine );
+		}
+		
+		/**
+		 * Display Objects Size Calculators
+		 */
+		private function calculateChartSettingsSize():Number
 		{
 			var chartSettingsHeight:Number = 0;
 			
@@ -432,8 +291,6 @@ package ui.screens
 			displayLines.validate();
 			
 			chartSettingsHeight = displayLines.height;
-			
-			//addChild( displayLines );
 			
 			/* Timeline Settings */
 			timeRangeGroup = new ToggleGroup();
@@ -472,157 +329,60 @@ package ui.screens
 				h24.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h24.scale = 1.4;
-			h24.addEventListener(FeathersEventType.CREATION_COMPLETE, onRadioCreation);
 			h24.validate();
-			
-			//Calculate selected radio
-			if (selectedTimelineRange == GlucoseChart.TIMELINE_1H)
-				timeRangeGroup.selectedItem = h1;
-			else if (selectedTimelineRange == GlucoseChart.TIMELINE_3H)
-				timeRangeGroup.selectedItem = h3;
-			else if (selectedTimelineRange == GlucoseChart.TIMELINE_6H)
-				timeRangeGroup.selectedItem = h6;
-			else if (selectedTimelineRange == GlucoseChart.TIMELINE_12H)
-				timeRangeGroup.selectedItem = h12;
-			else if (selectedTimelineRange == GlucoseChart.TIMELINE_24H)
-				timeRangeGroup.selectedItem = h24;
-			
-			//Add Event Listener For Radios
-			timeRangeGroup.addEventListener( Event.CHANGE, onTimeRangeChange );
 			
 			return chartSettingsHeight;
 		}
 		
-		private function redrawChartForTreatmentsAndLine():void
+		private function calculatePieChartSize():Number
 		{
-			//setTimeout(redrawChart, 1500);
-		}
-		
-		private function redrawChart():void
-		{
-			/*if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
-			{
-				//var previousData:Array = glucoseChart.dataSource.concat();
-				chartData = glucoseChart.dataSource;
-				
-				//Remove previous chart
-				removeChild(glucoseChart);
-				glucoseChart.dispose();
-				glucoseChart = null;
-				
-				//Create new chart
-				glucoseChart = new GlucoseChart(selectedTimelineRange, stage.stageWidth, mainChartHeight, stage.stageWidth, scrollChartHeight);
-				glucoseChart.dataSource = chartData;
-				glucoseChart.displayLine = drawLineChart;
-				glucoseChart.drawGraph();
-				glucoseChart.addAllTreatments();
-				var now:Number = new Date().valueOf();
-				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalIOB, now );
-				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalCOB, now );
-				glucoseChart.y = glucoseChartTopPadding;
-				addChild(glucoseChart);
-			}
-			else
-				SystemUtil.executeWhenApplicationIsActive( redrawChartForTreatmentsAndLine );*/
-		}
-		
-		/*private function calculateChartHeight():Number
-		{
-			//Calculate Multipliers
-			var userGlucoseFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_BG_FONT_SIZE));
-			var userTimeAgoFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
-			var higherMultiplier:Number;
-			if (userGlucoseFontMultiplier >= userTimeAgoFontMultiplier)
-				higherMultiplier = userGlucoseFontMultiplier;
-			else
-				higherMultiplier = userTimeAgoFontMultiplier;
+			var pieChartTotalHeight:Number = 0;
 			
-			//Chart Top Margin
-			var topMargin:int = Math.round(glucoseChartTopPadding);
-			
-			//Main Chart Internal Top Padding
-			var chartDisplayMargin:Number;
-			if ((!displayIOBEnabled && !displayCOBEnabled) || !chartTreatmentsEnabled || !treatmentsEnabled)
-			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-					chartDisplayMargin = 68 * higherMultiplier;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-					chartDisplayMargin = 60 * higherMultiplier;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-					chartDisplayMargin = 69 * higherMultiplier;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-					chartDisplayMargin = 58 * higherMultiplier;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					chartDisplayMargin = 40 * higherMultiplier;
-				else
-					chartDisplayMargin = 60 * higherMultiplier;
-			}
-			else if ((displayIOBEnabled || displayCOBEnabled ) && chartTreatmentsEnabled && treatmentsEnabled)
-			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-					chartDisplayMargin = 97 * higherMultiplier;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-					chartDisplayMargin = 95 * higherMultiplier;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-					chartDisplayMargin = 103 * higherMultiplier; 
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-					chartDisplayMargin = 90 * higherMultiplier; 
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					chartDisplayMargin = 62 * higherMultiplier; 
-				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
-					chartDisplayMargin = 86 * higherMultiplier; 
-				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
-					chartDisplayMargin = 140 * higherMultiplier; 
-				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-					chartDisplayMargin = 150 * higherMultiplier;
-				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
-					chartDisplayMargin = 125 * higherMultiplier;
-				else
-					chartDisplayMargin = 100 * higherMultiplier;
-			}
-			else
-				chartDisplayMargin = 50 * higherMultiplier;
-			
-			//Settings (Radio Buttons Height)
-			var settingsHeight:int = 20;
-			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-				settingsHeight *= 1.4;
-			
-			//Calculate Device Specific Adjustment
-			var deviceAdjustement:Number;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-				deviceAdjustement = 0;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-				deviceAdjustement = 6 * higherMultiplier;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-				deviceAdjustement = 12 * higherMultiplier;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-				deviceAdjustement = 20 * higherMultiplier;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				deviceAdjustement = 35 * higherMultiplier;
-			else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
-				deviceAdjustement = 40 * higherMultiplier;
-			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
-				deviceAdjustement = 40 * higherMultiplier;
-			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-				deviceAdjustement = 40 * higherMultiplier;
-			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
-				deviceAdjustement = 40 * higherMultiplier;
+				pieTopPadding = 10;
 			
-			//Return Calculated Chart Height
-			return availableScreenHeight - topMargin - chartDisplayMargin - scrollerTopPadding - scrollChartHeight - chartSettingsTopPadding - settingsHeight - deviceAdjustement;
-		}*/
+			pieChartTotalHeight += pieTopPadding * 2;
+			
+			/*pieChartHeight = 65;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
+			pieChartHeight = 100;*/
+			
+			var dummyPieChartStatsSection:PieDistributionSection = new PieDistributionSection(100, 30, 0x000000, 0x000000, 0x000000);
+			dummyPieChartStatsSection.title.text = "N/A";
+			dummyPieChartStatsSection.title.validate();
+			dummyPieChartStatsSection.message.text = "N/A";
+			dummyPieChartStatsSection.message.validate();
+			
+			var sectionMultiplier:Number = 3;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				sectionMultiplier = 2.5;
+			
+			pieChartHeight = (sectionMultiplier * dummyPieChartStatsSection.title.height) + (sectionMultiplier * dummyPieChartStatsSection.message.height);
+			
+			dummyPieChartStatsSection.dispose();
+			dummyPieChartStatsSection = null;
+			
+			pieChartTotalHeight += pieChartHeight;
+			
+			return pieChartTotalHeight;
+		}
 		
 		/**
 		 * Event Handlers
 		 */
+		private function onCreation(event:Event):void
+		{
+			createChart();
+			redrawChartForTreatmentsAndLine();
+		}
+		
 		private function onBgReadingReceivedFollower(e:FollowerEvent):void
 		{
 			Trace.myTrace("ChartScreen.as", "on onBgReadingReceivedFollower!");
 			
 			if (!BlueToothDevice.isFollower())
 				Trace.myTrace("ChartScreen.as", "User is not a follower. Ignoring");
-				
+			
 			try
 			{
 				var readings:Array = e.data;
@@ -815,14 +575,6 @@ package ui.screens
 			}
 		}
 		
-		private function onCreation(event:Event):void
-		{
-			setGlucoseChart();
-			if (Constants.isPortrait)
-				setChartSettings();
-			redrawChartForTreatmentsAndLine();
-		}
-		
 		private function onTimeRangeChange(event:Event):void
 		{
 			var group:ToggleGroup = ToggleGroup( event.currentTarget );
@@ -860,48 +612,6 @@ package ui.screens
 			//Save timerange in database
 			if (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE)) != selectedTimelineRange)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE, String(selectedTimelineRange));
-		}
-		
-		private function onRadioCreation(event:Event):void
-		{
-			//Position Radio Buttons
-			/*var paddingMultiplier:Number = DeviceInfo.getHorizontalPaddingMultipier();
-			
-			h24.x = stage.stageWidth - h24.width - chartSettingsLeftRightPadding;
-			h24.y = glucoseChart.y + glucoseChart.height + chartSettingsTopPadding;
-			
-			h12.x = h24.x - h12.width - (chartSettingsLeftRightPadding * paddingMultiplier);
-			h12.y = h24.y;
-			
-			h6.x = h12.x - h6.width - (chartSettingsLeftRightPadding * paddingMultiplier);
-			h6.y = h24.y;
-			
-			h3.x = h6.x - h3.width - (chartSettingsLeftRightPadding * paddingMultiplier);
-			h3.y = h24.y;
-			
-			h1.x = h3.x - h1.width - (chartSettingsLeftRightPadding * paddingMultiplier);
-			h1.y = h24.y;
-			
-			displayLines.x = chartSettingsLeftRightPadding;
-			displayLines.y = h24.y;
-			
-			//Add 24H Glucose distributon to the screen
-			if (displayPieChart)
-			{
-				delimitter = GraphLayoutFactory.createHorizontalLine(Constants.stageWidth, 1, 0x282a32);
-				delimitter.y = h24.y + h24.height + delimitterTopPadding;
-				addChild(delimitter);
-				
-				var lastAvailableSpace:Number = availableScreenHeight - glucoseChartTopPadding - glucoseChart.height - chartSettingsTopPadding - h24.height - delimitterTopPadding - delimitter.height;
-				var pieHeight:Number = (lastAvailableSpace * 0.8) / 2; //80% of availables space
-				var pieTopPadding:Number = Math.round((lastAvailableSpace * 0.3) / 2);
-				
-				//Pie Chart
-				pieChart = new DistributionChart(pieHeight, chartData);
-				pieChart.y = Math.round(h24.y + h24.height + delimitterTopPadding + delimitter.height + pieTopPadding);
-				pieChart.x = 10;
-				addChild(pieChart);
-			}*/
 		}
 		
 		private function onDisplayLine(event:Event):void
@@ -958,7 +668,6 @@ package ui.screens
 			
 			if (h24 != null)
 			{
-				h24.removeEventListener(FeathersEventType.CREATION_COMPLETE, onRadioCreation);
 				h24.removeFromParent();
 				h24.dispose();
 				h24 = null;
