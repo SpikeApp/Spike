@@ -32,7 +32,6 @@ package ui.screens
 	import services.TransmitterService;
 	
 	import starling.core.Starling;
-	import starling.display.Shape;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
@@ -46,6 +45,7 @@ package ui.screens
 	import ui.chart.GraphLayoutFactory;
 	import ui.chart.PieDistributionSection;
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeLine;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -93,7 +93,7 @@ package ui.screens
 		private var h3:Radio;
 		private var h1:Radio;
 		private var displayLines:Check;
-		private var delimitter:Shape;
+		private var delimitter:SpikeLine;
 		
 		public function ChartScreen() 
 		{
@@ -259,6 +259,7 @@ package ui.screens
 				
 				//Create new chart
 				glucoseChart = new GlucoseChart(selectedTimelineRange, Constants.stageWidth, mainChartHeight);
+				glucoseChart.y = Math.round(glucoseChartTopPadding);
 				glucoseChart.dataSource = chartData;
 				glucoseChart.displayLine = drawLineChart;
 				glucoseChart.drawGraph();
@@ -266,7 +267,6 @@ package ui.screens
 				var now:Number = new Date().valueOf();
 				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalIOB, now );
 				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalCOB, now );
-				glucoseChart.y = glucoseChartTopPadding;
 				addChild(glucoseChart);
 			}
 			else
