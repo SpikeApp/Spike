@@ -1,19 +1,18 @@
 package ui.chart
 {
-	
 	import database.CommonSettings;
 	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
-	import starling.display.Shape;
 	import starling.display.Sprite;
 	
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import ui.shapes.SpikeCanvas;
 	
 	public class ChartTreatmentPill extends Sprite
 	{
@@ -30,13 +29,13 @@ package ui.chart
 		private var treatmentPillColor:uint;
 		private static var fontSize:int = 16;
 		private static var pillHeight:int = 25;
-
+		
 		/* Display Objects */
-		private var pillBackground:Shape;
-		private var valueBackground:Shape;
+		private var pillBackground:SpikeCanvas;
+		private var valueBackground:SpikeCanvas;
 		private var titleLabel:Label;
 		private var valueLabel:Label;
-
+		
 		public function ChartTreatmentPill(type:String)
 		{
 			this.type = type;
@@ -118,14 +117,14 @@ package ui.chart
 			var valueBackgroundWidth:Number = valueLabel.width + (2 * PADDING);
 			
 			//Pill Background
-			pillBackground = new Shape();
-			pillBackground.graphics.beginFill(treatmentPillColor, 1);
-			pillBackground.graphics.drawRoundRect(0, 0, pillWidth, pillHeight, CORNER_RADIUS);
+			pillBackground = new SpikeCanvas();
+			pillBackground.beginFill(treatmentPillColor, 1);
+			pillBackground.drawRoundRectangle(0, 0, pillWidth, pillHeight, CORNER_RADIUS, 10);
 			
 			//Value Background
-			valueBackground = new Shape();
-			valueBackground.graphics.beginFill(0x20222a, 1);
-			valueBackground.graphics.drawRoundRect(pillWidth - valueBackgroundWidth - STROKE_THICKNESS, STROKE_THICKNESS, valueBackgroundWidth, pillHeight - (2 * STROKE_THICKNESS), CORNER_RADIUS);
+			valueBackground = new SpikeCanvas();
+			valueBackground.beginFill(0x20222a, 1);
+			valueBackground.drawRoundRectangle(pillWidth - valueBackgroundWidth - STROKE_THICKNESS, STROKE_THICKNESS, valueBackgroundWidth, pillHeight - (2 * STROKE_THICKNESS), CORNER_RADIUS, 10);
 			
 			//Position and Scale Objects
 			titleLabel.x = 0;

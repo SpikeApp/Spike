@@ -1,16 +1,15 @@
 package ui.chart
 {
-	
 	import database.CommonSettings;
 	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
-	import starling.display.Shape;
 	import starling.display.Sprite;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeCanvas;
 	
 	public class ChartInfoPill extends Sprite
 	{
@@ -26,10 +25,10 @@ package ui.chart
 		private var selectedColor:uint;
 		private var fontColor:uint;
 		private var oldColor:uint;
-
+		
 		/* Display Objects */
-		private var pillBackground:Shape;
-		private var valueBackground:Shape;
+		private var pillBackground:SpikeCanvas;
+		private var valueBackground:SpikeCanvas;
 		private var unitLabel:Label;
 		private var valueLabel:Label;
 		
@@ -81,14 +80,14 @@ package ui.chart
 			var valueBackgroundHeight:Number = valueLabel.height + (1 * PADDING);
 			
 			//Pill Background
-			pillBackground = new Shape();
-			pillBackground.graphics.beginFill(selectedColor, 1);
-			pillBackground.graphics.drawRoundRect(0, 0, pillWidth, valueBackgroundHeight, CORNER_RADIUS);
+			pillBackground = new SpikeCanvas();
+			pillBackground.beginFill(selectedColor, 1);
+			pillBackground.drawRoundRectangle(0, 0, pillWidth, valueBackgroundHeight, CORNER_RADIUS, 10);
 			
 			//Value Background
-			valueBackground = new Shape();
-			valueBackground.graphics.beginFill(0x20222a, 1);
-			valueBackground.graphics.drawRoundRect(STROKE_THICKNESS, STROKE_THICKNESS, valueBackgroundWidth, valueBackgroundHeight - (2 * STROKE_THICKNESS), CORNER_RADIUS);
+			valueBackground = new SpikeCanvas();
+			valueBackground.beginFill(0x20222a, 1);
+			valueBackground.drawRoundRectangle(STROKE_THICKNESS, STROKE_THICKNESS, valueBackgroundWidth, valueBackgroundHeight - (2 * STROKE_THICKNESS), CORNER_RADIUS, 10);
 			
 			//Position and Scale Objects
 			if (unit != "")
