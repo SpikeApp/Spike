@@ -6,19 +6,20 @@ package ui.chart
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
+	import starling.display.Canvas;
 	import starling.display.Shape;
-	import starling.display.graphics.NGon;
 	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeDisplayObject;
 	
 	public class CarbsMarker extends ChartTreatment
 	{
 		/* Display Objects */
 		private var label:Label;
-		private var carbsMarker:NGon;
-		private var stroke:Shape;
+		private var carbsMarker:Canvas;
+		private var stroke:SpikeDisplayObject;
 		
 		/* Properties */
 		private var fontSize:int = 11;
@@ -62,16 +63,17 @@ package ui.chart
 			}
 			
 			//Background
-			carbsMarker = new NGon(radius, 20, 0, 0, 360);
-			carbsMarker.x = radius / 3;
-			carbsMarker.y = radius + radius/4;
-			carbsMarker.color = backgroundColor;
+			carbsMarker = new Canvas();
+			carbsMarker.beginFill(backgroundColor);
+			carbsMarker.drawCircle(radius / 3, radius + radius/4, radius);
 			addChild(carbsMarker);
 			
 			//Stroke
-			stroke = new Shape();
-			stroke.graphics.lineStyle(0.8, strokeColor, 1);
-			stroke.graphics.drawCircle(radius, radius, radius);
+			var strokeShape:Shape = new Shape();
+			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
+			strokeShape.graphics.drawCircle(radius, radius, radius);
+			
+			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;
 			addChild(stroke);

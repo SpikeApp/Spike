@@ -637,8 +637,11 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			disposeDisplayObjects();
-			onCreation(null);
+			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+			{
+				disposeDisplayObjects();
+				onCreation(null);
+			}
 		}
 		
 		/**

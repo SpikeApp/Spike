@@ -1,11 +1,19 @@
 package ui.chart
 {
+    import flash.display.BitmapData;
+    
     import feathers.controls.Label;
     
+    import starling.core.Starling;
+    import starling.display.DisplayObject;
+    import starling.display.Image;
+    import starling.display.Quad;
     import starling.display.Shape;
     import starling.display.Sprite;
     import starling.text.TextFormat;
+    import starling.textures.Texture;
     
+    import ui.shapes.SpikeDisplayObject;
     import ui.shapes.SpikeLine;
     
     import utils.Constants;
@@ -164,6 +172,39 @@ package ui.chart
 			outline.addChild(line4);
 			
 			return outline;
+		}
+		
+		public static function createImageFromShape(shape:DisplayObject):SpikeDisplayObject
+		{			
+			//Dummy transparent background to circumvent Starling bug that cuts 1 pixel in width and heigh when converting to bitmap data
+			var dummyBackground:Quad = new Quad(shape.width + 2, shape.height + 2);
+			dummyBackground.alpha = 0;
+			
+			//Adjust shape position to be out of the trimmed area
+			shape.x += 1;
+			shape.y += 1;
+			
+			//Create a container with the dummy background and the shape on top
+			var container:Sprite = new Sprite();
+			container.addChild(dummyBackground);
+			container.addChild(shape);
+			
+			//Create bitmap data of the shape's visual representation
+			var bitmapData:BitmapData = new BitmapData(container.width * Starling.contentScaleFactor, container.height * Starling.contentScaleFactor);
+			container.drawToBitmapData(bitmapData)
+			
+			//Create and draw a texture onto the GPU. This texture can't be disposed unless we really want the object to not be drawn anymore on the Display List
+			var texture:Texture = Texture.fromBitmapData(bitmapData);
+			
+			//Create an image of the texture. This image can be added to the display list
+			var image:Image = new Image(texture);
+			image.scale = 1 / Starling.contentScaleFactor;
+			image.x = image.y = -1;
+			
+			//Create Spike Display Object
+			var spikeDisplayObject:SpikeDisplayObject = new SpikeDisplayObject(container, dummyBackground, shape, bitmapData, texture, image);
+			
+			return spikeDisplayObject;
 		}
     }
 }

@@ -7,19 +7,20 @@ package ui.chart
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
+	import starling.display.Canvas;
 	import starling.display.Shape;
-	import starling.display.graphics.NGon;
 	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeDisplayObject;
 	
 	public class BGCheckMarker extends ChartTreatment
 	{
 		/* Display Objects */
 		private var label:Label;
-		private var BGMarker:NGon;
-		private var stroke:Shape;
+		private var BGMarker:Canvas;
+		private var stroke:SpikeDisplayObject;
 		
 		/* Properties */
 		private var fontSize:int = 11;
@@ -52,16 +53,17 @@ package ui.chart
 				fontSize *= 0.6;
 			
 			//Background
-			BGMarker = new NGon(radius, 20, 0, 0, 360);
-			BGMarker.x = radius / 3;
-			BGMarker.y = radius + radius/4;
-			BGMarker.color = backgroundColor;
+			BGMarker = new Canvas();
+			BGMarker.beginFill(backgroundColor);
+			BGMarker.drawCircle(radius / 3, radius + radius/4, radius);
 			addChild(BGMarker);
 			
 			//Stroke
-			stroke = new Shape();
-			stroke.graphics.lineStyle(0.8, strokeColor, 1);
-			stroke.graphics.drawCircle(radius, radius, radius);
+			var strokeShape:Shape = new Shape();
+			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
+			strokeShape.graphics.drawCircle(radius, radius, radius);
+			
+			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;
 			addChild(stroke);
