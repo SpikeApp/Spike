@@ -435,12 +435,10 @@ package services
 				
 				if (BlueToothDevice.isMiaoMiao()) {
 					BackgroundFetch.startScanDeviceMiaoMiao();
-					removeBluetoothLEEventListeners();
 					addMiaoMiaoEventListeners();
 				} else {
 					BackgroundFetch.stopScanDeviceMiaoMiao();
 					addBluetoothLEEventListeners();
-					removeMiaoMiaoEventListeners();
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in commonSettingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
@@ -526,21 +524,25 @@ package services
 			}
 
 			if (!BluetoothLE.service.centralManager.isScanning) {
-				if (!BluetoothLE.service.centralManager.scanForPeripherals(advertisement_UUID_Vector))
-				{
-					myTrace("in startScanning, failed to start scanning for peripherals");
-					return;
+				if (advertisement_UUID_Vector != null) {
+					if (!BluetoothLE.service.centralManager.scanForPeripherals(advertisement_UUID_Vector))
+					{
+						myTrace("in startScanning, failed to start scanning for peripherals");
+						return;
+					} else {
+						myTrace("in startScanning, started scanning for peripherals");
+						if (itsNotAnAlwaysScanDevice) {
+							myTrace("in startScanning, it's a device which does not require always scanning, start the scan timer");
+							scanTimer = new Timer(MAX_SCAN_TIME_IN_SECONDS * 1000, 1);
+							scanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
+							scanTimer.start();
+						}
+						if (BlueToothDevice.isBluKon()) {
+							startMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
+						}
+					}
 				} else {
-					myTrace("in startScanning, started scanning for peripherals");
-					if (itsNotAnAlwaysScanDevice) {
-						myTrace("in startScanning, it's a device which does not require always scanning, start the scan timer");
-						scanTimer = new Timer(MAX_SCAN_TIME_IN_SECONDS * 1000, 1);
-						scanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
-						scanTimer.start();
-					}
-					if (BlueToothDevice.isBluKon()) {
-						startMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
-					}
+					myTrace("in startscanning but advertisement_UUID_Vector == null");
 				}
 			} else {
 				myTrace("in startscanning but already scanning");
@@ -549,17 +551,21 @@ package services
 		
 		public static function stopScanning(event:flash.events.Event):void {
 			myTrace("in stopScanning");
-			if (BlueToothDevice.isMiaoMiao()) {
-				BackgroundFetch.stopScanningMiaoMiao();				
-			} else {
-				if (BluetoothLE.service.centralManager.isScanning) {
-					myTrace("in stopScanning, is scanning, call stopScan");
-					BluetoothLE.service.centralManager.stopScan();
-					if (BlueToothDevice.isBluKon()) {
-						stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
-					}
-					_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
+			
+			//Stop scanning for both miaomiao and for the ANE
+			//Not sure here which one is scanning
+			
+			//stop scanning the miaomiao
+			BackgroundFetch.stopScanningMiaoMiao();
+			
+			//stop scanning the ANE
+			if (BluetoothLE.service.centralManager.isScanning) {
+				myTrace("in stopScanning, is scanning, call stopScan");
+				BluetoothLE.service.centralManager.stopScan();
+				if (BlueToothDevice.isBluKon()) {
+					stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 				}
+				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
 		}
 		
@@ -765,8 +771,8 @@ package services
 		
 		private static function central_peripheralDisconnectHandler(event:PeripheralEvent = null):void {
 			if (event != null) {
-				if (event.peripheral.uuid != peripheralUUID) {
-					myTrace("in central_peripheralDisconnectHandler, but event.peripheral.uuid != peripheralUUID, ignoring");
+				if (event.peripheral.uuid != peripheralUUID && peripheralUUID != "") {
+					myTrace("in central_peripheralDisconnectHandler, but event.peripheral.uuid != peripheralUUID && peripheralUUID != \"\" ignoring");
 					return;
 				}
 			}
@@ -1117,6 +1123,7 @@ package services
 				BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
 				activeBluetoothPeripheral = null;
 				myTrace("bluetooth device forgotten");
+				peripheralUUID = "";
 			}
 		}
 		
@@ -2194,14 +2201,6 @@ package services
 			BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
 		}
 		
-		private static function removeBluetoothLEEventListeners():void {
-			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
-			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, central_peripheralConnectHandler );
-			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT_FAIL, central_peripheralDisconnectHandler );
-			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
-			BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
-		}
-		
 		private static function addMiaoMiaoEventListeners():void {
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
@@ -2225,12 +2224,6 @@ package services
 				.setSound("");
 			Notifications.service.notify(notificationBuilder.build());
 			_amountOfConsecutiveSensorNotDetectedForMiaoMiao++;
-		}
-		
-		private static function removeMiaoMiaoEventListeners():void {
-			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
-			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
-			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorNotDetectedFromMiaoMiao);
 		}
 		
 		private static function receivedMiaoMiaoDeviceAddress(event:BackgroundFetchEvent):void {
@@ -2297,7 +2290,14 @@ package services
 				characteristics_UUID_Vector = xBridgeR_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = xBridgeR_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = xBridgeR_TX_Characteristic_UUID;
-			} 
+			} else {
+				service_UUID = "";
+				advertisement_UUID_Vector = null;
+				characteristics_UUID_Vector = xBridgeR_Characteristics_UUID_Vector;
+				RX_Characteristic_UUID = "";
+				TX_Characteristic_UUID = "";
+				
+			}
 		}
 	}
 }
