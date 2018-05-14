@@ -86,8 +86,12 @@ package ui.chart
 				pillHeight = 32;
 			}
 			
-			fontSize *= Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
-			pillHeight *= Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
+			var userFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
+			if (!Constants.isPortrait)
+				userFontMultiplier = 1;
+			
+			fontSize *= userFontMultiplier;
+			pillHeight *= userFontMultiplier;
 		}
 		
 		public function setValue(value:String):void
