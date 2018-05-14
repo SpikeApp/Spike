@@ -318,7 +318,10 @@ package ui.chart
 			else if (COBPill != null)
 				chartTopPadding = COBPill.y + COBPill.height + 10;
 			else
+			{
+				glucoseSlopePill.setValue(" ", " ", 0x20222a);
 				chartTopPadding = glucoseSlopePill.y + glucoseSlopePill.height + 10;
+			}
 			
 			//Set properties #2
 			this.timelineRange = timelineRange;
