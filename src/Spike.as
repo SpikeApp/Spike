@@ -1,5 +1,7 @@
 package 
 {
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.desktop.NativeApplication;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
@@ -182,7 +184,7 @@ package
 				
 				Constants.isPortrait = stage.stageWidth < stage.stageHeight;
 				
-				starling.start();
+				SystemUtil.executeWhenApplicationIsActive(starling.start);
 			}
 		}
 		

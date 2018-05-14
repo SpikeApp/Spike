@@ -1,7 +1,5 @@
 package ui.chart
 { 
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
@@ -349,6 +347,8 @@ package ui.chart
 			this._graphWidth = chartWidth;
 			this._scrollerWidth = chartWidth;
 			this._scrollerHeight = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 ? 50 : 35;
+			if (!Constants.isPortrait && (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6))
+				this._scrollerHeight = 35;
 			this._graphHeight = chartHeight - chartTopPadding - _scrollerHeight - scrollerTopPadding - (timelineActive ? 10 : 0);
 			this.mainChartGlucoseMarkersList = [];
 			this.scrollChartGlucoseMarkersList = [];
@@ -788,7 +788,7 @@ package ui.chart
 		
 		public function addAllTreatments():void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			if (TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && treatmentsActive && !dummyModeActive && !allTreatmentsAdded)
@@ -836,7 +836,7 @@ package ui.chart
 		
 		public function updateExternallyDeletedTreatment(treatment:Treatment):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			if (treatment != null)
@@ -1010,7 +1010,7 @@ package ui.chart
 		
 		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			var touch:Touch = e.getTouch(stage);
@@ -1199,7 +1199,7 @@ package ui.chart
 		
 		private function manageTreatments(animate:Boolean = false):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
 				return;
 			
 			if (treatmentsContainer == null || !treatmentsActive)
@@ -1316,7 +1316,7 @@ package ui.chart
 		
 		private function drawTimeline():void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
 			//Safeguards
@@ -1714,7 +1714,7 @@ package ui.chart
 		
 		public function addGlucose(BGReadingsList:Array):Boolean
 		{
-			if(BGReadingsList == null || BGReadingsList.length == 0 || !BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if(BGReadingsList == null || BGReadingsList.length == 0 || !SystemUtil.isApplicationActive)
 				return false;
 			
 			var latestTimestamp:Number = Number(BGReadingsList[BGReadingsList.length - 1].timestamp);
@@ -1890,7 +1890,7 @@ package ui.chart
 		
 		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
 			/**
@@ -2147,7 +2147,7 @@ package ui.chart
 		
 		private function drawLine(chartType:String):void 
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
 			//Line container
@@ -2236,7 +2236,7 @@ package ui.chart
 			if (glucoseValueDisplay == null || glucoseTimeAgoPill == null || glucoseSlopePill == null || glucoseDelimiter == null)
 				return;
 			
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!SystemUtil.isApplicationActive)
 				return;
 
 			var timeAgoValue:String;
@@ -2539,7 +2539,7 @@ package ui.chart
 		
 		public function showLine():void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
 			if(_displayLine == false)
@@ -2557,7 +2557,7 @@ package ui.chart
 		
 		public function hideLine():void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
 			if(_displayLine == true)
@@ -2575,7 +2575,7 @@ package ui.chart
 		
 		private function disposeLine(chartType:String):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
 			var sourceList:Array;
@@ -2597,7 +2597,7 @@ package ui.chart
 		
 		private function destroyAllLines(scrollerIncluded:Boolean = true):void
 		{
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
 			var i:int = 0
@@ -2943,7 +2943,7 @@ package ui.chart
 		
 		private function onAppInForeground (e:SpikeEvent):void
 		{
-			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+			if (SystemUtil.isApplicationActive)
 			{
 				calculateDisplayLabels();
 				var timelineTimestamp:Number = getTimelineTimestamp();
@@ -2956,7 +2956,7 @@ package ui.chart
 		
 		private function onUpdateTimerRefresh(event:flash.events.Event = null):void
 		{
-			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+			if (SystemUtil.isApplicationActive)
 			{
 				calculateDisplayLabels();
 				var timelineTimestamp:Number = getTimelineTimestamp();

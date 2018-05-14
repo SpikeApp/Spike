@@ -24,6 +24,7 @@ package ui.chart
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
+	import starling.utils.SystemUtil;
 	
 	import stats.BasicUserStats;
 	import stats.StatsManager;
@@ -247,7 +248,7 @@ package ui.chart
 			if (_dataSource != null && _dataSource.length > 0)
 				dummyModeActive = false;
 			
-			if (!BackgroundFetch.appIsInForeground())
+			if (!SystemUtil.isApplicationActive)
 				return false;
 			
 			var userStats:BasicUserStats = StatsManager.getBasicUserStats();

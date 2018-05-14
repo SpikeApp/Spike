@@ -1,7 +1,5 @@
 package ui.screens
-{
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
+{	
 	import flash.system.System;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
@@ -32,6 +30,7 @@ package ui.screens
 	import services.TransmitterService;
 	
 	import starling.core.Starling;
+	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
@@ -83,6 +82,7 @@ package ui.screens
 		private var chartTreatmentsEnabled:Boolean = false;
 		private var displayIOBEnabled:Boolean = false;
 		private var displayCOBEnabled:Boolean = false;
+		private var wasPortrait:Boolean = true;
 		
 		//Display Objects
 		private var glucoseChart:GlucoseChart;
@@ -171,8 +171,8 @@ package ui.screens
 			glucoseChart.drawGraph();
 			glucoseChart.addAllTreatments();
 			var now:Number = new Date().valueOf();
-			SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalIOB, now );
-			SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalCOB, now );
+			glucoseChart.calculateTotalIOB( now );
+			glucoseChart.calculateTotalCOB( now );
 			addChild(glucoseChart);
 			
 			if (Constants.isPortrait)
@@ -182,6 +182,8 @@ package ui.screens
 				if (displayPieChart)
 					createPieChart();
 			}
+			
+			wasPortrait = Constants.isPortrait;
 		}
 		
 		private function createSettings():void
@@ -248,7 +250,7 @@ package ui.screens
 		
 		private function redrawChart():void
 		{
-			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+			if (SystemUtil.isApplicationActive)
 			{
 				chartData = glucoseChart.dataSource;
 				
@@ -265,8 +267,8 @@ package ui.screens
 				glucoseChart.drawGraph();
 				glucoseChart.addAllTreatments();
 				var now:Number = new Date().valueOf();
-				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalIOB, now );
-				SystemUtil.executeWhenApplicationIsActive( glucoseChart.calculateTotalCOB, now );
+				glucoseChart.calculateTotalIOB( now );
+				glucoseChart.calculateTotalCOB( now );
 				addChild(glucoseChart);
 			}
 			else
@@ -388,7 +390,7 @@ package ui.screens
 				var readings:Array = e.data;
 				if (readings != null && readings.length > 0)
 				{
-					if (BackgroundFetch.appIsInForeground() && glucoseChart != null && Constants.appInForeground && SystemUtil.isApplicationActive)
+					if (glucoseChart != null && SystemUtil.isApplicationActive)
 					{
 						glucoseChart.addGlucose(readings);
 						if (displayPieChart)
@@ -426,7 +428,7 @@ package ui.screens
 					return;
 				}
 				
-				if (!appInBackground && glucoseChart != null && Constants.appInForeground && BackgroundFetch.appIsInForeground() && SystemUtil.isApplicationActive)
+				if (glucoseChart != null && SystemUtil.isApplicationActive)
 				{
 					Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
 					glucoseChart.addGlucose([reading]);
@@ -452,7 +454,7 @@ package ui.screens
 		
 		private function onUpdateIOBCOB(e:TreatmentsEvent):void
 		{
-			if (glucoseChart == null || !BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if (glucoseChart == null || !SystemUtil.isApplicationActive)
 				return;
 			
 			Trace.myTrace("ChartScreen.as", "Updating IOB/COB");
@@ -506,7 +508,7 @@ package ui.screens
 		{
 			clearTimeout(queueTimeout);
 			
-			if(!BackgroundFetch.appIsInForeground() || !Constants.appInForeground)
+			if(!SystemUtil.isApplicationActive)
 			{
 				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
 				
@@ -637,16 +639,18 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			if (BackgroundFetch.appIsInForeground() && Constants.appInForeground)
-			{
-				disposeDisplayObjects();
-				onCreation(null);
-			}
+			disposeDisplayObjects();
+			createChart();
 		}
 		
 		/**
 		 * Utility
 		 */
+		override protected function draw():void
+		{
+			super.draw();
+		}
+		
 		private function disposeDisplayObjects():void
 		{
 			if (glucoseChart != null)
