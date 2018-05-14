@@ -452,6 +452,16 @@
 						<key>UILaunchImageSize</key>
 						<string>{320, 480}</string>
 					</dict>
+					<dict>
+						<key>UILaunchImageMinimumOSVersion</key>
+						<string>8.0</string>
+						<key>UILaunchImageName</key>
+						<string>Default-Landscape-414w-736h@3x~iphone</string>
+						<key>UILaunchImageOrientation</key>
+						<string>Landscape</string>
+						<key>UILaunchImageSize</key>
+						<string>{320, 480}</string>
+					</dict>
 				</array>
             ]]>
 		</InfoAdditions>
