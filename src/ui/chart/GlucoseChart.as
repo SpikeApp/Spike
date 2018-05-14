@@ -141,6 +141,10 @@ package ui.chart
 		private var dummyModeActive:Boolean = false;
 		private var handPickerWidth:Number;
 		private var glucoseDisplayFont:Number;
+		private var deviceFontMultiplier:Number;
+		private var timeDisplayFont:Number;
+		private var retroDisplayFont:Number;
+		private var labelsYPos:Number;
 		
 		//Display Objects
 		private var glucoseTimelineContainer:Sprite;
@@ -235,14 +239,6 @@ package ui.chart
 		private var actionsContainer:LayoutGroup;
 		private var moveBtn:Button;
 		private var deleteBtn:Button;
-
-		private var deviceFontMultiplier:Number;
-
-		private var timeDisplayFont:Number;
-
-		private var retroDisplayFont:Number;
-
-		private var labelsYPos:Number;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number)
 		{
@@ -296,36 +292,6 @@ package ui.chart
 			displayIOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
 			displayCOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
 			
-			if (treatmentsActive && displayTreatmentsOnChart && (displayIOBEnabled || displayCOBEnabled))
-			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-					chartTopPadding = 93;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-					chartTopPadding = 95;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-					chartTopPadding = 92; 
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					chartTopPadding = 104; 
-				else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
-					chartTopPadding = 87; 
-				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
-					chartTopPadding = 80; 
-				else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-					chartTopPadding = 77; 
-				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
-					chartTopPadding = 82; 
-				else
-					chartTopPadding = 100;
-				
-				chartTopPadding += userTimeAgoFontMultiplier * 4;
-			}
-			else
-			{
-				chartTopPadding = 65;
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					chartTopPadding += 12;
-			}
-			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				scrollerChartGlucoseMarkerRadius = 2;
@@ -334,15 +300,27 @@ package ui.chart
 			glucoseTimelineContainer = new Sprite();
 			addChild(glucoseTimelineContainer);
 			
-			//Event Listeners
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
-			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
+			//Set properties #1
+			this.timelineRange = timelineRange;
+			this._graphWidth = chartWidth;
 			
 			//Calculate chartTopPadding
-			calculateTopPadding();
+			if (!Constants.isPortrait && userBGFontMultiplier == 1.2)
+				userBGFontMultiplier = 1;
 			
-			//Set properties
+			if (!Constants.isPortrait && userTimeAgoFontMultiplier == 1.2)
+				userTimeAgoFontMultiplier = 1; 
+			
+			createStatusTextDisplays();
+			
+			if (IOBPill != null)
+				chartTopPadding = IOBPill.y + IOBPill.height + 10;
+			else if (COBPill != null)
+				chartTopPadding = COBPill.y + COBPill.height + 10;
+			else
+				chartTopPadding = glucoseSlopePill.y + glucoseSlopePill.height + 10;
+			
+			//Set properties #2
 			this.timelineRange = timelineRange;
 			this._graphWidth = chartWidth;
 			this._scrollerWidth = chartWidth;
@@ -354,6 +332,11 @@ package ui.chart
 			this.scrollChartGlucoseMarkersList = [];
 			this.mainChartLineList = [];
 			this.scrollerChartLineList = [];
+			
+			//Event Listeners
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived, false, 0, true);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 0, true);
 		}
 		
 		/**
@@ -383,7 +366,7 @@ package ui.chart
 			/**
 			 * Status Text Displays
 			 */
-			createStatusTextDisplays();
+			//createStatusTextDisplays();
 			
 			/**
 			 * yAxis Line
@@ -2066,14 +2049,8 @@ package ui.chart
 						}
 						else if (i == dataLength -1)
 						{
-						//	currentLineX = glucoseMarker.x + (glucoseMarker.width);
-						//	currentLineY = glucoseMarker.y + (glucoseMarker.height);
-							//var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
 							currentLineX = glucoseMarker.x + (glucoseMarker.width);
-							//if (glucoseDifference > 0)
-								//currentLineY = glucoseMarker.y;
-							//else
-								currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
+							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						}
 						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
@@ -2339,12 +2316,6 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						/*timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(differenceInSeconds);
-						if (timeAgoValue != now)
-							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
-						else
-							glucoseTimeAgoPill.setValue("0m", now, oldColor);*/
-						
 						timeAgoValue = TimeSpan.formatHoursMinutesFromSecondsChart(differenceInSeconds, false, false);
 						if (timeAgoValue != now)
 							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
@@ -2396,12 +2367,6 @@ package ui.chart
 							glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						/*timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
-						if (timeAgoValue != now)
-							glucoseTimeAgoPill.setValue(timeAgoValue, ago, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
-						else
-							glucoseTimeAgoPill.setValue("0m", now, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);*/
-						
 						timeAgoValue = TimeSpan.formatHoursMinutesFromSecondsChart(timestampDifferenceInSeconds, false, false);
 						if (timeAgoValue != now)
 							glucoseTimeAgoPill.setValue(timeAgoValue, ago, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
@@ -2418,12 +2383,6 @@ package ui.chart
 						glucoseValueDisplay.fontStyles.color = oldColor;
 						
 						//Marker Date Time
-						/*timeAgoValue = TimeSpan.formatHoursMinutesFromSeconds(timestampDifferenceInSeconds);
-						if (timeAgoValue != now)
-							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
-						else
-							glucoseTimeAgoPill.setValue("0m", now, oldColor);*/
-						
 						timeAgoValue = TimeSpan.formatHoursMinutesFromSecondsChart(timestampDifferenceInSeconds, false, false);
 						if (timeAgoValue != now)
 							glucoseTimeAgoPill.setValue(timeAgoValue, ago, oldColor);
@@ -2439,13 +2398,11 @@ package ui.chart
 			currentNumberOfMakers == previousNumberOfMakers
 		}
 		
-		private function calculateTopPadding():void
+		private function createStatusTextDisplays():void
 		{
 			/* Calculate Font Sizes */
 			deviceFontMultiplier = DeviceInfo.getFontMultipier();
 			glucoseDisplayFont = 44 * deviceFontMultiplier * userBGFontMultiplier;
-			/*var timeDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-			var retroDisplayFont:Number = 13 * deviceFontMultiplier * userTimeAgoFontMultiplier;*/
 			timeDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			retroDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
@@ -2454,18 +2411,9 @@ package ui.chart
 				retroDisplayFont += 1;
 			}
 			
-			/* Calculate Position & Padding */
-			chartTopPadding *= deviceFontMultiplier;
-			if (userBGFontMultiplier >= userTimeAgoFontMultiplier)
-				chartTopPadding *= userBGFontMultiplier;
-			else
-				chartTopPadding *= userTimeAgoFontMultiplier;
-			
+			/* Calculate Position */
 			labelsYPos = 6 * DeviceInfo.getVerticalPaddingMultipier() * userBGFontMultiplier;
-		}
-		
-		private function createStatusTextDisplays():void
-		{
+			
 			//Glucose Value Display
 			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("0", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
 			glucoseValueDisplay.touchable = false;
@@ -2511,8 +2459,9 @@ package ui.chart
 				{
 					IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
 					IOBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
-					IOBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
+					//IOBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
 					IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+					IOBPill.setValue("0.00U");
 					
 					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
 						IOBPill.visible = false;
@@ -2524,8 +2473,8 @@ package ui.chart
 				{
 					COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
 					COBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
-					COBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
-					COBPill.setValue("0g");
+					//COBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
+					COBPill.setValue("0.0g");
 					
 					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
 						COBPill.visible = false;
