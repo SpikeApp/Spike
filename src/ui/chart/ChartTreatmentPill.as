@@ -87,7 +87,7 @@ package ui.chart
 			}
 			
 			var userFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
-			if (!Constants.isPortrait)
+			if (!Constants.isPortrait && userFontMultiplier > 1)
 				userFontMultiplier = 1;
 			
 			fontSize *= userFontMultiplier;
