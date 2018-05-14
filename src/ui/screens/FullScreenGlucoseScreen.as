@@ -31,8 +31,10 @@ package ui.screens
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
@@ -103,6 +105,8 @@ package ui.screens
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupHeader();
 			setupLayout();
@@ -374,7 +378,10 @@ package ui.screens
 					timeAgoColor = oldColor;
 			}
 			
-			latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+			if (Constants.isPortrait)
+				latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+			else
+				latestGlucoseOutput = latestGlucoseOutput + " " + latestGlucoseSlopeArrow;
 			
 			/* IOB / COB Display Label */
 			if (IOBCOBDisplay != null)
@@ -431,12 +438,16 @@ package ui.screens
 			AppInterface.instance.menu.selectedIndex = -1;
 		}
 		
-		private function calculateFontSize ():void
+		private function calculateFontSize():void
 		{
 			if (latestGlucoseOutput == null)
 				return;
 			
-			var formattedGlucoseOutput:String = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n"));
+			var formattedGlucoseOutput:String;
+			if (Constants.isPortrait)
+				formattedGlucoseOutput = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n"));
+			else
+				formattedGlucoseOutput = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf(" "));
 			
 			if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 			{
@@ -547,7 +558,10 @@ package ui.screens
 					slopeDisplay.fontStyles.color = oldColor;
 				}
 				
-				latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+				if (Constants.isPortrait)
+					latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+				else
+					latestGlucoseOutput = latestGlucoseOutput + " " + latestGlucoseSlopeArrow;
 			}
 			
 			/* IOB / COB Display Label */
@@ -603,6 +617,20 @@ package ui.screens
 			Constants.noLockEnabled = false;
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth;
+			
+			if (slopeDisplay != null)
+				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - 10;
+			
+			if (IOBCOBDisplay != null)
+				IOBCOBDisplay.width = Constants.stageWidth;
+			
+			calculateValues();
+			updateInfo();
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -614,6 +642,7 @@ package ui.screens
 		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 			this.removeEventListener(TouchEvent.TOUCH, onTouch);
