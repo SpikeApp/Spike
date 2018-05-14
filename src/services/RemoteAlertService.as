@@ -164,6 +164,12 @@ package services
 				myTrace("this alert has already been shown to the user");
 				return;
 			}
+			else if (String(data.message).indexOf(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION)) != -1 && String(data.message).indexOf("TestFlight") != -1 && String(data.message).indexOf("update") != -1)
+			{
+				//It's an update alert but user already has the latest versio
+				//Update Database so this alert is not shown anymore.
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_REMOTE_ALERT_LAST_ID, String(currentIDCheck));
+			}
 			else
 			{
 				//Show the alert to the user
