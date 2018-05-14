@@ -145,8 +145,12 @@ package ui.screens
 		 * Display Objects Creation and Positioning
 		 */
 		private function createChart():void
-		{
+		{	
 			var availableScreenHeight:Number = Constants.stageHeight - this.header.height;
+			var previousTopPadding:int = glucoseChartTopPadding;
+			Constants.isPortrait ? glucoseChartTopPadding = previousTopPadding : glucoseChartTopPadding = 0;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4) glucoseChartTopPadding = 0;
+			if (glucoseChartTopPadding == 0) availableScreenHeight += previousTopPadding;
 			mainChartHeight = availableScreenHeight;
 			
 			if (Constants.isPortrait)
