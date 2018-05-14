@@ -21,6 +21,7 @@ package ui.popups
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -137,11 +138,36 @@ package ui.popups
 				PopUpManager.addPopUp(alert);
 			}
 			else
-			{//There's currently one alert being displayed or app is in background, let's add this one to the queue
+			{
+				//There's currently one alert being displayed or app is in background, let's add this one to the queue
+				removeDuplicate(alertTitle, alertMessage);
 				alertQueue.push({ alert: alert, timeout: timeoutDuration});
 			}
 			
 			return alert; //Return the alert in case we need to do further customization to it outside this class
+		}
+		
+		private static function removeDuplicate(title:String, message:String):void
+		{
+			if (alertQueue == null || alertQueue.length == 0)
+				return;
+			
+			for(var i:int = alertQueue.length - 1 ; i >= 0; i--)
+			{
+				var queuedObject:Object = alertQueue[i];
+				if (queuedObject != null && queuedObject.alert != null)
+				{
+					var queuedAlert:Alert = queuedObject.alert as Alert;
+					if (queuedAlert.title == title && queuedAlert.message == message)
+					{
+						//Found duplicate. Remove it!
+						alertQueue.removeAt(i);
+						SystemUtil.executeWhenApplicationIsActive( queuedAlert.dispose );
+						queuedObject = null;
+					}
+				}
+			}
+			
 		}
 		
 		private static function processQueue(closeActivePopup:Boolean = true):void
