@@ -1,8 +1,5 @@
 package ui.screens
 {
-	import flash.events.ErrorEvent;
-	import flash.geom.Rectangle;
-	import flash.media.StageWebView;
 	import flash.system.System;
 	
 	import database.CommonSettings;
@@ -10,6 +7,7 @@ package ui.screens
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.WebView;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
@@ -21,21 +19,22 @@ package ui.screens
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
-	import utils.DeviceInfo;
 	
 	[ResourceBundle("nightscoutscreen")]
 	
 	public class NightscoutViewScreen extends BaseSubScreen
 	{
 		/* Display Objects */
-		private var webView:StageWebView;
+		private var nsWebView:WebView;
 		private var errorContainer:LayoutGroup;
 		private var errorLabel:Label;
 		
@@ -52,6 +51,8 @@ package ui.screens
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupHeader();
 			setupInitialContent();
@@ -86,15 +87,16 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
+			//Size
+			var availableScreenHeight:Number = Constants.stageHeight - this.header.height + 8;
+			
 			//Create web view
-			webView = new StageWebView();
-			webView.stage = Constants.appStage; 
-			if (Constants.deviceModel != DeviceInfo.IPHONE_X)
-				webView.viewPort = new Rectangle( 0, 140, Constants.appStage.stageWidth, Constants.appStage.stageHeight - 140 ); 
-			else
-				webView.viewPort = new Rectangle( 0, 255, Constants.appStage.stageWidth, Constants.appStage.stageHeight - 255 ); //Statusbar iPhone X
-			webView.addEventListener( ErrorEvent.ERROR, onLoadURLErrorTriggered );
-			webView.loadURL( nightscoutURL );
+			nsWebView = new WebView();
+			nsWebView.width = Constants.stageWidth;
+			nsWebView.height = availableScreenHeight;
+			nsWebView.addEventListener(FeathersEventType.ERROR, onLoadURLErrorTriggered);
+			nsWebView.loadURL( nightscoutURL );
+			addChild( nsWebView );
 		}
 		
 		private function adjustMainMenu():void
@@ -104,12 +106,12 @@ package ui.screens
 		
 		private function disposeWebView():void
 		{
-			if (webView != null)
+			if (nsWebView != null)
 			{
-				webView.stage = null;
-				webView.viewPort = null;
-				webView.dispose();
-				webView = null;
+				nsWebView.removeEventListener(FeathersEventType.ERROR, onLoadURLErrorTriggered);
+				nsWebView.removeFromParent();
+				nsWebView.dispose();
+				nsWebView = null;
 			}
 		}
 		
@@ -139,7 +141,7 @@ package ui.screens
 		 * Event Listeners
 		 */
 		
-		protected function onLoadURLErrorTriggered(event:ErrorEvent):void
+		protected function onLoadURLErrorTriggered(event:Event):void
 		{
 			disposeWebView();
 			displayErrorMessage();
@@ -154,6 +156,18 @@ package ui.screens
 			dispatchEventWith(Event.COMPLETE);
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth;
+			
+			if (nsWebView != null)
+			{
+				var availableScreenHeight:Number = Constants.stageHeight - this.header.height + 8;
+				nsWebView.width = Constants.stageWidth;
+				nsWebView.height = availableScreenHeight;
+			}
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -165,6 +179,8 @@ package ui.screens
 		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (errorLabel != null)
 			{
 				errorLabel.removeFromParent();
