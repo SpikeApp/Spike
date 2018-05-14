@@ -25,6 +25,7 @@ package ui.popups
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
+	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
 	import ui.screens.display.LayoutFactory;
@@ -45,6 +46,7 @@ package ui.popups
 		private static var snoozePickerList:PickerList;
 		private static var snoozeCallout:Callout;
 		private static var titleLabel:Label;
+		private static var positionHelper:Sprite;
 		
 		/* Properties */
 		private static var firstRun:Boolean = true;
@@ -74,6 +76,8 @@ package ui.popups
 			
 			if (firstRun)
 			{
+				Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+				
 				//Inantiate internal variables
 				firstRun = false;
 				if (_instance == null)
@@ -93,6 +97,7 @@ package ui.popups
 			clearTimeout(closeTimeout);
 			
 			/* Display Callout When Spike is in the Foreground */
+			SystemUtil.executeWhenApplicationIsActive( calculatePositionHelper );
 			SystemUtil.executeWhenApplicationIsActive( displayCallout );
 		}
 		
@@ -162,16 +167,25 @@ package ui.popups
 			actionButtonsContainer.addChild(okButton);
 			
 			/* Callout Position Helper Creation */
-			var positionHelper:Sprite = new Sprite();
-			positionHelper.x = Constants.stageWidth / 2;
-			positionHelper.y = 70;
-			Starling.current.stage.addChild(positionHelper);
+			calculatePositionHelper();
 			
 			/* Callout Creation */
 			snoozeCallout = new Callout();
 			snoozeCallout.content = mainContainer;
 			snoozeCallout.origin = positionHelper;
 			snoozeCallout.minWidth = 240;
+		}
+		
+		private static function calculatePositionHelper():void
+		{
+			if (positionHelper == null)
+			{
+				positionHelper = new Sprite();
+				Starling.current.stage.addChild(positionHelper);
+			}
+			
+			positionHelper.x = Constants.stageWidth / 2;
+			positionHelper.y = 70;
 		}
 		
 		public static function closeCallout():void
@@ -220,6 +234,11 @@ package ui.popups
 			SystemUtil.executeWhenApplicationIsActive (closeCallout );
 			
 			_instance.dispatchEventWith(CANCELLED);
+		}
+		
+		private static function onStarlingResize(event:ResizeEvent):void 
+		{
+			calculatePositionHelper();
 		}
 
 		/**
