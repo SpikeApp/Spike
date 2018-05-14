@@ -12,6 +12,7 @@ package ui.popups
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalLayout;
+	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
@@ -21,6 +22,7 @@ package ui.popups
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -46,6 +48,8 @@ package ui.popups
 		private static var preSnoozeButton:Button;
 		private static var snoozeStatusLabel:Label;
 		private static var cancelButton:Button;
+		private static var unSnoozeButton:Button;
+		private static var positionHelper:Sprite;
 		
 		/* Properties */
 		private static var firstRun:Boolean = true;
@@ -56,8 +60,6 @@ package ui.popups
 		private static var snoozeTitle:String = "";
 		private static var unSnoozeAction:Function = null;
 		private static var snoozeAction:Function = null;
-
-		private static var unSnoozeButton:Button;
 		
 		public function AlarmPreSnoozer()
 		{
@@ -71,6 +73,8 @@ package ui.popups
 		 */
 		public static function displaySnoozer(title:String, labels:Array):void
 		{
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			//Update internal variables
 			if (snoozeLabels == null) snoozeLabels = labels;
 			snoozeTitle = title;
@@ -107,10 +111,16 @@ package ui.popups
 			mainLayout.horizontalAlign = HorizontalAlign.CENTER;
 			mainLayout.gap = 15;
 			
+			if (mainContainer != null) mainContainer.dispose();
 			mainContainer = new LayoutGroup();
 			mainContainer.layout = mainLayout;
 			
 			/* Title */
+			if (titleLabel != null) 
+			{
+				titleLabel.removeFromParent();
+				titleLabel.dispose();
+			}
 			titleLabel = LayoutFactory.createSectionLabel(snoozeTitle, false, HorizontalAlign.CENTER);
 			mainContainer.addChild(titleLabel);
 			
@@ -121,22 +131,47 @@ package ui.popups
 			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
 			actionButtonsLayout.gap = 5;
 			
+			if (actionButtonsContainer != null)
+			{
+				actionButtonsContainer.removeFromParent();
+				actionButtonsContainer.dispose();
+			}
 			actionButtonsContainer = new LayoutGroup();
 			actionButtonsContainer.layout = actionButtonsLayout;
 			mainContainer.addChild(actionButtonsContainer);
 			
 			//Cancel Button
+			if (cancelButton != null)
+			{
+				cancelButton.removeFromParent();
+				cancelButton.dispose();
+			}
 			cancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label"));
 			cancelButton.addEventListener(Event.TRIGGERED, onCancel);
 			actionButtonsContainer.addChild(cancelButton);
 			
 			//Pre(Un)-snooze Buttons
+			if (preSnoozeButton != null)
+			{
+				preSnoozeButton.removeFromParent();
+				preSnoozeButton.dispose();
+			}
 			preSnoozeButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"presnooze_button_label"));
 			preSnoozeButton.addEventListener(Event.TRIGGERED, snoozeAlarm);
 			
+			if (unSnoozeButton != null)
+			{
+				unSnoozeButton.removeFromParent();
+				unSnoozeButton.dispose();
+			}
 			unSnoozeButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"unsnooze_button_label"));
 			unSnoozeButton.addEventListener(Event.TRIGGERED, unSnoozeAlarm);
 			
+			if (snoozeStatusLabel != null)
+			{
+				snoozeStatusLabel.removeFromParent();
+				snoozeStatusLabel.dispose();
+			}
 			snoozeStatusLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER);
 			
 			if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_X)
@@ -147,18 +182,32 @@ package ui.popups
 			}
 			
 			/* Callout Position Helper Creation */
-			var positionHelper:Sprite = new Sprite();
-			positionHelper.x = Constants.stageWidth / 2;
-			positionHelper.y = 70;
-			Starling.current.stage.addChild(positionHelper);
+			calculatePositionHelper();
 			
 			/* Callout Creation */
+			if (snoozeCallout != null)
+			{
+				snoozeCallout.removeFromParent();
+				snoozeCallout.dispose();
+			}
 			snoozeCallout = new Callout();
 			snoozeCallout.content = mainContainer;
 			snoozeCallout.origin = positionHelper;
 			snoozeCallout.minWidth = 240;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				snoozeCallout.paddingLeft = snoozeCallout.paddingRight = 12;
+		}
+		
+		private static function calculatePositionHelper():void
+		{
+			if (positionHelper == null)
+			{
+				positionHelper = new Sprite();
+				Starling.current.stage.addChild(positionHelper);
+			}
+			
+			positionHelper.x = Constants.stageWidth / 2;
+			positionHelper.y = 70;
 		}
 		
 		private static function createFirstPhase():void
@@ -171,6 +220,11 @@ package ui.popups
 			{
 				alarmTypesDataProvider.push( { label: alarmTypesLabels[i] } );
 			}
+			if (alarmTypesPicker != null)
+			{
+				alarmTypesPicker.removeFromParent();
+				alarmTypesPicker.dispose();
+			}
 			alarmTypesPicker = LayoutFactory.createPickerList();
 			alarmTypesPicker.prompt = ModelLocator.resourceManagerInstance.getString('globaltranslations',"picker_select");
 			alarmTypesPicker.dataProvider = alarmTypesDataProvider;
@@ -182,6 +236,11 @@ package ui.popups
 		private static function createSecondPhase():void
 		{
 			/* Snoozer Picker List */
+			if (snoozePickerList != null)
+			{
+				snoozePickerList.removeFromParent();
+				snoozePickerList.dispose();
+			}
 			snoozePickerList = LayoutFactory.createPickerList();
 			dataProvider = new ArrayCollection();
 			
@@ -422,6 +481,11 @@ package ui.popups
 		private static function onCancel(e:Event):void
 		{
 			closeCallout();
+		}
+		
+		private static function onStarlingResize(event:ResizeEvent):void 
+		{
+			calculatePositionHelper();
 		}
 
 		/**
