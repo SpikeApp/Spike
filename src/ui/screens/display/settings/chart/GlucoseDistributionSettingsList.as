@@ -3,6 +3,7 @@ package ui.screens.display.settings.chart
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
+	import feathers.controls.Check;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.ToggleSwitch;
@@ -30,6 +31,7 @@ package ui.screens.display.settings.chart
 		private var percentageRangePicker:PickerList;
 		private var avgRangePicker:PickerList;
 		private var a1cRangePicker:PickerList;
+		private var a1cIFCCCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -37,6 +39,7 @@ package ui.screens.display.settings.chart
 		private var percentageRangeValue:Number;
 		private var a1cRangeValue:Number;
 		private var avgRangeValue:Number;
+		private var isA1CIFCC:Boolean;
 		
 		public function GlucoseDistributionSettingsList()
 		{
@@ -68,6 +71,7 @@ package ui.screens.display.settings.chart
 			percentageRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_RANGES_OFFSET));
 			a1cRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_OFFSET));
 			avgRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_AVG_OFFSET));
+			isA1CIFCC = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -93,7 +97,7 @@ package ui.screens.display.settings.chart
 			}
 			percentageRangePicker.labelField = "label";
 			percentageRangePicker.popUpContentManager = new DropDownPopUpContentManager();
-			percentageRangePicker.addEventListener(Event.CHANGE, onRangeChanged);
+			percentageRangePicker.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			avgRangePicker = LayoutFactory.createPickerList();
 			avgRangePicker.dataProvider = new ArrayCollection();
@@ -106,7 +110,7 @@ package ui.screens.display.settings.chart
 			}
 			avgRangePicker.labelField = "label";
 			avgRangePicker.popUpContentManager = new DropDownPopUpContentManager();
-			avgRangePicker.addEventListener(Event.CHANGE, onRangeChanged);
+			avgRangePicker.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			a1cRangePicker = LayoutFactory.createPickerList();
 			a1cRangePicker.dataProvider = new ArrayCollection();
@@ -119,7 +123,10 @@ package ui.screens.display.settings.chart
 			}
 			a1cRangePicker.labelField = "label";
 			a1cRangePicker.popUpContentManager = new DropDownPopUpContentManager();
-			a1cRangePicker.addEventListener(Event.CHANGE, onRangeChanged);
+			a1cRangePicker.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			a1cIFCCCheck = LayoutFactory.createCheckMark(isA1CIFCC);
+			a1cIFCCCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			/* Set List Item Renderer */
 			itemRendererFactory = function():IListItemRenderer
@@ -138,11 +145,15 @@ package ui.screens.display.settings.chart
 		{
 			var data:Array = [];
 			data.push( { text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: enableGlucoseDistribution } );
-			if (pieChartEnabledValue && !BlueToothDevice.isFollower())
+			if (pieChartEnabledValue)
 			{
-				data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','thresholds_range_label'), accessory: percentageRangePicker } );
-				data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','average_glucose_range_label'), accessory: avgRangePicker } );
-				data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_range_label'), accessory: a1cRangePicker } );
+				if (!BlueToothDevice.isFollower())
+				{
+					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','thresholds_range_label'), accessory: percentageRangePicker } );
+					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','average_glucose_range_label'), accessory: avgRangePicker } );
+					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_range_label'), accessory: a1cRangePicker } );
+				}
+				data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_ifcc_label'), accessory: a1cIFCCCheck } );
 			}
 			
 			dataProvider = new ArrayCollection( data );
@@ -163,6 +174,9 @@ package ui.screens.display.settings.chart
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_RANGES_OFFSET) != String(percentageRangeValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_RANGES_OFFSET, String(percentageRangeValue));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != String(isA1CIFCC))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON, String(isA1CIFCC));
+			
 			needsSave = false;
 		}
 		
@@ -177,11 +191,12 @@ package ui.screens.display.settings.chart
 			refreshContent();
 		}
 		
-		private function onRangeChanged(e:Event):void
+		private function onSettingsChanged(e:Event):void
 		{
 			percentageRangeValue = Number(percentageRangePicker.selectedItem.value);
 			a1cRangeValue = Number(a1cRangePicker.selectedItem.value);
 			avgRangeValue = Number(avgRangePicker.selectedItem.value);
+			isA1CIFCC = a1cIFCCCheck.isSelected;
 			
 			needsSave = true;
 		}
@@ -200,23 +215,30 @@ package ui.screens.display.settings.chart
 			
 			if (a1cRangePicker != null)
 			{
-				a1cRangePicker.removeEventListener(Event.CHANGE, onRangeChanged);
+				a1cRangePicker.removeEventListener(Event.CHANGE, onSettingsChanged);
 				a1cRangePicker.dispose();
 				a1cRangePicker = null;
 			}
 			
 			if (avgRangePicker != null)
 			{
-				avgRangePicker.removeEventListener(Event.CHANGE, onRangeChanged);
+				avgRangePicker.removeEventListener(Event.CHANGE, onSettingsChanged);
 				avgRangePicker.dispose();
 				avgRangePicker = null;
 			}
 			
 			if (percentageRangePicker != null)
 			{
-				percentageRangePicker.removeEventListener(Event.CHANGE, onRangeChanged);
+				percentageRangePicker.removeEventListener(Event.CHANGE, onSettingsChanged);
 				percentageRangePicker.dispose();
 				percentageRangePicker = null;
+			}
+			
+			if (a1cIFCCCheck != null)
+			{
+				a1cIFCCCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				a1cIFCCCheck.dispose();
+				a1cIFCCCheck = null;
 			}
 			
 			super.dispose();

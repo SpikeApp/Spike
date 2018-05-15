@@ -77,7 +77,11 @@ package stats
 				}
 				followerUserStats.averageGlucose = (( (totalGlucose / realReadingsNumber) * 10 + 0.5)  >> 0) / 10;
 				if (realReadingsNumber != 0)
+				{
 					followerUserStats.a1c = (( ((46.7 + followerUserStats.averageGlucose) / 28.7) * 10 + 0.5)  >> 0) / 10;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) == "true")
+						followerUserStats.a1c = ((((followerUserStats.a1c - 2.15) * 10.929) * 10 + 0.5)  >> 0) / 10; //IFCC support
+				}
 				followerUserStats.captureRate = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 				followerUserStats.numReadingsTotal = realReadingsNumber;
 				followerUserStats.numReadingsDay = realReadingsNumber;

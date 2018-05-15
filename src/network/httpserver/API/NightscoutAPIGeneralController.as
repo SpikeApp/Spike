@@ -267,7 +267,7 @@ package network.httpserver.API
 									{
 										var userStats:BasicUserStats = StatsManager.getBasicUserStats();
 										readingObject.status_two = "L: " + userStats.percentageLowRounded + "% | " + "R: " + userStats.percentageInRangeRounded + "% | " + "H: " + userStats.percentageHighRounded + "%";
-										readingObject.status_three = "AVG: " + userStats.averageGlucose + GlucoseHelper.getGlucoseUnit() + " | " + "A1C: " + userStats.a1c + "%";
+										readingObject.status_three = "AVG: " + userStats.averageGlucose + GlucoseHelper.getGlucoseUnit() + " | " + "A1C: " + userStats.a1c + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != "true" ? "%" : "m");
 									}
 								}
 								readingsCollection.push(readingObject);

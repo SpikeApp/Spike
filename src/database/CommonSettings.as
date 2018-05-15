@@ -408,6 +408,12 @@
 		 * To read the contents, G5VersionInfo.getG5VersionInfo
 		  */
 		 public static const COMMON_SETTING_G5_VERSION_INFO:int = 142;
+		 
+		 /**
+		  * Apply IFCC calculation to A1C values
+		  * Useful for some countries like New Zealand.
+		  */
+		 public static const COMMON_SETTING_PIE_CHART_A1C_IFCC_ON:int = 143;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -552,7 +558,8 @@
 			 "86400000",//COMMON_SETTING_PIE_CHART_A1C_OFFSET (1 DAY)
 			 "86400000",//COMMON_SETTING_PIE_CHART_AVG_OFFSET (1 DAY)
 			 "86400000",//COMMON_SETTING_PIE_CHART_RANGES_OFFSET (1 DAY)
-			 ""//COMMON_SETTING_G5_VERSION_INFO
+			 "",//COMMON_SETTING_G5_VERSION_INFO
+			 "false"//COMMON_SETTING_PIE_CHART_A1C_IFCC_ON
 		 ];
 
 		 public function CommonSettings()

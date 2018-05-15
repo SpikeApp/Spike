@@ -2470,6 +2470,8 @@ package database
 					userStats.numReadingsInRange = Number(result.data[0]["numReadingsInRange"]);
 					userStats.numReadingsHigh = Number(result.data[0]["numReadingsHigh"]);
 					userStats.a1c = ((((46.7 + (((Number(result.data[0]["averageGlucoseA1C"]) * 10 + 0.5)  >> 0) / 10)) / 28.7) * 10 + 0.5)  >> 0) / 10;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) == "true")
+						userStats.a1c = ((((userStats.a1c - 2.15) * 10.929) * 10 + 0.5)  >> 0) / 10; //IFCC support
 					userStats.percentageHigh = (userStats.numReadingsHigh * 100) / userStats.numReadingsTotal;
 					userStats.percentageHighRounded = ((userStats.percentageHigh * 10 + 0.5)  >> 0) / 10;
 					userStats.percentageInRange = (userStats.numReadingsInRange * 100) / userStats.numReadingsTotal;

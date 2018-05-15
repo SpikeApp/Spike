@@ -347,7 +347,7 @@ package ui.chart
 			//Populate Stats
 			numReadingsSection.message.text = !dummyModeActive ? userStats.numReadingsDay + " (" + userStats.captureRate + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			avgGlucoseSection.message.text = !dummyModeActive ? averageGlucoseValueOutput + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-			estA1CSection.message.text = !dummyModeActive ? userStats.a1c + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			estA1CSection.message.text = !dummyModeActive ? userStats.a1c + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != "true" ? "%" : " mmol/mol") : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			
 			return true;
 		}
