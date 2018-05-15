@@ -181,7 +181,8 @@ package ui.popups
 				if (PopUpManager.isPopUp(activeAlert))
 					PopUpManager.removePopUp(activeAlert);
 				else
-					PopUpManager.removeAllPopUps();
+					activeAlert.removeFromParent();
+				
 				activeAlert.dispose();
 				activeAlert = null;
 					
