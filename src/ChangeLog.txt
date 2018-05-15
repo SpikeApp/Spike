@@ -1,4 +1,5 @@
 2.0.7
+FEATURE: Spike now supports full rotation mode (portrait and landscape). This also makes it possible to mirror Spike to a TV, projector or monitor. If using an Apple TV just AirPlay your device screen to it, if using a conventional TV, projector or monitor you'll need an HDMI adapter. Rotating Spike on older devices like iPhone 4S or older iOS version like 8.0 can result in strange artifacts being drawn on the screen. This is due to low memory GPUs. I've made all possible tweaks in the code to minimize this but it can happen sometimes. If it does just restart Spike. Recent devices and iOS versions should have no issues. 
 ENHANCEMENT: Added transmitter MAC address to Transmitter Screen for all transmitters and firmware version, other firmware version and bluetooth firmware version for Dexcom G5 users. (Joahn & Miguel)
 ENHANCEMENT: Support for older versions of xDrip wxl (Dexom G4). For instance: xDrip delivered by xdripkit.co.uk. (Johan)
 ENHANCEMENT: Updated Spike's internal server endpoints list for developers in Settings -> Integration -> Internal HTTP Server.
