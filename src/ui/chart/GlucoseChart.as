@@ -316,18 +316,19 @@ package ui.chart
 			
 			createStatusTextDisplays();
 			
+			var extraPadding:int = 15;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || !Constants.isPortrait)
+				extraPadding = 10;
+			
 			if (IOBPill != null)
-				chartTopPadding = IOBPill.y + IOBPill.height + 10;
+				chartTopPadding = IOBPill.y + IOBPill.height + extraPadding;
 			else if (COBPill != null)
-				chartTopPadding = COBPill.y + COBPill.height + 10;
+				chartTopPadding = COBPill.y + COBPill.height + extraPadding;
 			else
 			{
 				glucoseSlopePill.setValue(" ", " ", 0x20222a);
-				chartTopPadding = glucoseSlopePill.y + glucoseSlopePill.height + 10;
+				chartTopPadding = glucoseSlopePill.y + glucoseSlopePill.height + extraPadding;
 			}
-			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				chartTopPadding += 5;
 			
 			//Set properties #2
 			this._scrollerWidth = chartWidth;
