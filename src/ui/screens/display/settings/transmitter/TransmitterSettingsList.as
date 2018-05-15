@@ -110,7 +110,7 @@ package ui.screens.display.settings.transmitter
 			transitterNamesList.length = 0;
 			transitterNamesList = null;
 			transmitterType.labelField = "label";
-			transmitterType.popUpContentManager = new DropDownPopUpContentManager();
+			//transmitterType.popUpContentManager = new DropDownPopUpContentManager();
 			transmitterType.dataProvider = transmitterTypeList;
 			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
