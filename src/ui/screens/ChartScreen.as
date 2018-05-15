@@ -674,8 +674,8 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			disposeDisplayObjects();
-			createChart();
+			SystemUtil.executeWhenApplicationIsActive(disposeDisplayObjects);
+			SystemUtil.executeWhenApplicationIsActive(createChart);
 		}
 		
 		/**
@@ -775,7 +775,7 @@ package ui.screens
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			/* Display Objects */
-			disposeDisplayObjects();
+			SystemUtil.executeWhenApplicationIsActive(disposeDisplayObjects);
 			
 			/* Objects */
 			if (chartData != null)
