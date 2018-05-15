@@ -148,6 +148,7 @@ class InterfaceController: WKInterfaceController
         self.pumpstatus.setTextColor(gray)
         self.pumpstatus2.setTextColor(gray)
         self.pumpstatus3.setTextColor(gray)
+        self.graphhours.setTextColor(gray)
         super.didDeactivate()
     }
     
@@ -169,6 +170,7 @@ class InterfaceController: WKInterfaceController
         self.pumpstatus.setTextColor(gray)
         self.pumpstatus2.setTextColor(gray)
         self.pumpstatus3.setTextColor(gray)
+        self.graphhours.setTextColor(gray)
         
         //Define URL and perform connection. startoffset is changed based on how many hours are to be displayed on the graph
         let urlPath: String = urlUser + "/spikewatch?count=350&startoffset=" + String(graphlength * 60 * 60 * 1000)
