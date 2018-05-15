@@ -353,7 +353,7 @@ package services
 			
 			function onLocalSettingsChanged(event:SettingsServiceEvent):void
 			{
-				if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE)
+				if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE || (event.data == LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true"))
 				{
 					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 				}
