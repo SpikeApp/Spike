@@ -1,5 +1,6 @@
 package ui.screens
 {	
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
@@ -30,7 +31,6 @@ package ui.screens
 	import services.TransmitterService;
 	
 	import starling.core.Starling;
-	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
@@ -82,7 +82,6 @@ package ui.screens
 		private var chartTreatmentsEnabled:Boolean = false;
 		private var displayIOBEnabled:Boolean = false;
 		private var displayCOBEnabled:Boolean = false;
-		private var wasPortrait:Boolean = true;
 		
 		//Display Objects
 		private var glucoseChart:GlucoseChart;
@@ -146,10 +145,25 @@ package ui.screens
 		 */
 		private function createChart():void
 		{	
+			//When in landscape mode and device is iPhone X, make the header height same as oher models, we don't need to worry about the extra status bar size
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+			{
+				this.header.height = 78;
+				this.header.maxHeight = 78;
+			}
+			
 			var availableScreenHeight:Number = Constants.stageHeight - this.header.height;
 			Constants.isPortrait ? glucoseChartTopPadding = 7 : glucoseChartTopPadding = 0;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4) glucoseChartTopPadding = 0;
 			if (glucoseChartTopPadding == 0) availableScreenHeight += 7;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X) 
+			{
+				availableScreenHeight -= 15; //To avoid lower nudge
+				
+				if (Constants.currentOrientation == StageOrientation.UPSIDE_DOWN)
+					availableScreenHeight -= 15; //To avoid inverted status bar
+			}
+			
 			mainChartHeight = availableScreenHeight;
 			
 			if (Constants.isPortrait)
@@ -167,7 +181,17 @@ package ui.screens
 			chartData = ModelLocator.bgReadings.concat();
 			
 			//Create and setup glucose chart
-			glucoseChart = new GlucoseChart(selectedTimelineRange, Constants.stageWidth, mainChartHeight);
+			var chartWidth:Number = Constants.stageWidth;
+			var chartX:Number = 0;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+			{
+				chartWidth -= 30;
+				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					chartX = 30;
+			}
+			
+			glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight);
+			glucoseChart.x = Math.round(chartX);
 			glucoseChart.y = Math.round(glucoseChartTopPadding);
 			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
@@ -185,8 +209,43 @@ package ui.screens
 				if (displayPieChart)
 					createPieChart();
 			}
-			
-			wasPortrait = Constants.isPortrait;
+		}
+		
+		private function redrawChart():void
+		{
+			if (SystemUtil.isApplicationActive)
+			{
+				chartData = glucoseChart.dataSource;
+				
+				//Remove previous chart
+				removeChild(glucoseChart);
+				glucoseChart.dispose();
+				glucoseChart = null;
+				
+				var chartWidth:Number = Constants.stageWidth;
+				var chartX:Number = 0;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					chartWidth -= 30;
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						chartX = 30;
+				}
+				
+				//Create new chart
+				glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight);
+				glucoseChart.x = Math.round(chartX);
+				glucoseChart.y = Math.round(glucoseChartTopPadding);
+				glucoseChart.dataSource = chartData;
+				glucoseChart.displayLine = drawLineChart;
+				glucoseChart.drawGraph();
+				glucoseChart.addAllTreatments();
+				var now:Number = new Date().valueOf();
+				glucoseChart.calculateTotalIOB( now );
+				glucoseChart.calculateTotalCOB( now );
+				addChild(glucoseChart);
+			}
+			else
+				SystemUtil.executeWhenApplicationIsActive( redrawChartForTreatmentsAndLine );
 		}
 		
 		private function createSettings():void
@@ -251,33 +310,6 @@ package ui.screens
 			setTimeout(redrawChart, 1500);
 		}
 		
-		private function redrawChart():void
-		{
-			if (SystemUtil.isApplicationActive)
-			{
-				chartData = glucoseChart.dataSource;
-				
-				//Remove previous chart
-				removeChild(glucoseChart);
-				glucoseChart.dispose();
-				glucoseChart = null;
-				
-				//Create new chart
-				glucoseChart = new GlucoseChart(selectedTimelineRange, Constants.stageWidth, mainChartHeight);
-				glucoseChart.y = Math.round(glucoseChartTopPadding);
-				glucoseChart.dataSource = chartData;
-				glucoseChart.displayLine = drawLineChart;
-				glucoseChart.drawGraph();
-				glucoseChart.addAllTreatments();
-				var now:Number = new Date().valueOf();
-				glucoseChart.calculateTotalIOB( now );
-				glucoseChart.calculateTotalCOB( now );
-				addChild(glucoseChart);
-			}
-			else
-				SystemUtil.executeWhenApplicationIsActive( redrawChartForTreatmentsAndLine );
-		}
-		
 		/**
 		 * Display Objects Size Calculators
 		 */
@@ -287,7 +319,7 @@ package ui.screens
 			
 			/* Line Settings */
 			displayLines = LayoutFactory.createCheckMark(false, ModelLocator.resourceManagerInstance.getString('chartscreen','check_box_line_title'));
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				displayLines.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				displayLines.scale = 1.4;
@@ -302,35 +334,35 @@ package ui.screens
 			
 			//Create Radios
 			h1 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_1h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h1.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h1.scale = 1.4;
 			h1.validate();
 			
 			h3 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_3h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h3.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h3.scale = 1.4;
 			h3.validate();
 			
 			h6 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_6h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h6.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h6.scale = 1.4;
 			h6.validate();
 			
 			h12 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_12h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h12.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h12.scale = 1.4;
 			h12.validate();
 			
 			h24 = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('chartscreen','radio_button_24h_title'), timeRangeGroup);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				h24.scale = 0.8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				h24.scale = 1.4;

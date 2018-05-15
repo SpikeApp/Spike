@@ -1,7 +1,5 @@
 package 
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	
 	import flash.desktop.NativeApplication;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
@@ -9,11 +7,11 @@ package
 	import flash.display3D.Context3DProfile;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
+	import flash.events.StageOrientationEvent;
 	import flash.events.UncaughtErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
 	import flash.system.System;
-	import flash.utils.clearInterval;
 	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
@@ -59,7 +57,6 @@ package
 			
 			stage.align = StageAlign.TOP_LEFT;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
-			//stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
 			
 			_instance = this;
 			
@@ -157,10 +154,16 @@ package
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			stage.addEventListener(StageOrientationEvent.ORIENTATION_CHANGING, onOrientationChanging);
 			
 			/* Handle Application Activation & Deactivation */
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
+		}
+		
+		private function onOrientationChanging(e:StageOrientationEvent):void
+		{
+			Constants.currentOrientation = e.afterOrientation;
 		}
 		
 		private function onContextCreated(event:flash.events.Event):void

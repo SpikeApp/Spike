@@ -1,5 +1,6 @@
 package ui.chart
 { 
+	import flash.display.StageOrientation;
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
@@ -178,6 +179,8 @@ package ui.chart
 		private var lowUrgentGlucoseLegend:Label;
 		private var lowUrgentGlucoseDashedLine:Sprite;
 		private var yAxis:Sprite;
+		private var xRightMask:Quad;
+		private var xLeftMask:Quad;
 		
 		//Objects
 		private var statusUpdateTimer:Timer;
@@ -323,9 +326,10 @@ package ui.chart
 				chartTopPadding = glucoseSlopePill.y + glucoseSlopePill.height + 10;
 			}
 			
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+				chartTopPadding += 5;
+			
 			//Set properties #2
-			this.timelineRange = timelineRange;
-			this._graphWidth = chartWidth;
 			this._scrollerWidth = chartWidth;
 			this._scrollerHeight = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 ? 50 : 35;
 			if (!Constants.isPortrait && (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6))
@@ -469,6 +473,26 @@ package ui.chart
 			//Timeline
 			if (timelineActive)
 				drawTimeline();
+			
+			//iPhone X mask for landscape mode
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+			{
+				if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+				{
+					xRightMask = new Quad(60, scrollerChart.y, fakeChartMaskColor);
+					xRightMask.y = chartTopPadding;
+					xRightMask.x = _graphWidth;
+					addChild(xRightMask);
+				}
+				
+				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+				{
+					xLeftMask = new Quad(60, scrollerChart.y, fakeChartMaskColor);
+					xLeftMask.y = chartTopPadding;
+					xLeftMask.x = -xLeftMask.width;
+					addChild(xLeftMask);
+				}
+			}
 		}
 		
 		private function drawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):Sprite
@@ -3480,6 +3504,20 @@ package ui.chart
 				mainChartContainer.removeFromParent();;
 				mainChartContainer.dispose();
 				mainChartContainer = null;
+			}
+			
+			if (xRightMask != null)
+			{
+				xRightMask.removeFromParent();
+				xRightMask.dispose();
+				xRightMask = null;
+			}
+			
+			if (xLeftMask != null)
+			{
+				xLeftMask.removeFromParent();
+				xLeftMask.dispose();
+				xLeftMask = null;
 			}
 			
 			super.dispose();

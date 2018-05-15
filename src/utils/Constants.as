@@ -23,6 +23,7 @@ package utils
 		public static var appInForeground:Boolean = true;
 		public static var deviceModel:String;
 		public static var isPortrait:Boolean = true;
+		public static var currentOrientation:String = "default";
 		
 		/* Tutorial */
 		public static var mainMenuButton:Button;

@@ -41,15 +41,10 @@ package ui.chart
 				titleFontSize = 12;
 				messageFontSize = 12;
 			}
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS || Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
 				titleFontSize = 11;
 				messageFontSize = 11;
-			}
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-			{
-				titleFontSize = 9.5;
-				messageFontSize = 9.5;
 			}
 			else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 			{
