@@ -4,6 +4,7 @@ ENHANCEMENT: Added transmitter MAC address to Transmitter Screen for all transmi
 ENHANCEMENT: Support for older versions of xDrip wxl (Dexom G4). For instance: xDrip delivered by xdripkit.co.uk. (Johan)
 ENHANCEMENT: Updated Spike's internal server endpoints list for developers in Settings -> Integration -> Internal HTTP Server.
 ENHANCEMENT: When user changes the app badge multiplier option (mmol/L), Spike immediately updates the badge.
+ENHANCEMENT: Added an alert in Settings -> Transmitter notifying user that changing transmitter type or ID will stop the current sensor.
 FIX: When in mmol/L, app badge was not applying the multiplier for HIGH/LOW values. Fixed (Sascha)
 FIX: Treatments where not displaying correctly on Nightscout reports when using some specific browsers. Spike now uses a different date format that should display correctly on all browsers. Thank you Sulka Haro for pointing me in the right direction.
 FIX: Users that already have the latest Spike version installed should not get an in-app alert asking to update the app.

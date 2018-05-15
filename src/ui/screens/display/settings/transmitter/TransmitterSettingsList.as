@@ -9,7 +9,6 @@ package ui.screens.display.settings.transmitter
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
-	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -19,6 +18,7 @@ package ui.screens.display.settings.transmitter
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.text.TextFormat;
 	
@@ -93,6 +93,17 @@ package ui.screens.display.settings.transmitter
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
 			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO")
 				transmitterIDisEnabled = false;
+			
+			if ((transmitterTypeValue != "" && transmitterTypeValue.toUpperCase() != "FOLLOW") || transmitterIDValue != "")
+			{
+				Starling.juggler.delayCall
+				(
+					AlertManager.showSimpleAlert,
+					2,
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_sensor_warning')
+				);
+			}
 		}
 		
 		private function setupContent():void
