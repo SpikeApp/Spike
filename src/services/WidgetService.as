@@ -262,11 +262,8 @@ package services
 		
 		private static function processChartGlucoseValues():void
 		{
-			//if (BlueToothDevice.isFollower())
-			//{
-				activeGlucoseReadingsList = removeDuplicates(activeGlucoseReadingsList);
-				activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
-			//}
+			activeGlucoseReadingsList = removeDuplicates(activeGlucoseReadingsList);
+			activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
 			
 			var currentTimestamp:Number
 			if (BlueToothDevice.isFollower())
@@ -282,6 +279,15 @@ package services
 					currentTimestamp = activeGlucoseReadingsList[0].timestamp;
 				else
 					break;
+			}
+			
+			var maxReadings:int = historyTimespan * 12;
+			if (activeGlucoseReadingsList.length > maxReadings)
+			{
+				while (activeGlucoseReadingsList.length > maxReadings) 
+				{
+					activeGlucoseReadingsList.shift();
+				}
 			}
 		}
 		
@@ -318,6 +324,29 @@ package services
 			updateTreatments();
 		}
 		
+		private static function isLowValue(value:String):Boolean
+		{
+			var returnValue:Boolean = false;
+			
+			if (
+				value == "LOW" ||
+				value == "??0" ||
+				value == "?SN" ||
+				value == "??2" ||
+				value == "?NA" ||
+				value == "?NC" ||
+				value == "?CD" ||
+				value == "?AD" ||
+				value == "?RF" ||
+				value == "???"
+			)
+			{
+				returnValue = true;
+			}
+			
+			return returnValue;
+		}
+		
 		private static function onBloodGlucoseReceived(e:Event):void
 		{
 			if (!initialGraphDataSet) //Compatibility with follower mode because we get a new glucose event before Spike sends the initial chart data.
@@ -334,16 +363,23 @@ package services
 			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !BlueToothDevice.isFollower()))
 				return;
 			
-			var latestGlucoseValue:Number = Number(BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
+			var latestGlucose:String = BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+			var latestGlucoseValue:Number = Number(latestGlucose);
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 			{
-				if (isNaN(latestGlucoseValue) || latestGlucoseValue < 40)
+				if (isLowValue(latestGlucose) || latestGlucoseValue < 40)
 					latestGlucoseValue = 38;
+				else if (latestGlucose == "HIGH" || latestGlucoseValue > 400)
+					latestGlucoseValue = 400;
 			}
 			else
 			{
-				if (isNaN(latestGlucoseValue) || latestGlucoseValue < 2.2)
-					latestGlucoseValue = 2.2;
+				var lowestPossibleValue:Number = Math.round(((BgReading.mgdlToMmol((40))) * 10)) / 10;
+				var highestPossibleValue:Number = Math.round(((BgReading.mgdlToMmol((400))) * 10)) / 10
+				if (isLowValue(latestGlucose) || latestGlucoseValue < lowestPossibleValue)
+					latestGlucoseValue = lowestPossibleValue;
+				else if (latestGlucose == "HIGH" || latestGlucoseValue > highestPossibleValue)
+					latestGlucoseValue = highestPossibleValue;
 			}
 			
 			activeGlucoseReadingsList.push( { value: latestGlucoseValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
@@ -353,15 +389,13 @@ package services
 			
 			//Save data to User Defaults
 			BackgroundFetch.setUserDefaultsData("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + getLastUpdate(currentReading.timestamp) + ", " + getGlucoseTimeFormatted(currentReading.timestamp, false));
-			BackgroundFetch.setUserDefaultsData("latestGlucoseValue", BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
+			BackgroundFetch.setUserDefaultsData("latestGlucoseValue", latestGlucose);
 			BackgroundFetch.setUserDefaultsData("latestGlucoseSlopeArrow", currentReading.slopeArrow());
 			BackgroundFetch.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
 			BackgroundFetch.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
-			//BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
 			BackgroundFetch.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 			BackgroundFetch.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
 			BackgroundFetch.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
-			BackgroundFetch.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 		}
 		
 		/**
