@@ -107,12 +107,14 @@ package ui.screens.display.settings.chart
 			scaleFormatPicker.addEventListener(Event.CHANGE, onScaleFormatChange);
 			
 			/* Value Numeric Steppers */
-			chartMaxValueStepper = LayoutFactory.createNumericStepper(0, 400, chartMaxValue);
+			var maxConstrain:Number;
+			glucoseUnits == "mgdl" ? maxConstrain = 800 : maxConstrain = Math.round(((BgReading.mgdlToMmol((800))) * 10)) / 10;
+			chartMaxValueStepper = LayoutFactory.createNumericStepper(0, maxConstrain, chartMaxValue);
 			if (glucoseUnits != "mgdl")
 				chartMaxValueStepper.step = 0.1;
 			chartMaxValueStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			
-			chartMinValueStepper = LayoutFactory.createNumericStepper(0, 400, chartMinValue);
+			chartMinValueStepper = LayoutFactory.createNumericStepper(0, maxConstrain, chartMinValue);
 			if (glucoseUnits != "mgdl")
 				chartMinValueStepper.step = 0.1;
 			chartMinValueStepper.addEventListener(Event.CHANGE, onSettingsChanged);
