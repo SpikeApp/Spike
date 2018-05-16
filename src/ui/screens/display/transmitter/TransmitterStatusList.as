@@ -450,7 +450,7 @@ package ui.screens.display.transmitter
 			transmitterTypeLabel = LayoutFactory.createLabel(transmitterTypeValue, HorizontalAlign.RIGHT);
 			transmitterNameLabel = LayoutFactory.createLabel(transmitterNameValue, HorizontalAlign.RIGHT);
 			transmitterMACAddressLabel = LayoutFactory.createLabel(BlueToothDevice.address != "" ? BlueToothDevice.address : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'), HorizontalAlign.RIGHT);
-			transmitterMACAddressLabel.width = 140;
+			transmitterMACAddressLabel.width = Constants.isPortrait ? 140 : 280;
 			transmitterMACAddressLabel.wordWrap = true;
 			if (BlueToothDevice.isMiaoMiao())
 				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);
