@@ -11,6 +11,7 @@ ENHANCEMENT: Added an alert in Settings -> Transmitter screen notifying user tha
 ENHANCEMENT: Improved overall stability in Spike when running in the background. (Miguel)
 FIX: Dropdown transmitter type list was not displaying correctly on some large screen devices. (Sascha)
 FIX: When in mmol/L, app badge was not applying the multiplier for HIGH/LOW values. (Sascha)
+FIX: Bug that sometimes would display "Unable to load" on the Fullscreen Widget. (Miguel)
 FIX: HIGH values were displayed as LOW on the Today Widget chart. (Miguel)
 FIX: MiaoMiao users, due to readings on demand, could have more than 12 or 24 readings on the today widget chart, breaking the lower labels and overcrowding the chart. This has been fixed. (Miguel)
 FIX: Treatments where not displaying correctly on Nightscout reports when using some specific browsers. Spike now uses a different date format that should display correctly on all browsers. Thank you Sulka Haro for pointing me in the right direction. (Miguel)

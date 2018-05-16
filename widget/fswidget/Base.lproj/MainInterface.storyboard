@@ -94,6 +94,7 @@
                         <outlet property="noData" destination="DsU-Gy-Lf6" id="8LO-PO-mWZ"/>
                         <outlet property="openApp" destination="GZn-9R-ICs" id="oaY-nk-EuR"/>
                         <outlet property="timeDisplay" destination="aWz-C1-cub" id="1FC-N1-n0I"/>
+                        <outlet property="treatmentsConstrain" destination="MjT-31-cgh" id="95u-eF-Hyt"/>
                         <outlet property="treatmentsLabel" destination="bzA-gj-RS8" id="oUZ-f2-Y6e"/>
                     </connections>
                 </viewController>
