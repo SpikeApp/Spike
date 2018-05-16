@@ -16,8 +16,6 @@ package ui.screens.display.transmitter
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import G4Model.TransmitterStatus;
-	
 	import G5Model.G5VersionInfo;
 	import G5Model.TransmitterStatus;
 	import G5Model.VersionRequestRxMessage;
@@ -302,10 +300,9 @@ package ui.screens.display.transmitter
 				
 				/* Battery Level */
 				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
-				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+				
+				if (batteryLevelValue.toUpperCase() == "0" || batteryLevelValue.toUpperCase() == "UNKNOWN" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
 					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
-				else 
-					batteryLevelValue = capitalizeString(G4Model.TransmitterStatus.getBatteryLevel(Number(batteryLevelValue)).batteryLevel);
 			}
 			else if (BlueToothDevice.isBlueReader())
 			{
@@ -435,12 +432,28 @@ package ui.screens.display.transmitter
 			{
 				if(batteryLevelValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown') || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryUnknownTexture;
-				else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 60) //OK Battery
-					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryOkTexture;
-				else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 30) //Alert Battery
-					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryAlertTexture;
-				else //Low Battery
-					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;
+				else
+				{
+					if (BlueToothDevice.isDexcomG4())
+					{
+						var G4BatteryLevel:Number = Number(batteryLevelValue);
+						if (G4BatteryLevel >= 213)
+							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryOkTexture;
+						else if (G4BatteryLevel > 210)
+							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryAlertTexture;
+						else 
+							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;
+					}
+					else
+					{
+						if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 60) //OK Battery
+							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryOkTexture;
+						else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 30) //Alert Battery
+							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryAlertTexture;
+						else //Low Battery
+							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;
+					}
+				}
 				
 				if(batteryLevelIconTexture != null)
 					batteryLevelIcon = new Image(batteryLevelIconTexture);
