@@ -9,6 +9,7 @@ package ui.screens.display.settings.alarms
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
 	import feathers.controls.List;
+	import feathers.controls.ScrollContainer;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
@@ -21,6 +22,7 @@ package ui.screens.display.settings.alarms
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.text.TextFormat;
 	
 	import ui.popups.AlertManager;
@@ -68,6 +70,8 @@ package ui.screens.display.settings.alarms
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -572,11 +576,21 @@ package ui.screens.display.settings.alarms
 			}
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (positionHelper != null)
+				positionHelper.x = (Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2)) / 2;
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (alarmCustomizerCallout != null)
 			{
 				alarmCustomizerCallout.dispose();

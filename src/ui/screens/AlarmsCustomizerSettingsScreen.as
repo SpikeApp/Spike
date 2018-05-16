@@ -87,6 +87,7 @@ package ui.screens
 		{
 			if (alarmCustomizer != null)
 			{
+				alarmCustomizer.removeFromParent();
 				alarmCustomizer.dispose();
 				alarmCustomizer = null;
 			}

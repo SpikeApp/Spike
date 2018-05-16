@@ -9,7 +9,9 @@ package ui.screens.display.help
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -30,6 +32,8 @@ package ui.screens.display.help
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -79,11 +83,18 @@ package ui.screens.display.help
 			dispatchEventWith(Event.COMPLETE);
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if(tutorialButton != null)
 			{
 				tutorialButton.removeEventListener(Event.TRIGGERED, onShowTutorial);

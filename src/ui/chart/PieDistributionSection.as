@@ -5,10 +5,10 @@ package ui.chart
 	import feathers.layout.VerticalAlign;
 	
 	import starling.display.Quad;
-	import starling.display.Shape;
 	import starling.display.Sprite;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeLine;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -18,9 +18,8 @@ package ui.chart
 		/* Display Objects */
 		public var title:Label;
 		public var message:Label;
-		private var border:Shape;
+		private var border:SpikeLine;
 		private var background:Quad;
-
 		private var titleBackground:Quad;
 		
 		public function PieDistributionSection(width:Number, height:Number, backgroundColor:uint, fontColor:uint = Number.NaN, borderColor:Number = Number.NaN)
@@ -32,30 +31,20 @@ package ui.chart
 			var titleFontSize:Number;
 			var messageFontSize:Number;
 			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 			{
 				titleFontSize = 9;
 				messageFontSize = 9;
-			}
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-			{
-				titleFontSize = 8;
-				messageFontSize = 8;
 			}
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
 			{
 				titleFontSize = 12;
 				messageFontSize = 12;
 			}
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS || Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
 				titleFontSize = 11;
 				messageFontSize = 11;
-			}
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-			{
-				titleFontSize = 9.5;
-				messageFontSize = 9.5;
 			}
 			else if (Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 			{
@@ -116,14 +105,11 @@ package ui.chart
 			//Border
 			if (!isNaN(borderColor))
 			{
-				var borderLineThickness:uint = 1;
-				border = new Shape();
+				border = new SpikeLine();
 				border.touchable = false;
-				border.graphics.lineStyle(borderLineThickness, borderColor, 1);
-				border.graphics.moveTo(0, 0);
-				border.graphics.lineTo(width, 0);
-				border.graphics.endFill();
-				border.y = borderLineThickness / 2;
+				border.thickness = 1;
+				border.color = borderColor;
+				border.lineTo(width, 0);
 				
 				addChild(border);
 			}

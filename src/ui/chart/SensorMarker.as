@@ -2,10 +2,12 @@ package ui.chart
 {
 	import database.CommonSettings;
 	
+	import starling.display.Canvas;
 	import starling.display.Shape;
-	import starling.display.graphics.NGon;
 	
 	import treatments.Treatment;
+	
+	import ui.shapes.SpikeDisplayObject;
 	
 	public class SensorMarker extends ChartTreatment
 	{
@@ -14,8 +16,8 @@ package ui.chart
 		private var strokeColor:uint;
 
 		// Display Objects
-		private var sensorMarker:NGon;
-		private var stroke:Shape;
+		private var sensorMarker:Canvas;
+		private var stroke:SpikeDisplayObject;
 		private var hitArea:Shape;
 		
 		public function SensorMarker(treatment:Treatment)
@@ -43,16 +45,17 @@ package ui.chart
 			addChild(hitArea);
 			
 			//Background
-			sensorMarker = new NGon(radius, 20, 0, 0, 360);
-			sensorMarker.x = radius / 3;
-			sensorMarker.y = radius + radius/4;
-			sensorMarker.color = backgroundColor;
+			sensorMarker = new Canvas();
+			sensorMarker.beginFill(backgroundColor);
+			sensorMarker.drawCircle(radius / 3, radius + radius/4, radius);
 			addChild(sensorMarker);
 			
 			//Stroke
-			stroke = new Shape();
-			stroke.graphics.lineStyle(0.8, strokeColor, 1);
-			stroke.graphics.drawCircle(radius, radius, radius);
+			var strokeShape:Shape = new Shape();
+			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
+			strokeShape.graphics.drawCircle(radius, radius, radius);
+			
+			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;
 			addChild(stroke);

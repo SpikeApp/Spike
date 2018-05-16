@@ -95,12 +95,14 @@ package ui.screens
 			
 			if (icon != null)
 			{
+				icon.removeFromParent();
 				icon.dispose();
 				icon = null;
 			}
 			
 			if (readingsSection != null)
 			{
+				readingsSection.removeFromParent();
 				readingsSection.dispose();
 				readingsSection = null;
 			}

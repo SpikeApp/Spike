@@ -148,54 +148,63 @@ package ui.screens
 		{
 			if (healthkitSettings != null)
 			{
+				healthkitSettings.removeFromParent();
 				healthkitSettings.dispose();
 				healthkitSettings = null;
 			}
 			
 			if (dexcomSettings != null)
 			{
+				dexcomSettings.removeFromParent();
 				dexcomSettings.dispose();
 				dexcomSettings = null;
 			}
 			
 			if (nightscoutSettings != null)
 			{
+				nightscoutSettings.removeFromParent();
 				nightscoutSettings.dispose();
 				nightscoutSettings = null;
 			}
 			
 			if (dexcomLabel != null)
 			{
+				dexcomLabel.removeFromParent();
 				dexcomLabel.dispose();
 				dexcomLabel = null;
 			}
 			
 			if (nightscoutLabel != null)
 			{
+				nightscoutLabel.removeFromParent();
 				nightscoutLabel.dispose();
 				nightscoutLabel = null;
 			}
 			
 			if (notificationSettings != null)
 			{
+				notificationSettings.removeFromParent();
 				notificationSettings.dispose();
 				notificationSettings = null;
 			}
 			
 			if (notificationsLabel != null)
 			{
+				notificationsLabel.removeFromParent();
 				notificationsLabel.dispose();
 				notificationsLabel = null;
 			}
 			
 			if (appBadgeLabel != null)
 			{
+				appBadgeLabel.removeFromParent();
 				appBadgeLabel.dispose();
 				appBadgeLabel = null;
 			}
 			
 			if (appBadgeSettings != null)
 			{
+				appBadgeSettings.removeFromParent();
 				appBadgeSettings.dispose();
 				appBadgeSettings = null;
 			}

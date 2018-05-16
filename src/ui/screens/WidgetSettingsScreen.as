@@ -136,48 +136,56 @@ package ui.screens
 		{
 			if (chartColorSettings != null)
 			{
+				chartColorSettings.removeFromParent();
 				chartColorSettings.dispose();
 				chartColorSettings = null;
 			}
 			
 			if (chartColorLabel != null)
 			{
+				chartColorLabel.removeFromParent();
 				chartColorLabel.dispose();
 				chartColorLabel = null;
 			}
 			
 			if (historySettings != null)
 			{
+				historySettings.removeFromParent();
 				historySettings.dispose();
 				historySettings = null;
 			}
 			
 			if (historyLabel != null)
 			{
+				historyLabel.removeFromParent();
 				historyLabel.dispose();
 				historyLabel = null;
 			}
 			
 			if (chartSettingsLabel != null)
 			{
+				chartSettingsLabel.removeFromParent();
 				chartSettingsLabel.dispose();
 				chartSettingsLabel = null;
 			}
 			
 			if (chartSettings != null)
 			{
+				chartSettings.removeFromParent();
 				chartSettings.dispose();
 				chartSettings = null;
 			}
 			
 			if (sizeSettingsLabel != null)
 			{
+				sizeSettingsLabel.removeFromParent();
 				sizeSettingsLabel.dispose();
 				sizeSettingsLabel = null;
 			}
 			
 			if (sizeSettings != null)
 			{
+				sizeSettings.removeFromParent();
 				sizeSettings.dispose();
 				sizeSettings = null;
 			}

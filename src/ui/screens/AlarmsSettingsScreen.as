@@ -85,6 +85,7 @@ package ui.screens
 		{
 			if (alarmsList != null)
 			{
+				alarmsList.removeFromParent();
 				alarmsList.dispose();
 				alarmsList = null;
 			}

@@ -96,12 +96,14 @@ package ui.screens
 		{
 			if (watchComplicationSettings != null)
 			{
+				watchComplicationSettings.removeFromParent();
 				watchComplicationSettings.dispose();
 				watchComplicationSettings = null;
 			}
 			
 			if (watchComplicationLabel != null)
 			{
+				watchComplicationLabel.removeFromParent();
 				watchComplicationLabel.dispose();
 				watchComplicationLabel = null;
 			}

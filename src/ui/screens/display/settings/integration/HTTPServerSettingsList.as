@@ -34,6 +34,8 @@ package ui.screens.display.settings.integration
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -61,6 +63,7 @@ package ui.screens.display.settings.integration
 		private var developersAPITitleLabel:Label;
 		private var developersAPIDescriptionLabel:Label;
 		private var actionsContainer:LayoutGroup;
+		private var positionHelper:Sprite;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -75,6 +78,8 @@ package ui.screens.display.settings.integration
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -112,14 +117,14 @@ package ui.screens.display.settings.integration
 			dexcomCredentialsLabel.width = width - 20;
 			
 			//UserneName TextInput
-			userNameTextInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
+			userNameTextInput = LayoutFactory.createTextInput(false, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT);
 			userNameTextInput.text = serverUsername;
 			userNameTextInput.addEventListener(FeathersEventType.ENTER, onEnterPressed);
 			userNameTextInput.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			userNameTextInput.addEventListener(FeathersEventType.FOCUS_OUT, onFocusOut);
 			
 			//Password TextInput
-			passwordTextInput = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
+			passwordTextInput = LayoutFactory.createTextInput(true, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT);
 			passwordTextInput.text = serverPassword;
 			passwordTextInput.addEventListener(FeathersEventType.ENTER, onEnterPressed);
 			passwordTextInput.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
@@ -276,7 +281,7 @@ package ui.screens.display.settings.integration
 			actionButtonsContainer.addChild(sendButton);
 			
 			/* Callout Position Helper Creation */
-			var positionHelper:Sprite = new Sprite();
+			positionHelper = new Sprite();
 			positionHelper.x = Constants.stageWidth / 2;
 			positionHelper.y = 70;
 			Starling.current.stage.addChild(positionHelper);
@@ -421,11 +426,58 @@ package ui.screens.display.settings.integration
 				save();
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (userNameTextInput != null)
+			{
+				userNameTextInput.width = Constants.isPortrait ? 140 : 240;
+				SystemUtil.executeWhenApplicationIsActive( userNameTextInput.clearFocus );
+			}
+			
+			if (passwordTextInput != null)
+			{
+				passwordTextInput.width = Constants.isPortrait ? 140 : 240;
+				passwordTextInput.clearFocus();
+			}
+			
+			if (instructionsTitleLabel != null)
+				instructionsTitleLabel.width = width - 20;
+			
+			if (instructionsDescriptionLabel != null)
+				instructionsDescriptionLabel.width = width - 20;
+			
+			if (developersAPITitleLabel != null)
+				developersAPITitleLabel.width = width - 20;
+			
+			if (developersAPIDescriptionLabel != null)
+				developersAPIDescriptionLabel.width = width - 20;
+			
+			if (actionsContainer != null)
+				actionsContainer.width = width - 20;
+			
+			if (positionHelper != null)
+				positionHelper.x = Constants.stageWidth / 2;
+			
+			if (emailField != null)
+				emailField.clearFocus();
+		}
+		
 		/**
 		 * Utility
 		 */		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
+			if (positionHelper != null)
+			{
+				positionHelper.removeFromParent();
+				positionHelper.dispose();
+				positionHelper = null;
+			}
+			
 			if(loopOfflineToggle != null)
 			{
 				loopOfflineToggle.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);

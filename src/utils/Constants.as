@@ -22,6 +22,8 @@ package utils
 		private static var _noLockEnabled:Boolean;
 		public static var appInForeground:Boolean = true;
 		public static var deviceModel:String;
+		public static var isPortrait:Boolean = true;
+		public static var currentOrientation:String = "default";
 		
 		/* Tutorial */
 		public static var mainMenuButton:Button;
@@ -41,9 +43,19 @@ package utils
 			return _stageWidth;
 		}
 		
+		public static function set stageWidth(value:int):void
+		{
+			_stageWidth = value;
+		}
+		
 		public static function get stageHeight():int 
 		{
 			return _stageHeight;
+		}
+		
+		public static function set stageHeight(value:int):void
+		{
+			_stageHeight = value;
 		}
 		
 		public static function get scaleFactor():int 

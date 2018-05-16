@@ -79,6 +79,7 @@ package ui.screens
 		{
 			if (treatmentsSection != null)
 			{
+				treatmentsSection.removeFromParent();
 				treatmentsSection.dispose();
 				treatmentsSection = null;
 			}

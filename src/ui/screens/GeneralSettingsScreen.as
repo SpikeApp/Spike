@@ -165,42 +165,49 @@ package ui.screens
 			
 			if (glucoseSettings != null)
 			{
+				glucoseSettings.removeFromParent();
 				glucoseSettings.dispose();
 				glucoseSettings = null;
 			}
 			
 			if (updatesSettingsList != null)
 			{
+				updatesSettingsList.removeFromParent();
 				updatesSettingsList.dispose();
 				updatesSettingsList = null;
 			}
 			
 			if (glucoseLabel != null)
 			{
+				glucoseLabel.removeFromParent();
 				glucoseLabel.dispose();
 				glucoseLabel = null;
 			}
 			
 			if (updateLabel != null)
 			{
+				updateLabel.removeFromParent();
 				updateLabel.dispose();
 				updateLabel = null;
 			}
 			
 			if (chartDateSettings != null)
 			{
+				chartDateSettings.removeFromParent();
 				chartDateSettings.dispose();
 				chartDateSettings = null;
 			}
 			
 			if (chartDateFormatLabel != null)
 			{
+				chartDateFormatLabel.removeFromParent();
 				chartDateFormatLabel.dispose();
 				chartDateFormatLabel = null;
 			}
 			
 			if (dataCollectionLabel != null)
 			{
+				dataCollectionLabel.removeFromParent();
 				dataCollectionLabel.dispose();
 				dataCollectionLabel = null;
 			}
@@ -208,6 +215,7 @@ package ui.screens
 			
 			if (dataCollectionSettings != null)
 			{
+				dataCollectionSettings.removeFromParent();
 				dataCollectionSettings.dispose();
 				dataCollectionSettings = null;
 			}

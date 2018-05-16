@@ -16,7 +16,9 @@ package ui.screens.display.settings.general
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -52,6 +54,8 @@ package ui.screens.display.settings.general
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			
@@ -501,11 +505,18 @@ package ui.screens.display.settings.general
 			needsSave = true;
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{	
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if(glucoseUnitsPicker != null)
 			{
 				glucoseUnitsPicker.removeEventListener(Event.CHANGE, onUnitsChanged);

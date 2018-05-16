@@ -18,7 +18,9 @@ package ui.screens.display.settings.treatments
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import treatments.Profile;
 	import treatments.ProfileManager;
@@ -45,6 +47,8 @@ package ui.screens.display.settings.treatments
 		public function CarbsSettingsList()
 		{
 			super();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();	
@@ -141,6 +145,17 @@ package ui.screens.display.settings.treatments
 			navigateToURL(new URLRequest("https://diyps.org/2014/05/29/determining-your-carbohydrate-absorption-rate-diyps-lessons-learned/"));
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (carbAbsorptionRateDescription != null)
+				carbAbsorptionRateDescription.width = width;
+			
+			if (actionContainer != null)
+				actionContainer.width = width;
+		}
+		
 		/**
 		 * Utility
 		 */	
@@ -154,6 +169,8 @@ package ui.screens.display.settings.treatments
 		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (carbAbsorptionRateStepper != null)
 			{
 				carbAbsorptionRateStepper.removeEventListener(Event.CHANGE, onSettingsChanged);

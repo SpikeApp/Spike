@@ -53,16 +53,21 @@ package ui.screens.display.transmitter
 	
 	import services.BluetoothService;
 	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.textures.Texture;
+	import starling.utils.SystemUtil;
 	
+	import ui.AppInterface;
 	import ui.InterfaceController;
 	import ui.popups.AlertManager;
+	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
@@ -138,6 +143,8 @@ package ui.screens.display.transmitter
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -804,6 +811,16 @@ package ui.screens.display.transmitter
 			}
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.navigator.replaceScreen, Screens.TRANSMITTER, noTransition);
+			
+			function noTransition( oldScreen:DisplayObject, newScreen:DisplayObject, completeCallback:Function ):void
+			{
+				completeCallback();
+			};
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -827,6 +844,7 @@ package ui.screens.display.transmitter
 		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 			BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
 			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);

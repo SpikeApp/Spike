@@ -90,12 +90,14 @@ package ui.screens
 		{
 			if (deepSleepLabel != null)
 			{
+				deepSleepLabel.removeFromParent();
 				deepSleepLabel.dispose();
 				deepSleepLabel = null;
 			}
 			
 			if (deepSleepSettings != null)
 			{
+				deepSleepSettings.removeFromParent();
 				deepSleepSettings.dispose();
 				deepSleepSettings = null;
 			}

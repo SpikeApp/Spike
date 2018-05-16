@@ -23,8 +23,10 @@ package ui.screens.display.settings.treatments
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
@@ -86,6 +88,8 @@ package ui.screens.display.settings.treatments
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -440,11 +444,17 @@ package ui.screens.display.settings.treatments
 			AppInterface.instance.navigator.pushScreen( screenName );
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		/**
 		 * Utility 
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			removeEventListener( Event.CHANGE, onMenuChanged );
 			
 			if (chevronIconTexture != null)

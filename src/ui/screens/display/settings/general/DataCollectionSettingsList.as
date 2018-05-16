@@ -17,7 +17,9 @@ package ui.screens.display.settings.general
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -45,6 +47,8 @@ package ui.screens.display.settings.general
 		public function DataCollectionSettingsList()
 		{
 			super();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();	
@@ -211,8 +215,15 @@ package ui.screens.display.settings.general
 			super.draw();
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (collectionModePicker != null)
 			{
 				collectionModePicker.removeEventListener(Event.CHANGE, onCollectionModeChanged);

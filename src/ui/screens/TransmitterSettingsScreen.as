@@ -132,12 +132,14 @@ package ui.screens
 			
 			if (transmitterSettings != null)
 			{
+				transmitterSettings.removeFromParent();
 				transmitterSettings.dispose();
 				transmitterSettings = null;
 			}
 			
 			if (transmitterLabel != null)
 			{
+				transmitterLabel.removeFromParent();
 				transmitterLabel.dispose();
 				transmitterLabel = null;
 			}

@@ -98,6 +98,7 @@ package ui.screens
 		{
 			if (settingsMenu != null)
 			{
+				settingsMenu.removeFromParent();
 				settingsMenu.dispose();
 				settingsMenu = null;
 			}

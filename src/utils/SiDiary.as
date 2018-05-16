@@ -22,6 +22,7 @@ package utils
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalLayout;
+	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
@@ -31,6 +32,8 @@ package utils
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
+	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -50,7 +53,8 @@ package utils
 		private static var emailField:TextInput;
 		private static var sendButton:Button;
 		private static var siDiarySenderCallout:Callout;
-		private static var _instance:SiDiary = new SiDiary()
+		private static var _instance:SiDiary = new SiDiary();
+		private static var positionHelper:Sprite;
 		
 		/* Objects */
 		private static var fileData:ByteArray;
@@ -68,6 +72,8 @@ package utils
 		public static function exportSiDiary():void 
 		{
 			Trace.myTrace("SiDiary.as", "User requested export...");
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			//Instantiate objects
 			readingsList = [];
@@ -238,7 +244,7 @@ package utils
 			actionButtonsContainer.addChild(sendButton);
 			
 			/* Callout Position Helper Creation */
-			var positionHelper:Sprite = new Sprite();
+			positionHelper = new Sprite();
 			positionHelper.x = Constants.stageWidth / 2;
 			positionHelper.y = 70;
 			Starling.current.stage.addChild(positionHelper);
@@ -275,6 +281,8 @@ package utils
 		
 		private static function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			//Dispose Objects
 			output = null;
 			fileData = null;
@@ -282,6 +290,13 @@ package utils
 			readingsList = null;
 			
 			//Dispose display objects
+			if (positionHelper != null)
+			{
+				positionHelper.removeFromParent();
+				positionHelper.dispose();
+				positionHelper = null;
+			}
+			
 			if (emailLabel != null)
 			{
 				emailLabel.dispose();
@@ -413,6 +428,15 @@ package utils
 			
 			closeCallout();
 			dispose();	
+		}
+		
+		private static function onStarlingResize(event:ResizeEvent):void 
+		{
+			if (positionHelper != null)
+				positionHelper.x = Constants.stageWidth / 2;
+			
+			if (emailField != null)
+				SystemUtil.executeWhenApplicationIsActive( emailField.clearFocus );
 		}
 
 		/**

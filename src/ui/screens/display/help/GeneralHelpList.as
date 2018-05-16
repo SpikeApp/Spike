@@ -12,7 +12,10 @@ package ui.screens.display.help
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import utils.Constants;
 	
@@ -31,6 +34,8 @@ package ui.screens.display.help
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -87,11 +92,24 @@ package ui.screens.display.help
 			
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 		}
+		
+		/**
+		 * Event Handlers
+		 */
+		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			SystemUtil.executeWhenApplicationIsActive( setupContent );
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (missedReadingsDescriptionLabel != null)
 			{
 				missedReadingsDescriptionLabel.dispose();

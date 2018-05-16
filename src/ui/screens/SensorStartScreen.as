@@ -28,6 +28,7 @@ package ui.screens
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.popups.AlertManager;
@@ -58,6 +59,8 @@ package ui.screens
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			/* Display Initial Alert */
 			if( !TutorialService.isActive && !TutorialService.ninethStepActive )
@@ -216,11 +219,18 @@ package ui.screens
 			}
 		}	
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if( TutorialService.isActive && TutorialService.ninethStepActive)
 			{
 				removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn)
@@ -229,6 +239,7 @@ package ui.screens
 			
 			if (dateSpinner != null)
 			{
+				dateSpinner.removeFromParent();
 				dateSpinner.dispose();
 				dateSpinner = null;
 			}
@@ -236,12 +247,14 @@ package ui.screens
 			if (startButton != null)
 			{
 				startButton.removeEventListener(Event.TRIGGERED, onSensorStarted);
+				startButton.removeFromParent();
 				startButton.dispose();
 				startButton = null;
 			}
 			
 			if (container != null)
 			{
+				container.removeFromParent();
 				container.dispose();
 				container = null;
 			}

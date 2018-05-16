@@ -20,8 +20,14 @@ package ui.screens.display.settings.about
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
+	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
+	import ui.AppInterface;
+	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
@@ -47,6 +53,8 @@ package ui.screens.display.settings.about
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -151,11 +159,23 @@ package ui.screens.display.settings.about
 			navigateToURL(new URLRequest("https://spike-app.com"));
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.navigator.replaceScreen, Screens.SETTINGS_ABOUT, noTransition);
+			
+			function noTransition( oldScreen:DisplayObject, newScreen:DisplayObject, completeCallback:Function ):void
+			{
+				completeCallback();
+			};
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if(appNameLabel != null)
 			{
 				appNameLabel.dispose();

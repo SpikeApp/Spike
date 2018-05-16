@@ -31,12 +31,15 @@ package ui.screens
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.utils.Align;
+	import starling.utils.SystemUtil;
 	
 	import treatments.TreatmentsManager;
 	
@@ -104,6 +107,8 @@ package ui.screens
 		{
 			super.initialize();
 			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			setupHeader();
 			setupLayout();
 			setupInitialContent();
@@ -145,7 +150,7 @@ package ui.screens
 			glucoseList = ModelLocator.bgReadings;
 			
 			//Calculate Values
-			calculateValues();
+			SystemUtil.executeWhenApplicationIsActive( calculateValues );
 		}
 		
 		
@@ -374,7 +379,10 @@ package ui.screens
 					timeAgoColor = oldColor;
 			}
 			
-			latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+			if (Constants.isPortrait)
+				latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+			else
+				latestGlucoseOutput = latestGlucoseOutput + " " + latestGlucoseSlopeArrow;
 			
 			/* IOB / COB Display Label */
 			if (IOBCOBDisplay != null)
@@ -431,12 +439,16 @@ package ui.screens
 			AppInterface.instance.menu.selectedIndex = -1;
 		}
 		
-		private function calculateFontSize ():void
+		private function calculateFontSize():void
 		{
 			if (latestGlucoseOutput == null)
 				return;
 			
-			var formattedGlucoseOutput:String = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n"));
+			var formattedGlucoseOutput:String;
+			if (Constants.isPortrait)
+				formattedGlucoseOutput = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n"));
+			else
+				formattedGlucoseOutput = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf(" "));
 			
 			if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 			{
@@ -503,13 +515,13 @@ package ui.screens
 			}
 			
 			//Calculate Glucose Values and Update Labels
-			calculateValues();
-			updateInfo();
+			SystemUtil.executeWhenApplicationIsActive( calculateValues );
+			SystemUtil.executeWhenApplicationIsActive( updateInfo );
 		}
 		
 		private function onUpdateTimer(event:TimerEvent):void
 		{
-			if (latestGlucoseTimestamp != 0)
+			if (latestGlucoseTimestamp != 0 && SystemUtil.isApplicationActive)
 			{
 				/* Time Ago */
 				var nowTimestamp:Number = new Date().valueOf();
@@ -547,11 +559,14 @@ package ui.screens
 					slopeDisplay.fontStyles.color = oldColor;
 				}
 				
-				latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+				if (Constants.isPortrait)
+					latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
+				else
+					latestGlucoseOutput = latestGlucoseOutput + " " + latestGlucoseSlopeArrow;
 			}
 			
 			/* IOB / COB Display Label */
-			if (IOBCOBDisplay != null)
+			if (IOBCOBDisplay != null && SystemUtil.isApplicationActive)
 			{
 				var now:Number = new Date().valueOf();
 				IOBCOBDisplay.fontStyles.color = timeAgoColor;
@@ -603,6 +618,20 @@ package ui.screens
 			Constants.noLockEnabled = false;
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth;
+			
+			if (slopeDisplay != null)
+				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - 10;
+			
+			if (IOBCOBDisplay != null)
+				IOBCOBDisplay.width = Constants.stageWidth;
+			
+			SystemUtil.executeWhenApplicationIsActive( calculateValues );
+			SystemUtil.executeWhenApplicationIsActive( updateInfo );
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -614,45 +643,51 @@ package ui.screens
 		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 			this.removeEventListener(TouchEvent.TOUCH, onTouch);
-			
-			if(glucoseDisplay != null)
-			{
-				glucoseDisplay.dispose();
-				glucoseDisplay = null;
-			}
-			
-			if (slopeDisplay != null)
-			{
-				slopeDisplay.dispose();
-				slopeDisplay = null;
-			}
-			
-			if(timeAgoDisplay != null)
-			{
-				timeAgoDisplay.dispose();
-				timeAgoDisplay = null;
-			}
-			
-			if (IOBCOBDisplay != null)
-			{
-				IOBCOBDisplay.dispose();
-				IOBCOBDisplay = null;
-			}
-			
-			if(container != null)
-			{
-				container.dispose();
-				container = null;
-			}
 			
 			if(updateTimer != null)
 			{
 				updateTimer.stop();
 				updateTimer.removeEventListener(TimerEvent.TIMER, onUpdateTimer);
 				updateTimer = null;
+			}
+			
+			if(glucoseDisplay != null)
+			{
+				glucoseDisplay.removeFromParent();
+				glucoseDisplay.dispose();
+				glucoseDisplay = null;
+			}
+			
+			if (slopeDisplay != null)
+			{
+				slopeDisplay.removeFromParent();
+				slopeDisplay.dispose();
+				slopeDisplay = null;
+			}
+			
+			if(timeAgoDisplay != null)
+			{
+				timeAgoDisplay.removeFromParent();
+				timeAgoDisplay.dispose();
+				timeAgoDisplay = null;
+			}
+			
+			if (IOBCOBDisplay != null)
+			{
+				IOBCOBDisplay.removeFromParent();
+				IOBCOBDisplay.dispose();
+				IOBCOBDisplay = null;
+			}
+			
+			if(container != null)
+			{
+				container.removeFromParent();
+				container.dispose();
+				container = null;
 			}
 			
 			super.dispose();

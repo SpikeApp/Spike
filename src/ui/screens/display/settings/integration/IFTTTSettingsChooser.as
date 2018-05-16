@@ -9,8 +9,10 @@ package ui.screens.display.settings.integration
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
@@ -33,6 +35,8 @@ package ui.screens.display.settings.integration
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -82,11 +86,18 @@ package ui.screens.display.settings.integration
 			AppInterface.instance.navigator.pushScreen( screenName );
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (chevronIconTexture != null)
 			{
 				chevronIconTexture.dispose();

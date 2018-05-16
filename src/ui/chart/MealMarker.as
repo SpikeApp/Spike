@@ -7,11 +7,13 @@ package ui.chart
 	import feathers.layout.VerticalAlign;
 	
 	import starling.display.Shape;
+	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
 	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeDisplayObject;
 	
 	public class MealMarker extends ChartTreatment
 	{
@@ -19,9 +21,8 @@ package ui.chart
 		private var insulinLabel:Label;
 		private var carbsLabel:Label;
 		private var mainLabel:Label;
-		private var insulinMarker:NGon;
-		private var carbsMarker:NGon;
-		private var stroke:Shape;
+		private var mealBackground:SpikeDisplayObject;
+		private var stroke:SpikeDisplayObject;
 		
 		/* Properties */
 		private var fontSize:int = 11;
@@ -76,22 +77,27 @@ package ui.chart
 				fontSize -= 1.5;
 			
 			//Background
-			insulinMarker = new NGon(radius, 20, 0, 90, 270);
-			insulinMarker.x = radius / 3;
-			insulinMarker.y = radius + radius/4;
+			var insulinMarker:NGon = new NGon(radius, 20, 0, 90, 270);
 			insulinMarker.color = backgroundInsulinColor;
-			addChild(insulinMarker);
 			
-			carbsMarker = new NGon(radius, 20, 0, -90, 90);
-			carbsMarker.x = radius / 3;
-			carbsMarker.y = radius + radius/4;
+			var carbsMarker:NGon = new NGon(radius, 20, 0, -90, 90);
 			carbsMarker.color = backgroundCarbsColor;
-			addChild(carbsMarker);
+			
+			var allNGons:Sprite = new Sprite();
+			allNGons.addChild(insulinMarker);
+			allNGons.addChild(carbsMarker);
+			
+			mealBackground = GraphLayoutFactory.createImageFromShape(allNGons);
+			mealBackground.y = radius / 3;
+			mealBackground.x = -(radius / 2) - (radius / 12);
+			addChild(mealBackground);
 			
 			//Stroke
-			stroke = new Shape();
-			stroke.graphics.lineStyle(0.8, strokeColor, 1);
-			stroke.graphics.drawCircle(radius, radius, radius);
+			var strokeShape:Shape = new Shape();
+			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
+			strokeShape.graphics.drawCircle(radius, radius, radius);
+			
+			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;
 			addChild(stroke);
@@ -168,18 +174,11 @@ package ui.chart
 				mainLabel = null;
 			}
 			
-			if (insulinMarker != null)
+			if (mealBackground != null)
 			{
-				insulinMarker.removeFromParent();
-				insulinMarker.dispose();
-				insulinMarker = null;
-			}
-			
-			if (carbsMarker != null)
-			{
-				carbsMarker.removeFromParent();
-				carbsMarker.dispose();
-				carbsMarker = null;
+				mealBackground.removeFromParent();
+				mealBackground.dispose();
+				mealBackground = null;
 			}
 			
 			if (stroke != null)

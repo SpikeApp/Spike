@@ -1,24 +1,33 @@
 package ui.chart
 {
+	import flash.display.BitmapData;
+	
 	import database.CommonSettings;
 	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
+	import starling.core.Starling;
+	import starling.display.Canvas;
+	import starling.display.DisplayObject;
+	import starling.display.Image;
+	import starling.display.Quad;
 	import starling.display.Shape;
-	import starling.display.graphics.NGon;
+	import starling.display.Sprite;
+	import starling.textures.Texture;
 	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeDisplayObject;
 	
 	public class InsulinMarker extends ChartTreatment
 	{
 		/* Display Objects */
 		private var label:Label;
-		private var insulinMarker:NGon;
-		private var stroke:Shape;
+		private var insulinMarker:Canvas;
+		private var stroke:SpikeDisplayObject;
 		
 		/* Properties */
 		private var fontSize:Number = 11;
@@ -70,16 +79,17 @@ package ui.chart
 				fontSize -= 1.5;
 			
 			//Background
-			insulinMarker = new NGon(radius, 20, 0, 0, 360);
-			insulinMarker.x = radius / 3;
-			insulinMarker.y = radius + radius/4;
-			insulinMarker.color = backgroundColor;
+			insulinMarker = new Canvas();
+			insulinMarker.beginFill(backgroundColor);
+			insulinMarker.drawCircle(radius / 3, radius + radius/4, radius);
 			addChild(insulinMarker);
 			
 			//Stroke
-			stroke = new Shape();
-			stroke.graphics.lineStyle(0.8, strokeColor, 1);
-			stroke.graphics.drawCircle(radius, radius, radius);
+			var strokeShape:Shape = new Shape();
+			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
+			strokeShape.graphics.drawCircle(radius, radius, radius);
+			
+			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
 			stroke.y = radius/4;
 			stroke.x = -radius/1.5;
 			addChild(stroke);

@@ -21,9 +21,11 @@ package ui.screens.display.readings
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.display.Canvas;
 	import starling.display.Image;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.textures.RenderTexture;
 	import starling.textures.SubTexture;
 	import starling.textures.Texture;
@@ -77,6 +79,8 @@ package ui.screens.display.readings
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -292,11 +296,17 @@ package ui.screens.display.readings
 			}
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			var i:int;
 			
 			//Clear accessories

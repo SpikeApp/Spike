@@ -46,6 +46,8 @@ package ui.screens.display.settings.watch
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -102,6 +104,8 @@ package ui.screens.display.settings.watch
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -694,6 +698,20 @@ package ui.screens.display.settings.watch
 				instructionsSenderCallout.close(true);
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			if (displayNameTextInput != null)
+				SystemUtil.executeWhenApplicationIsActive( displayNameTextInput.clearFocus );
+			
+			if (instructionsTitleLabel != null)
+				instructionsTitleLabel.width = width - 20;
+			
+			if (instructionsDescriptionLabel != null)
+				instructionsDescriptionLabel.width = width - 20;
+			
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
 		/**
 		 * Utility
 		 */
@@ -707,6 +725,8 @@ package ui.screens.display.settings.watch
 		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if(watchComplicationToggle != null)
 			{
 				watchComplicationToggle.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);

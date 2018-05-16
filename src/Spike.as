@@ -7,11 +7,11 @@ package
 	import flash.display3D.Context3DProfile;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
+	import flash.events.StageOrientationEvent;
 	import flash.events.UncaughtErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
 	import flash.system.System;
-	import flash.utils.clearInterval;
 	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
@@ -26,6 +26,7 @@ package
 	
 	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
@@ -56,11 +57,8 @@ package
 			
 			stage.align = StageAlign.TOP_LEFT;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
-			//stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
 			
 			_instance = this;
-			
-			stage.addEventListener( flash.events.Event.RESIZE, onStageResize );
 			
 			/* Global Exceptions Handling */
 			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
@@ -136,17 +134,6 @@ package
 			loader = null;
 		}
 		
-		private function onStageResize( event:flash.events.Event ):void 
-		{
-			stage.removeEventListener( flash.events.Event.RESIZE, onStageResize );
-			if( timeoutID != -1 ) 
-				clearInterval( timeoutID );
-			
-			timeoutID = setTimeout( function():void {
-				SystemUtil.executeWhenApplicationIsActive(initStarling);
-			}, 200 );
-		}
-		
 		/**
 		 * Initialization
 		 */
@@ -163,17 +150,45 @@ package
 			
 			/* Initialize Constants */
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
+			Constants.isPortrait = starling.stage.stageWidth < starling.stage.stageHeight;
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			stage.addEventListener(StageOrientationEvent.ORIENTATION_CHANGING, onOrientationChanging);
 			
 			/* Handle Application Activation & Deactivation */
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.ACTIVATE, onActivate );
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
 		}
 		
+		private function onOrientationChanging(e:StageOrientationEvent):void
+		{
+			Constants.currentOrientation = e.afterOrientation;
+		}
+		
 		private function onContextCreated(event:flash.events.Event):void
 		{
 			Trace.myTrace("Spike.as", "onContextCreated! Event Debug: " + ObjectUtil.toString(event));
+		}
+		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			Trace.myTrace("Spike.as", "Stage has been resized. Width: " + stage.stageWidth + ", Height: " + stage.stageHeight);
+			
+			if (starling != null)
+			{
+				starling.stop();
+				
+				Constants.stageWidth = starling.stage.stageWidth;
+				Constants.stageHeight = starling.stage.stageHeight;
+				
+				Starling.current.viewPort.width  = stage.stageWidth;
+				Starling.current.viewPort.height = stage.stageHeight;
+				
+				Constants.isPortrait = stage.stageWidth < stage.stageHeight;
+				
+				SystemUtil.executeWhenApplicationIsActive(starling.start);
+			}
 		}
 		
 		/**

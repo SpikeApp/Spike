@@ -1,7 +1,5 @@
 package ui.screens.display.settings.advanced
 {
-	import mx.messaging.messages.CommandMessage;
-	
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
@@ -22,7 +20,9 @@ package ui.screens.display.settings.advanced
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -50,6 +50,8 @@ package ui.screens.display.settings.advanced
 		public function DeepSleepSettingsList()
 		{
 			super();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -210,25 +212,22 @@ package ui.screens.display.settings.advanced
 		private function onAlternativeMethod1Changed(e:Event):void
 		{
 			alternativeMode1Active = alternativeMethod1Check.isSelected;
-			/*if (alternativeMode1Active)
-			{
-				alternativeMethod2Check.isSelected = false;
-				alternativeMode2Active = false;
-			}*/
-				
+			
 			needsSave = true;
 		}
 		
 		private function onAlternativeMethod2Changed(e:Event):void
 		{
 			alternativeMode2Active = alternativeMethod2Check.isSelected;
-			/*if (alternativeMode2Active)
-			{
-				alternativeMethod1Check.isSelected = false;
-				alternativeMode1Active = false;
-			}*/
 			
 			needsSave = true;
+		}
+		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			instructionsTitleLabel.width = width;
+			instructionsDescriptionLabel.width = width;
 		}
 		
 		/**
@@ -242,6 +241,8 @@ package ui.screens.display.settings.advanced
 		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (suspensionModePicker != null)
 			{
 				suspensionModePicker.removeEventListener(Event.CHANGE, onSuspensionModeChanged);
