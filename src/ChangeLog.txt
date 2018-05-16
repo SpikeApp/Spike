@@ -1,11 +1,11 @@
 2.0.7
 FEATURE: Spike now supports full rotation mode (portrait and landscape, including upside down). This also makes it possible to mirror Spike to a TV, projector or monitor. If using an Apple TV just AirPlay your device screen to it, if using a conventional TV, projector or monitor you'll need an HDMI adapter. Rotating Spike on older devices like iPhone 4S or older iOS version like 8.0 can result in strange artifacts being drawn on the screen. This is due to low memory GPUs. I've made all possible tweaks in the code to minimize this but it can happen sometimes. If it does just restart Spike. Recent devices and iOS versions should have no issues. Special thanks to Edgardo Espector for helping me test it on iPhone X. (Miguel)
 FEATURE: Ability to display A1C in IFCC standard (mmol/mol). Press and hold stats for 1 second of head over to Settings -> Chart to enable/disable this option. (Miguel)
+FEATURE: Support for older versions of xDrip wxl (Dexom G4). For instance: xDrip delivered by xdripkit.co.uk. (Johan)
 ENHANCEMENT: Added transmitter MAC address to Transmitter Screen for all transmitters and firmware version, other firmware version and bluetooth firmware version for Dexcom G5 users. (Joahn & Miguel)
-ENHANCEMENT: Support for older versions of xDrip wxl (Dexom G4). For instance: xDrip delivered by xdripkit.co.uk. (Johan)
 ENHANCEMENT: Updated Spike's internal server endpoints list for developers in Settings -> Integration -> Internal HTTP Server. (Miguel)
 ENHANCEMENT: When user changes the app badge multiplier option (mmol/L), Spike immediately updates the badge. (Miguel)
-ENHANCEMENT: Added an alert in Settings -> Transmitter notifying user that changing transmitter type or ID will stop the current sensor. (Miguel)
+ENHANCEMENT: Added an alert in Settings -> Transmitter screen notifying user that changing transmitter type or ID will stop the current sensor. (Miguel)
 FIX: Dropdown transmitter type list was not displaying correctly on some large screen devices. (Sascha)
 FIX: When in mmol/L, app badge was not applying the multiplier for HIGH/LOW values. (Sascha)
 FIX: HIGH values were displayed as LOW on the Today Widget chart. (Miguel)
@@ -13,6 +13,7 @@ FIX: MiaoMiao users, due to readings on demand, could have more than 12 or 24 re
 FIX: Treatments where not displaying correctly on Nightscout reports when using some specific browsers. Spike now uses a different date format that should display correctly on all browsers. Thank you Sulka Haro for pointing me in the right direction. (Miguel)
 FIX: Users that already have the latest Spike version installed should not get an in-app alert asking to update the app. (Miguel)
 FIX: Spike will not show duplicate alerts anymore, this includes initial calibration popups. (Miguel)
+FIX: As usual, other small fixes and improvements.
 
 2.0.6
 FIX: The annoying bug in the Today Widget (introduced in version 2.0.4) that was making it not display readings on the graph for followers was only partially fixed. It's 100% fixed now.
