@@ -640,7 +640,7 @@ package services
 		}
 		
 		private static function receivedSensorChanged(be:BlueToothServiceEvent):void {
-			if (Sensor.getActiveSensor() != null) {
+			if (Sensor.getActiveSensor() != null && BlueToothDevice.knowsFSLAge()) {
 				myTrace("in receivedSensorChanged, Stopping the sensor"); 
 				Sensor.stopSensor();
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
