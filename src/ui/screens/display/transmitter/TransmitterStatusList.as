@@ -60,6 +60,7 @@ package ui.screens.display.transmitter
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.textures.Texture;
+	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
@@ -774,7 +775,7 @@ package ui.screens.display.transmitter
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			AppInterface.instance.navigator.replaceScreen(Screens.TRANSMITTER, noTransition);
+			SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.navigator.replaceScreen, Screens.TRANSMITTER, noTransition);
 			
 			function noTransition( oldScreen:DisplayObject, newScreen:DisplayObject, completeCallback:Function ):void
 			{

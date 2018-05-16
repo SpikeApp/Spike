@@ -33,6 +33,7 @@ package utils
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -435,7 +436,7 @@ package utils
 				positionHelper.x = Constants.stageWidth / 2;
 			
 			if (emailField != null)
-				emailField.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( emailField.clearFocus );
 		}
 
 		/**

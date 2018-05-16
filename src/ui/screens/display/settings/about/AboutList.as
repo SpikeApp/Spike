@@ -24,6 +24,7 @@ package ui.screens.display.settings.about
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
@@ -160,7 +161,7 @@ package ui.screens.display.settings.about
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			AppInterface.instance.navigator.replaceScreen(Screens.SETTINGS_ABOUT, noTransition);
+			SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.navigator.replaceScreen, Screens.SETTINGS_ABOUT, noTransition);
 			
 			function noTransition( oldScreen:DisplayObject, newScreen:DisplayObject, completeCallback:Function ):void
 			{

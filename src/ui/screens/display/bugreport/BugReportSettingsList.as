@@ -40,6 +40,7 @@ package ui.screens.display.bugreport
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.text.TextFormat;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -474,7 +475,7 @@ package ui.screens.display.bugreport
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			setupContent();
+			SystemUtil.executeWhenApplicationIsActive( setupContent );
 		}
 		
 		/**

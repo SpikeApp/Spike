@@ -23,6 +23,7 @@ package ui.popups
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -485,7 +486,7 @@ package ui.popups
 		
 		private static function onStarlingResize(event:ResizeEvent):void 
 		{
-			calculatePositionHelper();
+			SystemUtil.executeWhenApplicationIsActive(calculatePositionHelper);
 		}
 
 		/**

@@ -39,6 +39,7 @@ package ui.screens
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	import starling.utils.Align;
+	import starling.utils.SystemUtil;
 	
 	import treatments.TreatmentsManager;
 	
@@ -149,7 +150,7 @@ package ui.screens
 			glucoseList = ModelLocator.bgReadings;
 			
 			//Calculate Values
-			calculateValues();
+			SystemUtil.executeWhenApplicationIsActive( calculateValues );
 		}
 		
 		
@@ -514,13 +515,13 @@ package ui.screens
 			}
 			
 			//Calculate Glucose Values and Update Labels
-			calculateValues();
-			updateInfo();
+			SystemUtil.executeWhenApplicationIsActive( calculateValues );
+			SystemUtil.executeWhenApplicationIsActive( updateInfo );
 		}
 		
 		private function onUpdateTimer(event:TimerEvent):void
 		{
-			if (latestGlucoseTimestamp != 0)
+			if (latestGlucoseTimestamp != 0 && SystemUtil.isApplicationActive)
 			{
 				/* Time Ago */
 				var nowTimestamp:Number = new Date().valueOf();
@@ -565,7 +566,7 @@ package ui.screens
 			}
 			
 			/* IOB / COB Display Label */
-			if (IOBCOBDisplay != null)
+			if (IOBCOBDisplay != null && SystemUtil.isApplicationActive)
 			{
 				var now:Number = new Date().valueOf();
 				IOBCOBDisplay.fontStyles.color = timeAgoColor;
@@ -627,8 +628,8 @@ package ui.screens
 			if (IOBCOBDisplay != null)
 				IOBCOBDisplay.width = Constants.stageWidth;
 			
-			calculateValues();
-			updateInfo();
+			SystemUtil.executeWhenApplicationIsActive( calculateValues );
+			SystemUtil.executeWhenApplicationIsActive( updateInfo );
 		}
 		
 		/**

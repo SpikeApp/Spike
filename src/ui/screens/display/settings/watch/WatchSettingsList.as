@@ -47,6 +47,7 @@ package ui.screens.display.settings.watch
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -700,7 +701,7 @@ package ui.screens.display.settings.watch
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			if (displayNameTextInput != null)
-				displayNameTextInput.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( displayNameTextInput.clearFocus );
 			
 			if (instructionsTitleLabel != null)
 				instructionsTitleLabel.width = width - 20;

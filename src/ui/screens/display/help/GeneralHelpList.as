@@ -15,6 +15,7 @@ package ui.screens.display.help
 	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import utils.Constants;
 	
@@ -99,7 +100,7 @@ package ui.screens.display.help
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			setupContent();
+			SystemUtil.executeWhenApplicationIsActive( setupContent );
 		}
 		
 		/**

@@ -35,6 +35,7 @@ package ui.screens.display.settings.integration
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -432,7 +433,7 @@ package ui.screens.display.settings.integration
 			if (userNameTextInput != null)
 			{
 				userNameTextInput.width = Constants.isPortrait ? 140 : 240;
-				userNameTextInput.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( userNameTextInput.clearFocus );
 			}
 			
 			if (passwordTextInput != null)

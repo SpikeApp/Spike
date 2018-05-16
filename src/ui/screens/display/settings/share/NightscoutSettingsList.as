@@ -20,6 +20,7 @@ package ui.screens.display.settings.share
 	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -220,7 +221,7 @@ package ui.screens.display.settings.share
 			
 			if (nsURL != null)
 			{
-				nsURL.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( nsURL.clearFocus );
 				nsURL.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 190 : 220;
 				if (!Constants.isPortrait)
 					nsURL.width += 100;
@@ -228,7 +229,7 @@ package ui.screens.display.settings.share
 			
 			if (nsAPISecret != null)
 			{
-				nsAPISecret.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( nsAPISecret.clearFocus );
 				nsAPISecret.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
 				if (!Constants.isPortrait)
 					nsAPISecret.width += 100;

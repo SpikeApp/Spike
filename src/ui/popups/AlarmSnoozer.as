@@ -238,7 +238,7 @@ package ui.popups
 		
 		private static function onStarlingResize(event:ResizeEvent):void 
 		{
-			calculatePositionHelper();
+			SystemUtil.executeWhenApplicationIsActive( calculatePositionHelper );
 		}
 
 		/**

@@ -31,6 +31,7 @@ package ui.screens.display.settings.share
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -391,7 +392,7 @@ package ui.screens.display.settings.share
 			
 			if (dsUsername != null)
 			{
-				dsUsername.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( dsUsername.clearFocus );
 				dsUsername.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
 				if (!Constants.isPortrait)
 					dsUsername.width += 100;
@@ -399,7 +400,7 @@ package ui.screens.display.settings.share
 			
 			if (dsPassword != null)
 			{
-				dsPassword.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( dsPassword.clearFocus );
 				dsPassword.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
 				if (!Constants.isPortrait)
 					dsPassword.width += 100;
@@ -407,7 +408,7 @@ package ui.screens.display.settings.share
 			
 			if (dsSerial != null)
 			{
-				dsSerial.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( dsSerial.clearFocus );
 				dsSerial.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
 				if (!Constants.isPortrait)
 					dsSerial.width += 100;

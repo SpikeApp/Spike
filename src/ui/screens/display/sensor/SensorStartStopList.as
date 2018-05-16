@@ -34,6 +34,7 @@ package ui.screens.display.sensor
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import treatments.TreatmentsManager;
 	
@@ -451,7 +452,7 @@ package ui.screens.display.sensor
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			AppInterface.instance.navigator.replaceScreen(Screens.SENSOR_STATUS, noTransition);
+			SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.navigator.replaceScreen, Screens.SENSOR_STATUS, noTransition );
 			
 			function noTransition( oldScreen:DisplayObject, newScreen:DisplayObject, completeCallback:Function ):void
 			{
