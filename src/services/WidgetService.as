@@ -152,6 +152,8 @@ package services
 			startupGlucoseReadingsList = ModelLocator.bgReadings.concat();
 			var now:Number = new Date().valueOf();
 			var latestGlucoseReading:BgReading = startupGlucoseReadingsList[startupGlucoseReadingsList.length - 1];
+			var lowestPossibleMmolValue:Number = Math.round(((BgReading.mgdlToMmol((40))) * 10)) / 10;
+			var highestPossibleMmolValue:Number = Math.round(((BgReading.mgdlToMmol((400))) * 10)) / 10;
 			
 			for(var i:int = startupGlucoseReadingsList.length - 1 ; i >= 0; i--)
 			{
@@ -163,16 +165,22 @@ package services
 					if (currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !BlueToothDevice.isFollower()))
 						continue;
 					
-					var glucoseValue:Number = Number(BgGraphBuilder.unitizedString((startupGlucoseReadingsList[i] as BgReading).calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
+					var glucose:String = BgGraphBuilder.unitizedString((startupGlucoseReadingsList[i] as BgReading).calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+					var glucoseValue:Number = Number(glucose);
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 					{
-						if (isNaN(glucoseValue) || glucoseValue < 40)
+						if (isLowValue(glucose) || glucoseValue < 40)
 							glucoseValue = 38;
+						else if (glucose == "HIGH" || glucoseValue > 400)
+							glucoseValue = 400;
 					}
 					else
 					{
-						if (isNaN(glucoseValue) || glucoseValue < 2.2)
-						glucoseValue = 2.2;
+						
+						if (isLowValue(glucose) || glucoseValue < lowestPossibleMmolValue)
+							glucoseValue = lowestPossibleMmolValue;
+						else if (glucose == "HIGH" || glucoseValue > highestPossibleMmolValue)
+							glucoseValue = highestPossibleMmolValue;
 					}
 					
 					activeGlucoseReadingsList.push( { value: glucoseValue, time: getGlucoseTimeFormatted(timestamp, true), timestamp: timestamp } );
@@ -184,7 +192,6 @@ package services
 			activeGlucoseReadingsList.reverse();
 			
 			//Graph Data
-			//BackgroundFetch.setUserDefaultsData("chartData", JSON.stringify(activeGlucoseReadingsList));
 			BackgroundFetch.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 			
 			//Settings
