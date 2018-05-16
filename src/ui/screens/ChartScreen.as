@@ -308,7 +308,80 @@ package ui.screens
 		
 		private function redrawChartForTreatmentsAndLine():void
 		{
-			setTimeout(redrawChart, 1500);
+			redrawChartTimeoutID = setTimeout(redrawChart, 1500);
+		}
+		
+		private function processQueue():void
+		{
+			clearTimeout(queueTimeout);
+			
+			if(!SystemUtil.isApplicationActive)
+			{
+				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
+				
+				return;
+			}
+			
+			try
+			{
+				if (appInBackground)
+				{
+					var queueAddedToChart:Boolean = false;
+					var queueAddedToPie:Boolean = false;
+					
+					appInBackground = false;
+					
+					if (!BlueToothDevice.isFollower())
+					{
+						if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
+						{
+							if (glucoseChart.addGlucose(newReadingsList))
+								queueAddedToChart = true;
+							
+							if (displayPieChart && pieChart != null)
+							{
+								if (pieChart.drawChart())
+									queueAddedToPie = true;
+							}
+							else
+								queueAddedToPie = true;
+							
+							if (queueAddedToChart && queueAddedToPie)
+								newReadingsList.length = 0;
+						}
+						else
+							if (glucoseChart != null)
+								glucoseChart.calculateDisplayLabels();
+					}
+					else
+					{
+						if (newReadingsListFollower != null && newReadingsListFollower.length > 0 && glucoseChart != null)
+						{
+							if (glucoseChart.addGlucose(newReadingsListFollower))
+								queueAddedToChart = true;
+							
+							if (displayPieChart && pieChart != null)
+							{
+								if (pieChart.drawChart())
+									queueAddedToPie = true;
+							}
+							else
+								queueAddedToPie = true;
+							
+							if (queueAddedToChart && queueAddedToPie)
+								newReadingsListFollower.length = 0;
+						}	
+						else if (glucoseChart != null)
+							glucoseChart.calculateDisplayLabels();
+					}
+				}
+			} 
+			catch(error:Error)
+			{
+				Trace.myTrace("ChartScreen.as", "Error adding queue to chart when app came to the foreground. Error: " + error.message);
+				
+				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
+			}
 		}
 		
 		/**
@@ -380,10 +453,6 @@ package ui.screens
 				pieTopPadding = 10;
 			
 			pieChartTotalHeight += pieTopPadding * 2;
-			
-			/*pieChartHeight = 65;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-			pieChartHeight = 100;*/
 			
 			var dummyPieChartStatsSection:PieDistributionSection = new PieDistributionSection(100, 30, 0x000000, 0x000000, 0x000000);
 			dummyPieChartStatsSection.title.text = "N/A";
@@ -540,79 +609,6 @@ package ui.screens
 			SystemUtil.executeWhenApplicationIsActive( processQueue );
 		}
 		
-		private function processQueue():void
-		{
-			clearTimeout(queueTimeout);
-			
-			if(!SystemUtil.isApplicationActive)
-			{
-				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
-				
-				return;
-			}
-			
-			try
-			{
-				if (appInBackground)
-				{
-					var queueAddedToChart:Boolean = false;
-					var queueAddedToPie:Boolean = false;
-					
-					appInBackground = false;
-					
-					if (!BlueToothDevice.isFollower())
-					{
-						if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
-						{
-							if (glucoseChart.addGlucose(newReadingsList))
-								queueAddedToChart = true;
-							
-							if (displayPieChart && pieChart != null)
-							{
-								if (pieChart.drawChart())
-									queueAddedToPie = true;
-							}
-							else
-								queueAddedToPie = true;
-							
-							if (queueAddedToChart && queueAddedToPie)
-								newReadingsList.length = 0;
-						}
-						else
-							if (glucoseChart != null)
-								glucoseChart.calculateDisplayLabels();
-					}
-					else
-					{
-						if (newReadingsListFollower != null && newReadingsListFollower.length > 0 && glucoseChart != null)
-						{
-							if (glucoseChart.addGlucose(newReadingsListFollower))
-								queueAddedToChart = true;
-							
-							if (displayPieChart && pieChart != null)
-							{
-								if (pieChart.drawChart())
-									queueAddedToPie = true;
-							}
-							else
-								queueAddedToPie = true;
-							
-							if (queueAddedToChart && queueAddedToPie)
-								newReadingsListFollower.length = 0;
-						}	
-						else if (glucoseChart != null)
-							glucoseChart.calculateDisplayLabels();
-					}
-				}
-			} 
-			catch(error:Error)
-			{
-				Trace.myTrace("ChartScreen.as", "Error adding queue to chart when app came to the foreground. Error: " + error.message);
-				
-				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
-			}
-		}
-		
 		private function onTimeRangeChange(event:Event):void
 		{
 			var group:ToggleGroup = ToggleGroup( event.currentTarget );
@@ -682,11 +678,6 @@ package ui.screens
 		/**
 		 * Utility
 		 */
-		override protected function draw():void
-		{
-			super.draw();
-		}
-		
 		private function disposeDisplayObjects():void
 		{
 			/* Display Objects */

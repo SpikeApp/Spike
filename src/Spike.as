@@ -161,36 +161,6 @@ package
 			NativeApplication.nativeApplication.addEventListener( flash.events.Event.DEACTIVATE, onDeactivate );
 		}
 		
-		private function onOrientationChanging(e:StageOrientationEvent):void
-		{
-			Constants.currentOrientation = e.afterOrientation;
-		}
-		
-		private function onContextCreated(event:flash.events.Event):void
-		{
-			Trace.myTrace("Spike.as", "onContextCreated! Event Debug: " + ObjectUtil.toString(event));
-		}
-		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			Trace.myTrace("Spike.as", "Stage has been resized. Width: " + stage.stageWidth + ", Height: " + stage.stageHeight);
-			
-			if (starling != null)
-			{
-				starling.stop();
-				
-				Constants.stageWidth = starling.stage.stageWidth;
-				Constants.stageHeight = starling.stage.stageHeight;
-				
-				Starling.current.viewPort.width  = stage.stageWidth;
-				Starling.current.viewPort.height = stage.stageHeight;
-				
-				Constants.isPortrait = stage.stageWidth < stage.stageHeight;
-				
-				SystemUtil.executeWhenApplicationIsActive(starling.start);
-			}
-		}
-		
 		/**
 		 * Event Handlers
 		 */
@@ -259,6 +229,36 @@ package
 
 			//Call Garbage Collector
 			System.pauseForGCIfCollectionImminent(0);
+		}
+		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			Trace.myTrace("Spike.as", "Stage has been resized. Width: " + stage.stageWidth + ", Height: " + stage.stageHeight);
+			
+			if (starling != null)
+			{
+				starling.stop();
+				
+				Constants.stageWidth = starling.stage.stageWidth;
+				Constants.stageHeight = starling.stage.stageHeight;
+				
+				Starling.current.viewPort.width  = stage.stageWidth;
+				Starling.current.viewPort.height = stage.stageHeight;
+				
+				Constants.isPortrait = stage.stageWidth < stage.stageHeight;
+				
+				SystemUtil.executeWhenApplicationIsActive(starling.start);
+			}
+		}
+		
+		private function onOrientationChanging(e:StageOrientationEvent):void
+		{
+			Constants.currentOrientation = e.afterOrientation;
+		}
+		
+		private function onContextCreated(event:flash.events.Event):void
+		{
+			Trace.myTrace("Spike.as", "onContextCreated! Event Debug: " + ObjectUtil.toString(event));
 		}
 		
 		/**
