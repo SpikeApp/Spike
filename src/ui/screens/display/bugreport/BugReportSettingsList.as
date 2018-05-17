@@ -431,12 +431,18 @@ package ui.screens.display.bugreport
 		private function onLoadCompleteHandler(event:flash.events.Event):void 
 		{ 
 			var loader:URLLoader = URLLoader(event.target);
-			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
+			if (loader == null || loader.data == null)
+				return;
 			
 			var response:Object = loader.data;
+			
+			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
 			loader = null;
 			
-			if (response.success == "true")
+			if (sendEmail == null)
+				return;
+			
+			if (response.success != null && response.success == "true")
 			{
 				AlertManager.showSimpleAlert
 				(

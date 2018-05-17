@@ -21,6 +21,7 @@ package utils
 	import feathers.core.PopUpManager;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
@@ -33,6 +34,7 @@ package utils
 	import starling.events.Event;
 	import starling.events.EventDispatcher;
 	import starling.events.ResizeEvent;
+	import starling.text.TextFormat;
 	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
@@ -327,11 +329,17 @@ package utils
 		 */
 		private static function onSend(e:starling.events.Event):void
 		{
+			if (emailLabel == null || sendButton == null || output == null || output == "")
+				return;
+			
 			Trace.myTrace("SiDiary.as", "Sending CSV file...");
 			
 			//Validation
 			emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label");
-			emailLabel.fontStyles.color = 0xEEEEEE;
+			if (emailLabel.fontStyles != null)
+				emailLabel.fontStyles.color = 0xEEEEEE;
+			else
+				emailLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.TOP)
 			
 			if (emailField.text == "")
 			{

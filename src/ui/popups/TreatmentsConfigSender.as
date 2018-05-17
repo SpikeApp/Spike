@@ -16,6 +16,7 @@ package ui.popups
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
 	import model.ModelLocator;
@@ -25,6 +26,7 @@ package ui.popups
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.text.TextFormat;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -140,9 +142,15 @@ package ui.popups
 		 */
 		private static function onClose(e:starling.events.Event):void
 		{
+			if (emailLabel == null || sendButton == null)
+				return;
+			
 			//Validation
 			emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label");
-			emailLabel.fontStyles.color = 0xEEEEEE;
+			if (emailLabel.fontStyles != null)
+				emailLabel.fontStyles.color = 0xEEEEEE;
+			else
+				emailLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.TOP)
 			
 			if (emailField.text == "")
 			{

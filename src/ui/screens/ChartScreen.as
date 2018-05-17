@@ -157,13 +157,8 @@ package ui.screens
 			Constants.isPortrait ? glucoseChartTopPadding = 7 : glucoseChartTopPadding = 0;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4) glucoseChartTopPadding = 0;
 			if (glucoseChartTopPadding == 0) availableScreenHeight += 7;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X) 
-			{
-				availableScreenHeight -= 15; //To avoid lower nudge
-				
-				if (Constants.currentOrientation == StageOrientation.UPSIDE_DOWN)
-					availableScreenHeight -= 15; //To avoid inverted status bar
-			}
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+				availableScreenHeight -= 15; //To avoid lower notch
 			
 			mainChartHeight = availableScreenHeight;
 			

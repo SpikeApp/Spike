@@ -161,6 +161,7 @@ package ui.popups
 					if (queuedAlert.title == title && queuedAlert.message == message)
 					{
 						//Found duplicate. Remove it!
+						queuedAlert.removeEventListeners();
 						alertQueue.removeAt(i);
 						SystemUtil.executeWhenApplicationIsActive( queuedAlert.dispose );
 						queuedObject = null;

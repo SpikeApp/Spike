@@ -38,7 +38,7 @@ package services
 		public static const TUTORIAL_FINISHED:String = "tutorialFinished";
 		
 		/* Objects */
-		public static var instance:TutorialService = new TutorialService();
+		private static var _instance:TutorialService;
 		
 		/* Display Objects */
 		private static var firstStepCallout:TextCallout;
@@ -351,6 +351,17 @@ package services
 				callout.dispose();
 				callout = null;
 			}
+		}
+
+		/**
+		 * Getters & Setters
+		 */
+		public static function get instance():TutorialService
+		{
+			if (_instance == null)
+				_instance = new TutorialService();
+			
+			return _instance;
 		}
 	}
 }

@@ -405,7 +405,7 @@ package ui.screens.display.settings.alarms
 		
 		private function showAlarmCustomizerCallout(forceCreation:Boolean = false):void
 		{
-			if (forceCreation)
+			if (forceCreation || alarmCustomizerCallout == null)
 			{
 				setupCalloutPosition();
 				
