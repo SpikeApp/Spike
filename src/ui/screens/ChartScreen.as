@@ -147,10 +147,18 @@ package ui.screens
 		private function createChart():void
 		{	
 			//When in landscape mode and device is iPhone X, make the header height same as oher models, we don't need to worry about the extra status bar size
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 			{
-				this.header.height = 78;
-				this.header.maxHeight = 78;
+				if (Constants.isPortrait)
+				{
+					this.header.height = 108;
+					this.header.maxHeight = 108;	
+				}
+				else
+				{
+					this.header.height = 78;
+					this.header.maxHeight = 78;
+				}
 			}
 			
 			var availableScreenHeight:Number = Constants.stageHeight - this.header.height;
