@@ -23,12 +23,15 @@ package ui.screens.display.treatments
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.display.Canvas;
 	import starling.display.Image;
 	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.textures.RenderTexture;
+	import starling.utils.SystemUtil;
 	
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
@@ -83,6 +86,8 @@ package ui.screens.display.treatments
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -305,10 +310,13 @@ package ui.screens.display.treatments
 		private function setupCalloutPosition():void
 		{
 			//Position helper for the callout
-			positionHelper = new Sprite();
+			if (positionHelper == null)
+			{
+				positionHelper = new Sprite();
+				addChild(positionHelper);
+			}
 			positionHelper.x = (Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2)) / 2;
 			positionHelper.y = 0;
-			addChild(positionHelper);
 		}
 		
 		private function createTreatmentIcon(treatmentType:String):Canvas
@@ -386,12 +394,20 @@ package ui.screens.display.treatments
 			}
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			SystemUtil.executeWhenApplicationIsActive( setupCalloutPosition );
+		}
+		
 		/**
 		 * Utility
 		 */
-		
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			//Clear accessories
 			if (accessoryDictionary != null)
 			{

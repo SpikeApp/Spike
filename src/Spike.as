@@ -148,8 +148,6 @@ package
 			//Starling.current.showStatsAt("left", "bottom");
 			scaler = new ScreenDensityScaleFactorManager( starling );
 			
-			Constants.isPortrait = stage.stageWidth < stage.stageHeight;
-			
 			/* Initialize Constants */
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			Constants.isPortrait = starling.stage.stageWidth < starling.stage.stageHeight;
