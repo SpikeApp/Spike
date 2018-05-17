@@ -325,9 +325,6 @@ package services
 				calloutLocationHelper.dispose();
 				calloutLocationHelper = null;
 			}
-			
-			if (instance != null)
-				instance = null;
 		}
 		
 		/**

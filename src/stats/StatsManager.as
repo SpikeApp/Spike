@@ -84,14 +84,14 @@ package stats
 					followerUserStats.percentageInRange = 100;
 					followerUserStats.percentageInRangeRounded = 100;
 				}
-				else if (followerUserStats.percentageHighRounded = 0 && followerUserStats.percentageInRangeRounded == 0)
+				else if (followerUserStats.percentageHighRounded == 0 && followerUserStats.percentageInRangeRounded == 0)
 				{
 					followerUserStats.percentageHigh = 0;
 					followerUserStats.percentageInRange = 0;
 					followerUserStats.percentageLow = 100;
 					followerUserStats.percentageLowRounded = 100;
 				}
-				else if (followerUserStats.percentageLowRounded = 0 && followerUserStats.percentageInRangeRounded == 0)
+				else if (followerUserStats.percentageLowRounded == 0 && followerUserStats.percentageInRangeRounded == 0)
 				{
 					followerUserStats.percentageLow = 0;
 					followerUserStats.percentageInRange = 0;
