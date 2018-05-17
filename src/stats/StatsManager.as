@@ -75,6 +75,30 @@ package stats
 					followerUserStats.percentageLow = 100 - followerUserStats.percentageInRange - followerUserStats.percentageHigh;
 					followerUserStats.percentageLowRounded = Math.round ((100 - followerUserStats.percentageInRangeRounded - followerUserStats.percentageHighRounded) * 10) / 10;
 				}
+				
+				//Overcome AS3 number precision limitation
+				if (followerUserStats.percentageHighRounded == 0 && followerUserStats.percentageLowRounded == 0)
+				{
+					followerUserStats.percentageHigh = 0;
+					followerUserStats.percentageLow = 0;
+					followerUserStats.percentageInRange = 100;
+					followerUserStats.percentageInRangeRounded = 100;
+				}
+				else if (followerUserStats.percentageHighRounded = 0 && followerUserStats.percentageInRangeRounded == 0)
+				{
+					followerUserStats.percentageHigh = 0;
+					followerUserStats.percentageInRange = 0;
+					followerUserStats.percentageLow = 100;
+					followerUserStats.percentageLowRounded = 100;
+				}
+				else if (followerUserStats.percentageLowRounded = 0 && followerUserStats.percentageInRangeRounded == 0)
+				{
+					followerUserStats.percentageLow = 0;
+					followerUserStats.percentageInRange = 0;
+					followerUserStats.percentageHigh = 100;
+					followerUserStats.percentageHighRounded = 100;
+				}
+				
 				followerUserStats.averageGlucose = (( (totalGlucose / realReadingsNumber) * 10 + 0.5)  >> 0) / 10;
 				if (realReadingsNumber != 0)
 				{
