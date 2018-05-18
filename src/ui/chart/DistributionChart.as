@@ -16,10 +16,8 @@ package ui.chart
 	import model.ModelLocator;
 	
 	import starling.animation.Transitions;
-	import starling.display.DisplayObject;
 	import starling.display.Quad;
 	import starling.display.Sprite;
-	import starling.display.graphics.NGon;
 	import starling.events.Event;
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
@@ -31,7 +29,7 @@ package ui.chart
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
-	import ui.shapes.SpikeDisplayObject;
+	import ui.shapes.SpikeNGon;
 	
 	import utils.Constants;
 	
@@ -48,7 +46,7 @@ package ui.chart
 		private var pieTimer:Number;
 		
 		//Display Variables
-		private var numSides:int = 200;
+		private var numSides:int = 150;
 		private var lowColor:uint = 0xff0000;//red
 		private var inRangeColor:uint = 0x00ff00;//green
 		private var highColor:uint = 0xffff00;//yellow
@@ -76,14 +74,13 @@ package ui.chart
 		private var estA1CSection:PieDistributionSection;
 		private var numReadingsSection:PieDistributionSection;
 		private var pieBackground:Quad;
-		private var lowNGon:NGon;
-		private var inRangeNGon:NGon;
-		private var highNGon:NGon;
-		private var innerNGon:NGon;
-		private var middleNGon:NGon;
-		private var outterNGon:NGon;
+		private var lowNGonSpike:SpikeNGon;
+		private var inRangeNGonSpike:SpikeNGon;
+		private var highNGonSpike:SpikeNGon;
+		private var innerNGonSpike:SpikeNGon;
+		private var middleNGonSpike:SpikeNGon;
+		private var outterNGonSpike:SpikeNGon;
 		private var statsHitArea:Quad;
-		private var pieGraphicImage:SpikeDisplayObject;
 		
 		[ResourceBundle("globaltranslations")]
 		
@@ -270,12 +267,11 @@ package ui.chart
 			//LOW PORTION
 			if (!dummyModeActive)
 			{
-				if (lowNGon != null) lowNGon.removeFromParent(true);
-				lowNGon = new NGon(pieRadius, numSides, 0, 0, lowAngle);
-				lowNGon.color = lowColor;
-				lowNGon.x = lowNGon.y = pieRadius;
-				nGons.push(lowNGon);
-				pieGraphicContainer.addChild(lowNGon);
+				if (lowNGonSpike != null) lowNGonSpike.removeFromParent(true);
+				lowNGonSpike = new SpikeNGon(pieRadius, numSides, 0, lowAngle, lowColor);
+				lowNGonSpike.x = lowNGonSpike.y = pieRadius;
+				nGons.push(lowNGonSpike);
+				pieGraphicContainer.addChild(lowNGonSpike);
 			}
 			//Legend
 			lowSection.message.text = !dummyModeActive ? userStats.percentageLowRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
@@ -284,12 +280,11 @@ package ui.chart
 			//Graphics
 			if (!dummyModeActive)
 			{
-				if (inRangeNGon != null) inRangeNGon.removeFromParent(true);
-				inRangeNGon = new NGon(pieRadius, numSides, 0, lowAngle, lowAngle + inRangeAngle);
-				inRangeNGon.color = inRangeColor;
-				inRangeNGon.x = inRangeNGon.y = pieRadius;
-				nGons.push(inRangeNGon);
-				pieGraphicContainer.addChild(inRangeNGon);
+				if (inRangeNGonSpike != null) inRangeNGonSpike.removeFromParent(true);
+				inRangeNGonSpike = new SpikeNGon(pieRadius, numSides, lowAngle, lowAngle + inRangeAngle, inRangeColor);
+				inRangeNGonSpike.x = inRangeNGonSpike.y = pieRadius;
+				nGons.push(inRangeNGonSpike);
+				pieGraphicContainer.addChild(inRangeNGonSpike);
 			}
 			//Legend
 			inRangeSection.message.text = !dummyModeActive ? userStats.percentageInRangeRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
@@ -298,12 +293,11 @@ package ui.chart
 			//Graphics
 			if (!dummyModeActive)
 			{
-				if (highNGon != null) highNGon.removeFromParent(true);
-				highNGon = new NGon(pieRadius, numSides, 0, lowAngle + inRangeAngle, lowAngle + inRangeAngle + highAngle);
-				highNGon.color = highColor;
-				highNGon.x = highNGon.y = pieRadius;
-				nGons.push(highNGon);
-				pieGraphicContainer.addChild(highNGon);
+				if (highNGonSpike != null) highNGonSpike.removeFromParent(true);
+				highNGonSpike = new SpikeNGon(pieRadius, numSides, lowAngle + inRangeAngle, lowAngle + inRangeAngle + highAngle, highColor);
+				highNGonSpike.x = highNGonSpike.y = pieRadius;
+				nGons.push(highNGonSpike);
+				pieGraphicContainer.addChild(highNGonSpike);
 			}
 			//Legend
 			highSection.message.text = !dummyModeActive ? userStats.percentageHighRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
@@ -311,40 +305,29 @@ package ui.chart
 			//DUMMY NGON
 			if (dummyModeActive)
 			{
-				if (innerNGon != null) innerNGon.removeFromParent(true);
-				innerNGon = new NGon(pieRadius, numSides, 0, 0, 360);
-				innerNGon.color = lowColor;
-				innerNGon.x = innerNGon.y = pieRadius;
-				nGons.push(innerNGon);
-				pieGraphicContainer.addChild(innerNGon);
+				if (outterNGonSpike != null) outterNGonSpike.removeFromParent(true);
+				outterNGonSpike = new SpikeNGon(pieRadius, numSides, 0, 360, highColor);
+				outterNGonSpike.x = outterNGonSpike.y = pieRadius;
+				nGons.push(outterNGonSpike);
+				pieGraphicContainer.addChild(outterNGonSpike);
 				
-				if (middleNGon != null) middleNGon.removeFromParent(true);
-				middleNGon = new NGon(pieRadius, numSides, pieRadius/3, 0, 360);
-				middleNGon.color = inRangeColor;
-				middleNGon.x = middleNGon.y = pieRadius;
-				nGons.push(middleNGon);
-				pieGraphicContainer.addChild(middleNGon);
+				if (middleNGonSpike != null) middleNGonSpike.removeFromParent(true);
+				middleNGonSpike = new SpikeNGon((pieRadius / 3) * 2, numSides, 0, 360, inRangeColor);
+				middleNGonSpike.x = middleNGonSpike.y = pieRadius;
+				nGons.push(middleNGonSpike);
+				pieGraphicContainer.addChild(middleNGonSpike);
 				
-				if (outterNGon != null) outterNGon.removeFromParent(true);
-				outterNGon = new NGon(pieRadius, numSides, (pieRadius/3) * 2, 0, 360);
-				outterNGon.color = highColor;
-				outterNGon.x = outterNGon.y = pieRadius;
-				nGons.push(outterNGon);
-				pieGraphicContainer.addChild(outterNGon);
+				if (innerNGonSpike != null) innerNGonSpike.removeFromParent(true);
+				innerNGonSpike = new SpikeNGon(pieRadius / 3, numSides, 0, 360, lowColor);
+				innerNGonSpike.x = innerNGonSpike.y = pieRadius;
+				nGons.push(innerNGonSpike);
+				pieGraphicContainer.addChild(innerNGonSpike);
 			}
-			
-			//Create pie chart texture representation
-			if (pieGraphicImage != null)
-			{
-				pieGraphicImage.removeFromParent();
-				pieGraphicImage.dispose();
-				pieGraphicImage = null;
-			}
-			pieGraphicImage = GraphLayoutFactory.createImageFromShape(pieGraphicContainer);
 			
 			//Add pie to display list
-			pieContainer.addChild(pieGraphicImage);
+			pieContainer.addChild(pieGraphicContainer);
 			
+			//Average glucose
 			var averageGlucoseValueOutput:String
 			if (glucoseUnit == "mg/dL")
 				averageGlucoseValueOutput = String(userStats.averageGlucose);
@@ -457,18 +440,62 @@ package ui.chart
 			//Event Listeners
 			removeEventListener(Event.ENTER_FRAME, onPieHold);
 			
+		
 			/* Dispose Display Objects */
 			for (var i:int = 0; i < nGons.length; i++) 
 			{
-				var nGon:DisplayObject = nGons[i] as DisplayObject;
+				var nGon:SpikeNGon = nGons[i] as SpikeNGon;
 				if (nGon != null)
 				{
+					nGon.removeFromParent();
 					nGon.dispose();
 					nGon = null;
 				}
 			}
 			nGons.length = 0;
-			nGons = null;
+			nGons = null
+			
+			if (lowNGonSpike != null)
+			{
+				lowNGonSpike.removeFromParent();
+				lowNGonSpike.dispose();
+				lowNGonSpike = null;
+			}
+			
+			if (inRangeNGonSpike != null)
+			{
+				inRangeNGonSpike.removeFromParent();
+				inRangeNGonSpike.dispose();
+				inRangeNGonSpike = null;
+			}
+			
+			if (highNGonSpike != null)
+			{
+				highNGonSpike.removeFromParent();
+				highNGonSpike.dispose();
+				highNGonSpike = null;
+			}
+			
+			if (innerNGonSpike != null)
+			{
+				innerNGonSpike.removeFromParent();
+				innerNGonSpike.dispose();
+				innerNGonSpike = null;
+			}
+			
+			if (middleNGonSpike != null)
+			{
+				middleNGonSpike.removeFromParent();
+				middleNGonSpike.dispose();
+				middleNGonSpike = null;
+			}
+			
+			if (outterNGonSpike != null)
+			{
+				outterNGonSpike.removeFromParent();
+				outterNGonSpike.dispose();
+				outterNGonSpike = null;
+			}
 			
 			if (lowSection != null)
 			{
@@ -519,60 +546,11 @@ package ui.chart
 				pieBackground = null;
 			}
 			
-			if (lowNGon != null)
-			{
-				lowNGon.removeFromParent();
-				lowNGon.dispose();
-				lowNGon = null;
-			}
-			
-			if (inRangeNGon != null)
-			{
-				inRangeNGon.removeFromParent();
-				inRangeNGon.dispose();
-				inRangeNGon = null;
-			}
-			
-			if (highNGon != null)
-			{
-				highNGon.removeFromParent();
-				highNGon.dispose();
-				highNGon = null;
-			}
-			
-			if (innerNGon != null)
-			{
-				innerNGon.removeFromParent();
-				innerNGon.dispose();
-				innerNGon = null;
-			}
-			
-			if (middleNGon != null)
-			{
-				middleNGon.removeFromParent();
-				middleNGon.dispose();
-				middleNGon = null;
-			}
-			
-			if (outterNGon != null)
-			{
-				outterNGon.removeFromParent();
-				outterNGon.dispose();
-				outterNGon = null;
-			}
-			
 			if (statsContainer != null)
 			{
 				statsContainer.removeFromParent();
 				statsContainer.dispose();
 				statsContainer = null;
-			}
-			
-			if (pieGraphicImage != null)
-			{
-				pieGraphicImage.removeFromParent();
-				pieGraphicImage.dispose();
-				pieGraphicImage = null;
 			}
 			
 			if (pieContainer != null)

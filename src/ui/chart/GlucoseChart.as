@@ -55,6 +55,7 @@ package ui.chart
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
+	import ui.shapes.SpikeSuperLine;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -589,9 +590,9 @@ package ui.chart
 			//Line Chart
 			if(_displayLine)
 			{
-				var line:Shape = new Shape();
+				var line:SpikeSuperLine = new SpikeSuperLine();
 				line.touchable = false;
-				line.graphics.lineStyle(1, 0xFFFFFF, 1);
+				line.lineStyle(1, 0xFFFFFF, 1);
 			}
 			
 			/**
@@ -646,7 +647,7 @@ package ui.chart
 				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
-						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.width / 2));
+						line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.width / 2));
 					else
 					{
 						var currentLineX:Number;
@@ -664,16 +665,16 @@ package ui.chart
 						}
 						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-						line.graphics.lineStyle(1, glucoseMarker.color, 1);
+						line.lineStyle(1, glucoseMarker.color, 1);
 						if(i > 0)
 						{
 							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
 							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-								line.graphics.lineStyle(1, oldColor, 1);
+								line.lineStyle(1, oldColor, 1);
 						}	
 						
-						line.graphics.lineTo(currentLineX, currentLineY);
-						line.graphics.moveTo(currentLineX, currentLineY);
+						line.lineTo(currentLineX, currentLineY);
+						line.moveTo(currentLineX, currentLineY);
 					}
 					//Hide glucose marker
 					glucoseMarker.alpha = 0;
@@ -1982,9 +1983,9 @@ package ui.chart
 			//Line Chart
 			if(_displayLine)
 			{
-				var line:Shape = new Shape();
+				var line:SpikeSuperLine = new SpikeSuperLine();
 				line.touchable = false;
-				line.graphics.lineStyle(1, 0xFFFFFF, 1);
+				line.lineStyle(1, 0xFFFFFF, 1);
 			}
 			
 			//Loop through all available data points
@@ -2064,7 +2065,7 @@ package ui.chart
 				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
-						line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
+						line.moveTo(glucoseMarker.x, glucoseMarker.y);
 					else
 					{
 						var currentLineX:Number;
@@ -2082,16 +2083,16 @@ package ui.chart
 						}
 						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-						line.graphics.lineStyle(1, glucoseMarker.color, 1);
+						line.lineStyle(1, glucoseMarker.color, 1);
 						if(i > 0)
 						{
 							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
 							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-								line.graphics.lineStyle(1, oldColor, 1);
+								line.lineStyle(1, oldColor, 1);
 						}
 						
-						line.graphics.lineTo(currentLineX, currentLineY);
-						line.graphics.moveTo(currentLineX, currentLineY);
+						line.lineTo(currentLineX, currentLineY);
+						line.moveTo(currentLineX, currentLineY);
 					}
 					//Hide glucose marker
 					glucoseMarker.alpha = 0;
@@ -2154,6 +2155,84 @@ package ui.chart
 		{
 			if (!SystemUtil.isApplicationActive)
 				return;
+			
+			var line:SpikeSuperLine = new SpikeSuperLine();
+			line.touchable = false;
+			
+			//Define what chart needs line to be drawns
+			var sourceList:Array;
+			if(chartType == MAIN_CHART)
+				sourceList = mainChartGlucoseMarkersList;
+			else if (chartType == SCROLLER_CHART)
+				sourceList = scrollChartGlucoseMarkersList;
+			
+			if (sourceList == null || sourceList.length == 0)
+				return;
+			
+			//Loop all markers, draw the line from their positions and also hide the markers
+			var previousGlucoseMarker:GlucoseMarker;
+			var dataLength:int = sourceList.length;
+			for (var i:int = 0; i < dataLength; i++) 
+			{
+				var glucoseMarker:GlucoseMarker = sourceList[i];
+				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !BlueToothDevice.isFollower()))
+					continue;
+				
+				var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
+				
+				if(i == 0)
+				{
+					line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.height/2));
+				}
+				else
+				{
+					var currentLineX:Number;
+					var currentLineY:Number;
+					
+					if(i < dataLength -1)
+					{
+						currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
+						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
+					}
+					else if (i == dataLength -1)
+					{
+						currentLineX = glucoseMarker.x + (glucoseMarker.width);
+						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
+					}
+					
+					//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+					line.lineStyle(1, glucoseMarker.color, 1);
+					if(i > 0)
+					{
+						if (previousGlucoseMarker != null && glucoseMarker != null)
+						{
+							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
+							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
+								line.lineStyle(1, oldColor, 1);
+						}
+					}	
+					
+					line.lineTo(currentLineX, currentLineY);
+					line.moveTo(currentLineX, currentLineY);
+				}
+				//Hide glucose marker
+				glucoseMarker.alpha = 0;
+				previousGlucoseMarker = glucoseMarker;
+			}
+			
+			//Add line to display list
+			if(chartType == MAIN_CHART && mainChart != null)
+				mainChart.addChild(line);
+			else if(chartType == SCROLLER_CHART && scrollerChart != null)
+				scrollerChart.addChild(line);
+			
+			//Save line references for later use
+			if(chartType == MAIN_CHART && mainChartLineList != null)
+				mainChartLineList.push(line);
+			else if (chartType == SCROLLER_CHART && scrollerChartLineList != null)
+				scrollerChartLineList.push(line);
+			
+			/*
 			
 			//Line container
 			var line:Shape = new Shape();
@@ -2231,6 +2310,8 @@ package ui.chart
 				mainChartLineList.push(line);
 			else if (chartType == SCROLLER_CHART && scrollerChartLineList != null)
 				scrollerChartLineList.push(line);
+			
+			*/
 		}
 		
 		public function calculateDisplayLabels():void
