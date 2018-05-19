@@ -1,8 +1,8 @@
 2.0.9
 ENHANCEMENT: Increased graphics quality for glucose markers and all treatments present on the chart. (Miguel)
-ENHANCEMENT: Several optimizations were made to Spike's 3D engine. (Miguel)
+ENHANCEMENT: Several optimizations were made to Spike's 3D engine which reflect in less draw calls to the GPU. (Miguel)
 ENHANCEMENT: Better sizing logic for the chart screen header for iPhone X when in portrait and landscape mode. (Miguel)
-FIX: Fixed disappearing display objects for some iPhone X users when switching to landscape. (Miguel)
+FIX: Fixed disappearing display objects for some iPhone X and old devices (ex: iPhone 4S) when switching to landscape mode. Special thanks to Christian Rol for helping me test this on his iPhone X. (Miguel)
 FIX: Landscape support for treatments manager screen was missing. (Miguel)
 FIX: Other small fixes and improvements. (Miguel)
 
