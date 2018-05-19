@@ -58,18 +58,23 @@ package ui
 		public var drawers:Drawers;
 		public var navigator:StackScreenNavigator;
 		public var chartSettingsScreenItem:StackScreenNavigatorItem;
+		private var spikeIsActive:Boolean = false;
 		
 		public function AppInterface() 
 		{
-			super();
 			_instance = this;
 		}
 		
 		public function start():void 
 		{
-			Constants.deviceModel = DeviceInfo.getDeviceType();
-
-			SystemUtil.executeWhenApplicationIsActive( InterfaceController.init );
+			if (!spikeIsActive)
+			{
+				spikeIsActive = true;
+				
+				Constants.deviceModel = DeviceInfo.getDeviceType();
+	
+				SystemUtil.executeWhenApplicationIsActive( InterfaceController.init );
+			}
 		}
 		
 		public function init():void
