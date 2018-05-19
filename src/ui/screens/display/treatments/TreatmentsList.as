@@ -55,6 +55,7 @@ package ui.screens.display.treatments
 		private var treatmentsEnabled:Boolean = false;
 		private var numBgReadings:int = 0;
 		private var canAddTreatments:Boolean = false;
+		private var canSeeTreatments:Boolean = false;
 		
 		public function TreatmentsList()
 		{
@@ -123,6 +124,9 @@ package ui.screens.display.treatments
 			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || ModelLocator.INTERNAL_TESTING == true)
 				canAddTreatments = true;
 			
+			if (numBgReadings > 2 || ModelLocator.INTERNAL_TESTING == true)
+				canSeeTreatments = true;
+			
 			var menuData:Array = [];
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
@@ -136,7 +140,7 @@ package ui.screens.display.treatments
 			}
 			if (treatmentsEnabled)
 			{
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canAddTreatments, id: 7 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canSeeTreatments, id: 7 } );
 			}
 			
 			dataProvider = new ListCollection(menuData);
@@ -176,6 +180,23 @@ package ui.screens.display.treatments
 			}
 			setItemRendererFactoryWithID( "treatment-item", treatmentItemFactory );
 			
+			function treatmentListItemFactory():IListItemRenderer
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.iconField = "icon";
+				item.itemHasSelectable = true;
+				item.selectableField = "selectable";
+				item.gap = 5;
+				if(!canSeeTreatments)
+					item.alpha = 0.4;
+				item.paddingLeft = 8;
+				item.paddingRight = 14;
+				item.isQuickHitAreaEnabled = true;
+				return item;
+			}
+			setItemRendererFactoryWithID( "treatment-list-item", treatmentListItemFactory );
+			
 			//Menu Factory
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
@@ -185,6 +206,8 @@ package ui.screens.display.treatments
 						return "calibration-item";
 					else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6)
 						return "treatment-item";
+					else if(index == 6)
+						return "treatment-list-item";
 					
 					return "default-item";
 				};
@@ -193,7 +216,7 @@ package ui.screens.display.treatments
 			{
 				factoryIDFunction = function( item:Object, index:int ):String
 				{
-					return "treatment-item";
+					return "treatment-list-item";
 				};
 			}
 			

@@ -7,32 +7,36 @@ package ui.chart
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
-	import starling.display.Canvas;
-	import starling.display.Shape;
-	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
-	import ui.shapes.SpikeDisplayObject;
+	import ui.shapes.SpikeNGon;
+	
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	public class BGCheckMarker extends ChartTreatment
 	{
 		/* Display Objects */
 		private var label:Label;
-		private var BGMarker:Canvas;
-		private var stroke:SpikeDisplayObject;
+		private var BGMarker:SpikeNGon;
+		private var stroke:SpikeNGon;
 		
 		/* Properties */
 		private var fontSize:int = 11;
 		private var backgroundColor:uint;
 		private var strokeColor:uint;
 		private var chartTimeline:Number;
+		private var numSides:int = 30;
+		private const strokeThickness:Number = 0.8;
 		
 		public function BGCheckMarker(treatment:Treatment, timeline:Number)
 		{
 			this.treatment = treatment;
 			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_BGCHECK_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				numSides = 20;
 			
 			chartTimeline = timeline;
 			
@@ -52,21 +56,17 @@ package ui.chart
 			else if (chartTimeline == GlucoseChart.TIMELINE_24H)
 				fontSize *= 0.6;
 			
-			//Background
-			BGMarker = new Canvas();
-			BGMarker.beginFill(backgroundColor);
-			BGMarker.drawCircle(radius / 3, radius + radius/4, radius);
-			addChild(BGMarker);
-			
 			//Stroke
-			var strokeShape:Shape = new Shape();
-			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
-			strokeShape.graphics.drawCircle(radius, radius, radius);
-			
-			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
-			stroke.y = radius/4;
-			stroke.x = -radius/1.5;
+			stroke = new SpikeNGon(radius + strokeThickness, numSides, 0, 360, strokeColor);
+			stroke.x = radius / 3;
+			stroke.y = radius + radius/4;
 			addChild(stroke);
+			
+			//Background
+			BGMarker = new SpikeNGon(radius, numSides, 0, 360, backgroundColor);
+			BGMarker.x = radius / 3;
+			BGMarker.y = radius + radius/4;
+			addChild(BGMarker);
 			
 			//Label
 			var glucoseValue:Number;

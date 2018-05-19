@@ -1,33 +1,25 @@
 package ui.chart
 {
-	import flash.display.BitmapData;
-	
 	import database.CommonSettings;
 	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
-	import starling.core.Starling;
-	import starling.display.Canvas;
-	import starling.display.DisplayObject;
-	import starling.display.Image;
-	import starling.display.Quad;
-	import starling.display.Shape;
-	import starling.display.Sprite;
-	import starling.textures.Texture;
-	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
-	import ui.shapes.SpikeDisplayObject;
+	import ui.shapes.SpikeNGon;
+	
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	public class InsulinMarker extends ChartTreatment
 	{
 		/* Display Objects */
 		private var label:Label;
-		private var insulinMarker:Canvas;
-		private var stroke:SpikeDisplayObject;
+		private var insulinMarker:SpikeNGon;
+		private var stroke:SpikeNGon;
 		
 		/* Properties */
 		private var fontSize:Number = 11;
@@ -35,12 +27,16 @@ package ui.chart
 		private var strokeColor:uint;
 		private var initialRadius:Number = 8;
 		private var chartTimeline:Number;
+		private var numSides:int = 30;
+		private const strokeThickness:Number = 0.8;
 		
 		public function InsulinMarker(treatment:Treatment, timeline:Number)
 		{
 			this.treatment = treatment;
 			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				numSides = 20;
 			
 			chartTimeline = timeline;
 			
@@ -78,21 +74,17 @@ package ui.chart
 			if (treatment.insulinAmount < 1)
 				fontSize -= 1.5;
 			
-			//Background
-			insulinMarker = new Canvas();
-			insulinMarker.beginFill(backgroundColor);
-			insulinMarker.drawCircle(radius / 3, radius + radius/4, radius);
-			addChild(insulinMarker);
-			
 			//Stroke
-			var strokeShape:Shape = new Shape();
-			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
-			strokeShape.graphics.drawCircle(radius, radius, radius);
-			
-			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
-			stroke.y = radius/4;
-			stroke.x = -radius/1.5;
+			stroke = new SpikeNGon(radius + strokeThickness, numSides, 0, 360, strokeColor);
+			stroke.x = radius / 3;
+			stroke.y = radius + radius/4;
 			addChild(stroke);
+			
+			//Background
+			insulinMarker = new SpikeNGon(radius, numSides, 0, 360, backgroundColor);
+			insulinMarker.x = radius / 3;
+			insulinMarker.y = radius + radius/4;
+			addChild(insulinMarker);
 			
 			//Label
 			label = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);

@@ -6,20 +6,20 @@ package ui.chart
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
-	import starling.display.Canvas;
-	import starling.display.Shape;
-	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
-	import ui.shapes.SpikeDisplayObject;
+	import ui.shapes.SpikeNGon;
+	
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	public class CarbsMarker extends ChartTreatment
 	{
 		/* Display Objects */
 		private var label:Label;
-		private var carbsMarker:Canvas;
-		private var stroke:SpikeDisplayObject;
+		private var carbsMarker:SpikeNGon;
+		private var stroke:SpikeNGon;
 		
 		/* Properties */
 		private var fontSize:int = 11;
@@ -27,12 +27,16 @@ package ui.chart
 		private var strokeColor:uint;
 		private var initialRadius:Number = 4;
 		private var chartTimeline:Number;
+		private var numSides:int = 30;
+		private const strokeThickness:Number = 0.8;
 		
 		public function CarbsMarker(treatment:Treatment, timeline:Number)
 		{
 			this.treatment = treatment;
 			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				numSides = 20;
 			
 			chartTimeline = timeline;
 			
@@ -62,21 +66,17 @@ package ui.chart
 				fontSize *= 0.6;
 			}
 			
-			//Background
-			carbsMarker = new Canvas();
-			carbsMarker.beginFill(backgroundColor);
-			carbsMarker.drawCircle(radius / 3, radius + radius/4, radius);
-			addChild(carbsMarker);
-			
 			//Stroke
-			var strokeShape:Shape = new Shape();
-			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
-			strokeShape.graphics.drawCircle(radius, radius, radius);
-			
-			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
-			stroke.y = radius/4;
-			stroke.x = -radius/1.5;
+			stroke = new SpikeNGon(radius + strokeThickness, numSides, 0, 360, strokeColor);
+			stroke.x = radius / 3;
+			stroke.y = radius + radius/4;
 			addChild(stroke);
+			
+			//Background
+			carbsMarker = new SpikeNGon(radius, numSides, 0, 360, backgroundColor);
+			carbsMarker.x = radius / 3;
+			carbsMarker.y = radius + radius/4;
+			addChild(carbsMarker);
 			
 			//Label
 			label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);

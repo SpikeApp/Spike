@@ -106,10 +106,10 @@ package ui.chart
 			if (!isNaN(borderColor))
 			{
 				border = new SpikeLine();
+				border.lineStyle(1, borderColor);
+				border.moveTo(0, 0.5);
+				border.lineTo(width, 0.5);
 				border.touchable = false;
-				border.thickness = 1;
-				border.color = borderColor;
-				border.lineTo(width, 0);
 				
 				addChild(border);
 			}

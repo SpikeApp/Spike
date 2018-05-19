@@ -15,7 +15,7 @@ package ui.shapes
 		private var _startAngle	:Number;
 		private var _endAngle	:Number;
 		
-		public function SpikeNGon(radius:Number = 100, sides:int = 10, startAngle:Number = 0, endAngle:Number = 90, colour:uint = 0, alpha:Number = 1.0) 
+		public function SpikeNGon(radius:Number = 100, sides:int = 10, startAngle:Number = 0, endAngle:Number = 360, colour:uint = 0, alpha:Number = 1.0) 
 		{
 			_sides = sides;
 			_radius = radius;

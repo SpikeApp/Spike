@@ -37,7 +37,6 @@ package ui.chart
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.Quad;
-	import starling.display.Shape;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.Touch;
@@ -55,7 +54,6 @@ package ui.chart
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
-	import ui.shapes.SpikeSuperLine;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -151,7 +149,7 @@ package ui.chart
 		//Display Objects
 		private var glucoseTimelineContainer:Sprite;
 		private var mainChart:Sprite;
-		private var glucoseDelimiter:Sprite;
+		private var glucoseDelimiter:SpikeLine;
 		private var scrollerChart:Sprite;
 		private var handPicker:Sprite;
 		private var glucoseValueDisplay:Label;
@@ -162,23 +160,23 @@ package ui.chart
 		private var dummySprite:Sprite;
 		private var scrollerBackground:Quad;
 		private var handPickerFill:Quad;
-		private var handpickerOutline:Sprite;
+		private var handpickerOutline:SpikeLine;
 		private var yAxisLine:SpikeLine;
 		private var highestGlucoseLineMarker:SpikeLine;
 		private var highestGlucoseLegend:Label;
 		private var lowestGlucoseLineMarker:SpikeLine;
 		private var lowestGlucoseLegend:Label;
 		private var highUrgentGlucoseLineMarker:SpikeLine;
-		private var highUrgentGlucoseDashedLine:Sprite;
+		private var highUrgentGlucoseDashedLine:SpikeLine;
 		private var highGlucoseLineMarker:SpikeLine;
 		private var highGlucoseLegend:Label;
-		private var highGlucoseDashedLine:Sprite;
+		private var highGlucoseDashedLine:SpikeLine;
 		private var lowGlucoseLineMarker:SpikeLine;
 		private var lowGlucoseLegend:Label;
-		private var lowGlucoseDashedLine:Sprite;
+		private var lowGlucoseDashedLine:SpikeLine;
 		private var lowUrgentGlucoseLineMarker:SpikeLine;
 		private var lowUrgentGlucoseLegend:Label;
-		private var lowUrgentGlucoseDashedLine:Sprite;
+		private var lowUrgentGlucoseDashedLine:SpikeLine;
 		private var yAxis:Sprite;
 		private var xRightMask:Quad;
 		private var xLeftMask:Quad;
@@ -590,7 +588,7 @@ package ui.chart
 			//Line Chart
 			if(_displayLine)
 			{
-				var line:SpikeSuperLine = new SpikeSuperLine();
+				var line:SpikeLine = new SpikeLine();
 				line.touchable = false;
 				line.lineStyle(1, 0xFFFFFF, 1);
 			}
@@ -1444,7 +1442,7 @@ package ui.chart
 			//Create Axis Main Vertical Line
 			if (yAxisLine != null) yAxisLine.dispose();
 			yAxisLine = GraphLayoutFactory.createVerticalLine(_graphHeight, lineThickness, lineColor);
-			yAxisLine.x = _graphWidth;
+			yAxisLine.x = _graphWidth - (yAxisLine.width / 2);
 			yAxisLine.y = 0;
 			yAxisLine.touchable = false;
 			yAxis.addChild(yAxisLine);
@@ -1454,7 +1452,7 @@ package ui.chart
 			 */
 			if (glucoseDelimiter != null) glucoseDelimiter.dispose();
 			glucoseDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
-			glucoseDelimiter.y = 0;
+			glucoseDelimiter.y = 0 - glucoseDelimiter.width;
 			glucoseDelimiter.x = _graphWidth - yAxisMargin + glucoseDelimiter.width;
 			glucoseDelimiter.touchable = false;
 			yAxis.addChild(glucoseDelimiter);
@@ -1466,7 +1464,7 @@ package ui.chart
 			if (highestGlucoseLineMarker != null) highestGlucoseLineMarker.dispose();
 			highestGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 			highestGlucoseLineMarker.x = _graphWidth - legendSize;
-			highestGlucoseLineMarker.y = 0;
+			highestGlucoseLineMarker.y = 0 + (highestGlucoseLineMarker.width / 10);
 			highestGlucoseLineMarker.touchable = false;
 			yAxis.addChild(highestGlucoseLineMarker);
 			
@@ -1502,7 +1500,7 @@ package ui.chart
 			if (lowestGlucoseLineMarker != null) lowestGlucoseLineMarker.dispose();
 			lowestGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 			lowestGlucoseLineMarker.x = _graphWidth - legendSize;
-			lowestGlucoseLineMarker.y = _graphHeight - lineThickness;
+			lowestGlucoseLineMarker.y = _graphHeight - (lineThickness / 2);
 			lowestGlucoseLineMarker.touchable = false;
 			yAxis.addChild(lowestGlucoseLineMarker);
 			
@@ -1540,7 +1538,7 @@ package ui.chart
 				if (highUrgentGlucoseLineMarker != null) highUrgentGlucoseLineMarker.dispose();
 				highUrgentGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 				highUrgentGlucoseLineMarker.x = _graphWidth - legendSize;
-				highUrgentGlucoseLineMarker.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - (lineThickness * 1.25);
+				highUrgentGlucoseLineMarker.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				highUrgentGlucoseLineMarker.touchable = false;
 				yAxis.addChild(highUrgentGlucoseLineMarker);
 				
@@ -1563,9 +1561,9 @@ package ui.chart
 				if (highUrgentGlucoseLegend != null) highUrgentGlucoseLegend.dispose();
 				var highUrgentGlucoseLegend:Label = GraphLayoutFactory.createGraphLegend(urgentHighGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
 				if (userAxisFontMultiplier >= 1)
-					highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - ((highUrgentGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((highUrgentGlucoseLegend.height / userAxisFontMultiplier) / 15);
+					highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - ((highUrgentGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((highUrgentGlucoseLegend.height / userAxisFontMultiplier) / 8);
 				else
-					highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - ((highUrgentGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((highUrgentGlucoseLegend.height * userAxisFontMultiplier) / 15);
+					highUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentHigh - lowestGlucoseValue) * scaleYFactor) - ((highUrgentGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((highUrgentGlucoseLegend.height * userAxisFontMultiplier) / 8);
 				highUrgentGlucoseLegend.y -= lineThickness;
 				highUrgentGlucoseLegend.x = Math.round(_graphWidth - highestGlucoseLineMarker.width - highUrgentGlucoseLegend.width - legendMargin);
 				yAxis.addChild(highUrgentGlucoseLegend);
@@ -1587,7 +1585,7 @@ package ui.chart
 				if (highGlucoseLineMarker != null) highGlucoseLineMarker.dispose();
 				highGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 				highGlucoseLineMarker.x = _graphWidth - legendSize;
-				highGlucoseLineMarker.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - (lineThickness * 1.25);
+				highGlucoseLineMarker.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				highGlucoseLineMarker.touchable = false;
 				yAxis.addChild(highGlucoseLineMarker);
 				
@@ -1610,9 +1608,9 @@ package ui.chart
 				if (highGlucoseLegend != null) highGlucoseLegend.dispose();
 				highGlucoseLegend = GraphLayoutFactory.createGraphLegend(highGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
 				if (userAxisFontMultiplier >= 1)
-					highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - ((highGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((highGlucoseLegend.height / userAxisFontMultiplier) / 15);
+					highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - ((highGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((highGlucoseLegend.height / userAxisFontMultiplier) / 8);
 				else
-					highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - ((highGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((highGlucoseLegend.height * userAxisFontMultiplier) / 15);
+					highGlucoseLegend.y = _graphHeight - ((glucoseHigh - lowestGlucoseValue) * scaleYFactor) - ((highGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((highGlucoseLegend.height * userAxisFontMultiplier) / 8);
 				highGlucoseLegend.y -= lineThickness;
 				highGlucoseLegend.x = Math.round(_graphWidth - highestGlucoseLineMarker.width - highGlucoseLegend.width - legendMargin);
 				yAxis.addChild(highGlucoseLegend);
@@ -1634,7 +1632,7 @@ package ui.chart
 				if (lowGlucoseLineMarker != null) lowGlucoseLineMarker.dispose();
 				lowGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 				lowGlucoseLineMarker.x = _graphWidth - legendSize;
-				lowGlucoseLineMarker.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - (lineThickness * 1.25);
+				lowGlucoseLineMarker.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				lowGlucoseLineMarker.touchable = false;
 				yAxis.addChild(lowGlucoseLineMarker);
 				
@@ -1657,9 +1655,9 @@ package ui.chart
 				if (lowGlucoseLegend != null) lowGlucoseLegend.dispose();
 				lowGlucoseLegend = GraphLayoutFactory.createGraphLegend(lowGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
 				if (userAxisFontMultiplier >= 1)
-					lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - ((lowGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((lowGlucoseLegend.height / userAxisFontMultiplier) / 15);
+					lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - ((lowGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((lowGlucoseLegend.height / userAxisFontMultiplier) / 8);
 				else
-					lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - ((lowGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((lowGlucoseLegend.height * userAxisFontMultiplier) / 15);
+					lowGlucoseLegend.y = _graphHeight - ((glucoseLow - lowestGlucoseValue) * scaleYFactor) - ((lowGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((lowGlucoseLegend.height * userAxisFontMultiplier) / 8);
 				lowGlucoseLegend.y -= lineThickness;
 				lowGlucoseLegend.x = Math.round(_graphWidth - lowGlucoseLineMarker.width - lowGlucoseLegend.width - legendMargin);
 				yAxis.addChild(lowGlucoseLegend);
@@ -1681,7 +1679,7 @@ package ui.chart
 				if (lowUrgentGlucoseLineMarker != null) lowUrgentGlucoseLineMarker.dispose();
 				lowUrgentGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
 				lowUrgentGlucoseLineMarker.x = _graphWidth - legendSize;
-				lowUrgentGlucoseLineMarker.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - (lineThickness * 1.25);
+				lowUrgentGlucoseLineMarker.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				lowUrgentGlucoseLineMarker.touchable = false;
 				yAxis.addChild(lowUrgentGlucoseLineMarker);
 				
@@ -1704,9 +1702,9 @@ package ui.chart
 				if (lowUrgentGlucoseLegend != null) lowUrgentGlucoseLegend.dispose();
 				lowUrgentGlucoseLegend = GraphLayoutFactory.createGraphLegend(urgentLowGlucoseOutput, axisFontColor, legendTextSize * userAxisFontMultiplier);
 				if (userAxisFontMultiplier >= 1)
-					lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - ((lowUrgentGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((lowUrgentGlucoseLegend.height / userAxisFontMultiplier) / 15);
+					lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - ((lowUrgentGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((lowUrgentGlucoseLegend.height / userAxisFontMultiplier) / 8);
 				else
-					lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - ((lowUrgentGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((lowUrgentGlucoseLegend.height * userAxisFontMultiplier) / 15);
+					lowUrgentGlucoseLegend.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - ((lowUrgentGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((lowUrgentGlucoseLegend.height * userAxisFontMultiplier) / 8);
 				lowUrgentGlucoseLegend.y -= lineThickness;
 				lowUrgentGlucoseLegend.x = Math.round(_graphWidth - lowUrgentGlucoseLineMarker.width - lowUrgentGlucoseLegend.width - legendMargin);
 				yAxis.addChild(lowUrgentGlucoseLegend);
@@ -1983,7 +1981,7 @@ package ui.chart
 			//Line Chart
 			if(_displayLine)
 			{
-				var line:SpikeSuperLine = new SpikeSuperLine();
+				var line:SpikeLine = new SpikeLine();
 				line.touchable = false;
 				line.lineStyle(1, 0xFFFFFF, 1);
 			}
@@ -2156,7 +2154,7 @@ package ui.chart
 			if (!SystemUtil.isApplicationActive)
 				return;
 			
-			var line:SpikeSuperLine = new SpikeSuperLine();
+			var line:SpikeLine = new SpikeLine();
 			line.touchable = false;
 			
 			//Define what chart needs line to be drawns
@@ -2231,87 +2229,6 @@ package ui.chart
 				mainChartLineList.push(line);
 			else if (chartType == SCROLLER_CHART && scrollerChartLineList != null)
 				scrollerChartLineList.push(line);
-			
-			/*
-			
-			//Line container
-			var line:Shape = new Shape();
-			line.touchable = false;
-			
-			//Define what chart needs line to be drawns
-			var sourceList:Array;
-			if(chartType == MAIN_CHART)
-				sourceList = mainChartGlucoseMarkersList;
-			else if (chartType == SCROLLER_CHART)
-				sourceList = scrollChartGlucoseMarkersList;
-			
-			if (sourceList == null || sourceList.length == 0)
-				return;
-			
-			//Loop all markers, draw the line from their positions and also hide the markers
-			var previousGlucoseMarker:GlucoseMarker;
-			var dataLength:int = sourceList.length;
-			for (var i:int = 0; i < dataLength; i++) 
-			{
-				var glucoseMarker:GlucoseMarker = sourceList[i];
-				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !BlueToothDevice.isFollower()))
-					continue;
-				
-				var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
-				
-				if(i == 0)
-				{
-					line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.height/2));
-				}
-				else
-				{
-					var currentLineX:Number;
-					var currentLineY:Number;
-					
-					if(i < dataLength -1)
-					{
-						currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
-						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
-					}
-					else if (i == dataLength -1)
-					{
-						currentLineX = glucoseMarker.x + (glucoseMarker.width);
-						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
-					}
-						
-					//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-					line.graphics.lineStyle(1, glucoseMarker.color, 1);
-					if(i > 0)
-					{
-						if (previousGlucoseMarker != null && glucoseMarker != null)
-						{
-							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
-							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-								line.graphics.lineStyle(1, oldColor, 1);
-						}
-					}	
-					
-					line.graphics.lineTo(currentLineX, currentLineY);
-					line.graphics.moveTo(currentLineX, currentLineY);
-				}
-				//Hide glucose marker
-				glucoseMarker.alpha = 0;
-				previousGlucoseMarker = glucoseMarker;
-			}
-			
-			//Add line to display list
-			if(chartType == MAIN_CHART && mainChart != null)
-				mainChart.addChild(line);
-			else if(chartType == SCROLLER_CHART && scrollerChart != null)
-				scrollerChart.addChild(line);
-			
-			//Save line references for later use
-			if(chartType == MAIN_CHART && mainChartLineList != null)
-				mainChartLineList.push(line);
-			else if (chartType == SCROLLER_CHART && scrollerChartLineList != null)
-				scrollerChartLineList.push(line);
-			
-			*/
 		}
 		
 		public function calculateDisplayLabels():void
@@ -3103,8 +3020,8 @@ package ui.chart
 					//Dispose previous lines
 					destroyAllLines(false);
 					
-					var line:Shape = new Shape();
-					line.graphics.lineStyle(1, 0xFFFFFF, 1);
+					var line:SpikeLine = new SpikeLine();
+					line.lineStyle(1, 0xFFFFFF, 1);
 					
 					var markerLength:int = mainChartGlucoseMarkersList.length;
 					var previousGlucoseMarker:GlucoseMarker;
@@ -3115,7 +3032,7 @@ package ui.chart
 						var glucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList[i] as GlucoseMarker;
 						
 						if(i == 0)
-							line.graphics.moveTo(glucoseMarker.x, glucoseMarker.y);
+							line.moveTo(glucoseMarker.x, glucoseMarker.y);
 						else
 						{
 							var currentLineX:Number;
@@ -3133,16 +3050,16 @@ package ui.chart
 							}
 							
 							//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-							line.graphics.lineStyle(1, glucoseMarker.color, 1);
+							line.lineStyle(1, glucoseMarker.color, 1);
 							if(i > 0)
 							{
 								var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
 								if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-									line.graphics.lineStyle(1, oldColor, 1);
+									line.lineStyle(1, oldColor, 1);
 							}
 							
-							line.graphics.lineTo(currentLineX, currentLineY);
-							line.graphics.moveTo(currentLineX, currentLineY);
+							line.lineTo(currentLineX, currentLineY);
+							line.moveTo(currentLineX, currentLineY);
 						}
 						//Hide glucose marker
 						glucoseMarker.alpha = 0;

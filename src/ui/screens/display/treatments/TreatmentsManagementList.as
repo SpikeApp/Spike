@@ -25,9 +25,9 @@ package ui.screens.display.treatments
 	
 	import starling.core.Starling;
 	import starling.display.Canvas;
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.display.Sprite;
-	import starling.display.graphics.NGon;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.textures.RenderTexture;
@@ -38,6 +38,7 @@ package ui.screens.display.treatments
 	
 	import ui.chart.GlucoseFactory;
 	import ui.popups.AlertManager;
+	import ui.shapes.SpikeNGon;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -326,31 +327,31 @@ package ui.screens.display.treatments
 			
 			if (treatmentType == Treatment.TYPE_BOLUS || treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_CARBS_CORRECTION || treatmentType == Treatment.TYPE_GLUCOSE_CHECK || treatmentType == Treatment.TYPE_SENSOR_START)
 			{
-				var marker:NGon = new NGon(radius, 20, 0, 0, 360);
+				var marker:SpikeNGon = new SpikeNGon(radius, 20, 0, 360);
 				if (treatmentType == Treatment.TYPE_BOLUS || treatmentType == Treatment.TYPE_CORRECTION_BOLUS)
-					marker.color = bolusColor;
+					marker.colour = bolusColor;
 				else if (treatmentType == Treatment.TYPE_CARBS_CORRECTION)
-					marker.color = carbsColor;
+					marker.colour = carbsColor;
 				else if (treatmentType == Treatment.TYPE_GLUCOSE_CHECK)
-					marker.color = bgCheckColor;
+					marker.colour = bgCheckColor;
 				else if (treatmentType == Treatment.TYPE_SENSOR_START)
-					marker.color = sensorStartColor;
+					marker.colour = sensorStartColor;
 				marker.x = marker.width / 2;
 				marker.y = marker.height / 2;
 				icon.addChild(marker);
 			}
 			else if (treatmentType == Treatment.TYPE_MEAL_BOLUS)
 			{
-				var insulinMarker:NGon = new NGon(radius, 20, 0, 90, 270);
+				var insulinMarker:SpikeNGon = new SpikeNGon(radius, 20, 90, 270);
 				insulinMarker.x = insulinMarker.width / 2;
 				insulinMarker.y = insulinMarker.height / 2;
-				insulinMarker.color = bolusColor;
+				insulinMarker.colour = bolusColor;
 				icon.addChild(insulinMarker);
 				
-				var carbsMarker:NGon = new NGon(radius, 20, 0, -90, 90);
+				var carbsMarker:SpikeNGon = new SpikeNGon(radius, 20, -90, 90);
 				carbsMarker.x = carbsMarker.width / 2;
 				carbsMarker.y = carbsMarker.height / 2;
-				carbsMarker.color = carbsColor;
+				carbsMarker.colour = carbsColor;
 				icon.addChild(carbsMarker);
 			}
 			else if (treatmentType == Treatment.TYPE_NOTE)
@@ -437,8 +438,20 @@ package ui.screens.display.treatments
 			}
 
 			//Clear icons
+			var i:int;
+			var childCanvas:DisplayObject;
 			if (bolusCanvas != null)
 			{
+				for(i = bolusCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					childCanvas = bolusCanvas.getChildAt(i);
+					if (childCanvas != null)
+					{
+						childCanvas.removeFromParent();
+						childCanvas.dispose();
+						childCanvas = null;
+					}
+				}
 				bolusCanvas.dispose();
 				bolusCanvas = null;
 			}
@@ -451,6 +464,16 @@ package ui.screens.display.treatments
 			
 			if (carbsCanvas != null)
 			{
+				for(i = carbsCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					childCanvas = carbsCanvas.getChildAt(i);
+					if (childCanvas != null)
+					{
+						childCanvas.removeFromParent();
+						childCanvas.dispose();
+						childCanvas = null;
+					}
+				}
 				carbsCanvas.dispose();
 				carbsCanvas = null;
 			}
@@ -463,6 +486,16 @@ package ui.screens.display.treatments
 			
 			if (glucoseCanvas != null)
 			{
+				for(i = glucoseCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					childCanvas = glucoseCanvas.getChildAt(i);
+					if (childCanvas != null)
+					{
+						childCanvas.removeFromParent();
+						childCanvas.dispose();
+						childCanvas = null;
+					}
+				}
 				glucoseCanvas.dispose();
 				glucoseCanvas = null;
 			}
@@ -475,6 +508,16 @@ package ui.screens.display.treatments
 			
 			if (sensorStartCanvas != null)
 			{
+				for(i = sensorStartCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					childCanvas = sensorStartCanvas.getChildAt(i);
+					if (childCanvas != null)
+					{
+						childCanvas.removeFromParent();
+						childCanvas.dispose();
+						childCanvas = null;
+					}
+				}
 				sensorStartCanvas.dispose();
 				sensorStartCanvas = null;
 			}
@@ -487,6 +530,21 @@ package ui.screens.display.treatments
 			
 			if (noteCanvas != null)
 			{
+				for(i = noteCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (noteCanvas.getChildAt(i) is Image)
+					{
+						var childImage:Image = noteCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
 				noteCanvas.dispose();
 				noteCanvas = null;
 			}
@@ -499,6 +557,16 @@ package ui.screens.display.treatments
 			
 			if (mealCanvas != null)
 			{
+				for(i = mealCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					childCanvas = mealCanvas.getChildAt(i);
+					if (childCanvas != null)
+					{
+						childCanvas.removeFromParent();
+						childCanvas.dispose();
+						childCanvas = null;
+					}
+				}
 				mealCanvas.dispose();
 				mealCanvas = null;
 			}

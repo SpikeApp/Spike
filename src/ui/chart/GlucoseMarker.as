@@ -6,8 +6,9 @@ package ui.chart
 	
 	import model.ModelLocator;
 	
-	import starling.display.Canvas;
 	import starling.display.Sprite;
+	
+	import ui.shapes.SpikeNGon;
 	
 	import utils.MathHelper;
 	import utils.TimeSpan;
@@ -34,7 +35,7 @@ package ui.chart
 		private var dateFormat:String;
 
 		// Display Objects
-		private var glucoseMarker:Canvas;
+		private var glucoseMarker:SpikeNGon;
 
         public function GlucoseMarker(data:Object)
         {
@@ -113,24 +114,19 @@ package ui.chart
         //Function to draw the shape
         public function draw():void
         {
-            glucoseMarker = new Canvas();
-            glucoseMarker.beginFill(color);
-            glucoseMarker.drawCircle(radius,radius,radius);
-            glucoseMarker.endFill();
-			
+            glucoseMarker = new SpikeNGon(radius, 10, 0, 360, color);
+			glucoseMarker.x = glucoseMarker.y = radius;
             addChild(glucoseMarker);
         }
 		
 		public function updateColor():void
 		{
-			glucoseMarker.removeFromParent(true);
+			if (glucoseMarker != null)
+				glucoseMarker.removeFromParent(true);
 			
-			glucoseMarker = new Canvas();
-			glucoseMarker.beginFill(color);
-			glucoseMarker.drawCircle(radius,radius,radius);
-			glucoseMarker.endFill();
-			
-			addChild(glucoseMarker)
+			glucoseMarker = new SpikeNGon(radius, 15, 0, 360, color);
+			glucoseMarker.x = glucoseMarker.y = radius;
+			addChild(glucoseMarker);
 		}
 		
 		public function set newBgReading(bgReading:BgReading):void

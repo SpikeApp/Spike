@@ -2,29 +2,32 @@ package ui.chart
 {
 	import database.CommonSettings;
 	
-	import starling.display.Canvas;
-	import starling.display.Shape;
-	
 	import treatments.Treatment;
 	
-	import ui.shapes.SpikeDisplayObject;
+	import ui.shapes.SpikeNGon;
+	
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	public class SensorMarker extends ChartTreatment
 	{
 		/* Properties */
 		private var backgroundColor:uint;
 		private var strokeColor:uint;
+		private var numSides:int = 30;
+		private const strokeThickness:Number = 0.8;
 
 		// Display Objects
-		private var sensorMarker:Canvas;
-		private var stroke:SpikeDisplayObject;
-		private var hitArea:Shape;
+		private var sensorMarker:SpikeNGon;
+		private var stroke:SpikeNGon;
 		
 		public function SensorMarker(treatment:Treatment)
 		{
 			this.treatment = treatment;
 			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				numSides = 20;
 			
 			draw();
 		}
@@ -34,31 +37,17 @@ package ui.chart
 			//Radius
 			this.radius = 6;
 			
-			//Hit Area
-			hitArea = new Shape();
-			hitArea.graphics.beginFill(0xFF0000, 0);
-			hitArea.graphics.drawCircle(0, 0, radius * 2.5);
-			hitArea.graphics.endFill();
-			hitArea.x = radius / 2.5;
-			hitArea.y = radius * 1.25;
-			hitArea.alpha = 0;
-			addChild(hitArea);
+			//Stroke
+			stroke = new SpikeNGon(radius + strokeThickness, numSides, 0, 360, strokeColor);
+			stroke.x = radius / 3;
+			stroke.y = radius + radius/4;
+			addChild(stroke);
 			
 			//Background
-			sensorMarker = new Canvas();
-			sensorMarker.beginFill(backgroundColor);
-			sensorMarker.drawCircle(radius / 3, radius + radius/4, radius);
+			sensorMarker = new SpikeNGon(radius, numSides, 0, 360, backgroundColor);
+			sensorMarker.x = radius / 3;
+			sensorMarker.y = radius + radius/4;
 			addChild(sensorMarker);
-			
-			//Stroke
-			var strokeShape:Shape = new Shape();
-			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
-			strokeShape.graphics.drawCircle(radius, radius, radius);
-			
-			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
-			stroke.y = radius/4;
-			stroke.x = -radius/1.5;
-			addChild(stroke);
 		}	
 		
 		override public function updateMarker(treatment:Treatment):void
@@ -84,13 +73,6 @@ package ui.chart
 				stroke.removeFromParent();
 				stroke.dispose();
 				stroke = null;
-			}
-			
-			if (hitArea != null)
-			{
-				hitArea.removeFromParent();
-				hitArea.dispose();
-				hitArea = null;
 			}
 			
 			super.dispose();

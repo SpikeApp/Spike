@@ -1,19 +1,9 @@
 package ui.chart
 {
-    import flash.display.BitmapData;
-    
     import feathers.controls.Label;
     
-    import starling.core.Starling;
-    import starling.display.DisplayObject;
-    import starling.display.Image;
-    import starling.display.Quad;
-    import starling.display.Shape;
-    import starling.display.Sprite;
     import starling.text.TextFormat;
-    import starling.textures.Texture;
     
-    import ui.shapes.SpikeDisplayObject;
     import ui.shapes.SpikeLine;
     
     import utils.Constants;
@@ -28,8 +18,8 @@ package ui.chart
         public static function createVerticalLine(height:Number, thickness:int, color:uint):SpikeLine
         {
 			var line:SpikeLine = new SpikeLine();
-			line.thickness = thickness;
-			line.color = color;
+			line.lineStyle(thickness, color);
+			line.moveTo(0, 0);
 			line.lineTo(0, height);
 			
 			return line;
@@ -38,16 +28,18 @@ package ui.chart
 		public static function createHorizontalLine(width:Number, thickness:int, color:uint):SpikeLine
 		{
 			var line:SpikeLine = new SpikeLine();
-			line.thickness = thickness;
-			line.color = color;
+			line.lineStyle(thickness, color);
+			line.moveTo(0, 0);
 			line.lineTo(width, 0);
 			
 			return line;
 		}
 
-        public static function createHorizontalDashedLine(graphWidth:Number, lineWidth:int, lineGap:int, lineThickness:int, lineColor:uint, rightMargin:Number):Sprite
+        public static function createHorizontalDashedLine(graphWidth:Number, lineWidth:int, lineGap:int, lineThickness:int, lineColor:uint, rightMargin:Number):SpikeLine
         {
-            var line:Sprite = new Sprite();
+            
+			var line:SpikeLine = new SpikeLine();
+			line.lineStyle(lineThickness, lineColor);
 			
 			var dashedLineTotalWidth:Number = graphWidth - lineThickness - rightMargin - 30;
 			var numDashedLines:Number = Math.round(dashedLineTotalWidth/(lineWidth+lineGap));
@@ -55,13 +47,8 @@ package ui.chart
 			
 			for(var i:int=0; i <numDashedLines; i++)
 			{
-				var smallLine:SpikeLine = new SpikeLine();
-				smallLine.thickness = lineThickness;
-				smallLine.color = lineColor;
-				smallLine.x = currentLineX;
-				smallLine.y = 0;
-				smallLine.lineTo(currentLineX + lineWidth, 0);
-				line.addChild(smallLine);
+				line.moveTo(currentLineX, 0);
+				line.lineTo(currentLineX + lineWidth, 0);
 				
 				currentLineX += lineWidth + lineGap;
 			}
@@ -69,22 +56,19 @@ package ui.chart
 			return line;
         }
     
-        public static function createVerticalDashedLine(grapHeight:Number, lineHeight:int, lineGap:int, lineThickness:int, lineColor:uint):Sprite
+        public static function createVerticalDashedLine(grapHeight:Number, lineHeight:int, lineGap:int, lineThickness:int, lineColor:uint):SpikeLine
         {
-			var line:Sprite = new Sprite();
+			var line:SpikeLine = new SpikeLine();
+			line.lineStyle(lineThickness, lineColor);
+			
 			var dashedLineTotalHeight:Number = grapHeight;
 			var numDashedLines:Number = Math.round(dashedLineTotalHeight/(lineHeight+lineGap));
 			var currentLineY:Number = 0;
 			
 			for(var i:int=0; i <numDashedLines; i++)
 			{
-				var smallLine:SpikeLine = new SpikeLine();
-				smallLine.thickness = lineThickness;
-				smallLine.color = lineColor;
-				smallLine.x = 0;
-				smallLine.y = currentLineY;
-				smallLine.lineTo(0, currentLineY + lineHeight);
-				line.addChild(smallLine);
+				line.moveTo(0, currentLineY);
+				line.lineTo(0, currentLineY + lineHeight);
 				
 				currentLineY += lineHeight + lineGap;
 			}
@@ -135,46 +119,23 @@ package ui.chart
 			return legend;
 		}
 		
-		public static function createOutline(width:Number, height:Number, lineThickness:int):Sprite
+		public static function createOutline(width:Number, height:Number, lineThickness:int):SpikeLine
 		{
-			var outline:Sprite = new Sprite();
-			
-			var line1:SpikeLine = new SpikeLine();
-			line1.thickness = lineThickness;
-			line1.color = 0xFFFFFF;
-			line1.x = 0;
-			line1.y = 0;
-			line1.lineTo(width, 0);
-			outline.addChild(line1);
-			
-			var line2:SpikeLine = new SpikeLine();
-			line2.thickness = lineThickness;
-			line2.color = 0xFFFFFF;
-			line2.x = width;
-			line2.y = 0;
-			line2.lineTo(width, height);
-			outline.addChild(line2);
-			
-			var line3:SpikeLine = new SpikeLine();
-			line3.thickness = lineThickness;
-			line3.color = 0xFFFFFF;
-			line3.x = width;
-			line3.y = height;
-			line3.lineTo(0, height);
-			outline.addChild(line3);
-			
-			var line4:SpikeLine = new SpikeLine();
-			line4.thickness = lineThickness;
-			line4.color = 0xFFFFFF;
-			line4.x = 0;
-			line4.y = height;
-			line4.lineTo(0, 0);
-			outline.addChild(line4);
+			var outline:SpikeLine = new SpikeLine();
+			outline.lineStyle(lineThickness, 0xFFFFFF);
+			outline.moveTo(0 + (lineThickness/2), 0 + (lineThickness/2));
+			outline.lineTo(width - (lineThickness/2), 0 + (lineThickness/2));
+			outline.moveTo(width - (lineThickness/2), 0 + (lineThickness/2));
+			outline.lineTo(width - (lineThickness/2), height - (lineThickness/2));
+			outline.moveTo(width - (lineThickness/2), height - (lineThickness/2));
+			outline.lineTo(0 + (lineThickness/2), height - (lineThickness/2));
+			outline.moveTo(0 + (lineThickness/2), height - (lineThickness/2));
+			outline.lineTo(0 + (lineThickness/2), 0 + (lineThickness/2));
 			
 			return outline;
 		}
 		
-		public static function createImageFromShape(shape:DisplayObject):SpikeDisplayObject
+		/*public static function createImageFromShape(shape:DisplayObject):SpikeDisplayObject
 		{			
 			//Dummy transparent background to circumvent Starling bug that cuts 1 pixel in width and heigh when converting to bitmap data
 			var dummyBackground:Quad = new Quad(shape.width + 2, shape.height + 2);
@@ -205,6 +166,6 @@ package ui.chart
 			var spikeDisplayObject:SpikeDisplayObject = new SpikeDisplayObject(container, dummyBackground, shape, bitmapData, texture, image);
 			
 			return spikeDisplayObject;
-		}
+		}*/
     }
 }

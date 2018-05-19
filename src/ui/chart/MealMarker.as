@@ -6,14 +6,13 @@ package ui.chart
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
-	import starling.display.Shape;
-	import starling.display.Sprite;
-	import starling.display.graphics.NGon;
-	
 	import treatments.Treatment;
 	
 	import ui.screens.display.LayoutFactory;
-	import ui.shapes.SpikeDisplayObject;
+	import ui.shapes.SpikeNGon;
+	
+	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	public class MealMarker extends ChartTreatment
 	{
@@ -21,8 +20,9 @@ package ui.chart
 		private var insulinLabel:Label;
 		private var carbsLabel:Label;
 		private var mainLabel:Label;
-		private var mealBackground:SpikeDisplayObject;
-		private var stroke:SpikeDisplayObject;
+		private var insulinMarker:SpikeNGon;
+		private var carbsMarker:SpikeNGon;
+		private var stroke:SpikeNGon;
 		
 		/* Properties */
 		private var fontSize:int = 11;
@@ -31,6 +31,8 @@ package ui.chart
 		private var strokeColor:uint;
 		private var initialRadius:Number = 8;
 		private var chartTimeline:Number;
+		private var numSides:int = 30;
+		private const strokeThickness:Number = 0.8;
 
 		public function MealMarker(treatment:Treatment, timeline:Number)
 		{
@@ -38,6 +40,8 @@ package ui.chart
 			backgroundInsulinColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
 			backgroundCarbsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				numSides = 20;
 			
 			chartTimeline = timeline;
 			
@@ -76,31 +80,22 @@ package ui.chart
 			if (treatment.insulinAmount < 1)
 				fontSize -= 1.5;
 			
-			//Background
-			var insulinMarker:NGon = new NGon(radius, 20, 0, 90, 270);
-			insulinMarker.color = backgroundInsulinColor;
-			
-			var carbsMarker:NGon = new NGon(radius, 20, 0, -90, 90);
-			carbsMarker.color = backgroundCarbsColor;
-			
-			var allNGons:Sprite = new Sprite();
-			allNGons.addChild(insulinMarker);
-			allNGons.addChild(carbsMarker);
-			
-			mealBackground = GraphLayoutFactory.createImageFromShape(allNGons);
-			mealBackground.y = radius / 3;
-			mealBackground.x = -(radius / 2) - (radius / 12);
-			addChild(mealBackground);
-			
 			//Stroke
-			var strokeShape:Shape = new Shape();
-			strokeShape.graphics.lineStyle(0.8, strokeColor, 1);
-			strokeShape.graphics.drawCircle(radius, radius, radius);
-			
-			stroke = GraphLayoutFactory.createImageFromShape(strokeShape);
-			stroke.y = radius/4;
-			stroke.x = -radius/1.5;
+			stroke = new SpikeNGon(radius + strokeThickness, numSides, 0, 360, strokeColor);
+			stroke.x = radius / 3;
+			stroke.y = radius + radius/4;
 			addChild(stroke);
+			
+			//Background
+			insulinMarker = new SpikeNGon(radius, numSides, 90, 270, backgroundInsulinColor);
+			insulinMarker.x = radius / 3;
+			insulinMarker.y = radius + radius/4;
+			addChild(insulinMarker);
+			
+			carbsMarker = new SpikeNGon(radius, numSides, -90, 90, backgroundCarbsColor);
+			carbsMarker.x = radius / 3;
+			carbsMarker.y = radius + radius/4;
+			addChild(carbsMarker);
 			
 			//Label
 			insulinLabel = LayoutFactory.createLabel(treatment.insulinAmount != 0 ? treatment.insulinAmount + "U" : "", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
@@ -174,11 +169,18 @@ package ui.chart
 				mainLabel = null;
 			}
 			
-			if (mealBackground != null)
+			if (insulinMarker != null)
 			{
-				mealBackground.removeFromParent();
-				mealBackground.dispose();
-				mealBackground = null;
+				insulinMarker.removeFromParent();
+				insulinMarker.dispose();
+				insulinMarker = null;
+			}
+			
+			if (carbsMarker != null)
+			{
+				carbsMarker.removeFromParent();
+				carbsMarker.dispose();
+				carbsMarker = null;
 			}
 			
 			if (stroke != null)
