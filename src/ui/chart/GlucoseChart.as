@@ -180,6 +180,8 @@ package ui.chart
 		private var yAxis:Sprite;
 		private var xRightMask:Quad;
 		private var xLeftMask:Quad;
+		private var mainChartLine:SpikeLine;
+		private var scrollerChartLine:SpikeLine;
 		
 		//Objects
 		private var statusUpdateTimer:Timer;
@@ -591,6 +593,17 @@ package ui.chart
 				var line:SpikeLine = new SpikeLine();
 				line.touchable = false;
 				line.lineStyle(1, 0xFFFFFF, 1);
+				
+				if(chartType == MAIN_CHART)
+				{
+					if (mainChartLine != null) mainChartLine.removeFromParent(true);
+					mainChartLine = line;
+				}
+				else if (chartType == SCROLLER_CHART)
+				{
+					if (scrollerChartLine != null) scrollerChartLine.removeFromParent(true);
+					scrollerChartLine = line;
+				}
 			}
 			
 			/**
@@ -1984,6 +1997,17 @@ package ui.chart
 				var line:SpikeLine = new SpikeLine();
 				line.touchable = false;
 				line.lineStyle(1, 0xFFFFFF, 1);
+				
+				if(chartType == MAIN_CHART)
+				{
+					if (mainChartLine != null) mainChartLine.removeFromParent(true);
+					mainChartLine = line;
+				}
+				else if (chartType == SCROLLER_CHART)
+				{
+					if (scrollerChartLine != null) scrollerChartLine.removeFromParent(true);
+					scrollerChartLine = line;
+				}
 			}
 			
 			//Loop through all available data points
@@ -2156,6 +2180,17 @@ package ui.chart
 			
 			var line:SpikeLine = new SpikeLine();
 			line.touchable = false;
+			
+			if(chartType == MAIN_CHART)
+			{
+				if (mainChartLine != null) mainChartLine.removeFromParent(true);
+				mainChartLine = line;
+			}
+			else if (chartType == SCROLLER_CHART)
+			{
+				if (scrollerChartLine != null) scrollerChartLine.removeFromParent(true);
+				scrollerChartLine = line;
+			}
 			
 			//Define what chart needs line to be drawns
 			var sourceList:Array;
@@ -3023,6 +3058,9 @@ package ui.chart
 					var line:SpikeLine = new SpikeLine();
 					line.lineStyle(1, 0xFFFFFF, 1);
 					
+					if (mainChartLine != null) mainChartLine.removeFromParent(true);
+					mainChartLine = line;
+					
 					var markerLength:int = mainChartGlucoseMarkersList.length;
 					var previousGlucoseMarker:GlucoseMarker;
 					
@@ -3517,6 +3555,20 @@ package ui.chart
 				xLeftMask.removeFromParent();
 				xLeftMask.dispose();
 				xLeftMask = null;
+			}
+			
+			if (mainChartLine != null)
+			{
+				mainChartLine.removeFromParent();
+				mainChartLine.dispose();
+				mainChartLine = null;
+			}
+			
+			if (scrollerChartLine != null)
+			{
+				scrollerChartLine.removeFromParent();
+				scrollerChartLine.dispose();
+				scrollerChartLine = null;
 			}
 			
 			super.dispose();
