@@ -395,6 +395,11 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
 			
 			//check if there's 2 readings the last 30 minutes
+			var latestBGReadings:Array = BgReading.last30Minutes();
+			if (latestBGReadings == null) return;
+			var last2calibrations:Array = Calibration.latest(2);
+			if (last2calibrations == null || last2calibrations.length == 0) return;
+			
 			if (BgReading.last30Minutes().length < 2) 
 			{
 				myTrace(" in calibrationOnRequest, BgReading.last30Minutes().length < 2");

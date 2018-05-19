@@ -237,7 +237,7 @@ package
 			
 			if (starling != null)
 			{
-				starling.stop();
+				starling.stop( true );
 				
 				Constants.stageWidth = starling.stage.stageWidth;
 				Constants.stageHeight = starling.stage.stageHeight;
