@@ -1173,13 +1173,13 @@ package services
 						myTrace("in processG5TransmitterData, not paired, dispatching DEVICE_NOT_PAIRED event");
 						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.DEVICE_NOT_PAIRED);
 						_instance.dispatchEvent(blueToothServiceEvent);
-					}
-					
-					//probably doesn't make sense to subscribe to characteristic ? because not paired yet
-					myTrace("in processG5TransmitterData, Subscribing to WriteCharacteristic");
-					if (!activeBluetoothPeripheral.subscribeToCharacteristic(writeCharacteristic))
-					{
-						myTrace("in processG5TransmitterData, Subscribe to characteristic failed due to invalid adapter state.");
+						//doesn't make sense to subscribe to characteristic ? because not paired yet
+					} else {
+						myTrace("in processG5TransmitterData, Subscribing to WriteCharacteristic");
+						if (!activeBluetoothPeripheral.subscribeToCharacteristic(writeCharacteristic))
+						{
+							myTrace("in processG5TransmitterData, Subscribe to characteristic failed due to invalid adapter state.");
+						}
 					}
 					break;
 				case 3:
