@@ -1,5 +1,7 @@
 package ui
 {
+	//import com.demonsters.debugger.MonsterDebugger;
+	
 	import events.ScreenEvent;
 	
 	import feathers.controls.Drawers;
@@ -63,6 +65,9 @@ package ui
 		public function AppInterface() 
 		{
 			_instance = this;
+			
+			/*MonsterDebugger.initialize(this);
+			MonsterDebugger.trace(this, "Hello World!");*/
 		}
 		
 		public function start():void 
