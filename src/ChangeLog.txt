@@ -1,3 +1,6 @@
+2.1.0
+ENHANCEMENT: Chart line now uses gradients when transitioning from different colors (ex: low to in range). It look better and makes the horizontal threshold dashed lines more precise. (Miguel)
+
 2.0.9
 ENHANCEMENT: Increased graphics quality for glucose markers and all treatments present on the chart. (Miguel)
 ENHANCEMENT: Several optimizations were made to Spike's 3D engine which reflect in less draw calls to the GPU. (Miguel)

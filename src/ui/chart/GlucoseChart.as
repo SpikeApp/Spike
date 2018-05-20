@@ -675,16 +675,29 @@ package ui.chart
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						}
 						
-						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+						//Style
 						line.lineStyle(1, glucoseMarker.color, 1);
-						if(i > 0)
+						var currentColor:uint = glucoseMarker.color
+						var previousColor:uint;
+						
+						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+						if(previousGlucoseMarker != null && glucoseMarker != null)
 						{
 							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
 							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-								line.lineStyle(1, oldColor, 1);
+							{
+								currentColor = oldColor;
+								previousColor = oldColor;
+							}
+							else
+								previousColor = previousGlucoseMarker.color;
 						}	
 						
-						line.lineTo(currentLineX, currentLineY);
+						if (isNaN(previousColor))
+							line.lineTo(currentLineX, currentLineY);
+						else
+							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+						
 						line.moveTo(currentLineX, currentLineY);
 					}
 					//Hide glucose marker
@@ -2104,16 +2117,30 @@ package ui.chart
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						}
 						
+						//Style
+						line.lineStyle(1, glucoseMarker.color, 1);
+						var currentColor:uint = glucoseMarker.color
+						var previousColor:uint;
+						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
 						line.lineStyle(1, glucoseMarker.color, 1);
 						if(i > 0)
 						{
 							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
 							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-								line.lineStyle(1, oldColor, 1);
+							{
+								currentColor = oldColor;
+								previousColor = oldColor;
+							}
+							else
+								previousColor = previousGlucoseMarker.color;
 						}
 						
-						line.lineTo(currentLineX, currentLineY);
+						if (isNaN(previousColor))
+							line.lineTo(currentLineX, currentLineY);
+						else
+							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+						
 						line.moveTo(currentLineX, currentLineY);
 					}
 					//Hide glucose marker
@@ -2233,19 +2260,29 @@ package ui.chart
 						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 					}
 					
-					//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+					//Style
 					line.lineStyle(1, glucoseMarker.color, 1);
-					if(i > 0)
+					var currentColor:uint = glucoseMarker.color
+					var previousColor:uint;
+					
+					//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+					if (previousGlucoseMarker != null && glucoseMarker != null)
 					{
-						if (previousGlucoseMarker != null && glucoseMarker != null)
+						var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
+						if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
 						{
-							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
-							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-								line.lineStyle(1, oldColor, 1);
+							currentColor = oldColor;
+							previousColor = oldColor;
 						}
+						else
+							previousColor = previousGlucoseMarker.color;
 					}	
 					
-					line.lineTo(currentLineX, currentLineY);
+					if (isNaN(previousColor))
+						line.lineTo(currentLineX, currentLineY);
+					else
+						line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+					
 					line.moveTo(currentLineX, currentLineY);
 				}
 				//Hide glucose marker
@@ -3087,16 +3124,29 @@ package ui.chart
 								currentLineY = glucoseMarker.y + (glucoseMarker.height);
 							}
 							
-							//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+							//Style
 							line.lineStyle(1, glucoseMarker.color, 1);
-							if(i > 0)
+							var currentColor:uint = glucoseMarker.color
+							var previousColor:uint;
+							
+							//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+							if(previousGlucoseMarker != null && glucoseMarker != null)
 							{
 								var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
 								if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-									line.lineStyle(1, oldColor, 1);
+								{
+									currentColor = oldColor;
+									previousColor = oldColor;
+								}
+								else
+									previousColor = previousGlucoseMarker.color;
 							}
 							
-							line.lineTo(currentLineX, currentLineY);
+							if (isNaN(previousColor))
+								line.lineTo(currentLineX, currentLineY);
+							else
+								line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+							
 							line.moveTo(currentLineX, currentLineY);
 						}
 						//Hide glucose marker
