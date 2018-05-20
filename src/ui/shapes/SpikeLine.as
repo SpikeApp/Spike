@@ -35,7 +35,7 @@ package ui.shapes
 			_fromY = y;
 		}
 		
-		public function lineTo(x:Number, y:Number):void
+		public function lineTo(x:Number, y:Number, startColor:Number = Number.NaN, endColor:Number = Number.NaN):void
 		{
 			_toX = x;
 			_toY = y;
@@ -52,6 +52,14 @@ package ui.shapes
 			line. setVertexPosition(1, _toX  - fYOffset, _toY + fXOffset);
 			line. setVertexPosition(0, _toX  + fYOffset, _toY - fXOffset);
 			line. setVertexPosition(3, _fromX - fYOffset, _fromY + fXOffset);
+			
+			if (!isNaN(startColor) && !isNaN(endColor))
+			{
+				line.setVertexColor(2, startColor);
+				line.setVertexColor(3, startColor);
+				line.setVertexColor(0, endColor);
+				line.setVertexColor(1, endColor);
+			}
 			
 			line.alpha = _alpha;
 			
