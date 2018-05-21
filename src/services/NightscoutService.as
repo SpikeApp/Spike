@@ -1,5 +1,7 @@
 package services
 {
+	import com.adobe.utils.DateUtil;
+	import com.demonsters.debugger.MonsterDebugger;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
 	import com.hurlant.crypto.hash.SHA1;
@@ -32,6 +34,7 @@ package services
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
+	import events.UserInfoEvent;
 	
 	import feathers.layout.HorizontalAlign;
 	
@@ -68,6 +71,7 @@ package services
 		private static const MODE_PROFILE_GET:String = "profileGet";
 		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
 		private static const MODE_PEBBLE_GET:String = "pebbleGet";
+		private static const MODE_USER_INFO_GET:String = "userInfoGet";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
 		private static const MAX_RETRIES_FOR_TREATMENTS:int = 1;
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
@@ -155,6 +159,8 @@ package services
 		private static var pumpUserEnabled:Boolean;
 
 		private static var nightscoutPebbleURL:String;
+
+		private static var nightscoutUserInfoURL:String;
 
 		public function NightscoutService()
 		{
@@ -991,6 +997,125 @@ package services
 				Trace.myTrace("NightscoutService.as", "Error deleting treatment. Server response: " + response);
 		}
 		
+		public static function getUserInfo():void
+		{
+			Trace.myTrace("NightscoutService.as", "getUserInfo called!");
+			
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				Trace.myTrace("NightscoutService.as", "There's no Internet connection.");
+				
+				return;
+			}
+			
+			NetworkConnector.createNSConnector(nightscoutUserInfoURL, null, URLRequestMethod.GET, null, MODE_USER_INFO_GET, onGetUserInfoComplete, onConnectionFailed);
+		}
+		
+		private static function onGetUserInfoComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onGetUserInfoComplete called!");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate response
+			if (response.indexOf("bgnow") != -1 && response.indexOf("DOCTYPE") == -1)
+			{
+				try
+				{
+					var userInfoProperties:Object = SpikeJSON.parse(response) as Object;
+					MonsterDebugger.inspect(userInfoProperties);
+					
+					var currentBG:Number = userInfoProperties.bgnow != null && userInfoProperties.bgnow.mean != null ? Number(userInfoProperties.bgnow.mean) : Number.NaN;
+					var basal:Number = userInfoProperties.basal != null && userInfoProperties.basal.current != null && userInfoProperties.basal.current.basal != null ? Math.round(Number(userInfoProperties.basal.current.basal) * 1000) / 1000 : Number.NaN;
+					var tempBasal:Number = userInfoProperties.basal != null && userInfoProperties.basal.current != null && userInfoProperties.basal.current.tempbasal != null ? Math.round(Number(userInfoProperties.basal.current.tempbasal) * 1000) / 1000 : Number.NaN;
+					var raw:Number = userInfoProperties.rawbg != null && userInfoProperties.rawbg.mgdl != null ? Number(userInfoProperties.rawbg.mgdl) : Number.NaN;
+					!isNaN(raw) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? raw = Math.round((BgReading.mgdlToMmol(raw)) * 10) / 10 : raw = raw;
+					var uploaderBattery:String = userInfoProperties.upbat != null && userInfoProperties.upbat.display != null ? userInfoProperties.upbat.display : "";
+					var outcome:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.outcomeDisplay != null ? Number(userInfoProperties.bwp.outcomeDisplay) : Number.NaN;
+					!isNaN(outcome) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? outcome = Math.round((BgReading.mgdlToMmol(outcome)) * 10) / 10 : outcome = outcome;
+					var effect:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.effectDisplay != null ? Number(userInfoProperties.bwp.effectDisplay) : Number.NaN;
+					!isNaN(effect) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? effect = Math.round((BgReading.mgdlToMmol(effect)) * 10) / 10 : effect = effect;
+					if (!isNaN(currentBG) && !isNaN(outcome) && !isNaN(effect) && outcome < currentBG) effect = -effect;
+					var openAPSLastMoment:Number = userInfoProperties.openaps != null && userInfoProperties.openaps.lastLoopMoment != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.openaps.lastLoopMoment), new Date()).minutes : Number.NaN;
+					var pumpBattery:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.battery != null && userInfoProperties.pump.data.battery.display != null ? userInfoProperties.pump.data.battery.display : "";
+					var pumpReservoir:Number =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.reservoir != null && userInfoProperties.pump.data.reservoir.value != null ? Number(userInfoProperties.pump.data.reservoir.value) : Number.NaN;
+					var pumpStatus:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.status != null && userInfoProperties.pump.data.status.display != null ? userInfoProperties.pump.data.status.display : "";
+					var pumpTime:Number =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.clock != null && userInfoProperties.pump.data.clock.value != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.pump.data.clock.value), new Date()).minutes : Number.NaN;
+					var cage:String =  userInfoProperties.cage != null && userInfoProperties.cage.display != null ? userInfoProperties.cage.display : "";
+					var loopLastMoment:Number =  userInfoProperties.loop != null && userInfoProperties.loop.lastOkMoment != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.loop.lastOkMoment), new Date()).minutes : Number.NaN;
+					
+					_instance.dispatchEvent
+					(
+						new UserInfoEvent
+						(
+							UserInfoEvent.USER_INFO_RETRIEVED,
+							false,
+							false,
+							{
+								basal: basal,
+								tempBasal: tempBasal,
+								raw: raw,
+								uploaderBattery: uploaderBattery,
+								outcome: outcome,
+								effect: effect,
+								openAPSLastMoment: openAPSLastMoment,
+								loopLastMoment: loopLastMoment,
+								pumpBattery: pumpBattery,
+								pumpReservoir: pumpReservoir,
+								pumpStatus: pumpStatus,
+								pumpTime: pumpTime,
+								cage: cage
+							}
+						)
+					);
+					
+					/*if (pebbleProperties != null && pebbleProperties.bgs != null)
+					{
+						var previousPumpIOB:Number = TreatmentsManager.pumpIOB;
+						var pumpIOB:Number = Number(pebbleProperties.bgs[0].iob);
+						TreatmentsManager.setPumpIOB(pumpIOB);
+						
+						var previousPumpCOB:Number = TreatmentsManager.pumpCOB;
+						var pumpCOB:Number = Number(pebbleProperties.bgs[0].cob);
+						TreatmentsManager.setPumpCOB(pumpCOB);
+						
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
+							getRemoteTreatments();
+						
+						//Notify listeners of updated IOB/COB
+						if (previousPumpIOB != pumpIOB || previousPumpCOB != pumpCOB)
+							TreatmentsManager.notifyIOBCOB();
+						
+						retriesForPebbleDownload = 0;
+					}
+					else
+					{
+						Trace.myTrace("NightscoutService.as", "Could not parse User Info Nightscout response. Responder: " + response);
+					}*/
+				} 
+				catch(error:Error) 
+				{
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+					{
+						Trace.myTrace("NightscoutService.as", "Could not parse User Info Nightscout response. Error: " + error.message + " | Response: " + response);
+					}
+				}
+			}
+			else
+			{
+				Trace.myTrace("NightscoutService.as", "Server returned an unexpected response while retreiving user info. Responder: " + response);
+			}
+		}
+		
 		private static function getPebbleEndpoint():void
 		{
 			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
@@ -1758,6 +1883,9 @@ package services
 			nightscoutPebbleURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/pebble" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/pebble";
 			if (nightscoutPebbleURL.indexOf('http') == -1) nightscoutPebbleURL = "https://" + nightscoutPebbleURL;
 			
+			nightscoutUserInfoURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v2/properties" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v2/properties";
+			if (nightscoutUserInfoURL.indexOf('http') == -1) nightscoutUserInfoURL = "https://" + nightscoutUserInfoURL;
+			
 			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 			nightscoutTreatmentsSyncEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
 			pumpUserEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true";
@@ -1872,6 +2000,10 @@ package services
 					setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
 					retriesForPebbleDownload++;
 				}
+			}
+			else if (mode == MODE_USER_INFO_GET)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting user info. Error: " + error.message);
 			}
 		}
 		

@@ -15,6 +15,7 @@ package ui.chart
 	
 	import events.CalibrationServiceEvent;
 	import events.SpikeEvent;
+	import events.UserInfoEvent;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
@@ -23,6 +24,8 @@ package ui.chart
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.core.FeathersControl;
+	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
@@ -31,6 +34,7 @@ package ui.chart
 	import model.ModelLocator;
 	
 	import services.CalibrationService;
+	import services.NightscoutService;
 	
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
@@ -57,6 +61,7 @@ package ui.chart
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.GlucoseHelper;
 	import utils.TimeSpan;
 	
 	[ResourceBundle("chartscreen")]
@@ -243,6 +248,25 @@ package ui.chart
 		private var actionsContainer:LayoutGroup;
 		private var moveBtn:Button;
 		private var deleteBtn:Button;
+
+		//User Info
+		private var infoPill:ChartTreatmentPill;
+		private var infoContainer:LayoutGroup;
+		private var infoCallout:Callout;
+		private var basalPill:ChartTreatmentPill;
+		private var rawPill:ChartTreatmentPill;
+		private var upBatteryPill:ChartTreatmentPill;
+		private var outcomePill:ChartTreatmentPill;
+		private var effectPill:ChartTreatmentPill;
+		private var openAPSMomentPill:ChartTreatmentPill;
+		private var pumpBatteryPill:ChartTreatmentPill;
+		private var pumpReservoirPill:ChartTreatmentPill;
+		private var userInfoPreloader:MaterialDesignSpinner;
+		private var pumpStatusPill:ChartTreatmentPill;
+		private var pumpTimePill:ChartTreatmentPill;
+		private var tempBasalPill:ChartTreatmentPill;
+		private var cagePill:ChartTreatmentPill;
+		private var loopMomentPill:ChartTreatmentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number)
 		{
@@ -820,6 +844,18 @@ package ui.chart
 				
 				COBPill.visible = true;
 			}
+			
+			if (infoPill != null)
+			{
+				if (displayCOBEnabled)
+					infoPill.x = COBPill.x - infoPill.width - 6;
+				else if (displayIOBEnabled)
+					infoPill.x = IOBPill.x - infoPill.width - 6;
+				else
+					infoPill.x = _graphWidth - infoPill.width -glucoseStatusLabelsMargin - 2;
+				
+				infoPill.visible = true;
+			}
 		}
 		
 		public function addAllTreatments():void
@@ -1042,6 +1078,169 @@ package ui.chart
 			//Add treatment
 			chartTreatment.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 			treatmentsContainer.addChild(chartTreatment);
+		}
+		
+		private function onDisplayMoreInfo(e:starling.events.TouchEvent):void
+		{
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				var infoLayout:VerticalLayout = new VerticalLayout();
+				infoLayout.horizontalAlign = HorizontalAlign.CENTER;
+				infoLayout.gap = 6;
+				if (infoContainer != null) infoContainer.removeFromParent(true);
+				infoContainer = new LayoutGroup();
+				infoContainer.layout = infoLayout;
+				
+				//Preloader
+				userInfoPreloader = new MaterialDesignSpinner();
+				userInfoPreloader.color = 0x0086FF;
+				userInfoPreloader.validate();
+				infoContainer.addChild(userInfoPreloader);
+				
+				if (infoCallout != null) infoCallout.dispose();
+				infoCallout = Callout.show(infoContainer, infoPill, null, true);
+				
+				//Get user info
+				NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved, false, 0, true);
+				NightscoutService.getUserInfo();
+				
+				function onUserInfoRetrieved(e:UserInfoEvent):void
+				{
+					NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved);
+					
+					if (userInfoPreloader != null)
+					{
+						if (userInfoPreloader.parent != null)
+							userInfoPreloader.removeFromParent(true);
+						else
+							userInfoPreloader.dispose();
+					}
+					
+					//Blood Glucose Outcome
+					if (outcomePill != null) outcomePill.dispose();
+					if (e.userInfo.outcome != null && !isNaN(e.userInfo.outcome))
+					{
+						outcomePill = new ChartTreatmentPill("Outcome");
+						outcomePill.setValue(e.userInfo.outcome + " " + GlucoseHelper.getGlucoseUnit());
+						infoContainer.addChild(outcomePill);
+					}
+					
+					//Blood Glucose Effect
+					if (effectPill != null) effectPill.dispose();
+					if (e.userInfo.effect != null && !isNaN(e.userInfo.effect))
+					{
+						effectPill = new ChartTreatmentPill("Effect");
+						effectPill.setValue(e.userInfo.effect + " " + GlucoseHelper.getGlucoseUnit());
+						infoContainer.addChild(effectPill);
+					}
+					
+					//Raw Blood Glucose
+					if (rawPill != null) rawPill.dispose();
+					if (e.userInfo.raw != null && !isNaN(e.userInfo.raw))
+					{
+						rawPill = new ChartTreatmentPill("Raw");
+						rawPill.setValue(e.userInfo.raw + " " + GlucoseHelper.getGlucoseUnit());
+						infoContainer.addChild(rawPill);
+					}
+					
+					//Basal Rate
+					if (basalPill != null) basalPill.dispose();
+					if (e.userInfo.basal != null && !isNaN(e.userInfo.basal))
+					{
+						basalPill = new ChartTreatmentPill("Basal");
+						basalPill.setValue(e.userInfo.basal + "U");
+						infoContainer.addChild(basalPill);
+					}
+					
+					//Temp Basal Rate
+					if (tempBasalPill != null) tempBasalPill.dispose();
+					if (e.userInfo.tempBasal != null && !isNaN(e.userInfo.tempBasal))
+					{
+						tempBasalPill = new ChartTreatmentPill("Temp Basal");
+						tempBasalPill.setValue(e.userInfo.tempBasal + "U");
+						infoContainer.addChild(tempBasalPill);
+					}
+					
+					//CAGE
+					if (cagePill != null) cagePill.dispose();
+					if (e.userInfo.cage != null && e.userInfo.cage != "")
+					{
+						cagePill = new ChartTreatmentPill("CAGE");
+						cagePill.setValue(e.userInfo.cage);
+						infoContainer.addChild(cagePill);
+					}
+					
+					//Last OpenAPS Moment
+					if (openAPSMomentPill != null) openAPSMomentPill.dispose();
+					if (e.userInfo.openAPSLastMoment != null && !isNaN(e.userInfo.openAPSLastMoment))
+					{
+						openAPSMomentPill = new ChartTreatmentPill("OpenAPS");
+						openAPSMomentPill.setValue(e.userInfo.openAPSLastMoment + " min ago");
+						infoContainer.addChild(openAPSMomentPill);
+					}
+					
+					//Last Loop Moment
+					if (loopMomentPill != null) loopMomentPill.dispose();
+					if (e.userInfo.loopLastMoment != null && !isNaN(e.userInfo.loopLastMoment))
+					{
+						loopMomentPill = new ChartTreatmentPill("Loop");
+						loopMomentPill.setValue(e.userInfo.loopLastMoment + " min ago");
+						infoContainer.addChild(loopMomentPill);
+					}
+					
+					//Pump Reservoir
+					if (pumpReservoirPill != null) pumpReservoirPill.dispose();
+					if (e.userInfo.pumpReservoir != null && !isNaN(e.userInfo.pumpReservoir))
+					{
+						pumpReservoirPill = new ChartTreatmentPill("Pump Reservoir");
+						pumpReservoirPill.setValue(e.userInfo.pumpReservoir + "U");
+						infoContainer.addChild(pumpReservoirPill);
+					}
+					
+					//Pump Battery
+					if (pumpBatteryPill != null) pumpBatteryPill.dispose();
+					if (e.userInfo.pumpBattery != null && e.userInfo.pumpBattery != "")
+					{
+						pumpBatteryPill = new ChartTreatmentPill("Pump Battery");
+						pumpBatteryPill.setValue(e.userInfo.pumpBattery);
+						infoContainer.addChild(pumpBatteryPill);
+					}
+					
+					//Pump Status
+					if (pumpStatusPill != null) pumpStatusPill.dispose();
+					if (e.userInfo.pumpStatus != null && e.userInfo.pumpStatus != "")
+					{
+						pumpStatusPill = new ChartTreatmentPill("Pump Status");
+						pumpStatusPill.setValue(e.userInfo.pumpStatus);
+						infoContainer.addChild(pumpStatusPill);
+					}
+					
+					//Pump Status
+					if (pumpTimePill != null) pumpTimePill.dispose();
+					if (e.userInfo.pumpTime != null && !isNaN(e.userInfo.pumpTime))
+					{
+						pumpTimePill = new ChartTreatmentPill("Pump Time");
+						pumpTimePill.setValue(e.userInfo.pumpTime + " min ago");
+						infoContainer.addChild(pumpTimePill);
+					}
+					
+					//Uploader Battery
+					if (upBatteryPill != null) upBatteryPill.dispose();
+					if (e.userInfo.uploaderBattery != null && e.userInfo.uploaderBattery != "" && e.userInfo.uploaderBattery != "?%")
+					{
+						upBatteryPill = new ChartTreatmentPill("Uploader Battery");
+						upBatteryPill.setValue(e.userInfo.uploaderBattery);
+						infoContainer.addChild(upBatteryPill);
+					}
+					
+					infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
+				}
+			}
 		}
 		
 		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
@@ -2581,6 +2780,15 @@ package ui.chart
 				}
 			}
 			
+			//Info pill
+			infoPill = new ChartTreatmentPill(" + ");
+			infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+			infoPill.setValue("info");
+			infoPill.visible = false;
+			infoPill.addEventListener(TouchEvent.TOUCH, onDisplayMoreInfo);
+			addChild(infoPill);
+			
+			
 			glucoseTimeAgoPill.setValue("", "", chartFontColor);
 		}
 		
@@ -3619,6 +3827,136 @@ package ui.chart
 				scrollerChartLine.removeFromParent();
 				scrollerChartLine.dispose();
 				scrollerChartLine = null;
+			}
+			
+			if (infoPill != null)
+			{
+				infoPill.removeFromParent();
+				infoPill.dispose();
+				infoPill = null;
+			}
+			
+			if (basalPill != null)
+			{
+				basalPill.removeFromParent();
+				basalPill.dispose();
+				basalPill = null;
+			}
+			
+			if (rawPill != null)
+			{
+				rawPill.removeFromParent();
+				rawPill.dispose();
+				rawPill = null;
+			}
+			
+			if (upBatteryPill != null)
+			{
+				upBatteryPill.removeFromParent();
+				upBatteryPill.dispose();
+				upBatteryPill = null;
+			}
+			
+			if (outcomePill != null)
+			{
+				outcomePill.removeFromParent();
+				outcomePill.dispose();
+				outcomePill = null;
+			}
+			
+			if (effectPill != null)
+			{
+				effectPill.removeFromParent();
+				effectPill.dispose();
+				effectPill = null;
+			}
+			
+			if (openAPSMomentPill != null)
+			{
+				openAPSMomentPill.removeFromParent();
+				openAPSMomentPill.dispose();
+				openAPSMomentPill = null;
+			}
+			
+			if (pumpBatteryPill != null)
+			{
+				pumpBatteryPill.removeFromParent();
+				pumpBatteryPill.dispose();
+				pumpBatteryPill = null;
+			}
+			
+			if (pumpReservoirPill != null)
+			{
+				pumpReservoirPill.removeFromParent();
+				pumpReservoirPill.dispose();
+				pumpReservoirPill = null;
+			}
+			
+			trace("userInfoPreloader", userInfoPreloader == null);
+			
+			try
+			{
+				if (userInfoPreloader != null && !isNaN(userInfoPreloader.width))
+				{
+					userInfoPreloader.removeFromParent();
+					userInfoPreloader.dispose();
+					userInfoPreloader = null;
+				}
+			} 
+			catch(error:Error) 
+			{
+				
+			}
+			
+			
+			
+			if (pumpStatusPill != null)
+			{
+				pumpStatusPill.removeFromParent();
+				pumpStatusPill.dispose();
+				pumpStatusPill = null;
+			}
+			
+			if (pumpTimePill != null)
+			{
+				pumpTimePill.removeFromParent();
+				pumpTimePill.dispose();
+				pumpTimePill = null;
+			}
+			
+			if (tempBasalPill != null)
+			{
+				tempBasalPill.removeFromParent();
+				tempBasalPill.dispose();
+				tempBasalPill = null;
+			}
+			
+			if (cagePill != null)
+			{
+				cagePill.removeFromParent();
+				cagePill.dispose();
+				cagePill = null;
+			}
+			
+			if (loopMomentPill != null)
+			{
+				loopMomentPill.removeFromParent();
+				loopMomentPill.dispose();
+				loopMomentPill = null;
+			}
+			
+			if (infoContainer != null)
+			{
+				infoContainer.removeFromParent();
+				infoContainer.dispose();
+				infoContainer = null;
+			}
+			
+			if (infoCallout != null)
+			{
+				infoCallout.removeFromParent();
+				infoCallout.dispose();
+				infoCallout = null;
 			}
 			
 			super.dispose();
