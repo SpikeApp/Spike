@@ -202,7 +202,6 @@ package services
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		private static var awaitingConnect:Boolean = false;
 		private static var scanTimer:Timer;//only for peripheral types of type not always scan
-		private static var reconnectTimer:Timer;	
 		private static var peripheralUUID:String = "";
 
 		/**
@@ -828,20 +827,15 @@ package services
 				awaitingConnect = false;
 				tryReconnect();
 			} else if (BlueToothDevice.isDexcomG5()) {
-				startReconnectTimer(G5_RECONNECT_TIME_IN_SECONDS);
+				peripheralConnected = false;
+				awaitingConnect = false;
+				tryReconnect();
 			} else {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				forgetActiveBluetoothPeripheral();
 				startRescan(null);
 			}
-		}
-		
-		private static function startReconnectTimer(timerInSeconds:int):void {
-			myTrace("in startReconnectTime with timer =" + timerInSeconds);
-			reconnectTimer = new Timer(timerInSeconds * 1000, 1);
-			reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
-			reconnectTimer.start();
 		}
 		
 		private static function tryReconnect(event:flash.events.Event = null):void {
