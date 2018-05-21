@@ -662,6 +662,13 @@ package services
 			
 			blukonCurrentCommand = "";
 			
+			if (BlueToothDevice.isDexcomG5()) {
+				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 15 * 1000) {
+					myTrace("in central_peripheralConnectHandler, G5 but last reading was less than 15 seconds ago, no further action. Let G5 do the disconnect");
+					return;
+				}
+			}
+			
 			if (BlueToothDevice.isBluKon()) {
 				if (BluetoothLE.service.centralManager.isScanning) {
 					//this may happen because for blukon, after disconnect, we start scanning and also try to reconnect
@@ -670,16 +677,6 @@ package services
 					if (BlueToothDevice.isBluKon()) {
 						stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 					}
-				}
-			}
-			
-			if (BlueToothDevice.isDexcomG5()) {
-				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
-					myTrace("in central_peripheralConnectHandler, G5 but last reading was less than 1 minute ago, disconnecting");
-					if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
-						myTrace("in central_peripheralConnectHandler, disconnect failed");
-					}
-					return;
 				}
 			}
 			
