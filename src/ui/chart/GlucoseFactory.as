@@ -1,12 +1,19 @@
 package ui.chart
 {
 	import flash.errors.IllegalOperationError;
+	import flash.system.Capabilities;
+	
+	import spark.formatters.DateTimeFormatter;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
+	import database.Calibration;
 	import database.CommonSettings;
+	import database.Sensor;
 	
 	import model.ModelLocator;
+	
+	import utils.TimeSpan;
 	
 	[ResourceBundle("chartscreen")]
 
@@ -217,6 +224,96 @@ package ui.chart
 			value += "g";
 			
 			return value;
+		}
+		
+		public static function getRawGlucose():Number 
+		{
+			var raw:Number = Number.NaN;
+			var lastBgReading:BgReading = BgReading.lastNoSensor();
+			var lastCalibration:Calibration = Calibration.last();
+			if (lastBgReading != null && lastCalibration != null)
+			{
+				var slope:Number = lastCalibration.checkIn ? lastCalibration.slope : 1000/lastCalibration.slope;
+				var scale:Number = lastCalibration.checkIn ? lastCalibration.firstScale : 1;
+				var intercept:Number = lastCalibration.checkIn ? lastCalibration.firstIntercept : lastCalibration.intercept * -1000 / lastCalibration.slope;
+				var unfiltered:Number = lastBgReading.usedRaw() * 1000;
+				var filtered:Number = lastBgReading.ageAdjustedFiltered() * 1000;
+				
+				if (slope === 0 || unfiltered === 0 || scale === 0) 
+					raw = 0;
+				else if (filtered === 0 || lastBgReading.calculatedValue < 40) 
+					raw = scale * (unfiltered - intercept) / slope;
+				else 
+				{
+					var ratio:Number = scale * (filtered - intercept) / slope / lastBgReading.calculatedValue;
+					raw = scale * (unfiltered - intercept) / slope / ratio;
+				}
+				
+				if (!isNaN(raw) && raw != 0)
+				{
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+					{
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON) != "true")
+							raw = Math.round(raw * 10) / 10;
+						else
+							raw = Math.round(raw);
+					}
+					else
+						raw = Math.round(BgReading.mgdlToMmol(raw) * 10) / 10;
+				}
+			}
+			
+			return raw;
+		}
+		
+		public static function getSensorAge():String
+		{
+			var sage:String = "N/A";
+			
+			if (Sensor.getActiveSensor() != null)
+			{
+				var dateFormatter:DateTimeFormatter = new DateTimeFormatter();
+				dateFormatter.dateTimePattern = "dd MMM HH:mm";
+				dateFormatter.useUTC = false;
+				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
+				
+				//Set sensor start time
+				var sensorStartDate:Date = new Date(Sensor.getActiveSensor().startedAt)
+				var sensorStartDateValue:String =  dateFormatter.format(sensorStartDate);
+				
+				//Calculate Sensor Age
+				var sensorDays:String;
+				var sensorHours:String;
+				
+				if (BlueToothDevice.knowsFSLAge()) 
+				{
+					var sensorAgeInMinutes:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
+					
+					if (sensorAgeInMinutes == "0") 
+						sage = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
+					else if ((new Number(sensorAgeInMinutes)) > 14.5 * 24 * 60) 
+					{
+						sage = ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_expired');
+					}
+					else 
+					{
+						sensorDays = TimeSpan.fromMinutes(Number(sensorAgeInMinutes)).days.toString();
+						sensorHours = TimeSpan.fromMinutes(Number(sensorAgeInMinutes)).hours.toString();
+						
+						sage = sensorDays + "d " + sensorHours + "h";
+					}
+				}
+				else
+				{
+					var nowDate:Date = new Date();
+					sensorDays = TimeSpan.fromDates(sensorStartDate, nowDate).days.toString();
+					sensorHours = TimeSpan.fromDates(sensorStartDate, nowDate).hours.toString();
+					
+					sage = sensorDays + "d " + sensorHours + "h";
+				}
+			}
+			
+			return sage;
 		}
 	}
 }

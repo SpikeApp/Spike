@@ -1,7 +1,6 @@
 package services
 {
 	import com.adobe.utils.DateUtil;
-	import com.demonsters.debugger.MonsterDebugger;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
 	import com.hurlant.crypto.hash.SHA1;
@@ -105,6 +104,8 @@ package services
 		private static var apiSecret:String;
 		private static var nightscoutEventsURL:String;
 		private static var nightscoutTreatmentsURL:String;
+		private static var nightscoutPebbleURL:String;
+		private static var nightscoutUserInfoURL:String;
 		private static var credentialsTesterID:String;
 		private static var lastGlucoseReadingsSyncTimeStamp:Number;
 		private static var initialGlucoseReadingsIndex:int = 0;
@@ -128,7 +129,7 @@ package services
 		private static var waitingForNSData:Boolean = false;
 		private static var nightscoutFollowURL:String = "";
 		private static var nightscoutFollowOffset:Number = 0;
-		private static var followerModeEnabled:Boolean = false;
+		public static var followerModeEnabled:Boolean = false;
 		private static var followerTimer:int = -1;
 		private static var nightscoutFollowAPISecret:String = "";
 		private static var nightscoutProfileURL:String = "";
@@ -155,12 +156,7 @@ package services
 		private static var lastRemoteTreatmentsSync:Number = 0;
 		private static var lastRemoteProfileSync:Number = 0;
 		private static var lastRemotePebbleSync:Number = 0;
-
 		private static var pumpUserEnabled:Boolean;
-
-		private static var nightscoutPebbleURL:String;
-
-		private static var nightscoutUserInfoURL:String;
 
 		public function NightscoutService()
 		{
@@ -1008,6 +1004,13 @@ package services
 				return;
 			}
 			
+			if (!serviceActive && !followerModeEnabled)
+			{
+				Trace.myTrace("NightscoutService.as", "Service not enabled.");
+				
+				return;
+			}
+			
 			NetworkConnector.createNSConnector(nightscoutUserInfoURL, null, URLRequestMethod.GET, null, MODE_USER_INFO_GET, onGetUserInfoComplete, onConnectionFailed);
 		}
 		
@@ -1032,75 +1035,57 @@ package services
 				try
 				{
 					var userInfoProperties:Object = SpikeJSON.parse(response) as Object;
-					MonsterDebugger.inspect(userInfoProperties);
 					
-					var currentBG:Number = userInfoProperties.bgnow != null && userInfoProperties.bgnow.mean != null ? Number(userInfoProperties.bgnow.mean) : Number.NaN;
-					var basal:Number = userInfoProperties.basal != null && userInfoProperties.basal.current != null && userInfoProperties.basal.current.basal != null ? Math.round(Number(userInfoProperties.basal.current.basal) * 1000) / 1000 : Number.NaN;
-					var tempBasal:Number = userInfoProperties.basal != null && userInfoProperties.basal.current != null && userInfoProperties.basal.current.tempbasal != null ? Math.round(Number(userInfoProperties.basal.current.tempbasal) * 1000) / 1000 : Number.NaN;
-					var raw:Number = userInfoProperties.rawbg != null && userInfoProperties.rawbg.mgdl != null ? Number(userInfoProperties.rawbg.mgdl) : Number.NaN;
-					!isNaN(raw) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? raw = Math.round((BgReading.mgdlToMmol(raw)) * 10) / 10 : raw = raw;
-					var uploaderBattery:String = userInfoProperties.upbat != null && userInfoProperties.upbat.display != null ? userInfoProperties.upbat.display : "";
-					var outcome:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.outcomeDisplay != null ? Number(userInfoProperties.bwp.outcomeDisplay) : Number.NaN;
-					!isNaN(outcome) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? outcome = Math.round((BgReading.mgdlToMmol(outcome)) * 10) / 10 : outcome = outcome;
-					var effect:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.effectDisplay != null ? Number(userInfoProperties.bwp.effectDisplay) : Number.NaN;
-					!isNaN(effect) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? effect = Math.round((BgReading.mgdlToMmol(effect)) * 10) / 10 : effect = effect;
-					if (!isNaN(currentBG) && !isNaN(outcome) && !isNaN(effect) && outcome < currentBG) effect = -effect;
-					var openAPSLastMoment:Number = userInfoProperties.openaps != null && userInfoProperties.openaps.lastLoopMoment != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.openaps.lastLoopMoment), new Date()).minutes : Number.NaN;
-					var pumpBattery:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.battery != null && userInfoProperties.pump.data.battery.display != null ? userInfoProperties.pump.data.battery.display : "";
-					var pumpReservoir:Number =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.reservoir != null && userInfoProperties.pump.data.reservoir.value != null ? Number(userInfoProperties.pump.data.reservoir.value) : Number.NaN;
-					var pumpStatus:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.status != null && userInfoProperties.pump.data.status.display != null ? userInfoProperties.pump.data.status.display : "";
-					var pumpTime:Number =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.clock != null && userInfoProperties.pump.data.clock.value != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.pump.data.clock.value), new Date()).minutes : Number.NaN;
-					var cage:String =  userInfoProperties.cage != null && userInfoProperties.cage.display != null ? userInfoProperties.cage.display : "";
-					var loopLastMoment:Number =  userInfoProperties.loop != null && userInfoProperties.loop.lastOkMoment != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.loop.lastOkMoment), new Date()).minutes : Number.NaN;
-					
-					_instance.dispatchEvent
-					(
-						new UserInfoEvent
+					if (userInfoProperties != null)
+					{
+						var currentBG:Number = userInfoProperties.bgnow != null && userInfoProperties.bgnow.mean != null ? Number(userInfoProperties.bgnow.mean) : Number.NaN;
+						var basal:String = userInfoProperties.basal != null && userInfoProperties.basal.display != null ? String(userInfoProperties.basal.display) : "";
+						var raw:Number = userInfoProperties.rawbg != null && userInfoProperties.rawbg.mgdl != null ? Number(userInfoProperties.rawbg.mgdl) : Number.NaN;
+						!isNaN(raw) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? raw = Math.round((BgReading.mgdlToMmol(raw)) * 10) / 10 : raw = raw;
+						var uploaderBattery:String = userInfoProperties.upbat != null && userInfoProperties.upbat.display != null ? userInfoProperties.upbat.display : "";
+						var outcome:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.outcomeDisplay != null ? Number(userInfoProperties.bwp.outcomeDisplay) : Number.NaN;
+						!isNaN(outcome) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? outcome = Math.round((BgReading.mgdlToMmol(outcome)) * 10) / 10 : outcome = outcome;
+						var effect:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.effectDisplay != null ? Number(userInfoProperties.bwp.effectDisplay) : Number.NaN;
+						!isNaN(effect) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? effect = Math.round((BgReading.mgdlToMmol(effect)) * 10) / 10 : effect = effect;
+						if (!isNaN(currentBG) && !isNaN(outcome) && !isNaN(effect) && outcome < currentBG) effect = -effect;
+						var openAPSLastMoment:Number = userInfoProperties.openaps != null && userInfoProperties.openaps.lastLoopMoment != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.openaps.lastLoopMoment), new Date()).minutes : Number.NaN;
+						var pumpBattery:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.battery != null && userInfoProperties.pump.data.battery.display != null ? userInfoProperties.pump.data.battery.display : "";
+						var pumpReservoir:Number =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.reservoir != null && userInfoProperties.pump.data.reservoir.value != null ? Number(userInfoProperties.pump.data.reservoir.value) : Number.NaN;
+						var pumpStatus:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.status != null && userInfoProperties.pump.data.status.display != null ? userInfoProperties.pump.data.status.display : "";
+						var pumpTime:Number =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.clock != null && userInfoProperties.pump.data.clock.value != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.pump.data.clock.value), new Date()).minutes : Number.NaN;
+						var cage:String =  userInfoProperties.cage != null && userInfoProperties.cage.display != null ? userInfoProperties.cage.display : "";
+						var sage:String =  userInfoProperties.sage != null && userInfoProperties.sage["Sensor Start"] != null && userInfoProperties.sage["Sensor Start"].display != null ? String(userInfoProperties.sage["Sensor Start"].display) : "";
+						var iage:String =  userInfoProperties.iage != null && userInfoProperties.iage.display != null ? String(userInfoProperties.iage.display) : "";
+						var loopLastMoment:Number =  userInfoProperties.loop != null && userInfoProperties.loop.lastOkMoment != null ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.loop.lastOkMoment), new Date()).minutes : Number.NaN;
+						
+						_instance.dispatchEvent
 						(
-							UserInfoEvent.USER_INFO_RETRIEVED,
-							false,
-							false,
-							{
-								basal: basal,
-								tempBasal: tempBasal,
-								raw: raw,
-								uploaderBattery: uploaderBattery,
-								outcome: outcome,
-								effect: effect,
-								openAPSLastMoment: openAPSLastMoment,
-								loopLastMoment: loopLastMoment,
-								pumpBattery: pumpBattery,
-								pumpReservoir: pumpReservoir,
-								pumpStatus: pumpStatus,
-								pumpTime: pumpTime,
-								cage: cage
-							}
-						)
-					);
-					
-					/*if (pebbleProperties != null && pebbleProperties.bgs != null)
-					{
-						var previousPumpIOB:Number = TreatmentsManager.pumpIOB;
-						var pumpIOB:Number = Number(pebbleProperties.bgs[0].iob);
-						TreatmentsManager.setPumpIOB(pumpIOB);
-						
-						var previousPumpCOB:Number = TreatmentsManager.pumpCOB;
-						var pumpCOB:Number = Number(pebbleProperties.bgs[0].cob);
-						TreatmentsManager.setPumpCOB(pumpCOB);
-						
-						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
-							getRemoteTreatments();
-						
-						//Notify listeners of updated IOB/COB
-						if (previousPumpIOB != pumpIOB || previousPumpCOB != pumpCOB)
-							TreatmentsManager.notifyIOBCOB();
-						
-						retriesForPebbleDownload = 0;
-					}
+							new UserInfoEvent
+							(
+								UserInfoEvent.USER_INFO_RETRIEVED,
+								false,
+								false,
+								{
+									basal: basal,
+									raw: raw,
+									uploaderBattery: uploaderBattery,
+									outcome: outcome,
+									effect: effect,
+									openAPSLastMoment: openAPSLastMoment,
+									loopLastMoment: loopLastMoment,
+									pumpBattery: pumpBattery,
+									pumpReservoir: pumpReservoir,
+									pumpStatus: pumpStatus,
+									pumpTime: pumpTime,
+									cage: cage,
+									sage: sage,
+									iage: iage
+								}
+							)
+						);
+					} 
 					else
-					{
 						Trace.myTrace("NightscoutService.as", "Could not parse User Info Nightscout response. Responder: " + response);
-					}*/
 				} 
 				catch(error:Error) 
 				{

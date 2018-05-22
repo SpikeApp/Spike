@@ -19,7 +19,6 @@ package ui.chart
 		/* Constants */
 		public static const TYPE_IOB:String = "IOB";
 		public static const TYPE_COB:String = "COB";
-		public static const TYPE_INFO:String = "more";
 		private static const PADDING:int = 3;
 		private static const CORNER_RADIUS:int = 4;
 		private static const STROKE_THICKNESS:int = 1;
