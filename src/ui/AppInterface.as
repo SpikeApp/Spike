@@ -1,6 +1,6 @@
 package ui
 {
-	import com.demonsters.debugger.MonsterDebugger;
+	//import com.demonsters.debugger.MonsterDebugger;
 	
 	import events.ScreenEvent;
 	
@@ -66,7 +66,7 @@ package ui
 		{
 			_instance = this;
 			
-			MonsterDebugger.initialize(this);
+			//MonsterDebugger.initialize(this);
 		}
 		
 		public function start():void 
