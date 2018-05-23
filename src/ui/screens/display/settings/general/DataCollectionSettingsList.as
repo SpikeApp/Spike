@@ -164,6 +164,13 @@ package ui.screens.display.settings.general
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "");
 			}
 			
+			//URL Validation
+			if (followNSURL.substr(-1) == "/")
+			{
+				followNSURL = followNSURL.slice(0, -1);
+				nightscoutURLInput.text = followNSURL;
+			}
+			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != followNSURL)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL, followNSURL);
 			

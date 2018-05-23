@@ -125,6 +125,13 @@ package ui.screens.display.settings.share
 			{
 				var needsCredentialRechek:Boolean = false;
 				
+				//URL Validation
+				if (selectedURL.substr(-1) == "/")
+				{
+					selectedURL = selectedURL.slice(0, -1);
+					nsURL.text = selectedURL;
+				}
+				
 				//Nightscout
 				var nsEnabledValue:String;
 				
