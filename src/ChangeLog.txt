@@ -1,10 +1,11 @@
 2.1.0
+FEATURE: Ability to prevent Spike rotation. Open the "three dots" upper right menu and select "No Rotation". This feature might not work on all devices. (Miguel)
 ENHANCEMENT: Chart line now uses gradients when transitioning from different colors (ex: low to in range). It look better and makes the horizontal threshold dashed lines more precise. (Miguel)
-ENHANCEMENT: Reversed order of IOB and COB on the watch app to stay in tune with the same order displayed in the iPhone app.
-ENHANCEMENT: Improved validation of Nightscout URLs inserted by users.
-ENHANCEMENT: Small layout adjustment for glucose threshold labels on the main chart.
-ENHANCEMENT: Small layout adjustment for the pre(un)snoozer popup on iPhone X.
-FIX: Small fix for alarm snoozer popup layout.
+ENHANCEMENT: Reversed order of IOB and COB on the watch app to stay in tune with the same order displayed in the iPhone app. (Miguel)
+ENHANCEMENT: Improved validation of Nightscout URLs inserted by users. (Miguel)
+ENHANCEMENT: Small layout adjustment for glucose threshold labels on the main chart. (Miguel)
+ENHANCEMENT: Small layout adjustment for the pre(un)snoozer popup on iPhone X. (miguel)
+FIX: Small fix for alarm snoozer popup layout. (Miguel)
 
 2.0.9
 ENHANCEMENT: Increased graphics quality for glucose markers and all treatments present on the chart. (Miguel)
