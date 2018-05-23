@@ -12,6 +12,7 @@ package model
 	import database.CommonSettings;
 	import database.Sensor;
 	
+	
 	import utils.Crc;
 	import utils.Trace;
 	import utils.libre.LibreAlarmReceiver;
@@ -83,6 +84,10 @@ package model
 			temp = new ByteArray();s_full_data.readBytes(temp, 0, 2);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW,utils.UniqueId.bytesToHex(temp));
 			myTrace("in decodeTomatoPacket, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 
+			
+			data.position = 4;
+			temp = new ByteArray();data.readBytes(temp, 0, 1);
+			var status:int = temp[0];
 			
 			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
 			LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
