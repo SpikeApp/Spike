@@ -1128,6 +1128,21 @@ package treatments
 				}
 				else if (treatmentEventType == "Note")
 					treatmentType = Treatment.TYPE_NOTE;
+				else if (treatmentEventType == "OpenAPS Offline")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "OpenAPS Offline";
+				}
+				else if (treatmentEventType == "Site Change")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Pump Site Change";
+				}
+				else if (treatmentEventType == "Profile Switch")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Profile Switch" + (nsTreatment.profile != null ? ": " + nsTreatment.profile : "");
+				}
 				else if (treatmentEventType == "Sensor Start")
 					treatmentType = Treatment.TYPE_SENSOR_START;
 				else if (treatmentEventType == "BG Check")
@@ -1139,9 +1154,34 @@ package treatments
 					
 					treatmentGlucose = glucoseValue;
 				}
+				else if (treatmentEventType == "Bolus Wizard" || treatmentEventType == "<none>")
+				{
+					//Process special treatments like Bolus Wizard or treatments without and event type.
+					if ((nsTreatment.carbs == null || isNaN(nsTreatment.carbs))  && ((nsTreatment.insulin != null || !isNaN(nsTreatment.insulin)) && Number(nsTreatment.insulin) != 0))
+					{
+						//Bolus treatment
+						treatmentType = Treatment.TYPE_BOLUS;
+						treatmentInsulinAmount = Number(nsTreatment.insulin);
+						treatmentInsulinID = "000000";
+					}
+					else if (((nsTreatment.carbs != null || !isNaN(nsTreatment.carbs)) && Number(nsTreatment.carbs) != 0)  && (nsTreatment.insulin == null || isNaN(nsTreatment.insulin)))
+					{
+						//Carb treatment
+						treatmentType = Treatment.TYPE_CARBS_CORRECTION;
+						treatmentCarbs = Number(nsTreatment.carbs);
+					}
+					else if (((nsTreatment.carbs != null || !isNaN(nsTreatment.carbs)) && Number(nsTreatment.carbs) != 0)  && ((nsTreatment.insulin != null || !isNaN(nsTreatment.insulin)) && Number(nsTreatment.insulin) != 0))
+					{
+						//Meal treatment
+						treatmentType = Treatment.TYPE_MEAL_BOLUS;
+						treatmentInsulinAmount = Number(Math.round(nsTreatment.insulin * 10) / 10);
+						treatmentInsulinID = "000000";
+						treatmentCarbs = Number(nsTreatment.carbs);
+					}
+				}
 				
 				if (nsTreatment.foodType != null && nsTreatment.foodType != "")
-					treatmentNote += nsTreatment.foodType;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + nsTreatment.foodType;
 				
 				if (nsTreatment.notes != null && nsTreatment.notes != "")
 					treatmentNote += (treatmentNote != "" ? "\n" : "") + nsTreatment.notes;
