@@ -2,6 +2,8 @@ package ui.screens
 {
 	import flash.system.System;
 	
+	import database.BlueToothDevice;
+	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -95,21 +97,24 @@ package ui.screens
 			healthkitSettings = new HealthkitSettingsList();
 			screenRenderer.addChild(healthkitSettings);
 			
-			//Dexcom Section Label
-			dexcomLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_section_label'), true);
-			screenRenderer.addChild(dexcomLabel);
-			
-			//Dexcom Settings
-			dexcomSettings = new DexcomSettingsList();
-			screenRenderer.addChild(dexcomSettings);
-			
-			//Nightscout Section Label
-			nightscoutLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_section_label'), true);
-			screenRenderer.addChild(nightscoutLabel);
-			
-			//Nightscout Settings
-			nightscoutSettings = new NightscoutSettingsList();
-			screenRenderer.addChild(nightscoutSettings);
+			if (!BlueToothDevice.isFollower())
+			{
+				//Dexcom Section Label
+				dexcomLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_section_label'), true);
+				screenRenderer.addChild(dexcomLabel);
+				
+				//Dexcom Settings
+				dexcomSettings = new DexcomSettingsList();
+				screenRenderer.addChild(dexcomSettings);
+				
+				//Nightscout Section Label
+				nightscoutLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_section_label'), true);
+				screenRenderer.addChild(nightscoutLabel);
+				
+				//Nightscout Settings
+				nightscoutSettings = new NightscoutSettingsList();
+				screenRenderer.addChild(nightscoutSettings);
+			}
 		}
 		
 		private function adjustMainMenu():void
@@ -129,9 +134,9 @@ package ui.screens
 				appBadgeSettings.save();
 			if (healthkitSettings.needsSave)
 				healthkitSettings.save();
-			if (dexcomSettings.needsSave)
-				dexcomSettings.save();nightscoutSettings
-			if (nightscoutSettings.needsSave)
+			if (dexcomSettings != null && dexcomSettings.needsSave)
+				dexcomSettings.save();
+			if (nightscoutSettings != null && nightscoutSettings.needsSave)
 				nightscoutSettings.save();
 			
 			//Activate menu drag gesture

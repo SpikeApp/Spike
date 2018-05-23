@@ -7,6 +7,8 @@ package ui.popups
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
@@ -231,6 +233,16 @@ package ui.popups
 			alarmTypesPicker.dataProvider = alarmTypesDataProvider;
 			alarmTypesPicker.selectedIndex = -1;
 			alarmTypesPicker.addEventListener(Event.CHANGE, onAlarmChosen);
+			
+			alarmTypesPicker.itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				itemRenderer.paddingRight = 10;
+				itemRenderer.paddingLeft = 10;
+				return itemRenderer;
+			}
+			
 			mainContainer.addChild(alarmTypesPicker);
 		}
 		

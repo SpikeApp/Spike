@@ -18,6 +18,7 @@ package ui.screens
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.layout.HorizontalAlign;
@@ -107,6 +108,7 @@ package ui.screens
 		{
 			super.initialize();
 			
+			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupHeader();
@@ -115,6 +117,8 @@ package ui.screens
 			setupContent();
 			setupEventListeners();
 			adjustMainMenu();
+			
+			
 		}
 		
 		/**
@@ -185,7 +189,10 @@ package ui.screens
 			var now:Number = new Date().valueOf();
 			IOBCOBDisplay = GraphLayoutFactory.createChartStatusText(timeAgoColor != 0 ? "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) : "", timeAgoColor, infoFontSize, Align.CENTER, false, Constants.stageWidth);
 			var IOBCOBLayoutData:AnchorLayoutData = new AnchorLayoutData();
-			IOBCOBLayoutData.bottom = 10;
+			if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				IOBCOBLayoutData.bottom = 10;
+			else
+				IOBCOBLayoutData.bottom = 20;
 			IOBCOBDisplay.layoutData = IOBCOBLayoutData;
 			addChild(IOBCOBDisplay);
 			
@@ -481,6 +488,9 @@ package ui.screens
 			if (isNaN(glucoseFontSize))
 				glucoseFontSize = 130;
 			
+			if ((formattedGlucoseOutput == "LOW" || formattedGlucoseOutput == "HIGH") && Constants.isPortrait)
+				glucoseFontSize -= 20;
+			
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
 			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 		}
@@ -628,8 +638,28 @@ package ui.screens
 			if (IOBCOBDisplay != null)
 				IOBCOBDisplay.width = Constants.stageWidth;
 			
+			//Adjust header for iPhone X
+			onCreation(null);
+			
 			SystemUtil.executeWhenApplicationIsActive( calculateValues );
 			SystemUtil.executeWhenApplicationIsActive( updateInfo );
+		}
+		
+		private function onCreation(event:starling.events.Event):void
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && this.header != null)
+			{
+				if (Constants.isPortrait)
+				{
+					this.header.height = 108;
+					this.header.maxHeight = 108;	
+				}
+				else
+				{
+					this.header.height = 78;
+					this.header.maxHeight = 78;
+				}
+			}
 		}
 		
 		/**

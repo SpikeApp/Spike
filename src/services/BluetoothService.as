@@ -202,7 +202,6 @@ package services
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		private static var awaitingConnect:Boolean = false;
 		private static var scanTimer:Timer;//only for peripheral types of type not always scan
-		private static var reconnectTimer:Timer;	
 		private static var peripheralUUID:String = "";
 
 		/**
@@ -663,6 +662,13 @@ package services
 			
 			blukonCurrentCommand = "";
 			
+			if (BlueToothDevice.isDexcomG5()) {
+				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 15 * 1000) {
+					myTrace("in central_peripheralConnectHandler, G5 but last reading was less than 15 seconds ago, no further action. Let G5 do the disconnect");
+					return;
+				}
+			}
+			
 			if (BlueToothDevice.isBluKon()) {
 				if (BluetoothLE.service.centralManager.isScanning) {
 					//this may happen because for blukon, after disconnect, we start scanning and also try to reconnect
@@ -671,16 +677,6 @@ package services
 					if (BlueToothDevice.isBluKon()) {
 						stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 					}
-				}
-			}
-			
-			if (BlueToothDevice.isDexcomG5()) {
-				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
-					myTrace("in central_peripheralConnectHandler, G5 but last reading was less than 1 minute ago, disconnecting");
-					if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
-						myTrace("in central_peripheralConnectHandler, disconnect failed");
-					}
-					return;
 				}
 			}
 			
@@ -828,20 +824,15 @@ package services
 				awaitingConnect = false;
 				tryReconnect();
 			} else if (BlueToothDevice.isDexcomG5()) {
-				startReconnectTimer(G5_RECONNECT_TIME_IN_SECONDS);
+				peripheralConnected = false;
+				awaitingConnect = false;
+				tryReconnect();
 			} else {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				forgetActiveBluetoothPeripheral();
 				startRescan(null);
 			}
-		}
-		
-		private static function startReconnectTimer(timerInSeconds:int):void {
-			myTrace("in startReconnectTime with timer =" + timerInSeconds);
-			reconnectTimer = new Timer(timerInSeconds * 1000, 1);
-			reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
-			reconnectTimer.start();
 		}
 		
 		private static function tryReconnect(event:flash.events.Event = null):void {

@@ -262,7 +262,7 @@ package network.httpserver.API
 									readingObject.urgent_low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)).toString(16).toUpperCase();
 									
 									//Stats
-									readingObject.status_one = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + " | COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now));
 									if (!lightMode)
 									{
 										var userStats:BasicUserStats = StatsManager.getBasicUserStats();

@@ -11,6 +11,7 @@ package ui.popups
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
+	import feathers.core.FeathersControl;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
@@ -110,6 +111,7 @@ package ui.popups
 				SystemUtil.executeWhenApplicationIsActive( snoozeCallout.close );
 			
 			//Display callout
+			SystemUtil.executeWhenApplicationIsActive( snoozeCallout.invalidate, FeathersControl.INVALIDATION_FLAG_SIZE );
 			SystemUtil.executeWhenApplicationIsActive( PopUpManager.addPopUp, snoozeCallout, true, false );
 			
 			//Create close timer

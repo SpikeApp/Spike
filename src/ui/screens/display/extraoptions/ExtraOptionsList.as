@@ -65,17 +65,21 @@ package ui.screens.display.extraoptions
 		private var preSnoozeScreenIconImage:Image;
 		private var readingOnDemandIconTexture:Texture;
 		private var readingOnDemandIconImage:Image;
+		private var noRotationIconTexture:Texture;
+		private var noRotationIconImage:Image;
 		
 		/* Properties */
 		private var speechEnabled:Boolean;
 		private var listTextRenderers:Array;
 		private var timeoutTimer:Timer;
 		private var nightscoutEnabled:Boolean;
+		private var preventRotationEnabled:Boolean;
 		
 		public function ExtraOptionsList()
 		{
 			super();
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
@@ -107,6 +111,9 @@ package ui.screens.display.extraoptions
 			/* Get Speech Setting from Database */
 			speechEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true";
 			
+			/* Get Rotation Setting from Database */
+			preventRotationEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
+			
 			/* Get Nightscout Setting from Database */
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" && 
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" && 
@@ -123,6 +130,9 @@ package ui.screens.display.extraoptions
 			
 			//Skin No Lock Icon Accordingly
 			buildNoLockIcon();
+			
+			//Skin No Rotation Icon Accordingly
+			buildNoRotationIcon();
 			
 			//Build Menu Content
 			setupContent();
@@ -188,6 +198,7 @@ package ui.screens.display.extraoptions
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','full_screen_button_title'), icon: fullScreenIconImage, id: menuItems.length, action: "showFullScreen" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','snoozer_button_title'), icon: preSnoozeScreenIconImage, id: menuItems.length, action: "preSnooze" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_lock_button_title'), icon: noLockIconImage, id: menuItems.length, action: "enableNoLock" });
+			menuItems.push({ label: "No Rotation", icon: noRotationIconImage, id: menuItems.length, action: "enableNoRotation" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','speech_button_title'), icon: speechIconImage, id: menuItems.length, action: "enableSpeech" });
 			if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected) menuItems.push({ label: "On-Demand", icon: readingOnDemandIconImage, id: menuItems.length, action: "readingOnDemand" });
 			
@@ -226,6 +237,23 @@ package ui.screens.display.extraoptions
 			noLockIconImage = new Image(noLockIconTexture);
 		}
 		
+		private function buildNoRotationIcon():void
+		{
+			//No Roation
+			if(noRotationIconTexture != null)
+			{
+				noRotationIconTexture.dispose();
+				noRotationIconTexture = null;
+			}
+			
+			if (preventRotationEnabled)
+				noRotationIconTexture = MaterialDeepGreyAmberMobileThemeIcons.noRotationEnabledTexture;
+			else
+				noRotationIconTexture = MaterialDeepGreyAmberMobileThemeIcons.noRotationDisabledTexture;
+			
+			noRotationIconImage = new Image(noRotationIconTexture);
+		}
+		
 		/**
 		 * Event Handlers
 		 */
@@ -255,6 +283,20 @@ package ui.screens.display.extraoptions
 				{
 					menuItem = dataProvider.getItemAt(i);
 					if (menuItem.action == "enableNoLock")
+					{
+						(listTextRenderers[i] as DefaultListItemRenderer).fontStyles = selectedFontTxtFormat;
+						break;
+					}
+				}	
+			}
+			
+			//Skin Rotation Label
+			if(preventRotationEnabled)
+			{
+				for (i = 0; i < dataProvider.length; i++) 
+				{
+					menuItem = dataProvider.getItemAt(i);
+					if (menuItem.action == "enableNoRotation")
 					{
 						(listTextRenderers[i] as DefaultListItemRenderer).fontStyles = selectedFontTxtFormat;
 						break;
@@ -310,7 +352,7 @@ package ui.screens.display.extraoptions
 						timeoutTimer.stop();
 					timeoutTimer.start();
 				}
-				else if ( itemAction == "enableNoLock" ) //Speech
+				else if ( itemAction == "enableNoLock" ) //Lock
 				{	
 					if (!Constants.noLockEnabled)
 					{
@@ -343,6 +385,28 @@ package ui.screens.display.extraoptions
 					
 					//Vibrate Device
 					BackgroundFetch.vibrate();
+					
+					//Activate the close timer
+					if (timeoutTimer.running)
+						timeoutTimer.stop();
+					timeoutTimer.start();
+				}
+				else if ( itemAction == "enableNoRotation" ) //Rotation
+				{	
+					preventRotationEnabled = !preventRotationEnabled;
+					
+					//Skin Label
+					(listTextRenderers[itemID] as DefaultListItemRenderer).fontStyles = preventRotationEnabled ? selectedFontTxtFormat : unselectedFontTxtFormat;
+					
+					Constants.appStage.autoOrients = !preventRotationEnabled;
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON, String(preventRotationEnabled));
+					
+					//Build No Lock Icon
+					buildNoRotationIcon();
+					
+					//Refresh Layout
+					buildListLayout();
 					
 					//Activate the close timer
 					if (timeoutTimer.running)
@@ -510,6 +574,18 @@ package ui.screens.display.extraoptions
 			{
 				readingOnDemandIconImage.dispose();
 				readingOnDemandIconImage = null;;
+			}
+			
+			if (noRotationIconTexture != null)
+			{
+				noRotationIconTexture.dispose();
+				noRotationIconTexture = null;;
+			}
+			
+			if (noRotationIconImage != null)
+			{
+				noRotationIconImage.dispose();
+				noRotationIconImage = null;;
 			}
 			
 			super.dispose();

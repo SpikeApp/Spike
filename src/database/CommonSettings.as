@@ -414,6 +414,11 @@
 		  * Useful for some countries like New Zealand.
 		  */
 		 public static const COMMON_SETTING_PIE_CHART_A1C_IFCC_ON:int = 143;
+		 
+		 /**
+		 * Rotation
+		 */
+		 public static const COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON:int = 144;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -559,7 +564,8 @@
 			 "86400000",//COMMON_SETTING_PIE_CHART_AVG_OFFSET (1 DAY)
 			 "86400000",//COMMON_SETTING_PIE_CHART_RANGES_OFFSET (1 DAY)
 			 "",//COMMON_SETTING_G5_VERSION_INFO
-			 "false"//COMMON_SETTING_PIE_CHART_A1C_IFCC_ON
+			 "false",//COMMON_SETTING_PIE_CHART_A1C_IFCC_ON
+			 "false"//COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON
 		 ];
 
 		 public function CommonSettings()

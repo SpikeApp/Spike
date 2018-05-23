@@ -26,6 +26,7 @@ package model
 	import mx.resources.ResourceManager;
 	
 	import database.BgReading;
+	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
 	
@@ -144,6 +145,10 @@ package model
 			function bgReadingsReceivedFromDatabase(de:DatabaseEvent):void 
 			{
 				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+				
+				//Manage Rotation
+				var preventRotation:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
+				Constants.appStage.autoOrients = !preventRotation;
 				
 				_bgReadings = de.data as Array;
 				ProfileManager.init();
