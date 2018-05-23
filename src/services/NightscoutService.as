@@ -329,8 +329,14 @@ package services
 				else
 				{
 					//It's an initial readings call
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP, String(activeGlucoseReadings[initialGlucoseReadingsIndex -1].date));
-					activeGlucoseReadings = activeGlucoseReadings.slice(0, initialGlucoseReadingsIndex);
+					if (activeGlucoseReadings != null && activeGlucoseReadings[initialGlucoseReadingsIndex -1] != null && activeGlucoseReadings[initialGlucoseReadingsIndex -1].date != null)
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP, String(activeGlucoseReadings[initialGlucoseReadingsIndex -1].date));
+					else
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP, String(new Date().valueOf()));
+					
+					if (activeGlucoseReadings != null)
+						activeGlucoseReadings = activeGlucoseReadings.slice(0, initialGlucoseReadingsIndex);
+					
 					initialGlucoseReadingsIndex = 0;
 				}
 				
