@@ -271,6 +271,7 @@ package ui.chart
 		private var loopMomentPill:ChartTreatmentPill;
 		private var sagePill:ChartTreatmentPill;
 		private var iagePill:ChartTreatmentPill;
+		private var tBatteryPill:ChartTreatmentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number)
 		{
@@ -1105,6 +1106,14 @@ package ui.chart
 				//Raw & Sage for master
 				if (!BlueToothDevice.isFollower())
 				{
+					//Transmitter Battery
+					var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
+					if (tBatteryPill != null) tBatteryPill.dispose();
+					tBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','transmitter_battery'));
+					tBatteryPill.setValue(batteryStatus.level);
+					tBatteryPill.colorizeLabel(batteryStatus.color);
+					infoContainer.addChild(tBatteryPill);
+					
 					//Raw Blood Glucose
 					if (rawPill != null) rawPill.dispose();
 					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
@@ -3451,6 +3460,13 @@ package ui.chart
 		
 		private function disposeInfoPills():void
 		{
+			if (tBatteryPill != null)
+			{
+				tBatteryPill.removeFromParent();
+				tBatteryPill.dispose();
+				tBatteryPill = null;
+			}
+			
 			if (basalPill != null)
 			{
 				basalPill.removeFromParent();

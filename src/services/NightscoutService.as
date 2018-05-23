@@ -1029,6 +1029,8 @@ package services
 			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
 			loader = null;
 			
+			trace("response", response);
+			
 			//Validate response
 			if (response.indexOf("bgnow") != -1 && response.indexOf("DOCTYPE") == -1)
 			{

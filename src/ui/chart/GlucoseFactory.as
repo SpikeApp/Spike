@@ -5,6 +5,8 @@ package ui.chart
 	
 	import spark.formatters.DateTimeFormatter;
 	
+	import G5Model.TransmitterStatus;
+	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.Calibration;
@@ -16,6 +18,7 @@ package ui.chart
 	import utils.TimeSpan;
 	
 	[ResourceBundle("chartscreen")]
+	[ResourceBundle("transmitterscreen")]
 
 	public class GlucoseFactory
 	{
@@ -314,6 +317,141 @@ package ui.chart
 			}
 			
 			return sage;
+		}
+		
+		public static function getTransmitterBattery():Object
+		{
+			var transmitterBatteryColor:uint = 0xEEEEEE;
+			var transmitterBattery:String;
+			var transmitterValue:Number = Number.NaN;
+			var transmitterNameValue:String = BlueToothDevice.known() ? BlueToothDevice.name : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
+			
+			if (BlueToothDevice.isDexcomG5())
+			{
+				var voltageAValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
+				if (voltageAValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageAValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				var voltageBValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB);
+				if (voltageBValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageBValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				var resistanceValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST);
+				if (resistanceValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) resistanceValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				transmitterBattery = "A: " + voltageAValue + ", B: " + voltageBValue + ", R: " + resistanceValue;
+				
+				if (!isNaN(Number(voltageAValue)))
+				{
+					if (Number(voltageAValue) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA)
+						transmitterBatteryColor = 0xff1c1c;
+					else
+						transmitterBatteryColor = 0x4bef0a;
+				}
+			}
+			else if (BlueToothDevice.isDexcomG4()) 
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
+				
+				if (transmitterBattery.toUpperCase() == "0" || transmitterBattery.toUpperCase() == "UNKNOWN" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 213)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 210)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+					
+			}
+			else if (BlueToothDevice.isTransmiter_PL())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
+				
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					transmitterBattery = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL) + "%");
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
+			else if (BlueToothDevice.isMiaoMiao())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);
+				
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					transmitterBattery = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL) + "%");
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
+			else if (BlueToothDevice.isBluKon())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL) + "%";
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
+			else if (BlueToothDevice.isLimitter())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					transmitterBattery = String((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000);
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
+			
+			if (transmitterBattery == null || transmitterBattery == "")
+				transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');	
+			
+			return { level: transmitterBattery, color: transmitterBatteryColor };
 		}
 	}
 }
