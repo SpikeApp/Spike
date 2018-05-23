@@ -2,6 +2,7 @@
 ENHANCEMENT: Chart line now uses gradients when transitioning from different colors (ex: low to in range). It look better and makes the horizontal threshold dashed lines more precise. (Miguel)
 ENHANCEMENT: Reversed order of IOB and COB on the watch app to stay in tune with the same order displayed in the iPhone app.
 ENHANCEMENT: Improved validation of Nightscout URLs inserted by users.
+FIX: Small fix for alarm snoozer popup layout.
 
 2.0.9
 ENHANCEMENT: Increased graphics quality for glucose markers and all treatments present on the chart. (Miguel)
