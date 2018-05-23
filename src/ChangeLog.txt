@@ -2,12 +2,13 @@
 FEATURE: Ability to prevent Spike rotation. Open the "three dots" upper right menu and select "No Rotation". This feature might not work on all devices. (Miguel)
 ENHANCEMENT: New BT connection strategy for Dexcom G5. Should improve connection stability. It might mitigate the iPhone 7/SE issue with battery drain but right now it's just wishful thinking, we need more user testing and feedback. (Johan)
 ENHANCEMENT: Chart line now uses gradients when transitioning from different colors (ex: low to in range). It look better and makes the horizontal threshold dashed lines more precise. (Miguel)
-ENHANCEMENT: Spike is now able to process and display "Bolus Wizard" treatments from Nightscout and also treatments without an event type.
-ENHANCEMENT: Spike now displays the following Nightscout treatments as notes: OpenAPS Offline, Pump Site Change, Profile Switch.
+ENHANCEMENT: Spike is now able to process and display "Bolus Wizard" treatments from Nightscout and also treatments without an event type. (Miguel)
+ENHANCEMENT: Spike now displays the following Nightscout treatments as notes: OpenAPS Offline, Pump Site Change, Profile Switch. (Miguel)
 ENHANCEMENT: Reversed order of IOB and COB on the watch app to stay in tune with the same order displayed in the iPhone app. (Miguel)
 ENHANCEMENT: Improved validation of Nightscout URLs inserted by users. (Miguel)
 ENHANCEMENT: Small layout adjustment for glucose threshold labels on the main chart. (Miguel)
-ENHANCEMENT: Small layout adjustment for the pre(un)snoozer popup on iPhone X. (miguel)
+ENHANCEMENT: Small layout adjustment for the pre(un)snoozer popup on iPhone X. (Miguel)
+ENHANCEMENT: Diabled Nightscout and Dexcom Share for followers. This seems to create confusion among newbie users using follower mode and also creates duplicate entrie in Nightscout.
 FIX: Small fix for alarm snoozer popup layout. (Miguel)
 
 2.0.9
