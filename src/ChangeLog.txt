@@ -1,15 +1,19 @@
 2.1.0
+FEATURE: New pill called "+ info" is now available for all users (masters and followers) on the Chart Screen. When you press on it Spike will show you a popup with more info. Masters will have the latest raw glucose value, transmitter battery status and sensor age, even when offline. Masters and followers, when online, will also have additional info like: pump status, pump battery, pump reservoir, basal, uploader battery, treatments prediction, IAGE, CAGE, Loop/OpenAPS status, etc. depending on the plugins enabled on the user's Nightscout site. (Miguel)
 FEATURE: Ability to prevent Spike rotation. Open the "three dots" upper right menu and select "No Rotation". This feature might not work on all devices. (Miguel)
-ENHANCEMENT: New BT connection strategy for Dexcom G5. Should improve connection stability. It might mitigate the iPhone 7/SE issue with battery drain but right now it's just wishful thinking, we need more user testing and feedback. (Johan)
-ENHANCEMENT: Chart line now uses gradients when transitioning from different colors (ex: low to in range). It look better and makes the horizontal threshold dashed lines more precise. (Miguel)
+ENHANCEMENT: New BT connection strategy for Dexcom G5. Should improve connection stability. It might mitigate the iPhone 7/SE issue with battery drain because the new strategy gives more connection control to iOS and the transmitter, but right now it's just wishful thinking, we need more user testing and feedback. (Johan)
+ENHANCEMENT: Chart line now uses gradients when transitioning from different colors (ex: low to in range). It looks better and makes the horizontal threshold dashed lines more precise. (Miguel)
 ENHANCEMENT: Spike is now able to process and display "Bolus Wizard" treatments from Nightscout and also treatments without an event type. (Miguel)
 ENHANCEMENT: Spike now displays the following Nightscout treatments as notes: OpenAPS Offline, Pump Site Change, Profile Switch. (Miguel)
-ENHANCEMENT: Reversed order of IOB and COB on the watch app to stay in tune with the same order displayed in the iPhone app. (Miguel)
-ENHANCEMENT: Improved validation of Nightscout URLs inserted by users. (Miguel)
+ENHANCEMENT: Reversed order of IOB and COB on the watch app to stay in tune with the same order displayed in Spike. (Miguel)
+ENHANCEMENT: Improved validation of Nightscout URLs inserted by users to avoid user error. (Miguel)
 ENHANCEMENT: Small layout adjustment for glucose threshold labels on the main chart. (Miguel)
 ENHANCEMENT: Small layout adjustment for the pre(un)snoozer popup on iPhone X. (Miguel)
-ENHANCEMENT: Diabled Nightscout and Dexcom Share for followers. This seems to create confusion among newbie users using follower mode and also creates duplicate entrie in Nightscout.
+ENHANCEMENT: Disabled Nightscout and Dexcom Share for followers. This seems to create confusion among newbie users using follower mode and also creates duplicate entries in Nightscout. (Miguel)
 FIX: Small fix for alarm snoozer popup layout. (Miguel)
+FIX: When in landscape mode and fullscreen view, the timeago and delta labels were hidden behind the iPhone X notch. (Miguel)
+FIX: On some devices, also in fullscreen view, when glucose is HIGH or LOW some parts of the words were being clipped on the screen. (Miguel)
+FIX: As usual, other small fixes and improvements. (Miguel)
 
 2.0.9
 ENHANCEMENT: Increased graphics quality for glucose markers and all treatments present on the chart. (Miguel)
