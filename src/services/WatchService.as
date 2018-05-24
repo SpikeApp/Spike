@@ -343,7 +343,7 @@ package services
 				title += "\n";
 				var nowTreatments:Number = new Date().valueOf();
 				if (displayIOBEnabled && displayCOBEnabled)
-					title += "I:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments)) + " " + "C:" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments));
+					title += "C:" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments)) + " " + "I:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments));
 				else if (displayIOBEnabled)
 					title += "IOB:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments));
 				else if (displayCOBEnabled)
