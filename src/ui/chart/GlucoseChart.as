@@ -3485,7 +3485,7 @@ package ui.chart
 			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound);
 			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError);
 			
-			if (infoContainer == null)
+			if (infoContainer == null || infoCallout == null)
 				return;
 			
 			if (userInfoPreloader != null)
@@ -3511,6 +3511,8 @@ package ui.chart
 			//Notify user
 			userInfoErrorLabel = LayoutFactory.createLabel("Nightscout API V2 cannot be found!", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
 			infoContainer.addChild(userInfoErrorLabel);
+			
+			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
 		}
 		
 		private function onUserInfoError(e:UserInfoEvent):void
@@ -3519,7 +3521,7 @@ package ui.chart
 			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound);
 			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError);
 			
-			if (infoContainer == null)
+			if (infoContainer == null || infoCallout == null)
 				return;
 			
 			if (userInfoPreloader != null)
@@ -3545,6 +3547,8 @@ package ui.chart
 			//Notify user
 			userInfoErrorLabel = LayoutFactory.createLabel("Error retrieving info from Nightscout!", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
 			infoContainer.addChild(userInfoErrorLabel);
+			
+			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
 		}
 		
 		private function onMoreInfoCalloutClosed(e:starling.events.Event):void
