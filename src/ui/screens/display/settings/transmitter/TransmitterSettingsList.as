@@ -19,6 +19,8 @@ package ui.screens.display.settings.transmitter
 	
 	import model.ModelLocator;
 	
+	import services.TutorialService;
+	
 	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
@@ -98,7 +100,7 @@ package ui.screens.display.settings.transmitter
 			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO")
 				transmitterIDisEnabled = false;
 			
-			if ((transmitterTypeValue != "" && transmitterTypeValue.toUpperCase() != "FOLLOW") || transmitterIDValue != "")
+			if (((transmitterTypeValue != "" && transmitterTypeValue.toUpperCase() != "FOLLOW") || transmitterIDValue != "") && !TutorialService.isActive)
 			{
 				Starling.juggler.delayCall
 				(

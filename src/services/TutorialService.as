@@ -71,7 +71,7 @@ package services
 		public function TutorialService()
 		{
 			//Don't allow class to be instantiated
-			if (instance != null)
+			if (_instance != null)
 				throw new IllegalOperationError("TutorialService class is not meant to be instantiated!");	
 		}
 		
@@ -92,6 +92,8 @@ package services
 		
 		private static function startTutorial(e:Event):void
 		{
+			
+			
 			/* Notify that the tutorial has started */
 			isActive = true;
 			
@@ -170,7 +172,7 @@ package services
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				calloutLocationHelper.y += 15;
 			
-			fourthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','fourth_step_message'), calloutLocationHelper, null, false);
+			fourthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','fourth_step_message'), calloutLocationHelper, new <String>[RelativePosition.TOP], false);
 			fourthStepCallout.textRendererFactory = calloutTextRenderer;
 			
 			Starling.juggler.delayCall( closeCallout, 12, fourthStepCallout );
