@@ -3509,7 +3509,7 @@ package ui.chart
 			if (userInfoErrorLabel != null) userInfoErrorLabel.removeFromParent(true);
 			
 			//Notify user
-			userInfoErrorLabel = LayoutFactory.createLabel("Nightscout API V2 cannot be found!", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
+			userInfoErrorLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','api_v2_not_found'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
 			infoContainer.addChild(userInfoErrorLabel);
 			
 			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
@@ -3545,7 +3545,7 @@ package ui.chart
 			if (userInfoErrorLabel != null) userInfoErrorLabel.removeFromParent(true);
 			
 			//Notify user
-			userInfoErrorLabel = LayoutFactory.createLabel("Error retrieving info from Nightscout!", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
+			userInfoErrorLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','error_getting_user_info'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
 			infoContainer.addChild(userInfoErrorLabel);
 			
 			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
