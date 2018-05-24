@@ -146,6 +146,12 @@ package ui.chart
 			addChild(valueLabel);
 		}
 		
+		public function colorizeLabel(labelColor:uint):void
+		{
+			if (valueLabel != null && valueLabel.fontStyles != null)
+				valueLabel.fontStyles.color = labelColor;
+		}
+		
 		private function discard():void
 		{
 			if (titleLabel != null)

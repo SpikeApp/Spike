@@ -1,14 +1,24 @@
 package ui.chart
 {
 	import flash.errors.IllegalOperationError;
+	import flash.system.Capabilities;
+	
+	import spark.formatters.DateTimeFormatter;
+	
+	import G5Model.TransmitterStatus;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
+	import database.Calibration;
 	import database.CommonSettings;
+	import database.Sensor;
 	
 	import model.ModelLocator;
 	
+	import utils.TimeSpan;
+	
 	[ResourceBundle("chartscreen")]
+	[ResourceBundle("transmitterscreen")]
 
 	public class GlucoseFactory
 	{
@@ -217,6 +227,231 @@ package ui.chart
 			value += "g";
 			
 			return value;
+		}
+		
+		public static function getRawGlucose():Number 
+		{
+			var raw:Number = Number.NaN;
+			var lastBgReading:BgReading = BgReading.lastNoSensor();
+			var lastCalibration:Calibration = Calibration.last();
+			if (lastBgReading != null && lastCalibration != null)
+			{
+				var slope:Number = lastCalibration.checkIn ? lastCalibration.slope : 1000/lastCalibration.slope;
+				var scale:Number = lastCalibration.checkIn ? lastCalibration.firstScale : 1;
+				var intercept:Number = lastCalibration.checkIn ? lastCalibration.firstIntercept : lastCalibration.intercept * -1000 / lastCalibration.slope;
+				var unfiltered:Number = lastBgReading.usedRaw() * 1000;
+				var filtered:Number = lastBgReading.ageAdjustedFiltered() * 1000;
+				
+				if (slope === 0 || unfiltered === 0 || scale === 0) 
+					raw = 0;
+				else if (filtered === 0 || lastBgReading.calculatedValue < 40) 
+					raw = scale * (unfiltered - intercept) / slope;
+				else 
+				{
+					var ratio:Number = scale * (filtered - intercept) / slope / lastBgReading.calculatedValue;
+					raw = scale * (unfiltered - intercept) / slope / ratio;
+				}
+				
+				if (!isNaN(raw) && raw != 0)
+				{
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+					{
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON) != "true")
+							raw = Math.round(raw * 10) / 10;
+						else
+							raw = Math.round(raw);
+					}
+					else
+						raw = Math.round(BgReading.mgdlToMmol(raw) * 10) / 10;
+				}
+			}
+			
+			return raw;
+		}
+		
+		public static function getSensorAge():String
+		{
+			var sage:String = "N/A";
+			
+			if (Sensor.getActiveSensor() != null)
+			{
+				var dateFormatter:DateTimeFormatter = new DateTimeFormatter();
+				dateFormatter.dateTimePattern = "dd MMM HH:mm";
+				dateFormatter.useUTC = false;
+				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
+				
+				//Set sensor start time
+				var sensorStartDate:Date = new Date(Sensor.getActiveSensor().startedAt)
+				var sensorStartDateValue:String =  dateFormatter.format(sensorStartDate);
+				
+				//Calculate Sensor Age
+				var sensorDays:String;
+				var sensorHours:String;
+				
+				if (BlueToothDevice.knowsFSLAge()) 
+				{
+					var sensorAgeInMinutes:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
+					
+					if (sensorAgeInMinutes == "0") 
+						sage = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
+					else if ((new Number(sensorAgeInMinutes)) > 14.5 * 24 * 60) 
+					{
+						sage = ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_expired');
+					}
+					else 
+					{
+						sensorDays = TimeSpan.fromMinutes(Number(sensorAgeInMinutes)).days.toString();
+						sensorHours = TimeSpan.fromMinutes(Number(sensorAgeInMinutes)).hours.toString();
+						
+						sage = sensorDays + "d " + sensorHours + "h";
+					}
+				}
+				else
+				{
+					var nowDate:Date = new Date();
+					sensorDays = TimeSpan.fromDates(sensorStartDate, nowDate).days.toString();
+					sensorHours = TimeSpan.fromDates(sensorStartDate, nowDate).hours.toString();
+					
+					sage = sensorDays + "d " + sensorHours + "h";
+				}
+			}
+			
+			return sage;
+		}
+		
+		public static function getTransmitterBattery():Object
+		{
+			var transmitterBatteryColor:uint = 0xEEEEEE;
+			var transmitterBattery:String;
+			var transmitterValue:Number = Number.NaN;
+			var transmitterNameValue:String = BlueToothDevice.known() ? BlueToothDevice.name : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
+			
+			if (BlueToothDevice.isDexcomG5())
+			{
+				var voltageAValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
+				if (voltageAValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageAValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				var voltageBValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB);
+				if (voltageBValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageBValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				var resistanceValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST);
+				if (resistanceValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) resistanceValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				transmitterBattery = "A: " + voltageAValue + ", B: " + voltageBValue + ", R: " + resistanceValue;
+				
+				if (!isNaN(Number(voltageAValue)))
+				{
+					if (Number(voltageAValue) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA)
+						transmitterBatteryColor = 0xff1c1c;
+					else
+						transmitterBatteryColor = 0x4bef0a;
+				}
+			}
+			else if (BlueToothDevice.isDexcomG4()) 
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
+				
+				if (transmitterBattery.toUpperCase() == "0" || transmitterBattery.toUpperCase() == "UNKNOWN" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 213)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 210)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+					
+			}
+			else if (BlueToothDevice.isTransmiter_PL())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
+				
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					transmitterBattery = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL) + "%");
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
+			else if (BlueToothDevice.isMiaoMiao())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);
+				
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					transmitterBattery = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL) + "%");
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
+			else if (BlueToothDevice.isBluKon())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL) + "%";
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
+			else if (BlueToothDevice.isLimitter())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					transmitterBattery = String((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000);
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
+			
+			if (transmitterBattery == null || transmitterBattery == "")
+				transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');	
+			
+			return { level: transmitterBattery, color: transmitterBatteryColor };
 		}
 	}
 }

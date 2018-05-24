@@ -66,8 +66,7 @@ package ui
 		{
 			_instance = this;
 			
-			/*MonsterDebugger.initialize(this);
-			MonsterDebugger.trace(this, "Hello World!");*/
+			//MonsterDebugger.initialize(this);
 		}
 		
 		public function start():void 
