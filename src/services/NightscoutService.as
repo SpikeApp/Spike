@@ -1020,6 +1020,8 @@ package services
 			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
+			if (loader == null || loader.data == null)
+				return;
 			
 			//Get response
 			var response:String = loader.data;
@@ -1028,8 +1030,6 @@ package services
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
 			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
 			loader = null;
-			
-			trace("response", response);
 			
 			//Validate response
 			if (response.indexOf("bgnow") != -1 && response.indexOf("DOCTYPE") == -1)
@@ -1087,19 +1087,26 @@ package services
 						);
 					} 
 					else
-						Trace.myTrace("NightscoutService.as", "Could not parse User Info Nightscout response. Responder: " + response);
+					{
+						Trace.myTrace("NightscoutService.as", "Could not parse User Info Nightscout response. Response: " + response);
+						_instance.dispatchEvent(new UserInfoEvent(UserInfoEvent.USER_INFO_ERROR));
+					}
 				} 
 				catch(error:Error) 
 				{
-					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
-					{
-						Trace.myTrace("NightscoutService.as", "Could not parse User Info Nightscout response. Error: " + error.message + " | Response: " + response);
-					}
+					Trace.myTrace("NightscoutService.as", "Could not parse User Info Nightscout response. Error: " + error.message + " | Response: " + response);
+					_instance.dispatchEvent(new UserInfoEvent(UserInfoEvent.USER_INFO_ERROR));
 				}
+			}
+			else if (response.indexOf("Cannot GET /api/v2/properties") != -1 )
+			{
+				Trace.myTrace("NightscoutService.as", "Server doesn't have /api/v2/properties enabled. Notifying user!");
+				_instance.dispatchEvent(new UserInfoEvent(UserInfoEvent.USER_INFO_API_NOT_FOUND));
 			}
 			else
 			{
-				Trace.myTrace("NightscoutService.as", "Server returned an unexpected response while retreiving user info. Responder: " + response);
+				Trace.myTrace("NightscoutService.as", "Server returned an unexpected response while retreiving user info. Response: " + response);
+				_instance.dispatchEvent(new UserInfoEvent(UserInfoEvent.USER_INFO_ERROR));
 			}
 		}
 		

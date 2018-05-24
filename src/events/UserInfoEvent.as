@@ -5,8 +5,12 @@ package events
 	public class UserInfoEvent extends Event
 	{
 		[Event(name="userInfoRetreived",type="events.UserInfoEvent")]
+		[Event(name="userInfoAPINotFound",type="events.UserInfoEvent")]
+		[Event(name="userInfoError",type="events.UserInfoEvent")]
 		
 		public static const USER_INFO_RETRIEVED:String = "userInfoRetreived";
+		public static const USER_INFO_API_NOT_FOUND:String = "userInfoAPINotFound";
+		public static const USER_INFO_ERROR:String = "userInfoError";
 		
 		public var userInfo:Object;
 		

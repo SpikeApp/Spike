@@ -69,6 +69,7 @@ package ui.chart
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("treatments")]
+	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globaltranslations")]
 	
 	public class GlucoseChart extends Sprite
@@ -272,6 +273,8 @@ package ui.chart
 		private var sagePill:ChartTreatmentPill;
 		private var iagePill:ChartTreatmentPill;
 		private var tBatteryPill:ChartTreatmentPill;
+
+		private var userInfoErrorLabel:Label;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number)
 		{
@@ -1085,231 +1088,6 @@ package ui.chart
 			//Add treatment
 			chartTreatment.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
 			treatmentsContainer.addChild(chartTreatment);
-		}
-		
-		private function onDisplayMoreInfo(e:starling.events.TouchEvent):void
-		{
-			if (!SystemUtil.isApplicationActive || dummyModeActive)
-				return;
-			
-			var touch:Touch = e.getTouch(stage);
-			
-			if(touch != null && touch.phase == TouchPhase.BEGAN) 
-			{
-				var infoLayout:VerticalLayout = new VerticalLayout();
-				infoLayout.horizontalAlign = HorizontalAlign.CENTER;
-				infoLayout.gap = 6;
-				if (infoContainer != null) infoContainer.removeFromParent(true);
-				infoContainer = new ScrollContainer();
-				infoContainer.layout = infoLayout;
-				
-				//Raw & Sage for master
-				if (!BlueToothDevice.isFollower())
-				{
-					//Transmitter Battery
-					var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
-					if (tBatteryPill != null) tBatteryPill.dispose();
-					tBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','transmitter_battery'));
-					tBatteryPill.setValue(batteryStatus.level);
-					tBatteryPill.colorizeLabel(batteryStatus.color);
-					infoContainer.addChild(tBatteryPill);
-					
-					//Raw Blood Glucose
-					if (rawPill != null) rawPill.dispose();
-					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
-					rawPill.setValue(GlucoseFactory.getRawGlucose() + " " + GlucoseHelper.getGlucoseUnit());
-					infoContainer.addChild(rawPill);
-					
-					//SAGE
-					if (sagePill != null) sagePill.dispose();
-					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
-					sagePill.setValue(GlucoseFactory.getSensorAge());
-					infoContainer.addChild(sagePill);
-				}
-				
-				if (infoCallout != null) infoCallout.dispose();
-				infoCallout = Callout.show(infoContainer, infoPill, null, true);
-				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-					infoCallout.maxHeight = 290;
-				infoCallout.addEventListener(starling.events.Event.CLOSE, onMoreInfoCalloutClosed);
-				
-				if (!NetworkInfo.networkInfo.isReachable())
-					return;
-				
-				//Get user info
-				if (NightscoutService.serviceActive || NightscoutService.followerModeEnabled)
-				{
-					//Preloader
-					userInfoPreloader = new MaterialDesignSpinner();
-					userInfoPreloader.color = 0x0086FF;
-					userInfoPreloader.validate();
-					infoContainer.addChild(userInfoPreloader);
-					
-					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved, false, 0, true);
-					NightscoutService.getUserInfo();
-				}
-			}
-		}
-		
-		private function onMoreInfoCalloutClosed(e:starling.events.Event):void
-		{
-			disposeInfoPills();
-		}
-		
-		private function onUserInfoRetrieved(e:UserInfoEvent):void
-		{
-			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved);
-			
-			if (infoContainer == null)
-				return;
-			
-			if (userInfoPreloader != null)
-			{
-				if (userInfoPreloader.parent != null)
-					userInfoPreloader.removeFromParent(true);
-				else
-				{
-					try
-					{
-						userInfoPreloader.dispose();
-					} 
-					catch(error:Error) 
-					{
-						userInfoPreloader = null;
-					}
-				}
-			}
-			
-			if (BlueToothDevice.isFollower())
-			{
-				//Raw Blood Glucose
-				if (rawPill != null) rawPill.dispose();
-				if (e.userInfo.raw != null && !isNaN(e.userInfo.raw))
-				{
-					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
-					rawPill.setValue(e.userInfo.raw + " " + GlucoseHelper.getGlucoseUnit());
-					infoContainer.addChild(rawPill);
-				}
-				
-				//SAGE
-				if (sagePill != null) sagePill.dispose();
-				if (e.userInfo.sage != null && e.userInfo.sage != "" && String(e.userInfo.sage).indexOf("n/a") == -1)
-				{
-					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
-					sagePill.setValue(e.userInfo.sage);
-					infoContainer.addChild(sagePill);
-				}
-			}
-			
-			//CAGE
-			if (cagePill != null) cagePill.dispose();
-			if (e.userInfo.cage != null && e.userInfo.cage != "" && String(e.userInfo.cage).indexOf("n/a") == -1)
-			{
-				cagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','canula_age'));
-				cagePill.setValue(e.userInfo.cage);
-				infoContainer.addChild(cagePill);
-			}
-			
-			//IAGE
-			if (iagePill != null) iagePill.dispose();
-			if (e.userInfo.iage != null && e.userInfo.iage != "" && String(e.userInfo.iage).indexOf("n/a") == -1)
-			{
-				iagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_age'));
-				iagePill.setValue(e.userInfo.iage);
-				infoContainer.addChild(iagePill);
-			}
-			
-			//Blood Glucose Outcome
-			if (outcomePill != null) outcomePill.dispose();
-			if (e.userInfo.outcome != null && !isNaN(e.userInfo.outcome))
-			{
-				outcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_outcome'));
-				outcomePill.setValue(e.userInfo.outcome + " " + GlucoseHelper.getGlucoseUnit());
-				infoContainer.addChild(outcomePill);
-			}
-			
-			//Blood Glucose Effect
-			if (effectPill != null) effectPill.dispose();
-			if (e.userInfo.effect != null && !isNaN(e.userInfo.effect))
-			{
-				effectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_effect'));
-				effectPill.setValue(e.userInfo.effect + " " + GlucoseHelper.getGlucoseUnit());
-				infoContainer.addChild(effectPill);
-			}
-			
-			//Basal Rate
-			if (basalPill != null) basalPill.dispose();
-			if (e.userInfo.basal != null && e.userInfo.basal != "" && String(e.userInfo.basal).indexOf("n/a") == -1)
-			{
-				basalPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','basal_insulin'));
-				basalPill.setValue(e.userInfo.basal);
-				infoContainer.addChild(basalPill);
-			}
-			
-			//Last OpenAPS Moment
-			if (openAPSMomentPill != null) openAPSMomentPill.dispose();
-			if (e.userInfo.openAPSLastMoment != null && !isNaN(e.userInfo.openAPSLastMoment))
-			{
-				openAPSMomentPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','openaps'));
-				openAPSMomentPill.setValue(e.userInfo.openAPSLastMoment + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
-				infoContainer.addChild(openAPSMomentPill);
-			}
-			
-			//Last Loop Moment
-			if (loopMomentPill != null) loopMomentPill.dispose();
-			if (e.userInfo.loopLastMoment != null && !isNaN(e.userInfo.loopLastMoment))
-			{
-				loopMomentPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','loop_app'));
-				loopMomentPill.setValue(e.userInfo.loopLastMoment + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
-				infoContainer.addChild(loopMomentPill);
-			}
-			
-			//Uploader Battery
-			if (upBatteryPill != null) upBatteryPill.dispose();
-			if (e.userInfo.uploaderBattery != null && e.userInfo.uploaderBattery != "" && e.userInfo.uploaderBattery != "?%" && String(e.userInfo.uploaderBattery).indexOf("n/a") == -1)
-			{
-				upBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','uploader_battery'));
-				upBatteryPill.setValue(e.userInfo.uploaderBattery);
-				infoContainer.addChild(upBatteryPill);
-			}
-			
-			//Pump Reservoir
-			if (pumpReservoirPill != null) pumpReservoirPill.dispose();
-			if (e.userInfo.pumpReservoir != null && !isNaN(e.userInfo.pumpReservoir))
-			{
-				pumpReservoirPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_reservoir'));
-				pumpReservoirPill.setValue(e.userInfo.pumpReservoir + "U");
-				infoContainer.addChild(pumpReservoirPill);
-			}
-			
-			//Pump Time
-			if (pumpTimePill != null) pumpTimePill.dispose();
-			if (e.userInfo.pumpTime != null && !isNaN(e.userInfo.pumpTime))
-			{
-				pumpTimePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_time'));
-				pumpTimePill.setValue(e.userInfo.pumpTime + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
-				infoContainer.addChild(pumpTimePill);
-			}
-			
-			//Pump Status
-			if (pumpStatusPill != null) pumpStatusPill.dispose();
-			if (e.userInfo.pumpStatus != null && e.userInfo.pumpStatus != "" && String(e.userInfo.pumpStatus).indexOf("n/a") == -1)
-			{
-				pumpStatusPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_status'));
-				pumpStatusPill.setValue(e.userInfo.pumpStatus);
-				infoContainer.addChild(pumpStatusPill);
-			}
-			
-			//Pump Battery
-			if (pumpBatteryPill != null) pumpBatteryPill.dispose();
-			if (e.userInfo.pumpBattery != null && e.userInfo.pumpBattery != "" && String(e.userInfo.pumpBattery).indexOf("n/a") == -1)
-			{
-				pumpBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_battery'));
-				pumpBatteryPill.setValue(e.userInfo.pumpBattery);
-				infoContainer.addChild(pumpBatteryPill);
-			}
-			
-			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
 		}
 		
 		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
@@ -3455,11 +3233,327 @@ package ui.chart
 		}
 		
 		/**
+		 * Extra User Info
+		 */
+		private function onDisplayMoreInfo(e:starling.events.TouchEvent):void
+		{
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				var infoLayout:VerticalLayout = new VerticalLayout();
+				infoLayout.horizontalAlign = HorizontalAlign.CENTER;
+				infoLayout.gap = 6;
+				if (infoContainer != null) infoContainer.removeFromParent(true);
+				infoContainer = new ScrollContainer();
+				infoContainer.layout = infoLayout;
+				
+				//Raw & Sage for master
+				if (!BlueToothDevice.isFollower())
+				{
+					//Transmitter Battery
+					var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
+					if (tBatteryPill != null) tBatteryPill.dispose();
+					var transmitterName:String = "";
+					if (BlueToothDevice.isDexcomG5()) transmitterName = "G5";
+					else if (BlueToothDevice.isDexcomG4()) transmitterName = "G4";
+					else if (BlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
+					else if (BlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
+					else if (BlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
+					else if (BlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
+					else if (BlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
+					tBatteryPill = new ChartTreatmentPill(transmitterName + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
+					tBatteryPill.setValue(batteryStatus.level);
+					tBatteryPill.colorizeLabel(batteryStatus.color);
+					infoContainer.addChild(tBatteryPill);
+					
+					//Raw Blood Glucose
+					if (rawPill != null) rawPill.dispose();
+					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
+					rawPill.setValue(GlucoseFactory.getRawGlucose() + " " + GlucoseHelper.getGlucoseUnit());
+					infoContainer.addChild(rawPill);
+					
+					//SAGE
+					if (sagePill != null) sagePill.dispose();
+					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
+					sagePill.setValue(GlucoseFactory.getSensorAge());
+					infoContainer.addChild(sagePill);
+				}
+				
+				var infoPillLowerBounds:Number = infoPill.localToGlobal(new Point(0, 0)).y + infoPill.height;
+				var availableScreenHeight:Number = Constants.stageHeight - infoPillLowerBounds;
+				
+				if (infoCallout != null) infoCallout.dispose();
+				infoCallout = Callout.show(infoContainer, infoPill, null, true);
+				infoCallout.maxHeight = availableScreenHeight;
+				infoCallout.addEventListener(starling.events.Event.CLOSE, onMoreInfoCalloutClosed);
+				
+				if (!NetworkInfo.networkInfo.isReachable())
+					return;
+				
+				//Get user info
+				if (NightscoutService.serviceActive || NightscoutService.followerModeEnabled)
+				{
+					//Preloader
+					userInfoPreloader = new MaterialDesignSpinner();
+					userInfoPreloader.color = 0x0086FF;
+					userInfoPreloader.validate();
+					infoContainer.addChild(userInfoPreloader);
+					
+					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved, false, 0, true);
+					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound, false, 0, true);
+					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError, false, 0, true);
+					NightscoutService.getUserInfo();
+				}
+			}
+		}
+		
+		private function onUserInfoRetrieved(e:UserInfoEvent):void
+		{
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved);
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound);
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError);
+			
+			if (infoContainer == null)
+				return;
+			
+			if (userInfoPreloader != null)
+			{
+				if (userInfoPreloader.parent != null)
+					userInfoPreloader.removeFromParent(true);
+				else
+				{
+					try
+					{
+						userInfoPreloader.dispose();
+					} 
+					catch(error:Error) 
+					{
+						userInfoPreloader = null;
+					}
+				}
+			}
+			
+			if (BlueToothDevice.isFollower())
+			{
+				//Raw Blood Glucose
+				if (rawPill != null) rawPill.dispose();
+				if (e.userInfo.raw != null && !isNaN(e.userInfo.raw))
+				{
+					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
+					rawPill.setValue(e.userInfo.raw + " " + GlucoseHelper.getGlucoseUnit());
+					infoContainer.addChild(rawPill);
+				}
+				
+				//SAGE
+				if (sagePill != null) sagePill.dispose();
+				if (e.userInfo.sage != null && e.userInfo.sage != "" && String(e.userInfo.sage).indexOf("n/a") == -1)
+				{
+					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
+					sagePill.setValue(e.userInfo.sage);
+					infoContainer.addChild(sagePill);
+				}
+			}
+			
+			//CAGE
+			if (cagePill != null) cagePill.dispose();
+			if (e.userInfo.cage != null && e.userInfo.cage != "" && String(e.userInfo.cage).indexOf("n/a") == -1)
+			{
+				cagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','canula_age'));
+				cagePill.setValue(e.userInfo.cage);
+				infoContainer.addChild(cagePill);
+			}
+			
+			//IAGE
+			if (iagePill != null) iagePill.dispose();
+			if (e.userInfo.iage != null && e.userInfo.iage != "" && String(e.userInfo.iage).indexOf("n/a") == -1)
+			{
+				iagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_age'));
+				iagePill.setValue(e.userInfo.iage);
+				infoContainer.addChild(iagePill);
+			}
+			
+			//Blood Glucose Outcome
+			if (outcomePill != null) outcomePill.dispose();
+			if (e.userInfo.outcome != null && !isNaN(e.userInfo.outcome))
+			{
+				outcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_outcome'));
+				outcomePill.setValue(e.userInfo.outcome + " " + GlucoseHelper.getGlucoseUnit());
+				infoContainer.addChild(outcomePill);
+			}
+			
+			//Blood Glucose Effect
+			if (effectPill != null) effectPill.dispose();
+			if (e.userInfo.effect != null && !isNaN(e.userInfo.effect))
+			{
+				effectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_effect'));
+				effectPill.setValue(e.userInfo.effect + " " + GlucoseHelper.getGlucoseUnit());
+				infoContainer.addChild(effectPill);
+			}
+			
+			//Basal Rate
+			if (basalPill != null) basalPill.dispose();
+			if (e.userInfo.basal != null && e.userInfo.basal != "" && String(e.userInfo.basal).indexOf("n/a") == -1)
+			{
+				basalPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','basal_insulin'));
+				basalPill.setValue(e.userInfo.basal);
+				infoContainer.addChild(basalPill);
+			}
+			
+			//Last OpenAPS Moment
+			if (openAPSMomentPill != null) openAPSMomentPill.dispose();
+			if (e.userInfo.openAPSLastMoment != null && !isNaN(e.userInfo.openAPSLastMoment))
+			{
+				openAPSMomentPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','openaps'));
+				openAPSMomentPill.setValue(e.userInfo.openAPSLastMoment + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				infoContainer.addChild(openAPSMomentPill);
+			}
+			
+			//Last Loop Moment
+			if (loopMomentPill != null) loopMomentPill.dispose();
+			if (e.userInfo.loopLastMoment != null && !isNaN(e.userInfo.loopLastMoment))
+			{
+				loopMomentPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','loop_app'));
+				loopMomentPill.setValue(e.userInfo.loopLastMoment + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				infoContainer.addChild(loopMomentPill);
+			}
+			
+			//Uploader Battery
+			if (upBatteryPill != null) upBatteryPill.dispose();
+			if (e.userInfo.uploaderBattery != null && e.userInfo.uploaderBattery != "" && e.userInfo.uploaderBattery != "?%" && String(e.userInfo.uploaderBattery).indexOf("n/a") == -1)
+			{
+				upBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','uploader_battery'));
+				upBatteryPill.setValue(e.userInfo.uploaderBattery);
+				infoContainer.addChild(upBatteryPill);
+			}
+			
+			//Pump Reservoir
+			if (pumpReservoirPill != null) pumpReservoirPill.dispose();
+			if (e.userInfo.pumpReservoir != null && !isNaN(e.userInfo.pumpReservoir))
+			{
+				pumpReservoirPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_reservoir'));
+				pumpReservoirPill.setValue(e.userInfo.pumpReservoir + "U");
+				infoContainer.addChild(pumpReservoirPill);
+			}
+			
+			//Pump Time
+			if (pumpTimePill != null) pumpTimePill.dispose();
+			if (e.userInfo.pumpTime != null && !isNaN(e.userInfo.pumpTime))
+			{
+				pumpTimePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_time'));
+				pumpTimePill.setValue(e.userInfo.pumpTime + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				infoContainer.addChild(pumpTimePill);
+			}
+			
+			//Pump Status
+			if (pumpStatusPill != null) pumpStatusPill.dispose();
+			if (e.userInfo.pumpStatus != null && e.userInfo.pumpStatus != "" && String(e.userInfo.pumpStatus).indexOf("n/a") == -1)
+			{
+				pumpStatusPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_status'));
+				pumpStatusPill.setValue(e.userInfo.pumpStatus);
+				infoContainer.addChild(pumpStatusPill);
+			}
+			
+			//Pump Battery
+			if (pumpBatteryPill != null) pumpBatteryPill.dispose();
+			if (e.userInfo.pumpBattery != null && e.userInfo.pumpBattery != "" && String(e.userInfo.pumpBattery).indexOf("n/a") == -1)
+			{
+				pumpBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_battery'));
+				pumpBatteryPill.setValue(e.userInfo.pumpBattery);
+				infoContainer.addChild(pumpBatteryPill);
+			}
+			
+			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
+		}
+		
+		private function onUserInfoAPINotFound(e:UserInfoEvent):void
+		{
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved);
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound);
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError);
+			
+			if (infoContainer == null)
+				return;
+			
+			if (userInfoPreloader != null)
+			{
+				if (userInfoPreloader.parent != null)
+					userInfoPreloader.removeFromParent(true);
+				else
+				{
+					try
+					{
+						userInfoPreloader.dispose();
+					} 
+					catch(error:Error) 
+					{
+						userInfoPreloader = null;
+					}
+				}
+			}
+			
+			//Remove preloader
+			if (userInfoErrorLabel != null) userInfoErrorLabel.removeFromParent(true);
+			
+			//Notify user
+			userInfoErrorLabel = LayoutFactory.createLabel("Nightscout API V2 cannot be found!", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
+			infoContainer.addChild(userInfoErrorLabel);
+		}
+		
+		private function onUserInfoError(e:UserInfoEvent):void
+		{
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved);
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound);
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError);
+			
+			if (infoContainer == null)
+				return;
+			
+			if (userInfoPreloader != null)
+			{
+				if (userInfoPreloader.parent != null)
+					userInfoPreloader.removeFromParent(true);
+				else
+				{
+					try
+					{
+						userInfoPreloader.dispose();
+					} 
+					catch(error:Error) 
+					{
+						userInfoPreloader = null;
+					}
+				}
+			}
+			
+			//Remove preloader
+			if (userInfoErrorLabel != null) userInfoErrorLabel.removeFromParent(true);
+			
+			//Notify user
+			userInfoErrorLabel = LayoutFactory.createLabel("Error retrieving info from Nightscout!", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
+			infoContainer.addChild(userInfoErrorLabel);
+		}
+		
+		private function onMoreInfoCalloutClosed(e:starling.events.Event):void
+		{
+			if (infoCallout != null) infoCallout.dispose();
+			
+			disposeInfoPills();
+		}
+		
+		/**
 		 * Utility
 		 */
 		
 		private function disposeInfoPills():void
 		{
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved);
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound);
+			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError);
+			
 			if (tBatteryPill != null)
 			{
 				tBatteryPill.removeFromParent();
