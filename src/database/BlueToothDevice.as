@@ -203,7 +203,7 @@ package database
 		 * devices that set COMMON_SETTING_FSL_SENSOR_AGE 
 		 */
 		public static function knowsFSLAge():Boolean {
-			return (isBluKon() || isMiaoMiao() || isxBridgeR());
+			return (isMiaoMiao() || isxBridgeR());
 		}
 		
 		/**

@@ -10,6 +10,7 @@ ENHANCEMENT: Improved validation of Nightscout URLs inserted by users to avoid u
 ENHANCEMENT: Small layout adjustment for glucose threshold labels on the main chart. (Miguel)
 ENHANCEMENT: Small layout adjustment for the pre(un)snoozer popup on iPhone X. (Miguel)
 ENHANCEMENT: Disabled Nightscout and Dexcom Share for followers. This seems to create confusion among newbie users using follower mode and also creates duplicate entries in Nightscout. (Miguel)
+REGRESSION: Going back to manual sensor start/stop for BluCon and Transmiter PL due to unreliable units. (Johan)
 FIX: Small fix for alarm snoozer popup layout. (Miguel)
 FIX: When in landscape mode and fullscreen view, the timeago and delta labels were hidden behind the iPhone X notch. (Miguel)
 FIX: On some devices, also in fullscreen view, when glucose is HIGH or LOW some parts of the words were being clipped on the screen. (Miguel)

@@ -177,7 +177,7 @@ package ui.screens
 			
 			/* Calculate Time Till Next Calibration */
 			var actualTime:Number = (new Date()).valueOf();
-			var timeOfCalibration:Number = 2 * 3600 * 1000 - (actualTime - sensorStartTime);
+			var timeOfCalibration:Number = !BlueToothDevice.isTypeLimitter() ? 2 * 3600 * 1000 - (actualTime - sensorStartTime) : 3600 * 1000 - (actualTime - sensorStartTime);
 			
 			/* Define Date Formater Helper */
 			var dateFormatterForSensorStartWarning:DateTimeFormatter = new DateTimeFormatter();
