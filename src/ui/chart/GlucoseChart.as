@@ -131,7 +131,7 @@ package ui.chart
 		private var mainChartGlucoseMarkerRadius:int;
 		private var scrollerChartGlucoseMarkerRadius:int = 1;
 		private var lineThickness:int = 3;
-		private var legendMargin:int = 2;
+		private var legendMargin:int = 2.5;
 		private var legendSize:int = 10;
 		private var legendTextSize:int = 12;
 		private var graphDisplayTextSize:int = 20;
