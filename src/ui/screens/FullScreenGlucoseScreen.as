@@ -172,7 +172,7 @@ package ui.screens
 			/* TimeAgo Display Label */
 			timeAgoDisplay = LayoutFactory.createLabel(timeAgoOutput, HorizontalAlign.LEFT, VerticalAlign.MIDDLE, infoFontSize, false, timeAgoColor);
 			timeAgoDisplay.width = 300;
-			timeAgoDisplay.y = 10;
+			timeAgoDisplay.y = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait ? 5 : 10;
 			timeAgoDisplay.x = 10;
 			timeAgoDisplay.validate();
 			addChild(timeAgoDisplay);
@@ -640,6 +640,13 @@ package ui.screens
 			
 			//Adjust header for iPhone X
 			onCreation(null);
+			
+			//Adjust label position
+			if (timeAgoDisplay != null && slopeDisplay != null)
+			{
+				timeAgoDisplay.y = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait ? 5 : 10;
+				slopeDisplay.y = timeAgoDisplay.y
+			}
 			
 			SystemUtil.executeWhenApplicationIsActive( calculateValues );
 			SystemUtil.executeWhenApplicationIsActive( updateInfo );
