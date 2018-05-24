@@ -1041,7 +1041,17 @@ package ui.chart
 			
 			//Add treatment
 			chartTreatment.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+			chartTreatment.alpha = 0;
 			treatmentsContainer.addChild(chartTreatment);
+			
+			//Fade in treatment
+			var popupTween:Tween = new Tween(chartTreatment, 0.5, Transitions.EASE_OUT);
+			popupTween.fadeTo(1);
+			popupTween.onComplete = function():void
+			{
+				popupTween = null;
+			}
+			Starling.juggler.add(popupTween);
 		}
 		
 		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
