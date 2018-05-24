@@ -88,7 +88,14 @@ package ui.chart
 			
 			//Label
 			label = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
-			label.validate();
+			try
+			{
+				label.validate();
+			} 
+			catch(error:Error) 
+			{
+				label.width = 25;
+			}
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 4;
 			addChild(label);
