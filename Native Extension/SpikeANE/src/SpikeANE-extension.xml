@@ -1,0 +1,14 @@
+<extension xmlns="http://ns.adobe.com/air/extension/4.0">
+	<id>com.spike-app.spike.AirNativeExtension</id>
+	<versionNumber>1.0.0</versionNumber>
+	<platforms>
+		<platform name="iPhone-ARM"> <!-- platform name="iPhone-x86" -->
+			<applicationDeployment>
+				<nativeLibrary>libNativeExtensioniOS.a</nativeLibrary>
+				<initializer>NativeExtensionInitializer</initializer>
+				<finalizer>NativeExtensionFinalizer</finalizer>
+			</applicationDeployment>
+		</platform>
+		<platform name="default"> <applicationDeployment/> </platform>
+	</platforms>
+</extension>

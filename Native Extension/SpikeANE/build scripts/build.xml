@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<project name="Air Native Extension Build Script" default="package ios ane"> 
+	<!-- Configuration files: --> 
+	<property file="local.properties"/> 
+	<property file="build.properties"/>
+	<!-- Building of the projects and gathering of the files for packaging an ANE happens in a temporary folder structure, cleaned up at the end: --> 
+	<property name="tempdir"  value="${user.home}/${ane.temp}"/> 
+	<property name="iOS.library.outputdir" value="${tempdir}/ios"/> 
+	<property name="temp.packagedir" value="${tempdir}/package"/>
+	
+	<!-- ************************************************************ 
+		iOS Native Library Targets 
+	************************************************************ -->
+	<!-- Clean the Xcode project -->
+	<target name="clean ios" description="Clean the iOS Library" depends="set build type">
+		<exec executable="xcodebuild" failonerror="true" dir="${iOS.library.root}"> 
+			<arg line=" clean -configuration ${iOS.library.build.type} "/> 
+		</exec> 
+	</target>
+	<!-- Build the XCode project -->
+	<target name="build ios" description="Build the iOS Library" depends="set build type"> 
+		<property name="iOS.library.builddir" value="build"/> 
+		<exec executable="xcodebuild" failonerror="true" dir="${iOS.library.root}"> 
+			<arg 
+				line=" -project ${iOS.library.name}.xcodeproj -target ${iOS.library.name} ONLY_ACTIVE_ARCH=NO -arch armv7 -arch arm64 only_active_arch=no  -configuration ${iOS.library.build.type} SYMROOT=${iOS.library.builddir} "/> 
+			<!-- Note: the SYMROOT path is relative to {dir}. --> 
+		</exec> 
+		<copy 
+			file="${iOS.library.buildroot}/${iOS.library.builddir}/${iOS.library.build.type}-iphoneos/${iOS.library}" todir="${iOS.library.outputdir}" overwrite="true"/> 
+	</target>
+	<!-- Rebuild the XCode project --> 
+	<target name="rebuild ios" depends="clean ios,build ios" description="First clean then build the Xcode project"/>
+	
+	<!-- ************************************************************ 
+		Adobe AIR Library Generic Targets 
+	************************************************************ --> 
+	<!-- Generic target: it builds the AIR library that {library.name} and {library.root} point to. -->
+	<target name="build swc" description="Build an AIR library SWC file"> 
+		<fileset dir="${library.root}/src" casesensitive="yes" id="classfiles"> 
+			<include name="**/*.as"/> 
+		</fileset> 
+		<pathconvert property="classlist" refid="classfiles" pathsep=" " dirsep="."> 
+			<regexpmapper from=".*src.(.*)\.as" to="\1"/> 
+		</pathconvert> 
+		<exec executable="${COMPC}" failonerror="true"> 
+				<arg line=" +configname=airmobile -source-path ${library.root}/src -output ${library.outputdir}/${library.name}.swc -include-classes ${classlist} -swf-version=23"/> 
+		</exec> 
+	</target>
+
+	<!-- This is a generic target, which works with the AIR library that {library.name} is set to. --> 
+	<target name="extract swf library" depends="build swc" description="Extract library.swf from the SWC file"> 
+		<property name="library.extractdir" value="${library.outputdir}/content"/> 
+		<mkdir dir="${library.extractdir}"/> <unzip src="${library.outputdir}/${library.name}.swc" dest="${library.extractdir}" overwrite="true"/> 
+		<copy file="${library.extractdir}/library.swf" todir="${library.outputdir}" overwrite="true"/> <delete dir="${library.extractdir}"/> 
+	</target>
+	<!-- ************************************************************ 
+		Adobe AIR Library Targets
+	************************************************************ --> 
+	<!-- This target sets {library.name} and {library.root} and executes the generic target "build swc" for their values. --> 
+	<target name="build air library"> 
+		<subant target="extract swf library"> 
+			<property name="library.name" value="${air.library.name}"/> 
+			<property name="library.root" value="${air.library.root}"/> 
+			<property name="library.outputdir" value="${tempdir}/${air.library.name}/swc"/> 
+			<fileset dir="." includes="build.xml"/> 
+		</subant> 
+		<property name="air.library.outputdir" value="${tempdir}/${air.library.name}/swc"/> 
+	</target>
+	
+	<!-- Copy all of the files needed for packaging an ANE for iOS: -->
+	<target name="copy ios files for packaging" depends="rebuild ios, build air library, create package folder"> 
+		<copy file="${air.library.sourcedir}/${air.extension.descriptor}" todir="${temp.packagedir}"/> 
+		<copy file="${air.library.sourcedir}/${air.platform.descriptor}" todir="${temp.packagedir}"/> 
+		<copy file="${iOS.library.outputdir}/${iOS.library}" todir="${temp.packagedir}/ios"/> 
+		<copy file="${air.library.outputdir}/${air.library.name}.swc" todir="${temp.packagedir}"/> 
+		<copy file="${air.library.outputdir}/library.swf" todir="${temp.packagedir}/ios"/> 
+	</target>
+
+	<!-- Copy all of the files needed for default: -->
+	<target name="build default air library" description="Builds the default implementation of the Air library, which can run in a simulator"> 
+		<subant target="extract swf library"> 
+			<property name="library.name" value="${default.library.name}"/> 
+			<property name="library.root" value="${default.library.root}"/> 
+			<property name="library.outputdir" value="${tempdir}/${default.library.name}/swc"/> 
+			<fileset dir="." includes="build.xml"/> 
+		</subant> 
+		<property name="default.library.outputdir" value="${tempdir}/${default.library.name}/swc"/> 
+	</target>
+			
+	<target name="copy default files for packaging" depends="build default air library, create package folder"> 
+		<property name="default.swcdir" value="default"/> 
+		<copy file="${default.library.outputdir}/${default.library.name}.swc" todir="${temp.packagedir}/${default.swcdir}"/>
+		<copy file="${default.library.outputdir}/library.swf" todir="${temp.packagedir}/${default.swcdir}"/> 
+	</target>
+			
+	
+	<!-- ************************************************************ 
+		Create ANE 
+	************************************************************ --> 
+	<!-- Create the ANE package for iOS --> 
+	<target name="package ios ane" depends="copy ios files for packaging, copy default files for packaging" description="Package the extension into an ANE file"> 
+		<mkdir dir="${temp.packagedir}/ane"/> 
+		<exec executable="${ADT}" failonerror="true" dir="${temp.packagedir}"> 
+			<arg line=" -package -target ane ane/${ane.name}.ane ${air.extension.descriptor} -swc ${air.library.name}.swc -platform iPhone-ARM -platformoptions ${air.platform.descriptor} -C ios . -platform default -C default . "/> 
+		</exec> 
+		<mkdir dir="${ane.destination}"/> 
+		<move file="${temp.packagedir}/ane/${air.library.name}.ane" todir="${ane.destination}" overwrite="true"/> 
+		<delete dir="${tempdir}"/> 
+	</target>
+
+	<!-- ************************************************************ 
+		determine build type 
+	************************************************************ -->
+	<target name="set build type" depends="check debug, check release"/>
+	
+	<target name="check debug" if="${build.debug}" depends="check release" 
+		description="Check if ${debug} is true and if it is, set the properties below for a debug build"> 
+		<property name="iOS.library.build.type" value="Debug"/> 
+	</target>
+	<target name="check release" unless="${build.debug}" 
+		description="Check if ${debug} is false and if it is, set the properties below for a release build"> 
+		<property name="iOS.library.build.type" value="Release"/> 
+	</target>
+	
+
+	<!-- ************************************************************ 
+		Helper targets 
+	************************************************************ --> 
+	<target name="does package dir exist" description="Check if the temporary package folder has already been created" > 
+		<available property="temp.packagedir.exists" file="${temp.packagedir}"/> 
+	</target> 
+	<target name="create package folder" depends="does package dir exist" unless="temp.packagedir.exists" description="Create temporary folder for the package ingredients"> 
+		<mkdir dir="${temp.packagedir}"/>
+		<mkdir dir="${temp.packagedir}/ios"/>  
+		<mkdir dir="${temp.packagedir}/default"/>  
+	</target>
+	
+</project>
