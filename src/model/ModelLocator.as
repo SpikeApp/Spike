@@ -19,6 +19,7 @@ package model
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	
@@ -180,6 +181,8 @@ package model
 				RemoteAlertService.init();
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				updateApplicationVersion();
+				SpikeANE.init();
+				SpikeANE.traceNSLog("hello");
 			}
 		}
 		
