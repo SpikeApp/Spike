@@ -1,3 +1,6 @@
+2.1.1
+ENHANCEMENT: Increased insulin amount precision to 2 decimals for treatments coming from Nightscout. This will increase compatibility with 640g uploaders (and others). (Miguel)
+
 2.1.0
 FEATURE: New pill called "+ info" is now available for all users (masters and followers) on the Chart Screen. When you press on it, Spike will show you a popup with, wait for it.... more info! :) Masters will have the latest raw glucose value, transmitter battery status and sensor age, even when offline. Both masters and followers, when online and connected to a Nightscout site, will also have additional info like: pump status, pump battery, pump reservoir, basal, uploader battery, treatments prediction, IAGE, CAGE, Loop/OpenAPS status, etc. depending on the plugins enabled in Nightscout. (Miguel)
 FEATURE: Ability to prevent Spike rotation. Open the "three dots" upper right menu and select "No Rotation". This feature might not work on all devices. (Miguel)

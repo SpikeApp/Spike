@@ -1108,14 +1108,14 @@ package treatments
 				{
 					treatmentType = Treatment.TYPE_BOLUS;
 					if (nsTreatment.insulin != null)
-						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 10) / 10;
+						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
 					treatmentInsulinID = "000000";
 				}
 				else if (treatmentEventType == "Meal Bolus" || treatmentEventType == "Snack Bolus")
 				{
 					treatmentType = Treatment.TYPE_MEAL_BOLUS;
 					if (nsTreatment.insulin != null)
-						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 10) / 10;
+						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
 					treatmentInsulinID = "000000";
 					if (nsTreatment.carbs != null)
 						treatmentCarbs = Number(nsTreatment.carbs);
@@ -1161,7 +1161,7 @@ package treatments
 					{
 						//Bolus treatment
 						treatmentType = Treatment.TYPE_BOLUS;
-						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 10) / 10;
+						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
 						treatmentInsulinID = "000000";
 					}
 					else if (((nsTreatment.carbs != null || !isNaN(nsTreatment.carbs)) && Number(nsTreatment.carbs) != 0)  && (nsTreatment.insulin == null || isNaN(nsTreatment.insulin)))
@@ -1174,7 +1174,7 @@ package treatments
 					{
 						//Meal treatment
 						treatmentType = Treatment.TYPE_MEAL_BOLUS;
-						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 10) / 10;
+						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
 						treatmentInsulinID = "000000";
 						treatmentCarbs = Number(nsTreatment.carbs);
 					}
