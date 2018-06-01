@@ -3271,6 +3271,9 @@ package ui.chart
 			if (!SystemUtil.isApplicationActive || dummyModeActive)
 				return;
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+				return;
+			
 			if (TreatmentsManager.getTotalIOB(new Date().valueOf()) <= 0)
 				return;
 			
@@ -3296,6 +3299,9 @@ package ui.chart
 		private function onDisplayCarbsCurve(e:starling.events.TouchEvent):void
 		{
 			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 				return;
 			
 			if (TreatmentsManager.getTotalCOB(new Date().valueOf()) <= 0)
@@ -3329,8 +3335,8 @@ package ui.chart
 		{
 			if (absorptionGraph != null) absorptionGraph.removeFromParent(true);
 			absorptionGraph = new LayoutGroup();
-			var graphWidth:Number = 220;
-			var graphHeight:Number = 70;
+			var graphWidth:Number = Constants.isPortrait ? Constants.stageWidth - 60 : Constants.stageHeight - 60;
+			var graphHeight:Number = graphWidth / 3;
 			var info:Object = type == "insulin" ? TreatmentsManager.getTotalActiveInsulin() : TreatmentsManager.getTotalActiveCarbs();
 			var totalTreatmentsData:Number = type == "insulin" ? info.insulin : info.carbs;
 			var firstTreatmentTimestamp:Number = info.timestamp;
@@ -3419,7 +3425,7 @@ package ui.chart
 				timeFormatted = TimeSpan.formatHoursMinutes(firstDate.getHours(), firstDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			
 			if (firstCurveLabel != null) firstCurveLabel.removeFromParent(true);
-			firstCurveLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 10);
+			firstCurveLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
 			firstCurveLabel.validate();
 			firstCurveLabel.x = 0;
 			firstCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
@@ -3431,7 +3437,7 @@ package ui.chart
 			var now:Number = new Date().valueOf();
 			
 			if (nowCurveLabel != null) nowCurveLabel.removeFromParent(true);
-			nowCurveLabel = LayoutFactory.createLabel("now", HorizontalAlign.LEFT, VerticalAlign.TOP, 10);
+			nowCurveLabel = LayoutFactory.createLabel("NOW", HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
 			nowCurveLabel.validate();
 			nowCurveLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowCurveLabel.width / 2);
 			nowCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
@@ -3460,7 +3466,7 @@ package ui.chart
 				lastTimeFormatted = TimeSpan.formatHoursMinutes(lastDate.getHours(), lastDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			
 			if (lastCurveLabel != null) lastCurveLabel.removeFromParent(true);
-			lastCurveLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 10);
+			lastCurveLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
 			lastCurveLabel.validate();
 			lastCurveLabel.x = xAxisCurve.width - lastCurveLabel.width;
 			lastCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
@@ -3475,7 +3481,7 @@ package ui.chart
 			
 			//Highest value
 			if (highestCurveLabel != null) highestCurveLabel.removeFromParent(true);
-			highestCurveLabel = LayoutFactory.createLabel(String(highestDataPoint), HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
+			highestCurveLabel = LayoutFactory.createLabel(String(highestDataPoint), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
 			highestCurveLabel.validate();
 			highestCurveLabel.x = -highestCurveLabel.width - 5;
 			highestCurveLabel.y = -highestCurveLabel.height / 4.5;
@@ -3487,7 +3493,7 @@ package ui.chart
 			//Middle value
 			var middleValue:Number = Math.round((highestDataPoint / 2) * 100) / 100;
 			if (middleCurveLabel != null) middleCurveLabel.removeFromParent(true);
-			middleCurveLabel = LayoutFactory.createLabel(String(middleValue), HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
+			middleCurveLabel = LayoutFactory.createLabel(String(middleValue), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
 			middleCurveLabel.validate();
 			middleCurveLabel.x = -middleCurveLabel.width - 5;
 			middleCurveLabel.y = (graphHeight / 2) - (middleCurveLabel.height / 2);
@@ -3498,7 +3504,7 @@ package ui.chart
 			
 			//Lowest value
 			if (lowestCurveLabel != null) lowestCurveLabel.removeFromParent(true);
-			lowestCurveLabel = LayoutFactory.createLabel("0", HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
+			lowestCurveLabel = LayoutFactory.createLabel("0", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
 			lowestCurveLabel.validate();
 			lowestCurveLabel.x = -lowestCurveLabel.width - 5;
 			lowestCurveLabel.y = graphHeight - lowestCurveLabel.height + (lowestCurveLabel.height / 4.5);
