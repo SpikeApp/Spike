@@ -87,7 +87,11 @@ package model
 			
 			data.position = 4;
 			temp = new ByteArray();data.readBytes(temp, 0, 1);
-			var status:int = temp[0];
+			
+			//read sensor status 
+			//3 = sensor ready and working (up to 14 days and twelve hours)
+			//4 = sensor expired (for the following twelve hours, FRAM data section content does not change any more)
+			var sensorState:int = temp[0];
 			
 			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
 			LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
