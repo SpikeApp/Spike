@@ -17,6 +17,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 #import "FPANEUtils.h"
+#import "Trace.h"
 
 #pragma mark - Dispatch events
 
@@ -190,3 +191,10 @@ uint8_t * FPANE_ConvertNSString_TO_uint8(NSString * toConvert)
     const void *bytes = [someData bytes];
     return (uint8_t*)bytes;
 }
+
+void FPANE_Log(NSString *message)
+{
+    NSLog(@"%@",message);
+    [Trace writeTraceToFile:[NSString stringWithFormat:@"%@ %@%@", getCurrentTimeStamp(), message, @"\n"]];
+}
+

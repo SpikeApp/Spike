@@ -19,8 +19,6 @@ MuteChecker * _muteChecker;
 PlaySound * _soundPlayer;
 CLLocationManager * _locationManager;
 NSUserDefaults * _userDefaults;
-Trace * _trace;
-
 
 FREObject traceNSLog( FREContext ctx, void* funcData, uint32_t argc, FREObject argv[] ) {
    NSLog(@"%@", FPANE_FREObjectToNSString(argv[0]));
@@ -269,17 +267,17 @@ FREObject stopMonitoringAndRangingBeaconsInRegion (FREContext ctx, void* funcDat
 
 FREObject writeTraceToFile (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
 {
-    [_trace setFilepath:[FPANE_FREObjectToNSString(argv[0]) mutableCopy]];
+    [Trace setFilepath:[FPANE_FREObjectToNSString(argv[0]) mutableCopy]];
     
     NSString *text = [NSString stringWithFormat:@"%@\r\n", [FPANE_FREObjectToNSString(argv[1]) mutableCopy]];
     
-    [_trace writeTraceToFile:text];
+    [Trace writeTraceToFile:text];
     
     return nil;
 }
 
 FREObject resetTraceFilePath (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
-    [_trace setFilepath:NULL];
+    [Trace setFilepath:NULL];
     return nil;
 }
 
@@ -296,9 +294,6 @@ FREObject init( FREContext ctx, void* funcData, uint32_t argc, FREObject argv[] 
 
     /** MUTE CHECKER **/
     _muteChecker = [MuteChecker alloc];
-    
-    /** TRACE **/
-    _trace = [Trace alloc];
     
     return NULL;
 }

@@ -574,5 +574,6 @@
 		<extensionID>com.distriqt.Notifications</extensionID>
 		
     <extensionID>com.spike-app.spike.AirNativeExtension</extensionID>
+    
     </extensions>
 </application>
