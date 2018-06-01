@@ -11,8 +11,6 @@
 
 + (FREContext) getContext;
 
-+ (Context*) getInstance;
-
 @end
 
 #endif

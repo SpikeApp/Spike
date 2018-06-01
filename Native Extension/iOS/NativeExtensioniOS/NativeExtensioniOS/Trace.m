@@ -9,9 +9,21 @@
 
 @implementation Trace
 
+static Trace * instance;
 NSString * _filepath;
 
-- (void) writeTraceToFile:(NSString *) text {
++ (Trace*) getInstance {
+    if (instance == nil) {
+        instance = [[Trace alloc] init];
+    }
+    return instance;
+}
+
++ (void) setFilepath:(NSString*) newFilePath {
+    _filepath = newFilePath;
+}
+
++ (void) writeTraceToFile:(NSString *) text {
     if (!_filepath) {
         //NSLog(@"spiketrace ANE Trace.m in writeStringToFile, _filepath = nil");
         return;
@@ -33,7 +45,7 @@ NSString * _filepath;
     }
 }
 
-- (void) writeStringToFile:(NSString *) string withFilePath:(NSString *) path {
++ (void) writeStringToFile:(NSString *) string withFilePath:(NSString *) path {
     if (![[NSFileManager defaultManager] fileExistsAtPath:path]) {
         [[string dataUsingEncoding:NSUTF8StringEncoding] writeToFile:path atomically:YES];
     } else {

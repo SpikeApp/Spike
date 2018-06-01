@@ -5,9 +5,10 @@
 
 @interface Trace : NSObject
 
-- (void) setFilepath:(NSString *) newFilePath;
-- (void) writeTraceToFile:(NSString *) text;
-- (void) writeStringToFile:(NSString *) string withFilePath:(NSString *) path;
++ (void) setFilepath:(NSString *) newFilePath;
++ (void) writeTraceToFile:(NSString *) text;
++ (void) writeStringToFile:(NSString *) string withFilePath:(NSString *) path;
++ (Trace*) getInstance;
 
 @end
 
