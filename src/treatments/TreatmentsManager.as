@@ -1338,6 +1338,76 @@ package treatments
 			
 			return estimatedGlucose;
 		}
+		
+		public static function getTotalActiveInsulin():Object
+		{
+			var activeTotalInsulin:Number = 0;
+			var now:Number = new Date().valueOf();
+			var firstTreatmentTimestamp:Number = now;
+			
+			var dataLength:int = treatmentsList.length;
+			for (var i:int = 0; i < dataLength; i++) 
+			{
+				var treatment:Treatment = treatmentsList[i];
+				
+				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS) && treatment.calculateIOB(now) > 0)
+				{
+					activeTotalInsulin += treatment.insulinAmount;
+					if (treatment.timestamp < firstTreatmentTimestamp)
+						firstTreatmentTimestamp = treatment.timestamp;
+				}
+			}
+			
+			return { timestamp: firstTreatmentTimestamp, insulin: activeTotalInsulin };
+		}
+		
+		public static function getTotalActiveCarbs():Object
+		{
+			var activeTotalCarbs:Number = 0;
+			var now:Number = new Date().valueOf();
+			var firstTreatmentTimestamp:Number = now;
+			
+			var carbsAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate();
+			
+			// TODO: figure out the liverSensRatio that gives the most accurate purple line predictions
+			var liverSensRatio:int = 8;
+			var totalCOB:Number = 0;
+			var lastCarbs:Treatment;
+			
+			var isDecaying:Number = 0;
+			var lastDecayedBy:Number = 0;
+			
+			var dataLength:int = treatmentsList.length;
+			for (var i:int = 0; i < dataLength; i++) 
+			{
+				var treatment:Treatment = treatmentsList[i];
+				
+				if (treatment != null && (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS) && now >= treatment.timestamp)
+				{
+					var cCalc:CobCalc = treatment.calculateCOB(lastDecayedBy, now);
+					if (cCalc != null)
+					{
+						var decaysin_hr:Number = (cCalc.decayedBy - now) / 1000 / 60 / 60;
+									
+						if (decaysin_hr > 0) 
+						{
+							var treatmentCOB:Number = Math.min(Number(treatment.carbs), decaysin_hr * carbsAbsorptionRate);
+							if (isNaN(treatmentCOB)) treatmentCOB = 0;
+							isDecaying = cCalc.isDecaying;
+										
+							if (treatmentCOB > 0)
+							{
+								activeTotalCarbs += treatment.carbs;
+								if (treatment.timestamp < firstTreatmentTimestamp)
+									firstTreatmentTimestamp = treatment.timestamp;
+							}
+						} 
+					}
+				}
+			}
+			
+			return { timestamp: firstTreatmentTimestamp, carbs: activeTotalCarbs };
+		}
 
 		public static function get instance():TreatmentsManager
 		{
