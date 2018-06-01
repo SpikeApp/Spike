@@ -3290,7 +3290,7 @@ package ui.chart
 				
 				if (insulinCurveCallout != null) insulinCurveCallout.removeFromParent(true);
 				insulinCurveCallout = Callout.show(insulinCurve, IOBPill, null, true);
-				insulinCurveCallout.paddingLeft += graphData.padding;
+				insulinCurveCallout.paddingLeft += graphData.padding - 5;
 				insulinCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
 				
 				graphData = null;
@@ -3320,7 +3320,7 @@ package ui.chart
 				
 				if (carbsCurveCallout != null) carbsCurveCallout.removeFromParent(true);
 				carbsCurveCallout = Callout.show(carbsCurve, COBPill, null, true);
-				carbsCurveCallout.paddingLeft += graphData.padding;
+				carbsCurveCallout.paddingLeft += graphData.padding - 5;
 				carbsCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
 				
 				graphData = null;
@@ -3334,16 +3334,15 @@ package ui.chart
 		
 		private function getAbsorptionCurve(type:String):Object
 		{
+			//Graphics container
 			if (absorptionGraph != null) absorptionGraph.removeFromParent(true);
 			absorptionGraph = new LayoutGroup();
 			absorptionGraph.touchable = false;
-			var graphWidth:Number = Constants.isPortrait ? Constants.stageWidth - 60 : Constants.stageHeight - 60;
-			var graphHeight:Number = graphWidth / 3;
+			
+			//Data points
 			var info:Object = type == "insulin" ? TreatmentsManager.getTotalActiveInsulin() : TreatmentsManager.getTotalActiveCarbs();
 			var totalTreatmentsData:Number = type == "insulin" ? info.insulin : info.carbs;
 			var firstTreatmentTimestamp:Number = info.timestamp;
-			
-			//Data points
 			var dataPoints:Array = new Array();
 			var pointInTime:Number = firstTreatmentTimestamp;
 			var dataPoint:Number = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime) : TreatmentsManager.getTotalCOB(pointInTime);
@@ -3359,25 +3358,60 @@ package ui.chart
 					break;
 			}
 			
-			//Draw Curve
+			//Calculators
+			var leftPadding:Number = 0;
 			var firstTimestamp:Number = dataPoints[0].timestamp;
 			var lastTimestamp:Number = dataPoints[dataPoints.length - 1].timestamp;
 			var totalTimestampDifference:Number = lastTimestamp - firstTimestamp;
-			
 			var sortedData:Array = dataPoints.concat();
 			sortedData.sortOn(["dataPoint"], Array.NUMERIC);
-			
 			var highestDataPoint:Number = sortedData[sortedData.length -1].dataPoint;
 			var lowestDataPoint:Number = sortedData[0].dataPoint;
 			var totalDataDifference:Number = highestDataPoint - lowestDataPoint;
 			
+			//YAXIS LABELS
+			//Highest value
+			if (highestCurveLabel != null) highestCurveLabel.removeFromParent(true);
+			highestCurveLabel = LayoutFactory.createLabel(String(highestDataPoint) + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
+			highestCurveLabel.touchable = false;
+			highestCurveLabel.validate();
+			highestCurveLabel.x = -highestCurveLabel.width - 5;
+			highestCurveLabel.y = -highestCurveLabel.height / 4.5;
+			absorptionGraph.addChild(highestCurveLabel);
+			if (highestCurveLabel.x < leftPadding) leftPadding = highestCurveLabel.x;
+			
+			//Middle value
+			var middleValue:Number = Math.round((highestDataPoint / 2) * 100) / 100;
+			if (middleCurveLabel != null) middleCurveLabel.removeFromParent(true);
+			middleCurveLabel = LayoutFactory.createLabel(String(middleValue) + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
+			middleCurveLabel.touchable = false;
+			middleCurveLabel.validate();
+			middleCurveLabel.x = -middleCurveLabel.width - 5;
+			absorptionGraph.addChild(middleCurveLabel);
+			if (middleCurveLabel.x < leftPadding) leftPadding = middleCurveLabel.x;
+			
+			//Lowest value
+			if (lowestCurveLabel != null) lowestCurveLabel.removeFromParent(true);
+			lowestCurveLabel = LayoutFactory.createLabel("0" + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
+			lowestCurveLabel.touchable = false;
+			lowestCurveLabel.validate();
+			lowestCurveLabel.x = -lowestCurveLabel.width - 5;
+			absorptionGraph.addChild(lowestCurveLabel);
+			if (lowestCurveLabel.x < leftPadding) leftPadding = lowestCurveLabel.x;
+			
+			//Absorption Curve 
+			var graphWidth:Number = Constants.isPortrait ? Constants.stageWidth - Math.abs(leftPadding) - 35 : Constants.stageHeight - Math.abs(leftPadding) - 35;
+			var graphHeight:Number = graphWidth / 3;
 			var scaleXFactor:Number = 1 / (totalTimestampDifference / graphWidth);
 			var scaleYFactor:Number = graphHeight / totalDataDifference;
+			
+			middleCurveLabel.y = (graphHeight / 2) - (middleCurveLabel.height / 2);
+			lowestCurveLabel.y = graphHeight - lowestCurveLabel.height + (lowestCurveLabel.height / 4.5);
 			
 			if (curve != null) curve.removeFromParent(true);
 			curve = new SpikeLine();
 			curve.touchable = false;
-			curve.lineStyle(1, type == "insulin" ? uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)) : uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR)));
+			curve.lineStyle(1.5, type == "insulin" ? uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)) : uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR)));
 			var previousXCoordinate:Number = 0;
 			
 			var dataLength:int = dataPoints.length;
@@ -3410,19 +3444,18 @@ package ui.chart
 			
 			//Draw Axis
 			if (yAxisCurve != null) yAxisCurve.removeFromParent(true);
-			yAxisCurve = GraphLayoutFactory.createVerticalLine(graphHeight, 1, 0xEEEEEE);
+			yAxisCurve = GraphLayoutFactory.createVerticalLine(graphHeight, 1.5, lineColor);
 			yAxisCurve.touchable = false;
 			absorptionGraph.addChild(yAxisCurve);
 			
 			if (xAxisCurve != null) xAxisCurve.removeFromParent(true);
-			xAxisCurve = GraphLayoutFactory.createHorizontalLine(graphWidth, 1, 0xEEEEEE);
+			xAxisCurve = GraphLayoutFactory.createHorizontalLine(graphWidth, 1.5, lineColor);
 			xAxisCurve.touchable = false;
 			xAxisCurve.y = yAxisCurve.y + yAxisCurve.height;
 			absorptionGraph.addChild(xAxisCurve);
 			
 			//Draw X Labels
 			var dateFormat:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
-			var leftPadding:Number = 0;
 			
 			//First Timestamo
 			var firstDate:Date = new Date(firstTreatmentTimestamp);
@@ -3433,20 +3466,19 @@ package ui.chart
 				timeFormatted = TimeSpan.formatHoursMinutes(firstDate.getHours(), firstDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			
 			if (firstCurveLabel != null) firstCurveLabel.removeFromParent(true);
-			firstCurveLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
+			firstCurveLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			firstCurveLabel.touchable = false;
 			firstCurveLabel.validate();
 			firstCurveLabel.x = 0;
 			firstCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
 			absorptionGraph.addChild(firstCurveLabel);
-			
 			var firstLabelBounds:Rectangle = firstCurveLabel.bounds;
 			
 			//Now
 			var now:Number = new Date().valueOf();
 			
 			if (nowCurveLabel != null) nowCurveLabel.removeFromParent(true);
-			nowCurveLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
+			nowCurveLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			nowCurveLabel.touchable = false;
 			nowCurveLabel.validate();
 			nowCurveLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowCurveLabel.width / 2);
@@ -3454,7 +3486,7 @@ package ui.chart
 			absorptionGraph.addChild(nowCurveLabel);
 			
 			if (nowCurveMarker != null) nowCurveMarker.removeFromParent(true);
-			nowCurveMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, 0xEEEEEE);
+			nowCurveMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, lineColor);
 			nowCurveMarker.touchable = false;
 			nowCurveMarker.x = ((now - firstTreatmentTimestamp) * scaleXFactor);
 			nowCurveMarker.y = 0;
@@ -3477,7 +3509,7 @@ package ui.chart
 				lastTimeFormatted = TimeSpan.formatHoursMinutes(lastDate.getHours(), lastDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			
 			if (lastCurveLabel != null) lastCurveLabel.removeFromParent(true);
-			lastCurveLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
+			lastCurveLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			lastCurveLabel.touchable = false;
 			lastCurveLabel.validate();
 			lastCurveLabel.x = xAxisCurve.width - lastCurveLabel.width;
@@ -3490,43 +3522,6 @@ package ui.chart
 				if (latestLabelBounds.intersects(nowLabelBounds))
 					nowCurveLabel.removeFromParent(true);
 			}
-			
-			//Highest value
-			if (highestCurveLabel != null) highestCurveLabel.removeFromParent(true);
-			highestCurveLabel = LayoutFactory.createLabel(String(highestDataPoint), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
-			highestCurveLabel.touchable = false;
-			highestCurveLabel.validate();
-			highestCurveLabel.x = -highestCurveLabel.width - 5;
-			highestCurveLabel.y = -highestCurveLabel.height / 4.5;
-			absorptionGraph.addChild(highestCurveLabel);
-			
-			if (highestCurveLabel.x < leftPadding)
-				leftPadding = highestCurveLabel.x;
-			
-			//Middle value
-			var middleValue:Number = Math.round((highestDataPoint / 2) * 100) / 100;
-			if (middleCurveLabel != null) middleCurveLabel.removeFromParent(true);
-			middleCurveLabel = LayoutFactory.createLabel(String(middleValue), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
-			middleCurveLabel.touchable = false;
-			middleCurveLabel.validate();
-			middleCurveLabel.x = -middleCurveLabel.width - 5;
-			middleCurveLabel.y = (graphHeight / 2) - (middleCurveLabel.height / 2);
-			absorptionGraph.addChild(middleCurveLabel);
-			
-			if (middleCurveLabel.x < leftPadding)
-				leftPadding = middleCurveLabel.x;
-			
-			//Lowest value
-			if (lowestCurveLabel != null) lowestCurveLabel.removeFromParent(true);
-			lowestCurveLabel = LayoutFactory.createLabel("0", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
-			lowestCurveLabel.touchable = false;
-			lowestCurveLabel.validate();
-			lowestCurveLabel.x = -lowestCurveLabel.width - 5;
-			lowestCurveLabel.y = graphHeight - lowestCurveLabel.height + (lowestCurveLabel.height / 4.5);
-			absorptionGraph.addChild(lowestCurveLabel);
-			
-			if (lowestCurveLabel.x < leftPadding)
-				leftPadding = lowestCurveLabel.x;
 			
 			//Dispose unneded data
 			info = null;
