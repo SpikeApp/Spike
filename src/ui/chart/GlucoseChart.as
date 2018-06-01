@@ -3375,7 +3375,7 @@ package ui.chart
 			highestCurveLabel = LayoutFactory.createLabel(String(highestDataPoint) + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			highestCurveLabel.touchable = false;
 			highestCurveLabel.validate();
-			highestCurveLabel.x = -highestCurveLabel.width - 5;
+			highestCurveLabel.x = -highestCurveLabel.width - 7;
 			highestCurveLabel.y = -highestCurveLabel.height / 4.5;
 			absorptionGraph.addChild(highestCurveLabel);
 			if (highestCurveLabel.x < leftPadding) leftPadding = highestCurveLabel.x;
@@ -3386,7 +3386,7 @@ package ui.chart
 			middleCurveLabel = LayoutFactory.createLabel(String(middleValue) + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			middleCurveLabel.touchable = false;
 			middleCurveLabel.validate();
-			middleCurveLabel.x = -middleCurveLabel.width - 5;
+			middleCurveLabel.x = -middleCurveLabel.width - 7;
 			absorptionGraph.addChild(middleCurveLabel);
 			if (middleCurveLabel.x < leftPadding) leftPadding = middleCurveLabel.x;
 			
@@ -3395,7 +3395,7 @@ package ui.chart
 			lowestCurveLabel = LayoutFactory.createLabel("0" + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			lowestCurveLabel.touchable = false;
 			lowestCurveLabel.validate();
-			lowestCurveLabel.x = -lowestCurveLabel.width - 5;
+			lowestCurveLabel.x = -lowestCurveLabel.width - 7;
 			absorptionGraph.addChild(lowestCurveLabel);
 			if (lowestCurveLabel.x < leftPadding) leftPadding = lowestCurveLabel.x;
 			
@@ -3470,7 +3470,7 @@ package ui.chart
 			firstCurveLabel.touchable = false;
 			firstCurveLabel.validate();
 			firstCurveLabel.x = 0;
-			firstCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
+			firstCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
 			absorptionGraph.addChild(firstCurveLabel);
 			var firstLabelBounds:Rectangle = firstCurveLabel.bounds;
 			
@@ -3482,7 +3482,7 @@ package ui.chart
 			nowCurveLabel.touchable = false;
 			nowCurveLabel.validate();
 			nowCurveLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowCurveLabel.width / 2);
-			nowCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
+			nowCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
 			absorptionGraph.addChild(nowCurveLabel);
 			
 			if (nowCurveMarker != null) nowCurveMarker.removeFromParent(true);
@@ -3513,7 +3513,7 @@ package ui.chart
 			lastCurveLabel.touchable = false;
 			lastCurveLabel.validate();
 			lastCurveLabel.x = xAxisCurve.width - lastCurveLabel.width;
-			lastCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
+			lastCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
 			absorptionGraph.addChild(lastCurveLabel);
 			
 			if (nowCurveLabel != null)
