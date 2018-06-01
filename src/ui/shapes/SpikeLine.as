@@ -19,7 +19,9 @@ package ui.shapes
 		public function SpikeLine()
 		{
 			super();
-			addChild (batch = new MeshBatch ());
+			
+			batch = new MeshBatch();
+			addChild(batch);
 		}
 		
 		public function lineStyle(thickness:Number = 1, color:uint = 0, alpha:Number = 1):void
@@ -76,17 +78,19 @@ package ui.shapes
 		
 		override public function dispose():void
 		{
+			if (line != null)
+			{
+				line.removeFromParent();
+				line.dispose();
+				line = null;
+			}
+			
 			if (batch != null)
 			{
+				batch.removeFromParent();
 				batch.clear();
 				batch.dispose();
 				batch = null;
-			}
-			
-			if (line != null)
-			{
-				line.dispose();
-				line = null;
 			}
 			
 			super.dispose();
