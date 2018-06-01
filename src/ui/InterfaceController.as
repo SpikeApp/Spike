@@ -5,8 +5,8 @@ package ui
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.notifications.Notifications;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -318,13 +318,13 @@ package ui
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, bluetoothDeviceConnectionCompleted);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_DISCONNECTED, central_peripheralDisconnectHandler);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, bluetoothDeviceConnectionCompleted);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, central_peripheralDisconnectHandler);
 		}
 		
 		private static function deviceNotPaired(event:flash.events.Event):void 
 		{
-			if (BackgroundFetch.appIsInForeground())
+			if (SpikeANE.appIsInForeground())
 				return;
 			
 			if (BlueToothDevice.isBluKon())
@@ -385,10 +385,10 @@ package ui
 		public static function userInitiatedBTScanningSucceeded(event:flash.events.Event):void 
 		{
 			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
-			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
 			
 			//Vibrate device to warn user that scan was successful
-			BackgroundFetch.vibrate();
+			SpikeANE.vibrate();
 			
 			/*AlertManager.showSimpleAlert
 			(

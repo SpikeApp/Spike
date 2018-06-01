@@ -2,7 +2,7 @@ package services
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -255,7 +255,7 @@ package services
 							}
 							else if (errorCode == "SSO_AuthenticateMaxAttemptsExceeed") 
 							{
-								if (BackgroundFetch.appIsInForeground()) 
+								if (SpikeANE.appIsInForeground()) 
 								{
 									Trace.myTrace("DexcomShareService.as", "Alerting user of max authentication attempts exceeded.");
 									
@@ -438,7 +438,7 @@ package services
 					}
 					else if (errorCode == "MonitoredReceiverSerialNumberDoesNotMatch") 
 					{
-						if (BackgroundFetch.appIsInForeground()) 
+						if (SpikeANE.appIsInForeground()) 
 						{
 							AlertManager.showSimpleAlert(
 								ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_alert_title"),
@@ -449,7 +449,7 @@ package services
 					}
 					else if (errorCode == "MonitoredReceiverNotAssigned") 
 					{
-						if (BackgroundFetch.appIsInForeground()) 
+						if (SpikeANE.appIsInForeground()) 
 						{
 							var message:String = ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_alert_message_receiver_unassigned_1");
 							message += " " + transmitterID;
@@ -565,7 +565,7 @@ package services
 				Trace.myTrace("DexcomShareService.as", "Receiver assigned successfully!!");
 				getInitialGlucoseReadings();
 				
-				if (BackgroundFetch.appIsInForeground() && showAssignementPopup)
+				if (SpikeANE.appIsInForeground() && showAssignementPopup)
 				{
 					Trace.myTrace("DexcomShareService.as", "Notifying user...");
 					
@@ -596,7 +596,7 @@ package services
 					{
 						Trace.myTrace("DexcomShareService.as", "There's no error code in server's response. Aborting!");
 						
-						if (BackgroundFetch.appIsInForeground())
+						if (SpikeANE.appIsInForeground())
 						{
 							Trace.myTrace("DexcomShareService.as", "Notifying user...");
 							
@@ -610,7 +610,7 @@ package services
 					}
 					else
 					{
-						if (BackgroundFetch.appIsInForeground())
+						if (SpikeANE.appIsInForeground())
 						{
 							Trace.myTrace("DexcomShareService.as", "Notifying user...");
 							

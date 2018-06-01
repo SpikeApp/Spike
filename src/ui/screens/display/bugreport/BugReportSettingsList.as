@@ -1,7 +1,7 @@
 package ui.screens.display.bugreport
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.filesystem.File;
@@ -240,7 +240,7 @@ package ui.screens.display.bugreport
 				if (file.exists)
 					file.deleteFileAsync();
 			}
-			BackgroundFetch.resetTraceFilePath();
+			SpikeANE.resetTraceFilePath();
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, "");
 		}

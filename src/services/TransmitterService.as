@@ -20,7 +20,7 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	import flash.utils.ByteArray;
@@ -237,13 +237,13 @@ package services
 					//check special values filtered and unfiltered to detect dead battery
 					if (transmitterDataG5Packet.filteredData == 2096896) {
 						myTrace("in transmitterDataReceived, filteredData = 2096896, this indicates a dead G5 battery, no further processing");
-						if (BackgroundFetch.appIsInForeground()) {
+						if (SpikeANE.appIsInForeground()) {
 							AlertManager.showSimpleAlert
 							(
 								ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
 								ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info")
 							);
-							BackgroundFetch.vibrate();
+							SpikeANE.vibrate();
 						} else {
 							notificationBuilderG5BatteryInfo = new NotificationBuilder()
 								.setCount(BadgeBuilder.getAppBadge())
@@ -258,7 +258,7 @@ package services
 						myTrace("in transmitterDataReceived, rawdata = 0, this may be caused by refurbished G5 with badly placed batteries, or badly placed transmitter");
 						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000 && Sensor.getActiveSensor() != null) {
 							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
-							if (BackgroundFetch.appIsInForeground()) {
+							if (SpikeANE.appIsInForeground()) {
 								AlertManager.showActionAlert
 								(
 									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
@@ -281,7 +281,7 @@ package services
 									);
 								}
 								
-								BackgroundFetch.vibrate();
+								SpikeANE.vibrate();
 							} else {
 								notificationBuilderG5BatteryInfo = new NotificationBuilder()
 									.setCount(BadgeBuilder.getAppBadge())

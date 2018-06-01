@@ -1,6 +1,6 @@
 package services
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	
@@ -46,7 +46,7 @@ package services
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, processInitialBackfillData);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
-				BackgroundFetch.initHealthKit();
+				SpikeANE.initHealthKit();
 			}
 		}
 		
@@ -62,18 +62,18 @@ package services
 				if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Bolus, Quantity: " + treatment.insulinAmount + "U, Time: " + new Date(treatment.timestamp).toString());
-					BackgroundFetch.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
+					SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
 				}
 				else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Carbs, Quantity: " + treatment.carbs + "g, Time: " + new Date(treatment.timestamp).toString());
-					BackgroundFetch.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
+					SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
 				}
 				else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Meal, Insulin Quantity: " + treatment.insulinAmount + "U, Carbs Quantity: " + treatment.carbs + "g, Time: " + new Date(treatment.timestamp).toString());
-					BackgroundFetch.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
-					BackgroundFetch.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
+					SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
+					SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
 				}
 			}
 		}
@@ -82,7 +82,7 @@ package services
 			if (event.data == LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) {
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
 					//doesn't matter if it's already initiated
-					BackgroundFetch.initHealthKit();
+					SpikeANE.initHealthKit();
 				}
 			}
 		}
@@ -97,7 +97,7 @@ package services
 			if (bgReading == null || bgReading.calculatedValue == 0 || (bgReading.calculatedValue == 0 && bgReading.calibration == null) || bgReading.timestamp <= Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP)))
 				return;
 			
-			BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue, bgReading.timestamp);
+			SpikeANE.storeBGInHealthKitMgDl(bgReading.calculatedValue, bgReading.timestamp);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP, String(bgReading.timestamp));
 		}
 		
@@ -112,7 +112,7 @@ package services
 				var bgReading:BgReading = ModelLocator.bgReadings[i];
 				if (bgReading != null && bgReading.calculatedValue != 0 && bgReading.calibration == null && bgReading.timestamp > Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP)))
 				{
-					BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue, bgReading.timestamp);
+					SpikeANE.storeBGInHealthKitMgDl(bgReading.calculatedValue, bgReading.timestamp);
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP, String(bgReading.timestamp));
 				}
 			}

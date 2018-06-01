@@ -1,7 +1,7 @@
 package utils
 {
 	
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.filesystem.File;
@@ -58,7 +58,7 @@ package utils
 					getSaveStream();
 				
 				//Now that Spike is in the foreground we write the log
-				BackgroundFetch.writeTraceToFile(filePath, stringToWrite);
+				SpikeANE.writeTraceToFile(filePath, stringToWrite);
 				
 				stringToWrite = "";
 			}
@@ -95,7 +95,7 @@ package utils
 				trace(traceText);
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG) == "true") {
-				BackgroundFetch.traceNSLog(traceText);
+				SpikeANE.traceNSLog(traceText);
 			}
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "false" || dontWriteToFile) {
@@ -105,13 +105,13 @@ package utils
 					getSaveStream();
 				
 				stringToWrite += traceText.replace(" spiketrace ", " ");
-				if (!SystemUtil.isApplicationActive && !BackgroundFetch.appIsInForeground() && !Constants.appInForeground)
+				if (!SystemUtil.isApplicationActive && SpikeANE.appIsInBackground() && !Constants.appInForeground)
 					stringToWrite += "\n"; 
 				
 				//Write to log only if Spike is in the foreground, otherwise queue it for later. This is to avoid crashes on some specific devices and/or iOS versions
-				if (SystemUtil.isApplicationActive && BackgroundFetch.appIsInForeground() && Constants.appInForeground)
+				if (SystemUtil.isApplicationActive && !SpikeANE.appIsInBackground() && Constants.appInForeground)
 				{
-					BackgroundFetch.writeTraceToFile(filePath, stringToWrite);
+					SpikeANE.writeTraceToFile(filePath, stringToWrite);
 					stringToWrite = "";
 				}
 			}
@@ -133,10 +133,9 @@ package utils
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, fileName);
 				filePath = File.applicationStorageDirectory.resolvePath(fileName).nativePath;
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, filePath);
-				BackgroundFetch.writeTraceToFile(filePath, "New file created with name " + fileName);
-				BackgroundFetch.writeTraceToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
-				BackgroundFetch.writeTraceToFile(filePath, "BackgroundFetch ANE version = " + BackgroundFetch.getANEVersion());
-				BackgroundFetch.writeTraceToFile(filePath, "Device Info = " + Capabilities.os);
+				SpikeANE.writeTraceToFile(filePath, "New file created with name " + fileName);
+				SpikeANE.writeTraceToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
+				SpikeANE.writeTraceToFile(filePath, "Device Info = " + Capabilities.os);
 				var additionalInfoToWrite:String = "";
 				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
 				additionalInfoToWrite += "Device MAC = " + BlueToothDevice.address + ".\n";
@@ -186,7 +185,7 @@ package utils
 					additionalInfoToWrite += texttoadd;
 				}
 				
-				BackgroundFetch.writeTraceToFile(filePath, additionalInfoToWrite);
+				SpikeANE.writeTraceToFile(filePath, additionalInfoToWrite);
 			} else {
 				filePath = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME);
 			}

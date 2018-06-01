@@ -4,3 +4,4 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
 void NativeExtensionContextFinalizer(FREContext ctx);
 void NativeExtensionInitializer(void** extDataToSet, FREContextInitializer* ctxInitializerToSet, FREContextFinalizer* ctxFinalizerToSet);
 void NativeExtensionFinalizer(void *extData);
+static FREContext _context;

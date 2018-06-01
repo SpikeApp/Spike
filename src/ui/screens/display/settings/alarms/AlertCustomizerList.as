@@ -1,6 +1,6 @@
 package ui.screens.display.settings.alarms
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import database.AlertType;
 	import database.Database;
@@ -422,12 +422,12 @@ package ui.screens.display.settings.alarms
 			var selectedItemData:Object = DefaultListItemRenderer(Button(e.currentTarget).parent).data;
 			var soundFile:String = selectedItemData.soundFile;
 			if(soundFile != "" && soundFile != "default" && soundFile != "no_sound")
-				BackgroundFetch.playSound(soundFile);
+				SpikeANE.playSound(soundFile);
 		}
 		
 		private function onSoundListClose():void
 		{
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 		}
 		
 		private function onTextInputEnter(event:Event):void

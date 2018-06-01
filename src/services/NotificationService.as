@@ -26,7 +26,7 @@ package services
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.AuthorisationEvent;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
@@ -157,7 +157,7 @@ package services
 		private static function deviceNotPaired(event:Event):void {
 			var titleText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_notification_title");
 			var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_background");
-			if (BackgroundFetch.appIsInForeground())
+			if (SpikeANE.appIsInForeground())
 				bodyText = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_foreground");
 			Notifications.service.cancel(ID_FOR_DEVICE_NOT_PAIRED);
 			Notifications.service.notify(
@@ -406,7 +406,7 @@ package services
 			var lastBgReading:BgReading;
 			
 			//start with bgreading notification
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && SpikeANE.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
 				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
