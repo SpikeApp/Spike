@@ -3336,6 +3336,7 @@ package ui.chart
 		{
 			if (absorptionGraph != null) absorptionGraph.removeFromParent(true);
 			absorptionGraph = new LayoutGroup();
+			absorptionGraph.touchable = false;
 			var graphWidth:Number = Constants.isPortrait ? Constants.stageWidth - 60 : Constants.stageHeight - 60;
 			var graphHeight:Number = graphWidth / 3;
 			var info:Object = type == "insulin" ? TreatmentsManager.getTotalActiveInsulin() : TreatmentsManager.getTotalActiveCarbs();
@@ -3375,6 +3376,7 @@ package ui.chart
 			
 			if (curve != null) curve.removeFromParent(true);
 			curve = new SpikeLine();
+			curve.touchable = false;
 			curve.lineStyle(1, type == "insulin" ? uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)) : uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR)));
 			var previousXCoordinate:Number = 0;
 			
@@ -3409,10 +3411,12 @@ package ui.chart
 			//Draw Axis
 			if (yAxisCurve != null) yAxisCurve.removeFromParent(true);
 			yAxisCurve = GraphLayoutFactory.createVerticalLine(graphHeight, 1, 0xEEEEEE);
+			yAxisCurve.touchable = false;
 			absorptionGraph.addChild(yAxisCurve);
 			
 			if (xAxisCurve != null) xAxisCurve.removeFromParent(true);
 			xAxisCurve = GraphLayoutFactory.createHorizontalLine(graphWidth, 1, 0xEEEEEE);
+			xAxisCurve.touchable = false;
 			xAxisCurve.y = yAxisCurve.y + yAxisCurve.height;
 			absorptionGraph.addChild(xAxisCurve);
 			
@@ -3430,6 +3434,7 @@ package ui.chart
 			
 			if (firstCurveLabel != null) firstCurveLabel.removeFromParent(true);
 			firstCurveLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
+			firstCurveLabel.touchable = false;
 			firstCurveLabel.validate();
 			firstCurveLabel.x = 0;
 			firstCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
@@ -3442,6 +3447,7 @@ package ui.chart
 			
 			if (nowCurveLabel != null) nowCurveLabel.removeFromParent(true);
 			nowCurveLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
+			nowCurveLabel.touchable = false;
 			nowCurveLabel.validate();
 			nowCurveLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowCurveLabel.width / 2);
 			nowCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
@@ -3449,6 +3455,7 @@ package ui.chart
 			
 			if (nowCurveMarker != null) nowCurveMarker.removeFromParent(true);
 			nowCurveMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, 0xEEEEEE);
+			nowCurveMarker.touchable = false;
 			nowCurveMarker.x = ((now - firstTreatmentTimestamp) * scaleXFactor);
 			nowCurveMarker.y = 0;
 			absorptionGraph.addChild(nowCurveMarker);
@@ -3471,6 +3478,7 @@ package ui.chart
 			
 			if (lastCurveLabel != null) lastCurveLabel.removeFromParent(true);
 			lastCurveLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
+			lastCurveLabel.touchable = false;
 			lastCurveLabel.validate();
 			lastCurveLabel.x = xAxisCurve.width - lastCurveLabel.width;
 			lastCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
@@ -3486,6 +3494,7 @@ package ui.chart
 			//Highest value
 			if (highestCurveLabel != null) highestCurveLabel.removeFromParent(true);
 			highestCurveLabel = LayoutFactory.createLabel(String(highestDataPoint), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
+			highestCurveLabel.touchable = false;
 			highestCurveLabel.validate();
 			highestCurveLabel.x = -highestCurveLabel.width - 5;
 			highestCurveLabel.y = -highestCurveLabel.height / 4.5;
@@ -3498,6 +3507,7 @@ package ui.chart
 			var middleValue:Number = Math.round((highestDataPoint / 2) * 100) / 100;
 			if (middleCurveLabel != null) middleCurveLabel.removeFromParent(true);
 			middleCurveLabel = LayoutFactory.createLabel(String(middleValue), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
+			middleCurveLabel.touchable = false;
 			middleCurveLabel.validate();
 			middleCurveLabel.x = -middleCurveLabel.width - 5;
 			middleCurveLabel.y = (graphHeight / 2) - (middleCurveLabel.height / 2);
@@ -3509,6 +3519,7 @@ package ui.chart
 			//Lowest value
 			if (lowestCurveLabel != null) lowestCurveLabel.removeFromParent(true);
 			lowestCurveLabel = LayoutFactory.createLabel("0", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12);
+			lowestCurveLabel.touchable = false;
 			lowestCurveLabel.validate();
 			lowestCurveLabel.x = -lowestCurveLabel.width - 5;
 			lowestCurveLabel.y = graphHeight - lowestCurveLabel.height + (lowestCurveLabel.height / 4.5);
@@ -3566,18 +3577,21 @@ package ui.chart
 					tBatteryPill = new ChartTreatmentPill(transmitterName + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
 					tBatteryPill.setValue(batteryStatus.level);
 					tBatteryPill.colorizeLabel(batteryStatus.color);
+					tBatteryPill.touchable = false;
 					infoContainer.addChild(tBatteryPill);
 					
 					//Raw Blood Glucose
 					if (rawPill != null) rawPill.dispose();
 					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
 					rawPill.setValue(GlucoseFactory.getRawGlucose() + " " + GlucoseHelper.getGlucoseUnit());
+					rawPill.touchable = false;
 					infoContainer.addChild(rawPill);
 					
 					//SAGE
 					if (sagePill != null) sagePill.dispose();
 					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
 					sagePill.setValue(GlucoseFactory.getSensorAge());
+					sagePill.touchable = false;
 					infoContainer.addChild(sagePill);
 				}
 				
@@ -3599,6 +3613,7 @@ package ui.chart
 					userInfoPreloader = new MaterialDesignSpinner();
 					userInfoPreloader.color = 0x0086FF;
 					userInfoPreloader.validate();
+					userInfoPreloader.touchable = false;
 					infoContainer.addChild(userInfoPreloader);
 					
 					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved, false, 0, true);
@@ -3643,6 +3658,7 @@ package ui.chart
 				{
 					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
 					rawPill.setValue(e.userInfo.raw + " " + GlucoseHelper.getGlucoseUnit());
+					rawPill.touchable = false;
 					infoContainer.addChild(rawPill);
 				}
 				
@@ -3652,6 +3668,7 @@ package ui.chart
 				{
 					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
 					sagePill.setValue(e.userInfo.sage);
+					sagePill.touchable = false;
 					infoContainer.addChild(sagePill);
 				}
 			}
@@ -3662,6 +3679,7 @@ package ui.chart
 			{
 				cagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','canula_age'));
 				cagePill.setValue(e.userInfo.cage);
+				cagePill.touchable = false;
 				infoContainer.addChild(cagePill);
 			}
 			
@@ -3671,6 +3689,7 @@ package ui.chart
 			{
 				iagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_age'));
 				iagePill.setValue(e.userInfo.iage);
+				iagePill.touchable = false;
 				infoContainer.addChild(iagePill);
 			}
 			
@@ -3680,6 +3699,7 @@ package ui.chart
 			{
 				outcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_outcome'));
 				outcomePill.setValue(e.userInfo.outcome + " " + GlucoseHelper.getGlucoseUnit());
+				outcomePill.touchable = false;
 				infoContainer.addChild(outcomePill);
 			}
 			
@@ -3689,6 +3709,7 @@ package ui.chart
 			{
 				effectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_effect'));
 				effectPill.setValue(e.userInfo.effect + " " + GlucoseHelper.getGlucoseUnit());
+				effectPill.touchable = false;
 				infoContainer.addChild(effectPill);
 			}
 			
@@ -3698,6 +3719,7 @@ package ui.chart
 			{
 				basalPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','basal_insulin'));
 				basalPill.setValue(e.userInfo.basal);
+				basalPill.touchable = false;
 				infoContainer.addChild(basalPill);
 			}
 			
@@ -3707,6 +3729,7 @@ package ui.chart
 			{
 				openAPSMomentPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','openaps'));
 				openAPSMomentPill.setValue(e.userInfo.openAPSLastMoment + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				openAPSMomentPill.touchable = false;
 				infoContainer.addChild(openAPSMomentPill);
 			}
 			
@@ -3716,6 +3739,7 @@ package ui.chart
 			{
 				loopMomentPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','loop_app'));
 				loopMomentPill.setValue(e.userInfo.loopLastMoment + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				loopMomentPill.touchable = false;
 				infoContainer.addChild(loopMomentPill);
 			}
 			
@@ -3725,6 +3749,7 @@ package ui.chart
 			{
 				upBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','uploader_battery'));
 				upBatteryPill.setValue(e.userInfo.uploaderBattery);
+				upBatteryPill.touchable = false;
 				infoContainer.addChild(upBatteryPill);
 			}
 			
@@ -3734,6 +3759,7 @@ package ui.chart
 			{
 				pumpReservoirPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_reservoir'));
 				pumpReservoirPill.setValue(e.userInfo.pumpReservoir + "U");
+				pumpReservoirPill.touchable = false;
 				infoContainer.addChild(pumpReservoirPill);
 			}
 			
@@ -3743,6 +3769,7 @@ package ui.chart
 			{
 				pumpTimePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_time'));
 				pumpTimePill.setValue(e.userInfo.pumpTime + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				pumpTimePill.touchable = false;
 				infoContainer.addChild(pumpTimePill);
 			}
 			
@@ -3752,6 +3779,7 @@ package ui.chart
 			{
 				pumpStatusPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_status'));
 				pumpStatusPill.setValue(e.userInfo.pumpStatus);
+				pumpStatusPill.touchable = false;
 				infoContainer.addChild(pumpStatusPill);
 			}
 			
@@ -3761,6 +3789,7 @@ package ui.chart
 			{
 				pumpBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_battery'));
 				pumpBatteryPill.setValue(e.userInfo.pumpBattery);
+				pumpBatteryPill.touchable = false;
 				infoContainer.addChild(pumpBatteryPill);
 			}
 			
@@ -3798,6 +3827,7 @@ package ui.chart
 			
 			//Notify user
 			userInfoErrorLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','api_v2_not_found'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
+			userInfoErrorLabel.touchable = false;
 			infoContainer.addChild(userInfoErrorLabel);
 			
 			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
@@ -3834,6 +3864,7 @@ package ui.chart
 			
 			//Notify user
 			userInfoErrorLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','error_getting_user_info'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
+			userInfoErrorLabel.touchable = false;
 			infoContainer.addChild(userInfoErrorLabel);
 			
 			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
