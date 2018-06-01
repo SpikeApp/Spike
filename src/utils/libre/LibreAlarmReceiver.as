@@ -61,7 +61,7 @@ package utils.libre
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
 					}
 					
-					if (Sensor.getActiveSensor() == null) {
+					if (Sensor.getActiveSensor() == null && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE))) < 14 * 24 * 60) {
 						//start sensor without user intervention 
 						Sensor.startSensor(((new Date()).valueOf() - sensorAge * 60 * 1000));
 					}
