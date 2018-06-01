@@ -3,7 +3,7 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -296,7 +296,7 @@ package services
 		{
 			initialCalibrationActive = false;
 			
-			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
+			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
 				return;
 			
 			var latestReadings:Array = BgReading.latestBySize(2);
@@ -476,7 +476,7 @@ package services
 					
 					function calibrationDialogClosedWithOverride():void 
 					{
-						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
+						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
 							return;
 						
 						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
@@ -554,7 +554,7 @@ package services
 					
 					function calibrationDialogClosedWithoutOverride():void 
 					{
-						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
+						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
 							return;
 						
 						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
@@ -610,7 +610,7 @@ package services
 		
 		private static function calibrationValueEntered():void 
 		{
-			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
+			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
 				return;
 			
 			var asNumber:Number = Number(calibrationValue.text.replace(",","."));
@@ -674,7 +674,7 @@ package services
 		}
 		
 		private static function giveSensorWarning(warning:String):void {
-			if (BackgroundFetch.appIsInForeground()) {
+			if (SpikeANE.appIsInForeground()) {
 				AlertManager.showSimpleAlert
 					(
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"),

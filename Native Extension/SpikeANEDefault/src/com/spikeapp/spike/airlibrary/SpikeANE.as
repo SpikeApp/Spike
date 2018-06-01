@@ -2,12 +2,21 @@ package com.spikeapp.spike.airlibrary
 {
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
+	import flash.events.StatusEvent;
+	import flash.utils.ByteArray;
 	
 	public class SpikeANE extends EventDispatcher
 	{
+		private static var _instance:SpikeANE = new SpikeANE();
+
 		public function SpikeANE(target:IEventDispatcher=null)
 		{
 			super(target);
+		}
+		
+		public static function get instance():SpikeANE
+		{
+			return _instance;
 		}
 		
 		public static function traceNSLog(log:String) : void { 
@@ -15,6 +24,133 @@ package com.spikeapp.spike.airlibrary
 		}
 		
 		public static function init():void {
+		}
+		
+		/******************
+		 ** MIAOMIAO FUNCTIONS
+		 * ****************/
+		public static function startScanningForMiaoMiao():void {
+		}
+		
+		public static function setMiaoMiaoMac(newMac:String):void {
+		}
+		
+		public static function resetMiaoMiaoMac():void {
+		}
+		
+		public static function cancelMiaoMiaoConnection(MAC:String):void {
+		}
+		
+		public static function stopScanningMiaoMiao():void {
+		}
+		
+		public static function forgetMiaoMiaoPeripheral():void {
+		}
+		
+		public static function sendStartReadingCommmandToMiaoMia():void {
+		}
+		
+		public static function startScanDeviceMiaoMiao():void {
+		}
+		
+		public static function stopScanDeviceMiaoMiao():void {
+		}
+		
+		public static function confirmSensorChangeMiaoMiao():void {
+		}
+		
+		/****************
+		 * ** Status event received from objective-c side
+		 * ***************/
+		private static function onStatus(event:StatusEvent): void
+		{
+		}
+
+		/**********************
+		 * ** HEALTHKIT
+		 * *******************/
+		public static function initHealthKit():void {
+		}
+		
+		public static function storeBGInHealthKitMgDl(value:Number, timeStamp:Number = Number.NaN):void {
+		}
+
+		public static function storeCarbInHealthKitGram(value:Number, timeStamp:Number = Number.NaN):void {
+		}
+		
+		public static function storeInsulin(value:Number, isBolus:Boolean = true, timeStamp:Number = Number.NaN):void {
+		}
+		
+		/*************************************
+		 ** SOUND AND SPEECH RELATED FUNCTIONS
+		 *************************************/
+		public static function stopPlayingSound():void {
+		}
+
+		public static function playSound(sound:String, volume:Number = Number.NaN):void {
+		}
+		
+		public static function isPlayingSound():Boolean {
+			return false;
+		}
+
+		public static function say(text:String, language:String):void {
+		}
+
+		public static function setAvAudioSessionCategory(toCategoryPlayback:Boolean):void {
+		}
+
+		/***************
+		 ** APPLICATION
+		 ***************/
+		public static function appIsInBackground():Boolean {
+				return false;
+		}
+		
+		public static function appIsInForeground():Boolean {
+			return true;
+		}
+
+		public static function initUserDefaults():void {
+		}
+		
+		public static function setUserDefaultsData(key:String, data:String):void {
+		}
+		
+		public static function getAppVersion():String {
+			return "x.x.x";
+		}
+		
+		/**********
+		 ** DEVICE
+		 **********/
+		public static function checkMuted():void {
+		}
+		
+		public static function vibrate():void {
+		}
+		
+		/************
+		 ** UTILITIES
+		 ************/
+		public static function generateHMAC_SHA1(key:String, data:String):String {
+			return "";
+		}
+		
+		public static function AESEncryptWithKey(key:ByteArray, data:ByteArray):ByteArray {
+			return null;
+		}
+
+		public static function startMonitoringAndRangingBeaconsInRegion(region:String):void {
+		}
+		
+		public static function stopMonitoringAndRangingBeaconsInRegion(region:String):void {
+		}
+		
+		public static function writeTraceToFile(filePath:String, text:String):void {
+		}
+		
+		public static function resetTraceFilePath():void {
 		}
 	}
 }

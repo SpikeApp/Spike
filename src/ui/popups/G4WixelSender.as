@@ -1,6 +1,6 @@
 package ui.popups
 {	
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
@@ -66,7 +66,7 @@ package ui.popups
 		
 		private static function displayCallout():void
 		{
-			if (!BackgroundFetch.appIsInForeground())
+			if (!SpikeANE.appIsInForeground())
 				return
 			
 			//Close the callout

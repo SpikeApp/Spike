@@ -20,7 +20,7 @@
 
 package services
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
@@ -153,7 +153,7 @@ package services
 			myTrace("Text to speak: " + text);
 			
 			//Start Text To Speech
-			BackgroundFetch.say(text, language);		
+			SpikeANE.say(text, language);		
 		}
 		
 		private static function speakReading():void
@@ -268,7 +268,7 @@ package services
 			//if phone is muted and mute is not overriden by alert, then there's no need to suppress the speak bgreading even if an alarm is ongoing
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true"
 				&&
-				!BackgroundFetch.isPlayingSound() 
+				!SpikeANE.isPlayingSound() 
 				&&
 				((!ModelLocator.phoneMuted) || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true"))
 			{	

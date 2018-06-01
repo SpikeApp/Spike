@@ -1,6 +1,7 @@
 package model
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -35,7 +36,7 @@ package model
 		
 		private static function sendStartReadingCommandToMiaoMiao(event:Event):void {
 			myTrace("in sendStartReadingCommandToMiaoMiao");
-			BackgroundFetch.sendStartReadingCommmandToMiaoMia();
+			SpikeANE.sendStartReadingCommmandToMiaoMia();
 		}
 		
 		public static function decodeTomatoPacket(s_full_data:ByteArray):void {
@@ -93,7 +94,7 @@ package model
 		
 		public static function receivedSensorChangedFromMiaoMiao():void {
 			myTrace("in decodeTomatoPacket, received sensor change from miaomioa. Confirming sensor change and Stopping the sensor"); 
-			BackgroundFetch.confirmSensorChangeMiaoMiao();
+			SpikeANE.confirmSensorChangeMiaoMiao();
 			Sensor.stopSensor();
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
 		}

@@ -1,6 +1,6 @@
 package services
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.utils.Dictionary;
@@ -66,7 +66,7 @@ package services
 		{
 			Trace.myTrace("WidgetService.as", "Service started!");
 			
-			BackgroundFetch.initUserDefaults();
+			SpikeANE.initUserDefaults();
 			
 			months = ModelLocator.resourceManagerInstance.getString('widgetservice','months').split(",");
 			
@@ -101,43 +101,43 @@ package services
 				setInitialGraphData();
 			}
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_SMOOTH_LINE)
-				BackgroundFetch.setUserDefaultsData("smoothLine", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SMOOTH_LINE));
+				SpikeANE.setUserDefaultsData("smoothLine", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SMOOTH_LINE));
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKERS)
-				BackgroundFetch.setUserDefaultsData("showMarkers", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKERS));
+				SpikeANE.setUserDefaultsData("showMarkers", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKERS));
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKER_LABEL)
-				BackgroundFetch.setUserDefaultsData("showMarkerLabel", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKER_LABEL));
+				SpikeANE.setUserDefaultsData("showMarkerLabel", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKER_LABEL));
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_SHOW_GRID_LINES)
-				BackgroundFetch.setUserDefaultsData("showGridLines", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_GRID_LINES));
+				SpikeANE.setUserDefaultsData("showGridLines", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_GRID_LINES));
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_LINE_THICKNESS)
-				BackgroundFetch.setUserDefaultsData("lineThickness", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LINE_THICKNESS));
+				SpikeANE.setUserDefaultsData("lineThickness", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LINE_THICKNESS));
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_MARKER_RADIUS)
-				BackgroundFetch.setUserDefaultsData("markerRadius", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MARKER_RADIUS));
+				SpikeANE.setUserDefaultsData("markerRadius", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MARKER_RADIUS));
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_URGENT_HIGH_COLOR)
-				BackgroundFetch.setUserDefaultsData("urgentHighColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_HIGH_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("urgentHighColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_HIGH_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_HIGH_COLOR)
-				BackgroundFetch.setUserDefaultsData("highColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HIGH_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("highColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HIGH_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_IN_RANGE_COLOR)
-				BackgroundFetch.setUserDefaultsData("inRangeColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_IN_RANGE_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("inRangeColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_IN_RANGE_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_LOW_COLOR)
-				BackgroundFetch.setUserDefaultsData("lowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LOW_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("lowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LOW_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_URGENT_LOW_COLOR)
-				BackgroundFetch.setUserDefaultsData("urgenLowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_LOW_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("urgenLowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_LOW_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_GLUCOSE_MARKER_COLOR)
-				BackgroundFetch.setUserDefaultsData("markerColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GLUCOSE_MARKER_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("markerColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GLUCOSE_MARKER_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_AXIS_COLOR)
-				BackgroundFetch.setUserDefaultsData("axisColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("axisColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_AXIS_FONT_COLOR)
-				BackgroundFetch.setUserDefaultsData("axisFontColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_FONT_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("axisFontColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_FONT_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR)
-				BackgroundFetch.setUserDefaultsData("backgroundColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("backgroundColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_OPACITY)
-				BackgroundFetch.setUserDefaultsData("backgroundOpacity", String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_OPACITY)) / 100));
+				SpikeANE.setUserDefaultsData("backgroundOpacity", String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_OPACITY)) / 100));
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR)
-				BackgroundFetch.setUserDefaultsData("gridLinesColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("gridLinesColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_DISPLAY_LABELS_COLOR)
-				BackgroundFetch.setUserDefaultsData("displayLabelsColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_DISPLAY_LABELS_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("displayLabelsColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_DISPLAY_LABELS_COLOR)).toString(16).toUpperCase());
 			else if (e.data == CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR)
-				BackgroundFetch.setUserDefaultsData("oldDataColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR)).toString(16).toUpperCase());
+				SpikeANE.setUserDefaultsData("oldDataColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR)).toString(16).toUpperCase());
 		}
 		
 		private static function setInitialGraphData(e:Event = null):void
@@ -192,77 +192,77 @@ package services
 			activeGlucoseReadingsList.reverse();
 			
 			//Graph Data
-			BackgroundFetch.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
+			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 			
 			//Settings
-			BackgroundFetch.setUserDefaultsData("smoothLine", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SMOOTH_LINE));
-			BackgroundFetch.setUserDefaultsData("showMarkers", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKERS));
-			BackgroundFetch.setUserDefaultsData("showMarkerLabel", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKER_LABEL));
-			BackgroundFetch.setUserDefaultsData("showGridLines", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_GRID_LINES));
-			BackgroundFetch.setUserDefaultsData("lineThickness", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LINE_THICKNESS));
-			BackgroundFetch.setUserDefaultsData("markerRadius", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MARKER_RADIUS));
+			SpikeANE.setUserDefaultsData("smoothLine", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SMOOTH_LINE));
+			SpikeANE.setUserDefaultsData("showMarkers", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKERS));
+			SpikeANE.setUserDefaultsData("showMarkerLabel", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_MARKER_LABEL));
+			SpikeANE.setUserDefaultsData("showGridLines", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_SHOW_GRID_LINES));
+			SpikeANE.setUserDefaultsData("lineThickness", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LINE_THICKNESS));
+			SpikeANE.setUserDefaultsData("markerRadius", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MARKER_RADIUS));
 			
 			//Display Labels Data
 			if (latestGlucoseReading != null)
 			{
 				var timeFormatted:String = getGlucoseTimeFormatted(latestGlucoseReading.timestamp, false);
 				var lastUpdate:String = getLastUpdate(latestGlucoseReading.timestamp) + ", " + timeFormatted;
-				BackgroundFetch.setUserDefaultsData("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + lastUpdate);
-				BackgroundFetch.setUserDefaultsData("latestGlucoseTime", String(latestGlucoseReading.timestamp));
-				BackgroundFetch.setUserDefaultsData("latestGlucoseValue", BgGraphBuilder.unitizedString(latestGlucoseReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
-				BackgroundFetch.setUserDefaultsData("latestGlucoseSlopeArrow", latestGlucoseReading.slopeArrow());
-				BackgroundFetch.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
+				SpikeANE.setUserDefaultsData("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + lastUpdate);
+				SpikeANE.setUserDefaultsData("latestGlucoseTime", String(latestGlucoseReading.timestamp));
+				SpikeANE.setUserDefaultsData("latestGlucoseValue", BgGraphBuilder.unitizedString(latestGlucoseReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"));
+				SpikeANE.setUserDefaultsData("latestGlucoseSlopeArrow", latestGlucoseReading.slopeArrow());
+				SpikeANE.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
 			}
 			
 			//Threshold Values
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 			{
-				BackgroundFetch.setUserDefaultsData("urgenLowThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
-				BackgroundFetch.setUserDefaultsData("lowThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
-				BackgroundFetch.setUserDefaultsData("highThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
-				BackgroundFetch.setUserDefaultsData("urgentHighThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+				SpikeANE.setUserDefaultsData("urgenLowThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
+				SpikeANE.setUserDefaultsData("lowThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+				SpikeANE.setUserDefaultsData("highThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+				SpikeANE.setUserDefaultsData("urgentHighThreshold", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
 			}
 			else
 			{
-				BackgroundFetch.setUserDefaultsData("urgenLowThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK))))) * 10)) / 10));
-				BackgroundFetch.setUserDefaultsData("lowThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10));
-				BackgroundFetch.setUserDefaultsData("highThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10));
-				BackgroundFetch.setUserDefaultsData("urgentHighThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK))))) * 10)) / 10));
+				SpikeANE.setUserDefaultsData("urgenLowThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK))))) * 10)) / 10));
+				SpikeANE.setUserDefaultsData("lowThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10));
+				SpikeANE.setUserDefaultsData("highThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10));
+				SpikeANE.setUserDefaultsData("urgentHighThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK))))) * 10)) / 10));
 			}
 				
 			//Colors
-			BackgroundFetch.setUserDefaultsData("urgenLowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_LOW_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("lowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LOW_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("inRangeColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_IN_RANGE_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("highColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HIGH_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("urgentHighColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_HIGH_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("oldDataColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("displayLabelsColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_DISPLAY_LABELS_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("markerColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GLUCOSE_MARKER_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("axisColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("axisFontColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_FONT_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("gridLinesColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("mainLineColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MAIN_LINE_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("backgroundColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR)).toString(16).toUpperCase());
-			BackgroundFetch.setUserDefaultsData("backgroundOpacity", String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_OPACITY)) / 100));
+			SpikeANE.setUserDefaultsData("urgenLowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_LOW_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("lowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LOW_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("inRangeColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_IN_RANGE_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("highColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HIGH_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("urgentHighColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_HIGH_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("oldDataColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("displayLabelsColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_DISPLAY_LABELS_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("markerColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GLUCOSE_MARKER_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("axisColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("axisFontColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_AXIS_FONT_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("gridLinesColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_GRID_LINES_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("mainLineColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_MAIN_LINE_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("backgroundColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_COLOR)).toString(16).toUpperCase());
+			SpikeANE.setUserDefaultsData("backgroundOpacity", String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_BACKGROUND_OPACITY)) / 100));
 			
 			//Glucose Unit
-			BackgroundFetch.setUserDefaultsData("glucoseUnit", GlucoseHelper.getGlucoseUnit());
+			SpikeANE.setUserDefaultsData("glucoseUnit", GlucoseHelper.getGlucoseUnit());
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
-				BackgroundFetch.setUserDefaultsData("glucoseUnitInternal", "mgdl");
+				SpikeANE.setUserDefaultsData("glucoseUnitInternal", "mgdl");
 			else
-				BackgroundFetch.setUserDefaultsData("glucoseUnitInternal", "mmol");
+				SpikeANE.setUserDefaultsData("glucoseUnitInternal", "mmol");
 			
 			//IOB & COB
-			BackgroundFetch.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
-			BackgroundFetch.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
 			
 			//Translations
-			BackgroundFetch.setUserDefaultsData("minAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','minute_ago'));
-			BackgroundFetch.setUserDefaultsData("hourAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','hour_ago'));
-			BackgroundFetch.setUserDefaultsData("ago", ModelLocator.resourceManagerInstance.getString('widgetservice','ago'));
-			BackgroundFetch.setUserDefaultsData("now", ModelLocator.resourceManagerInstance.getString('widgetservice','now'));
-			BackgroundFetch.setUserDefaultsData("openSpike", ModelLocator.resourceManagerInstance.getString('widgetservice','open_spike'));
+			SpikeANE.setUserDefaultsData("minAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','minute_ago'));
+			SpikeANE.setUserDefaultsData("hourAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','hour_ago'));
+			SpikeANE.setUserDefaultsData("ago", ModelLocator.resourceManagerInstance.getString('widgetservice','ago'));
+			SpikeANE.setUserDefaultsData("now", ModelLocator.resourceManagerInstance.getString('widgetservice','now'));
+			SpikeANE.setUserDefaultsData("openSpike", ModelLocator.resourceManagerInstance.getString('widgetservice','open_spike'));
 			
 			initialGraphDataSet = true;
 		}
@@ -322,8 +322,8 @@ package services
 			
 			var now:Number = new Date().valueOf();
 			
-			BackgroundFetch.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
-			BackgroundFetch.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
 		}
 		
 		private static function onTreatmentRefresh(e:Event):void
@@ -395,14 +395,14 @@ package services
 			var now:Number = new Date().valueOf();
 			
 			//Save data to User Defaults
-			BackgroundFetch.setUserDefaultsData("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + getLastUpdate(currentReading.timestamp) + ", " + getGlucoseTimeFormatted(currentReading.timestamp, false));
-			BackgroundFetch.setUserDefaultsData("latestGlucoseValue", latestGlucose);
-			BackgroundFetch.setUserDefaultsData("latestGlucoseSlopeArrow", currentReading.slopeArrow());
-			BackgroundFetch.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
-			BackgroundFetch.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
-			BackgroundFetch.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
-			BackgroundFetch.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
-			BackgroundFetch.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+			SpikeANE.setUserDefaultsData("latestWidgetUpdate", ModelLocator.resourceManagerInstance.getString('widgetservice','last_update_label') + " " + getLastUpdate(currentReading.timestamp) + ", " + getGlucoseTimeFormatted(currentReading.timestamp, false));
+			SpikeANE.setUserDefaultsData("latestGlucoseValue", latestGlucose);
+			SpikeANE.setUserDefaultsData("latestGlucoseSlopeArrow", currentReading.slopeArrow());
+			SpikeANE.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
+			SpikeANE.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
+			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
+			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
 		}
 		
 		/**
