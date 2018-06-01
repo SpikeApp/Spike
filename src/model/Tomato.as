@@ -100,8 +100,11 @@ package model
 				giveSensorWarning(ModelLocator.resourceManagerInstance.getString("tomato","libre_sensor_not_yet_started_title"), ModelLocator.resourceManagerInstance.getString("tomato","libre_sensor_not_yet_started_body"));
 				myTrace("in decodeTomatoPacket, sensor not yet started status received (status = 1), generating notification, no further processing");
 				return;
-			}
-			
+			} else if (sensorState == 6) {
+				giveSensorWarning(ModelLocator.resourceManagerInstance.getString("tomato","libre_sensor_sensor_failure_title"), ModelLocator.resourceManagerInstance.getString("tomato","libre_sensor_sensor_failure_body"));
+				myTrace("in decodeTomatoPacket, sensor failure received (status = 6), generating notification, no further processing");
+				return;
+			} 
 			
 			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
 			LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
