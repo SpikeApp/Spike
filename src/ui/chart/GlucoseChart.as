@@ -82,6 +82,7 @@ package ui.chart
 		private static const NUM_MINUTES_MISSED_READING_GAP:int = 6;
 		private static const TIME_30_SECONDS:int = 30 * 1000;
 		private static const TIME_75_SECONDS:int = 75 * 1000;
+		private static const TIME_2_MINUTES_30_SECONDS:int = (2* 60 * 1000) + (30 * 1000);
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
 		private static const TIME_16_MINUTES:int = 16 * 60 * 1000;
@@ -3347,11 +3348,14 @@ package ui.chart
 			var dataPoint:Number = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime) : TreatmentsManager.getTotalCOB(pointInTime);
 			dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
 			
-			while (dataPoint > 0)
+			while (dataPoint >= 0)
 			{
-				pointInTime += TIME_5_MINUTES;
+				pointInTime += TIME_2_MINUTES_30_SECONDS;
 				dataPoint = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime) : TreatmentsManager.getTotalCOB(pointInTime);
 				dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
+				
+				if (dataPoint == 0)
+					break;
 			}
 			
 			//Draw Curve
@@ -3437,7 +3441,7 @@ package ui.chart
 			var now:Number = new Date().valueOf();
 			
 			if (nowCurveLabel != null) nowCurveLabel.removeFromParent(true);
-			nowCurveLabel = LayoutFactory.createLabel("NOW", HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
+			nowCurveLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12);
 			nowCurveLabel.validate();
 			nowCurveLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowCurveLabel.width / 2);
 			nowCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 5;
