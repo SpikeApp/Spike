@@ -2,6 +2,7 @@ package ui.screens
 {
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
+	import flash.display.StageOrientation;
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.system.System;
@@ -117,8 +118,6 @@ package ui.screens
 			setupContent();
 			setupEventListeners();
 			adjustMainMenu();
-			
-			
 		}
 		
 		/**
@@ -172,8 +171,8 @@ package ui.screens
 			/* TimeAgo Display Label */
 			timeAgoDisplay = LayoutFactory.createLabel(timeAgoOutput, HorizontalAlign.LEFT, VerticalAlign.MIDDLE, infoFontSize, false, timeAgoColor);
 			timeAgoDisplay.width = 300;
-			timeAgoDisplay.y = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait ? 5 : 10;
-			timeAgoDisplay.x = 10;
+			timeAgoDisplay.y = 10;
+			timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
 			timeAgoDisplay.validate();
 			addChild(timeAgoDisplay);
 			
@@ -181,7 +180,7 @@ package ui.screens
 			slopeDisplay = LayoutFactory.createLabel(latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit() : "", HorizontalAlign.RIGHT, VerticalAlign.MIDDLE, infoFontSize, false, latestSlopeInfoColor);
 			slopeDisplay.width = 300;
 			slopeDisplay.validate();
-			slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - 10;
+			slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
 			slopeDisplay.y = timeAgoDisplay.y;
 			addChild(slopeDisplay);
 			
@@ -632,9 +631,6 @@ package ui.screens
 		{
 			width = Constants.stageWidth;
 			
-			if (slopeDisplay != null)
-				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - 10;
-			
 			if (IOBCOBDisplay != null)
 				IOBCOBDisplay.width = Constants.stageWidth;
 			
@@ -644,8 +640,8 @@ package ui.screens
 			//Adjust label position
 			if (timeAgoDisplay != null && slopeDisplay != null)
 			{
-				timeAgoDisplay.y = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait ? 5 : 10;
-				slopeDisplay.y = timeAgoDisplay.y
+				timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
+				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
 			}
 			
 			SystemUtil.executeWhenApplicationIsActive( calculateValues );

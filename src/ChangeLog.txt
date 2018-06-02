@@ -5,6 +5,7 @@ ENHANCEMENT: Improved initial strategy to upload textures to the GPU when Spike 
 ENHANCEMENT: Several layout and logic enhancements to the "Insert Treatment" popup. Keyboard should not cover part of the popup anymore as long as there's enough room to render everything. (Miguel)
 FIX: Libre users sometimes where experiencing HIGH glucose values suddenly displayed as LOW. This is now fixed (Johan).
 FIX: BlueReader battery status was not displayed correctly on the "+ info" pill. (Miguel)
+FIX: Landscape mode in Fullscreen View should now display correctly on iPhone X. (Miguel)
 
 2.1.0
 FEATURE: New pill called "+ info" is now available for all users (masters and followers) on the Chart Screen. When you press on it, Spike will show you a popup with, wait for it.... more info! :) Masters will have the latest raw glucose value, transmitter battery status and sensor age, even when offline. Both masters and followers, when online and connected to a Nightscout site, will also have additional info like: pump status, pump battery, pump reservoir, basal, uploader battery, treatments prediction, IAGE, CAGE, Loop/OpenAPS status, etc. depending on the plugins enabled in Nightscout. (Miguel)
