@@ -6,6 +6,7 @@ package ui.chart
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.system.System;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
@@ -81,6 +82,7 @@ package ui.chart
 		private static const NUM_MINUTES_MISSED_READING_GAP:int = 6;
 		private static const TIME_30_SECONDS:int = 30 * 1000;
 		private static const TIME_75_SECONDS:int = 75 * 1000;
+		private static const TIME_2_MINUTES_30_SECONDS:int = (2* 60 * 1000) + (30 * 1000);
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
 		private static const TIME_16_MINUTES:int = 16 * 60 * 1000;
@@ -273,8 +275,24 @@ package ui.chart
 		private var sagePill:ChartTreatmentPill;
 		private var iagePill:ChartTreatmentPill;
 		private var tBatteryPill:ChartTreatmentPill;
-
 		private var userInfoErrorLabel:Label;
+
+		//Absorption curves
+		private var absorptionGraph:LayoutGroup;
+		private var curve:SpikeLine;
+		private var yAxisCurve:SpikeLine;
+		private var xAxisCurve:SpikeLine;
+		private var firstCurveLabel:Label;
+		private var nowCurveLabel:Label;
+		private var nowCurveMarker:SpikeLine;
+		private var lastCurveLabel:Label;
+		private var highestCurveLabel:Label;
+		private var middleCurveLabel:Label;
+		private var lowestCurveLabel:Label;
+		private var carbsCurve:LayoutGroup;
+		private var carbsCurveCallout:Callout;
+		private var insulinCurve:LayoutGroup;
+		private var insulinCurveCallout:Callout;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number)
 		{
@@ -2620,6 +2638,8 @@ package ui.chart
 					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
 						IOBPill.visible = false;
 					
+					IOBPill.addEventListener(TouchEvent.TOUCH, onDisplayInsulinCurve);
+					
 					addChild(IOBPill);
 				}
 				
@@ -2632,6 +2652,8 @@ package ui.chart
 					
 					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
 						COBPill.visible = false;
+					
+					COBPill.addEventListener(TouchEvent.TOUCH, onDisplayCarbsCurve);
 					
 					addChild(COBPill);
 				}
@@ -3245,6 +3267,278 @@ package ui.chart
 		/**
 		 * Extra User Info
 		 */
+		private function onDisplayInsulinCurve(e:starling.events.TouchEvent):void
+		{
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+				return;
+			
+			if (TreatmentsManager.getTotalIOB(new Date().valueOf()) <= 0)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				disposeAbsorptionCurves();
+				
+				var graphData:Object = getAbsorptionCurve("insulin");
+				if (insulinCurve != null) insulinCurve.removeFromParent(true);
+				insulinCurve = graphData.graph;
+				
+				if (insulinCurveCallout != null) insulinCurveCallout.removeFromParent(true);
+				insulinCurveCallout = Callout.show(insulinCurve, IOBPill, null, true);
+				insulinCurveCallout.paddingLeft += graphData.padding - 5;
+				insulinCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
+				
+				graphData = null;
+			}
+		}
+		
+		private function onDisplayCarbsCurve(e:starling.events.TouchEvent):void
+		{
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+				return;
+			
+			if (TreatmentsManager.getTotalCOB(new Date().valueOf()) <= 0)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				disposeAbsorptionCurves();
+				
+				var graphData:Object = getAbsorptionCurve("carbs");
+				if (carbsCurve != null) carbsCurve.removeFromParent(true);
+				carbsCurve = graphData.graph;
+				
+				if (carbsCurveCallout != null) carbsCurveCallout.removeFromParent(true);
+				carbsCurveCallout = Callout.show(carbsCurve, COBPill, null, true);
+				carbsCurveCallout.paddingLeft += graphData.padding - 5;
+				carbsCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
+				
+				graphData = null;
+			}
+		}
+		
+		private function onCurveCalloutClosed(e:starling.events.Event):void
+		{
+			disposeAbsorptionCurves();
+		}
+		
+		private function getAbsorptionCurve(type:String):Object
+		{
+			//Graphics container
+			if (absorptionGraph != null) absorptionGraph.removeFromParent(true);
+			absorptionGraph = new LayoutGroup();
+			absorptionGraph.touchable = false;
+			
+			//Data points
+			var info:Object = type == "insulin" ? TreatmentsManager.getTotalActiveInsulin() : TreatmentsManager.getTotalActiveCarbs();
+			var totalTreatmentsData:Number = type == "insulin" ? info.insulin : info.carbs;
+			var firstTreatmentTimestamp:Number = info.timestamp;
+			var dataPoints:Array = new Array();
+			var pointInTime:Number = firstTreatmentTimestamp;
+			var dataPoint:Number = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime) : TreatmentsManager.getTotalCOB(pointInTime);
+			dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
+			
+			while (dataPoint >= 0)
+			{
+				pointInTime += TIME_2_MINUTES_30_SECONDS;
+				dataPoint = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime) : TreatmentsManager.getTotalCOB(pointInTime);
+				dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
+				
+				if (dataPoint == 0)
+					break;
+			}
+			
+			//Calculators
+			var leftPadding:Number = 0;
+			var firstTimestamp:Number = dataPoints[0].timestamp;
+			var lastTimestamp:Number = dataPoints[dataPoints.length - 1].timestamp;
+			var totalTimestampDifference:Number = lastTimestamp - firstTimestamp;
+			var sortedData:Array = dataPoints.concat();
+			sortedData.sortOn(["dataPoint"], Array.NUMERIC);
+			var highestDataPoint:Number = sortedData[sortedData.length -1].dataPoint;
+			var lowestDataPoint:Number = sortedData[0].dataPoint;
+			var totalDataDifference:Number = highestDataPoint - lowestDataPoint;
+			
+			//YAXIS LABELS
+			//Highest value
+			if (highestCurveLabel != null) highestCurveLabel.removeFromParent(true);
+			highestCurveLabel = LayoutFactory.createLabel(String(highestDataPoint) + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
+			highestCurveLabel.touchable = false;
+			highestCurveLabel.validate();
+			highestCurveLabel.x = -highestCurveLabel.width - 7;
+			highestCurveLabel.y = -highestCurveLabel.height / 4.5;
+			absorptionGraph.addChild(highestCurveLabel);
+			if (highestCurveLabel.x < leftPadding) leftPadding = highestCurveLabel.x;
+			
+			//Middle value
+			var middleValue:Number = Math.round((highestDataPoint / 2) * 100) / 100;
+			if (middleCurveLabel != null) middleCurveLabel.removeFromParent(true);
+			middleCurveLabel = LayoutFactory.createLabel(String(middleValue) + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
+			middleCurveLabel.touchable = false;
+			middleCurveLabel.validate();
+			middleCurveLabel.x = -middleCurveLabel.width - 7;
+			absorptionGraph.addChild(middleCurveLabel);
+			if (middleCurveLabel.x < leftPadding) leftPadding = middleCurveLabel.x;
+			
+			//Lowest value
+			if (lowestCurveLabel != null) lowestCurveLabel.removeFromParent(true);
+			lowestCurveLabel = LayoutFactory.createLabel("0" + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
+			lowestCurveLabel.touchable = false;
+			lowestCurveLabel.validate();
+			lowestCurveLabel.x = -lowestCurveLabel.width - 7;
+			absorptionGraph.addChild(lowestCurveLabel);
+			if (lowestCurveLabel.x < leftPadding) leftPadding = lowestCurveLabel.x;
+			
+			//Absorption Curve 
+			var graphWidth:Number = Constants.isPortrait ? Constants.stageWidth - Math.abs(leftPadding) - 35 : Constants.stageHeight - Math.abs(leftPadding) - 35;
+			var graphHeight:Number = graphWidth / 3;
+			var scaleXFactor:Number = 1 / (totalTimestampDifference / graphWidth);
+			var scaleYFactor:Number = graphHeight / totalDataDifference;
+			
+			middleCurveLabel.y = (graphHeight / 2) - (middleCurveLabel.height / 2);
+			lowestCurveLabel.y = graphHeight - lowestCurveLabel.height + (lowestCurveLabel.height / 4.5);
+			
+			if (curve != null) curve.removeFromParent(true);
+			curve = new SpikeLine();
+			curve.touchable = false;
+			curve.lineStyle(1.5, type == "insulin" ? uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)) : uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR)));
+			var previousXCoordinate:Number = 0;
+			
+			var dataLength:int = dataPoints.length;
+			for(var i:int = 0; i < dataLength; i++)
+			{
+				var currentDataPointValue:Number = dataPoints[i].dataPoint;
+				
+				//Define data point x position
+				var dataX:Number;
+				if(i==0) dataX = 0;
+				else dataX = (Number(dataPoints[i].timestamp) - Number(dataPoints[i-1].timestamp)) * scaleXFactor;
+				
+				dataX = previousXCoordinate + dataX;
+				
+				//Define glucose marker y position
+				var dataY:Number = graphHeight - ((currentDataPointValue - lowestDataPoint) * scaleYFactor);
+				
+				if (i == 0)
+					curve.moveTo(dataX, dataY);
+				else
+				{
+					curve.lineTo(dataX, dataY);
+					curve.moveTo(dataX, dataY);
+				}
+				
+				previousXCoordinate = dataX;
+			}
+			
+			absorptionGraph.addChild(curve);
+			
+			//Draw Axis
+			if (yAxisCurve != null) yAxisCurve.removeFromParent(true);
+			yAxisCurve = GraphLayoutFactory.createVerticalLine(graphHeight, 1.5, lineColor);
+			yAxisCurve.touchable = false;
+			absorptionGraph.addChild(yAxisCurve);
+			
+			if (xAxisCurve != null) xAxisCurve.removeFromParent(true);
+			xAxisCurve = GraphLayoutFactory.createHorizontalLine(graphWidth, 1.5, lineColor);
+			xAxisCurve.touchable = false;
+			xAxisCurve.y = yAxisCurve.y + yAxisCurve.height;
+			absorptionGraph.addChild(xAxisCurve);
+			
+			//Draw X Labels
+			var dateFormat:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
+			
+			//First Timestamo
+			var firstDate:Date = new Date(firstTreatmentTimestamp);
+			var timeFormatted:String = "";
+			if (dateFormat.slice(0,2) == "24")
+				timeFormatted = TimeSpan.formatHoursMinutes(firstDate.getHours(), firstDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
+			else
+				timeFormatted = TimeSpan.formatHoursMinutes(firstDate.getHours(), firstDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
+			
+			if (firstCurveLabel != null) firstCurveLabel.removeFromParent(true);
+			firstCurveLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
+			firstCurveLabel.touchable = false;
+			firstCurveLabel.validate();
+			firstCurveLabel.x = 0;
+			firstCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
+			absorptionGraph.addChild(firstCurveLabel);
+			var firstLabelBounds:Rectangle = firstCurveLabel.bounds;
+			
+			//Now
+			var now:Number = new Date().valueOf();
+			
+			if (nowCurveLabel != null) nowCurveLabel.removeFromParent(true);
+			nowCurveLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
+			nowCurveLabel.touchable = false;
+			nowCurveLabel.validate();
+			nowCurveLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowCurveLabel.width / 2);
+			nowCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
+			absorptionGraph.addChild(nowCurveLabel);
+			
+			if (nowCurveMarker != null) nowCurveMarker.removeFromParent(true);
+			nowCurveMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, lineColor);
+			nowCurveMarker.touchable = false;
+			nowCurveMarker.x = ((now - firstTreatmentTimestamp) * scaleXFactor);
+			nowCurveMarker.y = 0;
+			absorptionGraph.addChild(nowCurveMarker);
+			
+			var nowLabelBounds:Rectangle = nowCurveLabel.bounds;
+			
+			if (nowLabelBounds.intersects(firstLabelBounds))
+			{
+				nowCurveLabel.removeFromParent(true);
+				nowCurveLabel = null;
+			}
+			
+			//Last timestamp
+			var lastDate:Date = new Date(lastTimestamp);
+			var lastTimeFormatted:String = "";
+			if (dateFormat.slice(0,2) == "24")
+				lastTimeFormatted = TimeSpan.formatHoursMinutes(lastDate.getHours(), lastDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
+			else
+				lastTimeFormatted = TimeSpan.formatHoursMinutes(lastDate.getHours(), lastDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
+			
+			if (lastCurveLabel != null) lastCurveLabel.removeFromParent(true);
+			lastCurveLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
+			lastCurveLabel.touchable = false;
+			lastCurveLabel.validate();
+			lastCurveLabel.x = xAxisCurve.width - lastCurveLabel.width;
+			lastCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
+			absorptionGraph.addChild(lastCurveLabel);
+			
+			if (nowCurveLabel != null)
+			{
+				var latestLabelBounds:Rectangle = lastCurveLabel.bounds;
+				if (latestLabelBounds.intersects(nowLabelBounds))
+					nowCurveLabel.removeFromParent(true);
+			}
+			
+			//Dispose unneded data
+			info = null;
+			if (dataPoints != null)
+			{
+				dataPoints.length = 0;
+				dataPoints = null;
+			}
+			if (sortedData != null)
+			{
+				sortedData.length = 0;
+				sortedData = null;
+			}
+			
+			return { graph: absorptionGraph, padding: Math.abs(leftPadding) };
+		}
+		
 		private function onDisplayMoreInfo(e:starling.events.TouchEvent):void
 		{
 			if (!SystemUtil.isApplicationActive || dummyModeActive)
@@ -3278,18 +3572,21 @@ package ui.chart
 					tBatteryPill = new ChartTreatmentPill(transmitterName + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
 					tBatteryPill.setValue(batteryStatus.level);
 					tBatteryPill.colorizeLabel(batteryStatus.color);
+					tBatteryPill.touchable = false;
 					infoContainer.addChild(tBatteryPill);
 					
 					//Raw Blood Glucose
 					if (rawPill != null) rawPill.dispose();
 					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
 					rawPill.setValue(GlucoseFactory.getRawGlucose() + " " + GlucoseHelper.getGlucoseUnit());
+					rawPill.touchable = false;
 					infoContainer.addChild(rawPill);
 					
 					//SAGE
 					if (sagePill != null) sagePill.dispose();
 					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
 					sagePill.setValue(GlucoseFactory.getSensorAge());
+					sagePill.touchable = false;
 					infoContainer.addChild(sagePill);
 				}
 				
@@ -3311,6 +3608,7 @@ package ui.chart
 					userInfoPreloader = new MaterialDesignSpinner();
 					userInfoPreloader.color = 0x0086FF;
 					userInfoPreloader.validate();
+					userInfoPreloader.touchable = false;
 					infoContainer.addChild(userInfoPreloader);
 					
 					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved, false, 0, true);
@@ -3355,6 +3653,7 @@ package ui.chart
 				{
 					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
 					rawPill.setValue(e.userInfo.raw + " " + GlucoseHelper.getGlucoseUnit());
+					rawPill.touchable = false;
 					infoContainer.addChild(rawPill);
 				}
 				
@@ -3364,6 +3663,7 @@ package ui.chart
 				{
 					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
 					sagePill.setValue(e.userInfo.sage);
+					sagePill.touchable = false;
 					infoContainer.addChild(sagePill);
 				}
 			}
@@ -3374,6 +3674,7 @@ package ui.chart
 			{
 				cagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','canula_age'));
 				cagePill.setValue(e.userInfo.cage);
+				cagePill.touchable = false;
 				infoContainer.addChild(cagePill);
 			}
 			
@@ -3383,6 +3684,7 @@ package ui.chart
 			{
 				iagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_age'));
 				iagePill.setValue(e.userInfo.iage);
+				iagePill.touchable = false;
 				infoContainer.addChild(iagePill);
 			}
 			
@@ -3392,6 +3694,7 @@ package ui.chart
 			{
 				outcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_outcome'));
 				outcomePill.setValue(e.userInfo.outcome + " " + GlucoseHelper.getGlucoseUnit());
+				outcomePill.touchable = false;
 				infoContainer.addChild(outcomePill);
 			}
 			
@@ -3401,6 +3704,7 @@ package ui.chart
 			{
 				effectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_effect'));
 				effectPill.setValue(e.userInfo.effect + " " + GlucoseHelper.getGlucoseUnit());
+				effectPill.touchable = false;
 				infoContainer.addChild(effectPill);
 			}
 			
@@ -3410,6 +3714,7 @@ package ui.chart
 			{
 				basalPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','basal_insulin'));
 				basalPill.setValue(e.userInfo.basal);
+				basalPill.touchable = false;
 				infoContainer.addChild(basalPill);
 			}
 			
@@ -3419,6 +3724,7 @@ package ui.chart
 			{
 				openAPSMomentPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','openaps'));
 				openAPSMomentPill.setValue(e.userInfo.openAPSLastMoment + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				openAPSMomentPill.touchable = false;
 				infoContainer.addChild(openAPSMomentPill);
 			}
 			
@@ -3428,6 +3734,7 @@ package ui.chart
 			{
 				loopMomentPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','loop_app'));
 				loopMomentPill.setValue(e.userInfo.loopLastMoment + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				loopMomentPill.touchable = false;
 				infoContainer.addChild(loopMomentPill);
 			}
 			
@@ -3437,6 +3744,7 @@ package ui.chart
 			{
 				upBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','uploader_battery'));
 				upBatteryPill.setValue(e.userInfo.uploaderBattery);
+				upBatteryPill.touchable = false;
 				infoContainer.addChild(upBatteryPill);
 			}
 			
@@ -3446,6 +3754,7 @@ package ui.chart
 			{
 				pumpReservoirPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_reservoir'));
 				pumpReservoirPill.setValue(e.userInfo.pumpReservoir + "U");
+				pumpReservoirPill.touchable = false;
 				infoContainer.addChild(pumpReservoirPill);
 			}
 			
@@ -3455,6 +3764,7 @@ package ui.chart
 			{
 				pumpTimePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_time'));
 				pumpTimePill.setValue(e.userInfo.pumpTime + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix'));
+				pumpTimePill.touchable = false;
 				infoContainer.addChild(pumpTimePill);
 			}
 			
@@ -3464,6 +3774,7 @@ package ui.chart
 			{
 				pumpStatusPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_status'));
 				pumpStatusPill.setValue(e.userInfo.pumpStatus);
+				pumpStatusPill.touchable = false;
 				infoContainer.addChild(pumpStatusPill);
 			}
 			
@@ -3473,6 +3784,7 @@ package ui.chart
 			{
 				pumpBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','pump_battery'));
 				pumpBatteryPill.setValue(e.userInfo.pumpBattery);
+				pumpBatteryPill.touchable = false;
 				infoContainer.addChild(pumpBatteryPill);
 			}
 			
@@ -3510,6 +3822,7 @@ package ui.chart
 			
 			//Notify user
 			userInfoErrorLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','api_v2_not_found'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
+			userInfoErrorLabel.touchable = false;
 			infoContainer.addChild(userInfoErrorLabel);
 			
 			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
@@ -3546,6 +3859,7 @@ package ui.chart
 			
 			//Notify user
 			userInfoErrorLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','error_getting_user_info'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false, 0xFF0000);
+			userInfoErrorLabel.touchable = false;
 			infoContainer.addChild(userInfoErrorLabel);
 			
 			infoCallout.invalidate(FeathersControl.INVALIDATION_FLAG_SIZE);
@@ -3697,6 +4011,123 @@ package ui.chart
 				infoCallout.dispose();
 				infoCallout = null;
 			}
+			
+			if (userInfoErrorLabel != null)
+			{
+				userInfoErrorLabel.removeFromParent();
+				userInfoErrorLabel.dispose();
+				userInfoErrorLabel = null;
+			}
+		}
+		
+		private function disposeAbsorptionCurves():void
+		{
+			if (lowestCurveLabel != null)
+			{
+				lowestCurveLabel.removeFromParent();
+				lowestCurveLabel.dispose();
+				lowestCurveLabel = null;
+			}
+			
+			if (middleCurveLabel != null)
+			{
+				middleCurveLabel.removeFromParent();
+				middleCurveLabel.dispose();
+				middleCurveLabel = null;
+			}
+			
+			if (highestCurveLabel != null)
+			{
+				highestCurveLabel.removeFromParent();
+				highestCurveLabel.dispose();
+				highestCurveLabel = null;
+			}
+			
+			if (lastCurveLabel != null)
+			{
+				lastCurveLabel.removeFromParent();
+				lastCurveLabel.dispose();
+				lastCurveLabel = null;
+			}
+			
+			if (nowCurveMarker != null)
+			{
+				nowCurveMarker.removeFromParent();
+				nowCurveMarker.dispose();
+				nowCurveMarker = null;
+			}
+			
+			if (nowCurveLabel != null)
+			{
+				nowCurveLabel.removeFromParent();
+				nowCurveLabel.dispose();
+				nowCurveLabel = null;
+			}
+			
+			if (firstCurveLabel != null)
+			{
+				firstCurveLabel.removeFromParent();
+				firstCurveLabel.dispose();
+				firstCurveLabel = null;
+			}
+			
+			if (xAxisCurve != null)
+			{
+				xAxisCurve.removeFromParent();
+				xAxisCurve.dispose();
+				xAxisCurve = null;
+			}
+			
+			if (yAxisCurve != null)
+			{
+				yAxisCurve.removeFromParent();
+				yAxisCurve.dispose();
+				yAxisCurve = null;
+			}
+			
+			if (curve != null)
+			{
+				curve.removeFromParent();
+				curve.dispose();
+				curve = null;
+			}
+			
+			if (absorptionGraph != null)
+			{
+				absorptionGraph.removeFromParent();
+				absorptionGraph.dispose();
+				absorptionGraph = null;
+			}
+			
+			if (carbsCurve != null)
+			{
+				carbsCurve.removeFromParent();
+				carbsCurve.dispose();
+				carbsCurve = null;
+			}
+			
+			if (insulinCurve != null)
+			{
+				insulinCurve.removeFromParent();
+				insulinCurve.dispose();
+				insulinCurve = null;
+			}
+			
+			if (carbsCurveCallout != null)
+			{
+				carbsCurveCallout.removeEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
+				carbsCurveCallout.removeFromParent();
+				carbsCurveCallout.dispose();
+				carbsCurveCallout = null;
+			}
+			
+			if (insulinCurveCallout != null)
+			{
+				insulinCurveCallout.removeEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
+				insulinCurveCallout.removeFromParent();
+				insulinCurveCallout.dispose();
+				insulinCurveCallout = null;
+			}
 		}
 		
 		override public function dispose():void
@@ -3835,6 +4266,7 @@ package ui.chart
 			
 			if (IOBPill != null)
 			{
+				IOBPill.removeEventListener(TouchEvent.TOUCH, onDisplayInsulinCurve);
 				IOBPill.removeFromParent();
 				IOBPill.dispose();
 				IOBPill = null;
@@ -3842,6 +4274,7 @@ package ui.chart
 			
 			if (COBPill != null)
 			{
+				COBPill.removeEventListener(TouchEvent.TOUCH, onDisplayCarbsCurve);
 				COBPill.removeFromParent();
 				COBPill.dispose();
 				COBPill = null;
@@ -4149,6 +4582,7 @@ package ui.chart
 			}
 			
 			disposeInfoPills();
+			disposeAbsorptionCurves();
 			
 			super.dispose();
 			
