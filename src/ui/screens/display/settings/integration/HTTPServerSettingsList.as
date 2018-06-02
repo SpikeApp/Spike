@@ -35,6 +35,7 @@ package ui.screens.display.settings.integration
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.text.TextFormat;
 	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
@@ -306,9 +307,15 @@ package ui.screens.display.settings.integration
 		
 		private function onClose(e:starling.events.Event):void
 		{
+			if (emailLabel == null || sendButton == null)
+				return;
+			
 			//Validation
 			emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label");
-			emailLabel.fontStyles.color = 0xEEEEEE;
+			if (emailLabel.fontStyles != null)
+				emailLabel.fontStyles.color = 0xEEEEEE;
+			else
+				emailLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.TOP);
 			
 			if (emailField.text == "")
 			{

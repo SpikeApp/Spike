@@ -118,7 +118,7 @@ package ui.chart
 		
 		override public function labelUp():void
 		{
-			if (mainLabel != null)
+			if (mainLabel != null && insulinLabel != null && carbsLabel != null)
 			{
 				insulinLabel.visible = false;
 				carbsLabel.visible = false;
@@ -132,9 +132,12 @@ package ui.chart
 		
 		override public function labelDown():void
 		{
-			insulinLabel.visible = true;
-			carbsLabel.visible = true;
-			mainLabel.visible = false;
+			if (mainLabel != null && insulinLabel != null && carbsLabel != null)
+			{
+				insulinLabel.visible = true;
+				carbsLabel.visible = true;
+				mainLabel.visible = false;
+			}
 		}
 		
 		override public function updateMarker(treatment:Treatment):void
