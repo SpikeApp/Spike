@@ -87,6 +87,12 @@ package ui
 		{
 			Spike.instance.removeEventListener(SpikeEvent.TEXTURES_INITIALIZED, begin);
 			
+			if (!SystemUtil.isApplicationActive)
+			{
+				SystemUtil.executeWhenApplicationIsActive(begin, null);
+				return;
+			}
+			
 			/* Screen Navigator */
 			navigator = new StackScreenNavigator();
 			navigator.pushTransition = Slide.createSlideLeftTransition(0.6, Transitions.EASE_IN_OUT);
