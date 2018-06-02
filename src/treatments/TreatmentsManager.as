@@ -17,9 +17,10 @@ package treatments
 	import events.SettingsServiceEvent;
 	import events.TreatmentsEvent;
 	
-	import feathers.controls.Alert;
 	import feathers.controls.Button;
+	import feathers.controls.Callout;
 	import feathers.controls.DateTimeSpinner;
+	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
@@ -29,6 +30,8 @@ package treatments
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
 	import model.ModelLocator;
@@ -47,6 +50,8 @@ package treatments
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
+	import utils.Constants;
+	import utils.DeviceInfo;
 	import utils.Trace;
 	import utils.UniqueId;
 	
@@ -68,6 +73,28 @@ package treatments
 		/* Internal Properties */
 		public static var pumpIOB:Number = 0;
 		public static var pumpCOB:Number = 0;
+
+		//Treatments callout display objects
+		private static var treatmentInserterContainer:LayoutGroup;
+		private static var treatmentInserterTitleLabel:Label;
+		private static var insulinTextInput:TextInput;
+		private static var insulinSpacer:Sprite;
+		private static var glucoseTextInput:TextInput;
+		private static var glucoseSpacer:Sprite;
+		private static var carbsTextInput:TextInput;
+		private static var carbSpacer:Sprite;
+		private static var noteSpacer:Sprite;
+		private static var treatmentTime:DateTimeSpinner;
+		private static var treatmentSpacer:Sprite;
+		private static var otherFieldsConstainer:LayoutGroup;
+		private static var insulinList:PickerList;
+		private static var createInsulinButton:Button;
+		private static var notes:TextInput;
+		private static var actionContainer:LayoutGroup;
+		private static var cancelButton:Button;
+		private static var addButton:Button;
+		private static var calloutPositionHelper:Sprite;
+		private static var treatmentCallout:Callout;
 		
 		public function TreatmentsManager()
 		{
@@ -436,8 +463,26 @@ package treatments
 			displayLayout.horizontalAlign = HorizontalAlign.LEFT;
 			displayLayout.gap = 10;
 			
-			var displayContainer:LayoutGroup = new LayoutGroup();
-			displayContainer.layout = displayLayout;
+			if (treatmentInserterContainer != null) treatmentInserterContainer.removeFromParent(true);
+			treatmentInserterContainer = new LayoutGroup();
+			treatmentInserterContainer.layout = displayLayout;
+			
+			//Title
+			var treatmentTitle:String = "";
+			if (type == Treatment.TYPE_BOLUS)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_units_label');
+			else if (type == Treatment.TYPE_NOTE)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_note_label');
+			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_bg_label');
+			else if (type == Treatment.TYPE_CARBS_CORRECTION)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_grams_label');
+			else if (type == Treatment.TYPE_MEAL_BOLUS)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_meal_label');
+			
+			if (treatmentInserterTitleLabel != null) treatmentInserterTitleLabel.removeFromParent(true);
+			treatmentInserterTitleLabel = LayoutFactory.createLabel(treatmentTitle, HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			treatmentInserterContainer.addChild(treatmentInserterTitleLabel);
 			
 			//Fields
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
@@ -446,61 +491,74 @@ package treatments
 				var canAddInsulin:Boolean = true;
 				
 				//Insulin Amout
-				var insulinTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				if (insulinTextInput != null) insulinTextInput.removeFromParent(true);
+				insulinTextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
 				insulinTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				insulinTextInput.maxChars = 5;
 				if (type == Treatment.TYPE_MEAL_BOLUS)
 					insulinTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','insulin_text_input_prompt');
-				displayContainer.addChild(insulinTextInput);
-				var insulinSpacer:Sprite = new Sprite();
+				treatmentInserterContainer.addChild(insulinTextInput);
+				
+				if (insulinSpacer != null) insulinSpacer.removeFromParent(true);
+				insulinSpacer = new Sprite();
 				insulinSpacer.height = 10;
-				displayContainer.addChild(insulinSpacer);
+				treatmentInserterContainer.addChild(insulinSpacer);
 			}
 			
 			if (type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
 				//Glucose Amout
-				var glucoseTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				if (glucoseTextInput != null) glucoseTextInput.removeFromParent(true);
+				glucoseTextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
 				glucoseTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				glucoseTextInput.maxChars = 4;
-				displayContainer.addChild(glucoseTextInput);
-				var glucoseSpacer:Sprite = new Sprite();
+				treatmentInserterContainer.addChild(glucoseTextInput);
+				
+				if (glucoseSpacer != null) glucoseSpacer.removeFromParent(true);
+				glucoseSpacer = new Sprite();
 				glucoseSpacer.height = 10;
-				displayContainer.addChild(glucoseSpacer);
+				treatmentInserterContainer.addChild(glucoseSpacer);
 			}
 			
 			if (type == Treatment.TYPE_CARBS_CORRECTION || type == Treatment.TYPE_MEAL_BOLUS)
 			{
-				//Glucose Amout
-				var carbsTextInput:TextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				//Carbs Amout
+				if (carbsTextInput != null) carbsTextInput.removeFromParent(true);
+				carbsTextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
 				carbsTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				carbsTextInput.maxChars = 4;
 				if (type == Treatment.TYPE_MEAL_BOLUS)
 					carbsTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','carbs_text_input_prompt');
-				displayContainer.addChild(carbsTextInput);
-				var carbSpacer:Sprite = new Sprite();
+				treatmentInserterContainer.addChild(carbsTextInput);
+				
+				if (carbSpacer != null) carbSpacer.removeFromParent(true);
+				carbSpacer = new Sprite();
 				carbSpacer.height = 10;
-				displayContainer.addChild(carbSpacer);
+				treatmentInserterContainer.addChild(carbSpacer);
 			}
 			
 			if (type == Treatment.TYPE_NOTE)
 			{
-				var noteSpacer:Sprite = new Sprite();
+				if (noteSpacer != null) noteSpacer.removeFromParent(true);
+				noteSpacer = new Sprite();
 				noteSpacer.height = 10;
-				displayContainer.addChild(noteSpacer);
+				treatmentInserterContainer.addChild(noteSpacer);
 			}
 			
 			//Treatment Time
-			var treatmentTime:DateTimeSpinner = new DateTimeSpinner();
+			if (treatmentTime != null) treatmentTime.removeFromParent(true);
+			treatmentTime = new DateTimeSpinner();
 			treatmentTime.minimum = new Date(now - TIME_24_HOURS);
 			treatmentTime.maximum = new Date(now);
 			treatmentTime.value = new Date();
 			treatmentTime.height = 30;
-			displayContainer.addChild(treatmentTime);
+			treatmentInserterContainer.addChild(treatmentTime);
 			treatmentTime.validate();
-			var treatmentSpacer:Sprite = new Sprite();
+			
+			if (treatmentSpacer != null) treatmentSpacer.removeFromParent(true);
+			treatmentSpacer = new Sprite();
 			treatmentSpacer.height = 10;
-			displayContainer.addChild(treatmentSpacer);
+			treatmentInserterContainer.addChild(treatmentSpacer);
 			
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
 				insulinTextInput.width = treatmentTime.width;
@@ -509,14 +567,18 @@ package treatments
 			if (type == Treatment.TYPE_CARBS_CORRECTION || type == Treatment.TYPE_MEAL_BOLUS)
 				carbsTextInput.width = treatmentTime.width;
 			
+			treatmentInserterTitleLabel.width = treatmentTime.width;
+			
 			//Other Fields constainer
 			var otherFieldsLayout:VerticalLayout = new VerticalLayout();
 			otherFieldsLayout.horizontalAlign = HorizontalAlign.CENTER
 			otherFieldsLayout.gap = 10;
-			var otherFieldsConstainer:LayoutGroup = new LayoutGroup();
+			
+			if (otherFieldsConstainer != null) otherFieldsConstainer.removeFromParent(true);
+			otherFieldsConstainer = new LayoutGroup();
 			otherFieldsConstainer.layout = otherFieldsLayout;
 			otherFieldsConstainer.width = treatmentTime.width;
-			displayContainer.addChild(otherFieldsConstainer);
+			treatmentInserterContainer.addChild(otherFieldsConstainer);
 			
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
 			{
@@ -524,7 +586,8 @@ package treatments
 				var askForInsulinConfiguration:Boolean = true;
 				if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
 				{
-					var insulinList:PickerList = LayoutFactory.createPickerList();
+					if (insulinList != null) insulinList.removeFromParent(true);
+					insulinList = LayoutFactory.createPickerList();
 					var insulinDataProvider:ArrayCollection = new ArrayCollection();
 					var userInsulins:Array = sortInsulinsByDefault(ProfileManager.insulinsList.concat());
 					var numInsulins:int = userInsulins.length
@@ -552,14 +615,16 @@ package treatments
 				
 				if (askForInsulinConfiguration)
 				{
-					var createInsulinButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','configure_insulins_button_label'));
+					if (createInsulinButton != null) createInsulinButton.removeFromParent(true);
+					createInsulinButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','configure_insulins_button_label'));
 					createInsulinButton.addEventListener(Event.TRIGGERED, onConfigureInsulins);
 					otherFieldsConstainer.addChild(createInsulinButton);
 					canAddInsulin = false;
 				}
 			}
 			
-			var notes:TextInput = LayoutFactory.createTextInput(false, false, treatmentTime.width, HorizontalAlign.CENTER);
+			if (notes != null) notes.removeFromParent(true);
+			notes = LayoutFactory.createTextInput(false, false, treatmentTime.width, HorizontalAlign.CENTER);
 			notes.addEventListener(FeathersEventType.ENTER, onClearFocus);
 			notes.prompt = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
 			notes.maxChars = 50;
@@ -583,33 +648,44 @@ package treatments
 			if (((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION)
 				actionButtons.push( { label: ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase(), triggered: actionFunction } );
 			
-			//Popup
-			var treatmentTitle:String;
-			if (type == Treatment.TYPE_BOLUS)
-				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_units_label');
-			else if (type == Treatment.TYPE_NOTE)
-				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_note_label');
-			else if (type == Treatment.TYPE_GLUCOSE_CHECK)
-				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_bg_label');
-			else if (type == Treatment.TYPE_CARBS_CORRECTION)
-				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_grams_label');
-			else if (type == Treatment.TYPE_MEAL_BOLUS)
-				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_meal_label');
-				
-			var treatmentPopup:Alert = AlertManager.showActionAlert
-			(
-				treatmentTitle,
-				"",
-				Number.NaN,
-				actionButtons,
-				HorizontalAlign.JUSTIFY,
-				displayContainer
-			);
-			treatmentPopup.gap = 5;
-			treatmentPopup.headerProperties.maxHeight = 30;
-			treatmentPopup.buttonGroupProperties.paddingTop = -10;
-			treatmentPopup.buttonGroupProperties.gap = 10;
-			treatmentPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+			var actionLayout:HorizontalLayout = new HorizontalLayout();
+			actionLayout.gap = 5;
+			
+			if (actionContainer != null) actionContainer.removeFromParent(true);
+			actionContainer = new LayoutGroup();
+			actionContainer.layout = actionLayout;
+			otherFieldsConstainer.addChild(actionContainer);
+			
+			if (cancelButton != null) cancelButton.removeFromParent(true);
+			cancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
+			cancelButton.addEventListener(Event.TRIGGERED, closeCallout);
+			actionContainer.addChild(cancelButton);
+			
+			if (addButton != null) addButton.removeFromParent(true);
+			addButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
+			addButton.addEventListener(Event.TRIGGERED, actionFunction);
+			actionContainer.addChild(addButton);
+			
+			//Callout
+			if (calloutPositionHelper != null) calloutPositionHelper.removeFromParent(true);
+			calloutPositionHelper = new Sprite();
+			var yPos:Number = 0;
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			calloutPositionHelper.y = yPos;
+			calloutPositionHelper.x = Constants.stageWidth / 2;
+			Starling.current.stage.addChild(calloutPositionHelper);
+			
+			if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
+			treatmentCallout = Callout.show(treatmentInserterContainer, calloutPositionHelper);
+			treatmentCallout.paddingBottom = 15;
 			
 			//Keyboard Focus
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
@@ -621,8 +697,17 @@ package treatments
 			else if (type == Treatment.TYPE_CARBS_CORRECTION)
 				carbsTextInput.setFocus();
 			
+			function closeCallout(e:Event):void
+			{
+				if (cancelButton != null) cancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
+				
+				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
+			}
+			
 			function onInsulinEntered (e:Event):void
 			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onInsulinEntered);
+				
 				if (insulinTextInput == null || insulinTextInput.text == null || !BackgroundFetch.appIsInForeground())
 					return;
 				
@@ -673,10 +758,14 @@ package treatments
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
 				}
+				
+				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
 			}
 			
 			function onCarbsEntered (e:Event):void
 			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onCarbsEntered);
+				
 				if (carbsTextInput == null || carbsTextInput.text == null || !BackgroundFetch.appIsInForeground())
 					return;
 				
@@ -727,10 +816,14 @@ package treatments
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
 				}
+				
+				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
 			}
 			
 			function onMealEntered (e:Event):void
 			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onMealEntered);
+				
 				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null ||!BackgroundFetch.appIsInForeground())
 					return;
 				
@@ -799,10 +892,14 @@ package treatments
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
 				}
+				
+				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
 			}
 			
 			function onBGCheckEntered (e:Event):void
 			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onBGCheckEntered);
+				
 				if (glucoseTextInput == null || glucoseTextInput.text == null || !BackgroundFetch.appIsInForeground())
 					return;
 				
@@ -860,10 +957,14 @@ package treatments
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
 				}
+				
+				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
 			}
 			
 			function onNoteEntered (e:Event):void
 			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onNoteEntered);
+				
 				if (notes == null || notes.text == null || !BackgroundFetch.appIsInForeground())
 					return;
 				
@@ -912,17 +1013,21 @@ package treatments
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
 				}
+				
+				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
 			}
 			
 			function onConfigureInsulins(e:Event):void
 			{
+				if (createInsulinButton != null) createInsulinButton.removeEventListener(Event.TRIGGERED, onConfigureInsulins);
+				
 				AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_PROFILE );
 				
-				var popupTween:Tween=new Tween(treatmentPopup, 0.3, Transitions.LINEAR);
+				var popupTween:Tween=new Tween(treatmentCallout, 0.3, Transitions.LINEAR);
 				popupTween.fadeTo(0);
 				popupTween.onComplete = function():void
 				{
-					treatmentPopup.removeFromParent(true);
+					treatmentCallout.removeFromParent(true);
 				}
 				Starling.juggler.add(popupTween);
 			}

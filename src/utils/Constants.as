@@ -24,6 +24,7 @@ package utils
 		public static var deviceModel:String;
 		public static var isPortrait:Boolean = true;
 		public static var currentOrientation:String = "default";
+		public static var headerHeight:Number = Number.NaN;
 		
 		/* Tutorial */
 		public static var mainMenuButton:Button;

@@ -213,6 +213,8 @@ package ui.screens
 				if (displayPieChart)
 					createPieChart();
 			}
+			
+			Constants.headerHeight = this.header.maxHeight;
 		}
 		
 		private function redrawChart():void
