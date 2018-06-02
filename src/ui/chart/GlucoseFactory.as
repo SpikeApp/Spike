@@ -367,6 +367,27 @@ package ui.chart
 				}
 					
 			}
+			else if (BlueToothDevice.isBlueReader())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
+				
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					transmitterBattery = String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))  + "%";
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue >= 60)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 30)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
 			else if (BlueToothDevice.isTransmiter_PL())
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
