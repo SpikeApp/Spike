@@ -1,4 +1,5 @@
 2.1.1
+FEATURE: Insulin and carbs absorption curves! When there's active IOB or COB the user can now press on those pills to be presented with a new graph showing the respective absorption curve and the exact position the user is on the curve. The user will also be able to see the exact time the insulin and/or carbs will be fully absorbed by the body. Available for both masters and followers. Not available for users that have the "Loop/OpenAPS User" option enabled in Settings -> Treatments. (Miguel)
 ENHANCEMENT: Increased insulin amount precision to 2 decimals for treatments coming from Nightscout. This will increase compatibility with 640g uploaders (and others). (Miguel)
 ENHANCEMENT: Improved initial strategy to upload textures to the GPU when Spike boots. This should avoid some crashes (Miguel).
 FIX: Libre users sometimes where experiencing HIGH glucose values suddenly displayed as LOW. This is now fixed (Johan).
