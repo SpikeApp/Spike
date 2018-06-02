@@ -35,6 +35,7 @@
 		Adobe AIR Library Generic Targets 
 	************************************************************ --> 
 	<!-- Generic target: it builds the AIR library that {library.name} and {library.root} point to. -->
+	<!-- not used --> 
 	<target name="build swc" description="Build an AIR library SWC file"> 
 		<fileset dir="${library.root}/src" casesensitive="yes" id="classfiles"> 
 			<include name="**/*.as"/> 
@@ -46,29 +47,43 @@
 				<arg line=" +configname=airmobile -source-path ${library.root}/src -output ${library.outputdir}/${library.name}.swc -include-classes ${classlist} -swf-version=23"/> 
 		</exec> 
 	</target>
+	<!-- copies swc from project bin folder. -->
+	<target name="copy swc from project bin folder" description="Copy the swc from the project bin folder">
+		<copy file="../../${library.name}/bin/${library.name}.swc" todir="${library.outputdir}" overwrite="true"/>
+	</target>
 
 	<!-- This is a generic target, which works with the AIR library that {library.name} is set to. --> 
-	<target name="extract swf library" depends="build swc" description="Extract library.swf from the SWC file"> 
+	<target name="extract swf library" depends="copy swc from project bin folder" description="Extract library.swf from the SWC file"> 
 		<property name="library.extractdir" value="${library.outputdir}/content"/> 
-		<mkdir dir="${library.extractdir}"/> <unzip src="${library.outputdir}/${library.name}.swc" dest="${library.extractdir}" overwrite="true"/> 
-		<copy file="${library.extractdir}/library.swf" todir="${library.outputdir}" overwrite="true"/> <delete dir="${library.extractdir}"/> 
+		<mkdir dir="${library.extractdir}"/> 
+		<unzip src="${library.outputdir}/${library.name}.swc" dest="${library.extractdir}" overwrite="true"/> 
+		<copy file="${library.extractdir}/library.swf" todir="${library.outputdir}" overwrite="true"/> 
+		<delete dir="${library.extractdir}"/> 
 	</target>
+	
 	<!-- ************************************************************ 
 		Adobe AIR Library Targets
 	************************************************************ --> 
-	<!-- This target sets {library.name} and {library.root} and executes the generic target "build swc" for their values. --> 
-	<target name="build air library"> 
-		<subant target="extract swf library"> 
-			<property name="library.name" value="${air.library.name}"/> 
-			<property name="library.root" value="${air.library.root}"/> 
-			<property name="library.outputdir" value="${tempdir}/${air.library.name}/swc"/> 
-			<fileset dir="." includes="build.xml"/> 
-		</subant> 
-		<property name="air.library.outputdir" value="${tempdir}/${air.library.name}/swc"/> 
+	<target name="copy ios swc and extract swf library" description="copy ios swc and extract swf library">
+		<mkdir dir="${library.extractdir}"/>
+		<copy file="../../${library.name}/bin/${library.name}.swc" todir="${library.extractdir}" overwrite="true"/>
+		<copy file="${library.extractdir}/library.swf" todir="${library.name}.swc" overwrite="true"/> 
+		<unzip src="${library.extractdir}/${library.name}.swc" dest="." overwrite="true"/> 
+		<copy file="${library.extractdir}/library.swf" todir="${library.name}/${library.name}.swc" overwrite="true"/> 
+		<delete dir="${library.extractdir}"/>
+	</target>
+	
+	<target name="copy default swc and extract swf library" description="copy default swc and extract swf library">
+		<mkdir dir="${library.extractdir}"/>
+		<copy file="../../${default.library.name}/bin/${default.library.name}.swc" todir="${library.extractdir}" overwrite="true"/>
+		<unzip src="${library.extractdir}/${default.library.name}.swc" dest="${library.extractdir}" overwrite="true"/> 
+		<copy file="${library.extractdir}/library.swf" todir="${library.name}.swc" overwrite="true"/> 
+		<copy file="${library.extractdir}/library.swf" todir="${library.name}/${library.name}.swc" overwrite="true"/> 
+		<delete dir="${library.extractdir}"/>
 	</target>
 	
 	<!-- Copy all of the files needed for packaging an ANE for iOS: -->
-	<target name="copy ios files for packaging" depends="rebuild ios, build air library, create package folder"> 
+	<target name="copy ios files for packaging" depends="rebuild ios, copy ios swc and extract swf library, copy default swc and extract swf library, create package folder"> 
 		<copy file="${air.library.sourcedir}/${air.extension.descriptor}" todir="${temp.packagedir}"/> 
 		<copy file="${air.library.sourcedir}/${air.platform.descriptor}" todir="${temp.packagedir}"/> 
 		<copy file="${iOS.library.outputdir}/${iOS.library}" todir="${temp.packagedir}/ios"/> 
@@ -76,7 +91,7 @@
 		<copy file="${air.library.outputdir}/library.swf" todir="${temp.packagedir}/ios"/> 
 	</target>
 
-	<!-- Copy all of the files needed for default: -->
+	<!-- build default air library -->
 	<target name="build default air library" description="Builds the default implementation of the Air library, which can run in a simulator"> 
 		<subant target="extract swf library"> 
 			<property name="library.name" value="${default.library.name}"/> 
@@ -87,6 +102,7 @@
 		<property name="default.library.outputdir" value="${tempdir}/${default.library.name}/swc"/> 
 	</target>
 			
+	<!-- Copy all of the files needed for default: -->
 	<target name="copy default files for packaging" depends="build default air library, create package folder"> 
 		<property name="default.swcdir" value="default"/> 
 		<copy file="${default.library.outputdir}/${default.library.name}.swc" todir="${temp.packagedir}/${default.swcdir}"/>
@@ -105,7 +121,7 @@
 		</exec> 
 		<mkdir dir="${ane.destination}"/> 
 		<move file="${temp.packagedir}/ane/${air.library.name}.ane" todir="${ane.destination}" overwrite="true"/> 
-		<delete dir="${tempdir}"/> 
+		<delete dir="${tempdir}"/>
 	</target>
 
 	<!-- ************************************************************ 
