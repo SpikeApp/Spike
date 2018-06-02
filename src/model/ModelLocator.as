@@ -53,6 +53,8 @@ package model
 	import services.WatchService;
 	import services.WidgetService;
 	
+	import starling.utils.SystemUtil;
+	
 	import treatments.ProfileManager;
 	import treatments.TreatmentsManager;
 	
@@ -153,7 +155,7 @@ package model
 				_bgReadings = de.data as Array;
 				ProfileManager.init();
 				TreatmentsManager.init();
-				AppInterface.instance.init(); //Start rendering interface now that all data is available
+				SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.init ); //Start rendering interface now that all data is available but only when app is active
 				AlertManager.init();
 				DeepSleepService.init();
 				Database.getBlueToothDevice();

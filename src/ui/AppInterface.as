@@ -3,6 +3,7 @@ package ui
 	//import com.demonsters.debugger.MonsterDebugger;
 	
 	import events.ScreenEvent;
+	import events.SpikeEvent;
 	
 	import feathers.controls.Drawers;
 	import feathers.controls.StackScreenNavigator;
@@ -71,20 +72,20 @@ package ui
 		
 		public function start():void 
 		{
-			if (!spikeIsActive)
-			{
-				spikeIsActive = true;
-				
-				Constants.deviceModel = DeviceInfo.getDeviceType();
-	
-				SystemUtil.executeWhenApplicationIsActive( InterfaceController.init );
-			}
+			Constants.deviceModel = DeviceInfo.getDeviceType();
+			InterfaceController.init();
 		}
 		
 		public function init():void
 		{
 			/* Init Theme */
+			Spike.instance.addEventListener(SpikeEvent.TEXTURES_INITIALIZED, begin);
 			new MaterialDeepGreyAmberMobileThemeWithIcons();
+		}
+		
+		public function begin(e:SpikeEvent = null):void
+		{
+			Spike.instance.removeEventListener(SpikeEvent.TEXTURES_INITIALIZED, begin);
 			
 			/* Screen Navigator */
 			navigator = new StackScreenNavigator();
