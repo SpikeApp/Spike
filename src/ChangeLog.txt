@@ -1,5 +1,7 @@
 2.1.1
 ENHANCEMENT: Increased insulin amount precision to 2 decimals for treatments coming from Nightscout. This will increase compatibility with 640g uploaders (and others). (Miguel)
+ENHANCEMENT: Improved initial strategy to upload textures to the GPU when Spike boots. This should avoid some crashes (Miguel).
+FIX: Libre users sometimes where experiencing HIGH glucose values suddenly displayed as LOW. This is now fixed (Johan).
 
 2.1.0
 FEATURE: New pill called "+ info" is now available for all users (masters and followers) on the Chart Screen. When you press on it, Spike will show you a popup with, wait for it.... more info! :) Masters will have the latest raw glucose value, transmitter battery status and sensor age, even when offline. Both masters and followers, when online and connected to a Nightscout site, will also have additional info like: pump status, pump battery, pump reservoir, basal, uploader battery, treatments prediction, IAGE, CAGE, Loop/OpenAPS status, etc. depending on the plugins enabled in Nightscout. (Miguel)

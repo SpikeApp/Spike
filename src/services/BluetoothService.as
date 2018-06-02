@@ -1710,10 +1710,10 @@ package services
 			var rawGlucose:Number;
 			
 			// grep 2 bytes with BG data from input bytearray, mask out 12 LSB bits and rescale for xDrip+
-			//rawGlucose = (input[3+m_nowGlucoseOffset+1]&0x0F)*16 + input[3+m_nowGlucoseOffset];
+			//xdripplus code : rawGlucose = ((input[3 + m_nowGlucoseOffset + 1] & 0x1F)) << 8) | (input[3 + m_nowGlucoseOffset] & 0xFF);
 			var value1:int = input.readByte();
 			var value2:int = input.readByte();
-			rawGlucose = ((value2 & 0x0F)<<8) | (value1 & 0xFF);
+			rawGlucose = ((value2 & 0x1F)<<8) | (value1 & 0xFF);
 			myTrace("in nowGetGlucoseValue rawGlucose=" + rawGlucose);
 			
 			// rescale
