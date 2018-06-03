@@ -163,11 +163,8 @@
     [FQToolsUtil saveUserDefaults:uuid.UUIDString key:self.selectMAC];
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didConnectPeripheral, connected peripheral name:%@ MAC: %@, uuid:%@", peripheral.name, self.selectMAC, uuid]);
     self.peripheral = peripheral;
-    FPANE_Log(@"spiketrace ANE FQBLEManager.m in didConnectPeripheral trace 1");
     [self.peripheral setDelegate:self];
-    FPANE_Log(@"spiketrace ANE FQBLEManager.m in didConnectPeripheral trace 2");
     [self.peripheral discoverServices:@[[CBUUID UUIDWithString:FQ_MM_SERVICE_UUID]]];
-    FPANE_Log(@"spiketrace ANE FQBLEManager.m in didConnectPeripheral trace 3");
     FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_connectedMiaoMiao", (const uint8_t*) "");
 }
 
