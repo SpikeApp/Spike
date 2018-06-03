@@ -107,6 +107,7 @@ package stats
 						followerUserStats.a1c = ((((followerUserStats.a1c - 2.15) * 10.929) * 10 + 0.5)  >> 0) / 10; //IFCC support
 				}
 				followerUserStats.captureRate = ((((realReadingsNumber * 100) / 288) * 10 + 0.5)  >> 0) / 10;
+				if (followerUserStats.captureRate > 100) followerUserStats.captureRate = 100;
 				followerUserStats.numReadingsTotal = realReadingsNumber;
 				followerUserStats.numReadingsDay = realReadingsNumber;
 				

@@ -2485,6 +2485,7 @@ package database
 						userStats.percentageLowRounded = Math.round ((100 - userStats.percentageInRangeRounded - userStats.percentageHighRounded) * 10) / 10;
 					}
 					userStats.captureRate = ((((userStats.numReadingsDay * 100) / 288) * 10 + 0.5)  >> 0) / 10;
+					if (userStats.captureRate > 100) userStats.captureRate = 100;
 				}
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();
