@@ -1229,8 +1229,43 @@ package services
 					||
 					isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
 					myTrace("in checkAlarms, calibration request alert not snoozed ");
-					if (Calibration.last() != null && BgReading.last30Minutes().length >= 2) {
-						if (alertValue < ((now.valueOf() - Calibration.last().timestamp) / 1000 / 60 / 60)) {
+					if (Calibration.last() != null && BgReading.last30Minutes().length >= 2) 
+					{
+						var optimalCalibrationCondition:Boolean = false;
+						
+						if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length >= 3)
+						{
+							//We have at least 3 readings
+							var lastReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading;
+							var middleReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 2] as BgReading;
+							var firstReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 3] as BgReading;
+							
+							if (lastReading != null && lastReading.calculatedValue != 0 && middleReading != null && middleReading.calculatedValue != 0 && firstReading != null && firstReading.calculatedValue != 0)
+							{
+								//Last 3 readings are valid
+								if (lastReading.timestamp - middleReading.timestamp < (6 * 60 * 1000) && middleReading.timestamp - firstReading.timestamp < (6 * 60 * 1000))
+								{
+									//All readings are not more than 6 minutes apart
+									var lastReadingSlope:Number = Math.abs(lastReading.calculatedValue - middleReading.calculatedValue);
+									var middleReadingSlope:Number = Math.abs(middleReading.calculatedValue - firstReading.calculatedValue);
+									
+									if (lastReadingSlope <= 3 && middleReadingSlope <= 3)
+									{
+										//Not going up or down by more than 3mg/dL
+										var highThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+										var lowThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+										
+										if ((lastReading.calculatedValue < highThreshold && lastReading.calculatedValue > lowThreshold) && (middleReading.calculatedValue < highThreshold && middleReading.calculatedValue > lowThreshold) && (firstReading.calculatedValue < highThreshold && firstReading.calculatedValue > lowThreshold))
+										{
+											//All readings are within "in-range" threshold. Optimal calibration condition has been found
+											optimalCalibrationCondition = true;
+										}
+									}
+								}
+							}
+						}
+						
+						if (alertValue < ((now.valueOf() - Calibration.last().timestamp) / 1000 / 60 / 60) && optimalCalibrationCondition) {
 							myTrace("in checkAlarms, calibration is necessary");
 							fireAlert(
 								0,
