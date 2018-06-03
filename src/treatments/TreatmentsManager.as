@@ -765,6 +765,7 @@ package treatments
 			
 			function onCarbsEntered (e:Event):void
 			{
+
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onCarbsEntered);
 				
 				if (carbsTextInput == null || carbsTextInput.text == null || !SpikeANE.appIsInForeground())
@@ -823,6 +824,7 @@ package treatments
 			
 			function onMealEntered (e:Event):void
 			{
+
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onMealEntered);
 				
 				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null ||!SpikeANE.appIsInForeground())
@@ -899,6 +901,7 @@ package treatments
 			
 			function onBGCheckEntered (e:Event):void
 			{
+
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onBGCheckEntered);
 				
 				if (glucoseTextInput == null || glucoseTextInput.text == null || !SpikeANE.appIsInForeground())
