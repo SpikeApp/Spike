@@ -158,7 +158,11 @@ package com.spikeapp.spike.airlibrary
 		 ** APPLICATION
 		 ***************/
 		public static function appIsInBackground():Boolean {
-			return (context.call("applicationInBackGround") as Boolean);
+			if (context != null)
+				return (context.call("applicationInBackGround") as Boolean);
+			else 
+				//if context == null, this means app is still starting up, context hasn'b een intialized yet, most probably the app is in foreground
+				return false;
 		}
 
 		public static function appIsInForeground():Boolean {
