@@ -1,5 +1,7 @@
 package ui.screens.display.settings.transmitter
 {
+	import com.adobe.utils.StringUtil;
+	
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
@@ -218,9 +220,9 @@ package ui.screens.display.settings.transmitter
 		{
 			var needsReset:Boolean = false;
 			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != transmitterIDValue.toUpperCase())
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != StringUtil.trim(transmitterIDValue).toUpperCase())
 			{
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDValue.toUpperCase());
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, StringUtil.trim(transmitterIDValue).toUpperCase());
 				needsReset = true;
 			}
 			
@@ -391,7 +393,7 @@ package ui.screens.display.settings.transmitter
 		
 		private function onTransmitterIDChange(e:Event):void
 		{
-			transmitterIDValue = transmitterID.text;
+			transmitterIDValue = StringUtil.trim(transmitterID.text);
 			
 			checkWarn();
 			
