@@ -2660,13 +2660,15 @@ package ui.chart
 			}
 			
 			//Info pill
-			infoPill = new ChartTreatmentPill(" + ");
-			infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
-			infoPill.setValue("info");
-			infoPill.visible = false;
-			infoPill.addEventListener(TouchEvent.TOUCH, onDisplayMoreInfo);
-			addChild(infoPill);
-			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_ON) == "true")
+			{
+				infoPill = new ChartTreatmentPill(" + ");
+				infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+				infoPill.setValue("info");
+				infoPill.visible = false;
+				infoPill.addEventListener(TouchEvent.TOUCH, onDisplayMoreInfo);
+				addChild(infoPill);
+			}
 			
 			glucoseTimeAgoPill.setValue("", "", chartFontColor);
 		}
@@ -3292,6 +3294,7 @@ package ui.chart
 				insulinCurveCallout = Callout.show(insulinCurve, IOBPill, null, true);
 				insulinCurveCallout.paddingLeft += graphData.padding - 5;
 				insulinCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
+				Callout.stagePaddingRight = 1;
 				
 				graphData = null;
 			}
@@ -3322,6 +3325,8 @@ package ui.chart
 				carbsCurveCallout = Callout.show(carbsCurve, COBPill, null, true);
 				carbsCurveCallout.paddingLeft += graphData.padding - 5;
 				carbsCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
+				
+				Callout.stagePaddingRight = 1;
 				
 				graphData = null;
 			}
@@ -3559,35 +3564,44 @@ package ui.chart
 				if (!BlueToothDevice.isFollower())
 				{
 					//Transmitter Battery
-					var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
-					if (tBatteryPill != null) tBatteryPill.dispose();
-					var transmitterName:String = "";
-					if (BlueToothDevice.isDexcomG5()) transmitterName = "G5";
-					else if (BlueToothDevice.isDexcomG4()) transmitterName = "G4";
-					else if (BlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
-					else if (BlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
-					else if (BlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
-					else if (BlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
-					else if (BlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
-					tBatteryPill = new ChartTreatmentPill(transmitterName + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
-					tBatteryPill.setValue(batteryStatus.level);
-					tBatteryPill.colorizeLabel(batteryStatus.color);
-					tBatteryPill.touchable = false;
-					infoContainer.addChild(tBatteryPill);
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_ON) == "true")
+					{
+						var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
+						if (tBatteryPill != null) tBatteryPill.dispose();
+						var transmitterName:String = "";
+						if (BlueToothDevice.isDexcomG5()) transmitterName = "G5";
+						else if (BlueToothDevice.isDexcomG4()) transmitterName = "G4";
+						else if (BlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
+						else if (BlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
+						else if (BlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
+						else if (BlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
+						else if (BlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
+						tBatteryPill = new ChartTreatmentPill(transmitterName + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
+						tBatteryPill.setValue(batteryStatus.level);
+						tBatteryPill.colorizeLabel(batteryStatus.color);
+						tBatteryPill.touchable = false;
+						infoContainer.addChild(tBatteryPill);
+					}
 					
 					//Raw Blood Glucose
-					if (rawPill != null) rawPill.dispose();
-					rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
-					rawPill.setValue(GlucoseFactory.getRawGlucose() + " " + GlucoseHelper.getGlucoseUnit());
-					rawPill.touchable = false;
-					infoContainer.addChild(rawPill);
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true")
+					{
+						if (rawPill != null) rawPill.dispose();
+						rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
+						rawPill.setValue(GlucoseFactory.getRawGlucose() + " " + GlucoseHelper.getGlucoseUnit());
+						rawPill.touchable = false;
+						infoContainer.addChild(rawPill);
+					}
 					
 					//SAGE
-					if (sagePill != null) sagePill.dispose();
-					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
-					sagePill.setValue(GlucoseFactory.getSensorAge());
-					sagePill.touchable = false;
-					infoContainer.addChild(sagePill);
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) == "true")
+					{
+						if (sagePill != null) sagePill.dispose();
+						sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
+						sagePill.setValue(GlucoseFactory.getSensorAge());
+						sagePill.touchable = false;
+						infoContainer.addChild(sagePill);
+					}
 				}
 				
 				var infoPillLowerBounds:Number = infoPill.localToGlobal(new Point(0, 0)).y + infoPill.height;

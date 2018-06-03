@@ -3,6 +3,7 @@ package ui.screens
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
+	import feathers.controls.Label;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -12,6 +13,8 @@ package ui.screens
 	import starling.events.Event;
 	
 	import ui.AppInterface;
+	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.settings.treatments.InfoPillSettingsList;
 	import ui.screens.display.settings.treatments.TreatmentsSettingsList;
 	
 	import utils.Constants;
@@ -22,6 +25,9 @@ package ui.screens
 	{
 		/* Display Objects */
 		private var treatmentsSettings:TreatmentsSettingsList;
+		private var treatmentsLabel:Label;
+		private var infoPillLabel:Label;
+		private var infoPillSettings:InfoPillSettingsList;
 		
 		public function TreatmentsSettingsScreen() 
 		{
@@ -55,9 +61,21 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
+			//Treatments Section Label
+			treatmentsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('treatments',"treatments_screen_title"), true);
+			screenRenderer.addChild(treatmentsLabel);
+			
 			//Treatments Settings
 			treatmentsSettings = new TreatmentsSettingsList(this);
 			screenRenderer.addChild(treatmentsSettings);
+			
+			//Info Pill Section Label
+			infoPillLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('treatments',"info_pill"), true);
+			screenRenderer.addChild(infoPillLabel);
+			
+			//Info Pill Settings
+			infoPillSettings = new InfoPillSettingsList();
+			screenRenderer.addChild(infoPillSettings);
 		}
 		
 		/**
@@ -71,6 +89,8 @@ package ui.screens
 			//Save settings
 			if (treatmentsSettings.needsSave)
 				treatmentsSettings.save();
+			if (infoPillSettings.needsSave)
+				infoPillSettings.save();
 			
 			//Pop Screen
 			dispatchEventWith(Event.COMPLETE);
@@ -86,6 +106,27 @@ package ui.screens
 				treatmentsSettings.removeFromParent();
 				treatmentsSettings.dispose();
 				treatmentsSettings = null;
+			}
+			
+			if (treatmentsLabel != null)
+			{
+				treatmentsLabel.removeFromParent();
+				treatmentsLabel.dispose();
+				treatmentsLabel = null;
+			}
+			
+			if (infoPillLabel != null)
+			{
+				infoPillLabel.removeFromParent();
+				infoPillLabel.dispose();
+				infoPillLabel = null;
+			}
+			
+			if (infoPillSettings != null)
+			{
+				infoPillSettings.removeFromParent();
+				infoPillSettings.dispose();
+				infoPillSettings = null;
 			}
 			
 			super.dispose();

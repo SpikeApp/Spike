@@ -419,6 +419,26 @@
 		 * Rotation
 		 */
 		 public static const COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON:int = 144;
+		 
+		 /**
+		 * Info Pill
+		 */
+		 public static const COMMON_SETTING_INFO_PILL_ON:int = 145;
+		 public static const COMMON_SETTING_BASAL_ON:int = 146;
+		 public static const COMMON_SETTING_RAW_GLUCOSE_ON:int = 147;
+		 public static const COMMON_SETTING_UPLOADER_BATTERY_ON:int = 148;
+		 public static const COMMON_SETTING_OUTCOME_ON:int = 149;
+		 public static const COMMON_SETTING_EFFECT_ON:int = 150;
+		 public static const COMMON_SETTING_OPENAPS_MOMENT_ON:int = 151;
+		 public static const COMMON_SETTING_LOOP_MOMENT_ON:int = 152;
+		 public static const COMMON_SETTING_PUMP_BATTERY_ON:int = 153;
+		 public static const COMMON_SETTING_PUMP_RESERVOIR_ON:int = 154;
+		 public static const COMMON_SETTING_PUMP_STATUS_ON:int = 155;
+		 public static const COMMON_SETTING_PUMP_TIME_ON:int = 156;
+		 public static const COMMON_SETTING_CAGE_ON:int = 157;
+		 public static const COMMON_SETTING_SAGE_ON:int = 158;
+		 public static const COMMON_SETTING_IAGE_ON:int = 159;
+		 public static const COMMON_SETTING_TRANSMITTER_BATTERY_ON:int = 160;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -565,7 +585,23 @@
 			 "86400000",//COMMON_SETTING_PIE_CHART_RANGES_OFFSET (1 DAY)
 			 "",//COMMON_SETTING_G5_VERSION_INFO
 			 "false",//COMMON_SETTING_PIE_CHART_A1C_IFCC_ON
-			 "false"//COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON
+			 "false",//COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON
+			 "true",//COMMON_SETTING_INFO_PILL_ON
+			 "true",//COMMON_SETTING_BASAL_ON
+			 "true",//COMMON_SETTING_RAW_GLUCOSE_ON
+			 "true",//COMMON_SETTING_UPLOADER_BATTERY_ON
+			 "true",//COMMON_SETTING_OUTCOME_ON
+			 "true",//COMMON_SETTING_EFFECT_ON
+			 "true",//COMMON_SETTING_OPENAPS_MOMENT_ON
+			 "true",//COMMON_SETTING_LOOP_MOMENT_ON
+			 "true",//COMMON_SETTING_PUMP_BATTERY_ON
+			 "true",//COMMON_SETTING_PUMP_RESERVOIR_ON
+			 "true",//COMMON_SETTING_PUMP_STATUS_ON
+			 "true",//COMMON_SETTING_PUMP_TIME_ON
+			 "true",//COMMON_SETTING_CAGE_ON
+			 "true",//COMMON_SETTING_SAGE_ON
+			 "true",//COMMON_SETTING_IAGE_ON
+			 "true"//COMMON_SETTING_TRANSMITTER_BATTERY_ON
 		 ];
 
 		 public function CommonSettings()
