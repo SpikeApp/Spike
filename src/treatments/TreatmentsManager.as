@@ -927,17 +927,19 @@ package treatments
 					if (glucoseValueToAdd >= 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
 					{
 						//User is on mmol/L but inserted a calibration in mg/dL. Let's do a conversion.
-						glucoseValueToAdd = glucoseValueToAdd * BgReading.MGDL_TO_MMOLL;
+						glucoseValueToAdd = Math.round(glucoseValueToAdd * BgReading.MGDL_TO_MMOLL * 10) / 10;
 					}
 					
 					if (glucoseValueToAdd < 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 					{
 						//User is on mg/dL but inserted a calibration in mmol/L. Let's do a conversion.
-						glucoseValueToAdd = glucoseValueToAdd * BgReading.MMOLL_TO_MGDL;
+						glucoseValueToAdd = Math.round(glucoseValueToAdd * BgReading.MMOLL_TO_MGDL);
 					}
 					
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
-						glucoseValueToAdd = Math.round(BgReading.mmolToMgdl(glucoseValue))
+					{
+						glucoseValueToAdd = Math.round(BgReading.mmolToMgdl(glucoseValueToAdd));
+					}
 					
 					var treatment:Treatment = new Treatment
 					(
