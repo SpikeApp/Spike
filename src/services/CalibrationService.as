@@ -325,6 +325,18 @@ package services
 			} 
 			else 
 			{
+				if (asNumber >= 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				{
+					//User is on mmol/L but inserted a calibration in mg/dL. Let's do a conversion.
+					asNumber = asNumber * BgReading.MGDL_TO_MMOLL;
+				}
+				
+				if (asNumber < 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+				{
+					//User is on mg/dL but inserted a calibration in mmol/L. Let's do a conversion.
+					asNumber = asNumber * BgReading.MMOLL_TO_MGDL;
+				}
+				
 				if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") 
 				{
 					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
@@ -486,6 +498,18 @@ package services
 						} 
 						else 
 						{
+							if (asNumber >= 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+							{
+								//User is on mmol/L but inserted a calibration in mg/dL. Let's do a conversion.
+								asNumber = asNumber * BgReading.MGDL_TO_MMOLL;
+							}
+							
+							if (asNumber < 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+							{
+								//User is on mg/dL but inserted a calibration in mmol/L. Let's do a conversion.
+								asNumber = asNumber * BgReading.MMOLL_TO_MGDL;
+							}
+							
 							if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
 								asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 							
@@ -552,6 +576,18 @@ package services
 						} 
 						else 
 						{
+							if (asNumber >= 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+							{
+								//User is on mmol/L but inserted a calibration in mg/dL. Let's do a conversion.
+								asNumber = asNumber * BgReading.MGDL_TO_MMOLL;
+							}
+							
+							if (asNumber < 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+							{
+								//User is on mg/dL but inserted a calibration in mmol/L. Let's do a conversion.
+								asNumber = asNumber * BgReading.MMOLL_TO_MGDL;
+							}
+							
 							if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
 								asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 							
@@ -592,6 +628,18 @@ package services
 			} 
 			else 
 			{
+				if (asNumber >= 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+				{
+					//User is on mmol/L but inserted a calibration in mg/dL. Let's do a conversion.
+					asNumber = asNumber * BgReading.MGDL_TO_MMOLL;
+				}
+				
+				if (asNumber < 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+				{
+					//User is on mg/dL but inserted a calibration in mmol/L. Let's do a conversion.
+					asNumber = asNumber * BgReading.MMOLL_TO_MGDL;
+				}
+				
 				if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") 
 					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 				

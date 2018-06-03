@@ -922,11 +922,21 @@ package treatments
 				}
 				else
 				{
+					var glucoseValueToAdd:Number = glucoseValue;
 					
-					var glucoseValueToAdd:Number;
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
-						glucoseValueToAdd = glucoseValue;
-					else
+					if (glucoseValueToAdd >= 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+					{
+						//User is on mmol/L but inserted a calibration in mg/dL. Let's do a conversion.
+						glucoseValueToAdd = glucoseValueToAdd * BgReading.MGDL_TO_MMOLL;
+					}
+					
+					if (glucoseValueToAdd < 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+					{
+						//User is on mg/dL but inserted a calibration in mmol/L. Let's do a conversion.
+						glucoseValueToAdd = glucoseValueToAdd * BgReading.MMOLL_TO_MGDL;
+					}
+					
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
 						glucoseValueToAdd = Math.round(BgReading.mmolToMgdl(glucoseValue))
 					
 					var treatment:Treatment = new Treatment
