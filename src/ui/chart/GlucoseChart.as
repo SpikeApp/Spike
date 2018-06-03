@@ -3325,7 +3325,6 @@ package ui.chart
 				carbsCurveCallout = Callout.show(carbsCurve, COBPill, null, true);
 				carbsCurveCallout.paddingLeft += graphData.padding - 5;
 				carbsCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
-				
 				Callout.stagePaddingRight = 1;
 				
 				graphData = null;

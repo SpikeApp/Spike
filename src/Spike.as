@@ -90,7 +90,9 @@ package
 				error.indexOf("ioError") != -1 ||
 				error.indexOf("Unexpected < encountered") != -1 ||
 				error.indexOf("Unexpected T encountered") != -1 ||
+				error.indexOf("details:'cannot rollback - no transaction is active") != -1 ||
 				error.indexOf("PickerList/closeList()") != -1 ||
+				error.indexOf("PickerList/button_touchHandler()") != -1 ||
 				error.indexOf("JSONParseError") != -1 ||
 				error.indexOf("starling.display.graphics::Graphic/render()") != -1 ||
 				error.indexOf("starling.rendering::VertexData/createVertexBuffer()") != -1 ||
