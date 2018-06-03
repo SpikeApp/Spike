@@ -122,7 +122,8 @@ package ui.popups
 				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_first_calibration_title') || 
 				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_second_calibration_title') || 
 				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_calibration_title') || 
-				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_calibration_title_with_override')
+				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_calibration_title_with_override') ||
+				alertTitle == ModelLocator.resourceManagerInstance.getString('calibrationservice','enter_calibration_title_sub_optimal')
 				) && 
 				Constants.appInForeground) //If no alerts are being currently displayed and app is in foreground, let's display this one 
 			{

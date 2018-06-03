@@ -35,6 +35,7 @@ package services
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.BadgeBuilder;
+	import utils.GlucoseHelper;
 	import utils.Trace;
 	
 	/**
@@ -402,6 +403,9 @@ package services
 		{
 			myTrace(" in calibrationOnRequest");
 			
+			trace("override", override);
+			trace("addSnoozeOption", addSnoozeOption);
+			
 			//start with removing any calibration request notification that might be there
 			Notifications.service.cancel(NotificationService.ID_FOR_REQUEST_CALIBRATION);
 			Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
@@ -521,7 +525,93 @@ package services
 							myTrace("calibration override, new one = created : " + newcalibration.print("   "));
 						}
 					}
-				} 
+				}
+				else if (!GlucoseHelper.isOptimalConditionToCalibrate()) //Check for optimal calibration conditions
+				{
+					AlertManager.showActionAlert
+						(
+							ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title_sub_optimal"),
+							ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_sub_optimal").replace("{max_bg_difference}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "3mg/dL" : "0.16mmol/L").replace("{high_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10)).replace("{low_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10)),
+							60,
+							[
+								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','ok_alert_button_label'), triggered: onAcceptedCalibrateWithSuboptimal }
+							]
+						);
+					
+					function onAcceptedCalibrateWithSuboptimal():void
+					{
+						/* Create and Style Popup Window */
+						var calibrationPopup:Alert = AlertManager.showActionAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_alert_title'),
+								"",
+								Number.NaN,
+								[
+									{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+									{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationDialogClosedWithSuboptimal }
+								],
+								HorizontalAlign.JUSTIFY,
+								calibrationValue
+							);
+						calibrationPopup.validate();
+						calibrationValue.width = calibrationPopup.width - 20;
+						calibrationPopup.gap = 0;
+						calibrationPopup.headerProperties.maxHeight = 30;
+						calibrationPopup.buttonGroupProperties.paddingTop = -10;
+						calibrationPopup.buttonGroupProperties.gap = 10;
+						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+						calibrationValue.setFocus();
+					}
+					
+					function calibrationDialogClosedWithSuboptimal():void 
+					{
+						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
+							return;
+						
+						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
+						if (isNaN(asNumber)) 
+						{
+							AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
+									ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"),
+									Number.NaN,
+									onAskNewCalibration
+								);
+							
+							function onAskNewCalibration():void
+							{
+								//and ask again a value
+								calibrationOnRequest(override);
+							}
+						} 
+						else 
+						{
+							if (asNumber >= 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+							{
+								//User is on mmol/L but inserted a calibration in mg/dL. Let's do a conversion.
+								asNumber = asNumber * BgReading.MGDL_TO_MMOLL;
+							}
+							
+							if (asNumber < 30 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+							{
+								//User is on mg/dL but inserted a calibration in mmol/L. Let's do a conversion.
+								asNumber = asNumber * BgReading.MMOLL_TO_MGDL;
+							}
+							
+							if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
+								asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
+							
+							Calibration.clearLastCalibration();
+							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+							var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
+							_instance.dispatchEvent(calibrationServiceEvent);
+							
+							myTrace("calibration suboptimal, new one = created : " + newcalibration.print("   "));
+						}
+					}
+				}
 				else 
 				{
 					var alertButtonsList:Array = [];
