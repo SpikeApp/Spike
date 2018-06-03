@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?> 
-<project name="Air Native Extension Build Script" default="package ios ane"> 
+<project name="Air Native Extension Ant Build Script" default="package ios ane"> 
+	<!-- Air Native Extension Build Script.
+	Only for iOS ANE (not Android)
+	
+	The default and ios actionscript libraries must be precompiled, swc must be in the project's bin folder
+	
+	To use for another project, the directory structure must be always the same. Only the name of the iOS ane and Default ANE can be changed in build.properties.
+	
+	Flex Home folder, location of compc and adt are stored in local.properties
+	--> 
+	
 	<!-- Configuration files: --> 
 	<property file="local.properties"/> 
 	<property file="build.properties"/>
@@ -11,17 +21,16 @@
 	************************************************************ -->
 	<!-- Clean the Xcode project -->
 	<target name="clean ios" description="Clean the iOS Library" depends="set build type">
-		<exec executable="xcodebuild" failonerror="true" dir="${iOS.library.root}"> 
+		<exec executable="xcodebuild" failonerror="true" dir="../../iOS/NativeExtensioniOS"> 
 			<arg line=" clean -configuration ${iOS.library.build.type} "/> 
 		</exec> 
 	</target>
 	<!-- Build the XCode project -->
 	<target name="build ios" description="Build the iOS Library" depends="set build type"> 
 		<property name="iOS.library.builddir" value="build"/> 
-		<exec executable="xcodebuild" failonerror="true" dir="${iOS.library.root}"> 
+		<exec executable="xcodebuild" failonerror="true" dir="../../iOS/NativeExtensioniOS"> 
 			<arg 
 				line=" -project NativeExtensioniOS.xcodeproj -target NativeExtensioniOS ONLY_ACTIVE_ARCH=NO -arch armv7 -arch arm64 only_active_arch=no  -configuration ${iOS.library.build.type} SYMROOT=${iOS.library.builddir} "/> 
-			<!-- Note: the SYMROOT path is relative to {dir}. --> 
 		</exec> 
 	</target>
 	<!-- Rebuild the XCode project --> 
@@ -30,24 +39,24 @@
 	<!-- ************************************************************************************** 
 		Adobe AIR Library Targets - copy swc, .a (only ios), extract swf and store in temporary package folder
 	*************************************************************************************** --> 
-	<!-- Copy ios swc and extract swf and store in temporary package folder -->
+	<!-- Copy ios swc and extract swf and store in temporary package folder, copy .a to package folder -->
 	<target name="copy ios files for packaging"> 
-		<copy file="../bin/${air.library.name}.swc" todir="${tempdir}/package"/> 
-		<copy file="../bin/${air.library.name}.swc" todir="${tempdir}/${air.library.name}/swc"/>
-		<unzip src="${tempdir}/${air.library.name}/swc/${air.library.name}.swc" dest="${tempdir}/${air.library.name}/swc" overwrite="true"/> 
-		<copy file="${tempdir}/${air.library.name}/swc/library.swf" todir="${tempdir}/package/ios" overwrite="true"/> 
-		<copy file="../../iOS/NativeExtensioniOS/build/${iOS.library.build.type}-iphoneos/${iOS.library}" todir="${tempdir}/ios" overwrite="true"/> 
-		<copy file="../../iOS/NativeExtensioniOS/build/${iOS.library.build.type}-iphoneos/${iOS.library}" todir="${tempdir}/package/ios" overwrite="true"/> 
-		<copy file="../src/${air.library.name}-extension.xml" todir="${tempdir}/package"/>
-		<copy file="../src/${air.library.name}-ios-platformoptions.xml" todir="${tempdir}/package"/>
-		<copy file="../src/${air.library.name}-ios-platformoptions.xml" todir="${tempdir}/package"/>
+		<copy file="../bin/${ane.name}.swc" todir="${tempdir}/package"/> 
+		<copy file="../bin/${ane.name}.swc" todir="${tempdir}/${ane.name}/swc"/>
+		<unzip src="${tempdir}/${ane.name}/swc/${ane.name}.swc" dest="${tempdir}/${ane.name}/swc" overwrite="true"/> 
+		<copy file="${tempdir}/${ane.name}/swc/library.swf" todir="${tempdir}/package/ios" overwrite="true"/> 
+		<copy file="../../iOS/NativeExtensioniOS/build/${iOS.library.build.type}-iphoneos/libNativeExtensioniOS.a" todir="${tempdir}/ios" overwrite="true"/> 
+		<copy file="../../iOS/NativeExtensioniOS/build/${iOS.library.build.type}-iphoneos/libNativeExtensioniOS.a" todir="${tempdir}/package/ios" overwrite="true"/> 
+		<copy file="../src/${ane.name}-extension.xml" todir="${tempdir}/package"/>
+		<copy file="../src/${ane.name}-ios-platformoptions.xml" todir="${tempdir}/package"/>
+		<copy file="../src/${ane.name}-ios-platformoptions.xml" todir="${tempdir}/package"/>
 	</target>
 
 	<!-- Copy default swc and extract swf and store in temporary package folder -->
 	<target name="copy default files for packaging"> 
-		<copy file="../../${default.library.name}/bin/${default.library.name}.swc" todir="${tempdir}/${default.library.name}/swc"/> 
-		<copy file="../../${default.library.name}/bin/${default.library.name}.swc" todir="${tempdir}/package/default"/> 
-		<unzip src="${tempdir}/package/default/${default.library.name}.swc" dest="${tempdir}/package/default" overwrite="true"/> 
+		<copy file="../../${defaultane.name}/bin/${defaultane.name}.swc" todir="${tempdir}/${defaultane.name}/swc"/> 
+		<copy file="../../${defaultane.name}/bin/${defaultane.name}.swc" todir="${tempdir}/package/default"/> 
+		<unzip src="${tempdir}/package/default/${defaultane.name}.swc" dest="${tempdir}/package/default" overwrite="true"/> 
 	</target>
 	
 	<!-- ***************************************************************************** 
@@ -56,11 +65,11 @@
 	<!-- Create the ANE package for iOS --> 
 	<target name="package ios ane" depends="set build type, create package folder, rebuild ios, copy ios files for packaging, copy default files for packaging" description="Package the extension into an ANE file"> 
 		<exec executable="${ADT}" failonerror="true" dir="${tempdir}/package"> 
-			<arg line=" -package -target ane ane/${ane.name}.ane ${air.library.name}-extension.xml -swc ${air.library.name}.swc -platform iPhone-ARM -platformoptions ${air.library.name}-ios-platformoptions.xml -C ios . -platform default -C default . "/> 
+			<arg line=" -package -target ane ane/${ane.name}.ane ${ane.name}-extension.xml -swc ${ane.name}.swc -platform iPhone-ARM -platformoptions ${ane.name}-ios-platformoptions.xml -C ios . -platform default -C default . "/> 
 		</exec> 
 		<!-- copy final ane to destination -->
 		<mkdir dir="${ane.destination}"/> 
-		<move file="${tempdir}/package/ane/${air.library.name}.ane" todir="${ane.destination}" overwrite="true"/> 
+		<move file="${tempdir}/package/ane/${ane.name}.ane" todir="${ane.destination}" overwrite="true"/> 
 		<delete dir="${tempdir}"/>
 	</target>
 
@@ -88,10 +97,10 @@
 		<mkdir dir="${tempdir}/package/ane"/>
 		<mkdir dir="${tempdir}/package/default"/>
 		<mkdir dir="${tempdir}/package/ios"/>
-		<mkdir dir="${tempdir}/${default.library.name}"/>
-		<mkdir dir="${tempdir}/${default.library.name}/swc"/>
-		<mkdir dir="${tempdir}/${air.library.name}"/>
-		<mkdir dir="${tempdir}/${air.library.name}/swc"/>
+		<mkdir dir="${tempdir}/${defaultane.name}"/>
+		<mkdir dir="${tempdir}/${defaultane.name}/swc"/>
+		<mkdir dir="${tempdir}/${ane.name}"/>
+		<mkdir dir="${tempdir}/${ane.name}/swc"/>
 	</target>
 	
 </project>
