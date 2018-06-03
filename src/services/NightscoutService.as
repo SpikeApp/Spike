@@ -964,6 +964,21 @@ package services
 			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + "/" + (activeTreatmentsDelete[0] as Treatment).ID, apiSecret, URLRequestMethod.DELETE, null, MODE_TREATMENT_DELETE, onDeleteTreatmentComplete, onConnectionFailed);
 		}
 		
+		public static function deleteTreatmentByID(id:String):void
+		{
+			if (syncTreatmentsDeleteActive || !NetworkInfo.networkInfo.isReachable())
+				return;
+			
+			if (!BlueToothDevice.isFollower() && !serviceActive)
+				return;
+			
+			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+				return;
+			
+			//Delete Treatment
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + "/" + id, apiSecret, URLRequestMethod.DELETE, null, MODE_TREATMENT_DELETE, onDeleteTreatmentComplete, onConnectionFailed);
+		}
+		
 		private static function onDeleteTreatmentComplete(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "in onTreatmentDelete.");
@@ -987,7 +1002,8 @@ package services
 				Trace.myTrace("NightscoutService.as", "Treatment deleted successfully!");
 				
 				//Remove treatment from queue
-				activeTreatmentsDelete.shift() 
+				if (activeTreatmentsDelete.length > 0)
+					activeTreatmentsDelete.shift() 
 				
 				if (activeTreatmentsDelete.length > 0)
 				{
@@ -1362,33 +1378,40 @@ package services
 			//Validate response
 			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
 			{
-				try
+				if (NetworkConnector.nightscoutTreatmentsLastModifiedHeader != "" && TreatmentsManager.nightscoutTreatmentsLastModifiedHeader != "" && NetworkConnector.nightscoutTreatmentsLastModifiedHeader == TreatmentsManager.nightscoutTreatmentsLastModifiedHeader)
 				{
-					var nightscoutTreatments:Array = SpikeJSON.parse(response) as Array;
-					if (nightscoutTreatments!= null && nightscoutTreatments is Array)
+					Trace.myTrace("NightscoutService.as", "No treatments where modified in Nightscout. No further processing.");
+				}
+				else
+				{
+					try
 					{
-						//Send nightscout treatments to TreatmentsManager for further processing
-						TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
-						
-						retriesForTreatmentsDownload = 0;
-					}
-					else
+						var nightscoutTreatments:Array = SpikeJSON.parse(response) as Array;
+						if (nightscoutTreatments!= null && nightscoutTreatments is Array)
+						{
+							//Send nightscout treatments to TreatmentsManager for further processing
+							TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
+							TreatmentsManager.nightscoutTreatmentsLastModifiedHeader = NetworkConnector.nightscoutTreatmentsLastModifiedHeader;
+							retriesForTreatmentsDownload = 0;
+						}
+						else
+						{
+							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
+							{
+								Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+								setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+								retriesForTreatmentsDownload++;
+							}
+						}
+					} 
+					catch(error:Error) 
 					{
 						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 						{
-							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
+							Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
 							setTimeout(getRemoteTreatments, TIME_30_SECONDS);
 							retriesForTreatmentsDownload++;
 						}
-					}
-				} 
-				catch(error:Error) 
-				{
-					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
-					{
-						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
-						setTimeout(getRemoteTreatments, TIME_30_SECONDS);
-						retriesForTreatmentsDownload++;
 					}
 				}
 			}
@@ -1429,7 +1452,7 @@ package services
 		private static function createVisualCalibrationObject(calibration:Calibration):Object
 		{
 			var newVisualCalibration:Object = new Object();
-			newVisualCalibration["_id"] = UniqueId.createEventId();	
+			newVisualCalibration["_id"] = calibration.uniqueId;	
 			newVisualCalibration["eventType"] = "BG Check";	
 			newVisualCalibration["created_at"] = formatter.format(calibration.timestamp).replace("000+0000", "000Z");
 			newVisualCalibration["enteredBy"] = "Spike";	

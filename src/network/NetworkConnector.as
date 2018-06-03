@@ -12,6 +12,8 @@ package network
 
 	public class NetworkConnector
 	{
+		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
+		
 		public function NetworkConnector()
 		{
 		}
@@ -207,11 +209,29 @@ package network
 		/**
 		 * Local Event Listeners
 		 */
-		private static function localHTTPStatus(e:Event):void
+		private static function localHTTPStatus(e:HTTPStatusEvent):void
 		{
 			var loader:URLLoader = e.currentTarget as URLLoader;
+			
 			if (loader != null)
 			{
+				if (e.responseURL.indexOf("/api/v1/treatments.json?find") != -1)
+				{
+					//It's a call to treatments
+					if (e.responseHeaders != null && e.responseHeaders.length > 0)
+					{
+						var numHeaders:int = e.responseHeaders.length;
+						for (var i:int = 0; i < numHeaders; i++) 
+						{
+							if (e.responseHeaders[i].name != null && e.responseHeaders[i].value != null && e.responseHeaders[i].name == "Last-Modified")
+							{
+								nightscoutTreatmentsLastModifiedHeader = e.responseHeaders[i].value;
+								break;
+							}
+						}
+					}
+				}
+				
 				if (String(loader.data) != "undefined")
 					Trace.myTrace("NetworkConnector.as", "localHTTPStatus called. Message: " + String(loader.data));
 				

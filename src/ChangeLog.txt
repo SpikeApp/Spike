@@ -7,6 +7,8 @@ ENHANCEMENT: Ability to enable/disable the "+ info" pill completely or just spec
 ENHANCEMENT: For MiaoMiao users, capture rate will not display above 100% even when there's more than 288 readings. This should avoid user confusion. (Miguel)
 ENHANCEMENT: Added more FitBit and Garmin compatible watch faces/apps to Spike's instructions located at Settings -> Integration -> Internal HTTP Server. (Miguel)
 ENHANCEMENT: When users are on mmol/L and insert a Calibration/BgCheck in mg/dL or vice versa, Spike will do the conversion automatically. (Miguel)
+ENHANCEMENT: Spike now checks the "Last-Modified" header when retrieving treatments from Nightscout. If nothing changed then no further processing is done. This should safe some battery life. (Miguel)
+ENHANCEMENT: If user deletes a calibration or all calibrations, their visual representations should now be deleted on the chart and Nightscout. (Miguel)
 FIX: Libre users sometimes where experiencing HIGH glucose values suddenly displayed as LOW. This is now fixed (Johan).
 FIX: BlueReader battery status was not displayed correctly on the "+ info" pill. (Miguel)
 FIX: Landscape mode in Fullscreen View should now display correctly on iPhone X. (Miguel)

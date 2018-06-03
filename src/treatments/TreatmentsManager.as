@@ -73,6 +73,7 @@ package treatments
 		/* Internal Properties */
 		public static var pumpIOB:Number = 0;
 		public static var pumpCOB:Number = 0;
+		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -171,7 +172,7 @@ package treatments
 			
 			//Add calibration treatment to Spike
 			var lastCalibration:Calibration = Calibration.last();
-			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, UniqueId.createEventId());
+			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, lastCalibration.uniqueId);
 		}
 		
 		public static function getTotalIOB(time:Number):Number

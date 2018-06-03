@@ -411,6 +411,7 @@ package ui.screens.display.sensor
 				{
 					var calibration:Calibration = allCalibrations[i] as Calibration;
 					TreatmentsManager.deleteInternalCalibration(calibration.timestamp);
+					if (NightscoutService.serviceActive) NightscoutService.deleteTreatmentByID(calibration.uniqueId);
 				}
 				
 				//Restart the sensor (this will reset all current calibrations)
