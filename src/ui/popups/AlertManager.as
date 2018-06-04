@@ -76,6 +76,11 @@ package ui.popups
 		 */
 		private static function processAlert(alertTitle:String, alertMessage:String, timeoutDuration:Number = Number.NaN, eventHandlerFunct:Function = null, buttonGroup:Array = null, textAlign:String = HorizontalAlign.JUSTIFY, icon:DisplayObject = null):Alert
 		{
+			if (activeAlert != null && activeAlert.title == alertTitle && activeAlert.message == alertMessage)
+			{
+				return activeAlert;
+			}
+			
 			var alert:Alert = new Alert();
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				alert.maxWidth = 270;
@@ -164,12 +169,11 @@ package ui.popups
 						//Found duplicate. Remove it!
 						queuedAlert.removeEventListeners();
 						alertQueue.removeAt(i);
-						SystemUtil.executeWhenApplicationIsActive( queuedAlert.dispose );
+						SystemUtil.executeWhenApplicationIsActive( queuedAlert.removeFromParent, true );
 						queuedObject = null;
 					}
 				}
 			}
-			
 		}
 		
 		private static function processQueue(closeActivePopup:Boolean = true):void

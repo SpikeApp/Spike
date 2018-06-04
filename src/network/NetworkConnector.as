@@ -215,7 +215,7 @@ package network
 			
 			if (loader != null)
 			{
-				if (e.responseURL.indexOf("/api/v1/treatments.json?find") != -1)
+				if (e != null && e.responseURL != null && e.responseURL.indexOf("/api/v1/treatments.json?find") != -1)
 				{
 					//It's a call to treatments
 					if (e.responseHeaders != null && e.responseHeaders.length > 0)
