@@ -316,17 +316,23 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     
     FRENamedFunction * func = (FRENamedFunction *) malloc(sizeof(FRENamedFunction) * *numFunctionsToTest);
 
-    //init function
+    /*************************
+     **  INIT FUNCTIONS
+     *************************/
     func[0].name = (const uint8_t*) "init";
     func[0].functionData = NULL;
     func[0].function = &init;
     
-    //NSLog
+    /*************************
+     **  NSLOG
+     *************************/
     func[1].name = (const uint8_t*) "traceNSLog";
     func[1].functionData = NULL;
     func[1].function = &traceNSLog;
 
-    //MiaoMiao functions
+    /**********************
+     **  MIAOMIAO FUNCTIONS
+     *********************/
     func[2].name = (const uint8_t*) "ScanAndConnectToMiaoMiaoDevice";
     func[2].functionData = NULL;
     func[2].function = &ScanAndConnectToMiaoMiaoDevice;
@@ -358,7 +364,9 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[11].functionData = NULL;
     func[11].function = &confirmSensorChangeMiaoMiao;
 
-    //healthkit functions
+    /*********************
+     * ** HEALTHKIT
+     * *******************/
     func[12].name = (const uint8_t*) "initHealthKit";
     func[12].functionData = NULL;
     func[12].function = &initHealthKit;
