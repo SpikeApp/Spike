@@ -104,7 +104,10 @@ package services
 					initialCalibrationRequested = false;
 					requestInitialCalibration();
 				} else {
-					myTrace("in notificationReceived with id = " + notificationEvent.id + ", and initialCalibrationRequested = " + initialCalibrationRequested);
+					if (notificationEvent.id == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
+						calibrationOnRequest();
+					else
+						myTrace("in notificationReceived with id = " + notificationEvent.id + ", and initialCalibrationRequested = " + initialCalibrationRequested);
 				}
 			}
 		}
@@ -403,9 +406,6 @@ package services
 		{
 			myTrace(" in calibrationOnRequest");
 			
-			trace("override", override);
-			trace("addSnoozeOption", addSnoozeOption);
-			
 			//start with removing any calibration request notification that might be there
 			Notifications.service.cancel(NotificationService.ID_FOR_REQUEST_CALIBRATION);
 			Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
@@ -531,7 +531,7 @@ package services
 					AlertManager.showActionAlert
 						(
 							ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title_sub_optimal"),
-							ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_sub_optimal").replace("{max_bg_difference}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "3mg/dL" : "0.16mmol/L").replace("{high_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10)).replace("{low_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10)),
+							ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_sub_optimal").replace("{max_bg_difference}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "3mg/dL" : "0.16mmol/L").replace("{high_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK) + "-" + (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) + Math.round(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25)) : Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10 + "-" + ((Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10) + (Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25))) * 10)) / 10))).replace("{low_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10)),
 							60,
 							[
 								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },

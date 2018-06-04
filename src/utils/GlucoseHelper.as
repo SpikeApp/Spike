@@ -46,12 +46,12 @@ package utils
 						if (lastReadingSlope <= 3 && middleReadingSlope <= 3)
 						{
 							//Not going up or down by more than 3mg/dL
-							var highThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+							var highThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 1.25;
 							var lowThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
 							
 							if ((lastReading.calculatedValue < highThreshold && lastReading.calculatedValue > lowThreshold) && (middleReading.calculatedValue < highThreshold && middleReading.calculatedValue > lowThreshold) && (firstReading.calculatedValue < highThreshold && firstReading.calculatedValue > lowThreshold))
 							{
-								//All readings are within "in-range" threshold. Optimal calibration condition has been found!
+								//All readings are within "in-range" threshold. Optimal calibration condition has been reached!
 								optimalCalibrationCondition = true;
 							}
 						}

@@ -243,6 +243,8 @@ package services
 		private static var queuedAlertSound:String = "";
 		private static var lastQueuedAlertSoundTimeStamp:Number = 0;
 		
+		private static var userWarnedOfSuboptimalCalibration:Boolean = false;
+		
 		public static function get instance():AlarmService {
 			return _instance;
 		}
@@ -1231,7 +1233,28 @@ package services
 					myTrace("in checkAlarms, calibration request alert not snoozed ");
 					if (Calibration.last() != null && BgReading.last30Minutes().length >= 2) 
 					{
-						if (alertValue < ((now.valueOf() - Calibration.last().timestamp) / 1000 / 60 / 60) && GlucoseHelper.isOptimalConditionToCalibrate()) {
+						var isOptimaCalibration:Boolean = GlucoseHelper.isOptimalConditionToCalibrate();
+						var lastCalibrationTimestamp:Number = Calibration.last().timestamp;
+						
+						if (alertValue < ((now.valueOf() - lastCalibrationTimestamp) / 1000 / 60 / 60) && !isOptimaCalibration && !userWarnedOfSuboptimalCalibration) 
+						{
+							//Warn the user (only once) of suboptimal conditions to calibrate
+							var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+								.setCount(BadgeBuilder.getAppBadge())
+								.setId(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
+								.setAlert(ModelLocator.resourceManagerInstance.getString('alarmservice','suboptimal_calibration_request_alert_notification_alert_title'))
+								.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice','suboptimal_calibration_request_alert_notification_alert_title'))
+								.setBody(ModelLocator.resourceManagerInstance.getString('alarmservice','suboptimal_calibration_request_notification_body'))
+								.enableLights(true)
+								.setSound("default")
+								.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
+							Notifications.service.notify(notificationBuilder.build());
+							
+							BackgroundFetch.vibrate();
+							userWarnedOfSuboptimalCalibration = true;
+						} 
+						else if (alertValue < ((now.valueOf() - lastCalibrationTimestamp) / 1000 / 60 / 60) && GlucoseHelper.isOptimalConditionToCalibrate()) 
+						{
 							myTrace("in checkAlarms, calibration is necessary");
 							fireAlert(
 								0,
@@ -1244,7 +1267,10 @@ package services
 							); 
 							_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
 							_calibrationRequestSnoozePeriodInMinutes = 0;
-						} else {
+							userWarnedOfSuboptimalCalibration = false;
+						} 
+						else 
+						{
 							myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
 							Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
 							disableRepeatAlert(0);
