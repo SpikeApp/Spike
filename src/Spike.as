@@ -96,7 +96,8 @@ package
 				error.indexOf("JSONParseError") != -1 ||
 				error.indexOf("starling.display.graphics::Graphic/render()") != -1 ||
 				error.indexOf("starling.rendering::VertexData/createVertexBuffer()") != -1 ||
-				error.indexOf("RangeError: Error #1125 at BatchProcessor/getBatchAt() at starling.rendering::Painter/drawFromCache()") != -1
+				error.indexOf("RangeError: Error #1125 at BatchProcessor/getBatchAt() at starling.rendering::Painter/drawFromCache()") != -1 ||
+				error.indexOf("Graphic/getBounds()") != -1
 				)
 			{
 				return;

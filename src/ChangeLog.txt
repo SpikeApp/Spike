@@ -10,6 +10,8 @@ ENHANCEMENT: For MiaoMiao users, capture rate will not display above 100% even w
 ENHANCEMENT: Added more FitBit and Garmin compatible watch faces/apps to Spike's instructions located at Settings -> Integration -> Internal HTTP Server. (Miguel)
 ENHANCEMENT: When users are on mmol/L and insert a Calibration/BgCheck in mg/dL or vice versa, Spike will detect it and do the conversion automatically. (Miguel)
 ENHANCEMENT: Spike now checks the "Last-Modified" header when retrieving treatments from Nightscout. If the header has not changed then no further processing is done. This should save some battery. (Miguel)
+ENHANCEMENT: Spike now queries Nightscout's API only for supported treatments. This will reduce bandwidth and some battery life, especially for pump, Loop and OpenAPS users. (Miguel)
+ENHANCEMENT: Spike now displays the following Nightscout treatments as notes: Pump Battery Change, Suspend Pump, Resume Pump and Announcements. (Miguel)
 ENHANCEMENT: If user deletes a calibration or all calibrations, their visual representations should now be deleted on the chart and Nightscout. (Miguel)
 ENHANCEMENT: Don't display transmitter settings if user is a follower to avoid confusion. (Miguel)
 FIX: Libre users sometimes where experiencing HIGH glucose values suddenly displayed as LOW. (Johan).

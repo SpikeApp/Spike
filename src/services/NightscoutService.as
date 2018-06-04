@@ -1323,6 +1323,25 @@ package services
 			//Define request parameters
 			var parameters:URLVariables = new URLVariables();
 			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
+			parameters["find[eventType][$in][0]"] = "Correction Bolus";
+			parameters["find[eventType][$in][1]"] = "Bolus";
+			parameters["find[eventType][$in][2]"] = "Correction";
+			parameters["find[eventType][$in][3]"] = "Meal Bolus";
+			parameters["find[eventType][$in][4]"] = "Snack Bolus";
+			parameters["find[eventType][$in][5]"] = "Carb Correction";
+			parameters["find[eventType][$in][6]"] = "Carbs";
+			parameters["find[eventType][$in][7]"] = "Note";
+			parameters["find[eventType][$in][8]"] = "OpenAPS Offline";
+			parameters["find[eventType][$in][9]"] = "Site Change";
+			parameters["find[eventType][$in][10]"] = "Pump Battery Change";
+			parameters["find[eventType][$in][11]"] = "Announcement";
+			parameters["find[eventType][$in][12]"] = "Profile Switch";
+			parameters["find[eventType][$in][13]"] = "Sensor Start";
+			parameters["find[eventType][$in][14]"] = "BG Check";
+			parameters["find[eventType][$in][15]"] = "Bolus Wizard";
+			parameters["find[eventType][$in][16]"] = "<none>";
+			parameters["find[eventType][$in][17]"] = "Suspend Pump";
+			parameters["find[eventType][$in][18]"] = "Resume Pump";
 			
 			//API Secret
 			var treatmentAPISecret:String = "";

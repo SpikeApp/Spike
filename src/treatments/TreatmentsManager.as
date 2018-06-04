@@ -1199,10 +1199,10 @@ package treatments
 			{
 				//Define initial treatment properties
 				var nsTreatment:Object = nsTreatments[i];
+				var treatmentEventType:String = nsTreatment.eventType;
 				var treatmentTimestamp:Number = DateUtil.parseW3CDTF(nsTreatment.created_at).valueOf();
 				var treatmentID:String = nsTreatment._id;
 				nightscoutTreatmentsMap[treatmentID] = nsTreatment;
-				var treatmentEventType:String = nsTreatment.eventType;
 				var treatmentType:String = "";
 				var treatmentInsulinAmount:Number = 0;
 				var treatmentInsulinID:String = "";
@@ -1255,6 +1255,26 @@ package treatments
 				{
 					treatmentType = Treatment.TYPE_NOTE;
 					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Pump Site Change";
+				}
+				else if (treatmentEventType == "Pump Battery Change")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Pump Battery Change";
+				}
+				else if (treatmentEventType == "Resume Pump")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Resume Pump";
+				}
+				else if (treatmentEventType == "Suspend Pump")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Suspend Pump";
+				}
+				else if (treatmentEventType == "Announcement" && nsTreatment.notes != null && nsTreatment.notes != "")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + nsTreatment.notes;
 				}
 				else if (treatmentEventType == "Profile Switch")
 				{
