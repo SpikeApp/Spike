@@ -293,9 +293,15 @@ FREObject init( FREContext ctx, void* funcData, uint32_t argc, FREObject argv[] 
     [audioSession setActive:YES error:nil];
 
     /** MUTE CHECKER **/
-    _muteChecker = [MuteChecker alloc];
+    _muteChecker = [[MuteChecker alloc] initWithCompletionBlk:^(NSTimeInterval lapse, BOOL muted) {
+        if (muted) {
+            FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "phoneMuted", (const uint8_t*) "");
+        } else {
+            FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "phoneNotMuted", (const uint8_t*) "");
+        }
+    }];
     
-    return NULL;
+    return nil;
 }
 
 void NativeExtensionInitializer( void** extDataToSet, FREContextInitializer* ctxInitializerToSet, FREContextFinalizer* ctxFinalizerToSet ) {

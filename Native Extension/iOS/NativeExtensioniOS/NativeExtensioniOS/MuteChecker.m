@@ -31,12 +31,7 @@ void MuteCheckCompletionProc(SystemSoundID ssID, void* clientData){
     NSTimeInterval t = [now timeIntervalSinceDate:self.startTime];
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE MuteChecker.m playMuteSound completed, t =   %f", t ]);
     BOOL muted = (t > 0.7)? NO : YES;
-    if (muted) {
-        FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "phoneMuted", (const uint8_t*) "");
-    } else {
-        FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "phoneNotMuted", (const uint8_t*) "");
-    }
-
+    self.completionBlk(t, muted);
 }
 
 -(void)check{
@@ -52,14 +47,15 @@ void MuteCheckCompletionProc(SystemSoundID ssID, void* clientData){
 }
 
 
--(instancetype)init{
-    //self = [self init];
+-(instancetype)initWithCompletionBlk:(MuteCheckCompletionHandler)completionBlk{
+    self = [self init];
     if (self) {
         NSURL* url = [[NSBundle mainBundle] URLForResource:@"../assets/silence-1sec" withExtension:@"aif"];
         if (AudioServicesCreateSystemSoundID((__bridge CFURLRef)url, &_soundId) == kAudioServicesNoError){
             AudioServicesAddSystemSoundCompletion(self.soundId, CFRunLoopGetMain(), kCFRunLoopDefaultMode, MuteCheckCompletionProc,(__bridge void *)(self));
             UInt32 yes = 1;
             AudioServicesSetProperty(kAudioServicesPropertyIsUISound, sizeof(_soundId),&_soundId,sizeof(yes), &yes);
+            self.completionBlk = completionBlk;
         } else {
             FPANE_Log(@"error setting up Sound ID");
         }
