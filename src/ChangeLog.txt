@@ -14,6 +14,7 @@ ENHANCEMENT: Spike now queries Nightscout's API only for supported treatments. T
 ENHANCEMENT: Spike now displays the following Nightscout treatments as notes: Pump Battery Change, Suspend Pump, Resume Pump and Announcements. (Miguel)
 ENHANCEMENT: If user deletes a calibration or all calibrations, their visual representations should now be deleted on the chart and Nightscout. (Miguel)
 ENHANCEMENT: Don't display transmitter settings if user is a follower to avoid confusion. (Miguel)
+REGRESSION: Bluetooth 3rd party library has been downgraded to a previous version to try and mitigate iPhone 7 issues. 
 FIX: Libre users sometimes where experiencing HIGH glucose values suddenly displayed as LOW. (Johan).
 FIX: BlueReader battery status was not displayed correctly on the "+ info" pill. (Miguel)
 FIX: Landscape mode in Fullscreen View should now display correctly on iPhone X. (Miguel)
