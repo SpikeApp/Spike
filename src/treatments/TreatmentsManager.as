@@ -687,6 +687,8 @@ package treatments
 			if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
 			treatmentCallout = Callout.show(treatmentInserterContainer, calloutPositionHelper);
 			treatmentCallout.paddingBottom = 15;
+			treatmentCallout.closeOnTouchBeganOutside = false;
+			treatmentCallout.closeOnTouchEndedOutside = false;
 			
 			//Keyboard Focus
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
