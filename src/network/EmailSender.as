@@ -17,6 +17,7 @@ package network
 		/* Constants */
 		public static const TRANSMISSION_URL_WITH_ATTACHMENT:String = "https://spike-app.com/sparkpost/transmission_with_attachment.php";
 		public static const TRANSMISSION_URL_NO_ATTACHMENT:String = "https://spike-app.com/sparkpost/transmission.php";
+		public static const TRANSMISSION_URL_NO_ATTACHMENT_EXTENDED:String = "https://spike-app.com/sparkpost/transmission_extended.php";
 		public static const MODE_EMAIL_SUPPORT:String = "emailToSupport";
 		public static const MODE_EMAIL_USER:String = "emailToUser";
 		
@@ -24,7 +25,7 @@ package network
 		{
 		}
 		
-		public static function sendData(URL:String, completeHandler:Function, variables:URLVariables = null, rawData:ByteArray = null):void
+		public static function sendData(URL:String, completeHandler:Function, variables:URLVariables = null, rawData:ByteArray = null, rawString:String = null):void
 		{
 			//Format URL
 			var requestURL:String = URL;
@@ -35,6 +36,7 @@ package network
 			request.contentType = "application/octet-stream";
 			request.method = URLRequestMethod.POST;
 			if (rawData != null) request.data = rawData;
+			else if (rawString != null) request.data = rawString;
 			
 			//Create the URL Loader
 			var urlLoader:URLLoader = new URLLoader();

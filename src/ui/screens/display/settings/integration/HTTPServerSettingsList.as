@@ -336,16 +336,17 @@ package ui.screens.display.settings.integration
 			var vars:URLVariables = new URLVariables();
 			vars.mimeType = "text/html";
 			vars.emailSubject = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen',"email_instructions_subject");
-			vars.emailBody = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','instructions_description_label') + "<p>Have a great day!</p><p>Spike App</p>";
 			vars.userName = "";
 			vars.userEmail = emailField.text.replace(" ", "");
 			
 			//Send Email
 			EmailSender.sendData
 			(
-				EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
+				EmailSender.TRANSMISSION_URL_NO_ATTACHMENT_EXTENDED,
 				onLoadCompleteHandler,
-				vars
+				vars,
+				null,
+				ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','instructions_description_label') + ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','email_signature')
 			);
 		}
 		
