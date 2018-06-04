@@ -1,9 +1,6 @@
 package com.spikeapp.spike.airlibrary
 {
 	import flash.events.Event;
-	import flash.system.Capabilities;
-	
-	import spark.formatters.DateTimeFormatter;
 	
 	[Event(name="phoneMuted",type="events.SpikeANEEVent")]
 	[Event(name="phoneNotMuted",type="events.SpikeANEEVent")]
@@ -38,32 +35,10 @@ package com.spikeapp.spike.airlibrary
 		public static const MIAOMIAO_STOPPED_SCANNING_BECAUSE_CONNECTED:String = "stoppedScanningMiaoMiaoBecauseConnected";
 
 		
-		private static var dateFormatter:DateTimeFormatter;
 		public var data:Object;
-		public var timeStamp:Number;
 		public function SpikeANEEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
 		{
 			super(type, bubbles, cancelable);
-			timeStamp = (new Date()).valueOf();
-		}
-	
-		public function getTimeStampAsString(): String {
-			if (dateFormatter == null) {
-				dateFormatter = new DateTimeFormatter();
-				dateFormatter.dateTimePattern = "MM dd HH:mm:ss";
-				dateFormatter.useUTC = false;
-				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
-			}
-			
-			var date:Date = new Date();
-			var milliSeconds:String = date.milliseconds.toString();
-			if (milliSeconds.length < 3)
-				milliSeconds = "0" + milliSeconds;
-			if (milliSeconds.length < 3)
-				milliSeconds = "0" + milliSeconds;
-			
-			var returnValue:String = dateFormatter.format(date) + " " + milliSeconds + " ";
-			return returnValue;
 		}
 	}
 }
