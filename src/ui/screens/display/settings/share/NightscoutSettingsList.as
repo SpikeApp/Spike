@@ -85,7 +85,7 @@ package ui.screens.display.settings.share
 			nsToggle.addEventListener( Event.CHANGE, onNightscoutOnOff );
 			
 			//URL
-			nsURL = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 190 : 220, HorizontalAlign.RIGHT);
+			nsURL = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 190 : 220, HorizontalAlign.RIGHT, false, false, true);
 			if (!Constants.isPortrait)
 				nsURL.width += 100;
 			nsURL.text = selectedURL;

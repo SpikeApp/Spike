@@ -140,7 +140,7 @@ package ui.screens.display.bugreport
 			nameField.text = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_BUG_REPORT_NAME);
 			
 			//Email Field
-			emailField = LayoutFactory.createTextInput(false, false, fieldWidth, HorizontalAlign.RIGHT);
+			emailField = LayoutFactory.createTextInput(false, false, fieldWidth, HorizontalAlign.RIGHT, false, true);
 			emailField.addEventListener(FeathersEventType.ENTER, onKeyboardEnter);
 			emailField.pivotX = 6;
 			emailField.text = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_BUG_REPORT_EMAIL);

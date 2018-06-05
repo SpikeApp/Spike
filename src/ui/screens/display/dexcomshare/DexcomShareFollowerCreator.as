@@ -2,8 +2,6 @@ package ui.screens.display.dexcomshare
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CommonSettings;
 	
@@ -146,7 +144,7 @@ package ui.screens.display.dexcomshare
 			followerName.prompt = ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_name_label_prompt');
 			followerName.pivotX = -3;
 			
-			followerEmail = LayoutFactory.createTextInput(false, false, width - 14, HorizontalAlign.LEFT);
+			followerEmail = LayoutFactory.createTextInput(false, false, width - 14, HorizontalAlign.LEFT, false, true);
 			followerEmail.addEventListener(FeathersEventType.ENTER, onTextInputEnter);
 			followerEmail.prompt = ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_email_label_prompt');
 			followerEmail.pivotX = -3;

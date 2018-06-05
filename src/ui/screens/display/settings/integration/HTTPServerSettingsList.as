@@ -259,7 +259,7 @@ package ui.screens.display.settings.integration
 			mainContainer.addChild(emailLabel);
 			
 			/* Email Input */
-			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.CENTER);
+			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.CENTER, false, true);
 			emailField.fontStyles.size = 12;
 			mainContainer.addChild(emailField);
 			

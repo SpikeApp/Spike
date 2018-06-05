@@ -92,7 +92,7 @@ package ui.popups
 			mainContainer.addChild(emailLabel);
 			
 			/* Email Input */
-			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.CENTER);
+			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.CENTER, false, true);
 			mainContainer.addChild(emailField);
 			
 			/* Action Buttons */

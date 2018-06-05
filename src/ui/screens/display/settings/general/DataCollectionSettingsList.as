@@ -104,7 +104,7 @@ package ui.screens.display.settings.general
 			collectionModePicker.addEventListener(Event.CHANGE, onCollectionModeChanged);
 			
 			//Nightscout URL
-			nightscoutURLInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
+			nightscoutURLInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT, false, false, true);
 			nightscoutURLInput.fontStyles.size = 10;
 			nightscoutURLInput.text = followNSURL;
 			nightscoutURLInput.addEventListener(Event.CHANGE, onSettingsChanged);
