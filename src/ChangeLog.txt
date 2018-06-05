@@ -1,9 +1,9 @@
 2.1.1
-FEATURE: Insulin and carbs absorption curves! When there's active IOB or COB the user can now press on those pills to be presented with a new graph showing the respective absorption curve and the exact position the user is on the curve. The user will also be able to see the exact time the insulin and/or carbs will be fully absorbed by the body. Available for both masters and followers. Not available for users that have the "Loop/OpenAPS User" option enabled in Settings -> Treatments. (Miguel)
-ENHANCEMENT: When it's time to fire a Calibration Request alarm, Spike will first verify if optimal conditions for calibration are present. If they're not, the user will receive a lock screen notification warning him/her and if no calibration is done in the meantime Spike will refire the "Request Calibration" alarm as soon as optimal conditions are met: At least 3 recent readings (15min of data), glucose is on a flat line (not going up or down by more than 3mg/dL or 0.16mmol/L) and readings are within range. This will ensure more precise calibrations. (Miguel)
-ENHANCEMENT: When performing a calibration on-demand, Spike will now warn the user if conditions for calibrations are not optimal. Users still have the option to ignore the warning and proceed with the calibration. (Miguel)
+FEATURE: Insulin and carb absorption curves! When there's active IOB or COB the user can touch those pills to be presented with a graph showing the respective absorption curve and the exact position the user is on the curve. The user will also be able to see the exact time the insulin and/or carbs will be fully absorbed by the body. Available for both masters and followers. Not available for users that have the "Loop/OpenAPS User" option enabled in Settings -> Treatments. (Miguel)
+ENHANCEMENT: When it's time to fire a Calibration Request alarm, Spike will first verify if optimal conditions for calibration are present. If they're not, the user will instead receive a lock screen notification warning him/her and if no calibration is done in the meantime Spike will refire the "Request Calibration" alarm as soon as optimal conditions are met. This will ensure more precise calibrations. (Miguel)
+ENHANCEMENT: When performing a calibration on-demand, Spike will now warn the user if conditions for calibration are not optimal. Users still have the option to ignore the warning and proceed with the calibration. (Miguel)
 ENHANCEMENT: Increased insulin amount precision to 2 decimals for treatments coming from Nightscout. This will ensure compatibility with 640g uploaders (and others). (Miguel)
-ENHANCEMENT: Improved initial upload textures to the GPU strategy when Spike boots. This should avoid some crashes (Miguel).
+ENHANCEMENT: Improved initial GPU textures upload strategy when Spike boots. This should avoid some crashes (Miguel)
 ENHANCEMENT: Several layout and logic enhancements to the "Insert Treatment" popup. Keyboard should not cover part of the popup anymore as long as there's enough room to render everything. (Miguel)
 ENHANCEMENT: Ability to enable/disable the "+ info" pill completely or just specific items. Head over to settings -> treatments for options. (Miguel)
 ENHANCEMENT: For MiaoMiao users, capture rate will not display above 100% even when there's more than 288 readings. This should avoid user confusion. (Miguel)
@@ -12,10 +12,11 @@ ENHANCEMENT: When users are on mmol/L and insert a Calibration/BgCheck in mg/dL 
 ENHANCEMENT: Spike now checks the "Last-Modified" header when retrieving treatments from Nightscout. If the header has not changed then no further processing is done. This should save some battery. (Miguel)
 ENHANCEMENT: Spike now queries Nightscout's API only for supported treatments. This will reduce bandwidth and some battery life, especially for pump, Loop and OpenAPS users. (Miguel)
 ENHANCEMENT: Spike now displays the following Nightscout treatments as notes: Pump Battery Change, Suspend Pump, Resume Pump and Announcements. (Miguel)
-ENHANCEMENT: If user deletes a calibration or all calibrations, their visual representations should now be deleted on the chart and Nightscout. (Miguel)
-ENHANCEMENT: Don't display transmitter settings if user is a follower to avoid confusion. (Miguel)
-REGRESSION: Bluetooth 3rd party library has been downgraded to a previous version to try and mitigate iPhone 7 issues. 
-FIX: Libre users sometimes where experiencing HIGH glucose values suddenly displayed as LOW. (Johan).
+ENHANCEMENT: If user deletes a calibration or all calibrations, their visual representation is now deleted on Nightscout. (Miguel)
+ENHANCEMENT: Transmitter settings are now hidden if user is a follower to avoid confusion. (Miguel)
+ENHANCEMENT: For MiaoMiao users, Spike will now display the following warnings: Readings may become inaccurate if sensor age > 14 days; Sensor has not yet been activated with the Libre Reader; Sensor has failed. (Johan)
+REGRESSION: Bluetooth 3rd party library has been downgraded to a previous version to try and mitigate iPhone 7 issues. (Miguel)
+FIX: Libre users sometimes where experiencing HIGH glucose values suddenly displayed as LOW. (Johan)
 FIX: BlueReader battery status was not displayed correctly on the "+ info" pill. (Miguel)
 FIX: Landscape mode in Fullscreen View should now display correctly on iPhone X. (Miguel)
 FIX: Fixes an issue that prevented Spike from sending the integration instructions to the user's email. (Miguel)
