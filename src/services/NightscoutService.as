@@ -1540,7 +1540,7 @@ package services
 			activeVisualCalibrations.push(visualCalibration);
 			
 			//Add calibration treatment to Spike
-			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, visualCalibration._id);
+			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, lastCalibration.uniqueId);
 			
 			syncCalibrations();
 			syncVisualCalibrations();
@@ -1601,7 +1601,7 @@ package services
 			
 			//Upload Glucose Readings
 			//NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeVisualCalibrations), MODE_VISUAL_CALIBRATION, onUploadVisualCalibrationsComplete, onConnectionFailed);
-			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(activeVisualCalibrations), MODE_VISUAL_CALIBRATION, onUploadVisualCalibrationsComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, SpikeJSON.stringify(activeVisualCalibrations[0]), MODE_VISUAL_CALIBRATION, onUploadVisualCalibrationsComplete, onConnectionFailed);
 		}
 		
 		private static function onUploadVisualCalibrationsComplete(e:Event):void
@@ -1621,10 +1621,16 @@ package services
 			
 			syncVisualCalibrationsActive = false;
 			
-			if (response.indexOf("BG Check") != -1 && response.indexOf("Error") == -1)
+			if (response.indexOf("ok") != -1 && response.indexOf("Error") == -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Visual calibration upload was successful!");
-				activeVisualCalibrations.length = 0;
+				
+				if (activeVisualCalibrations.length > 0)
+				{
+					activeVisualCalibrations.shift();
+					if (activeVisualCalibrations.length > 0)
+						syncVisualCalibrations();
+				}
 			}
 			else
 			{

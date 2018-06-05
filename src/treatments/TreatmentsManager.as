@@ -373,22 +373,23 @@ package treatments
 						Trace.myTrace("TreatmentsManager.as", "Treatment deleted. Type: " + spikeTreatment.type);
 						
 						treatmentsList.removeAt(i);
+						
+						//Notify listeners
+						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, spikeTreatment));
+						
+						//Delete from Nightscout
+						if (updateNightscout && NightscoutService.serviceActive)
+							NightscoutService.deleteTreatment(spikeTreatment);
+						
+						//Delete from databse
+						if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+							Database.deleteTreatmentSynchronous(spikeTreatment);
+						
+						treatmentsMap[spikeTreatment.ID] = null;
 						spikeTreatment = null;
 						break;
 					}
 				}
-				treatmentsMap[treatment.ID] = null;
-				
-				//Notify listeners
-				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, treatment));
-				
-				//Delete from Nightscout
-				if (updateNightscout && NightscoutService.serviceActive)
-					NightscoutService.deleteTreatment(treatment);
-				
-				//Delete from databse
-				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-					Database.deleteTreatmentSynchronous(treatment);
 			}
 		}
 		
