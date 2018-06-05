@@ -1,9 +1,10 @@
 package model
 {
+	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
-	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
@@ -12,23 +13,23 @@ package model
 	import database.CommonSettings;
 	import database.Sensor;
 	
+	import services.NotificationService;
+	
+	import ui.popups.AlertManager;
+	
 	import utils.Crc;
 	import utils.Trace;
 	import utils.libre.LibreAlarmReceiver;
 	
-	public class Tomato extends EventDispatcher
+	public class Tomato
 	{
+		[ResourceBundle("tomato")]
+		
 		private static var TOMATO_HEADER_LENGTH:int = 18;		
 		private static var resendPakcetTimer:Timer;
 		private static var resendPacketCounter:int = 0;
 		private static const MAX_PACKET_RESEND_REQUESTS:int = 3;
 		
-		private static var _instance:Tomato = new Tomato();
-		public static function get instance():Tomato
-		{
-			return _instance;
-		}
-
 		public function Tomato()
 		{
 		}
@@ -84,6 +85,27 @@ package model
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW,utils.UniqueId.bytesToHex(temp));
 			myTrace("in decodeTomatoPacket, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 
 			
+			data.position = 4;
+			temp = new ByteArray();data.readBytes(temp, 0, 1);
+			
+			//read sensor status 
+			//1 = sensor not yet started
+			//2 = sensor in warmup phase
+			//3 = sensor ready and working (up to 14 days and twelve hours)
+			//4 = sensor expired (for the following twelve hours, FRAM data section content does not change any more)
+			//5 = sensor shutdown
+			//6 = sensor failure
+			var sensorState:int = temp[0];
+			if (sensorState == 1) {
+				giveSensorWarning(ModelLocator.resourceManagerInstance.getString("tomato","libre_sensor_not_yet_started_title"), ModelLocator.resourceManagerInstance.getString("tomato","libre_sensor_not_yet_started_body"));
+				myTrace("in decodeTomatoPacket, sensor not yet started status received (status = 1), generating notification, no further processing");
+				return;
+			} else if (sensorState == 6) {
+				giveSensorWarning(ModelLocator.resourceManagerInstance.getString("tomato","libre_sensor_sensor_failure_title"), ModelLocator.resourceManagerInstance.getString("tomato","libre_sensor_sensor_failure_body"));
+				myTrace("in decodeTomatoPacket, sensor failure received (status = 6), generating notification, no further processing");
+				return;
+			} 
+			
 			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
 			LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
 			/*if (LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)) {
@@ -99,7 +121,23 @@ package model
 		}
 		
 		
-		private static function InitBuffer():void {
+		private static function giveSensorWarning(title:String, body:String):void {
+			if (BackgroundFetch.appIsInForeground()) {
+				AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"),
+						title + " " + body
+					);
+			} else {
+				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+					.setId(NotificationService.ID_FOR_LIBRE_SENSOR_14DAYS)
+					.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"))
+					.setTitle(title)
+					.setBody(body)
+					.enableVibration(false)
+					.setSound("");
+				Notifications.service.notify(notificationBuilder.build());
+			}
 		}
 		
 		private static function myTrace(log:String):void {

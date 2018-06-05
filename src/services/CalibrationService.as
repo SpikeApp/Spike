@@ -755,7 +755,7 @@ package services
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN,"true");
 					}
 				}
-				if (currentSensorAgeInMinutes > 0 && Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao() && BlueToothDevice.knowsFSLAge() && currentSensorAgeInMinutes < 14.5 * 24 * 60) {
+				if (currentSensorAgeInMinutes > 0 && Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao() && BlueToothDevice.knowsFSLAge() && currentSensorAgeInMinutes < 14 * 24 * 60) {
 					//not doing this for miaomiao because sensorstart for miaomiao is already handled in LibreAlarmReceiver
 					myTrace("in commonSettingChanged, sensorage changed to smaller value, starting sensor");
 					Sensor.startSensor(((new Date()).valueOf() - currentSensorAgeInMinutes * 60 * 1000));
