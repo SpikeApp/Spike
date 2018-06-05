@@ -1,5 +1,6 @@
-2.2.2
+2.1.2
 ENHANCEMENT: Calibration and treatments input keyboard now comes included with decimal keys. (Miguel)
+ENHANCEMENT: URL input fields now display an URL optimized keyboard. E-mail input fields now display an E-mail optimized keyboard. (Miguel)
 
 2.1.1
 FEATURE: Insulin and carb absorption curves! When there's active IOB or COB the user can touch those pills to be presented with a graph showing the respective absorption curve and the exact position the user is on the curve. The user will also be able to see the exact time the insulin and/or carbs will be fully absorbed by the body. Available for both masters and followers. Not available for users that have the "Loop/OpenAPS User" option enabled in Settings -> Treatments. (Miguel)
