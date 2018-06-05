@@ -573,6 +573,5 @@
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
     	<extensionID>com.spike-app.spike.AirNativeExtension</extensionID>
-    	<!--<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>-->
     </extensions>
 </application>

@@ -566,7 +566,7 @@ package services
 					
 					function calibrationDialogClosedWithSuboptimal():void 
 					{
-						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !BackgroundFetch.appIsInForeground())
+						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
 							return;
 						
 						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));

@@ -1250,7 +1250,7 @@ package services
 								.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
 							Notifications.service.notify(notificationBuilder.build());
 							
-							BackgroundFetch.vibrate();
+							SpikeANE.vibrate();
 							userWarnedOfSuboptimalCalibration = true;
 						} 
 						else if (alertValue < ((now.valueOf() - lastCalibrationTimestamp) / 1000 / 60 / 60) && GlucoseHelper.isOptimalConditionToCalibrate()) 

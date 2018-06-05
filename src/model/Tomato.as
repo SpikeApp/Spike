@@ -2,8 +2,8 @@ package model
 {
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
+	
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.utils.ByteArray;
@@ -122,7 +122,7 @@ package model
 		
 		
 		private static function giveSensorWarning(title:String, body:String):void {
-			if (BackgroundFetch.appIsInForeground()) {
+			if (SpikeANE.appIsInForeground()) {
 				AlertManager.showSimpleAlert
 					(
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"),
