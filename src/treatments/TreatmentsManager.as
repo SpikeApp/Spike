@@ -1,7 +1,7 @@
 package treatments
 {
 	import com.adobe.utils.DateUtil;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	import flash.utils.Dictionary;
@@ -712,7 +712,7 @@ package treatments
 			{
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onInsulinEntered);
 				
-				if (insulinTextInput == null || insulinTextInput.text == null || !BackgroundFetch.appIsInForeground())
+				if (insulinTextInput == null || insulinTextInput.text == null || !SpikeANE.appIsInForeground())
 					return;
 				
 				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
@@ -768,9 +768,10 @@ package treatments
 			
 			function onCarbsEntered (e:Event):void
 			{
+
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onCarbsEntered);
 				
-				if (carbsTextInput == null || carbsTextInput.text == null || !BackgroundFetch.appIsInForeground())
+				if (carbsTextInput == null || carbsTextInput.text == null || !SpikeANE.appIsInForeground())
 					return;
 				
 				carbsTextInput.text = carbsTextInput.text.replace(" ", "");
@@ -826,9 +827,10 @@ package treatments
 			
 			function onMealEntered (e:Event):void
 			{
+
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onMealEntered);
 				
-				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null ||!BackgroundFetch.appIsInForeground())
+				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null ||!SpikeANE.appIsInForeground())
 					return;
 				
 				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
@@ -902,9 +904,10 @@ package treatments
 			
 			function onBGCheckEntered (e:Event):void
 			{
+
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onBGCheckEntered);
 				
-				if (glucoseTextInput == null || glucoseTextInput.text == null || !BackgroundFetch.appIsInForeground())
+				if (glucoseTextInput == null || glucoseTextInput.text == null || !SpikeANE.appIsInForeground())
 					return;
 				
 				glucoseTextInput.text = glucoseTextInput.text.replace(" ", "");
@@ -981,7 +984,7 @@ package treatments
 			{
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onNoteEntered);
 				
-				if (notes == null || notes.text == null || !BackgroundFetch.appIsInForeground())
+				if (notes == null || notes.text == null || !SpikeANE.appIsInForeground())
 					return;
 				
 				if (notes.text == "")

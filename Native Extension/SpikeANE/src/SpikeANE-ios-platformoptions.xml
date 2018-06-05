@@ -1,0 +1,6 @@
+<platform xmlns="http://ns.adobe.com/air/extension/4.0">
+	<sdkVersion>11.2</sdkVersion>
+	<linkerOptions>
+		<option>-framework HealthKit</option>
+	</linkerOptions>
+</platform>

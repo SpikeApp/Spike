@@ -1,6 +1,6 @@
 package ui.chart
 {	
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
@@ -395,7 +395,7 @@ package ui.chart
 				}
 				
 				//Vibrate Device
-				BackgroundFetch.vibrate();
+				SpikeANE.vibrate();
 			}
 		}
 		

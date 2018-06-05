@@ -1,0 +1,486 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F849A81720BDDCF000853F50 /* FQBleManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A80E20BDDCEF00853F50 /* FQBleManager.m */; };
+		F849A81820BDDCF000853F50 /* FQAESUitil.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A80F20BDDCEF00853F50 /* FQAESUitil.m */; };
+		F849A81920BDDCF000853F50 /* FQApiObject.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A81320BDDCEF00853F50 /* FQApiObject.m */; };
+		F849A81A20BDDCF000853F50 /* FQApi.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A81520BDDCF000853F50 /* FQApi.m */; };
+		F849A81B20BDDCF000853F50 /* FQToolsUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A81620BDDCF000853F50 /* FQToolsUtil.m */; };
+		F849A81E20BDDEAA00853F50 /* Context.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A81D20BDDEAA00853F50 /* Context.m */; };
+		F849A82120BF492600853F50 /* HealthKitStore.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A82020BF492600853F50 /* HealthKitStore.m */; };
+		F849A82720BF4F3B00853F50 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F849A82620BF4F3B00853F50 /* MediaPlayer.framework */; };
+		F849A82920BF4F8D00853F50 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F849A82820BF4F8D00853F50 /* AVFoundation.framework */; };
+		F849A82B20BF503700853F50 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F849A82A20BF503700853F50 /* Foundation.framework */; };
+		F849A82D20BF53B800853F50 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F849A82C20BF53B800853F50 /* UIKit.framework */; };
+		F849A82F20BF544C00853F50 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F849A82E20BF544B00853F50 /* AudioToolbox.framework */; };
+		F849A83120BF548400853F50 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F849A83020BF548400853F50 /* HealthKit.framework */; };
+		F849A83320BF548E00853F50 /* HealthKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F849A83220BF548E00853F50 /* HealthKitUI.framework */; };
+		F849A83820C0745700853F50 /* MuteChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A83420C0745600853F50 /* MuteChecker.m */; };
+		F849A83920C0745700853F50 /* Vibrate.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A83520C0745600853F50 /* Vibrate.m */; };
+		F849A83E20C0888400853F50 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F849A83D20C0888400853F50 /* CoreBluetooth.framework */; };
+		F849A85F20C08A5E00853F50 /* FQBleManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A84320C08A5E00853F50 /* FQBleManager.m */; };
+		F849A86120C08A5E00853F50 /* FQApiObject.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A84C20C08A5E00853F50 /* FQApiObject.m */; };
+		F849A86220C08A5E00853F50 /* FQApi.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85120C08A5E00853F50 /* FQApi.m */; };
+		F849A86320C08A5E00853F50 /* HealthKitStore.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85420C08A5E00853F50 /* HealthKitStore.m */; };
+		F849A86420C08A5E00853F50 /* FPANEUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85620C08A5E00853F50 /* FPANEUtils.m */; };
+		F849A86520C08A5E00853F50 /* FQAESUitil.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85720C08A5E00853F50 /* FQAESUitil.m */; };
+		F849A86620C08A5E00853F50 /* FQToolsUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85820C08A5E00853F50 /* FQToolsUtil.m */; };
+		F849A86720C08A5E00853F50 /* NativeExtensioniOS.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85920C08A5E00853F50 /* NativeExtensioniOS.m */; };
+		F849A86820C08A5E00853F50 /* Context.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85A20C08A5E00853F50 /* Context.m */; };
+		F849A86920C08A5E00853F50 /* MuteChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85B20C08A5E00853F50 /* MuteChecker.m */; };
+		F849A86A20C08A5E00853F50 /* PlaySound.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85D20C08A5E00853F50 /* PlaySound.m */; };
+		F849A86B20C08A5E00853F50 /* Vibrate.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A85E20C08A5E00853F50 /* Vibrate.m */; };
+		F849A87020C09BE800853F50 /* Trace.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A86F20C09BE800853F50 /* Trace.m */; };
+		F86D5C4420B7275A009F0BD6 /* NativeExtensioniOS.m in Sources */ = {isa = PBXBuildFile; fileRef = F86D5C4320B7275A009F0BD6 /* NativeExtensioniOS.m */; };
+		F86D5C4F20BB2130009F0BD6 /* FPANEUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = F86D5C4E20BB2130009F0BD6 /* FPANEUtils.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F86D5C3D20B7275A009F0BD6 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		F849A80C20BDDCDE00853F50 /* FQToolsUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQToolsUtil.h; sourceTree = "<group>"; };
+		F849A80D20BDDCEF00853F50 /* FQApiObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQApiObject.h; sourceTree = "<group>"; };
+		F849A80E20BDDCEF00853F50 /* FQBleManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQBleManager.m; sourceTree = "<group>"; };
+		F849A80F20BDDCEF00853F50 /* FQAESUitil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQAESUitil.m; sourceTree = "<group>"; };
+		F849A81020BDDCEF00853F50 /* FQBleManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQBleManager.h; sourceTree = "<group>"; };
+		F849A81120BDDCEF00853F50 /* FQApi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQApi.h; sourceTree = "<group>"; };
+		F849A81220BDDCEF00853F50 /* FQAESUitil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQAESUitil.h; sourceTree = "<group>"; };
+		F849A81320BDDCEF00853F50 /* FQApiObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQApiObject.m; sourceTree = "<group>"; };
+		F849A81420BDDCF000853F50 /* FQHeaderDefine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQHeaderDefine.h; sourceTree = "<group>"; };
+		F849A81520BDDCF000853F50 /* FQApi.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQApi.m; sourceTree = "<group>"; };
+		F849A81620BDDCF000853F50 /* FQToolsUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQToolsUtil.m; sourceTree = "<group>"; };
+		F849A81C20BDDEAA00853F50 /* Context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Context.h; sourceTree = "<group>"; };
+		F849A81D20BDDEAA00853F50 /* Context.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Context.m; sourceTree = "<group>"; };
+		F849A81F20BF492600853F50 /* HealthKitStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HealthKitStore.h; sourceTree = "<group>"; };
+		F849A82020BF492600853F50 /* HealthKitStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HealthKitStore.m; sourceTree = "<group>"; };
+		F849A82620BF4F3B00853F50 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		F849A82820BF4F8D00853F50 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		F849A82A20BF503700853F50 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		F849A82C20BF53B800853F50 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		F849A82E20BF544B00853F50 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		F849A83020BF548400853F50 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		F849A83220BF548E00853F50 /* HealthKitUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKitUI.framework; path = System/Library/Frameworks/HealthKitUI.framework; sourceTree = SDKROOT; };
+		F849A83420C0745600853F50 /* MuteChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MuteChecker.m; sourceTree = "<group>"; };
+		F849A83520C0745600853F50 /* Vibrate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Vibrate.m; sourceTree = "<group>"; };
+		F849A83620C0745600853F50 /* Vibrate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vibrate.h; sourceTree = "<group>"; };
+		F849A83720C0745700853F50 /* MuteChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MuteChecker.h; sourceTree = "<group>"; };
+		F849A83D20C0888400853F50 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		F849A84320C08A5E00853F50 /* FQBleManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQBleManager.m; sourceTree = "<group>"; };
+		F849A84420C08A5E00853F50 /* HealthKitStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HealthKitStore.h; sourceTree = "<group>"; };
+		F849A84620C08A5E00853F50 /* FQApi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQApi.h; sourceTree = "<group>"; };
+		F849A84720C08A5E00853F50 /* NativeExtensioniOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeExtensioniOS.h; sourceTree = "<group>"; };
+		F849A84820C08A5E00853F50 /* FQToolsUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQToolsUtil.h; sourceTree = "<group>"; };
+		F849A84920C08A5E00853F50 /* FQHeaderDefine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQHeaderDefine.h; sourceTree = "<group>"; };
+		F849A84A20C08A5E00853F50 /* FPANEUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FPANEUtils.h; sourceTree = "<group>"; };
+		F849A84B20C08A5E00853F50 /* FQAESUitil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQAESUitil.h; sourceTree = "<group>"; };
+		F849A84C20C08A5E00853F50 /* FQApiObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQApiObject.m; sourceTree = "<group>"; };
+		F849A84D20C08A5E00853F50 /* MuteChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MuteChecker.h; sourceTree = "<group>"; };
+		F849A84E20C08A5E00853F50 /* Context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Context.h; sourceTree = "<group>"; };
+		F849A84F20C08A5E00853F50 /* Vibrate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vibrate.h; sourceTree = "<group>"; };
+		F849A85020C08A5E00853F50 /* PlaySound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlaySound.h; sourceTree = "<group>"; };
+		F849A85120C08A5E00853F50 /* FQApi.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQApi.m; sourceTree = "<group>"; };
+		F849A85220C08A5E00853F50 /* FlashRuntimeExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlashRuntimeExtensions.h; sourceTree = "<group>"; };
+		F849A85420C08A5E00853F50 /* HealthKitStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HealthKitStore.m; sourceTree = "<group>"; };
+		F849A85520C08A5E00853F50 /* FQBleManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQBleManager.h; sourceTree = "<group>"; };
+		F849A85620C08A5E00853F50 /* FPANEUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FPANEUtils.m; sourceTree = "<group>"; };
+		F849A85720C08A5E00853F50 /* FQAESUitil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQAESUitil.m; sourceTree = "<group>"; };
+		F849A85820C08A5E00853F50 /* FQToolsUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FQToolsUtil.m; sourceTree = "<group>"; };
+		F849A85920C08A5E00853F50 /* NativeExtensioniOS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NativeExtensioniOS.m; sourceTree = "<group>"; };
+		F849A85A20C08A5E00853F50 /* Context.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Context.m; sourceTree = "<group>"; };
+		F849A85B20C08A5E00853F50 /* MuteChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MuteChecker.m; sourceTree = "<group>"; };
+		F849A85C20C08A5E00853F50 /* FQApiObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FQApiObject.h; sourceTree = "<group>"; };
+		F849A85D20C08A5E00853F50 /* PlaySound.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlaySound.m; sourceTree = "<group>"; };
+		F849A85E20C08A5E00853F50 /* Vibrate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Vibrate.m; sourceTree = "<group>"; };
+		F849A86F20C09BE800853F50 /* Trace.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Trace.m; sourceTree = "<group>"; };
+		F849A87120C09C3A00853F50 /* Trace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Trace.h; sourceTree = "<group>"; };
+		F86D5C3F20B7275A009F0BD6 /* libNativeExtensioniOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libNativeExtensioniOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		F86D5C4320B7275A009F0BD6 /* NativeExtensioniOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NativeExtensioniOS.m; sourceTree = "<group>"; };
+		F86D5C4B20B72911009F0BD6 /* FlashRuntimeExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlashRuntimeExtensions.h; sourceTree = "<group>"; };
+		F86D5C4C20B76825009F0BD6 /* NativeExtensioniOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NativeExtensioniOS.h; sourceTree = "<group>"; };
+		F86D5C4D20BB212F009F0BD6 /* FPANEUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FPANEUtils.h; sourceTree = "<group>"; };
+		F86D5C4E20BB2130009F0BD6 /* FPANEUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FPANEUtils.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F86D5C3C20B7275A009F0BD6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F849A83E20C0888400853F50 /* CoreBluetooth.framework in Frameworks */,
+				F849A83320BF548E00853F50 /* HealthKitUI.framework in Frameworks */,
+				F849A83120BF548400853F50 /* HealthKit.framework in Frameworks */,
+				F849A82720BF4F3B00853F50 /* MediaPlayer.framework in Frameworks */,
+				F849A82F20BF544C00853F50 /* AudioToolbox.framework in Frameworks */,
+				F849A82D20BF53B800853F50 /* UIKit.framework in Frameworks */,
+				F849A82B20BF503700853F50 /* Foundation.framework in Frameworks */,
+				F849A82920BF4F8D00853F50 /* AVFoundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F849A82520BF4F3A00853F50 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F849A83D20C0888400853F50 /* CoreBluetooth.framework */,
+				F849A83220BF548E00853F50 /* HealthKitUI.framework */,
+				F849A83020BF548400853F50 /* HealthKit.framework */,
+				F849A82E20BF544B00853F50 /* AudioToolbox.framework */,
+				F849A82C20BF53B800853F50 /* UIKit.framework */,
+				F849A82A20BF503700853F50 /* Foundation.framework */,
+				F849A82820BF4F8D00853F50 /* AVFoundation.framework */,
+				F849A82620BF4F3B00853F50 /* MediaPlayer.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F849A84220C08A5E00853F50 /* NativeExtensioniOS */ = {
+			isa = PBXGroup;
+			children = (
+				F849A84E20C08A5E00853F50 /* Context.h */,
+				F849A85A20C08A5E00853F50 /* Context.m */,
+				F849A85220C08A5E00853F50 /* FlashRuntimeExtensions.h */,
+				F849A84A20C08A5E00853F50 /* FPANEUtils.h */,
+				F849A85620C08A5E00853F50 /* FPANEUtils.m */,
+				F849A84B20C08A5E00853F50 /* FQAESUitil.h */,
+				F849A85720C08A5E00853F50 /* FQAESUitil.m */,
+				F849A84620C08A5E00853F50 /* FQApi.h */,
+				F849A85120C08A5E00853F50 /* FQApi.m */,
+				F849A85C20C08A5E00853F50 /* FQApiObject.h */,
+				F849A84C20C08A5E00853F50 /* FQApiObject.m */,
+				F849A85520C08A5E00853F50 /* FQBleManager.h */,
+				F849A84320C08A5E00853F50 /* FQBleManager.m */,
+				F849A84920C08A5E00853F50 /* FQHeaderDefine.h */,
+				F849A84820C08A5E00853F50 /* FQToolsUtil.h */,
+				F849A85820C08A5E00853F50 /* FQToolsUtil.m */,
+				F849A84420C08A5E00853F50 /* HealthKitStore.h */,
+				F849A85420C08A5E00853F50 /* HealthKitStore.m */,
+				F849A84D20C08A5E00853F50 /* MuteChecker.h */,
+				F849A85B20C08A5E00853F50 /* MuteChecker.m */,
+				F849A84720C08A5E00853F50 /* NativeExtensioniOS.h */,
+				F849A85920C08A5E00853F50 /* NativeExtensioniOS.m */,
+				F849A85020C08A5E00853F50 /* PlaySound.h */,
+				F849A85D20C08A5E00853F50 /* PlaySound.m */,
+				F849A84F20C08A5E00853F50 /* Vibrate.h */,
+				F849A85E20C08A5E00853F50 /* Vibrate.m */,
+				F849A86F20C09BE800853F50 /* Trace.m */,
+				F849A87120C09C3A00853F50 /* Trace.h */,
+			);
+			name = NativeExtensioniOS;
+			sourceTree = "<group>";
+		};
+		F86D5C3620B7275A009F0BD6 = {
+			isa = PBXGroup;
+			children = (
+				F86D5C4120B7275A009F0BD6 /* NativeExtensioniOS */,
+				F86D5C4020B7275A009F0BD6 /* Products */,
+				F849A82520BF4F3A00853F50 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		F86D5C4020B7275A009F0BD6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F86D5C3F20B7275A009F0BD6 /* libNativeExtensioniOS.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F86D5C4120B7275A009F0BD6 /* NativeExtensioniOS */ = {
+			isa = PBXGroup;
+			children = (
+				F849A84220C08A5E00853F50 /* NativeExtensioniOS */,
+				F849A81F20BF492600853F50 /* HealthKitStore.h */,
+				F849A82020BF492600853F50 /* HealthKitStore.m */,
+				F849A81C20BDDEAA00853F50 /* Context.h */,
+				F849A81D20BDDEAA00853F50 /* Context.m */,
+				F849A81220BDDCEF00853F50 /* FQAESUitil.h */,
+				F849A80F20BDDCEF00853F50 /* FQAESUitil.m */,
+				F849A81120BDDCEF00853F50 /* FQApi.h */,
+				F849A81520BDDCF000853F50 /* FQApi.m */,
+				F849A80D20BDDCEF00853F50 /* FQApiObject.h */,
+				F849A81320BDDCEF00853F50 /* FQApiObject.m */,
+				F849A81020BDDCEF00853F50 /* FQBleManager.h */,
+				F849A80E20BDDCEF00853F50 /* FQBleManager.m */,
+				F849A81420BDDCF000853F50 /* FQHeaderDefine.h */,
+				F849A80C20BDDCDE00853F50 /* FQToolsUtil.h */,
+				F849A81620BDDCF000853F50 /* FQToolsUtil.m */,
+				F86D5C4D20BB212F009F0BD6 /* FPANEUtils.h */,
+				F86D5C4E20BB2130009F0BD6 /* FPANEUtils.m */,
+				F86D5C4B20B72911009F0BD6 /* FlashRuntimeExtensions.h */,
+				F849A83720C0745700853F50 /* MuteChecker.h */,
+				F849A83420C0745600853F50 /* MuteChecker.m */,
+				F849A83620C0745600853F50 /* Vibrate.h */,
+				F849A83520C0745600853F50 /* Vibrate.m */,
+				F86D5C4C20B76825009F0BD6 /* NativeExtensioniOS.h */,
+				F86D5C4320B7275A009F0BD6 /* NativeExtensioniOS.m */,
+			);
+			path = NativeExtensioniOS;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F86D5C3E20B7275A009F0BD6 /* NativeExtensioniOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F86D5C4820B7275A009F0BD6 /* Build configuration list for PBXNativeTarget "NativeExtensioniOS" */;
+			buildPhases = (
+				F86D5C3B20B7275A009F0BD6 /* Sources */,
+				F86D5C3C20B7275A009F0BD6 /* Frameworks */,
+				F86D5C3D20B7275A009F0BD6 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NativeExtensioniOS;
+			productName = NativeExtensioniOS;
+			productReference = F86D5C3F20B7275A009F0BD6 /* libNativeExtensioniOS.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F86D5C3720B7275A009F0BD6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0940;
+				ORGANIZATIONNAME = "Johan Degraeve";
+				TargetAttributes = {
+					F86D5C3E20B7275A009F0BD6 = {
+						CreatedOnToolsVersion = 9.4;
+					};
+				};
+			};
+			buildConfigurationList = F86D5C3A20B7275A009F0BD6 /* Build configuration list for PBXProject "NativeExtensioniOS" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = F86D5C3620B7275A009F0BD6;
+			productRefGroup = F86D5C4020B7275A009F0BD6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F86D5C3E20B7275A009F0BD6 /* NativeExtensioniOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F86D5C3B20B7275A009F0BD6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F849A86520C08A5E00853F50 /* FQAESUitil.m in Sources */,
+				F849A86920C08A5E00853F50 /* MuteChecker.m in Sources */,
+				F849A86720C08A5E00853F50 /* NativeExtensioniOS.m in Sources */,
+				F86D5C4F20BB2130009F0BD6 /* FPANEUtils.m in Sources */,
+				F849A81E20BDDEAA00853F50 /* Context.m in Sources */,
+				F86D5C4420B7275A009F0BD6 /* NativeExtensioniOS.m in Sources */,
+				F849A86220C08A5E00853F50 /* FQApi.m in Sources */,
+				F849A86120C08A5E00853F50 /* FQApiObject.m in Sources */,
+				F849A86320C08A5E00853F50 /* HealthKitStore.m in Sources */,
+				F849A87020C09BE800853F50 /* Trace.m in Sources */,
+				F849A86420C08A5E00853F50 /* FPANEUtils.m in Sources */,
+				F849A86B20C08A5E00853F50 /* Vibrate.m in Sources */,
+				F849A83820C0745700853F50 /* MuteChecker.m in Sources */,
+				F849A83920C0745700853F50 /* Vibrate.m in Sources */,
+				F849A81820BDDCF000853F50 /* FQAESUitil.m in Sources */,
+				F849A82120BF492600853F50 /* HealthKitStore.m in Sources */,
+				F849A86A20C08A5E00853F50 /* PlaySound.m in Sources */,
+				F849A86620C08A5E00853F50 /* FQToolsUtil.m in Sources */,
+				F849A81A20BDDCF000853F50 /* FQApi.m in Sources */,
+				F849A86820C08A5E00853F50 /* Context.m in Sources */,
+				F849A81B20BDDCF000853F50 /* FQToolsUtil.m in Sources */,
+				F849A85F20C08A5E00853F50 /* FQBleManager.m in Sources */,
+				F849A81920BDDCF000853F50 /* FQApiObject.m in Sources */,
+				F849A81720BDDCF000853F50 /* FQBleManager.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F86D5C4620B7275A009F0BD6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = "arm64 armv7";
+			};
+			name = Debug;
+		};
+		F86D5C4720B7275A009F0BD6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "arm64 armv7";
+			};
+			name = Release;
+		};
+		F86D5C4920B7275A009F0BD6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 8DKSZ5HNLB;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F86D5C4A20B7275A009F0BD6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 8DKSZ5HNLB;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F86D5C3A20B7275A009F0BD6 /* Build configuration list for PBXProject "NativeExtensioniOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F86D5C4620B7275A009F0BD6 /* Debug */,
+				F86D5C4720B7275A009F0BD6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F86D5C4820B7275A009F0BD6 /* Build configuration list for PBXNativeTarget "NativeExtensioniOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F86D5C4920B7275A009F0BD6 /* Debug */,
+				F86D5C4A20B7275A009F0BD6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F86D5C3720B7275A009F0BD6 /* Project object */;
+}

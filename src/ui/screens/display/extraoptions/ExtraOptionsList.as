@@ -1,6 +1,7 @@
 package ui.screens.display.extraoptions
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
@@ -384,7 +385,7 @@ package ui.screens.display.extraoptions
 					buildListLayout();
 					
 					//Vibrate Device
-					BackgroundFetch.vibrate();
+					SpikeANE.vibrate();
 					
 					//Activate the close timer
 					if (timeoutTimer.running)
@@ -434,7 +435,7 @@ package ui.screens.display.extraoptions
 				else if ( itemAction == "readingOnDemand" ) 
 				{	
 					if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
-						BackgroundFetch.sendStartReadingCommmandToMiaoMia();
+						SpikeANE.sendStartReadingCommmandToMiaoMia();
 					
 					dispatchEventWith(CLOSE); //Close Menu
 				}
@@ -487,7 +488,7 @@ package ui.screens.display.extraoptions
 				timeoutTimer = null;
 			}
 			
-			if (!BackgroundFetch.appIsInForeground() || !Constants.appInForeground || !SystemUtil.isApplicationActive)
+			if (!SpikeANE.appIsInForeground() || !Constants.appInForeground || !SystemUtil.isApplicationActive)
 			{
 				return;
 			}

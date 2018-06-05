@@ -1,20 +1,3 @@
-/**
- Copyright (C) 2016  Johan Degraeve
- 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
- 
- */
 package services
 {
 	import com.distriqt.extension.bluetoothle.AuthorisationStatus;
@@ -28,8 +11,10 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -324,9 +309,9 @@ package services
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
 			
 			if (BlueToothDevice.isMiaoMiao()) {
-				BackgroundFetch.startScanDeviceMiaoMiao();
+				SpikeANE.startScanDeviceMiaoMiao();
 				if (BlueToothDevice.known()) {
-					BackgroundFetch.setMiaoMiaoMac(BlueToothDevice.address);
+					SpikeANE.setMiaoMiaoMac(BlueToothDevice.address);
 				}
 			}
 			
@@ -433,10 +418,10 @@ package services
 				BlueToothDevice.forgetBlueToothDevice();
 				
 				if (BlueToothDevice.isMiaoMiao()) {
-					BackgroundFetch.startScanDeviceMiaoMiao();
+					SpikeANE.startScanDeviceMiaoMiao();
 					addMiaoMiaoEventListeners();
 				} else {
-					BackgroundFetch.stopScanDeviceMiaoMiao();
+					SpikeANE.stopScanDeviceMiaoMiao();
 					addBluetoothLEEventListeners();
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
@@ -498,7 +483,7 @@ package services
 			} else if (BlueToothDevice.isMiaoMiao()) {
 				if (BlueToothDevice.known()) {
 					myTrace("in bluetoothStatusIsOn, isMiaoMiao");
-					BackgroundFetch.setMiaoMiaoMac(BlueToothDevice.address);
+					SpikeANE.setMiaoMiaoMac(BlueToothDevice.address);
 					startScanning();
 				}
 				myTrace("in bluetoothStatusIsOn, device is miaomiao - DO WE NEED TO DEVELOP ANYTHING HERE ?.");
@@ -518,7 +503,7 @@ package services
 			
 			if (BlueToothDevice.isMiaoMiao()) {
 				myTrace("in startScanning, is miaomiao");
-				BackgroundFetch.startScanningForMiaoMiao();
+				SpikeANE.startScanningForMiaoMiao();
 				return;
 			}
 
@@ -555,7 +540,7 @@ package services
 			//Not sure here which one is scanning
 			
 			//stop scanning the miaomiao
-			BackgroundFetch.stopScanningMiaoMiao();
+			SpikeANE.stopScanningMiaoMiao();
 			
 			//stop scanning the ANE
 			if (BluetoothLE.service.centralManager.isScanning) {
@@ -784,13 +769,13 @@ package services
 					if ((new Date()).valueOf() - timeStampOfLastInfoAboutOtherApp > 1 * 3600 * 1000) {//not repeating the warning every 5 minutes, only once per hour
 						myTrace('in central_peripheralDisconnectHandler, giving warning to the user');
 						timeStampOfLastInfoAboutOtherApp = (new Date()).valueOf();
-						if (BackgroundFetch.appIsInForeground()) {
+						if (SpikeANE.appIsInForeground()) {
 							AlertManager.showSimpleAlert
 								(
 									ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
 									ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info")
 								);
-							BackgroundFetch.vibrate();
+							SpikeANE.vibrate();
 						} else {
 							var notificationBuilderG5OtherAppRunningInfo:NotificationBuilder = new NotificationBuilder()
 								.setCount(BadgeBuilder.getAppBadge())
@@ -1101,9 +1086,9 @@ package services
 		public static function forgetActiveBluetoothPeripheral(address:String = ""):void {
 			if (BlueToothDevice.isMiaoMiao()) {
 				myTrace("in forgetActiveBluetoothPeripheral  miaomiao device");
-				BackgroundFetch.cancelMiaoMiaoConnection(address);
-				BackgroundFetch.resetMiaoMiaoMac();
-				BackgroundFetch.forgetMiaoMiaoPeripheral();
+				SpikeANE.cancelMiaoMiaoConnection(address);
+				SpikeANE.resetMiaoMiaoMac();
+				SpikeANE.forgetMiaoMiaoPeripheral();
 			} else {
 				myTrace("in forgetActiveBluetoothPeripheral");
 				writeCharacteristic = null;
@@ -1233,14 +1218,14 @@ package services
 						if (buffer.length !== 4) {
 							myTrace(" in processG5TransmitterData, received G5 Reset message, but length != 4, ignoring");
 						} else {
-							if (BackgroundFetch.appIsInForeground()) 
+							if (SpikeANE.appIsInForeground()) 
 							{
 								AlertManager.showSimpleAlert
 									(
 										ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"),
 										ModelLocator.resourceManagerInstance.getString("bluetoothservice","g5_reset_done")
 									);
-								BackgroundFetch.vibrate();
+								SpikeANE.vibrate();
 							} else {
 								var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 									.setId(NotificationService.ID_FOR_G5_RESET_DONE)
@@ -1319,7 +1304,7 @@ package services
 			var doubleData:ByteArray = new ByteArray();
 			doubleData.writeBytes(data);
 			doubleData.writeBytes(data);
-			var aesBytes:ByteArray = BackgroundFetch.AESEncryptWithKey(key, doubleData);
+			var aesBytes:ByteArray = SpikeANE.AESEncryptWithKey(key, doubleData);
 			var returnValue:ByteArray = new ByteArray();
 			returnValue.writeBytes(aesBytes, 0, 8);
 			return returnValue;
@@ -1744,7 +1729,7 @@ package services
 				if (bufferAsStringSplitted[0] == "000999") {
 					if (bufferAsStringSplitted[1] == "0001") {
 						myTrace("in processTRANSMITER_PLTransmitterData, error code 0001, to low voltage for nfc reading");
-						if (BackgroundFetch.appIsInForeground()) {
+						if (SpikeANE.appIsInForeground()) {
 							AlertManager.showSimpleAlert
 							(
 								"Error",
@@ -1754,7 +1739,7 @@ package services
 						} 					
 					} else if (bufferAsStringSplitted[1] == "0002") {
 						myTrace("in processTRANSMITER_PLTransmitterData, error code 0002, please check position of device. Is it fixed on sensor ? ");
-						if (BackgroundFetch.appIsInForeground()) {
+						if (SpikeANE.appIsInForeground()) {
 							AlertManager.showSimpleAlert
 								(
 									"Error",
@@ -1764,7 +1749,7 @@ package services
 						} 					
 					} else {
 						myTrace("in processTRANSMITER_PLTransmitterData, Error code = " + bufferAsStringSplitted[1] + ", call the service man");
-						if (BackgroundFetch.appIsInForeground()) {
+						if (SpikeANE.appIsInForeground()) {
 							AlertManager.showSimpleAlert
 								(
 									"Error",
@@ -1798,14 +1783,14 @@ package services
 							(new Number(new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES))) + 1).toString());
 						if (new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES)) >= 5) {
 							myTrace("in processTRANSMITER_PLTransmitterData, LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES = " + LocalSettings.LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES);
-							if (BackgroundFetch.appIsInForeground()) 
+							if (SpikeANE.appIsInForeground()) 
 							{
 								AlertManager.showSimpleAlert
 								(
 									ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
 									ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor")
 								);
-								BackgroundFetch.vibrate();
+								SpikeANE.vibrate();
 							} else {
 								var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 										.setId(NotificationService.ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL)
@@ -1976,7 +1961,7 @@ package services
 		}
 		
 		public static function warnOldWxlCodeUsed(packetType:int):void {
-			if (BackgroundFetch.appIsInBackground()) {
+			if (SpikeANE.appIsInBackground()) {
 				return;
 			}
 			
@@ -2172,14 +2157,14 @@ package services
 		//while trying to find a stable solution for blukon, this is being added. It's supposed to increase the iOS scanning frequency
 		private static function startMonitoringAndRangingBeaconsInRegion(uuid:String):void {
 			if (!startedMonitoringAndRangingBeaconsInRegion) {
-				BackgroundFetch.startMonitoringAndRangingBeaconsInRegion(uuid);
+				SpikeANE.startMonitoringAndRangingBeaconsInRegion(uuid);
 				startedMonitoringAndRangingBeaconsInRegion = true;
 			}
 		}
 		
 		private static function stopMonitoringAndRangingBeaconsInRegion(uuid:String):void {
 			if (startedMonitoringAndRangingBeaconsInRegion) {
-				BackgroundFetch.stopMonitoringAndRangingBeaconsInRegion(uuid);
+				SpikeANE.stopMonitoringAndRangingBeaconsInRegion(uuid);
 				startedMonitoringAndRangingBeaconsInRegion = false;
 			}
 		}
@@ -2193,10 +2178,10 @@ package services
 		}
 		
 		private static function addMiaoMiaoEventListeners():void {
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorNotDetectedFromMiaoMiao);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorChangedFromMiaoMiao);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorNotDetectedFromMiaoMiao);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorChangedFromMiaoMiao);
 		}
 		
 		private static function receivedSensorChangedFromMiaoMiao(event:flash.events.Event):void {
@@ -2217,7 +2202,7 @@ package services
 			_amountOfConsecutiveSensorNotDetectedForMiaoMiao++;
 		}
 		
-		private static function receivedMiaoMiaoDeviceAddress(event:BackgroundFetchEvent):void {
+		private static function receivedMiaoMiaoDeviceAddress(event:SpikeANEEvent):void {
 			if (!BlueToothDevice.isMiaoMiao()) {
 				myTrace("in receivedMiaoMiaoDeviceAddress but not miaomiao device, not processing");
 			} else {
@@ -2226,7 +2211,7 @@ package services
 			}
 		}
 		
-		private static function receivedMiaoMiaoDataPacket(event:BackgroundFetchEvent):void {
+		private static function receivedMiaoMiaoDataPacket(event:SpikeANEEvent):void {
 			Notifications.service.cancel(NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO);
 			_amountOfConsecutiveSensorNotDetectedForMiaoMiao = 0;
 			if (!BlueToothDevice.isMiaoMiao()) {

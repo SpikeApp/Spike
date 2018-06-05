@@ -1,26 +1,6 @@
-/**
- Copyright (C) 2016  Johan Degraeve
- 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
- 
- Author: Miguel Kennedy
- 
- */
-
 package services
 {
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
@@ -153,7 +133,7 @@ package services
 			myTrace("Text to speak: " + text);
 			
 			//Start Text To Speech
-			BackgroundFetch.say(text, language);		
+			SpikeANE.say(text, language);		
 		}
 		
 		private static function speakReading():void
@@ -268,7 +248,7 @@ package services
 			//if phone is muted and mute is not overriden by alert, then there's no need to suppress the speak bgreading even if an alarm is ongoing
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true"
 				&&
-				!BackgroundFetch.isPlayingSound() 
+				!SpikeANE.isPlayingSound() 
 				&&
 				((!ModelLocator.phoneMuted) || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true"))
 			{	

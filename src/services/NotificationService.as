@@ -1,20 +1,3 @@
-/**
- Copyright (C) 2016  Johan Degraeve
- 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
- 
- */
 package services
 {
 	import com.distriqt.extension.core.Core;
@@ -26,7 +9,7 @@ package services
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.AuthorisationEvent;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
@@ -157,7 +140,7 @@ package services
 		private static function deviceNotPaired(event:Event):void {
 			var titleText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_notification_title");
 			var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_background");
-			if (BackgroundFetch.appIsInForeground())
+			if (SpikeANE.appIsInForeground())
 				bodyText = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_foreground");
 			Notifications.service.cancel(ID_FOR_DEVICE_NOT_PAIRED);
 			Notifications.service.notify(
@@ -406,7 +389,7 @@ package services
 			var lastBgReading:BgReading;
 			
 			//start with bgreading notification
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && SpikeANE.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
 				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 

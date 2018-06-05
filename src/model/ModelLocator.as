@@ -1,24 +1,8 @@
-/**
- Copyright (C) 2016  Johan Degraeve
- 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
- 
- */
 package model
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	
@@ -36,7 +20,6 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.AlarmService;
-	import services.BackGroundFetchService;
 	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
@@ -160,14 +143,13 @@ package model
 				DeepSleepService.init();
 				Database.getBlueToothDevice();
 				TransmitterService.init();
-				BackGroundFetchService.init();
+				SpikeANE.init();
 				BluetoothService.init();
 				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 				NotificationService.init();
 				CalibrationService.init();
 				NetworkInfo.init(DistriqtKey.distriqtKey);
-				BackgroundFetch.setAvAudioSessionCategory(true);
-				BackgroundFetch.isVersion2_1_1()//to make sure the correct ANE is used
+				SpikeANE.setAvAudioSessionCategory(true);
 				WidgetService.init();
 				WatchService.init();
 				AlarmService.init();
@@ -185,7 +167,7 @@ package model
 		
 		private static function updateApplicationVersion():void 
 		{
-			var currentAppVersion:String = BackgroundFetch.getAppVersion();
+			var currentAppVersion:String = SpikeANE.getAppVersion();
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) != currentAppVersion)
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, currentAppVersion); 
 		}

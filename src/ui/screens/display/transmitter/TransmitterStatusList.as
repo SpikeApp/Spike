@@ -4,8 +4,8 @@ package ui.screens.display.transmitter
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.BluetoothLEState;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
@@ -749,7 +749,7 @@ package ui.screens.display.transmitter
 			{
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped, false, 0, true);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded, false, 0, true);
-				BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
+				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
 				BluetoothService.startScanning(true);
 				
 				AlertManager.showSimpleAlert(
@@ -760,7 +760,7 @@ package ui.screens.display.transmitter
 				
 				Trace.myTrace("TransmitterStatusList.as", "in onTransmitterScan, initial scan for device, setting systemIdleMode = SystemIdleMode.KEEP_AWAKE");
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
-				BackgroundFetch.vibrate();
+				SpikeANE.vibrate();
 				
 				setupRefreshTimer();
 			} 

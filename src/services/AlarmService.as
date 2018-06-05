@@ -3,8 +3,8 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
+	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -273,8 +273,8 @@ package services
 			//not interested in NOTIFICATION_SELECTED_EVENT, because NOTIFICATION_SELECTED_EVENT is only received while the app is in the background and being braught to the
 			//foreground because the user selects a notification. But in that case, in function appInForeGround, the notificationReceived function will also be called.
 			
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.PHONE_MUTED, phoneMuted);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.PHONE_NOT_MUTED, phoneNotMuted);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
@@ -349,8 +349,8 @@ package services
 					var alertType:AlertType = Database.getAlertType(alertName);
 					if (alertType.enabled || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
 						//alert enabled or speak readings is on 
-						myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
-						BackgroundFetch.checkMuted();
+						myTrace("in checkMuted, calling SpikeANE.checkMuted");
+						SpikeANE.checkMuted();
 					}
 					lastCheckMuteTimeStamp = nowNumber;
 				}
@@ -359,10 +359,10 @@ package services
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			myTrace("in notificationReceived");
-			if (BackgroundFetch.appIsInBackground()) {
+			if (SpikeANE.appIsInBackground()) {
 				//app is in background, which means the notification was received because the user clicked the notification action, typically "snooze"
 				//  so stop the playing
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 			} else {
 				//notificationReceived was called by appInForeGround(), ie the user brings the app in the foreground and an alert is active
 				//or the app was already in the foreground and an notification was fired (ie firealert was called)
@@ -378,7 +378,7 @@ package services
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
 				myTrace("in notificationReceived, event != null, id = " + NotificationService.notificationIdToText(notificationEvent.id));
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
-					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(1);
 					}
 					
@@ -396,7 +396,7 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_HIGH_ALERT) {
-					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(3);
 					}
 					
@@ -414,7 +414,7 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_LOW_ALERT) {
-					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(2);
 					}
 					
@@ -432,7 +432,7 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _veryLowAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryLowAlertLatestSnoozeTimeInMs)) + ", _veryLowAlertSnoozePeriodInMinutes = " + _veryLowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_HIGH_ALERT) {
-					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(4);
 					}
 					
@@ -450,7 +450,7 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _veryHighAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryHighAlertLatestSnoozeTimeInMs)) + ", _veryHighAlertSnoozePeriodInMinutes = " + _veryHighAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_MISSED_READING_ALERT) {
-					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(5);
 					}
 					openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT),
@@ -461,7 +461,7 @@ package services
 						NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER,
 						setMissedReadingAlertSnooze);
 				} else if (notificationEvent.id == NotificationService.ID_FOR_PHONEMUTED_ALERT) {
-					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(7);
 					}
 					
@@ -479,7 +479,7 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _phoneMutedAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_phoneMutedAlertLatestSnoozeTimeInMs)) + ", _phoneMutedAlertSnoozePeriodInMinutes = " + _phoneMutedAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_BATTERY_ALERT) {
-					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(6);
 					}
 					
@@ -523,7 +523,7 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT) {
-					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(0);
 					}
 					
@@ -574,7 +574,7 @@ package services
 			}
 			
 			function calibrationRequestSnoozePicker_closedHandler(event:starling.events.Event): void {
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(0);
 				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -582,7 +582,7 @@ package services
 			}
 			
 			function batteryLevelSnoozePicker_closedHandler(event:starling.events.Event): void {
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(6);
 				_batteryLevelAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -590,7 +590,7 @@ package services
 			}
 			
 			function phoneMutedSnoozePicker_closedHandler(event:starling.events.Event): void {
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(7);
 				_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -598,7 +598,7 @@ package services
 			}
 			
 			function missedReadingSnoozePicker_closedHandler(event:starling.events.Event): void {
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(5);
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -608,7 +608,7 @@ package services
 			function lowSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(1);
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 				_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
@@ -616,7 +616,7 @@ package services
 			function highSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(3);
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 				_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
@@ -624,14 +624,14 @@ package services
 			function veryHighSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(4);
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 				_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 		}
 		
 		private static function snoozePickerChangedOrCanceledHandler(event:starling.events.Event): void {
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 		}
 		
 		public static function snoozeLowAlert(index:int):void {
@@ -640,7 +640,7 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
 			resetLowAlertPreSnooze();
 			disableRepeatAlert(1);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
 			_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -651,7 +651,7 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
 			resetVeryLowAlertPreSnooze();
 			disableRepeatAlert(2);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
 			_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -662,7 +662,7 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
 			resetHighAlertPreSnooze();
 			disableRepeatAlert(3);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
 			_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -673,7 +673,7 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
 			resetVeryHighAlertPreSnooze();
 			disableRepeatAlert(4);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
 			_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -684,7 +684,7 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 			resetMissedreadingAlertPreSnooze();
 			disableRepeatAlert(5);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
 			_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -695,7 +695,7 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 			resetPhoneMutedAlertPreSnooze();
 			disableRepeatAlert(7);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
 			_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -756,7 +756,7 @@ package services
 			}
 			
 			function canceledHandler(event:starling.events.Event):void {
-				BackgroundFetch.stopPlayingSound();
+				SpikeANE.stopPlayingSound();
 				if (presnoozeResetFunction != null) {
 					presnoozeResetFunction();
 				}
@@ -820,7 +820,7 @@ package services
 		private static function lowSnoozePicker_closedHandler(event:starling.events.Event): void {
 			myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(1);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 			_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -828,7 +828,7 @@ package services
 		private static function veryLowSnoozePicker_closedHandler(event:starling.events.Event): void {
 			myTrace("in veryLowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(2);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 			_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -836,7 +836,7 @@ package services
 		private static function highSnoozePicker_closedHandler(event:starling.events.Event): void {
 			myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(3);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 			_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -844,7 +844,7 @@ package services
 		private static function veryHighSnoozePicker_closedHandler(event:starling.events.Event): void {
 			myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(4);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 			_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -852,7 +852,7 @@ package services
 		private static function missedReadingSnoozePicker_closedHandler(event:starling.events.Event): void {
 			myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(5);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 			_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -861,7 +861,7 @@ package services
 			myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, phoneMutedSnoozePicker_closedHandler);
 			disableRepeatAlert(7);
-			BackgroundFetch.stopPlayingSound();
+			SpikeANE.stopPlayingSound();
 			_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 			_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 		}
@@ -913,7 +913,7 @@ package services
 			}
 		}
 		
-		private static function phoneMuted(event:BackgroundFetchEvent):void {
+		private static function phoneMuted(event:SpikeANEEvent):void {
 			myTrace("in phoneMuted");
 			ModelLocator.phoneMuted = true;
 			var now:Date = new Date(); 
@@ -962,14 +962,14 @@ package services
 			}
 		}
 		
-		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
+		private static function phoneNotMuted(event:SpikeANEEvent):void {
 			myTrace("in phoneNotMuted");
 			ModelLocator.phoneMuted = false;
 			
 			if ((new Date()).valueOf() - lastQueuedAlertSoundTimeStamp < 2 * 1000) {//it should normally be max 1 second
 				if (queuedAlertSound != "") {
 					myTrace("in phoneNotMuted, sound queued and fired alert time < 2 seconds ago");
-					BackgroundFetch.playSound(queuedAlertSound);
+					SpikeANE.playSound(queuedAlertSound);
 				}
 			}
 			queuedAlertSound = "";
@@ -1026,7 +1026,7 @@ package services
 			if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default") && !(StringUtil.trim(alertType.sound) == "")) {//check against default for backward compability. Default sound can't be played with playSound
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") 
 				{
-					BackgroundFetch.playSound("../assets/sounds/" + soundToSet);
+					SpikeANE.playSound("../assets/sounds/" + soundToSet);
 				}
 				else 
 				{
@@ -1050,7 +1050,7 @@ package services
 			Notifications.service.notify(notificationBuilder.build());
 			
 			if (enableVibration) {
-				BackgroundFetch.vibrate();
+				SpikeANE.vibrate();
 			}
 			
 			//set repeat arrays
@@ -1089,8 +1089,8 @@ package services
 			
 			//phone might be muted, but Modellocator.phonemuted may be false
 			//launch check now
-			//use backgroundfetch.checkmuted, bypasses all phone muted settings, user might have switched from non muted to muted just very recently
-			BackgroundFetch.checkMuted();
+			//use SpikeANE.checkmuted, bypasses all phone muted settings, user might have switched from non muted to muted just very recently
+			SpikeANE.checkMuted();
 		}
 		
 		public static function cancelInactiveAlert():void
@@ -1820,7 +1820,7 @@ package services
 						myTrace("in appInForeGround, found active alert with id " + repeatAlertsNotificationIds[cntr]);
 						//user brings the app from back to foreground within 30 seconds after firing the alert
 						//Stop playing sound, this will not be done by calling notificationReceived
-						BackgroundFetch.stopPlayingSound();
+						SpikeANE.stopPlayingSound();
 						
 						//simulating as if the app was opened by clicking a notification
 						var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
