@@ -1,3 +1,6 @@
+2.2.2
+ENHANCEMENT: Calibration and treatments input keyboard now comes included with decimal keys. (Miguel)
+
 2.1.1
 FEATURE: Insulin and carb absorption curves! When there's active IOB or COB the user can touch those pills to be presented with a graph showing the respective absorption curve and the exact position the user is on the curve. The user will also be able to see the exact time the insulin and/or carbs will be fully absorbed by the body. Available for both masters and followers. Not available for users that have the "Loop/OpenAPS User" option enabled in Settings -> Treatments. (Miguel)
 ENHANCEMENT: When it's time to fire a Calibration Request alarm, Spike will first verify if optimal conditions for calibration are present. If they're not, the user will instead receive a lock screen notification warning him/her and if no calibration is done in the meantime Spike will refire the "Request Calibration" alarm as soon as optimal conditions are met. This will ensure more precise calibrations. (Miguel)

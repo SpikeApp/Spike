@@ -64,7 +64,7 @@ package ui.screens.display
 			else if (isNumericExtended)
 			{
 				inputField.restrict = "0-9.,";
-				inputField.textEditorProperties.softKeyboardType = SoftKeyboardType.PUNCTUATION;
+				inputField.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
 				
 			}
 			

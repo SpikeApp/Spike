@@ -4,6 +4,7 @@ package treatments
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
+	import flash.text.SoftKeyboardType;
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
@@ -495,6 +496,7 @@ package treatments
 				//Insulin Amout
 				if (insulinTextInput != null) insulinTextInput.removeFromParent(true);
 				insulinTextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+				insulinTextInput.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
 				insulinTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 				insulinTextInput.maxChars = 5;
 				if (type == Treatment.TYPE_MEAL_BOLUS)
