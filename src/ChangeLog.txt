@@ -1,4 +1,5 @@
 2.1.2
+ENHANCEMENT: Upgraded Adobe Air framework to version 29. Many many thanks to Johan for making this possible. This took weeks of hard work and ensures that Spike can continue being submitted to TestFlight! It should also make Spike a bit more stable. (Johan)
 ENHANCEMENT: Calibration and treatments input keyboard now comes included with decimal keys. (Miguel)
 ENHANCEMENT: URL input fields now display an URL optimized keyboard. E-mail input fields now display an E-mail optimized keyboard. (Miguel)
 ENHANCEMENT: Better validation of treatments inserted from the Today Widget or watches. (Miguel)
