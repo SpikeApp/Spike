@@ -15,6 +15,8 @@ package ui.chart
 	
 	import model.ModelLocator;
 	
+	import ui.InterfaceController;
+	
 	import utils.TimeSpan;
 	
 	[ResourceBundle("chartscreen")]
@@ -433,7 +435,7 @@ package ui.chart
 			else if (BlueToothDevice.isBluKon())
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL) + "%";
-				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown') || !InterfaceController.peripheralConnected)
 					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
 				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL))
