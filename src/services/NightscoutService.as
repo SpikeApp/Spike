@@ -1397,7 +1397,7 @@ package services
 			//Validate response
 			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
 			{
-				if (NetworkConnector.nightscoutTreatmentsLastModifiedHeader != "" && TreatmentsManager.nightscoutTreatmentsLastModifiedHeader != "" && NetworkConnector.nightscoutTreatmentsLastModifiedHeader == TreatmentsManager.nightscoutTreatmentsLastModifiedHeader)
+				if (NetworkConnector.nightscoutTreatmentsLastModifiedHeader != "" && NetworkConnector.nightscoutTreatmentsLastModifiedHeader != "Invalid Date" && TreatmentsManager.nightscoutTreatmentsLastModifiedHeader != "" && TreatmentsManager.nightscoutTreatmentsLastModifiedHeader != "Invalid Date" && NetworkConnector.nightscoutTreatmentsLastModifiedHeader == TreatmentsManager.nightscoutTreatmentsLastModifiedHeader)
 				{
 					Trace.myTrace("NightscoutService.as", "No treatments where modified in Nightscout. No further processing.");
 				}

@@ -2,6 +2,7 @@
 ENHANCEMENT: Calibration and treatments input keyboard now comes included with decimal keys. (Miguel)
 ENHANCEMENT: URL input fields now display an URL optimized keyboard. E-mail input fields now display an E-mail optimized keyboard. (Miguel)
 ENHANCEMENT: Better validation of treatments inserted from the Today Widget or watches. (Miguel)
+ENHANCEMENT: Spike will ignore the "Last Modified" header when querying treatments for users running old versions of Nightscout that don't report the header correctly. This will make Spike use more battery so it's advisable that all users upgrade to the latest Nightscout version if they haven't already done so (v0.10.2). (Miguel)
 
 2.1.1
 FEATURE: Insulin and carb absorption curves! When there's active IOB or COB the user can touch those pills to be presented with a graph showing the respective absorption curve and the exact position the user is on the curve. The user will also be able to see the exact time the insulin and/or carbs will be fully absorbed by the body. Available for both masters and followers. Not available for users that have the "Loop/OpenAPS User" option enabled in Settings -> Treatments. (Miguel)
