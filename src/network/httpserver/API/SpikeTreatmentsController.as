@@ -51,7 +51,7 @@ package network.httpserver.API
 					
 					if (treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_BOLUS)
 					{
-						if (params.insulin != null)
+						if (params.insulin != null && Number(params.insulin) != 0)
 							treatmentInsulinAmount = Number(String(params.insulin).replace(",", "."));
 						else
 							response = "ERROR";
@@ -60,35 +60,34 @@ package network.httpserver.API
 					}
 					else if (treatmentType == Treatment.TYPE_MEAL_BOLUS)
 					{
-						if (params.insulin != null)
+						if (params.insulin != null && params.carbs != null && Number(params.carbs) == 0 && Number(params.insulin) == 0)
+							response = "ERROR";
+						else if (params.insulin == null || params.carbs == null)
+							response = "ERROR";
+						else
+						{
 							treatmentInsulinAmount = Number(String(params.insulin).replace(",", "."));
-						else
-							response = "ERROR";
-						
-						treatmentInsulinID = ProfileManager.getDefaultInsulinID();
-						
-						if (params.carbs != null)
+							treatmentInsulinID = ProfileManager.getDefaultInsulinID();
 							treatmentCarbs = Number(String(params.carbs).replace(",", "."));
-						else
-							response = "ERROR";
+						}
 					}
 					else if (treatmentType == Treatment.TYPE_CARBS_CORRECTION)
 					{
-						if (params.carbs != null)
+						if (params.carbs != null && Number(params.carbs) != 0)
 							treatmentCarbs = Number(String(params.carbs).replace(",", "."));
 						else
 							response = "ERROR";
 					}
 					else if (treatmentType == Treatment.TYPE_GLUCOSE_CHECK)
 					{
-						if (params.glucose != null)
+						if (params.glucose != null && Number(params.glucose) != 0)
 							treatmentGlucose = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Number(String(params.glucose).replace(",", ".")) : Math.round(BgReading.mmolToMgdl(Number(String(params.glucose).replace(",", "."))));
 						else
 							response = "ERROR";
 					}
 					else if (treatmentType == Treatment.TYPE_NOTE)
 					{
-						if (params.note != null)
+						if (params.note != null && String(params.note) != "")
 							treatmentNote = String(params.note);
 						else
 							response = "ERROR";
