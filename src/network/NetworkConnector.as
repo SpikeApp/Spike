@@ -8,6 +8,8 @@ package network
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
 	
+	import mx.utils.ObjectUtil;
+	
 	import utils.Trace;
 
 	public class NetworkConnector
@@ -220,10 +222,9 @@ package network
 					//It's a call to treatments
 					if (e.responseHeaders != null && e.responseHeaders.length > 0)
 					{
-						var numHeaders:int = e.responseHeaders.length;
-						for (var i:int = 0; i < numHeaders; i++) 
+						for(var i:int = e.responseHeaders.length - 1 ; i >= 0; i--)
 						{
-							if (e.responseHeaders[i].name != null && e.responseHeaders[i].value != null && e.responseHeaders[i].name == "Last-Modified")
+							if (e.responseHeaders[i].name != null && e.responseHeaders[i].value != null && e.responseHeaders[i].name == "Etag")
 							{
 								nightscoutTreatmentsLastModifiedHeader = e.responseHeaders[i].value;
 								break;
