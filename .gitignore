@@ -9,3 +9,5 @@
 *.xcuserstate
 .actionScriptProperties
 .project
+/Native Extension/SpikeANE/build scripts/local.properties
+/Native\ Extension/SpikeANE/build\ scripts/local.properties
