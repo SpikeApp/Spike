@@ -1323,7 +1323,9 @@ package services
 			//Define request parameters
 			var parameters:URLVariables = new URLVariables();
 			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
-			parameters["find[eventType][$in][0]"] = "Correction Bolus";
+			parameters["find[eventType][$nin][0]"] = "Temp Basal";
+			
+			/*parameters["find[eventType][$in][0]"] = "Correction Bolus";
 			parameters["find[eventType][$in][1]"] = "Bolus";
 			parameters["find[eventType][$in][2]"] = "Correction";
 			parameters["find[eventType][$in][3]"] = "Meal Bolus";
@@ -1341,7 +1343,7 @@ package services
 			parameters["find[eventType][$in][15]"] = "Bolus Wizard";
 			parameters["find[eventType][$in][16]"] = "<none>";
 			parameters["find[eventType][$in][17]"] = "Suspend Pump";
-			parameters["find[eventType][$in][18]"] = "Resume Pump";
+			parameters["find[eventType][$in][18]"] = "Resume Pump";*/
 			
 			//API Secret
 			var treatmentAPISecret:String = "";
