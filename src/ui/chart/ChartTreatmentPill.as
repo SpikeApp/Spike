@@ -19,7 +19,7 @@ package ui.chart
 		/* Constants */
 		public static const TYPE_IOB:String = "IOB";
 		public static const TYPE_COB:String = "COB";
-		private static const PADDING:int = 3;
+		private static const PADDING:int = 5;
 		private static const CORNER_RADIUS:int = 4;
 		private static const STROKE_THICKNESS:int = 1;
 		
@@ -82,8 +82,8 @@ package ui.chart
 			}
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
 			{
-				fontSize = 23;
-				pillHeight = 32;
+				fontSize = 18;
+				pillHeight = 30;
 			}
 			
 			var userFontMultiplier:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));

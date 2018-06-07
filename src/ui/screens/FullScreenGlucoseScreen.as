@@ -385,6 +385,8 @@ package ui.screens
 					timeAgoColor = oldColor;
 			}
 			
+			//latestGlucoseOutput = "222.4"
+			
 			if (Constants.isPortrait)
 				latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
 			else
@@ -483,6 +485,13 @@ package ui.screens
 				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 105;
 				
 			}
+			else if(Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 345;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 340;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 260;
+				
+			}
 			
 			if (isNaN(glucoseFontSize))
 				glucoseFontSize = 130;
@@ -492,6 +501,8 @@ package ui.screens
 			
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
 			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			
+			trace("ok3");
 		}
 		
 		/**

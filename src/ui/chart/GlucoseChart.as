@@ -386,6 +386,7 @@ package ui.chart
 			//Set properties #2
 			this._scrollerWidth = chartWidth;
 			this._scrollerHeight = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 ? 50 : 35;
+			if (DeviceInfo.isTablet()) this._scrollerHeight = 75;
 			if (!Constants.isPortrait && (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6))
 				this._scrollerHeight = 35;
 			this._graphHeight = chartHeight - chartTopPadding - _scrollerHeight - scrollerTopPadding - (timelineActive ? 10 : 0);
@@ -2574,7 +2575,7 @@ package ui.chart
 		{
 			/* Calculate Font Sizes */
 			deviceFontMultiplier = DeviceInfo.getFontMultipier();
-			glucoseDisplayFont = 44 * deviceFontMultiplier * userBGFontMultiplier;
+			glucoseDisplayFont = (!DeviceInfo.isTablet() ? 44 : 48) * deviceFontMultiplier * userBGFontMultiplier;
 			timeDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			retroDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
@@ -2624,13 +2625,15 @@ package ui.chart
 			glucoseSlopePill.y = glucoseTimeAgoPill.y + glucoseTimeAgoPill.height + 6;
 			addChild(glucoseSlopePill);
 			
+			const pillPadding:int = DeviceInfo.isTablet() ? 16 : 6;
+			
 			//IOB
 			if (treatmentsActive && displayTreatmentsOnChart)
 			{
 				if (displayIOBEnabled)
 				{
 					IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
-					IOBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+					IOBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
 					//IOBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
 					IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 					IOBPill.setValue("0.00U");
@@ -2646,7 +2649,7 @@ package ui.chart
 				if (displayCOBEnabled)
 				{
 					COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
-					COBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+					COBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
 					//COBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
 					COBPill.setValue("0.0g");
 					
@@ -2663,7 +2666,7 @@ package ui.chart
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_ON) == "true")
 			{
 				infoPill = new ChartTreatmentPill(" + ");
-				infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+				infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
 				infoPill.setValue("info");
 				infoPill.visible = false;
 				infoPill.addEventListener(TouchEvent.TOUCH, onDisplayMoreInfo);
