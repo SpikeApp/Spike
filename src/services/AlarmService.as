@@ -3,8 +3,8 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
-	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -265,6 +265,26 @@ package services
 			lastPhoneMutedAlertCheckTimeStamp = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
+			
+			//Get snooze times from database
+			_veryHighAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES));
+			_veryHighAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS));
+			_veryHighAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_PRESNOOZED) == "true";
+			_highAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES));
+			_highAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS));
+			_highAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_PRESNOOZED) == "true";
+			_lowAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES));
+			_lowAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS));
+			_lowAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_PRESNOOZED) == "true";
+			_veryLowAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES));
+			_veryLowAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS));
+			_veryLowAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_PRESNOOZED) == "true";
+			_missedReadingAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_SNOOZE_PERIOD_IN_MINUTES));
+			_missedReadingAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_LATEST_SNOOZE_TIME_IN_MS));
+			_missedReadingAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_PRESNOOZED) == "true";
+			_phoneMutedAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES));
+			_phoneMutedAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS));
+			_phoneMutedAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED) == "true";
 			
 			//listen to NOTIFICATION_EVENT. This even is received only if the app is in the foreground. The function notificationReceived will shows the snooze dialog
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
@@ -594,7 +614,9 @@ package services
 				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(7);
 				_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 			}
 			
 			function missedReadingSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -602,7 +624,9 @@ package services
 				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 				disableRepeatAlert(5);
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_missedReadingAlertSnoozePeriodInMinutes));
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_missedReadingAlertLatestSnoozeTimeInMs));
 			}
 			
 			function lowSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -610,7 +634,9 @@ package services
 				disableRepeatAlert(1);
 				SpikeANE.stopPlayingSound();
 				_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_lowAlertSnoozePeriodInMinutes));
 				_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_lowAlertLatestSnoozeTimeInMs));
 			}
 			
 			function highSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -618,7 +644,9 @@ package services
 				disableRepeatAlert(3);
 				SpikeANE.stopPlayingSound();
 				_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_highAlertSnoozePeriodInMinutes));
 				_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_highAlertLatestSnoozeTimeInMs));
 			}
 			
 			function veryHighSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -626,7 +654,9 @@ package services
 				disableRepeatAlert(4);
 				SpikeANE.stopPlayingSound();
 				_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryHighAlertSnoozePeriodInMinutes));
 				_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryHighAlertLatestSnoozeTimeInMs));
 			}
 		}
 		
@@ -637,67 +667,85 @@ package services
 		public static function snoozeLowAlert(index:int):void {
 			myTrace("in snoozeLowAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_lowAlertPreSnoozed = true;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_PRESNOOZED, String(_lowAlertPreSnoozed));
 			Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
 			resetLowAlertPreSnooze();
 			disableRepeatAlert(1);
 			SpikeANE.stopPlayingSound();
 			_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_lowAlertSnoozePeriodInMinutes));
 			_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_lowAlertLatestSnoozeTimeInMs));
 		}
 		
 		public static function snoozeVeyLowAlert(index:int):void {
 			myTrace("in snoozeVeyLowAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_veryLowAlertPreSnoozed = true;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_PRESNOOZED, String(_veryLowAlertPreSnoozed));
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
 			resetVeryLowAlertPreSnooze();
 			disableRepeatAlert(2);
 			SpikeANE.stopPlayingSound();
 			_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryLowAlertSnoozePeriodInMinutes));
 			_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryLowAlertLatestSnoozeTimeInMs));
 		}
 		
 		public static function snoozeHighAlert(index:int):void {
 			myTrace("in snoozeHighAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_highAlertPreSnoozed = true;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_PRESNOOZED, String(_highAlertPreSnoozed));
 			Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
 			resetHighAlertPreSnooze();
 			disableRepeatAlert(3);
 			SpikeANE.stopPlayingSound();
 			_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_highAlertSnoozePeriodInMinutes));
 			_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_highAlertLatestSnoozeTimeInMs));
 		}
 		
 		public static function snoozeVeryHighAlert(index:int):void {
 			myTrace("in snoozeVeryHighAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_veryHighAlertPreSnoozed = true;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_PRESNOOZED, String(_veryHighAlertPreSnoozed));
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
 			resetVeryHighAlertPreSnooze();
 			disableRepeatAlert(4);
 			SpikeANE.stopPlayingSound();
 			_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryHighAlertSnoozePeriodInMinutes));
 			_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryHighAlertLatestSnoozeTimeInMs));
 		}
 		
 		public static function snoozeMissedReadingAlert(index:int):void {
 			myTrace("in snoozeMissedReadingAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_missedReadingAlertPreSnoozed = true;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_PRESNOOZED, String(_missedReadingAlertPreSnoozed));
 			Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 			resetMissedreadingAlertPreSnooze();
 			disableRepeatAlert(5);
 			SpikeANE.stopPlayingSound();
 			_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_missedReadingAlertSnoozePeriodInMinutes));
 			_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_missedReadingAlertLatestSnoozeTimeInMs));
 		}
 		
 		public static function snoozePhoneMutedAlert(index:int):void {
 			myTrace("in snoozePhoneMutedAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
 			_phoneMutedAlertPreSnoozed = true;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED, String(_phoneMutedAlertPreSnoozed));
 			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 			resetPhoneMutedAlertPreSnooze();
 			disableRepeatAlert(7);
 			SpikeANE.stopPlayingSound();
 			_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 			_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 		}
 		
 		private static function openSnoozePickerDialog(alertSetting:String, notificationId:int, notificationEvent:NotificationEvent, 
@@ -765,8 +813,10 @@ package services
 		
 		private static function setLowAlertSnooze(periodInMinutes:int):void {
 			_lowAlertSnoozePeriodInMinutes = periodInMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_lowAlertSnoozePeriodInMinutes));
 			myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + " minutes");
 			_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_lowAlertLatestSnoozeTimeInMs));
 			
 			//Notify Services (ex: IFTTT)
 			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.LOW_GLUCOSE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert"),time: _lowAlertSnoozePeriodInMinutes}));
@@ -774,8 +824,10 @@ package services
 		
 		private static function setVeryLowAlertSnooze(periodInMinutes:int):void {
 			_veryLowAlertSnoozePeriodInMinutes = periodInMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryLowAlertSnoozePeriodInMinutes));
 			myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, snoozing the notification for " + _veryLowAlertSnoozePeriodInMinutes + " minutes");
 			_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryLowAlertLatestSnoozeTimeInMs));
 			
 			//Notify Services (ex: IFTTT)
 			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_LOW_GLUCOSE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert"), time: _veryLowAlertSnoozePeriodInMinutes}));
@@ -783,8 +835,10 @@ package services
 		
 		private static function setHighAlertSnooze(periodInMinutes:int):void {
 			_highAlertSnoozePeriodInMinutes = periodInMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_highAlertSnoozePeriodInMinutes));
 			myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
 			_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_highAlertLatestSnoozeTimeInMs));
 			
 			//Notify Services (ex: IFTTT)
 			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert"),time: _highAlertSnoozePeriodInMinutes}));
@@ -792,8 +846,10 @@ package services
 		
 		private static function setVeryHighAlertSnooze(periodInMinutes:int):void {
 			_veryHighAlertSnoozePeriodInMinutes = periodInMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryHighAlertSnoozePeriodInMinutes));
 			myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, snoozing the notification for " + _veryHighAlertSnoozePeriodInMinutes + " minutes");
 			_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryHighAlertLatestSnoozeTimeInMs));
 			
 			//Notify Services (ex: IFTTT)
 			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert"),time: _veryHighAlertSnoozePeriodInMinutes}));
@@ -801,8 +857,10 @@ package services
 		
 		private static function setMissedReadingAlertSnooze(periodInMinutes:int):void {
 			_missedReadingAlertSnoozePeriodInMinutes = periodInMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_missedReadingAlertSnoozePeriodInMinutes));
 			myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes + " minutes");
 			_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_missedReadingAlertLatestSnoozeTimeInMs));
 			
 			//Notify Services (ex: IFTTT)
 			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.MISSED_READINGS_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert"),time: _missedReadingAlertSnoozePeriodInMinutes}));
@@ -810,8 +868,10 @@ package services
 		
 		private static function setPhoneMutedAlertSnooze(periodInMinutes:int):void {
 			_phoneMutedAlertSnoozePeriodInMinutes = periodInMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 			myTrace("in notificationReceived with id = ID_FOR_PHONE_MUTED_ALERT, snoozing the notification for " + _phoneMutedAlertSnoozePeriodInMinutes + " minutes");
 			_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 			
 			//Notify Services (ex: IFTTT)
 			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.PHONE_MUTED_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert"),time: _phoneMutedAlertSnoozePeriodInMinutes}));
@@ -822,7 +882,9 @@ package services
 			disableRepeatAlert(1);
 			SpikeANE.stopPlayingSound();
 			_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_lowAlertSnoozePeriodInMinutes));
 			_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_lowAlertLatestSnoozeTimeInMs));
 		}
 		
 		private static function veryLowSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -830,7 +892,9 @@ package services
 			disableRepeatAlert(2);
 			SpikeANE.stopPlayingSound();
 			_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryLowAlertSnoozePeriodInMinutes));
 			_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryLowAlertLatestSnoozeTimeInMs));
 		}
 		
 		private static function highSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -838,7 +902,9 @@ package services
 			disableRepeatAlert(3);
 			SpikeANE.stopPlayingSound();
 			_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_highAlertSnoozePeriodInMinutes));
 			_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_highAlertLatestSnoozeTimeInMs));
 		}
 		
 		private static function veryHighSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -846,7 +912,9 @@ package services
 			disableRepeatAlert(4);
 			SpikeANE.stopPlayingSound();
 			_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryHighAlertSnoozePeriodInMinutes));
 			_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryHighAlertLatestSnoozeTimeInMs));
 		}
 		
 		private static function missedReadingSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -854,7 +922,9 @@ package services
 			disableRepeatAlert(5);
 			SpikeANE.stopPlayingSound();
 			_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_missedReadingAlertSnoozePeriodInMinutes));
 			_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_missedReadingAlertLatestSnoozeTimeInMs));
 		}
 		
 		private static function phoneMutedSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -863,7 +933,9 @@ package services
 			disableRepeatAlert(7);
 			SpikeANE.stopPlayingSound();
 			_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 			_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 		}
 		
 		private static function checkAlarms(be:flash.events.Event):void {
@@ -941,7 +1013,9 @@ package services
 							NotificationService.ID_FOR_PHONE_MUTED_CATEGORY
 						); 
 						_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 						_phoneMutedAlertSnoozePeriodInMinutes = 0;
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 					} else {
 						//snoozed no need to do anything
 						myTrace("in phoneMuted, alarm snoozed, _phoneMutedAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_phoneMutedAlertLatestSnoozeTimeInMs)) + ", _phoneMutedAlertSnoozePeriodInMinutes = " + _phoneMutedAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
@@ -953,7 +1027,9 @@ package services
 						myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
 						Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 						_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 						_phoneMutedAlertSnoozePeriodInMinutes = 0;
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 					}
 				}
 				
@@ -979,7 +1055,9 @@ package services
 				myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 				_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 				_phoneMutedAlertSnoozePeriodInMinutes = 0;
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 				disableRepeatAlert(7);
 			}
 		}
@@ -1197,7 +1275,9 @@ package services
 							alertBody
 						); 
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_missedReadingAlertLatestSnoozeTimeInMs));
 						_missedReadingAlertSnoozePeriodInMinutes = 0;
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_missedReadingAlertSnoozePeriodInMinutes));
 					} else {
 						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
@@ -1401,7 +1481,9 @@ package services
 							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _highAlertLatestSnoozeTimeInMs = Number.NaN;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_highAlertLatestSnoozeTimeInMs));
 						 _highAlertSnoozePeriodInMinutes = 0;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_highAlertSnoozePeriodInMinutes));
 						 returnValue = true;
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_HIGH_ALERT");
@@ -1457,7 +1539,9 @@ package services
 							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryHighAlertLatestSnoozeTimeInMs));
 						 _veryHighAlertSnoozePeriodInMinutes = 0;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryHighAlertSnoozePeriodInMinutes));
 						 returnValue = true;
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_VERY_HIGH_ALERT");
@@ -1514,7 +1598,9 @@ package services
 							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _lowAlertLatestSnoozeTimeInMs = Number.NaN;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_lowAlertLatestSnoozeTimeInMs));
 						 _lowAlertSnoozePeriodInMinutes = 0;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_lowAlertSnoozePeriodInMinutes));
 						 returnValue = true;
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_LOW_ALERT");
@@ -1570,7 +1656,9 @@ package services
 							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryLowAlertLatestSnoozeTimeInMs));
 						 _veryLowAlertSnoozePeriodInMinutes = 0;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryLowAlertSnoozePeriodInMinutes));
 						 returnValue = true;
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_VERY_LOW_ALERT");
@@ -1596,8 +1684,11 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
 			disableRepeatAlert(4);
 			_veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryHighAlertLatestSnoozeTimeInMs));
 			_veryHighAlertSnoozePeriodInMinutes = 0;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryHighAlertSnoozePeriodInMinutes));
 			_veryHighAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_PRESNOOZED, String(_veryHighAlertPreSnoozed));
 		}
 		
 		public static function resetVeryLowAlert():void {
@@ -1605,8 +1696,11 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
 			disableRepeatAlert(2);
 			_veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryLowAlertLatestSnoozeTimeInMs));
 			_veryLowAlertSnoozePeriodInMinutes = 0;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_veryLowAlertSnoozePeriodInMinutes));
 			_veryLowAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_PRESNOOZED, String(_veryLowAlertPreSnoozed));
 		}
 		
 		public static function resetHighAlert():void {
@@ -1614,8 +1708,11 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
 			disableRepeatAlert(3);
 			_highAlertLatestSnoozeTimeInMs = Number.NaN;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_highAlertLatestSnoozeTimeInMs));
 			_highAlertSnoozePeriodInMinutes = 0;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_highAlertSnoozePeriodInMinutes));
 			_highAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_PRESNOOZED, String(_highAlertPreSnoozed));
 		}
 		
 		public static function resetLowAlert():void {
@@ -1623,8 +1720,11 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
 			disableRepeatAlert(1);
 			_lowAlertLatestSnoozeTimeInMs = Number.NaN;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_lowAlertLatestSnoozeTimeInMs));
 			_lowAlertSnoozePeriodInMinutes = 0;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_lowAlertSnoozePeriodInMinutes));
 			_lowAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_PRESNOOZED, String(_lowAlertPreSnoozed));
 		}
 		
 		public static function resetMissedReadingAlert():void {
@@ -1632,8 +1732,11 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 			disableRepeatAlert(5);
 			_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_missedReadingAlertLatestSnoozeTimeInMs));
 			_missedReadingAlertSnoozePeriodInMinutes = 0;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_missedReadingAlertSnoozePeriodInMinutes));
 			_missedReadingAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_PRESNOOZED, String(_missedReadingAlertPreSnoozed));
 		}
 		
 		public static function resetPhoneMutedAlert():void {
@@ -1641,8 +1744,11 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 			disableRepeatAlert(7);
 			_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 			_phoneMutedAlertSnoozePeriodInMinutes = 0;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 			_phoneMutedAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED, String(_phoneMutedAlertPreSnoozed));
 		}
 		
 		private static function localSettingChanged(event:SettingsServiceEvent):void {
