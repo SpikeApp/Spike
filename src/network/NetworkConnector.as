@@ -8,8 +8,6 @@ package network
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
 	
-	import mx.utils.ObjectUtil;
-	
 	import utils.Trace;
 
 	public class NetworkConnector
