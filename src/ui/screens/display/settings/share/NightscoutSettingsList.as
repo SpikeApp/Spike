@@ -86,8 +86,8 @@ package ui.screens.display.settings.share
 			
 			//URL
 			nsURL = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 190 : 220, HorizontalAlign.RIGHT, false, false, true);
-			if (!Constants.isPortrait)
-				nsURL.width += 100;
+			if (!Constants.isPortrait) nsURL.width += 100;
+			if (DeviceInfo.isTablet()) nsURL.width += 100;
 			nsURL.text = selectedURL;
 			nsURL.prompt = "yoursite.example.com";
 			nsURL.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
@@ -95,8 +95,8 @@ package ui.screens.display.settings.share
 			
 			//API Secret
 			nsAPISecret = LayoutFactory.createTextInput(true, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
-			if (!Constants.isPortrait)
-				nsAPISecret.width += 100;
+			if (!Constants.isPortrait) nsAPISecret.width += 100;
+			if (DeviceInfo.isTablet()) nsAPISecret.width += 100;
 			nsAPISecret.text = selectedAPISecret;
 			nsAPISecret.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			nsAPISecret.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -230,16 +230,16 @@ package ui.screens.display.settings.share
 			{
 				SystemUtil.executeWhenApplicationIsActive( nsURL.clearFocus );
 				nsURL.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 190 : 220;
-				if (!Constants.isPortrait)
-					nsURL.width += 100;
+				if (!Constants.isPortrait) nsURL.width += 100;
+				if (DeviceInfo.isTablet()) nsURL.width += 100;
 			}
 			
 			if (nsAPISecret != null)
 			{
 				SystemUtil.executeWhenApplicationIsActive( nsAPISecret.clearFocus );
 				nsAPISecret.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
-				if (!Constants.isPortrait)
-					nsAPISecret.width += 100;
+				if (!Constants.isPortrait) nsAPISecret.width += 100;
+				if (DeviceInfo.isTablet()) nsAPISecret.width += 100;
 			}
 		}
 		

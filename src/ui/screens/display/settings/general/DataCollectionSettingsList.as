@@ -25,6 +25,7 @@ package ui.screens.display.settings.general
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("generalsettingsscreen")]
 
@@ -104,7 +105,8 @@ package ui.screens.display.settings.general
 			collectionModePicker.addEventListener(Event.CHANGE, onCollectionModeChanged);
 			
 			//Nightscout URL
-			nightscoutURLInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT, false, false, true);
+			nightscoutURLInput = LayoutFactory.createTextInput(false, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT, false, false, true);
+			if (DeviceInfo.isTablet()) nightscoutURLInput.width += 100;
 			nightscoutURLInput.fontStyles.size = 10;
 			nightscoutURLInput.text = followNSURL;
 			nightscoutURLInput.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -114,7 +116,8 @@ package ui.screens.display.settings.general
 			nightscoutOffsetStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//API Secret
-			nightscoutAPISecretTextInput = LayoutFactory.createTextInput(true, false, 140, HorizontalAlign.RIGHT);
+			nightscoutAPISecretTextInput = LayoutFactory.createTextInput(true, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT);
+			if (DeviceInfo.isTablet()) nightscoutAPISecretTextInput.width += 100;
 			nightscoutAPISecretTextInput.text = nightscoutAPISecretValue;
 			nightscoutAPISecretTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
@@ -225,6 +228,18 @@ package ui.screens.display.settings.general
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (nightscoutURLInput != null)
+			{
+				nightscoutURLInput.width = Constants.isPortrait ? 140 : 240;
+				if (DeviceInfo.isTablet()) nightscoutURLInput.width += 100;
+			}
+			
+			if (nightscoutAPISecretTextInput != null)
+			{
+				nightscoutAPISecretTextInput.width = Constants.isPortrait ? 140 : 240;
+				if (DeviceInfo.isTablet()) nightscoutAPISecretTextInput.width += 100;
+			}
 		}
 		
 		override public function dispose():void

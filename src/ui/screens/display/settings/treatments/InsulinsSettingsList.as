@@ -33,6 +33,7 @@ package ui.screens.display.settings.treatments
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("profilesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -105,6 +106,7 @@ package ui.screens.display.settings.treatments
 			
 			//New Insulin Name
 			insulinName = LayoutFactory.createTextInput(false, false, Constants.isPortrait ? 140: 240, HorizontalAlign.RIGHT);
+			if (DeviceInfo.isTablet()) insulinName.width += 100;
 			insulinName.addEventListener(Event.CHANGE, onInsulinNameChanged);
 			
 			//New Insulin Type
@@ -407,7 +409,10 @@ package ui.screens.display.settings.treatments
 				guideContainer.width = width;
 			
 			if (insulinName != null)
+			{
 				insulinName.width = Constants.isPortrait ? 140: 240;
+				if (DeviceInfo.isTablet()) insulinName.width += 100;
+			}
 		}
 		
 		override public function dispose():void

@@ -168,7 +168,7 @@ package ui.screens.display.settings.alarms
 			
 			soundList = LayoutFactory.createPickerList();
 			var soundListPopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
-			soundListPopUp.margin = 10;
+			soundListPopUp.margin = 20;
 			soundList.popUpContentManager = soundListPopUp;
 			soundList.pivotX = -3;
 			soundList.maxWidth = 200;
