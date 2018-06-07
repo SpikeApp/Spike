@@ -54,10 +54,12 @@
 - (void)startScanning;
 
 
-//connect device
-- (void)connectDevice;
+//reconnect device
+- (void)reconnectDevice;
 //cancel connect
 - (void)cancelConnectDevice;
+
+- (void)disconnectDevice;
 
 
 //get servicies
