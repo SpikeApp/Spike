@@ -26,4 +26,8 @@
 
 +(void)stopScanDevice;
 
++(void)disconnectDevice;
+
++(void)reconnectDevice;
+
 @end
