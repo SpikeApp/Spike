@@ -9,10 +9,10 @@ package ui.chart
 	import starling.display.Sprite;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeCanvas;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
-	import ui.shapes.SpikeCanvas;
 	
 	public class ChartTreatmentPill extends Sprite
 	{
@@ -70,7 +70,7 @@ package ui.chart
 				fontSize = 15;
 				pillHeight = 24;
 			}
-			else if (Constants.deviceModel == Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
 			{
 				fontSize = 24;
 				pillHeight = 36;

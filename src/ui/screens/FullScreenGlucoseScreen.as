@@ -170,7 +170,7 @@ package ui.screens
 			
 			/* TimeAgo Display Label */
 			timeAgoDisplay = LayoutFactory.createLabel(timeAgoOutput, HorizontalAlign.LEFT, VerticalAlign.MIDDLE, infoFontSize, false, timeAgoColor);
-			timeAgoDisplay.width = 300;
+			timeAgoDisplay.width = 350;
 			timeAgoDisplay.y = 10;
 			timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
 			timeAgoDisplay.validate();
@@ -385,8 +385,6 @@ package ui.screens
 					timeAgoColor = oldColor;
 			}
 			
-			//latestGlucoseOutput = "222.4"
-			
 			if (Constants.isPortrait)
 				latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
 			else
@@ -488,8 +486,36 @@ package ui.screens
 			else if(Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
 			{
 				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 345;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 340;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 305;
 				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 260;
+				
+			}
+			else if(Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 330;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 300;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 235;
+				
+			}
+			else if(Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 410;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 380;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 300;
+				
+			}
+			else if(Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 220;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 180;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 155;
+				
+			}
+			else if(DeviceInfo.isTablet())
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 330;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 300;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 235;
 				
 			}
 			
@@ -501,8 +527,6 @@ package ui.screens
 			
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
 			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-			
-			trace("ok3");
 		}
 		
 		/**
@@ -578,6 +602,7 @@ package ui.screens
 					glucoseDisplay.fontStyles.color = oldColor;
 					slopeDisplay.fontStyles.color = oldColor;
 				}
+				
 				
 				if (Constants.isPortrait)
 					latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;
