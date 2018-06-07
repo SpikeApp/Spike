@@ -6,6 +6,7 @@ ENHANCEMENT: Better validation of treatments inserted from the Today Widget or w
 ENHANCEMENT: Switched to the Etag header instead of Last-Modified when querying Nightscout treatments as it seems to be broken on versions prior to v0.10.2. (Miguel)
 ENHANCEMENT: Display battery as unknown when BluCon is not connected. (Miguel)
 ENHANCEMENT: Changed Nightscout treatments query strategy to increase compatibility with older versions or problematic sites. (Miguel)
+ENHANCEMENT: Alarm snooze times are now saved in the database. This means if you snooze and alarm and restart Spike the alarm will remain snoozed. (Miguel)
 
 2.1.1
 FEATURE: Insulin and carb absorption curves! When there's active IOB or COB the user can touch those pills to be presented with a graph showing the respective absorption curve and the exact position the user is on the curve. The user will also be able to see the exact time the insulin and/or carbs will be fully absorbed by the body. Available for both masters and followers. Not available for users that have the "Loop/OpenAPS User" option enabled in Settings -> Treatments. (Miguel)
