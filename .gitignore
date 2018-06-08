@@ -11,3 +11,5 @@
 .project
 /Native Extension/SpikeANE/build scripts/local.properties
 /Native\ Extension/SpikeANE/build\ scripts/local.properties
+/widget/Spike.xcworkspace/xcuserdata/spike.xcuserdatad/UserInterfaceState.xcuserstate
+*.swc
