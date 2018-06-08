@@ -383,6 +383,8 @@ package ui.chart
 				chartTopPadding = glucoseSlopePill.y + glucoseSlopePill.height + extraPadding;
 			}
 			
+			if (!Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4) scrollerTopPadding += 2;
+			
 			//Set properties #2
 			this._scrollerWidth = chartWidth;
 			this._scrollerHeight = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 ? 50 : 35;
@@ -1500,9 +1502,9 @@ package ui.chart
 				
 				var fontSize:int;
 				if (timelineRange == TIMELINE_1H || timelineRange == TIMELINE_3H || timelineRange == TIMELINE_6H)
-					fontSize = 11;
+					fontSize = Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && dateFormat.slice(0,2) != "24") ? 11 : 12;
 				else
-					fontSize = 10;
+					fontSize = Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && dateFormat.slice(0,2) != "24") ? 10 : 11;
 				
 				var time:Label = LayoutFactory.createLabel(label, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, false, axisFontColor);
 				time.touchable = false;
@@ -1513,6 +1515,10 @@ package ui.chart
 				timeDisplayContainer.touchable = false;
 				timeDisplayContainer.addChild(time);
 				timeDisplayContainer.x =  currentX - (time.width / 2);
+				timeDisplayContainer.y = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && (timelineRange == TIMELINE_1H || timelineRange == TIMELINE_3H || timelineRange == TIMELINE_6H) ? 0.5 : 0;
+				timeDisplayContainer.y = Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && dateFormat.slice(0,2) != "24" ? 0 : timeDisplayContainer.y;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && dateFormat.slice(0,2) != "24" ? 0 : timeDisplayContainer.y) {}
+				else timeDisplayContainer.y = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && timelineRange != TIMELINE_1H && timelineRange != TIMELINE_3H && timelineRange != TIMELINE_6H ? -1 : timeDisplayContainer.y;
 				timelineContainer.addChild(timeDisplayContainer);
 				
 				//Save marker for later processing/disposing

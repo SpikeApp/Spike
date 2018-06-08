@@ -31,6 +31,7 @@ package ui.screens.display.settings.about
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("aboutsettingsscreen")]
 
@@ -80,7 +81,7 @@ package ui.screens.display.settings.about
 			/* Set Info Labels */
 			appNameLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','app_name_description'), HorizontalAlign.RIGHT);
 			appVersionLabel = LayoutFactory.createLabel(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION), HorizontalAlign.RIGHT);
-			deviceRequirementsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','device_description_label'));
+			deviceRequirementsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','device_description_label') + (DeviceInfo.isIpad() ? "\n\n" + ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','ipad_device_description_label') : ""));
 			deviceRequirementsLabel.width = 170;
 			deviceRequirementsLabel.wordWrap = true;
 			deviceRequirementsLabel.fontStyles.horizontalAlign = HorizontalAlign.RIGHT;

@@ -203,5 +203,10 @@ package utils
 		{
 			return Constants.deviceModel == IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == IPAD_PRO_105 || Constants.deviceModel == IPAD_PRO_129;
 		}
+		
+		public static function isIpad():Boolean
+		{
+			return Constants.deviceModel == IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == IPAD_PRO_105 || Constants.deviceModel == IPAD_PRO_129 || Constants.deviceModel == IPAD_MINI_1_2_3_4;
+		}
 	}
 }

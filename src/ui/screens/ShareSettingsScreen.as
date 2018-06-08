@@ -89,13 +89,16 @@ package ui.screens
 			appBadgeSettings = new AppBadgeSettingsList();
 			screenRenderer.addChild(appBadgeSettings);
 			
-			//Healthkit Section Label
-			healthkitLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','healthkit_section_label'), true);
-			screenRenderer.addChild(healthkitLabel);
-			
-			//Healthkit Settings
-			healthkitSettings = new HealthkitSettingsList();
-			screenRenderer.addChild(healthkitSettings);
+			if (!ModelLocator.IS_IPAD)
+			{
+				//Healthkit Section Label
+				healthkitLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','healthkit_section_label'), true);
+				screenRenderer.addChild(healthkitLabel);
+				
+				//Healthkit Settings
+				healthkitSettings = new HealthkitSettingsList();
+				screenRenderer.addChild(healthkitSettings);
+			}
 			
 			if (!BlueToothDevice.isFollower())
 			{
@@ -132,7 +135,7 @@ package ui.screens
 				notificationSettings.save();
 			if (appBadgeSettings.needsSave)
 				appBadgeSettings.save();
-			if (healthkitSettings.needsSave)
+			if (healthkitSettings != null && healthkitSettings.needsSave)
 				healthkitSettings.save();
 			if (dexcomSettings != null && dexcomSettings.needsSave)
 				dexcomSettings.save();

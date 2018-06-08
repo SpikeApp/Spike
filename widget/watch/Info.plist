@@ -28,7 +28,7 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>com.spike-app.spike</string>
+	<string>com.spike-app.spikeipad</string>
 	<key>WKWatchKitApp</key>
 	<true/>
 </dict>
