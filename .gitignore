@@ -16,3 +16,4 @@
 /Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS.xcodeproj/xcuserdata/
 *.swc
 .DS_Store
+libNativeExtensioniOS.a
