@@ -36,7 +36,7 @@ package services
 						return;
 					}
 				}
-				//set reconnecttimer to 20 seconds, after 20 seconds ios device will try to reconnect
+				//set reconnecttimer to 10 seconds, after 10 seconds ios device will try to reconnect
 				myTrace("starting timer");
 				reconnectTimer = new Timer(10 * 1000, 1);
 				reconnectTimer.addEventListener(TimerEvent.TIMER, reconnect);
