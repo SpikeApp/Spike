@@ -30,7 +30,14 @@ package services
 				//temporary disconnecting to allow other ios device to connect to the miaomiao
 				SpikeANE.disconnectMiaoMiao();
 				
+				if (reconnectTimer != null) {
+					if (reconnectTimer.running) {
+						myTrace("timer already running, not restarting");
+						return;
+					}
+				}
 				//set reconnecttimer to 20 seconds, after 20 seconds ios device will try to reconnect
+				myTrace("starting timer");
 				reconnectTimer = new Timer(10 * 1000, 1);
 				reconnectTimer.addEventListener(TimerEvent.TIMER, reconnect);
 				reconnectTimer.start();
