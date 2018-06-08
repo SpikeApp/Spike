@@ -31,7 +31,7 @@ package services
 				SpikeANE.disconnectMiaoMiao();
 				
 				//set reconnecttimer to 20 seconds, after 20 seconds ios device will try to reconnect
-				reconnectTimer = new Timer(20 * 1000, 1);
+				reconnectTimer = new Timer(5 * 1000, 1);
 				reconnectTimer.addEventListener(TimerEvent.TIMER, reconnect);
 				reconnectTimer.start();
 			}
