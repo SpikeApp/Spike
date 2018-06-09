@@ -5,7 +5,7 @@ package services
 	import flash.events.Event;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
@@ -103,7 +103,7 @@ package services
 		
 		private static function processInitialBackfillData(e:Event):void
 		{
-			if (!BlueToothDevice.isMiaoMiao() || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") //Only for backfil
+			if (!CGMBlueToothDevice.isMiaoMiao() || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") //Only for backfil
 				return
 			
 			var loopLength:int = ModelLocator.bgReadings.length

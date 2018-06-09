@@ -12,7 +12,7 @@ package ui.chart
 	import flash.utils.Timer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
@@ -710,7 +710,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.width / 2));
@@ -761,7 +761,7 @@ package ui.chart
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
-				if (glucoseReading.sensor == null && !BlueToothDevice.isFollower())
+				if (glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower())
 					glucoseMarker.alpha = 0;
 				
 				//Set variables for next iteration
@@ -1207,7 +1207,7 @@ package ui.chart
 				}
 				
 				//Action Buttons
-				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				{
 					if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 					{
@@ -2171,7 +2171,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -2223,7 +2223,7 @@ package ui.chart
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
-				if (glucoseReading.sensor == null && !BlueToothDevice.isFollower())
+				if (glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower())
 					glucoseMarker.alpha = 0;
 				
 				
@@ -2309,7 +2309,7 @@ package ui.chart
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var glucoseMarker:GlucoseMarker = sourceList[i];
-				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !BlueToothDevice.isFollower()))
+				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !CGMBlueToothDevice.isFollower()))
 					continue;
 				
 				var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
@@ -2724,7 +2724,7 @@ package ui.chart
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var currentMarker:GlucoseMarker = sourceList[i];
-				if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || BlueToothDevice.isFollower()))
+				if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()))
 					currentMarker.alpha = 1;
 				else
 					currentMarker.alpha = 0;
@@ -2963,7 +2963,7 @@ package ui.chart
 					//Check if the current marker is the one selected by the main chart's delimiter line
 					if ((i == 0 && currentMarkerGlobalX >= glucoseDelimiter.x) || (currentMarkerGlobalX >= glucoseDelimiter.x && previousMarkerGlobalX < glucoseDelimiter.x))
 					{
-						if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || BlueToothDevice.isFollower()))
+						if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()))
 						{
 							nowTimestamp = new Date().valueOf();
 							var latestTimestamp:Number;
@@ -3560,7 +3560,7 @@ package ui.chart
 				infoContainer.layout = infoLayout;
 				
 				//Raw & Sage for master
-				if (!BlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower())
 				{
 					//Transmitter Battery
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_ON) == "true")
@@ -3568,13 +3568,13 @@ package ui.chart
 						var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
 						if (tBatteryPill != null) tBatteryPill.dispose();
 						var transmitterName:String = "";
-						if (BlueToothDevice.isDexcomG5()) transmitterName = "G5";
-						else if (BlueToothDevice.isDexcomG4()) transmitterName = "G4";
-						else if (BlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
-						else if (BlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
-						else if (BlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
-						else if (BlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
-						else if (BlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
+						if (CGMBlueToothDevice.isDexcomG5()) transmitterName = "G5";
+						else if (CGMBlueToothDevice.isDexcomG4()) transmitterName = "G4";
+						else if (CGMBlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
+						else if (CGMBlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
+						else if (CGMBlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
+						else if (CGMBlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
+						else if (CGMBlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
 						tBatteryPill = new ChartTreatmentPill(transmitterName + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
 						tBatteryPill.setValue(batteryStatus.level);
 						tBatteryPill.colorizeLabel(batteryStatus.color);
@@ -3658,7 +3658,7 @@ package ui.chart
 				}
 			}
 			
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 			{
 				//Raw Blood Glucose
 				if (rawPill != null) rawPill.dispose();

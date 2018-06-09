@@ -17,7 +17,7 @@ package ui
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
@@ -33,7 +33,7 @@ package ui
 	
 	import model.ModelLocator;
 	
-	import services.BluetoothService;
+	import services.bluetooth.CGMBluetoothService;
 	import services.CalibrationService;
 	import services.NotificationService;
 	import services.TutorialService;
@@ -117,7 +117,7 @@ package ui
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "false");
 				
 				Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
-				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
+				CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
 				
 				//3D Touch Management
 				setup3DTouch();
@@ -137,9 +137,9 @@ package ui
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE) == "Follower")
 					return;
 				
-				if (BlueToothDevice.alwaysScan()) 
+				if (CGMBlueToothDevice.alwaysScan()) 
 				{
-					if (BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
+					if (CGMBlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 					{
 						var alertMessageG5:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g5_info_screen');
 						if (Sensor.getActiveSensor() == null)
@@ -154,7 +154,7 @@ package ui
 						
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN,"true");
 					} 
-					else if (BlueToothDevice.isBluKon() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
+					else if (CGMBlueToothDevice.isBluKon() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 					{
 						var alertMessageBlucon:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','blucon_info_screen');
 						if (Sensor.getActiveSensor() == null)
@@ -172,7 +172,7 @@ package ui
 				} 
 				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 				{
-					if (BlueToothDevice.knowsFSLAge())
+					if (CGMBlueToothDevice.knowsFSLAge())
 					{
 						//variables are named miaomiao but this is used for all FSL peripherals, ie all type limitter
 						var alertMiaoMiao:Alert = AlertManager.showSimpleAlert
@@ -315,8 +315,8 @@ package ui
 		 */
 		private static function blueToothServiceInitiated(be:BlueToothServiceEvent):void 
 		{
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, bluetoothDeviceConnectionCompleted);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, central_peripheralDisconnectHandler);
@@ -327,7 +327,7 @@ package ui
 			if (SpikeANE.appIsInForeground())
 				return;
 			
-			if (BlueToothDevice.isBluKon())
+			if (CGMBlueToothDevice.isBluKon())
 				return; //blukon keeps on trying to connect, there's always a request to pair, no need to give additional comments
 			
 			AlertManager.showSimpleAlert
@@ -367,14 +367,14 @@ package ui
 		
 		public static function btScanningStopped(event:BlueToothServiceEvent):void 
 		{
-			BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
 			
-			if (!BluetoothService.bluetoothPeripheralActive()) 
+			if (!CGMBluetoothService.bluetoothPeripheralActive()) 
 			{
 				AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_alert_title"),
-					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_message") + (BlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"with_name") + " " + BlueToothDevice.name) + "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"explain_expected_device_name"): ""),
+					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_message") + (CGMBlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"with_name") + " " + CGMBlueToothDevice.name) + "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"explain_expected_device_name"): ""),
 					Number.NaN,
 					null,
 					HorizontalAlign.CENTER

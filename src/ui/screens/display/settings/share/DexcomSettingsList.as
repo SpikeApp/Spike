@@ -1,6 +1,6 @@
 package ui.screens.display.settings.share
 {
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
@@ -109,7 +109,7 @@ package ui.screens.display.settings.share
 			else
 				selectedServerCode = "non-us";
 			
-			if (!BlueToothDevice.isDexcomG5())
+			if (!CGMBlueToothDevice.isDexcomG5())
 				selectedDexcomShareSerialNumber = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER).toUpperCase();
 			else
 				selectedDexcomShareSerialNumber = "";
@@ -138,7 +138,7 @@ package ui.screens.display.settings.share
 			dsPassword.addEventListener(Event.CHANGE, onTextInputChanged);
 			
 			//Serial
-			if (!BlueToothDevice.isDexcomG5())
+			if (!CGMBlueToothDevice.isDexcomG5())
 			{
 				dsSerial = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
 				if (!Constants.isPortrait)
@@ -234,7 +234,7 @@ package ui.screens.display.settings.share
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, selectedPassword);
 			
 			//Serial
-			if (!BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER) != selectedDexcomShareSerialNumber.toUpperCase())
+			if (!CGMBlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER) != selectedDexcomShareSerialNumber.toUpperCase())
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER, selectedDexcomShareSerialNumber.toUpperCase());
 			
 			//Server
@@ -258,11 +258,11 @@ package ui.screens.display.settings.share
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: dsToggle });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_username_label'), accessory: dsUsername });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_password_label'), accessory: dsPassword });
-				if (!BlueToothDevice.isDexcomG5())
+				if (!CGMBlueToothDevice.isDexcomG5())
 					listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','serial_label'), accessory: dsSerial });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_label'), accessory: dsServer });
 				listDataProviderItems.push({ label: "", accessory: actionsContainer });
-				if (!BlueToothDevice.isDexcomG4() && !BlueToothDevice.isDexcomG5())
+				if (!CGMBlueToothDevice.isDexcomG4() && !CGMBlueToothDevice.isDexcomG5())
 					listDataProviderItems.push({ label: "", accessory: nonDexcomInstructions });
 				
 				dataProvider = new ArrayCollection(listDataProviderItems);

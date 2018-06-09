@@ -20,7 +20,7 @@ package ui.screens.display.transmitter
 	import G5Model.TransmitterStatus;
 	import G5Model.VersionRequestRxMessage;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Sensor;
@@ -49,7 +49,7 @@ package ui.screens.display.transmitter
 	
 	import model.ModelLocator;
 	
-	import services.BluetoothService;
+	import services.bluetooth.CGMBluetoothService;
 	
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
@@ -169,7 +169,7 @@ package ui.screens.display.transmitter
 		private function setupInitialState():void
 		{
 			/* Get transmitter name */
-			if (BlueToothDevice.known()) transmitterNameValue = BlueToothDevice.name;
+			if (CGMBlueToothDevice.known()) transmitterNameValue = CGMBlueToothDevice.name;
 			else transmitterNameValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 			
 			/* Get connectiion status */
@@ -180,7 +180,7 @@ package ui.screens.display.transmitter
 				transmitterConnectionStatusValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','connection_status_last_connection') + " " + InterfaceController.dateFormatterForSensorStartTimeAndDate.format(new Date(InterfaceController.peripheralConnectionStatusChangeTimestamp));
 			
 			/* Battery and Transmitter Type */
-			if (BlueToothDevice.isDexcomG5()) 
+			if (CGMBlueToothDevice.isDexcomG5()) 
 			{
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
@@ -293,7 +293,7 @@ package ui.screens.display.transmitter
 				}
 				
 			}
-			else if (BlueToothDevice.isDexcomG4()) 
+			else if (CGMBlueToothDevice.isDexcomG4()) 
 			{
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
@@ -304,7 +304,7 @@ package ui.screens.display.transmitter
 				if (batteryLevelValue.toUpperCase() == "0" || batteryLevelValue.toUpperCase() == "UNKNOWN" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
 					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 			}
-			else if (BlueToothDevice.isBlueReader())
+			else if (CGMBlueToothDevice.isBlueReader())
 			{
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
@@ -317,7 +317,7 @@ package ui.screens.display.transmitter
 				else
 					batteryLevelValue = String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))  + "%";
 			}
-			else if (BlueToothDevice.isTransmiter_PL())
+			else if (CGMBlueToothDevice.isTransmiter_PL())
 			{
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
@@ -330,7 +330,7 @@ package ui.screens.display.transmitter
 				else
 					batteryLevelValue = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL) + "%");
 			}
-			else if (BlueToothDevice.isMiaoMiao())
+			else if (CGMBlueToothDevice.isMiaoMiao())
 			{
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
@@ -348,7 +348,7 @@ package ui.screens.display.transmitter
 				else
 					batteryLevelValue = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL) + "%");
 			}
-			else if (BlueToothDevice.isBluKon())
+			else if (CGMBlueToothDevice.isBluKon())
 			{
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
@@ -358,7 +358,7 @@ package ui.screens.display.transmitter
 				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown') || !InterfaceController.peripheralConnected)
 					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 			}
-			else if (BlueToothDevice.isLimitter())
+			else if (CGMBlueToothDevice.isLimitter())
 			{
 				/* Transmitter Type */
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
@@ -434,7 +434,7 @@ package ui.screens.display.transmitter
 					batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryUnknownTexture;
 				else
 				{
-					if (BlueToothDevice.isDexcomG4())
+					if (CGMBlueToothDevice.isDexcomG4())
 					{
 						var G4BatteryLevel:Number = Number(batteryLevelValue);
 						if (G4BatteryLevel >= 213)
@@ -462,15 +462,15 @@ package ui.screens.display.transmitter
 			/* Define Info & Battery/Connection Status Labels */
 			transmitterTypeLabel = LayoutFactory.createLabel(transmitterTypeValue, HorizontalAlign.RIGHT);
 			transmitterNameLabel = LayoutFactory.createLabel(transmitterNameValue, HorizontalAlign.RIGHT);
-			transmitterMACAddressLabel = LayoutFactory.createLabel(BlueToothDevice.address != "" ? BlueToothDevice.address : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'), HorizontalAlign.RIGHT);
+			transmitterMACAddressLabel = LayoutFactory.createLabel(CGMBlueToothDevice.address != "" ? CGMBlueToothDevice.address : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'), HorizontalAlign.RIGHT);
 			transmitterMACAddressLabel.width = Constants.isPortrait ? 140 : 280;
 			transmitterMACAddressLabel.wordWrap = true;
-			if (BlueToothDevice.isMiaoMiao())
+			if (CGMBlueToothDevice.isMiaoMiao())
 				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);
 			
 			if (transmitterConnectionStatusValue != null)
 				transmitterConnectionStatusLabel = LayoutFactory.createLabel(transmitterConnectionStatusValue, HorizontalAlign.RIGHT);
-			if (BlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isDexcomG5())
 			{
 				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);
 				otherFirmwareLabel = LayoutFactory.createLabel(transmitterOtherFirmwareValue, HorizontalAlign.RIGHT);
@@ -517,11 +517,11 @@ package ui.screens.display.transmitter
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','data_source_label'), accessory: transmitterTypeLabel });
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_name_label'), accessory: transmitterNameLabel });
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','mac_address_label'), accessory: transmitterMACAddressLabel });
-			if (BlueToothDevice.isMiaoMiao())
+			if (CGMBlueToothDevice.isMiaoMiao())
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_version_label'), accessory: transmitterFirmwareLabel });
 			if (transmitterConnectionStatusValue != null)
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_connection_status_label'), accessory: transmitterConnectionStatusLabel });
-			if (BlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isDexcomG5())
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_version_label'), accessory: transmitterFirmwareLabel });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','other_firmware_version_label'), accessory: otherFirmwareLabel });
@@ -557,7 +557,7 @@ package ui.screens.display.transmitter
 			screenDataContent.push(batterySection);
 			
 			//Actions Section
-			if ((!BluetoothService.bluetoothPeripheralActive() && !BlueToothDevice.alwaysScan()) || (BlueToothDevice.known() && !BlueToothDevice.alwaysScan())) 
+			if ((!CGMBluetoothService.bluetoothPeripheralActive() && !CGMBlueToothDevice.alwaysScan()) || (CGMBlueToothDevice.known() && !CGMBlueToothDevice.alwaysScan())) 
 			{
 				/* Action Controls Container */
 				var actionControls:LayoutGroup = new LayoutGroup();
@@ -572,7 +572,7 @@ package ui.screens.display.transmitter
 				var actionsSection:Object = {};
 				actionsSection.header = { label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','actions_label') };
 				
-				if(!BluetoothService.bluetoothPeripheralActive() && !BlueToothDevice.alwaysScan()) //Scan Action
+				if(!CGMBluetoothService.bluetoothPeripheralActive() && !CGMBlueToothDevice.alwaysScan()) //Scan Action
 				{
 					scanButtonIcon = MaterialDeepGreyAmberMobileThemeIcons.bluetoothSearchingTexture;
 					scanButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('transmitterscreen','scan_device_button_label'), false, scanButtonIcon);
@@ -581,7 +581,7 @@ package ui.screens.display.transmitter
 					actionControls.addChild(scanButton);
 				}
 				
-				if(BlueToothDevice.known() && !BlueToothDevice.alwaysScan()) //Forget Action
+				if(CGMBlueToothDevice.known() && !CGMBlueToothDevice.alwaysScan()) //Forget Action
 				{
 					forgetButtonIcon = MaterialDeepGreyAmberMobileThemeIcons.bluetoothDisabledTexture;
 					forgetButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('transmitterscreen','forget_device_button_label'), false, forgetButtonIcon);
@@ -598,7 +598,7 @@ package ui.screens.display.transmitter
 				screenDataContent.push(actionsSection);
 			}
 			
-			if(!BluetoothService.bluetoothPeripheralActive() && !BlueToothDevice.alwaysScan() && !InterfaceController.peripheralConnected)
+			if(!CGMBluetoothService.bluetoothPeripheralActive() && !CGMBlueToothDevice.alwaysScan() && !InterfaceController.peripheralConnected)
 			{
 				screenRefreshLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('transmitterscreen','refresh_screen_label').replace("{sec}", 5), HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
 				
@@ -634,7 +634,7 @@ package ui.screens.display.transmitter
 		
 		private function setupRefreshTimer():void
 		{
-			if(!BluetoothService.bluetoothPeripheralActive() && !BlueToothDevice.alwaysScan() && !InterfaceController.peripheralConnected)
+			if(!CGMBluetoothService.bluetoothPeripheralActive() && !CGMBlueToothDevice.alwaysScan() && !InterfaceController.peripheralConnected)
 			{
 				if (refreshTimer != null)
 					disposeRefreshTimer();
@@ -670,7 +670,7 @@ package ui.screens.display.transmitter
 			var touch:Touch = e.getTouch(stage);
 			
 			//If a click was recorded, show callout with status info
-			if(touch != null && e != null && e.currentTarget != null && touch != null && touch.phase == TouchPhase.BEGAN && BlueToothDevice.isDexcomG5())
+			if(touch != null && e != null && e.currentTarget != null && touch != null && touch.phase == TouchPhase.BEGAN && CGMBlueToothDevice.isDexcomG5())
 			{
 				var listItem:Object = (e.currentTarget as Object);
 				if (listItem == null)
@@ -711,7 +711,7 @@ package ui.screens.display.transmitter
 		
 		private function onRefreshG5BatteyInfo(e:Event):void
 		{
-			if (BlueToothDevice.known())
+			if (CGMBlueToothDevice.known())
 			{
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, String(timestampForRefresh));
 				lastG5BatteryUpdateLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen',"updating_message");
@@ -733,7 +733,7 @@ package ui.screens.display.transmitter
 			
 			function onResetTransmitter(e:Event):void
 			{
-				BluetoothService.G5_RequestReset();
+				CGMBluetoothService.G5_RequestReset();
 				
 				AlertManager.showSimpleAlert
 				(
@@ -747,10 +747,10 @@ package ui.screens.display.transmitter
 		{
 			if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) 
 			{
-				BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped, false, 0, true);
+				CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped, false, 0, true);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded, false, 0, true);
 				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
-				BluetoothService.startScanning(true);
+				CGMBluetoothService.startScanning(true);
 				
 				AlertManager.showSimpleAlert(
 					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scan_for_device_alert_title"),
@@ -780,11 +780,11 @@ package ui.screens.display.transmitter
 		
 		private function onTransmitterForget():void
 		{
-			BlueToothDevice.forgetBlueToothDevice();
-			BluetoothService.stopScanning(null);
+			CGMBlueToothDevice.forgetBlueToothDevice();
+			CGMBluetoothService.stopScanning(null);
 			InterfaceController.peripheralConnected = false;
 			
-			if (BlueToothDevice.knowsFSLAge() && Calibration.allForSensor().length < 2)
+			if (CGMBlueToothDevice.knowsFSLAge() && Calibration.allForSensor().length < 2)
 				Sensor.stopSensor();
 			
 			AlertManager.showSimpleAlert
@@ -859,7 +859,7 @@ package ui.screens.display.transmitter
 		{
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-			BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
 			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
 			
 			disposeRefreshTimer();

@@ -7,7 +7,7 @@ package services
 	import flash.utils.setInterval;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
@@ -70,7 +70,7 @@ package services
 			
 			months = ModelLocator.resourceManagerInstance.getString('widgetservice','months').split(",");
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				Starling.juggler.delayCall(setInitialGraphData, 3);
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
@@ -162,7 +162,7 @@ package services
 				if (now - timestamp <= widgetHistory)
 				{
 					var currentReading:BgReading = startupGlucoseReadingsList[i] as BgReading;
-					if (currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !BlueToothDevice.isFollower()))
+					if (currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !CGMBlueToothDevice.isFollower()))
 						continue;
 					
 					var glucose:String = BgGraphBuilder.unitizedString((startupGlucoseReadingsList[i] as BgReading).calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
@@ -273,7 +273,7 @@ package services
 			activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
 			
 			var currentTimestamp:Number
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 				currentTimestamp = (activeGlucoseReadingsList[0] as Object).timestamp;
 			else
 				currentTimestamp = activeGlucoseReadingsList[0].timestamp;
@@ -362,12 +362,12 @@ package services
 			Trace.myTrace("WidgetService.as", "Sending new glucose reading to widget!");
 			
 			var currentReading:BgReading;
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				currentReading = BgReading.lastNoSensor();
 			else
 				currentReading = BgReading.lastWithCalculatedValue();
 			
-			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !BlueToothDevice.isFollower()))
+			if ((Calibration.allForSensor().length < 2 && !CGMBlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !CGMBlueToothDevice.isFollower()))
 				return;
 			
 			var latestGlucose:String = BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");

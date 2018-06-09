@@ -1,6 +1,6 @@
 package ui.screens.display.settings.chart
 {
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
@@ -151,7 +151,7 @@ package ui.screens.display.settings.chart
 			data.push( { text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: enableGlucoseDistribution } );
 			if (pieChartEnabledValue)
 			{
-				if (!BlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower())
 				{
 					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','thresholds_range_label'), accessory: percentageRangePicker } );
 					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','average_glucose_range_label'), accessory: avgRangePicker } );

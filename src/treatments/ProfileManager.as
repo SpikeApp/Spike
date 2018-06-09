@@ -2,7 +2,7 @@ package treatments
 {
 	import flash.utils.Dictionary;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Database;
 	
 	import model.ModelLocator;
@@ -27,7 +27,7 @@ package treatments
 		{
 			Trace.myTrace("ProfileManager.as", "init called!");
 			
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				//Common variables
 				var i:int;
@@ -278,7 +278,7 @@ package treatments
 		{
 			var carbAbsorptionRate:Number = 0;
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 			{
 				if (profilesList != null && profilesList.length > 0 && profilesList[0] != null && !isNaN((profilesList[0] as Profile).carbsAbsorptionRate))
 					carbAbsorptionRate = (profilesList[0] as Profile).carbsAbsorptionRate;

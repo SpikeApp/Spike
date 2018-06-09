@@ -2,7 +2,7 @@ package ui.screens.display.settings.alarms
 {
 	import database.AlertType;
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	
@@ -524,13 +524,13 @@ package ui.screens.display.settings.alarms
 				alarmData.value = 0;
 			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT)
 			{
-				if (BlueToothDevice.isDexcomG5())
+				if (CGMBlueToothDevice.isDexcomG5())
 					alarmData.value = 300;
-				else if (BlueToothDevice.isDexcomG4())
+				else if (CGMBlueToothDevice.isDexcomG4())
 					alarmData.value = 210;
-				else if (BlueToothDevice.isBluKon())
+				else if (CGMBlueToothDevice.isBluKon())
 					alarmData.value = 5;
-				else if (BlueToothDevice.isMiaoMiao() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL())
+				else if (CGMBlueToothDevice.isMiaoMiao() || CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL())
 					alarmData.value = 20;
 			}
 			else if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING && alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) || (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT))

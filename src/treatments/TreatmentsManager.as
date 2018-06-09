@@ -8,7 +8,7 @@ package treatments
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
@@ -114,7 +114,7 @@ package treatments
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 			
 			//Fetch Data From Database
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				Trace.myTrace("TreatmentsManager.as", "Fetching treatments from database...");
 				
@@ -383,7 +383,7 @@ package treatments
 							NightscoutService.deleteTreatment(spikeTreatment);
 						
 						//Delete from databse
-						if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 							Database.deleteTreatmentSynchronous(spikeTreatment);
 						
 						treatmentsMap[spikeTreatment.ID] = null;
@@ -402,7 +402,7 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			
 			//Update in Database
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				Database.updateTreatmentSynchronous(treatment);
 			
 			//Update Nightscout
@@ -415,7 +415,7 @@ package treatments
 			Trace.myTrace("TreatmentsManager.as", "addNightscoutTreatment called! Treatment type: " + treatment.type);
 			
 			//Insert in Database
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				if (treatmentsMap[treatment.ID] == null) //new treatment
 					Database.insertTreatmentSynchronous(treatment);
@@ -758,7 +758,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -817,7 +817,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -894,7 +894,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -972,7 +972,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -1028,7 +1028,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -1096,7 +1096,7 @@ package treatments
 			Trace.myTrace("TreatmentsManager.as", "addExternalTreatment called! Type: " + treatment.type);
 			
 			//Insert in DB
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				if (treatmentsMap[treatment.ID] == null) //new treatment
 					Database.insertTreatmentSynchronous(treatment);

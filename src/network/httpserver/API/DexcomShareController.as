@@ -3,7 +3,7 @@ package network.httpserver.API
 	import flash.net.URLVariables;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import network.httpserver.ActionController;
 	
@@ -69,7 +69,7 @@ package network.httpserver.API
 				if (params.maxCount != null)	
 					numReadings = int(params.maxCount);
 				
-				var dexcomReadingsList:Array = BgReading.latest(numReadings, BlueToothDevice.isFollower());
+				var dexcomReadingsList:Array = BgReading.latest(numReadings, CGMBlueToothDevice.isFollower());
 				var dexcomReadingsCollection:Array = [];
 				
 				for (var i:int = 0; i < dexcomReadingsList.length; i++) 

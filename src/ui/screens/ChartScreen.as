@@ -6,7 +6,7 @@ package ui.screens
 	import flash.utils.setTimeout;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
@@ -336,7 +336,7 @@ package ui.screens
 					
 					appInBackground = false;
 					
-					if (!BlueToothDevice.isFollower())
+					if (!CGMBlueToothDevice.isFollower())
 					{
 						if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
 						{
@@ -492,7 +492,7 @@ package ui.screens
 		{
 			Trace.myTrace("ChartScreen.as", "on onBgReadingReceivedFollower!");
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				Trace.myTrace("ChartScreen.as", "User is not a follower. Ignoring");
 			
 			try
@@ -522,7 +522,7 @@ package ui.screens
 		{
 			Trace.myTrace("ChartScreen.as", "on onBgReadingReceived!");
 			
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 			{
 				Trace.myTrace("ChartScreen.as", "User is a follower. Ignoring");
 				return;

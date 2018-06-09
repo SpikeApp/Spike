@@ -15,7 +15,7 @@ package services
 	
 	import database.AlertType;
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
@@ -42,6 +42,7 @@ package services
 	import utils.FromtimeAndValueArrayCollection;
 	import utils.GlucoseHelper;
 	import utils.Trace;
+	import services.bluetooth.CGMBluetoothService;
 	
 	public class AlarmService extends EventDispatcher
 	{
@@ -974,12 +975,12 @@ package services
 					}
 				}
 				checkMissedReadingAlert();
-				if (!alertActive && !BlueToothDevice.isFollower()) {
+				if (!alertActive && !CGMBlueToothDevice.isFollower()) {
 					//to avoid that the arrival of a notification of a checkCalibrationRequestAlert stops the sounds of a previous low or high alert
 					checkCalibrationRequestAlert(now);
 				}
 			}
-			if (!alertActive && !BlueToothDevice.isFollower()) {
+			if (!alertActive && !CGMBlueToothDevice.isFollower()) {
 				//to avoid that the arrival of a notification of a checkBatteryLowAlert stops the sounds of a previous low or high alert
 				checkBatteryLowAlert(now);
 			}
@@ -1182,7 +1183,7 @@ package services
 			myTrace("in planApplicationStoppedAlert, planning alert for the future");
 			cancelInactiveAlert();
 			
-			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "" && Calibration.allForSensor().length >= 2) || BlueToothDevice.isFollower())
+			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "" && Calibration.allForSensor().length >= 2) || CGMBlueToothDevice.isFollower())
 			{
 				Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 				
@@ -1211,14 +1212,14 @@ package services
 			
 			lastMissedReadingAlertCheckTimeStamp = (new Date()).valueOf(); 	
 			
-			if (Sensor.getActiveSensor() == null && !BlueToothDevice.isFollower()) {
+			if (Sensor.getActiveSensor() == null && !CGMBlueToothDevice.isFollower()) {
 				myTrace("in checkMissedReadingAlert, but sensor is not active and not follower, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
 				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				return;
 			}
 			var lastBgReading:BgReading 
-			if (!BlueToothDevice.isFollower()) {
+			if (!CGMBlueToothDevice.isFollower()) {
 				var lastBgReadings:Array = BgReading.latest(1);
 				if (lastBgReadings.length == 0) {
 					myTrace("in checkMissedReadingAlert, but no readings exist yet, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
@@ -1253,12 +1254,12 @@ package services
 						myTrace("in checkAlarms, missed reading");
 						
 						var alertBody:String = " ";
-						if (BlueToothDevice.isMiaoMiao()) 
+						if (CGMBlueToothDevice.isMiaoMiao()) 
 						{
-							if (BluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao > 0) 
+							if (CGMBluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao > 0) 
 							{
 								alertBody = ModelLocator.resourceManagerInstance.getString("alarmservice","received");
-								alertBody += " " + BluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao + " ";
+								alertBody += " " + CGMBluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao + " ";
 								alertBody += ModelLocator.resourceManagerInstance.getString("alarmservice","consecutive_sensor_not_detected");
 							}
 							myTrace("in checkMissedReadingAlert, fire alert with body = " + alertBody);
@@ -1377,7 +1378,7 @@ package services
 		/**
 		 * returns true of alarm fired
 		 */private static function checkBatteryLowAlert(now:Date):Boolean {
-			 if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter()) {
+			 if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isLimitter()) {
 				 myTrace("in checkAlarms, checkBatteryLowAlert, device is bluereader or limitter, battery value not yet supported/tested.");
 				 return false;
 			 }
@@ -1401,17 +1402,17 @@ package services
 					 myTrace("in checkAlarms, batteryLevel alert not snoozed ");
 					 //not snoozed
 					 
-					 if ((BlueToothDevice.isDexcomG4() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) > 0))
+					 if ((CGMBlueToothDevice.isDexcomG4() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) > 0))
 						 ||
-						 (BlueToothDevice.isBluKon() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) > 0))
+						 (CGMBlueToothDevice.isBluKon() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) > 0))
 						 ||
-						 (BlueToothDevice.isMiaoMiao() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) > 0))
+						 (CGMBlueToothDevice.isMiaoMiao() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) > 0))
 						 ||
-						 (BlueToothDevice.isxBridgeR() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL)) > 0))
+						 (CGMBlueToothDevice.isxBridgeR() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL)) > 0))
 						 ||
-						 (BlueToothDevice.isBlueReader() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)) > 0))
+						 (CGMBlueToothDevice.isBlueReader() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)) > 0))
 						 ||
-						 (BlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown"))) {
+						 (CGMBlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown"))) {
 						 myTrace("in checkAlarms, battery level is too low");
 						 fireAlert(
 							 6,

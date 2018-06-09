@@ -3,7 +3,7 @@ package ui.screens.display.treatments
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Alert;
@@ -228,7 +228,7 @@ package ui.screens.display.treatments
 				itemRenderer.paddingRight = -25;
 				itemRenderer.accessoryOffsetX = -30;
 				itemRenderer.labelField = "label";
-				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				{
 					itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
 					{

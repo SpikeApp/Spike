@@ -1,4 +1,4 @@
-package services
+package services.bluetooth
 {
 	import com.distriqt.extension.bluetoothle.AuthorisationStatus;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
@@ -11,8 +11,6 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
-	import com.spikeapp.spike.airlibrary.SpikeANE;
-	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
@@ -35,7 +33,7 @@ package services
 	import G5Model.VersionRequestTxMessage;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
@@ -59,6 +57,8 @@ package services
 	import model.TransmitterDataXBridgeRDataPacket;
 	import model.TransmitterDataXdripDataPacket;
 	
+	import services.NotificationService;
+	
 	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
@@ -73,14 +73,14 @@ package services
 	 * all functionality related to bluetooth connectivity<br>
 	 * Only for CGM transmitters.
 	 */
-	public class BluetoothService extends EventDispatcher
+	public class CGMBluetoothService extends EventDispatcher
 	{
 		[ResourceBundle("globaltranslations")]
 		[ResourceBundle("bluetoothservice")]
 		[ResourceBundle("transmitterservice")]
 		
-		private static var _instance:BluetoothService = new BluetoothService();
-		public static function get instance():BluetoothService
+		private static var _instance:CGMBluetoothService = new CGMBluetoothService();
+		public static function get instance():CGMBluetoothService
 		{
 			return _instance;
 		}
@@ -274,7 +274,7 @@ package services
 			return _activeBluetoothPeripheral;
 		}
 		
-		public function BluetoothService()
+		public function CGMBluetoothService()
 		{
 			if (_instance != null) {
 				throw new Error("BluetoothService class constructor can not be used");	
@@ -308,10 +308,10 @@ package services
 			//Miaomiao
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
 			
-			if (BlueToothDevice.isMiaoMiao()) {
+			if (CGMBlueToothDevice.isMiaoMiao()) {
 				SpikeANE.startScanDeviceMiaoMiao();
-				if (BlueToothDevice.known()) {
-					SpikeANE.setMiaoMiaoMac(BlueToothDevice.address);
+				if (CGMBlueToothDevice.known()) {
+					SpikeANE.setMiaoMiaoMac(CGMBlueToothDevice.address);
 				}
 			}
 			
@@ -330,7 +330,7 @@ package services
 					
 					case AuthorisationStatus.NOT_DETERMINED:
 					case AuthorisationStatus.AUTHORISED:				
-						if (BlueToothDevice.isMiaoMiao()) {
+						if (CGMBlueToothDevice.isMiaoMiao()) {
 							addMiaoMiaoEventListeners();
 						} else {
 							addBluetoothLEEventListeners();
@@ -406,8 +406,8 @@ package services
 				}
 				
 				stopScanning(null);//need to stop scanning because device type has changed, means also the UUID to scan for
-				if (!BlueToothDevice.isFollower()) {
-					if (BlueToothDevice.alwaysScan() && BlueToothDevice.transmitterIdKnown()) {
+				if (!CGMBlueToothDevice.isFollower()) {
+					if (CGMBlueToothDevice.alwaysScan() && CGMBlueToothDevice.transmitterIdKnown()) {
 						if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
 							startScanning();
 						}
@@ -415,9 +415,9 @@ package services
 					}
 				}
 				
-				BlueToothDevice.forgetBlueToothDevice();
+				CGMBlueToothDevice.forgetBlueToothDevice();
 				
-				if (BlueToothDevice.isMiaoMiao()) {
+				if (CGMBlueToothDevice.isMiaoMiao()) {
 					SpikeANE.startScanDeviceMiaoMiao();
 					addMiaoMiaoEventListeners();
 				} else {
@@ -426,8 +426,8 @@ package services
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in commonSettingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
-				BlueToothDevice.forgetBlueToothDevice();
-				if (BlueToothDevice.transmitterIdKnown() && BlueToothDevice.alwaysScan()) {
+				CGMBlueToothDevice.forgetBlueToothDevice();
+				if (CGMBlueToothDevice.transmitterIdKnown() && CGMBlueToothDevice.alwaysScan()) {
 					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
 						myTrace("in commonSettingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, restart scanning");
 						startScanning();
@@ -470,24 +470,24 @@ package services
 		}
 		
 		private static function bluetoothStatusIsOn():void {
-			if (activeBluetoothPeripheral != null && !(BlueToothDevice.alwaysScan())) {//do we ever pass here, activebluetoothperipheral is set to null after disconnect
+			if (activeBluetoothPeripheral != null && !(CGMBlueToothDevice.alwaysScan())) {//do we ever pass here, activebluetoothperipheral is set to null after disconnect
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("in bluetoothStatusIsOn, Trying to connect to known device.");
-			} else if (activeBluetoothPeripheral != null && (BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5() || BlueToothDevice.isBluKon() || BlueToothDevice.isDexcomG4())) {
+			} else if (activeBluetoothPeripheral != null && (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isDexcomG4())) {
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("in bluetoothStatusIsOn, Trying to connect.");
-			} else if (BlueToothDevice.isMiaoMiao()) {
-				if (BlueToothDevice.known()) {
+			} else if (CGMBlueToothDevice.isMiaoMiao()) {
+				if (CGMBlueToothDevice.known()) {
 					myTrace("in bluetoothStatusIsOn, isMiaoMiao");
-					SpikeANE.setMiaoMiaoMac(BlueToothDevice.address);
+					SpikeANE.setMiaoMiaoMac(CGMBlueToothDevice.address);
 					startScanning();
 				}
 				myTrace("in bluetoothStatusIsOn, device is miaomiao - DO WE NEED TO DEVELOP ANYTHING HERE ?.");
-			} else if (BlueToothDevice.known() || (BlueToothDevice.alwaysScan() && BlueToothDevice.transmitterIdKnown())) {
+			} else if (CGMBlueToothDevice.known() || (CGMBlueToothDevice.alwaysScan() && CGMBlueToothDevice.transmitterIdKnown())) {
 				myTrace("bluetoothStatusIsOn, call startScanning");
 				startScanning();
 			} else {
@@ -496,12 +496,12 @@ package services
 		}
 		
 		public static function startScanning(itsNotAnAlwaysScanDevice:Boolean = false):void {
-			if (BlueToothDevice.isFollower()) {
+			if (CGMBlueToothDevice.isFollower()) {
 				myTrace("in startScanning but follower, not starting scan");
 				return;
 			}
 			
-			if (BlueToothDevice.isMiaoMiao()) {
+			if (CGMBlueToothDevice.isMiaoMiao()) {
 				myTrace("in startScanning, is miaomiao");
 				SpikeANE.startScanningForMiaoMiao();
 				return;
@@ -521,7 +521,7 @@ package services
 							scanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
 							scanTimer.start();
 						}
-						if (BlueToothDevice.isBluKon()) {
+						if (CGMBlueToothDevice.isBluKon()) {
 							startMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 						}
 					}
@@ -546,7 +546,7 @@ package services
 			if (BluetoothLE.service.centralManager.isScanning) {
 				myTrace("in stopScanning, is scanning, call stopScan");
 				BluetoothLE.service.centralManager.stopScan();
-				if (BlueToothDevice.isBluKon()) {
+				if (CGMBlueToothDevice.isBluKon()) {
 					stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 				}
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
@@ -556,18 +556,18 @@ package services
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
 			myTrace("in central_peripheralDiscoveredHandler, stop scanning. Device name = " + event.peripheral.name + ", Device address = " + event.peripheral.uuid);
 			BluetoothLE.service.centralManager.stopScan();
-			if (BlueToothDevice.isBluKon()) {
+			if (CGMBlueToothDevice.isBluKon()) {
 				stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 			}
 
 			discoveryTimeStamp = (new Date()).valueOf();
-			if (awaitingConnect && !(BlueToothDevice.alwaysScan())) {
+			if (awaitingConnect && !(CGMBlueToothDevice.alwaysScan())) {
 				myTrace("in central_peripheralDiscoveredHandler, but already awaiting connect, restart scan");
 				startRescan(null);
 				return;
 			}
 			
-			if (BlueToothDevice.isDexcomG5()) {
+			if (CGMBlueToothDevice.isDexcomG5()) {
 				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
 					myTrace("in central_peripheralDiscoveredHandler, G5 but last reading was less than 1 minute ago, ignoring this peripheral discovery. restart scan");
 					startRescan(null);
@@ -575,7 +575,7 @@ package services
 				}
 			}
 			
-			if (BlueToothDevice.isBluKon()) {
+			if (CGMBlueToothDevice.isBluKon()) {
 				if (peripheralConnected) {
 					myTrace("in central_peripheralDiscoveredHandler, blukon, already connected. Ignoring this device (it could be another one) and not restarting scanning");
 					return;
@@ -585,10 +585,10 @@ package services
 			//event.peripheral contains a Peripheral object with information about the Peripheral
 			//only for DexcomG5 and Blucon we look at the device name. For the others we don't care about the device name
 			var expectedPeripheralName:String;
-			if (BlueToothDevice.isDexcomG5()) {
+			if (CGMBlueToothDevice.isDexcomG5()) {
 				expectedPeripheralName = "DEXCOM" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).substring(4,6);
 				myTrace("in central_peripheralDiscoveredHandler, expected g5 peripheral name = " + expectedPeripheralName);
-			} else if (BlueToothDevice.isBluKon()) {
+			} else if (CGMBlueToothDevice.isBluKon()) {
 				expectedPeripheralName = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).toUpperCase();
 				if (expectedPeripheralName.toUpperCase().indexOf("BLU") < 0) {
 					while (expectedPeripheralName.length < 5) {
@@ -600,30 +600,30 @@ package services
 			}
 			
 			if (
-				!(BlueToothDevice.alwaysScan()) //if always scan peripheral, we don't look at the name of the peripheral
+				!(CGMBlueToothDevice.alwaysScan()) //if always scan peripheral, we don't look at the name of the peripheral
 				||
-				(BlueToothDevice.isDexcomG5() &&
+				(CGMBlueToothDevice.isDexcomG5() &&
 					(
 						(event.peripheral.name as String).toUpperCase().indexOf(expectedPeripheralName) > -1
 					)
 				)
 				||
-				(BlueToothDevice.isBluKon() &&
+				(CGMBlueToothDevice.isBluKon() &&
 					(
 						(event.peripheral.name as String).toUpperCase().indexOf(expectedPeripheralName) > -1
 					)
 				)
 			) {
-				if (BlueToothDevice.address != "") {
-					if (BlueToothDevice.address != event.peripheral.uuid) {
+				if (CGMBlueToothDevice.address != "") {
+					if (CGMBlueToothDevice.address != event.peripheral.uuid) {
 						myTrace("in central_peripheralDiscoveredHandler, UUID of found peripheral does not match with name of the UUID stored in the database - will ignore this peripheral.");
 						startRescan(null);
 						return;
 					}
 				} else {
 					//we store also this peripheral, as of now, all future connect attempts will be only to this one, until the user choses "forget device"
-					BlueToothDevice.address = event.peripheral.uuid;
-					BlueToothDevice.name = event.peripheral.name;
+					CGMBlueToothDevice.address = event.peripheral.uuid;
+					CGMBlueToothDevice.name = event.peripheral.name;
 					myTrace("in central_peripheralDiscoveredHandler, Device details will be stored in database. Future attempts will only use this device to connect to.");
 				}
 				myTrace("in central_peripheralDiscoveredHandler, try to connect");
@@ -647,19 +647,19 @@ package services
 			
 			blukonCurrentCommand = "";
 			
-			if (BlueToothDevice.isDexcomG5()) {
+			if (CGMBlueToothDevice.isDexcomG5()) {
 				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 15 * 1000) {
 					myTrace("in central_peripheralConnectHandler, G5 but last reading was less than 15 seconds ago, no further action. Let G5 do the disconnect");
 					return;
 				}
 			}
 			
-			if (BlueToothDevice.isBluKon()) {
+			if (CGMBlueToothDevice.isBluKon()) {
 				if (BluetoothLE.service.centralManager.isScanning) {
 					//this may happen because for blukon, after disconnect, we start scanning and also try to reconnect
 					myTrace("in central_peripheralConnectHandler, blukon and scanning. Stop scanning");
 					BluetoothLE.service.centralManager.stopScan();
-					if (BlueToothDevice.isBluKon()) {
+					if (CGMBlueToothDevice.isBluKon()) {
 						stopMonitoringAndRangingBeaconsInRegion(Blucon_Advertisement_UUID);
 					}
 				}
@@ -673,14 +673,14 @@ package services
 				scanTimer = null;
 			}
 
-			if (!awaitingConnect && !BlueToothDevice.isBluKon()) {
+			if (!awaitingConnect && !CGMBlueToothDevice.isBluKon()) {
 				myTrace("in central_peripheralConnectHandler but awaitingConnect = false, will disconnect");
 				BluetoothLE.service.centralManager.disconnect(event.peripheral);
 				return;
 			} 
 			
 			awaitingConnect = false;
-			if (!BlueToothDevice.alwaysScan() && !BlueToothDevice.isMiaoMiao()) {//should never be miaomiao ?
+			if (!CGMBlueToothDevice.alwaysScan() && !CGMBlueToothDevice.isMiaoMiao()) {//should never be miaomiao ?
 				if ((new Date()).valueOf() - connectionAttemptTimeStamp > maxTimeBetweenConnectAttemptAndConnectSuccess * 1000) { //not waiting more than 3 seconds between device discovery and connection success
 					myTrace("in central_peripheralConnectHandler but time between connect attempt and connect success is more than " + maxTimeBetweenConnectAttemptAndConnectSuccess + " seconds. Will disconnect");
 					BluetoothLE.service.centralManager.disconnect(event.peripheral);
@@ -688,7 +688,7 @@ package services
 				} 
 			}
 			
-			if (BlueToothDevice.isBlueReader() || BlueToothDevice.isBluKon()) {
+			if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isBluKon()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			}
 			
@@ -696,7 +696,7 @@ package services
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
 			
-			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5() || BlueToothDevice.isDexcomG4())
+			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG4())
 				activeBluetoothPeripheral = event.peripheral;
 
 			discoverServices();
@@ -725,7 +725,7 @@ package services
 				
 				waitingForServicesDiscovered = true;
 				activeBluetoothPeripheral.discoverServices(service_UUID_Vector);
-				if (!BlueToothDevice.isBluKon()) {
+				if (!CGMBlueToothDevice.isBluKon()) {
 					discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 					discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
 					discoverServiceOrCharacteristicTimer.start();
@@ -762,7 +762,7 @@ package services
 			
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
-			if (BlueToothDevice.isDexcomG5() && awaitingAuthStatusRxMessage) {
+			if (CGMBlueToothDevice.isDexcomG5() && awaitingAuthStatusRxMessage) {
 				myTrace('in central_peripheralDisconnectHandler, Dexcom G5 and awaitingAuthStatusRxMessage, seems another app is trying to connecto to the G5');
 				awaitingAuthStatusRxMessage = false;
 				if (new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP)) < MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5) {
@@ -794,21 +794,21 @@ package services
 				}
 			}
 			
-			if (BlueToothDevice.isBluKon()) {
+			if (CGMBlueToothDevice.isBluKon()) {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				//try to reconnect and also restart scanning, to cover reconnect issue. Because maybe the transmitter starts re-advertising
 				tryReconnect();
 				startScanning();
-			} else if (BlueToothDevice.isBlueReader()) {
+			} else if (CGMBlueToothDevice.isBlueReader()) {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
-			}  else if (BlueToothDevice.isDexcomG4()) {
+			}  else if (CGMBlueToothDevice.isDexcomG4()) {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
-			} else if (BlueToothDevice.isDexcomG5()) {
+			} else if (CGMBlueToothDevice.isDexcomG5()) {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
@@ -834,7 +834,7 @@ package services
 				return;
 			}
 
-			if (!waitingForServicesDiscovered && !(BlueToothDevice.alwaysScan())) {
+			if (!waitingForServicesDiscovered && !(CGMBlueToothDevice.alwaysScan())) {
 				myTrace("in peripheral_discoverServicesHandler but not waitingForServicesDiscovered and not alwaysscan device, ignoring");
 				return;
 			}
@@ -847,7 +847,7 @@ package services
 			}
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
-			if (BlueToothDevice.isDexcomG5()) {
+			if (CGMBlueToothDevice.isDexcomG5()) {
 				awaitingAuthStatusRxMessage = false;	
 			}
 			
@@ -906,7 +906,7 @@ package services
 			}
 
 			myTrace("in peripheral_discoverCharacteristicsHandler");
-			if (!waitingForPeripheralCharacteristicsDiscovered && !BlueToothDevice.isBluKon()) {
+			if (!waitingForPeripheralCharacteristicsDiscovered && !CGMBlueToothDevice.isBluKon()) {
 				myTrace("in peripheral_discoverCharacteristicsHandler but not waitingForPeripheralCharacteristicsDiscovered");
 				return;
 			}
@@ -986,15 +986,16 @@ package services
 				value.endian = Endian.LITTLE_ENDIAN;
 				myTrace("in peripheral_characteristic_updatedHandler, data packet received from transmitter : " + utils.UniqueId.bytesToHex(value));
 				value.position = 0;
-				if (BlueToothDevice.isDexcomG5()) {
+				if (CGMBlueToothDevice.isDexcomG5()) {
+					G5.processG5TransmitterData(value, event.characteristic);
 					processG5TransmitterData(value, event.characteristic);
-				} else if (BlueToothDevice.isBluKon()) {
+				} else if (CGMBlueToothDevice.isBluKon()) {
 					processBLUKONTransmitterData(value);
-				} else if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
+				} else if (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isxBridgeR()) {
 					processG4TransmitterData(value);
-				} else if (BlueToothDevice.isBlueReader()) {
+				} else if (CGMBlueToothDevice.isBlueReader()) {
 					processBlueReaderTransmitterData(value);
-				} else if (BlueToothDevice.isTransmiter_PL()) {
+				} else if (CGMBlueToothDevice.isTransmiter_PL()) {
 					processTRANSMITER_PLTransmitterData(value);
 				} else {
 					myTrace("in peripheral_characteristic_updatedHandler, device type not known");
@@ -1009,9 +1010,9 @@ package services
 			}
 
 			myTrace("in peripheral_characteristic_writeHandler " + getCharacteristicName(event.characteristic.uuid));
-			if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
+			if (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isxBridgeR()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
-			} else if (BlueToothDevice.isDexcomG5() && event.characteristic.uuid.toUpperCase() == G5_Authentication_Characteristic_UUID.toUpperCase()) {
+			} else if (CGMBlueToothDevice.isDexcomG5() && event.characteristic.uuid.toUpperCase() == G5_Authentication_Characteristic_UUID.toUpperCase()) {
 				awaitingAuthStatusRxMessage = true;
 			}
 		}
@@ -1034,7 +1035,7 @@ package services
 			}
 
 			myTrace("in peripheral_characteristic_subscribeHandler success: " + getCharacteristicName(event.characteristic.uuid));
-			if (BlueToothDevice.isDexcomG5()) {
+			if (CGMBlueToothDevice.isDexcomG5()) {
 				if (event.characteristic.uuid.toUpperCase() == G5_Control_Characteristic_UUID.toUpperCase()) {
 					if (G5_RESET_REQUESTED) {
 						doG5Reset();
@@ -1046,7 +1047,7 @@ package services
 					fullAuthenticateG5();
 				}
 			}
-			if (!BlueToothDevice.alwaysScan()) {
+			if (!CGMBlueToothDevice.alwaysScan()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			}
 		}
@@ -1061,7 +1062,7 @@ package services
 			myTrace("in peripheral_characteristic_subscribeErrorHandler, event.error = " + event.error);
 			myTrace("in peripheral_characteristic_subscribeErrorHandler, event.errorcode  = " + event.errorCode);
 			if ((new Date()).valueOf() - timeStampOfLastDeviceNotPairedForBlukon > 4.75 * 60 * 1000) {
-				if (BlueToothDevice.isBluKon()) {
+				if (CGMBlueToothDevice.isBluKon()) {
 					if (event.characteristic.uuid.toUpperCase() == Blucon_RX_Characteristic_UUID.toUpperCase()
 						&&
 						event.errorCode == 15 
@@ -1084,7 +1085,7 @@ package services
 		 * address only for miaomiao because the cancelMiaoMiaoConnection method needs that mac, otherwise it will not forget the device
 		 */
 		public static function forgetActiveBluetoothPeripheral(address:String = ""):void {
-			if (BlueToothDevice.isMiaoMiao()) {
+			if (CGMBlueToothDevice.isMiaoMiao()) {
 				myTrace("in forgetActiveBluetoothPeripheral  miaomiao device");
 				SpikeANE.cancelMiaoMiaoConnection(address);
 				SpikeANE.resetMiaoMiaoMac();
@@ -1182,7 +1183,7 @@ package services
 						myTrace("in processG5TransmitterData, firmare version unknown, will request it");
 						doG5FirmwareVersionRequestMessage(characteristic);
 					} else {
-						if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER)) > BluetoothService.G5_BATTERY_READ_PERIOD_MS) {
+						if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER)) > CGMBluetoothService.G5_BATTERY_READ_PERIOD_MS) {
 							doBatteryInfoRequestMessage(characteristic);
 						} else {
 							doDisconnectMessageG5(characteristic);
@@ -2203,18 +2204,18 @@ package services
 		}
 		
 		private static function receivedMiaoMiaoDeviceAddress(event:SpikeANEEvent):void {
-			if (!BlueToothDevice.isMiaoMiao()) {
+			if (!CGMBlueToothDevice.isMiaoMiao()) {
 				myTrace("in receivedMiaoMiaoDeviceAddress but not miaomiao device, not processing");
 			} else {
-				BlueToothDevice.address = event.data.MAC;
-				BlueToothDevice.name = "MIAOMIAO";
+				CGMBlueToothDevice.address = event.data.MAC;
+				CGMBlueToothDevice.name = "MIAOMIAO";
 			}
 		}
 		
 		private static function receivedMiaoMiaoDataPacket(event:SpikeANEEvent):void {
 			Notifications.service.cancel(NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO);
 			_amountOfConsecutiveSensorNotDetectedForMiaoMiao = 0;
-			if (!BlueToothDevice.isMiaoMiao()) {
+			if (!CGMBlueToothDevice.isMiaoMiao()) {
 				myTrace("in receivedMiaoMiaoDataPacket but not miaomiao device, not processing");
 			} else {
 				Tomato.decodeTomatoPacket(utils.UniqueId.hexStringToByteArray(event.data.packet as String));
@@ -2230,37 +2231,37 @@ package services
 		}
 		
 		private static function setPeripheralUUIDs():void {
-			if (BlueToothDevice.isDexcomG4()) {
+			if (CGMBlueToothDevice.isDexcomG4()) {
 				service_UUID = G4_Service_UUID;
 				advertisement_UUID_Vector = new <String>[G4_Advertisement_UUID];
 				characteristics_UUID_Vector = G4_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = G4_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = G4_TX_Characteristic_UUID;
-			} else if (BlueToothDevice.isDexcomG5()) {
+			} else if (CGMBlueToothDevice.isDexcomG5()) {
 				service_UUID = G5_Service_UUID;
 				advertisement_UUID_Vector = new <String>[G5_Advertisement_UUID];
 				characteristics_UUID_Vector = G5_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = G5_Authentication_Characteristic_UUID;
 				TX_Characteristic_UUID = G5_Control_Characteristic_UUID;
-			} else if (BlueToothDevice.isBlueReader()) {
+			} else if (CGMBlueToothDevice.isBlueReader()) {
 				service_UUID = BlueReader_Service_UUID;
 				advertisement_UUID_Vector = new <String>[BlueReader_Advertisement_UUID];
 				characteristics_UUID_Vector = BlueReader_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = BlueReader_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = BlueReader_TX_Characteristic_UUID;
-			} else if (BlueToothDevice.isBluKon()) {
+			} else if (CGMBlueToothDevice.isBluKon()) {
 				service_UUID = Blucon_Service_UUID;
 				advertisement_UUID_Vector = new <String>[Blucon_Advertisement_UUID];
 				characteristics_UUID_Vector = Blucon_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = Blucon_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = Blucon_TX_Characteristic_UUID;
-			} else if (BlueToothDevice.isTransmiter_PL()) {
+			} else if (CGMBlueToothDevice.isTransmiter_PL()) {
 				service_UUID = Transmiter_PL_Service_UUID;
 				advertisement_UUID_Vector = new <String>[Transmiter_PL_Advertisement_UUID];
 				characteristics_UUID_Vector = Transmiter_PL_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = Transmiter_PL_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = Transmiter_PL_TX_Characteristic_UUID;
-			} else if (BlueToothDevice.isxBridgeR()) {
+			} else if (CGMBlueToothDevice.isxBridgeR()) {
 				service_UUID = xBridgeR_Service_UUID;
 				advertisement_UUID_Vector = new <String>[xBridgeR_Advertisement_UUID];
 				characteristics_UUID_Vector = xBridgeR_Characteristics_UUID_Vector;

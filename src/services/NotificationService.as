@@ -18,7 +18,7 @@ package services
 	import flash.utils.Timer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -38,6 +38,7 @@ package services
 	import utils.BadgeBuilder;
 	import utils.BgGraphBuilder;
 	import utils.Trace;
+	import services.bluetooth.CGMBluetoothService;
 	
 	/**
 	 * This service<br>
@@ -283,8 +284,8 @@ package services
 			
 			alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
 			
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
 			
 			//var object:Object = Notifications.service.authorisationStatus();
 			switch (Notifications.service.authorisationStatus())
@@ -391,7 +392,7 @@ package services
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && SpikeANE.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
-				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
+				if (Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");
@@ -438,7 +439,7 @@ package services
 			{	
 				//App badge
 				myTrace("in updateBgNotification app badge on, local notifications off and not in foreground");
-				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
+				if (Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
 					

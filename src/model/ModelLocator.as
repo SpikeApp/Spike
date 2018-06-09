@@ -20,7 +20,7 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.AlarmService;
-	import services.BluetoothService;
+	import services.bluetooth.CGMBluetoothService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
@@ -144,7 +144,7 @@ package model
 				Database.getBlueToothDevice();
 				TransmitterService.init();
 				SpikeANE.init();
-				BluetoothService.init();
+				CGMBluetoothService.init();
 				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 				NotificationService.init();
 				CalibrationService.init();

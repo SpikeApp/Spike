@@ -9,7 +9,7 @@ package services
 	import flash.events.EventDispatcher;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Sensor;
@@ -37,6 +37,7 @@ package services
 	import utils.BadgeBuilder;
 	import utils.GlucoseHelper;
 	import utils.Trace;
+	import services.bluetooth.CGMBluetoothService;
 	
 	/**
 	 * listens for bgreadings, at each bgreading user is asked to enter bg value<br>
@@ -79,7 +80,7 @@ package services
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED, receivedSensorChanged);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED, receivedSensorChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 			myTrace("finished init");
 		}
@@ -196,7 +197,7 @@ package services
 			initialCalibrationActive = false;
 			
 			var warmupTimeInMs:Number = 2 * 3600 * 1000;
-			if (BlueToothDevice.isTypeLimitter()) {
+			if (CGMBlueToothDevice.isTypeLimitter()) {
 				warmupTimeInMs = 1 * 3600 * 1000;
 			}
 			
@@ -332,7 +333,7 @@ package services
 				
 				myTrace("in intialCalibrationValueEntered, starting Calibration.initialCalibration");
 				var now:Number = new Date().valueOf();
-				Calibration.initialCalibration(asNumber, now - TIME_5_MINUTES, now, BlueToothDevice.isMiaoMiao() ? 36 : 5);
+				Calibration.initialCalibration(asNumber, now - TIME_5_MINUTES, now, CGMBlueToothDevice.isMiaoMiao() ? 36 : 5);
 				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 				_instance.dispatchEvent(calibrationServiceEvent);
 			}
@@ -723,7 +724,7 @@ package services
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN,"true");
 					}
 				}
-				if (currentSensorAgeInMinutes > 0 && Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao() && BlueToothDevice.knowsFSLAge() && currentSensorAgeInMinutes < 14 * 24 * 60) {
+				if (currentSensorAgeInMinutes > 0 && Sensor.getActiveSensor() == null && !CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.knowsFSLAge() && currentSensorAgeInMinutes < 14 * 24 * 60) {
 					//not doing this for miaomiao because sensorstart for miaomiao is already handled in LibreAlarmReceiver
 					myTrace("in commonSettingChanged, sensorage changed to smaller value, starting sensor");
 					Sensor.startSensor(((new Date()).valueOf() - currentSensorAgeInMinutes * 60 * 1000));
@@ -751,7 +752,7 @@ package services
 		}
 		
 		private static function receivedSensorChanged(be:BlueToothServiceEvent):void {
-			if (Sensor.getActiveSensor() != null && BlueToothDevice.knowsFSLAge()) {
+			if (Sensor.getActiveSensor() != null && CGMBlueToothDevice.knowsFSLAge()) {
 				myTrace("in receivedSensorChanged, Stopping the sensor"); 
 				Sensor.stopSensor();
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");

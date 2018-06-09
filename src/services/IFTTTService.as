@@ -4,7 +4,7 @@ package services
 	import flash.net.URLRequestMethod;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -498,10 +498,10 @@ package services
 		
 		private static function onBgReading(e:Event):void
 		{
-			if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) 
+			if (Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) 
 			{
 				var lastReading:BgReading;
-				if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+				if (!CGMBlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
 				else lastReading = BgReading.lastWithCalculatedValue();
 				
 				if (lastReading != null && lastReading.calculatedValue != 0 && (new Date()).valueOf() - lastReading.timestamp < 4.5 * 60 * 1000 && lastReading.calculatedValue != 0 && (new Date().getTime()) - (60000 * 11) - lastReading.timestamp <= 0) 
@@ -555,7 +555,7 @@ package services
 		private static function onUrgentHighGlucoseTriggered(e:AlarmServiceEvent):void
 		{
 			var lastReading:BgReading;
-			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			if (!CGMBlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
 			else lastReading = BgReading.lastWithCalculatedValue();
 			
 			var info:Object = {};
@@ -589,7 +589,7 @@ package services
 		private static function onHighGlucoseTriggered(e:AlarmServiceEvent):void
 		{
 			var lastReading:BgReading;
-			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			if (!CGMBlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
 			else lastReading = BgReading.lastWithCalculatedValue();
 			
 			var info:Object = {};
@@ -623,7 +623,7 @@ package services
 		private static function onLowGlucoseTriggered(e:AlarmServiceEvent):void
 		{
 			var lastReading:BgReading;
-			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			if (!CGMBlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
 			else lastReading = BgReading.lastWithCalculatedValue();
 			
 			var info:Object = {};
@@ -657,7 +657,7 @@ package services
 		private static function onUrgentLowGlucoseTriggered(e:AlarmServiceEvent):void
 		{
 			var lastReading:BgReading;
-			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			if (!CGMBlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
 			else lastReading = BgReading.lastWithCalculatedValue();
 			
 			var info:Object = {};
@@ -721,7 +721,7 @@ package services
 		private static function onMissedReadingsTriggered(e:AlarmServiceEvent):void
 		{
 			var lastReading:BgReading;
-			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			if (!CGMBlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
 			else lastReading = BgReading.lastWithCalculatedValue();
 			
 			var timeSpan:TimeSpan;

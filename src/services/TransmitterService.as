@@ -10,7 +10,7 @@ package services
 	import flash.utils.Endian;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
 	
@@ -40,6 +40,7 @@ package services
 	
 	import utils.BadgeBuilder;
 	import utils.Trace;
+	import services.bluetooth.CGMBluetoothService;
 	
 	/**
 	 * transmitter service handles all transmitterdata received from BlueToothService<br>
@@ -83,7 +84,7 @@ package services
 			else
 				initialStart = false;
 			
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
 		}
@@ -128,7 +129,7 @@ package services
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 						&&
 						transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
@@ -136,14 +137,14 @@ package services
 						value.endian = Endian.LITTLE_ENDIAN;
 						value.writeByte(0x06);
 						value.writeByte(0x01);
-						value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+						value.writeInt((CGMBluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
 						myTrace("calling BluetoothService.ackCharacteristicUpdate");
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					} else {
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					}
 				} else if ((be.data is TransmitterDataXBridgeDataPacket) || (be.data is TransmitterDataXBridgeRDataPacket)) {
 					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket;
@@ -160,7 +161,7 @@ package services
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 						&&
 						transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
@@ -168,14 +169,14 @@ package services
 						value.endian = Endian.LITTLE_ENDIAN;
 						value.writeByte(0x06);
 						value.writeByte(0x01);
-						value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+						value.writeInt((CGMBluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
 						myTrace("calling BluetoothService.ackCharacteristicUpdate");
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					} else {
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					}						
 
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
@@ -190,7 +191,7 @@ package services
 					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 					_instance.dispatchEvent(transmitterServiceEvent);
 
-					if (BlueToothDevice.isDexcomG4()) {
+					if (CGMBlueToothDevice.isDexcomG4()) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
 					}
 				} else if (be.data is TransmitterDataXdripDataPacket) {
@@ -255,7 +256,7 @@ package services
 								
 								function onResetTransmitter(e:Event):void
 								{
-									BluetoothService.G5_RequestReset();
+									CGMBluetoothService.G5_RequestReset();
 									
 									AlertManager.showSimpleAlert
 									(
@@ -328,7 +329,7 @@ package services
 					lastBgReading = BgReading.lastNoSensor();
 					if (lastBgReading == null || lastBgReading.timestamp + 4 * 60 * 1000 < (new Date()).valueOf()) {
 						myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket, sending 6C");
-						BluetoothService.writeToCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
+						CGMBluetoothService.writeToCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 					}
 				} else if (be.data is TransmitterDataBluKonPacket) {
 					lastBgReading = BgReading.lastNoSensor();
@@ -411,9 +412,9 @@ package services
 				value.endian = Endian.LITTLE_ENDIAN;
 				value.writeByte(0x06);
 				value.writeByte(0x01);
-				value.writeInt(BluetoothService.encodeTxID(transmitterIDTextInput.text));
+				value.writeInt(CGMBluetoothService.encodeTxID(transmitterIDTextInput.text));
 				myTrace("calling BluetoothService.ackCharacteristicUpdate");
-				BluetoothService.writeToCharacteristic(value);
+				CGMBluetoothService.writeToCharacteristic(value);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDTextInput.text.toUpperCase());
 			}
 		}

@@ -1,6 +1,6 @@
 package database
 {
-	import services.BluetoothService;
+	import services.bluetooth.CGMBluetoothService;
 	
 	import utils.Trace;
 	
@@ -25,15 +25,15 @@ package database
 	 * <br>
 	 * - xbridgr : requested by Marek Macner. Uses an adapted version of the xbridge protocol, for FSL
 	 */
-	public class BlueToothDevice extends SuperDatabaseClass
+	public class CGMBlueToothDevice extends SuperDatabaseClass
 	{
 		public static const DEFAULT_BLUETOOTH_DEVICE_ID:String = "1465501584186cb0d5f60b3c";
-		private static var _instance:BlueToothDevice = new BlueToothDevice(DEFAULT_BLUETOOTH_DEVICE_ID, Number.NaN);//note that while calling Database.getbluetoothdevice, all attributes will be overwritten by the values stored in the database
+		private static var _instance:CGMBlueToothDevice = new CGMBlueToothDevice(DEFAULT_BLUETOOTH_DEVICE_ID, Number.NaN);//note that while calling Database.getbluetoothdevice, all attributes will be overwritten by the values stored in the database
 		
 		/**
 		 * in case we need attributes of the superclass (like uniqueid), then we need to get an instance of this class
 		 */
-		public static function get instance():BlueToothDevice
+		public static function get instance():CGMBlueToothDevice
 		{
 			return _instance;
 		}
@@ -95,7 +95,7 @@ package database
 			_lastModifiedTimestamp = lastmodifiedtimestamp;
 		}
 		
-		public function BlueToothDevice(bluetoothdeviceid:String, lastmodifiedtimestamp:Number)
+		public function CGMBlueToothDevice(bluetoothdeviceid:String, lastmodifiedtimestamp:Number)
 		{	
 			super(bluetoothdeviceid, lastmodifiedtimestamp);
 			if (_instance != null) {
@@ -113,7 +113,7 @@ package database
 			_address = "";
 			_name = "";
 			Database.updateBlueToothDeviceSynchronous("", "", (new Date()).valueOf());
-			BluetoothService.forgetActiveBluetoothPeripheral(tempAddress);
+			CGMBluetoothService.forgetActiveBluetoothPeripheral(tempAddress);
 		}
 		
 		/**

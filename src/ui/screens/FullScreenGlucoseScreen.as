@@ -10,7 +10,7 @@ package ui.screens
 	import flash.utils.getTimer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.FollowerEvent;
@@ -501,7 +501,7 @@ package ui.screens
 		{
 			//Get latest BGReading
 			var latestBgReading:BgReading;
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				latestBgReading = BgReading.lastNoSensor();
 			else
 				latestBgReading = BgReading.lastWithCalculatedValue();

@@ -485,7 +485,7 @@ package database
 		 * without database update<br> 
 		 */
 		private static function calculateWLS(calibration:Calibration):Calibration {
-			var sParams:SlopeParameters = BlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
+			var sParams:SlopeParameters = CGMBlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
 			if (Sensor.getActiveSensor()) {
 				myTrace("calculatewls : sensor is active");
 				var l:Number = 0;
@@ -618,7 +618,7 @@ package database
 		 * calibrations should have maximum 3 calibrations, the latest,  from large to small ie descending
 		 */
 		private function slopeOOBHandler(status:int, calibrations:Array):Number {
-			var sParams:SlopeParameters = BlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
+			var sParams:SlopeParameters = CGMBlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
 			
 			var thisCalibration:Calibration = calibrations[0] as Calibration;
 			if(status == 0) {

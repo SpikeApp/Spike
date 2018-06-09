@@ -2,7 +2,7 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.Label;
 	import feathers.events.FeathersEventType;
@@ -106,7 +106,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				AppInterface.instance.menu.selectedIndex = 6;
 			else
 				AppInterface.instance.menu.selectedIndex = 3;

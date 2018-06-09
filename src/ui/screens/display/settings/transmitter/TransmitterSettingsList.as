@@ -2,7 +2,7 @@ package ui.screens.display.settings.transmitter
 {
 	import com.adobe.utils.StringUtil;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
 	
@@ -88,7 +88,7 @@ package ui.screens.display.settings.transmitter
 		{
 			/* Get Values From Database */
 			transmitterIDValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
-			if (!BlueToothDevice.needsTransmitterId())
+			if (!CGMBlueToothDevice.needsTransmitterId())
 				transmitterIDValue = "";
 			transmitterTypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
 			
@@ -99,7 +99,7 @@ package ui.screens.display.settings.transmitter
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
 			else if (transmitterTypeValue == "G4")
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
-			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO")
+			else if (!CGMBlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO")
 				transmitterIDisEnabled = false;
 			
 			if (((transmitterTypeValue != "" && transmitterTypeValue.toUpperCase() != "FOLLOW") || transmitterIDValue != "") && !TutorialService.isActive)
@@ -209,7 +209,7 @@ package ui.screens.display.settings.transmitter
 				transmitterIDisEnabled = transmitterID.isEnabled = true;
 				transmitterID.prompt = "BLUXXXXX";
 			}
-			else if ((!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO") && transmitterID.text == "")
+			else if ((!CGMBlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO") && transmitterID.text == "")
 			{
 				transmitterIDisEnabled = transmitterID.isEnabled = false;
 				transmitterID.prompt = "";

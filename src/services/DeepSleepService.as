@@ -11,7 +11,7 @@ package services
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.SettingsServiceEvent;
@@ -85,12 +85,12 @@ package services
 			{
 				//Spike manages suspension
 				Trace.myTrace("DeepSleepService.as", "Interval managed by Spike");
-				if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isDexcomG5()) 
+				if (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5()) 
 				{
 					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_DEXCOM");
 					deepSleepInterval = AUTOMATIC_DEXCOM;
 				}
-				else if (BlueToothDevice.isFollower())
+				else if (CGMBlueToothDevice.isFollower())
 				{
 					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_FOLLOWER");
 					deepSleepInterval = AUTOMATIC_FOLLOWER;

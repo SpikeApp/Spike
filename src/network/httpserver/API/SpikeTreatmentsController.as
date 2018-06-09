@@ -3,7 +3,7 @@ package network.httpserver.API
 	import flash.net.URLVariables;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import network.httpserver.ActionController;
@@ -28,7 +28,7 @@ package network.httpserver.API
 		{
 			Trace.myTrace("SpikeTreatmentsController.as", "AddTreatment endpoint called!");
 			
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 				return responseSuccess("Followers can't add treatments!");
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")

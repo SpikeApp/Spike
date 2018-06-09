@@ -15,7 +15,7 @@ package utils
 	import G5Model.VersionRequestRxMessage;
 	
 	import database.AlertType;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
@@ -137,9 +137,9 @@ package utils
 				SpikeANE.writeTraceToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
 				SpikeANE.writeTraceToFile(filePath, "Device Info = " + Capabilities.os);
 				var additionalInfoToWrite:String = "";
-				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
-				additionalInfoToWrite += "Device MAC = " + BlueToothDevice.address + ".\n";
-				if (BlueToothDevice.isDexcomG5())
+				additionalInfoToWrite += "Device type = " + CGMBlueToothDevice.deviceType() + ".\n";
+				additionalInfoToWrite += "Device MAC = " + CGMBlueToothDevice.address + ".\n";
+				if (CGMBlueToothDevice.isDexcomG5())
 				{
 					var dexcomG5TransmitterInfo:VersionRequestRxMessage = G5VersionInfo.getG5VersionInfo();
 					additionalInfoToWrite += "Firmware Version = " + dexcomG5TransmitterInfo.firmware_version_string + ".\n";
@@ -147,7 +147,7 @@ package utils
 					additionalInfoToWrite += "BT Firmware Version = " + dexcomG5TransmitterInfo.bluetooth_firmware_version_string + ".\n";
 					dexcomG5TransmitterInfo = null;
 				}
-				if (BlueToothDevice.isMiaoMiao())
+				if (CGMBlueToothDevice.isMiaoMiao())
 					additionalInfoToWrite += "Firmware Version = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ".\n";
 				additionalInfoToWrite += "Transmitterid = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) + ".\n";
 				additionalInfoToWrite += "Sensor " + (Sensor.getActiveSensor() == null ? "not":"") + " started ";

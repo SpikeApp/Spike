@@ -22,7 +22,7 @@ package services
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.FollowerBgReading;
@@ -183,7 +183,7 @@ package services
 			
 			setupNightscoutProperties();
 			
-			if (BlueToothDevice.isFollower() && 
+			if (CGMBlueToothDevice.isFollower() && 
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""
@@ -215,7 +215,7 @@ package services
 		private static function createGlucoseReading(glucoseReading:BgReading):Object
 		{
 			var newReading:Object = new Object();
-			newReading["device"] = BlueToothDevice.name;
+			newReading["device"] = CGMBlueToothDevice.name;
 			newReading["date"] = glucoseReading.timestamp;
 			newReading["dateString"] = formatter.format(glucoseReading.timestamp);
 			newReading["sgv"] = Math.round(glucoseReading.calculatedValue);
@@ -262,7 +262,7 @@ package services
 			if (activeGlucoseReadings.length == 0 || syncGlucoseReadingsActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) 
+			if (Calibration.allForSensor().length < 2 && !CGMBlueToothDevice.isFollower()) 
 				return;
 			
 			syncGlucoseReadingsActive = true;
@@ -275,7 +275,7 @@ package services
 		private static function onBgreadingReceived(e:Event):void 
 		{
 			var latestGlucoseReading:BgReading;
-			if(!BlueToothDevice.isFollower())
+			if(!CGMBlueToothDevice.isFollower())
 				latestGlucoseReading= BgReading.lastNoSensor();
 			else
 				latestGlucoseReading= BgReading.lastWithCalculatedValue();
@@ -289,7 +289,7 @@ package services
 			//Only start uploading bg reading if it's newer than 1 minute. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last reading. The previous readings will still be uploaded because they reside in the queue array.
 			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_1_MINUTE)
 			{
-				if (!BlueToothDevice.canDoBackfill()) //No backfill transmitter, sync immediately
+				if (!CGMBlueToothDevice.canDoBackfill()) //No backfill transmitter, sync immediately
 					syncGlucoseReadings();
 				else //Backfill transmitter. Wait 5 seconds to process all data
 					setTimeout(syncGlucoseReadings, TIME_5_SECONDS);
@@ -315,7 +315,7 @@ package services
 			loader = null;
 			
 			//Check response
-			if (response.indexOf(BlueToothDevice.name) != -1)
+			if (response.indexOf(CGMBlueToothDevice.name) != -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Glucose reading upload was successful.");
 				if (initialGlucoseReadingsIndex == 0)
@@ -366,10 +366,10 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "getNightscoutProfile called!");
 			
-			if (!BlueToothDevice.isFollower() && !serviceActive)
+			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			
-			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+			if (CGMBlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			var now:Number = new Date().valueOf();
@@ -397,9 +397,9 @@ package services
 				
 				//Define API secret
 				var profileAPISecret:String = "";
-				if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+				if (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
 					profileAPISecret = nightscoutFollowAPISecret;
-				else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+				else if (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
 					profileAPISecret = apiSecret;
 				
 				//Fetch profile
@@ -467,7 +467,7 @@ package services
 						isNSProfileSet = true; //Mark profile as downloaded
 							
 						//Add nightscout insulin to Spike and don't save it to DB
-						ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", BlueToothDevice.isFollower() ? true : false, "000000", !BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING ? true : false);
+						ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", CGMBlueToothDevice.isFollower() ? true : false, "000000", !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING ? true : false);
 							
 						//Add nightscout carbs absorption rate and don't save it to DB
 						ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
@@ -594,7 +594,7 @@ package services
 			
 			var now:Number = (new Date()).valueOf();
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 			{
 				Trace.myTrace("NightscoutService.as", "Spike is not in follower mode. Aborting!");
 				
@@ -875,10 +875,10 @@ package services
 			if (activeTreatmentsUpload.length == 0 || syncTreatmentsUploadActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (!BlueToothDevice.isFollower() && !serviceActive)
+			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			
-			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+			if (CGMBlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to upload/update: " + activeTreatmentsUpload.length);
@@ -950,10 +950,10 @@ package services
 			if (activeTreatmentsDelete.length == 0 || syncTreatmentsDeleteActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (!BlueToothDevice.isFollower() && !serviceActive)
+			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			
-			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+			if (CGMBlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to delete: " + activeTreatmentsDelete.length);
@@ -969,10 +969,10 @@ package services
 			if (syncTreatmentsDeleteActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (!BlueToothDevice.isFollower() && !serviceActive)
+			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			
-			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+			if (CGMBlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			//Delete Treatment
@@ -1175,9 +1175,9 @@ package services
 			
 			//API Secret
 			var treatmentAPISecret:String = "";
-			if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+			if (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
 				treatmentAPISecret = nightscoutFollowAPISecret;
-			else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+			else if (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
 				treatmentAPISecret = apiSecret;
 			
 			NetworkConnector.createNSConnector(nightscoutPebbleURL, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_PEBBLE_GET, onGetPebbleComplete, onConnectionFailed);
@@ -1347,9 +1347,9 @@ package services
 			
 			//API Secret
 			var treatmentAPISecret:String = "";
-			if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+			if (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
 				treatmentAPISecret = nightscoutFollowAPISecret;
-			else if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+			else if (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
 				treatmentAPISecret = apiSecret;
 			
 			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + ".json?" + parameters, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_TREATMENTS_GET, onGetTreatmentsComplete, onConnectionFailed);
@@ -1453,7 +1453,7 @@ package services
 		private static function createCalibrationObject(calibration:Calibration):Object
 		{	
 			var newCalibration:Object = new Object();
-			newCalibration["device"] = BlueToothDevice.name;
+			newCalibration["device"] = CGMBlueToothDevice.name;
 			newCalibration["type"] = "cal";
 			newCalibration["date"] = calibration.timestamp;
 			newCalibration["dateString"] = formatter.format(calibration.timestamp);
@@ -1489,10 +1489,10 @@ package services
 			if (activeCalibrations.length == 0 || syncGlucoseReadingsActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (!BlueToothDevice.isFollower() && !serviceActive)
+			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			
-			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+			if (CGMBlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			syncCalibrationsActive = true;
@@ -1569,7 +1569,7 @@ package services
 			//Update Internal Variables
 			syncCalibrationsActive = false;
 			
-			if (response.indexOf(BlueToothDevice.name) != -1)
+			if (response.indexOf(CGMBlueToothDevice.name) != -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Calibration upload was successful.");
 				
@@ -1593,10 +1593,10 @@ package services
 			if (activeVisualCalibrations.length == 0 || syncVisualCalibrationsActive || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
-			if (!BlueToothDevice.isFollower() && !serviceActive)
+			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			
-			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+			if (CGMBlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			syncVisualCalibrationsActive = true;
@@ -1648,10 +1648,10 @@ package services
 			if (activeSensorStarts.length == 0 || syncSensorStartActive || !NetworkInfo.networkInfo.isReachable() || !serviceActive)
 				return;
 			
-			if (!BlueToothDevice.isFollower() && !serviceActive)
+			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			
-			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+			if (CGMBlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
 			syncSensorStartActive = true;
@@ -1874,7 +1874,7 @@ package services
 			serviceActive = true;
 			setupNightscoutProperties();
 			getInitialGlucoseReadings();
-			if (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true" && treatmentsEnabled)
+			if (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true" && treatmentsEnabled)
 				getInitialTreatments();
 			getInitialCalibrations();
 			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
@@ -1924,16 +1924,16 @@ package services
 			nightscoutEventsURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";
 			if (nightscoutEventsURL.indexOf('http') == -1) nightscoutEventsURL = "https://" + nightscoutEventsURL;
 			
-			nightscoutTreatmentsURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/treatments";
+			nightscoutTreatmentsURL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/treatments";
 			if (nightscoutTreatmentsURL.indexOf('http') == -1) nightscoutTreatmentsURL = "https://" + nightscoutTreatmentsURL;
 			
-			nightscoutProfileURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/profile.json" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/profile.json";
+			nightscoutProfileURL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/profile.json" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/profile.json";
 			if (nightscoutProfileURL.indexOf('http') == -1) nightscoutProfileURL = "https://" + nightscoutProfileURL;
 			
-			nightscoutPebbleURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/pebble" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/pebble";
+			nightscoutPebbleURL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/pebble" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/pebble";
 			if (nightscoutPebbleURL.indexOf('http') == -1) nightscoutPebbleURL = "https://" + nightscoutPebbleURL;
 			
-			nightscoutUserInfoURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v2/properties" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v2/properties";
+			nightscoutUserInfoURL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v2/properties" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v2/properties";
 			if (nightscoutUserInfoURL.indexOf('http') == -1) nightscoutUserInfoURL = "https://" + nightscoutUserInfoURL;
 			
 			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
@@ -1972,7 +1972,7 @@ package services
 			
 			if (activeSensorStarts.length > 0) syncSensorStart();
 			
-			if (BlueToothDevice.isFollower()) getRemoteReadings();
+			if (CGMBlueToothDevice.isFollower()) getRemoteReadings();
 			
 			if (activeTreatmentsUpload.length > 0) syncTreatmentsUpload();
 			
@@ -2105,7 +2105,7 @@ package services
 				 e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL
 				)
 			{
-				if (BlueToothDevice.isFollower() && 
+				if (CGMBlueToothDevice.isFollower() && 
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE).toUpperCase() == "FOLLOWER" &&
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() == "NIGHTSCOUT" &&
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""

@@ -6,7 +6,7 @@ package services
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import events.TransmitterServiceEvent;
 	
@@ -26,7 +26,7 @@ package services
 		}
 
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
-			if (BlueToothDevice.isMiaoMiao()) {
+			if (CGMBlueToothDevice.isMiaoMiao()) {
 				//temporary disconnecting to allow other ios device to connect to the miaomiao
 				SpikeANE.disconnectMiaoMiao();
 				
