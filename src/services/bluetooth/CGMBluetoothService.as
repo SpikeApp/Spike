@@ -987,7 +987,6 @@ package services.bluetooth
 				myTrace("in peripheral_characteristic_updatedHandler, data packet received from transmitter : " + utils.UniqueId.bytesToHex(value));
 				value.position = 0;
 				if (CGMBlueToothDevice.isDexcomG5()) {
-					G5.processG5TransmitterData(value, event.characteristic);
 					processG5TransmitterData(value, event.characteristic);
 				} else if (CGMBlueToothDevice.isBluKon()) {
 					processBLUKONTransmitterData(value);
