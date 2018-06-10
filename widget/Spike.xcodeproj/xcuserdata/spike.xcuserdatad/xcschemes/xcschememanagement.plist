@@ -14,28 +14,28 @@
 		<key>fswidget.xcscheme</key>
 		<dict>
 			<key>isShown</key>
-			<false/>
+			<true/>
 			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
 		<key>watch (Notification).xcscheme</key>
 		<dict>
 			<key>isShown</key>
-			<false/>
+			<true/>
 			<key>orderHint</key>
 			<integer>4</integer>
 		</dict>
 		<key>watch.xcscheme</key>
 		<dict>
 			<key>isShown</key>
-			<false/>
+			<true/>
 			<key>orderHint</key>
 			<integer>3</integer>
 		</dict>
 		<key>widget.xcscheme</key>
 		<dict>
 			<key>isShown</key>
-			<false/>
+			<true/>
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>

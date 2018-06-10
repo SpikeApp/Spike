@@ -11,7 +11,7 @@
 	<!-- A universally unique application identifier. Must be unique across 
 		all AIR applications. Using a reverse DNS-style name as the id is recommended. 
 		(Eg. com.example.ExampleApplication.) Required. -->
-	<id>com.spike-app.spike</id>
+	<id>com.spike-app.spikeipad</id>
 
 	<!-- Used as the filename for the application. Required. -->
 	<filename>Spike</filename>
@@ -25,7 +25,7 @@
 		can also be 1-part or 2-part. It is not necessary to have a 3-part value. 
 		An updated version of application must have a versionNumber value higher 
 		than the previous version. Required for namespace >= 2.5 . -->
-	<versionNumber>2.1.1</versionNumber>
+	<versionNumber>1.0.0</versionNumber>
 
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents 
 		the version of the application, as it should be shown to users. Optional. -->
@@ -229,11 +229,6 @@
 				<string>Stores CGM Glucose Readings, Carbohydrates and Insulin.</string>
 				<key>NSBluetoothPeripheralUsageDescription</key>
 				<string>Connects to CGM Transmitters</string>
-      				
-      			<key>UIRequiredDeviceCapabilities</key>
-      				<array>
-      					<string>healthkit</string>
-					</array>
 				<key>ITSAppUsesNonExemptEncryption</key><false/>
 				<key>NSCalendarsUsageDescription</key>
 				<string>Access to calendar is required.</string>
@@ -245,7 +240,7 @@
 				<array>
 					<dict>
 						<key>CFBundleURLName</key>
-						<string>com.spike-app.spike</string>
+						<string>com.spike-app.spikeipad</string>
 						<key>CFBundleURLSchemes</key>
 						<array>
 							<string>spikeapp</string>
@@ -520,9 +515,7 @@
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
 		<Entitlements> <![CDATA[
 		<key>application-identifier</key>
-		<string>AGW6KV7M2W.com.spike-app.spike</string>
-		<key>com.apple.developer.healthkit</key>
-		<true/>
+		<string>AGW6KV7M2W.com.spike-app.spikeipad</string>
 		<key>com.apple.security.application-groups</key>
 		<array>
 			<string>group.com.spike-app.spike</string>

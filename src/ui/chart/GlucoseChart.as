@@ -3272,6 +3272,9 @@ package ui.chart
 				
 				//Redraw YAxis
 				yAxisContainer.addChild(drawYAxis());
+				
+				//Reposition treatments
+				manageTreatments();
 			}
 		}
 		
