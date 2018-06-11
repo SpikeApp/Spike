@@ -380,7 +380,7 @@ package ui.screens.display.settings.transmitter
 				);
 				alert.height = 310;
 			}
-			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') && DeviceInfo.isIphone7())
+			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') && DeviceInfo.isIphone7SE())
 			{
 				AlertManager.showSimpleAlert(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),

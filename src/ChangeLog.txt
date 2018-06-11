@@ -1,6 +1,7 @@
 2.1.2
 FEATURE: iPad support! Request a TestFlight invite for the iPad version at https://spike-app.com (Miguel)
 ENHANCEMENT: Upgraded Adobe Air framework to version 29. Many many thanks to Johan for making this possible. This took weeks of hard work and ensures that Spike can continue being submitted to TestFlight, otherwise will soon cease to exist! It should also make Spike a bit more stable. (Johan)
+ENHANCEMENT: Upgraded Starling UI framework to version 2.4. (Miguel)
 ENHANCEMENT: Calibration and treatments input keyboard now comes included with decimal keys. (Miguel)
 ENHANCEMENT: URL input fields now display an URL optimized keyboard. E-mail input fields now display an E-mail optimized keyboard. (Miguel)
 ENHANCEMENT: Better validation of treatments inserted from the Today Widget or watches. (Miguel)
