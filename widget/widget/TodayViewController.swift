@@ -34,6 +34,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     }
     
     //Variables
+    var chart:PNLineChart! = nil
     var chartGlucoseValues = [Double]()
     var chartGlucoseTimes = [String]()
     var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.spike-app.spike")!
@@ -149,13 +150,13 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             {
                 setBackground()
                 setLabels()
-                if #available(iOSApplicationExtension 10.0, *)
+                /*if #available(iOSApplicationExtension 10.0, *)
                 {
                     if parseChartData()
                     {
                         setChart()
                     }
-                }
+                }*/
             }
         }
         
@@ -416,6 +417,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         
         do
         {
+            chartGlucoseValues.removeAll()
+            chartGlucoseTimes.removeAll()
             let decoder = JSONDecoder()
             let externalDataJSON = try decoder.decode([ChartData].self, from: externalDataEncoded)
             for (chartData) in externalDataJSON
@@ -437,16 +440,20 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     /**
      *  Populates the chart
      */
-    func setChart()
+    func setChart(chartSize:CGFloat)
     {
-        let chart:PNLineChart
+        if (chart != nil)
+        {
+            chart.removeFromSuperview()
+        }
+        
         if #available(iOSApplicationExtension 10.0, *)
         {
-            chart = PNLineChart(frame: CGRect(x: 0, y: 0, width:chartView!.frame.size.width, height: 178))
+            chart = PNLineChart(frame: CGRect(x: 0, y: 0, width:chartSize, height: 178))
         }
         else
         {
-            chart = PNLineChart(frame: CGRect(x: 0, y: 0, width:chartView!.frame.size.width - 29, height: 178))
+            chart = PNLineChart(frame: CGRect(x: 0, y: 0, width:chartSize - 29, height: 178))
         }
         
         if glucoseUnit == "mmol/L"
@@ -589,6 +596,9 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         chart.chartData = [data]
         chart.stroke()
         
+        
+        chart.removeFromSuperview()
+        
         chartView?.addSubview(chart)
     }
     
@@ -671,6 +681,21 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         } else if activeDisplayMode == .expanded {
             self.preferredContentSize = CGSize(width: maxSize.width, height: 300)
         }
+        
+        print("maxSize.width")
+        print(maxSize.width)
+        
+        
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
+    {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        if (parseChartData())
+        {
+            setChart(chartSize: size.width + 10)
+        }
     }
     
     override func didReceiveMemoryWarning() {
@@ -683,7 +708,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
      */
     func widgetPerformUpdate(completionHandler: (@escaping (NCUpdateResult) -> Void))
     {
-        let currentData = externalData
+        /*let currentData = externalData
         if getExternalData()
         {
             if NSDictionary(dictionary: currentData).isEqual(to: externalData)
@@ -706,7 +731,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
                 }
                 completionHandler(NCUpdateResult.newData)
             }
-        }
+        }*/
     }
 }
 
