@@ -55,6 +55,7 @@ package ui.screens.display.settings.watch
 	
 	import utils.Constants;
 	import utils.DataValidator;
+	import utils.DeviceInfo;
 	import utils.Trace;
 	
 	[ResourceBundle("globaltranslations")]
@@ -195,7 +196,8 @@ package ui.screens.display.settings.watch
 			displayCOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
 			
 			//Display Name TextInput
-			displayNameTextInput = LayoutFactory.createTextInput(false, false, 140, HorizontalAlign.RIGHT);
+			displayNameTextInput = LayoutFactory.createTextInput(false, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT);
+			if (DeviceInfo.isTablet()) displayNameTextInput.width += 100;
 			displayNameTextInput.text = displayNameValue;
 			displayNameTextInput.addEventListener(FeathersEventType.ENTER, onEnterPressed);
 			displayNameTextInput.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
@@ -708,7 +710,11 @@ package ui.screens.display.settings.watch
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			if (displayNameTextInput != null)
+			{
+				displayNameTextInput.width = Constants.isPortrait ? 140 : 240;
+				if (DeviceInfo.isTablet()) displayNameTextInput.width += 100;
 				SystemUtil.executeWhenApplicationIsActive( displayNameTextInput.clearFocus );
+			}
 			
 			if (instructionsTitleLabel != null)
 				instructionsTitleLabel.width = width - 20;

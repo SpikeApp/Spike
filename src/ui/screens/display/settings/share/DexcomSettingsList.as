@@ -123,16 +123,16 @@ package ui.screens.display.settings.share
 			
 			//Username
 			dsUsername = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
-			if (!Constants.isPortrait)
-				dsUsername.width += 100;
+			if (!Constants.isPortrait) dsUsername.width += 100;
+			if (DeviceInfo.isTablet()) dsUsername.width += 100;
 			dsUsername.text = selectedUsername;
 			dsUsername.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			dsUsername.addEventListener(Event.CHANGE, onTextInputChanged);
 			
 			//Password
 			dsPassword = LayoutFactory.createTextInput(true, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
-			if (!Constants.isPortrait)
-				dsPassword.width += 100;
+			if (!Constants.isPortrait) dsPassword.width += 100;
+			if (DeviceInfo.isTablet()) dsPassword.width += 100;
 			dsPassword.text = selectedPassword;
 			dsPassword.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			dsPassword.addEventListener(Event.CHANGE, onTextInputChanged);
@@ -141,8 +141,8 @@ package ui.screens.display.settings.share
 			if (!BlueToothDevice.isDexcomG5())
 			{
 				dsSerial = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
-				if (!Constants.isPortrait)
-					dsSerial.width += 100;
+				if (!Constants.isPortrait) dsSerial.width += 100;
+				if (DeviceInfo.isTablet()) dsSerial.width += 100;
 				dsSerial.text = selectedDexcomShareSerialNumber;
 				dsSerial.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 				dsSerial.addEventListener(Event.CHANGE, onTextInputChanged);
@@ -394,24 +394,24 @@ package ui.screens.display.settings.share
 			{
 				SystemUtil.executeWhenApplicationIsActive( dsUsername.clearFocus );
 				dsUsername.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
-				if (!Constants.isPortrait)
-					dsUsername.width += 100;
+				if (!Constants.isPortrait) dsUsername.width += 100;
+				if (DeviceInfo.isTablet()) dsUsername.width += 100;
 			}
 			
 			if (dsPassword != null)
 			{
 				SystemUtil.executeWhenApplicationIsActive( dsPassword.clearFocus );
 				dsPassword.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
-				if (!Constants.isPortrait)
-					dsPassword.width += 100;
+				if (!Constants.isPortrait) dsPassword.width += 100;
+				if (DeviceInfo.isTablet()) dsPassword.width += 100;
 			}
 			
 			if (dsSerial != null)
 			{
 				SystemUtil.executeWhenApplicationIsActive( dsSerial.clearFocus );
 				dsSerial.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
-				if (!Constants.isPortrait)
-					dsSerial.width += 100;
+				if (!Constants.isPortrait) dsSerial.width += 100;
+				if (DeviceInfo.isTablet()) dsSerial.width += 100;
 			}
 			
 			if (positionHelper != null)

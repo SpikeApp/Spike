@@ -69,6 +69,7 @@ package ui.screens.display.transmitter
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	import utils.Trace;
 	
 	[ResourceBundle("transmitterscreen")]
@@ -464,6 +465,7 @@ package ui.screens.display.transmitter
 			transmitterNameLabel = LayoutFactory.createLabel(transmitterNameValue, HorizontalAlign.RIGHT);
 			transmitterMACAddressLabel = LayoutFactory.createLabel(BlueToothDevice.address != "" ? BlueToothDevice.address : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'), HorizontalAlign.RIGHT);
 			transmitterMACAddressLabel.width = Constants.isPortrait ? 140 : 280;
+			if (DeviceInfo.isTablet()) transmitterMACAddressLabel.width += 200;
 			transmitterMACAddressLabel.wordWrap = true;
 			if (BlueToothDevice.isMiaoMiao())
 				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);

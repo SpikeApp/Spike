@@ -71,7 +71,7 @@ package services
 			
 			try
 			{
-				Calendar.init( DistriqtKey.distriqtKey );
+				Calendar.init( !ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad );
 				if (Calendar.isSupported)
 				{
 					getInitialProperties();

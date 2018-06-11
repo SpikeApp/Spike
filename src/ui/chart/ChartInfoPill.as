@@ -14,7 +14,7 @@ package ui.chart
 	public class ChartInfoPill extends Sprite
 	{
 		/* Constants */
-		private static const PADDING:int = 3;
+		private static const PADDING:int = 5;
 		private static const CORNER_RADIUS:int = 4;
 		private static const STROKE_THICKNESS:int = 1;
 		

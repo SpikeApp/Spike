@@ -13,8 +13,6 @@ package services
 	import com.distriqt.extension.notifications.events.NotificationEvent;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
-	import com.spikeapp.spike.airlibrary.SpikeANE;
-	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -317,7 +315,7 @@ package services
 			
 			setPeripheralUUIDs();
 			
-			BluetoothLE.init(DistriqtKey.distriqtKey);
+			BluetoothLE.init(!ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
 			if (BluetoothLE.isSupported) {
 				switch (BluetoothLE.service.authorisationStatus()) {
 					case AuthorisationStatus.SHOULD_EXPLAIN:

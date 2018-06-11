@@ -2,7 +2,6 @@ package model
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
-	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	
@@ -58,6 +57,7 @@ package model
 		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 60 * 60 * 1000 + Constants.READING_OFFSET;
 
 		public static const TEST_FLIGHT_MODE:Boolean = true;
+		public static const IS_IPAD:Boolean = true;
 		public static const INTERNAL_TESTING:Boolean = false;
 		
 		public static function get instance():ModelLocator
@@ -148,13 +148,13 @@ package model
 				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 				NotificationService.init();
 				CalibrationService.init();
-				NetworkInfo.init(DistriqtKey.distriqtKey);
+				NetworkInfo.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
 				SpikeANE.setAvAudioSessionCategory(true);
 				WidgetService.init();
 				WatchService.init();
 				AlarmService.init();
 				HTTPServerService.init();
-				HealthKitService.init();
+				if (!IS_IPAD) HealthKitService.init();
 				NightscoutService.init();
 				DexcomShareService.init();
 				IFTTTService.init();

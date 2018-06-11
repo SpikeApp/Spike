@@ -182,7 +182,7 @@ package services
 				initialStart = false;
 			
 			Core.init();
-			Notifications.init(DistriqtKey.distriqtKey);
+			Notifications.init(!ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
 			if (!Notifications.isSupported) {
 				return;
 			}

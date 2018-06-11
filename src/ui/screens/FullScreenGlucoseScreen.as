@@ -6,6 +6,8 @@ package ui.screens
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.system.System;
+	import flash.text.TextField;
+	import flash.text.TextFormat;
 	import flash.utils.Timer;
 	import flash.utils.getTimer;
 	
@@ -98,6 +100,9 @@ package ui.screens
 		private var previousGlucoseValueFormatted:Number;
 		private var touchTimer:Number;
 		
+		[Embed(source="/assets/theme/fonts/OpenSans-Bold.ttf", embedAsCFF="false", fontWeight="bold", fontName="OpenSansBold", fontFamily="OpenSansBold", mimeType="application/x-font")]
+		private static const OPEN_SANS_BOLD:Class;
+		
 		public function FullScreenGlucoseScreen() 
 		{
 			super();
@@ -156,7 +161,6 @@ package ui.screens
 			SystemUtil.executeWhenApplicationIsActive( calculateValues );
 		}
 		
-		
 		private function setupContent():void
 		{
 			/* Determine Font Sizes */
@@ -170,7 +174,7 @@ package ui.screens
 			
 			/* TimeAgo Display Label */
 			timeAgoDisplay = LayoutFactory.createLabel(timeAgoOutput, HorizontalAlign.LEFT, VerticalAlign.MIDDLE, infoFontSize, false, timeAgoColor);
-			timeAgoDisplay.width = 300;
+			timeAgoDisplay.width = 350;
 			timeAgoDisplay.y = 10;
 			timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
 			timeAgoDisplay.validate();
@@ -407,7 +411,7 @@ package ui.screens
 			{
 				if (arrow.indexOf("\u21C4") != -1 || arrow.indexOf("\u2192") != -1) //FLAT
 					leading = -glucoseFontSize / 2;
-				else if (arrow.indexOf("\u2198") != -1 || arrow.indexOf("\u2197") != -1) //45º Up/Down
+				else if (arrow.indexOf("\u2198") != -1 || arrow.indexOf("\u2197") != -1) //45º Down/UP
 					leading = -glucoseFontSize / 3;
 				else if (arrow.indexOf("\u2193") != -1 || arrow.indexOf("\u2191") != -1) //Down/Up
 				{
@@ -450,6 +454,106 @@ package ui.screens
 			if (latestGlucoseOutput == null)
 				return;
 			
+			var sNativeFormat:flash.text.TextFormat = new flash.text.TextFormat();
+			sNativeFormat.font = "OpenSansBold";
+			sNativeFormat.bold = true;
+			sNativeFormat.color = 0xFFFFFF;
+			sNativeFormat.size = 600;
+			sNativeFormat.leading = getLeading(latestGlucoseSlopeArrow);
+			
+			var formattedGlucoseOutput:String = Constants.isPortrait ? latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n")) : latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf(" "));
+			if (!Constants.isPortrait) formattedGlucoseOutput += " -->";
+			if (Constants.isPortrait && (latestGlucoseSlopeArrow.indexOf("\u2197") != -1 || latestGlucoseSlopeArrow.indexOf("\u2198") != -1 || latestGlucoseSlopeArrow.indexOf("\u2191") != -1 || latestGlucoseSlopeArrow.indexOf("\u2193") != -1))
+				formattedGlucoseOutput += "\n |";
+			
+			var nativeTextField:flash.text.TextField = new flash.text.TextField();
+			nativeTextField.defaultTextFormat = sNativeFormat;
+			nativeTextField.width  = Constants.stageWidth;
+			nativeTextField.height = Constants.stageHeight;
+			nativeTextField.selectable = false;
+			nativeTextField.multiline = true;
+			nativeTextField.wordWrap = false;
+			nativeTextField.embedFonts = true;
+			nativeTextField.text = formattedGlucoseOutput;
+			
+			var textFormat:flash.text.TextFormat = sNativeFormat;
+			var maxTextWidth:int  = Constants.stageWidth - (Constants.isPortrait ? Constants.stageWidth * 0.25 : Constants.stageWidth * 0.1);
+			var maxTextHeight:int = Constants.stageHeight - Constants.headerHeight;
+			
+			var size:Number = Number(textFormat.size);
+			
+			while (nativeTextField.textWidth > maxTextWidth || nativeTextField.textHeight > maxTextHeight)
+			{
+				if (size <= 4) break;
+				
+				textFormat.size = size--;
+				nativeTextField.defaultTextFormat = textFormat;
+				
+				nativeTextField.text = formattedGlucoseOutput;
+			}
+			
+			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
+			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			
+			glucoseFontSize =  Number(textFormat.size);
+			if (isNaN(glucoseFontSize)) glucoseFontSize = 130;
+		}
+		
+		/*private function calculateFontSize():void
+		{
+			if (latestGlucoseOutput == null)
+				return;
+			
+			var sNativeFormat:flash.text.TextFormat = new flash.text.TextFormat();
+			sNativeFormat.font = "OpenSansBold";
+			sNativeFormat.bold = true;
+			sNativeFormat.color = 0xFFFFFF;
+			sNativeFormat.size = 600;
+			
+			var formattedGlucoseOutput:String = Constants.isPortrait ? latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n")) : latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf(" "));
+			if (!Constants.isPortrait && DeviceInfo.isTablet()) formattedGlucoseOutput += " -";
+			else if (!Constants.isPortrait) formattedGlucoseOutput += " ";
+			
+			var nativeTextField:flash.text.TextField = new flash.text.TextField();
+			nativeTextField.defaultTextFormat = sNativeFormat;
+			nativeTextField.width  = Constants.isPortrait ? Constants.stageWidth: Constants.stageHeight;
+			nativeTextField.height = Constants.isPortrait ? Constants.stageHeight : Constants.stageWidth;
+			nativeTextField.selectable = false;
+			nativeTextField.multiline = true;
+			nativeTextField.wordWrap = false;
+			nativeTextField.embedFonts = true;
+			nativeTextField.text = formattedGlucoseOutput;
+			
+			var textFormat:flash.text.TextFormat = sNativeFormat;
+			var maxTextWidth:int  = nativeTextField.width;
+			if (Constants.isPortrait && !DeviceInfo.isTablet()) maxTextWidth -= 90;
+			else if (Constants.isPortrait && DeviceInfo.isTablet()) maxTextWidth -= 140;
+			else if (!Constants.isPortrait  && !DeviceInfo.isTablet()) maxTextWidth -= 70;
+			else if (!Constants.isPortrait  && DeviceInfo.isTablet()) maxTextWidth -= 100;
+			var size:Number = Number(textFormat.size);
+			
+			while (nativeTextField.textWidth > maxTextWidth)
+			{
+				if (size <= 4) break;
+				
+				textFormat.size = size--;
+				nativeTextField.defaultTextFormat = textFormat;
+				
+				nativeTextField.text = formattedGlucoseOutput;
+			}
+			
+			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
+			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
+			
+			glucoseFontSize =  Number(textFormat.size);
+			if (isNaN(glucoseFontSize)) glucoseFontSize = 130;
+		}*/
+		
+		/*private function calculateFontSize():void
+		{
+			if (latestGlucoseOutput == null)
+				return;
+			
 			var formattedGlucoseOutput:String;
 			if (Constants.isPortrait)
 				formattedGlucoseOutput = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n"));
@@ -483,6 +587,41 @@ package ui.screens
 				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 105;
 				
 			}
+			else if(Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 345;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 305;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 260;
+				
+			}
+			else if(Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 330;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 300;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 235;
+				
+			}
+			else if(Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 410;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 380;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 300;
+				
+			}
+			else if(Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 220;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 180;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 155;
+				
+			}
+			else if(DeviceInfo.isTablet())
+			{
+				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 330;
+				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 300;
+				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 235;
+				
+			}
 			
 			if (isNaN(glucoseFontSize))
 				glucoseFontSize = 130;
@@ -492,7 +631,7 @@ package ui.screens
 			
 			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
 			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-		}
+		}*/
 		
 		/**
 		 * Event Listeners
@@ -567,6 +706,7 @@ package ui.screens
 					glucoseDisplay.fontStyles.color = oldColor;
 					slopeDisplay.fontStyles.color = oldColor;
 				}
+				
 				
 				if (Constants.isPortrait)
 					latestGlucoseOutput = latestGlucoseOutput + "\n" + latestGlucoseSlopeArrow;

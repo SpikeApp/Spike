@@ -43,6 +43,7 @@ package ui.screens.display.settings.integration
 	
 	import utils.Constants;
 	import utils.DataValidator;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("httpserversettingsscreen")]
@@ -119,6 +120,7 @@ package ui.screens.display.settings.integration
 			
 			//UserneName TextInput
 			userNameTextInput = LayoutFactory.createTextInput(false, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT);
+			if (DeviceInfo.isTablet()) userNameTextInput.width += 100;
 			userNameTextInput.text = serverUsername;
 			userNameTextInput.addEventListener(FeathersEventType.ENTER, onEnterPressed);
 			userNameTextInput.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
@@ -126,6 +128,7 @@ package ui.screens.display.settings.integration
 			
 			//Password TextInput
 			passwordTextInput = LayoutFactory.createTextInput(true, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT);
+			if (DeviceInfo.isTablet()) passwordTextInput.width += 100;
 			passwordTextInput.text = serverPassword;
 			passwordTextInput.addEventListener(FeathersEventType.ENTER, onEnterPressed);
 			passwordTextInput.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
@@ -441,12 +444,14 @@ package ui.screens.display.settings.integration
 			if (userNameTextInput != null)
 			{
 				userNameTextInput.width = Constants.isPortrait ? 140 : 240;
+				if (DeviceInfo.isTablet()) userNameTextInput.width += 100;
 				SystemUtil.executeWhenApplicationIsActive( userNameTextInput.clearFocus );
 			}
 			
 			if (passwordTextInput != null)
 			{
 				passwordTextInput.width = Constants.isPortrait ? 140 : 240;
+				if (DeviceInfo.isTablet()) passwordTextInput.width += 100;
 				passwordTextInput.clearFocus();
 			}
 			

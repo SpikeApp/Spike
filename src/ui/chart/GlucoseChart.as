@@ -383,9 +383,12 @@ package ui.chart
 				chartTopPadding = glucoseSlopePill.y + glucoseSlopePill.height + extraPadding;
 			}
 			
+			if (!Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4) scrollerTopPadding += 2;
+			
 			//Set properties #2
 			this._scrollerWidth = chartWidth;
 			this._scrollerHeight = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 ? 50 : 35;
+			if (DeviceInfo.isTablet()) this._scrollerHeight = 75;
 			if (!Constants.isPortrait && (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6))
 				this._scrollerHeight = 35;
 			this._graphHeight = chartHeight - chartTopPadding - _scrollerHeight - scrollerTopPadding - (timelineActive ? 10 : 0);
@@ -1499,9 +1502,9 @@ package ui.chart
 				
 				var fontSize:int;
 				if (timelineRange == TIMELINE_1H || timelineRange == TIMELINE_3H || timelineRange == TIMELINE_6H)
-					fontSize = 11;
+					fontSize = Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && dateFormat.slice(0,2) != "24") ? 11 : 12;
 				else
-					fontSize = 10;
+					fontSize = Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && dateFormat.slice(0,2) != "24") ? 10 : 11;
 				
 				var time:Label = LayoutFactory.createLabel(label, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, false, axisFontColor);
 				time.touchable = false;
@@ -1512,6 +1515,10 @@ package ui.chart
 				timeDisplayContainer.touchable = false;
 				timeDisplayContainer.addChild(time);
 				timeDisplayContainer.x =  currentX - (time.width / 2);
+				timeDisplayContainer.y = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && (timelineRange == TIMELINE_1H || timelineRange == TIMELINE_3H || timelineRange == TIMELINE_6H) ? 0.5 : 0;
+				timeDisplayContainer.y = Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && dateFormat.slice(0,2) != "24" ? 0 : timeDisplayContainer.y;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && dateFormat.slice(0,2) != "24" ? 0 : timeDisplayContainer.y) {}
+				else timeDisplayContainer.y = Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && timelineRange != TIMELINE_1H && timelineRange != TIMELINE_3H && timelineRange != TIMELINE_6H ? -1 : timeDisplayContainer.y;
 				timelineContainer.addChild(timeDisplayContainer);
 				
 				//Save marker for later processing/disposing
@@ -2574,7 +2581,7 @@ package ui.chart
 		{
 			/* Calculate Font Sizes */
 			deviceFontMultiplier = DeviceInfo.getFontMultipier();
-			glucoseDisplayFont = 44 * deviceFontMultiplier * userBGFontMultiplier;
+			glucoseDisplayFont = (!DeviceInfo.isTablet() ? 44 : 48) * deviceFontMultiplier * userBGFontMultiplier;
 			timeDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			retroDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
@@ -2624,13 +2631,15 @@ package ui.chart
 			glucoseSlopePill.y = glucoseTimeAgoPill.y + glucoseTimeAgoPill.height + 6;
 			addChild(glucoseSlopePill);
 			
+			const pillPadding:int = DeviceInfo.isTablet() ? 16 : 6;
+			
 			//IOB
 			if (treatmentsActive && displayTreatmentsOnChart)
 			{
 				if (displayIOBEnabled)
 				{
 					IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
-					IOBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+					IOBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
 					//IOBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
 					IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 					IOBPill.setValue("0.00U");
@@ -2646,7 +2655,7 @@ package ui.chart
 				if (displayCOBEnabled)
 				{
 					COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
-					COBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+					COBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
 					//COBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
 					COBPill.setValue("0.0g");
 					
@@ -2663,7 +2672,7 @@ package ui.chart
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_ON) == "true")
 			{
 				infoPill = new ChartTreatmentPill(" + ");
-				infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + 6;
+				infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
 				infoPill.setValue("info");
 				infoPill.visible = false;
 				infoPill.addEventListener(TouchEvent.TOUCH, onDisplayMoreInfo);
@@ -3263,6 +3272,9 @@ package ui.chart
 				
 				//Redraw YAxis
 				yAxisContainer.addChild(drawYAxis());
+				
+				//Reposition treatments
+				manageTreatments();
 			}
 		}
 		

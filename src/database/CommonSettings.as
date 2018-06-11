@@ -5,6 +5,8 @@ package database
  	import events.SettingsServiceEvent;
  	
  	import model.ModelLocator;
+ 	
+ 	import utils.DeviceInfo;
 
 	 /**
 	  * common settings are settings that are shared with other devices, ie settings that will be synchronized
@@ -494,7 +496,7 @@ package database
 			 "15658734",//COMMON_SETTING_CHART_FONT_COLOR
 			 "15658734",//COMMON_SETTING_CHART_AXIS_FONT_COLOR
 			 "15658734",//COMMON_SETTING_CHART_PIE_CHART_FONT_COLOR
-			 "3",//COMMON_SETTING_CHART_MARKER_RADIUS
+			 !DeviceInfo.isTablet() ? "3" : "5",//COMMON_SETTING_CHART_MARKER_RADIUS
 			 "1.2",//COMMON_SETTING_CHART_BG_FONT_SIZE
 			 "1.2",//COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE
 			 "1.2",//COMMON_SETTING_CHART_AXIS_FONT_SIZE
