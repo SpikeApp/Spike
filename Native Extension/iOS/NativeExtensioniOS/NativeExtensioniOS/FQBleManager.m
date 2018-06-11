@@ -17,6 +17,9 @@
 @property (assign ,nonatomic) BOOL receivedEnoughPackets;
 @property (assign,nonatomic) NSInteger timeIntervalInSeconds;
 
+//if false, then when diddisconnect is entered, then no automatic reconnect required, even if peripheral exists
+@property (assign ,nonatomic) BOOL reconnectAfterDisconnect;
+
 @end
 
 @implementation FQBleManager
@@ -50,9 +53,27 @@
     }
 }
 
-- (void)connectDevice
+- (void)reconnectDevice
 {
-    [self.manager connectPeripheral:self.peripheral options:nil];
+    if (self.peripheral) {
+        if(self.peripheral.state != CBPeripheralStateConnected ) {
+            FPANE_Log(@"spiketrace ANE FQBLEManager.m in reconnectDevice, self.peripheral not nil, trying to connect");
+            [self.manager connectPeripheral:self.peripheral options:nil];
+        } else {
+            FPANE_Log(@"spiketrace ANE FQBLEManager.m in reconnectDevice, self.peripheral not nil but already connected, not trying to connect");
+        }
+    } else {
+        FPANE_Log(@"spiketrace ANE FQBLEManager.m in reconnectDevice, self.peripheral is nil, not trying to connect");
+    }
+}
+
+//to be used when app wants to force a disconnect without forgetting the device completely
+//also no automatic reconnect required
+- (void)disconnectDevice
+{
+    FPANE_Log(@"spiketrace ANE FQBLEManager.m in disconnectDevice, disconnecting");
+    _reconnectAfterDisconnect = false;
+    [self.manager cancelPeripheralConnection:_peripheral];
 }
 
 - (void)disCoverServiceWith:(CBPeripheral *)peripheral{
@@ -73,7 +94,7 @@
     if (self.manager) {
         if ([self.manager isScanning]) {
             [self.manager stopScan];
-            FPANE_Log(@"spiketrace ANE FQBLEManager.m stop stopScanning");
+            FPANE_Log(@"spiketrace ANE FQBLEManager.m stopScanning");
         }
     }
 }
@@ -159,6 +180,9 @@
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
+    //by default, whenever a disconnect occurs, try to reconnect
+    _reconnectAfterDisconnect = true;
+    
     NSUUID *uuid = peripheral.identifier;
     [FQToolsUtil saveUserDefaults:uuid.UUIDString key:self.selectMAC];
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didConnectPeripheral, connected peripheral name:%@ MAC: %@, uuid:%@", peripheral.name, self.selectMAC, uuid]);
@@ -181,9 +205,13 @@
     
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m >>>peripheral didDisconnect %@: %@\n", [peripheral name], [error localizedDescription]]);
     FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_disconnectedMiaoMiao", (const uint8_t*) "");
-    if (self.peripheral) {
-        FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, self.peripheral not nil, trying to reconnect");
+    if (self.peripheral && _reconnectAfterDisconnect) {
+        FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, self.peripheral not nil and _reconnectAfterDisconnect = true, trying to reconnect");
         [self.manager connectPeripheral:self.peripheral options:nil];
+    } else if (!self.peripheral) {
+        FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, self.peripheral = nil");
+    } else if (!_reconnectAfterDisconnect) {
+        FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, _reconnectAfterDisconnect = false");
     }
     
 }

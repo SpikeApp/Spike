@@ -1028,6 +1028,18 @@ internal class LiParameters extends SlopeParameters {
 		DEFAULT_SLOPE = 1;
 		DEFAULT_HIGH_SLOPE_HIGH = 1;
 		DEFAUL_HIGH_SLOPE_LOW = 1;
+		
+		/*
+		LOW_SLOPE_1 = 0.55;
+		LOW_SLOPE_2 = 0.50;
+		HIGH_SLOPE_1 = 1.5;
+		HIGH_SLOPE_2 = 1.6;
+		DEFAULT_LOW_SLOPE_LOW = 0.55;
+		DEFAULT_LOW_SLOPE_HIGH = 0.50;
+		DEFAULT_SLOPE = 1;
+		DEFAULT_HIGH_SLOPE_HIGH = 1.5;
+		DEFAUL_HIGH_SLOPE_LOW = 1.4;	
+*/
 	}
 }
 

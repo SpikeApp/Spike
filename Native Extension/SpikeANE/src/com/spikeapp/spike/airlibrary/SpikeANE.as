@@ -85,6 +85,22 @@ package com.spikeapp.spike.airlibrary
 			context.call("confirmSensorChangeMiaoMiao");
 		}
 
+		/**
+		* disconnect without forgetting device, and without automatically reconnecting<br>
+		* by calling reconnectMiaoMiao, the app will try to reconnect<br>
+		* <br>
+		*/
+		public static function disconnectMiaoMiao():void {
+			context.call("disconnectMiaoMiao");
+		}
+
+		/**
+		* reconnect to known peripheral, can only be used if previously disconnect was done with disconnectMiaoMiao
+		*/
+		public static function reconnectMiaoMiao():void {
+			context.call("reconnectMiaoMiao");
+		}
+
 		/**********************
 		 * ** HEALTHKIT
 		 * *******************/
@@ -195,6 +211,7 @@ package com.spikeapp.spike.airlibrary
 		/************
 		 ** UTILITIES
 		 ************/
+		//generateHMAC_SHA1 not yet retested after migratoin to SpikeANE
 		public static function generateHMAC_SHA1(key:String, data:String):String {
 			return (context.call("generateHMAC_SHA1", key, data) as String);
 		}
