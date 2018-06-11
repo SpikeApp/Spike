@@ -26,7 +26,7 @@ package services
 	{
 		// Constants
 		private static const TIME_24H:int = 24 * 60 * 60 * 1000;
-		private static const REMOTE_ALERT_URL:String = "https://spike-app.com/app/global_alert.json";
+		private static var remoteAlertURL:String;
 		
 		//Variables 
 		private static var initialStart:Boolean = true;
@@ -41,6 +41,8 @@ package services
 		public static function init():void
 		{
 			myTrace("RemoteAlertService initiated!");
+			
+			remoteAlertURL = !ModelLocator.IS_IPAD ? "https://spike-app.com/app/global_alert.json" : "https://spike-app.com/app/global_alert_ipad.json"
 			
 			//Setup Event Listeners
 			createEventListeners();
@@ -66,7 +68,7 @@ package services
 			}
 			
 			//Create and configure loader and url request
-			var request:URLRequest = new URLRequest(REMOTE_ALERT_URL);
+			var request:URLRequest = new URLRequest(remoteAlertURL);
 			request.method = URLRequestMethod.GET;
 			var loader:URLLoader = new URLLoader(); 
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
