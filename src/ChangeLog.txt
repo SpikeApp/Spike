@@ -11,6 +11,7 @@ ENHANCEMENT: Changed Nightscout treatments query strategy to increase compatibil
 ENHANCEMENT: Alarm snooze times are now saved to the database. This means if you snooze and alarm and restart Spike the alarm will remain snoozed. (Miguel)
 ENHANCEMENT: Added rotation compatibility to the Chart Today Widget (Miguel)
 ENHANCEMENT: Different delta calculation for speech functionality to work more in sync with the main graph. (Miguel)
+ENHANCEMENT: Added glucose value and time to the confirmation popup when user tries to delete a reading. (Miguel)
 
 2.1.1
 FEATURE: Insulin and carb absorption curves! When there's active IOB or COB the user can touch those pills to be presented with a graph showing the respective absorption curve and the exact position the user is on the curve. The user will also be able to see the exact time the insulin and/or carbs will be fully absorbed by the body. Available for both masters and followers. Not available for users that have the "Loop/OpenAPS User" option enabled in Settings -> Treatments. (Miguel)

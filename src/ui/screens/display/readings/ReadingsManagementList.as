@@ -35,6 +35,7 @@ package ui.screens.display.readings
 	
 	import utils.BgGraphBuilder;
 	import utils.Constants;
+	import utils.GlucoseHelper;
 	import utils.TimeSpan;
 	
 	[ResourceBundle("globaltranslations")]
@@ -212,7 +213,7 @@ package ui.screens.display.readings
 				iconsList.push(icon);
 				
 				//Push row into list
-				dataList.push({ icon: icon, label: label, bgReading: reading, id: i });
+				dataList.push({ icon: icon, label: label, glucoseValue: glucoseValue, time: timeFormatted, bgReading: reading, id: i });
 			}
 			
 			dataProvider = new ArrayCollection(dataList);
@@ -271,12 +272,14 @@ package ui.screens.display.readings
 			//Get list row properties
 			var item:Object = ((e.currentTarget as Button).parent as DefaultListItemRenderer).data as Object;
 			var bgReading:BgReading = item.bgReading as BgReading;
+			var glucoseValue:String = (item.glucoseValue as String) + " " + GlucoseHelper.getGlucoseUnit();
+			var glucoseTime:String = item.time as String
 			var id:int = item.id;
 			
 			var alert:Alert = AlertManager.showActionAlert
 			(
 				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-				ModelLocator.resourceManagerInstance.getString('globaltranslations','cant_be_undone'),
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','cant_be_undone') + "\n" + glucoseValue + " - " + glucoseTime,
 				Number.NaN,
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase")  },	
