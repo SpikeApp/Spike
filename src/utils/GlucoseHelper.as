@@ -4,6 +4,8 @@ package utils
 	import database.CommonSettings;
 	
 	import model.ModelLocator;
+	
+	import ui.chart.GlucoseFactory;
 
 	[ResourceBundle("generalsettingsscreen")]
 	
@@ -60,6 +62,35 @@ package utils
 			}
 			
 			return optimalCalibrationCondition;
+		}
+		
+		public static function calculateLatestDelta():String
+		{
+			var delta:String = "uknown";	
+			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length >= 2)
+			{
+				var lastBgReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading;
+				var previousBgReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 2] as BgReading;
+				
+				if (lastBgReading != null && lastBgReading.calculatedValue != 0 && previousBgReading != null && previousBgReading.calculatedValue != 0)
+				{
+					var lastBgReadingProperties:Object = GlucoseFactory.getGlucoseOutput(lastBgReading.calculatedValue);
+					var lastBgReadingGlucoseValueFormatted:Number = lastBgReadingProperties.glucoseValueFormatted;
+					
+					var previousBgReadingProperties:Object = GlucoseFactory.getGlucoseOutput(previousBgReading.calculatedValue);
+					var previousBgReadingGlucoseValueFormatted:Number = previousBgReadingProperties.glucoseValueFormatted;
+					
+					delta = GlucoseFactory.getGlucoseSlope
+						(
+							previousBgReading.calculatedValue,
+							previousBgReadingGlucoseValueFormatted,
+							lastBgReading.calculatedValue,
+							lastBgReadingGlucoseValueFormatted
+						);
+				}
+			}
+			
+			return delta;
 		}
 	}
 }

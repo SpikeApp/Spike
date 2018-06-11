@@ -15,7 +15,10 @@ package services
 	
 	import model.ModelLocator;
 	
+	import ui.chart.GlucoseFactory;
+	
 	import utils.BgGraphBuilder;
+	import utils.GlucoseHelper;
 	import utils.Trace;
 	
 	[ResourceBundle("texttospeech")]
@@ -165,7 +168,8 @@ package services
 						var currentTrend:String = currentBgReading.slopeName() as String;
 							
 						//Get current delta
-						var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
+						//var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
+						var currentDelta:String = GlucoseHelper.calculateLatestDelta();
 						
 						//If user wants trend to be spoken...
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
@@ -196,7 +200,7 @@ package services
 							if (currentDelta == "ERR" || currentDelta == "???")
 								currentDelta = ModelLocator.resourceManagerInstance.getString('texttospeech','deltanoncomputable');
 							
-							if (currentDelta == "0.0" || currentDelta == "+0" || currentDelta == "-0")
+							if (currentDelta == "0.0" || currentDelta == "+0" || currentDelta == "+ 0" || currentDelta == "-0" || currentDelta == "- 0")
 								currentDelta = "0";
 						}
 						
