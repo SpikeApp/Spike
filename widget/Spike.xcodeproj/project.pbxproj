@@ -21,7 +21,7 @@
 		1CB729D72029FD3500965219 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
 		677BE12171EF0760555A41F4 /* Pods_widget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68C880EB4875714A3910DFCC /* Pods_widget.framework */; };
 		89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */; };
-		9606645420CE151800EE6418 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9606645320CE151800EE6418 /* HealthKit.framework */; };
+		9606645620CE1D2100EE6418 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9606645520CE1D2100EE6418 /* HealthKit.framework */; };
 		961EB7632089460D005F0E9F /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 961EB7612089460D005F0E9F /* Interface.storyboard */; };
 		961EB7652089460D005F0E9F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB7642089460D005F0E9F /* Assets.xcassets */; };
 		961EB76C2089460D005F0E9F /* watch Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 961EB76B2089460D005F0E9F /* watch Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -164,7 +164,7 @@
 		68C880EB4875714A3910DFCC /* Pods_widget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_widget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SpikeTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		814206E8BCE86FF5796BA541 /* Pods-SpikeTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SpikeTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-SpikeTests/Pods-SpikeTests.release.xcconfig"; sourceTree = "<group>"; };
-		9606645320CE151800EE6418 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		9606645520CE1D2100EE6418 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		961EB75F2089460D005F0E9F /* watch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = watch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		961EB7622089460D005F0E9F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
 		961EB7642089460D005F0E9F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -198,7 +198,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9606645420CE151800EE6418 /* HealthKit.framework in Frameworks */,
+				9606645620CE1D2100EE6418 /* HealthKit.framework in Frameworks */,
 				89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */,
 				964AFDF920CE0F0000C465B9 /* (null) in Frameworks */,
 			);
@@ -329,7 +329,7 @@
 		1C510154202806D600872D37 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				9606645320CE151800EE6418 /* HealthKit.framework */,
+				9606645520CE1D2100EE6418 /* HealthKit.framework */,
 				9654C8022087C8790021B684 /* Pods_widget.framework */,
 				1C510155202806D600872D37 /* NotificationCenter.framework */,
 				FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */,

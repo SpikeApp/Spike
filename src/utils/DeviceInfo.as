@@ -208,5 +208,20 @@ package utils
 		{
 			return Constants.deviceModel == IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == IPAD_PRO_105 || Constants.deviceModel == IPAD_PRO_129 || Constants.deviceModel == IPAD_MINI_1_2_3_4;
 		}
+		
+		public static function isIphone7():Boolean
+		{
+			var isIphone7Model:Boolean = false;
+			
+			if(Capabilities.cpuArchitecture == "ARM") 
+			{
+				var deviceSpecs:String = Capabilities.os;
+				
+				if (deviceSpecs.indexOf("iPhone9,1") != -1 || deviceSpecs.indexOf("iPhone9,3") != -1 || deviceSpecs.indexOf("iPhone9,2") != -1 || deviceSpecs.indexOf("iPhone9,4") != -1)
+					isIphone7Model = true;
+			}
+			
+			return isIphone7Model;
+		}
 	}
 }

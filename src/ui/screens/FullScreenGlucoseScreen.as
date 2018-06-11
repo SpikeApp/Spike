@@ -477,7 +477,7 @@ package ui.screens
 			nativeTextField.text = formattedGlucoseOutput;
 			
 			var textFormat:flash.text.TextFormat = sNativeFormat;
-			var maxTextWidth:int  = Constants.stageWidth - (Constants.isPortrait ? Constants.stageWidth * 0.25 : Constants.stageWidth * 0.1);
+			var maxTextWidth:int  = Constants.stageWidth - (Constants.isPortrait ? Constants.stageWidth * 0.2 : Constants.stageWidth * 0.1);
 			var maxTextHeight:int = Constants.stageHeight - Constants.headerHeight;
 			
 			var size:Number = Number(textFormat.size);
