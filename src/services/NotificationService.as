@@ -421,17 +421,20 @@ package services
 						valueToShow = "---"
 					}
 					
-					Notifications.service.notify(
-						new NotificationBuilder()
-						.setCount(BadgeBuilder.getAppBadge())
-						.setId(NotificationService.ID_FOR_BG_VALUE)
-						.setAlert(valueToShow)
-						.setTitle(valueToShow)
-						.setBody(" ")
-						.setSound("")
-						.enableVibration(false)
-						.enableLights(false)
-						.build());
+					if (valueToShow != "" && valueToShow != " ")
+					{
+						Notifications.service.notify(
+							new NotificationBuilder()
+							.setCount(BadgeBuilder.getAppBadge())
+							.setId(NotificationService.ID_FOR_BG_VALUE)
+							.setAlert(valueToShow)
+							.setTitle(valueToShow)
+							.setBody(" ")
+							.setSound("")
+							.enableVibration(false)
+							.enableLights(false)
+							.build());
+					}
 				}
 			}
 			else if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
