@@ -7,6 +7,7 @@ package services
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.utils.setTimeout;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -61,6 +62,8 @@ package services
 		private static var initialCalibrationActive:Boolean = false;
 		
 		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
+
+		public static var optimalCalibrationScheduled:Boolean = false;
 		
 
 		public static function get instance():CalibrationService {
@@ -272,6 +275,43 @@ package services
 						initialCalibrationActive = true;
 					}
 				}
+			}
+			else if (optimalCalibrationScheduled && GlucoseHelper.isOptimalConditionToCalibrate())
+			{
+				if (SpikeANE.appIsInBackground())
+				{
+					//Warn the user that optimal calibration conditions have been met
+					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+						.setCount(BadgeBuilder.getAppBadge())
+						.setId(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
+						.setAlert(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
+						.setBody(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body'))
+						.enableLights(true)
+						.setSound("default")
+						.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
+					Notifications.service.notify(notificationBuilder.build());
+					
+					SpikeANE.vibrate();
+				}
+				else
+				{
+					var optimalAlert:Alert = AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'),
+						ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body')
+					);
+					optimalAlert.addEventListener(starling.events.Event.CLOSE, onOptimalCalibrationAcknowledged);
+					
+					function onOptimalCalibrationAcknowledged(e:starling.events.Event = null):void
+					{
+						calibrationOnRequest();
+					}
+				}
+				
+				setTimeout( function():void {
+					optimalCalibrationScheduled = false;
+				}, 5000 );
 			}
 		}
 		
@@ -497,15 +537,21 @@ package services
 				else if (!GlucoseHelper.isOptimalConditionToCalibrate()) //Check for optimal calibration conditions
 				{
 					AlertManager.showActionAlert
-						(
-							ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title_sub_optimal"),
-							ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_sub_optimal").replace("{max_bg_difference}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "3mg/dL" : "0.16mmol/L").replace("{high_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK) + "-" + (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) + Math.round(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25)) : Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10 + "-" + ((Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10) + (Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25))) * 10)) / 10))).replace("{low_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10)),
-							60,
-							[
-								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
-								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','ok_alert_button_label'), triggered: onAcceptedCalibrateWithSuboptimal }
-							]
-						);
+					(
+						ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title_sub_optimal"),
+						ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_sub_optimal").replace("{max_bg_difference}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "3mg/dL" : "0.16mmol/L").replace("{high_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK) + "-" + (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) + Math.round(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25)) : Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10 + "-" + ((Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10) + (Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25))) * 10)) / 10))).replace("{low_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10)),
+						60,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+							{ label: ModelLocator.resourceManagerInstance.getString("calibrationservice","notify_optimal_conditions_button_label"), triggered: onScheduleOptimalCalibration },
+							{ label: ModelLocator.resourceManagerInstance.getString("calibrationservice","proceed_button_label"), triggered: onAcceptedCalibrateWithSuboptimal }
+						]
+					);
+					
+					function onScheduleOptimalCalibration():void
+					{
+						optimalCalibrationScheduled = true;
+					}
 					
 					function onAcceptedCalibrateWithSuboptimal():void
 					{

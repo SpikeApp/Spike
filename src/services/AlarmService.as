@@ -1299,7 +1299,11 @@ package services
 			}
 		}
 		
-		private static function checkCalibrationRequestAlert(now:Date):void {
+		private static function checkCalibrationRequestAlert(now:Date):void 
+		{
+			if (CalibrationService.optimalCalibrationScheduled)
+				return;
+			
 			var listOfAlerts:FromtimeAndValueArrayCollection;
 			var alertValue:Number;
 			var alertName:String;
