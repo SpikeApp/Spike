@@ -26,6 +26,7 @@ package services
 	import ui.chart.GlucoseFactory;
 	
 	import utils.BgGraphBuilder;
+	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
 	import utils.MathHelper;
 	import utils.SpikeJSON;
@@ -423,14 +424,14 @@ package services
 			if (dateFormat == null || dateFormat.slice(0,2) == "24")
 			{
 				if (formatForChartLabel)
-					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H, widgetHistory == TIME_2_HOURS);
+					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H, widgetHistory == TIME_2_HOURS || DeviceInfo.isSmallScreenDevice());
 				else
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
 			}
 			else
 			{
 				if (formatForChartLabel)
-					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H, widgetHistory == TIME_2_HOURS, widgetHistory == TIME_1_HOUR);
+					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H, widgetHistory == TIME_2_HOURS  || DeviceInfo.isSmallScreenDevice(), widgetHistory == TIME_1_HOUR && !DeviceInfo.isSmallScreenDevice());
 				else
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			}

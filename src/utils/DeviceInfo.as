@@ -223,5 +223,10 @@ package utils
 			
 			return isIphone7SEModel;
 		}
+		
+		public static function isSmallScreenDevice():Boolean
+		{
+			return Constants.deviceModel == IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == IPHONE_5_5S_5C_SE_ITOUCH_5_6;
+		}
 	}
 }
