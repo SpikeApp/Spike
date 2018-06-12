@@ -65,6 +65,7 @@ package ui.screens.display.transmitter
 	import ui.AppInterface;
 	import ui.InterfaceController;
 	import ui.popups.AlertManager;
+	import ui.popups.TreatmentsConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
@@ -73,6 +74,7 @@ package ui.screens.display.transmitter
 	import utils.Trace;
 	
 	[ResourceBundle("transmitterscreen")]
+	[ResourceBundle("treatments")]
 	[ResourceBundle("globaltranslations")]
 
 	public class TransmitterStatusList extends GroupedList 
@@ -109,6 +111,7 @@ package ui.screens.display.transmitter
 		private var otherFirmwareLabel:Label;
 		private var bluetoothFirmwareLabel:Label;
 		private var transmitterMACAddressLabel:Label;
+		private var miaomiaoWidgetWatchConfigSender:Button;
 		
 		/* Properties */
 		private var transmitterNameValue:String;
@@ -592,9 +595,17 @@ package ui.screens.display.transmitter
 					actionControls.addChild(forgetButton);
 				}
 				
-				actionsSection.children = [
-					{ label: "", accessory: actionControls }
-				];
+				if (BlueToothDevice.isMiaoMiao())
+				{
+					miaomiaoWidgetWatchConfigSender = LayoutFactory.createButton(Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_label") : ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_iphone_x_label"));
+					miaomiaoWidgetWatchConfigSender.addEventListener(Event.TRIGGERED, onSendMiaoMiaoConfigurationFiles);
+				}
+				
+				var actionsData:Array = [];
+				actionsData.push( { label: "", accessory: actionControls } );
+				if (BlueToothDevice.isMiaoMiao()) actionsData.push( { label: "", accessory: miaomiaoWidgetWatchConfigSender } );
+				
+				actionsSection.children = actionsData;
 				
 				/* Add Actions Section to Display List */
 				screenDataContent.push(actionsSection);
@@ -826,6 +837,11 @@ package ui.screens.display.transmitter
 			}
 		}
 		
+		private function onSendMiaoMiaoConfigurationFiles(e:Event):void
+		{
+			TreatmentsConfigSender.displayTreatmentsConfigSender(true);
+		}
+		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.navigator.replaceScreen, Screens.TRANSMITTER, noTransition);
@@ -1020,6 +1036,13 @@ package ui.screens.display.transmitter
 			{
 				transmitterMACAddressLabel.dispose();
 				transmitterMACAddressLabel = null;
+			}
+			
+			if (miaomiaoWidgetWatchConfigSender != null)
+			{
+				miaomiaoWidgetWatchConfigSender.removeEventListener(Event.TRIGGERED, onSendMiaoMiaoConfigurationFiles);
+				miaomiaoWidgetWatchConfigSender.dispose();
+				miaomiaoWidgetWatchConfigSender = null;
 			}
 			
 			super.dispose();

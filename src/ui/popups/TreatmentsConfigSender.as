@@ -43,9 +43,18 @@ package ui.popups
 		private static var emailField:TextInput;
 		private static var emailLabel:Label;
 		private static var sendButton:Button;
+		private static var isMiaoMiaoConfig:Boolean;
 		
 		/* Properties */
 		private static var dataProvider:ArrayCollection;
+
+		private static var mainContainer:LayoutGroup;
+
+		private static var actionButtonsContainer:LayoutGroup;
+
+		private static var cancelButton:Button;
+
+		private static var positionHelper:Sprite;
 		
 		public function TreatmentsConfigSender()
 		{
@@ -56,8 +65,10 @@ package ui.popups
 		/**
 		 * Functionality
 		 */
-		public static function displayTreatmentsConfigSender():void
+		public static function displayTreatmentsConfigSender(isMiaoMiao:Boolean = false):void
 		{
+			isMiaoMiaoConfig = isMiaoMiao;
+			
 			createDisplayObjects();
 			displayCallout();
 		}
@@ -84,14 +95,17 @@ package ui.popups
 			mainLayout.horizontalAlign = HorizontalAlign.CENTER;
 			mainLayout.gap = 10;
 			
-			var mainContainer:LayoutGroup = new LayoutGroup();
+			if (mainContainer != null) mainContainer.removeFromParent(true);
+			mainContainer = new LayoutGroup();
 			mainContainer.layout = mainLayout;
 			
 			/* Title */
+			if (emailLabel != null) emailLabel.removeFromParent(true);
 			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label"), HorizontalAlign.CENTER);
 			mainContainer.addChild(emailLabel);
 			
 			/* Email Input */
+			if (emailField != null) emailField.removeFromParent(true);
 			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.CENTER, false, true);
 			mainContainer.addChild(emailField);
 			
@@ -99,27 +113,32 @@ package ui.popups
 			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
 			actionButtonsLayout.gap = 5;
 			
-			var actionButtonsContainer:LayoutGroup = new LayoutGroup();
+			if (actionButtonsContainer != null) actionButtonsContainer.removeFromParent(true);
+			actionButtonsContainer = new LayoutGroup();
 			actionButtonsContainer.layout = actionButtonsLayout;
 			mainContainer.addChild(actionButtonsContainer);
 			
 			//Cancel Button
-			var cancelButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label"));
+			if (cancelButton != null) cancelButton.removeFromParent(true);
+			cancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label"));
 			cancelButton.addEventListener(starling.events.Event.TRIGGERED, onCancel);
 			actionButtonsContainer.addChild(cancelButton);
 			
 			//Send Button
+			if (sendButton != null) sendButton.removeFromParent();
 			sendButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"send_button_label_capitalized"));
 			sendButton.addEventListener(starling.events.Event.TRIGGERED, onClose);
 			actionButtonsContainer.addChild(sendButton);
 			
 			/* Callout Position Helper Creation */
-			var positionHelper:Sprite = new Sprite();
+			if (positionHelper != null) positionHelper.removeFromParent(true);
+			positionHelper = new Sprite();
 			positionHelper.x = Constants.stageWidth / 2;
 			positionHelper.y = 70;
 			Starling.current.stage.addChild(positionHelper);
 			
 			/* Callout Creation */
+			if (treatmentsConfigSenderCallout != null) treatmentsConfigSenderCallout.removeFromParent(true);
 			treatmentsConfigSenderCallout = new Callout();
 			treatmentsConfigSenderCallout.content = mainContainer;
 			treatmentsConfigSenderCallout.origin = positionHelper;
@@ -170,8 +189,8 @@ package ui.popups
 			//Create URL Request 
 			var vars:URLVariables = new URLVariables();
 			vars.mimeType = "text/html";
-			vars.emailSubject = ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_subject");
-			vars.emailBody = ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_body");
+			vars.emailSubject = !isMiaoMiaoConfig ? ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_subject") : ModelLocator.resourceManagerInstance.getString('treatments',"workflow_miaomiao_email_subject");
+			vars.emailBody = !isMiaoMiaoConfig ? ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_body") : ModelLocator.resourceManagerInstance.getString('treatments',"workflow__miaomiao_email_body");
 			vars.userEmail = emailField.text.replace(" ", "");
 				
 			//Send data

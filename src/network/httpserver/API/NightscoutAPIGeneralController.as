@@ -1,5 +1,7 @@
 package network.httpserver.API
 {
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	
 	import flash.net.URLVariables;
 	
 	import spark.formatters.DateTimeFormatter;
@@ -18,6 +20,7 @@ package network.httpserver.API
 	
 	import treatments.TreatmentsManager;
 	
+	import ui.InterfaceController;
 	import ui.chart.GlucoseFactory;
 	
 	import utils.BgGraphBuilder;
@@ -290,6 +293,14 @@ package network.httpserver.API
 			}
 			
 			return responseSuccess(response);
+		}
+		
+		public function spikeondemand(params:URLVariables):String
+		{
+			if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
+				SpikeANE.sendStartReadingCommmandToMiaoMia();
+			
+			return responseSuccess("OK");
 		}
 	}
 }
