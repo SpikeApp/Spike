@@ -22,6 +22,7 @@ package ui.screens.display.settings.chart
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("chartsettingsscreen")]
@@ -34,6 +35,7 @@ package ui.screens.display.settings.chart
 		private var avgRangePicker:PickerList;
 		private var a1cRangePicker:PickerList;
 		private var a1cIFCCCheck:Check;
+		private var displayInLandscapeCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -42,6 +44,7 @@ package ui.screens.display.settings.chart
 		private var a1cRangeValue:Number;
 		private var avgRangeValue:Number;
 		private var isA1CIFCC:Boolean;
+		private var displayInLandscapeValue:Boolean;
 		
 		public function GlucoseDistributionSettingsList()
 		{
@@ -76,6 +79,7 @@ package ui.screens.display.settings.chart
 			a1cRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_OFFSET));
 			avgRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_AVG_OFFSET));
 			isA1CIFCC = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) == "true";
+			displayInLandscapeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE) == "true";
 		}
 		
 		private function setupContent():void
@@ -132,6 +136,9 @@ package ui.screens.display.settings.chart
 			a1cIFCCCheck = LayoutFactory.createCheckMark(isA1CIFCC);
 			a1cIFCCCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
+			displayInLandscapeCheck = LayoutFactory.createCheckMark(displayInLandscapeValue);
+			displayInLandscapeCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			/* Set List Item Renderer */
 			itemRendererFactory = function():IListItemRenderer
 			{
@@ -151,6 +158,8 @@ package ui.screens.display.settings.chart
 			data.push( { text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: enableGlucoseDistribution } );
 			if (pieChartEnabledValue)
 			{
+				if (DeviceInfo.isTablet())
+					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','display_in_landscape_label'), accessory: displayInLandscapeCheck } );
 				if (!BlueToothDevice.isFollower())
 				{
 					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','thresholds_range_label'), accessory: percentageRangePicker } );
@@ -181,6 +190,9 @@ package ui.screens.display.settings.chart
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != String(isA1CIFCC))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON, String(isA1CIFCC));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE) != String(displayInLandscapeValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE, String(displayInLandscapeValue));
+			
 			needsSave = false;
 		}
 		
@@ -201,6 +213,7 @@ package ui.screens.display.settings.chart
 			a1cRangeValue = Number(a1cRangePicker.selectedItem.value);
 			avgRangeValue = Number(avgRangePicker.selectedItem.value);
 			isA1CIFCC = a1cIFCCCheck.isSelected;
+			displayInLandscapeValue = displayInLandscapeCheck.isSelected;
 			
 			needsSave = true;
 		}
@@ -250,6 +263,13 @@ package ui.screens.display.settings.chart
 				a1cIFCCCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
 				a1cIFCCCheck.dispose();
 				a1cIFCCCheck = null;
+			}
+			
+			if (displayInLandscapeCheck != null)
+			{
+				displayInLandscapeCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				displayInLandscapeCheck.dispose();
+				displayInLandscapeCheck = null;
 			}
 			
 			super.dispose();

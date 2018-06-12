@@ -170,7 +170,7 @@ package ui.screens
 			
 			mainChartHeight = availableScreenHeight;
 			
-			if (Constants.isPortrait)
+			if (Constants.isPortrait || (DeviceInfo.isTablet() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE) == "true"))
 			{
 				//Calculate timeline ranges and display line height
 				mainChartHeight -= chartSettingsTopPadding; //Top padding for settings
@@ -206,7 +206,7 @@ package ui.screens
 			glucoseChart.calculateTotalCOB( now );
 			addChild(glucoseChart);
 			
-			if (Constants.isPortrait)
+			if (Constants.isPortrait || (DeviceInfo.isTablet() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE) == "true"))
 			{
 				createSettings();
 				

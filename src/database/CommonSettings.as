@@ -425,6 +425,11 @@ package database
 		 public static const COMMON_SETTING_SAGE_ON:int = 158;
 		 public static const COMMON_SETTING_IAGE_ON:int = 159;
 		 public static const COMMON_SETTING_TRANSMITTER_BATTERY_ON:int = 160;
+		 
+		 /**
+		 * Pie Chart #3 
+		 */
+		 public static const COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE:int = 161;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -587,7 +592,8 @@ package database
 			 "true",//COMMON_SETTING_CAGE_ON
 			 "true",//COMMON_SETTING_SAGE_ON
 			 "true",//COMMON_SETTING_IAGE_ON
-			 "true"//COMMON_SETTING_TRANSMITTER_BATTERY_ON
+			 "true",//COMMON_SETTING_TRANSMITTER_BATTERY_ON
+			 "false"//COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE
 		 ];
 
 		 public function CommonSettings()
