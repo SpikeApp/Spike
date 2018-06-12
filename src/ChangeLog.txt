@@ -14,6 +14,7 @@ ENHANCEMENT: Display battery as unknown when BluCon is not connected. (Miguel)
 ENHANCEMENT: Different delta calculation for speech functionality to work more in sync with the main graph. (Miguel)
 ENHANCEMENT: Added glucose value and time to the confirmation popup when user tries to delete a reading. (Miguel)
 FIX: Layout issues with the x axis label of the Chart Today Widget on small screen devices. (Miguel)
+FIX: Specific Nightscout treatments like "Pump Site Change", "Profile Switch", etc.. that are added in Spike as notes were being reuploaded overwriting the original ones. This is now fixed! (Miguel)
 FIX: As usual, other small bug fixes and improvements. (Miguel)
 
 2.1.1

@@ -847,6 +847,19 @@ package services
 			//Check if the treatment is already present in another queue and delete it.
 			if (!deleteInternalTreatment(activeTreatmentsDelete, treatment))
 			{
+				if 
+				(
+					treatment.note.indexOf("OpenAPS Offline") != -1 ||
+					treatment.note.indexOf("Pump Site Change") != -1 ||
+					treatment.note.indexOf("Pump Battery Change") != -1 ||
+					treatment.note.indexOf("Resume Pump") != -1 ||
+					treatment.note.indexOf("Suspend Pump") != -1 ||
+					treatment.note.indexOf("Profile Switch") != -1 ||
+					treatment.note.indexOf("Announcement") != -1
+				)
+					return;
+				
+				
 				//Add treatment to queue
 				activeTreatmentsUpload.push(createTreatmentObject(treatment));
 				
@@ -863,6 +876,20 @@ package services
 			{
 				//Add treatment to queue
 				var treatment:Treatment = TreatmentsManager.treatmentsList[i] as Treatment;
+				if 
+				(
+					treatment.note.indexOf("OpenAPS Offline") != -1 ||
+					treatment.note.indexOf("Pump Site Change") != -1 ||
+					treatment.note.indexOf("Pump Battery Change") != -1 ||
+					treatment.note.indexOf("Resume Pump") != -1 ||
+					treatment.note.indexOf("Suspend Pump") != -1 ||
+					treatment.note.indexOf("Profile Switch") != -1 ||
+					treatment.note.indexOf("Announcement") != -1
+				)
+				{
+					continue;
+				}
+				
 				activeTreatmentsUpload.push(createTreatmentObject(treatment));
 			}
 			

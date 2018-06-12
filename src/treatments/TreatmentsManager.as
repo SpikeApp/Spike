@@ -1282,7 +1282,7 @@ package treatments
 				else if (treatmentEventType == "Announcement" && nsTreatment.notes != null && nsTreatment.notes != "")
 				{
 					treatmentType = Treatment.TYPE_NOTE;
-					treatmentNote += (treatmentNote != "" ? "\n" : "") + nsTreatment.notes;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Announcement: " + nsTreatment.notes;
 				}
 				else if (treatmentEventType == "Profile Switch")
 				{
