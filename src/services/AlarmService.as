@@ -753,10 +753,14 @@ package services
 													   snoozeText:String, alertSnoozeIdentifier:String, snoozeValueSetter:Function, presnoozeResetFunction:Function = null):void {
 			var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
 				alertSetting, true);
-			var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+			var alertName:String = listOfAlerts != null ? listOfAlerts.getAlarmName(Number.NaN, "", new Date()) : "";
 			var alertType:AlertType = Database.getAlertType(alertName);
 			myTrace("in openSnoozePickerDialog with id = " + NotificationService.notificationIdToText(notificationId) + ", cancelling notification");
 			Notifications.service.cancel(notificationId);
+			
+			if (listOfAlerts == null || alertName == null || alertName == "" || alertType == null)
+				return;
+			
 			var index:int = 0;
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 				if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
@@ -1303,9 +1307,11 @@ package services
 			
 			listOfAlerts = FromtimeAndValueArrayCollection.createList(
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT), false);
+			if (listOfAlerts == null) return;
 			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			alertType = Database.getAlertType(alertName);
+			if (alertType == null) return;
 			if (alertType.enabled) {
 				if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
 					||
@@ -1883,10 +1889,12 @@ package services
 		 */
 		private static function repeatAlerts():void {
 			//id ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br
+			if (activeAlertsArray == null || repeatAlertsLastFireTimeStampArray == null) return;
 			for (var cntr:int = 0;cntr < activeAlertsArray.length;cntr++) {
 				if (activeAlertsArray[cntr] == true) {
 					if ((new Date()).valueOf() - repeatAlertsLastFireTimeStampArray[cntr] > 60 * 1000) {
 						var alertType:AlertType = Database.getAlertType(repeatAlertsAlertTypeNameArray[cntr]);
+						if (alertType == null) continue;
 						if (alertType.repeatInMinutes > 0) {
 							Notifications.service.cancel(repeatAlertsNotificationIds[cntr]);//remove any notification that may already exist
 							

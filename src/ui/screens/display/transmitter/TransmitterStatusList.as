@@ -708,7 +708,7 @@ package ui.screens.display.transmitter
 					target = resistanceIcon;
 				}
 				
-				if (message != null && target != null)
+				if (message != null && target != null && target.stage != null)
 				{
 					batteryStatusG5Callout = TextCallout.show(message, target, new <String>[RelativePosition.TOP], false);
 					batteryStatusG5Callout.textRendererFactory = function calloutTextRenderer():ITextRenderer
@@ -832,7 +832,8 @@ package ui.screens.display.transmitter
 			}
 			else
 			{
-				screenRefreshLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen','refresh_screen_label').replace("{sec}", refreshSecondsElapsed);
+				if (screenRefreshLabel != null)
+					screenRefreshLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen','refresh_screen_label').replace("{sec}", refreshSecondsElapsed);
 				refreshSecondsElapsed--;
 			}
 		}

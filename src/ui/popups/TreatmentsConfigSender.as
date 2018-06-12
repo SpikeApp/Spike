@@ -166,10 +166,7 @@ package ui.popups
 			
 			//Validation
 			emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label");
-			if (emailLabel.fontStyles != null)
-				emailLabel.fontStyles.color = 0xEEEEEE;
-			else
-				emailLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.TOP);
+			emailLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.TOP);
 			
 			if (emailField.text == "")
 			{
