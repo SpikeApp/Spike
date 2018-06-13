@@ -849,6 +849,7 @@ package services
 			{
 				if 
 				(
+					treatment.note.indexOf("Exercise (NS)") != -1 ||
 					treatment.note.indexOf("OpenAPS Offline") != -1 ||
 					treatment.note.indexOf("Pump Site Change") != -1 ||
 					treatment.note.indexOf("Pump Battery Change") != -1 ||
@@ -878,6 +879,7 @@ package services
 				var treatment:Treatment = TreatmentsManager.treatmentsList[i] as Treatment;
 				if 
 				(
+					treatment.note.indexOf("Exercise (NS)") != -1 ||
 					treatment.note.indexOf("OpenAPS Offline") != -1 ||
 					treatment.note.indexOf("Pump Site Change") != -1 ||
 					treatment.note.indexOf("Pump Battery Change") != -1 ||
@@ -1351,6 +1353,7 @@ package services
 			var parameters:URLVariables = new URLVariables();
 			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
 			parameters["find[eventType][$nin][0]"] = "Temp Basal";
+			parameters["find[eventType][$nin][0]"] = "Combo Bolus";
 			
 			/*parameters["find[eventType][$in][0]"] = "Correction Bolus";
 			parameters["find[eventType][$in][1]"] = "Bolus";

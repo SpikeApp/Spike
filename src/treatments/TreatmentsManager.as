@@ -1355,6 +1355,11 @@ package treatments
 				}
 				else if (treatmentEventType == "Note")
 					treatmentType = Treatment.TYPE_NOTE;
+				else if (treatmentEventType == "Exercise")
+				{
+					treatmentType = Treatment.TYPE_NOTE;
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Exercise (NS)";
+				}
 				else if (treatmentEventType == "OpenAPS Offline")
 				{
 					treatmentType = Treatment.TYPE_NOTE;
