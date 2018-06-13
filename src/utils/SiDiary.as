@@ -384,6 +384,12 @@ package utils
 		
 		private static function onLoadCompleteHandler(event:flash.events.Event):void 
 		{ 
+			if (!SystemUtil.isApplicationActive)
+			{
+				SystemUtil.executeWhenApplicationIsActive(onLoadCompleteHandler, event);
+				return;
+			}
+			
 			var loader:URLLoader = URLLoader(event.target);
 			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
 			
