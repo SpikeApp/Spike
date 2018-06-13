@@ -1,7 +1,5 @@
 package treatments
 {
-	import mx.utils.ObjectUtil;
-	
 	import utils.UniqueId;
 
 	public class Treatment
@@ -30,6 +28,7 @@ package treatments
 		public var timestamp:Number;
 		public var ID:String;
 		private var insulinScaleFactor:Number;
+		public var needsAdjustment:Boolean = false;
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null)
 		{

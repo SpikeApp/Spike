@@ -58,7 +58,7 @@ package model
 
 		public static const TEST_FLIGHT_MODE:Boolean = true;
 		public static const IS_IPAD:Boolean = false;
-		public static const INTERNAL_TESTING:Boolean = false;
+		public static const INTERNAL_TESTING:Boolean = true;
 		
 		public static function get instance():ModelLocator
 		{

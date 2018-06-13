@@ -23,6 +23,7 @@ package treatments
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
@@ -97,6 +98,12 @@ package treatments
 		private static var addButton:Button;
 		private static var calloutPositionHelper:Sprite;
 		private static var treatmentCallout:Callout;
+
+		private static var extendedCarbContainer:LayoutGroup;
+
+		private static var carbOffSet:NumericStepper;
+
+		private static var carbOffsetSuffix:Label;
 		
 		public function TreatmentsManager()
 		{
@@ -526,6 +533,22 @@ package treatments
 			
 			if (type == Treatment.TYPE_CARBS_CORRECTION || type == Treatment.TYPE_MEAL_BOLUS)
 			{
+				if (type == Treatment.TYPE_MEAL_BOLUS)
+				{
+					var extendedCarbLayout:HorizontalLayout = new HorizontalLayout();
+					extendedCarbLayout.gap = 0;
+					extendedCarbLayout.verticalAlign = VerticalAlign.MIDDLE;
+					if (extendedCarbContainer != null) extendedCarbContainer.removeFromParent(true);
+					extendedCarbContainer = new LayoutGroup();
+					extendedCarbContainer.layout = extendedCarbLayout;
+					if (carbOffSet != null) carbOffSet.removeFromParent(true);
+					carbOffSet = LayoutFactory.createNumericStepper(-300, 300, 0, 5);
+					carbOffSet.validate();
+					if (carbOffsetSuffix != null) carbOffsetSuffix.removeFromParent(true);
+					carbOffsetSuffix = LayoutFactory.createLabel("min", HorizontalAlign.RIGHT);
+					carbOffsetSuffix.validate();
+				}
+				
 				//Carbs Amout
 				if (carbsTextInput != null) carbsTextInput.removeFromParent(true);
 				carbsTextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
@@ -533,7 +556,16 @@ package treatments
 				carbsTextInput.maxChars = 4;
 				if (type == Treatment.TYPE_MEAL_BOLUS)
 					carbsTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','carbs_text_input_prompt');
-				treatmentInserterContainer.addChild(carbsTextInput);
+				
+				if (type == Treatment.TYPE_MEAL_BOLUS)
+				{
+					extendedCarbContainer.addChild(carbsTextInput);
+					extendedCarbContainer.addChild(carbOffSet);
+					extendedCarbContainer.addChild(carbOffsetSuffix);
+					treatmentInserterContainer.addChild(extendedCarbContainer);
+				}
+				else
+					treatmentInserterContainer.addChild(carbsTextInput);
 				
 				if (carbSpacer != null) carbSpacer.removeFromParent(true);
 				carbSpacer = new Sprite();
@@ -557,6 +589,8 @@ package treatments
 			treatmentTime.value = new Date();
 			treatmentTime.height = 30;
 			treatmentInserterContainer.addChild(treatmentTime);
+			if (type == Treatment.TYPE_MEAL_BOLUS)
+				treatmentTime.minWidth = 270;
 			treatmentTime.validate();
 			
 			if (treatmentSpacer != null) treatmentSpacer.removeFromParent(true);
@@ -568,8 +602,13 @@ package treatments
 				insulinTextInput.width = treatmentTime.width;
 			if (type == Treatment.TYPE_GLUCOSE_CHECK)
 				glucoseTextInput.width = treatmentTime.width;
-			if (type == Treatment.TYPE_CARBS_CORRECTION || type == Treatment.TYPE_MEAL_BOLUS)
+			if (type == Treatment.TYPE_CARBS_CORRECTION)
 				carbsTextInput.width = treatmentTime.width;
+			else if (type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				extendedCarbContainer.width = treatmentTime.width;
+				carbsTextInput.width = treatmentTime.width - carbOffSet.width - carbOffsetSuffix.width;
+			}
 			
 			treatmentInserterTitleLabel.width = treatmentTime.width;
 			
@@ -832,7 +871,7 @@ package treatments
 
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onMealEntered);
 				
-				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null ||!SpikeANE.appIsInForeground())
+				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null || carbOffSet == null || !SpikeANE.appIsInForeground())
 					return;
 				
 				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
@@ -872,33 +911,95 @@ package treatments
 				}
 				else
 				{
-					var treatment:Treatment = new Treatment
-					(
-						Treatment.TYPE_MEAL_BOLUS,
-						treatmentTime.value.valueOf(),
-						insulinValue,
-						insulinList.selectedItem.id,
-						carbsValue,
-						0,
-						getEstimatedGlucose(treatmentTime.value.valueOf()),
-						notes.text
-					);
-					
-					//Add to list
-					treatmentsList.push(treatment);
-					treatmentsMap[treatment.ID] = treatment;
-					
-					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
-					
-					//Notify listeners
-					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-					
-					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-						Database.insertTreatmentSynchronous(treatment);
-					
-					//Upload to Nightscout
-					NightscoutService.uploadTreatment(treatment);
+					if (carbOffSet.value == 0)
+					{
+						var treatment:Treatment = new Treatment
+						(
+							Treatment.TYPE_MEAL_BOLUS,
+							treatmentTime.value.valueOf(),
+							insulinValue,
+							insulinList.selectedItem.id,
+							carbsValue,
+							0,
+							getEstimatedGlucose(treatmentTime.value.valueOf()),
+							notes.text
+						);
+						
+						//Add to list
+						treatmentsList.push(treatment);
+						treatmentsMap[treatment.ID] = treatment;
+						
+						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+						
+						//Notify listeners
+						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+						
+						//Insert in DB
+						if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+							Database.insertTreatmentSynchronous(treatment);
+						
+						//Upload to Nightscout
+						NightscoutService.uploadTreatment(treatment);
+					}
+					else
+					{
+						//Insulin portion
+						var treatmentInsulin:Treatment = new Treatment
+						(
+							Treatment.TYPE_MEAL_BOLUS,
+							treatmentTime.value.valueOf(),
+							insulinValue,
+							insulinList.selectedItem.id,
+							0,
+							0,
+							getEstimatedGlucose(treatmentTime.value.valueOf()),
+							notes.text
+						);
+						
+						//Add to list
+						treatmentsList.push(treatmentInsulin);
+						treatmentsMap[treatmentInsulin.ID] = treatmentInsulin;
+						
+						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatmentInsulin.type);
+						
+						//Insulin portion
+						var carbTime:Number = treatmentTime.value.valueOf() + (carbOffSet.value * 60 * 1000);
+						var nowTime:Number = new Date().valueOf();
+						var treatmentCarbs:Treatment = new Treatment
+						(
+							Treatment.TYPE_MEAL_BOLUS,
+							carbTime,
+							0,
+							insulinList.selectedItem.id,
+							carbsValue,
+							0,
+							getEstimatedGlucose(carbTime <= nowTime ? carbTime : treatmentTime.value.valueOf()),
+							notes.text
+						);
+						if (carbTime > nowTime) treatmentCarbs.needsAdjustment = true;
+						
+						//Add to list
+						treatmentsList.push(treatmentCarbs);
+						treatmentsMap[treatmentCarbs.ID] = treatmentCarbs;
+						
+						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatmentCarbs.type);
+						
+						
+						//Notify listeners
+						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentInsulin));
+						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentCarbs));
+						
+						//Insert in DB
+						if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						{
+							Database.insertTreatmentSynchronous(treatmentInsulin);
+							Database.insertTreatmentSynchronous(treatmentCarbs);
+						}
+						
+						//Upload to Nightscout
+						NightscoutService.uploadTreatment(treatmentInsulin);
+						NightscoutService.uploadTreatment(treatmentCarbs);
+					}
 				}
 				
 				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);

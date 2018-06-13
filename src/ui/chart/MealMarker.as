@@ -77,7 +77,7 @@ package ui.chart
 			}
 			
 			//OpenAPS/Loop support
-			if (treatment.insulinAmount < 1)
+			if (treatment.insulinAmount < 1 && treatment.insulinAmount > 0)
 				fontSize -= 1.5;
 			
 			//Stroke
