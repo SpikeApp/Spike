@@ -1353,7 +1353,7 @@ package services
 			var parameters:URLVariables = new URLVariables();
 			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
 			parameters["find[eventType][$nin][0]"] = "Temp Basal";
-			parameters["find[eventType][$nin][0]"] = "Combo Bolus";
+			parameters["find[eventType][$nin][1]"] = "Combo Bolus";
 			
 			/*parameters["find[eventType][$in][0]"] = "Correction Bolus";
 			parameters["find[eventType][$in][1]"] = "Bolus";
