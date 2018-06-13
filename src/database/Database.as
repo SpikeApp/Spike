@@ -205,7 +205,7 @@ package database
 		{
 			if (debugMode) trace("Database.init");
 			
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingEventReceived);
 
 			dbFile  = File.applicationStorageDirectory.resolvePath(dbFileName);
 			

@@ -89,8 +89,12 @@ package services
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
 		}
 		
-		public static function dispatchBgReadingEvent():void {
-			_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT));
+		public static function dispatchBgReadingReceivedEvent():void {
+			_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED));
+		}
+		
+		public static function dispatchLastBgReadingReceivedEvent():void {
+			_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED));
 		}
 		
 		private static function transmitterDataReceived(be:BlueToothServiceEvent):void {
@@ -188,7 +192,9 @@ package services
 						create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData, readingTimeStamp)
 						.saveToDatabaseSynchronous();
 					
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 					_instance.dispatchEvent(transmitterServiceEvent);
 
 					if (CGMBlueToothDevice.isDexcomG4()) {
@@ -212,7 +218,9 @@ package services
 							.saveToDatabaseSynchronous();
 						
 						//dispatch the event that there's new data
-						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+						_instance.dispatchEvent(transmitterServiceEvent);
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 						_instance.dispatchEvent(transmitterServiceEvent);
 					}
 				} else if (be.data is TransmitterDataG5Packet) {
@@ -284,7 +292,9 @@ package services
 							.saveToDatabaseSynchronous();
 						
 						//dispatch the event that there's new data
-						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+						_instance.dispatchEvent(transmitterServiceEvent);
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 						_instance.dispatchEvent(transmitterServiceEvent);
 					}
 				} else if (be.data is TransmitterDataTransmiter_PLPacket) {
@@ -300,7 +310,9 @@ package services
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderPacket");
@@ -322,7 +334,9 @@ package services
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderBatteryPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket");
@@ -354,7 +368,10 @@ package services
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					//can we dispatch this event from CGMBluetoothService when last reading is dispatched in branch "if (!m_getOlderReading)"
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} 
 			}

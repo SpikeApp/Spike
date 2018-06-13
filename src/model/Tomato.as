@@ -14,6 +14,7 @@ package model
 	import database.Sensor;
 	
 	import services.NotificationService;
+	import services.TransmitterService;
 	
 	import ui.popups.AlertManager;
 	
@@ -107,10 +108,10 @@ package model
 			} 
 			
 			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
-			LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
-			/*if (LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)) {
-				TransmitterService.dispatchBgReadingEvent();
-			}*/
+			//LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
+			if (LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)) {
+				TransmitterService.dispatchLastBgReadingReceivedEvent();
+			}
 		}
 		
 		public static function receivedSensorChangedFromMiaoMiao():void {

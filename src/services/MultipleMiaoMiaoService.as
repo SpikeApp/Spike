@@ -198,7 +198,7 @@ package services
 			}
 			
 			//temporary remove the eventlistener, because BGREADING_EVENTs are going to be dispatched 
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
 			
 			try {
 				var NSResponseJSON:Object = SpikeJSON.parse(response);
@@ -239,6 +239,7 @@ package services
 							newData = true;
 							myTrace("in onDownloadGlucoseReadingsComplete, created bgreading at: " + (new Date(NSDownloadReadingTime)).toString() + ", with unfiltered value " + NSDownloadReading.unfiltered);
 							BgReading.create(gd.glucoseLevelRaw, gd.glucoseLevelRaw, gd.realDate).saveToDatabaseSynchronous();
+							TransmitterService.dispatchBgReadingReceivedEvent();
 						} else {
 							myTrace("in onDownloadGlucoseReadingsComplete, received glucoseLevelRaw = 0");
 						}
@@ -246,7 +247,7 @@ package services
 					
 					//Notify Listeners
 					if (newData)
-						TransmitterService.dispatchBgReadingEvent()
+						TransmitterService.dispatchLastBgReadingReceivedEvent();
 				} 
 				else 
 					myTrace("in onDownloadGlucoseReadingsComplete, Nightscout response was not a JSON array. Ignoring! Response: " + response);
@@ -256,7 +257,7 @@ package services
 				myTrace("in onDownloadGlucoseReadingsComplete, Error parsing Nightscout responde! Error: " + error.message + " Response: " + response);
 			}
 			
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
 			resetCheckReadingTimer(calculateNextFollowDownloadDelayInSeconds(now, BgReading.lastNoSensor()));
 		}
 		
@@ -304,7 +305,7 @@ package services
 		
 		private static function setupService():void {
 			if (isMiaoMiaoMultiple()) {
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
 				resetCheckReadingTimer(calculateNextFollowDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
 				setupNightScoutDownloadProperties();
 			} else {
@@ -320,7 +321,7 @@ package services
 						checkReadingTimer.stop();
 					}
 				}
-				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
 			}
 		}
 

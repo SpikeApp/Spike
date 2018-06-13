@@ -2,8 +2,8 @@ package events
 {
 	import flash.events.Event;
 
-	[Event(name="BGReadingEvent",type="events.TransmitterServiceEvent")]
-	[Event(name="LastBGReadingEvent",type="events.TransmitterServiceEvent")]
+	[Event(name="BGReadingReceived",type="events.TransmitterServiceEvent")]
+	[Event(name="LastBGReadingReceived",type="events.TransmitterServiceEvent")]
 	
 	/**
 	 * used by transmitter service to notify on all kinds of events : information messages, etc.. <br>
@@ -16,20 +16,15 @@ package events
 		 * event is dispatched when bgreading is stored in the Modellocator and also in the databaase.<br>
 		 * There's no data attached to it.<br>
 		 * <br>
-		 * BGREADING_EVENT must be dispatched when there's still additional bgreading events expected. This occurs for example in case of MiaoMiao, while processing the data
-		 * there will be multiple bgreadings and so multiple BGREADING_EVENTs dispatched. The last one should be LAST_BGREADING_EVENT<br>
 		 */
-		public static const BGREADING_EVENT:String = "BGReadingEvent";
+		public static const BGREADING_RECEIVED:String = "BGReadingReceived";
 		/**
-		 * event to inform that there's a new bgreading available<br>
-		 * event is dispatched when bgreading is stored in the Modellocator and also in the databaase.<br>
-		 * There's no data attached to it.<br>
-		 * <br>
-		 * LAST_BGREADING_EVENT is the last if there's a series of bgreading events expected.<br>
-		 * <br>
-		 * see also  BGREADING_EVENT
+		 * event to inform that the last BGReading has been received<br>
+		 * Usually, for most transmitters, this event will be dispatched right after BGREADING_RECEIVED has been dispatched.<br>
+		 * But some transmitters (MiaoMiao, Blucon), can send multiple Bgreadings, 
+		 * in that case LAST_BGREADING_RECEIVED is only dispatched after having dispatched the final BGREADING_RECEIVED 
 		 */
-		public static const LAST_BGREADING_EVENT:String = "LastBGReadingEvent";
+		public static const LAST_BGREADING_RECEIVED:String = "LastBGReadingReceived";
 		
 		public var data:*;
 

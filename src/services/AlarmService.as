@@ -264,7 +264,7 @@ package services
 			
 			lastCheckMuteTimeStamp = new Number(0);
 			lastPhoneMutedAlertCheckTimeStamp = new Number(0);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, checkAlarms);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
 			
 			//Get snooze times from database
