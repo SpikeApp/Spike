@@ -2,7 +2,6 @@ package model
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
-	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	
@@ -20,13 +19,13 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.AlarmService;
-	import services.bluetooth.CGMBluetoothService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
 	import services.HTTPServerService;
 	import services.HealthKitService;
 	import services.IFTTTService;
+	import services.MultipleMiaoMiaoService;
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
@@ -35,6 +34,7 @@ package model
 	import services.UpdateService;
 	import services.WatchService;
 	import services.WidgetService;
+	import services.bluetooth.CGMBluetoothService;
 	
 	import starling.utils.SystemUtil;
 	
@@ -162,6 +162,7 @@ package model
 				RemoteAlertService.init();
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				updateApplicationVersion();
+				MultipleMiaoMiaoService.init();
 			}
 		}
 		

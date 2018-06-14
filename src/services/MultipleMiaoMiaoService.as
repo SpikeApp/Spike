@@ -229,7 +229,7 @@ package services
 						}
 					}
 					
-					//sort the array, old reading needs to be treated first
+					//sort the array, oldest reading needs to be treated first
 					bgReadingList.sortOn(["realDate"], Array.NUMERIC);
 					
 					//process all readings
@@ -239,6 +239,12 @@ package services
 							newData = true;
 							myTrace("in onDownloadGlucoseReadingsComplete, created bgreading at: " + (new Date(NSDownloadReadingTime)).toString() + ", with unfiltered value " + NSDownloadReading.unfiltered);
 							BgReading.create(gd.glucoseLevelRaw, gd.glucoseLevelRaw, gd.realDate).saveToDatabaseSynchronous();
+							
+							//to avoid that NightScoutService would re-upload the readings to NightScout, set COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP
+							if (gd.realDate > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP))) {
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP, gd.realDate.toString());
+							}
+							
 							TransmitterService.dispatchBgReadingReceivedEvent();
 						} else {
 							myTrace("in onDownloadGlucoseReadingsComplete, received glucoseLevelRaw = 0");
@@ -327,11 +333,7 @@ package services
 
 		private static function setupNightScoutDownloadProperties():void
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "") {
-				nightscoutDownloadURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL);
-			} else {
-				nightscoutDownloadURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
-			}
+			nightscoutDownloadURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
 			if (nightscoutDownloadURL != "") {
 				nightscoutDownloadURL += "/api/v1/entries/sgv.json?";
 				if (nightscoutDownloadURL.indexOf('http') == -1) 
