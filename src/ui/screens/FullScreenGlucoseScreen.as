@@ -451,7 +451,7 @@ package ui.screens
 		
 		private function calculateFontSize():void
 		{
-			if (latestGlucoseOutput == null)
+			if (latestGlucoseOutput == null || latestGlucoseSlopeArrow == null)
 				return;
 			
 			var sNativeFormat:flash.text.TextFormat = new flash.text.TextFormat();
@@ -462,6 +462,7 @@ package ui.screens
 			sNativeFormat.leading = getLeading(latestGlucoseSlopeArrow);
 			
 			var formattedGlucoseOutput:String = Constants.isPortrait ? latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n")) : latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf(" "));
+			if (formattedGlucoseOutput == null) formattedGlucoseOutput = "";
 			if (!Constants.isPortrait) formattedGlucoseOutput += " -->";
 			if (Constants.isPortrait && (latestGlucoseSlopeArrow.indexOf("\u2197") != -1 || latestGlucoseSlopeArrow.indexOf("\u2198") != -1 || latestGlucoseSlopeArrow.indexOf("\u2191") != -1 || latestGlucoseSlopeArrow.indexOf("\u2193") != -1))
 				formattedGlucoseOutput += "\n |";
@@ -476,9 +477,13 @@ package ui.screens
 			nativeTextField.embedFonts = true;
 			nativeTextField.text = formattedGlucoseOutput;
 			
+			if (sNativeFormat == null) return;
+			
 			var textFormat:flash.text.TextFormat = sNativeFormat;
 			var maxTextWidth:int  = Constants.stageWidth - (Constants.isPortrait ? Constants.stageWidth * 0.2 : Constants.stageWidth * 0.1);
 			var maxTextHeight:int = Constants.stageHeight - Constants.headerHeight;
+			
+			if (isNaN(maxTextWidth) || isNaN(maxTextHeight)) return;
 			
 			var size:Number = Number(textFormat.size);
 			

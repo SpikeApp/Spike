@@ -260,7 +260,7 @@ package ui.screens
 			var paddingMultiplier:Number = DeviceInfo.getHorizontalPaddingMultipier();
 			
 			h24.x = stage.stageWidth - h24.width - chartSettingsLeftRightPadding;
-			h24.y = glucoseChart.y + glucoseChart.height + chartSettingsTopPadding;
+			h24.y = glucoseChart.y + mainChartHeight + chartSettingsTopPadding;
 			addChild(h24);
 			
 			h12.x = h24.x - h12.width - (chartSettingsLeftRightPadding * paddingMultiplier);
