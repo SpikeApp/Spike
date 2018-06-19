@@ -18,7 +18,7 @@ ENHANCEMENT: Added glucose value and time to the confirmation popup when user tr
 ENHANCEMENT: Nightscout exercise treatments are now displayed as notes in Spike. (Miguel)
 FIX: Layout issues with the x axis label of the Chart Today Widget on small screen devices. (Miguel)
 FIX: Specific Nightscout treatments like "Pump Site Change", "Profile Switch", etc.. that are added in Spike as notes were being reuploaded overwriting the original ones. This is now fixed! (Miguel)
-FIX: Bug that prevented the "Resize On Out OF Bounds" chart setting to work correctly when off. (Miguel)
+FIX: Bug that prevented the "Resize On Out Of Bounds" chart setting to work correctly when off. (Miguel)
 FIX: As usual, other small bug fixes and improvements. (Miguel)
 
 2.1.1
