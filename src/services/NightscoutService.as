@@ -732,6 +732,7 @@ package services
 								);  
 								
 								ModelLocator.addBGReading(bgReading);
+								ModelLocator.bgReadings.sortOn(["timestamp"], Array.NUMERIC); //Sort readings by timestamp. Some windows servers return values in reverse
 								bgReading.findSlope(true);
 								BgReadingsToSend.push(bgReading);
 								newData = true;
@@ -751,6 +752,9 @@ package services
 					if (newData) 
 					{
 						//Notify Listeners
+						if (BgReadingsToSend != null && BgReadingsToSend.length > 1) //Sort readings by timestamp. Some windows servers return values in reverse
+							BgReadingsToSend.sortOn(["timestamp"], Array.NUMERIC);
+						
 						_instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
 						
 						//Get remote treatments/pebble
