@@ -64,7 +64,7 @@ package utils
 			return optimalCalibrationCondition;
 		}
 		
-		public static function calculateLatestDelta():String
+		public static function calculateLatestDelta(trimWhiteSpace:Boolean = false):String
 		{
 			var delta:String = "uknown";	
 			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length >= 2)
@@ -81,14 +81,17 @@ package utils
 					var previousBgReadingGlucoseValueFormatted:Number = previousBgReadingProperties.glucoseValueFormatted;
 					
 					delta = GlucoseFactory.getGlucoseSlope
-						(
-							previousBgReading.calculatedValue,
-							previousBgReadingGlucoseValueFormatted,
-							lastBgReading.calculatedValue,
-							lastBgReadingGlucoseValueFormatted
-						);
+					(
+						previousBgReading.calculatedValue,
+						previousBgReadingGlucoseValueFormatted,
+						lastBgReading.calculatedValue,
+						lastBgReadingGlucoseValueFormatted
+					);
 				}
 			}
+			
+			if (trimWhiteSpace) 
+				delta.replace(/[\s\r\n]+/gim, '');
 			
 			return delta;
 		}

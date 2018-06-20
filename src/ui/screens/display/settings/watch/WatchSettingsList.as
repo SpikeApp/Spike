@@ -73,7 +73,6 @@ package ui.screens.display.settings.watch
 		private var displayTrend:Check;
 		private var displayDelta:Check;
 		private var displayUnits:Check;
-		private var glucoseHistory:NumericStepper;
 		private var authorizeButton:Button;
 		private var sendEmail:Button;
 		private var emailLabel:Label;
@@ -94,7 +93,6 @@ package ui.screens.display.settings.watch
 		private var displayTrendEnabled:Boolean;
 		private var displayDeltaEnabled:Boolean;
 		private var displayUnitsEnabled:Boolean;
-		private var glucoseHistoryValue:int;
 		private var gapFixValue:Boolean;
 		private var displayIOBEnabled:Boolean;
 		private var displayCOBEnabled:Boolean;
@@ -138,7 +136,6 @@ package ui.screens.display.settings.watch
 			displayTrendEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_TREND) == "true";
 			displayDeltaEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA) == "true";
 			displayUnitsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS) == "true";
-			glucoseHistoryValue = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY));
 			gapFixValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) == "true";
 			displayIOBEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_IOB_ON) == "true";
 			displayCOBEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON) == "true";
@@ -177,11 +174,6 @@ package ui.screens.display.settings.watch
 				Trace.myTrace("WatchSettingsList.as", "Calendar access not Authorized!");
 			
 			calendarPickerList.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
-			
-			//History
-			glucoseHistory = LayoutFactory.createNumericStepper(1, 36, glucoseHistoryValue);
-			glucoseHistory.pivotX = -12;
-			glucoseHistory.addEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 			
 			//Display Name Toggle
 			displayNameToggle = LayoutFactory.createToggleSwitch(displayNameEnabled);
@@ -270,7 +262,6 @@ package ui.screens.display.settings.watch
 				{
 					populateCalendarList();
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','calendar_label'), accessory: calendarPickerList });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','glucose_history_label'), accessory: glucoseHistory });
 					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_name_label'), accessory: displayNameToggle });
 					if (displayNameEnabled)
 						content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','your_name_label'), accessory: displayNameTextInput });
@@ -351,6 +342,8 @@ package ui.screens.display.settings.watch
 			if (!needsSave)
 				return;
 			
+			needsSave = false;
+			
 			//Feature On/Off
 			var complicationValueToSave:String;
 			if(watchComplicationEnabled) complicationValueToSave = "true";
@@ -388,12 +381,6 @@ package ui.screens.display.settings.watch
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_SELECTED_CALENDAR_ID, calendarIDValue);
 			}
 			
-			//History
-			var historyValueToSave:String = String(glucoseHistory.value);
-			
-			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY) != historyValueToSave)
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GLUCOSE_HISTORY, historyValueToSave);
-			
 			//Trend
 			var trendValueToSave:String;
 			if (displayTrend.isSelected) trendValueToSave = "true";
@@ -425,8 +412,6 @@ package ui.screens.display.settings.watch
 			
 			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) != gapFixValueToSave)
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON, gapFixValueToSave);
-			
-			needsSave = false;
 		}
 		
 		/**
@@ -803,13 +788,6 @@ package ui.screens.display.settings.watch
 				displayUnits.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
 				displayUnits.dispose();
 				displayUnits = null;
-			}
-			
-			if (glucoseHistory != null)
-			{
-				glucoseHistory.removeEventListener(starling.events.Event.CHANGE, onUpdateSaveStatus);
-				glucoseHistory.dispose();
-				glucoseHistory = null;
 			}
 			
 			if (authorizeButton != null)
