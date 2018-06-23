@@ -73,7 +73,7 @@ package utils
 			var time:String = dateTime.split("T")[1];
 						
 			var year:Number = date.split("-")[0];
-			var month:Number = date.split("-")[1] - 1;
+			var month:Number = date.split("-")[1];
 			var day:Number = date.split("-")[2];
 						
 			var hour:Number = time.split(":")[0];
@@ -84,7 +84,7 @@ package utils
 			if (dateTime.indexOf("Z") > -1) {
 				return new Date(Date.parse(year + "/" + month + "/" + day + "/" + " " + hour + ":" + minute + ":" + second + " GMT-0000"));
 			} else {
-				return new Date(year,month,day,hour,minute,second,millisecondsecond);
+				return new Date(year,month - 1,day,hour,minute,second,millisecondsecond);
 			}
 		}
 	}
