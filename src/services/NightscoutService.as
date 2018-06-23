@@ -286,14 +286,11 @@ package services
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
 			
-			//Only start uploading bg reading if it's newer than 1 minute. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last reading. The previous readings will still be uploaded because they reside in the queue array.
-			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_1_MINUTE)
-			{
-				if (!CGMBlueToothDevice.canDoBackfill()) //No backfill transmitter, sync immediately
-					syncGlucoseReadings();
-				else //Backfill transmitter. Wait 5 seconds to process all data
-					setTimeout(syncGlucoseReadings, TIME_5_SECONDS);
-			}
+		}
+		
+		private static function onLastBgreadingReceived(e:Event):void 
+		{
+			syncGlucoseReadings();
 		}
 		
 		private static function onUploadGlucoseReadingsComplete(e:Event):void
@@ -1944,6 +1941,7 @@ package services
 		private static function activateEventListeners():void
 		{
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBgreadingReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onLastBgreadingReceived);
 			//NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, getInitialGlucoseReadings);
@@ -1954,6 +1952,7 @@ package services
 		private static function deactivateEventListeners():void
 		{
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBgreadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onLastBgreadingReceived);
 			//NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, getInitialGlucoseReadings);

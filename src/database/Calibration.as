@@ -421,8 +421,12 @@ package database
 		/**
 		 * no database insert of the new calibration !
 		 */
-		public static function create(bg:Number):Calibration {
-			myTrace("create calibration");
+		public static function create(bg:Number, timeStamp:Number = Number.NaN):Calibration {
+			var calibrationTimeStamp:Number = isNaN(timeStamp) ? (new Date()).valueOf() : timeStamp;
+
+			myTrace("in create, with timestamp  = " + timeStamp);
+			myTrace("in create, with timestamp  = " + (new Date(calibrationTimeStamp)).toString());
+			
 			var calibration:Calibration;
 			var unit:String = "mgdl";
 			if (unit != "mgdl") {
@@ -435,8 +439,8 @@ package database
 				if (bgReading != null) {
 					var estimatedRawBg:Number = BgReading.estimatedRawBg((new Date()).valueOf());
 					calibration = (new Calibration(
-						(new Date()).valueOf(),//timestamp
-						(new Date()).valueOf() - sensor.startedAt,//sensorageattimeofestimation
+						calibrationTimeStamp,//timestamp
+						calibrationTimeStamp - sensor.startedAt,//sensorageattimeofestimation
 						sensor,//sensor
 						bg,//bg
 						bgReading.rawData,//rawvalue
