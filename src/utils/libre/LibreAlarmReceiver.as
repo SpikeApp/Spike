@@ -71,7 +71,7 @@ package utils.libre
 						var gd:GlucoseData = bgReadings[cntr] as GlucoseData;
 						if (gd.glucoseLevelRaw > 0) {
 							if (gd.realDate > timeStampLastAddedBgReading + 4.5 * 60 * 1000) {//
-								myTrace("in CalculateFromDataTransferObject createbgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
+								//myTrace("in CalculateFromDataTransferObject create bgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
 								createBGfromGD(gd);
 								timeStampLastAddedBgReading = gd.realDate;
 								lastReadingNotAdded = null;
@@ -92,7 +92,7 @@ package utils.libre
 							myTrace("in CalculateFromDataTransferObject, removing last reading from modellocator");
 							ModelLocator.removeLastBgReading();
 						}*/
-						myTrace("in CalculateFromDataTransferObject createbgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
+						//myTrace("in CalculateFromDataTransferObject createbgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
 						createBGfromGD(lastReadingNotAdded);
 						timeStampLastAddedBgReading = gd.realDate;
 					}
@@ -168,7 +168,7 @@ package utils.libre
 					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
 					glucoseData.sensorId = tagId;
 					glucoseData.sensorTime = time;
-					myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+					//myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
 					bgReadingList.push(glucoseData);
 				}
 			}
@@ -187,8 +187,7 @@ package utils.libre
 					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
 					glucoseData.sensorId = tagId;
 					glucoseData.sensorTime = time;
-					//myTrace("in parseData trendlist, glucoselevelraw = " + glucoseData.glucoseLevelRaw + ", realdata = " + glucoseData.realDate + ", glucoseData.sensorId = " + glucoseData.sensorId + ", sensorTime = " + glucoseData.sensorTime);
-					myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+					//myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
 					bgReadingList.push(glucoseData);
 				}
 			}
