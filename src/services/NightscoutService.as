@@ -308,7 +308,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onUploadGlucoseReadingsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onUploadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			//Check response
@@ -416,7 +416,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			//Validate response
@@ -671,7 +671,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			//Validate response
@@ -898,7 +898,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onUploadTreatmentComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onUploadTreatmentComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			syncTreatmentsUploadActive = false;
@@ -988,7 +988,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onDeleteTreatmentComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDeleteTreatmentComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			//Update Internal Variables
@@ -1047,7 +1047,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			//Validate response
@@ -1369,7 +1369,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			//Validate if we can process treatments
@@ -1560,7 +1560,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onUploadCalibrationsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onUploadCalibrationsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			//Update Internal Variables
@@ -1615,7 +1615,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onUploadVisualCalibrationsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onUploadVisualCalibrationsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			syncVisualCalibrationsActive = false;
@@ -1689,7 +1689,7 @@ package services
 			
 			//Dispose loader
 			loader.removeEventListener(Event.COMPLETE, onUploadVisualCalibrationsComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onUploadVisualCalibrationsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			syncSensorStartActive = false;
