@@ -528,7 +528,7 @@ package services
 		private static function setupService():void {
 			myTrace("in setupService");
 			if (isMiaoMiaoMultiple()) {
-				myTrace("in setupService and ismioamiaomultiple");
+				myTrace("in setupService and ismiaomiaomultiple");
 				firstTime = true;
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
 				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
@@ -536,13 +536,7 @@ package services
 				NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, checkTimeStampLatestReadingAtNS);
 				setupNightScoutDownloadProperties();
 			} else {
-				myTrace("in setupService and not ismioamiaomultiple");
-				if (reconnectTimer != null) {
-					if (reconnectTimer.running) {
-						myTrace("in setupService, reconnectTimer running, stopping it now");
-						reconnectTimer.stop();
-					}
-				}
+				myTrace("in setupService and not ismiaomiaomultiple");
 				if (checkReadingTimer != null) {
 					if (checkReadingTimer.running) {
 						myTrace("in setupService, checkReadingTimer running, stopping it now");
