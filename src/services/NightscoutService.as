@@ -2141,7 +2141,10 @@ package services
 		
 		private static function onNetworkChange( event:NetworkInfoEvent ):void
 		{
-			if(NetworkInfo.networkInfo.isReachable() && networkChangeOcurrances > 0)
+			if(NetworkInfo.networkInfo.isReachable() && networkChangeOcurrances > 0 && !MultipleMiaoMiaoService.isMiaoMiaoMultiple())
+				//if multiple miaomiao enalbed, then let multiplemiaomiaoservice check first if there's been a NS update by another device
+				//if yes multiplemiaomiaoservice will change the value of COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP to a value corresponding to the latest reading at NS
+				//this will avoid uploading duplicate readings
 			{
 				Trace.myTrace("NightscoutService.as", "Network is reachable again. Calling resync.");
 				

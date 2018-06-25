@@ -759,6 +759,11 @@ package services
 				giveSensorWarning("new_fsl_sensor_detected");
 			}
 		}
+		
+		public static function dispatchCalibrationEvent():void {
+			var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
+			_instance.dispatchEvent(calibrationServiceEvent);
+		}
 
 		private static function myTrace(log:String):void {
 			Trace.myTrace("CalibrationService.as", log);

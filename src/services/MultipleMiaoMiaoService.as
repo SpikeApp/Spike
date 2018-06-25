@@ -1,9 +1,15 @@
+/**
+ * 
+ * 
+ */
 package services
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
 	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.util.Hex;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
@@ -41,6 +47,7 @@ package services
 		private static const TIME_4_MINUTES_30_SECONDS:int = (4 * 60 * 1000) + 30000;
 		private static const MODE_GLUCOSE_READING_GET:String = "glucoseReadingGet";
 		private static const MODE_CALIBRATION:String = "calibration";
+		private static const MODE_CHECK_LATEST_NS_TIMESTAMP:String = "checkLatestNSTimestamp";
 
 		//timers
 		//timer to reconnect to MiaoMiao
@@ -165,6 +172,8 @@ package services
 				parameters["find[dateString][$gte]"] = timeOfFirstBgReadingToDowload;
 				parameters["count"] = Math.round(numberOfReadings);
 				
+				//myTrace("in checkLatestReading, parameters = " + "find[dateString][$gte]=" + (new Date(timeOfFirstBgReadingToDowload)).toString() + ", count=" +  Math.round(numberOfReadings));
+				
 				waitingForNSData = true;
 				lastNSDownloadAttempt = (new Date()).valueOf();
 				
@@ -175,27 +184,94 @@ package services
 			resetCheckReadingTimer(now + 5 * 60 * 1000);
 		}
 		
+		private static function checkTimeStampLatestReadingAtNS(event:Event = null):void {
+			var now:Number = (new Date()).valueOf();
+			if (isMiaoMiaoMultiple() && Sensor.getActiveSensor() != null) {
+				myTrace("in checkTimeStampLatestReadingAtNS");
+				
+				if (nightscoutDownloadURL == "") {
+					myTrace("in checkTimeStampLatestReadingAtNS, nightscoutDownloadURL is not set. Aborting!");
+					return;
+				}
+				
+				var lastNSUpload:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP))
+				
+				if (now - lastNSUpload < 5 * 60 * 1000) {
+					myTrace("in checkTimeStampLatestReadingAtNS, last NS upload was less than 5 minutes ago.");
+					return;
+				}
+				
+				
+				if (!NetworkInfo.networkInfo.isReachable()) {
+					myTrace("in checkTimeStampLatestReadingAtNS, There's no Internet connection. Will try again later!");
+					return;
+				}
+				
+				var parameters:URLVariables = new URLVariables();
+				parameters["count"] = 1;
+				
+				waitingForNSData = true;
+				
+				NetworkConnector.createNSConnector(nightscoutDownloadURL + parameters.toString(), nightscoutDownloadAPISecret != "" ? nightscoutDownloadAPISecret : null, URLRequestMethod.GET, null, MODE_CHECK_LATEST_NS_TIMESTAMP, onCheckTimeStampLatestReadingAtNSComplete, onConnectionFailed);
+			}
+		}
+
+		
 		private static function onConnectionFailed(error:Error, mode:String):void
 		{
-			if (mode == MODE_GLUCOSE_READING_GET)
-			{
+			if (mode == MODE_GLUCOSE_READING_GET) {
 				myTrace("in onConnectionFailed. Can't make connection to the server while trying to download glucose readings. Error: " +  error.message);
-			}
-			if (mode == MODE_CALIBRATION)
-			{
+				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
+			} else if (mode == MODE_CALIBRATION) {
 				myTrace("in onConnectionFailed. Can't make connection to the server while trying to download calibration. Error: " +  error.message);
+				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
 				//there might be glucose readings waiting to be processed
 				processReadingsAndCalibrations();
+			} else if (mode == MODE_CHECK_LATEST_NS_TIMESTAMP) {
+				myTrace("in onConnectionFailed. Can't make connection to the server while trying to find latest NS reading " +  error.message);
 			}
-			resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
+			
 		}
 		
+		private static function onCheckTimeStampLatestReadingAtNSComplete(e:Event):void {
+			myTrace("in onCheckTimeStampLatestReadingAtNSComplete");
+			
+			var response:String = getResponseAndDisposeLoader(e, onCheckTimeStampLatestReadingAtNSComplete, onConnectionFailed);
+			myTrace(" in onCheckTimeStampLatestReadingAtNSComplete, response = " + response);
+			if (response.length != 0) {
+				try {
+					var NSResponseJSON:Object = SpikeJSON.parse(response);
+					if (NSResponseJSON is Array) {
+						var NSBgReadings:Array = NSResponseJSON as Array;
+						if (NSBgReadings.length > 0) {
+							if (NSBgReadings[0].date) {
+								var NSDownloadReadingDate:Date = new Date(NSBgReadings[0].date);
+								NSDownloadReadingDate.setMinutes(NSDownloadReadingDate.minutes + nightscoutDownloadOffset);
+								var NSDownloadReadingTime:Number = NSDownloadReadingDate.valueOf();
+								myTrace("in onCheckTimeStampLatestReadingAtNSComplete, setting COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP to " + (new Date(NSDownloadReadingTime)).toString());
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP, NSDownloadReadingTime.toString());
+							}
+						}
+					} 
+					else 
+						myTrace("in onCheckTimeStampLatestReadingAtNSComplete, Nightscout response was not a JSON array. Ignoring! Response: " + response);
+				} 
+				catch (error:Error) 
+				{
+					myTrace("in onCheckTimeStampLatestReadingAtNSComplete, Error parsing Nightscout responde! Error: " + error.message + " Response: " + response);
+				}
+			} else {
+				myTrace(" in onCheckTimeStampLatestReadingAtNSComplete, response.length = 0");
+			}
+		}
 
 		private static function onDownloadGlucoseReadingsComplete(e:Event):void {
 			myTrace("in onDownloadGlucoseReadingsComplete");
 
 			var glucoseData:GlucoseData;
 			var now:Number = (new Date()).valueOf();
+
+			var response:String = getResponseAndDisposeLoader(e, onDownloadGlucoseReadingsComplete, onConnectionFailed);
 			
 			//Validate call
 			if (!waitingForNSData || (now - lastNSDownloadAttempt > TIME_4_MINUTES_30_SECONDS)) {
@@ -206,8 +282,6 @@ package services
 			}
 			
 			waitingForNSData = false;
-			
-			var response:String = getResponseAndDisposeLoader(e, onDownloadGlucoseReadingsComplete, onConnectionFailed);
 			
 			//Validate response
 			if (response.length == 0) {
@@ -296,7 +370,7 @@ package services
 						if (calibration.realDate > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP))) {
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP, calibration.realDate.toString());
 						}
-						
+						CalibrationService.dispatchCalibrationEvent();						
 					} else {
 						myTrace("in processReadingsAndCalibrations, received glucoseLevelRaw = 0");
 					}
@@ -322,6 +396,8 @@ package services
 			var calibrationData:CalibrationData;
 			var now:Number = (new Date()).valueOf();
 			
+			var response:String = getResponseAndDisposeLoader(e, onDownloadCalibrationsComplete, onConnectionFailed);
+			
 			//Validate call
 			if (!waitingForNSData) {
 				myTrace("in onDownloadCalibrationsComplete, Not waiting for data. Ignoring!");
@@ -331,8 +407,6 @@ package services
 			}
 			
 			waitingForNSData = false;
-			
-			var response:String = getResponseAndDisposeLoader(e, onDownloadCalibrationsComplete, onConnectionFailed);
 			
 			//Validate response
 			if (response.length == 0) {
@@ -478,6 +552,8 @@ package services
 				firstTime = true;
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
 				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
+				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, central_peripheralConnectHandler);
+				NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, checkTimeStampLatestReadingAtNS);
 				setupNightScoutDownloadProperties();
 			} else {
 				myTrace("in setupService and not ismioamiaomultiple");
@@ -494,7 +570,17 @@ package services
 					}
 				}
 				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
+				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, central_peripheralConnectHandler);
+				NetworkInfo.networkInfo.removeEventListener(NetworkInfoEvent.CHANGE, checkTimeStampLatestReadingAtNS);
 			}
+		}
+		
+		private static function central_peripheralConnectHandler(event:flash.events.Event):void {
+			//device connected to the miaomioa. Most probably the device will receive readings, it takes a few seconds to get those readings
+			//during that period, check @ NS the timestamp of the latest uploaded NS reading
+			//this timestamp will be used to set COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP
+			//This to avoid that multiple devices would start uploading to NightScout duplicates
+			checkTimeStampLatestReadingAtNS();
 		}
 
 		private static function setupNightScoutDownloadProperties():void
@@ -523,7 +609,7 @@ package services
 		/**
 		 * true if device is miaomiao && LOCAL_SETTING_MIAOMIAO_MULTIPLE_DEVICE_ON = true
 		 */
-		private static function isMiaoMiaoMultiple():Boolean {
+		public static function isMiaoMiaoMultiple():Boolean {
 			return (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MIAOMIAO_MULTIPLE_DEVICE_ON) == "true"
 				&&
 				CGMBlueToothDevice.isMiaoMiao());
