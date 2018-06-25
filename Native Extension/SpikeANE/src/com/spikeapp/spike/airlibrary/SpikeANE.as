@@ -87,7 +87,6 @@ package com.spikeapp.spike.airlibrary
 
 		/**
 		* disconnect without forgetting device, and without automatically reconnecting<br>
-		* by calling reconnectMiaoMiao, the app will try to reconnect<br>
 		* <br>
 		*/
 		public static function disconnectMiaoMiao():void {
