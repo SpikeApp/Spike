@@ -14,6 +14,8 @@ package ui
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
+	import flash.text.engine.LineJustification;
+	import flash.text.engine.SpaceJustifier;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -29,6 +31,9 @@ package ui
 	import events.SettingsServiceEvent;
 	
 	import feathers.controls.Alert;
+	import feathers.controls.text.TextBlockTextRenderer;
+	import feathers.core.ITextRenderer;
+	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
@@ -53,6 +58,7 @@ package ui
 	[ResourceBundle("sensorscreen")]
 	[ResourceBundle("3dtouch")]
 	[ResourceBundle("crashreport")]
+	[ResourceBundle("disclaimerscreen")]
 
 	public class InterfaceController extends EventDispatcher
 	{
@@ -281,18 +287,40 @@ package ui
 		{
 			NotificationService.updateBgNotification(null);
 			
+			/* Display Initial Disclaimer */
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DISCLAIMER_ACCEPTED) == "false")
+			{
+				var disclaimerAlert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('disclaimerscreen', "screen_title"),
+					ModelLocator.resourceManagerInstance.getString('disclaimerscreen', "disclaimer_content") + "\n\n" + ModelLocator.resourceManagerInstance.getString('disclaimerscreen', "important_notice_label").toUpperCase() + "\n\n" + ModelLocator.resourceManagerInstance.getString('disclaimerscreen', "important_notice_content"),
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "agree_alert_button_label"), triggered: onDisclaimerAccepted }
+					]
+				);
+				disclaimerAlert.height = 420;	
+			}
+			else
+				onDisclaimerAccepted(null);
+		}
+		
+		private static function onDisclaimerAccepted (e:starling.events.Event):void
+		{
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DISCLAIMER_ACCEPTED, "true");
+			
 			/* Display Initial License Agreement */
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LICENSE_INFO_ACCEPTED) == "false")
 			{
 				var licenseAlert:Alert = AlertManager.showActionAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations', "license_alert_title"),
-						ModelLocator.resourceManagerInstance.getString('globaltranslations', "license_alert_message"),
-						Number.NaN,
-						[
-							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "agree_alert_button_label"), triggered: onLicenseAccepted }
-						]
-					);
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations', "license_alert_title"),
+					ModelLocator.resourceManagerInstance.getString('globaltranslations', "license_alert_message"),
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "agree_alert_button_label"), triggered: onLicenseAccepted }
+					]
+				);
 				licenseAlert.height = 420;
 			}
 		}

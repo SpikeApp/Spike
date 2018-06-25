@@ -234,6 +234,11 @@ package database
 		public static const LOCAL_SETTING_MISSED_READINGS_ALERT_PRESNOOZED:int = 111;
 		public static const LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED:int = 112;
 		
+		/**
+		 * Disclaimer
+		 */
+		public static const LOCAL_SETTING_DISCLAIMER_ACCEPTED:int = 113;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -347,7 +352,8 @@ package database
 			"false",//LOCAL_SETTING_LOW_ALERT_PRESNOOZED
 			"false",//LOCAL_SETTING_VERY_LOW_ALERT_PRESNOOZED
 			"false",//LOCAL_SETTING_MISSED_READINGS_ALERT_PRESNOOZED
-			"false"//LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED
+			"false",//LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED
+			"false"//LOCAL_SETTING_DISCLAIMER_ACCEPTED
 		];
 		
 		public function LocalSettings() {
