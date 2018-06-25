@@ -50,8 +50,6 @@ package services
 		private static const MODE_CHECK_LATEST_NS_TIMESTAMP:String = "checkLatestNSTimestamp";
 
 		//timers
-		//timer to reconnect to MiaoMiao
-		private static var reconnectTimer:Timer;
 		//timer to check if reading was received on time
 		private static var checkReadingTimer:Timer;
 		
@@ -95,26 +93,8 @@ package services
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MIAOMIAO_MULTIPLE_DEVICE_ON) == "true"
 				&&
 				CGMBlueToothDevice.isMiaoMiao()) {
-				//temporary disconnecting to allow other ios device to connect to the miaomiao
-				//It doesn't harm to make this call even if there's no miaomiao connection for the moment
-				SpikeANE.disconnectMiaoMiao();
 				
-				if (reconnectTimer != null && reconnectTimer.running) {
-					myTrace("reconnectTimer already running, not restarting");
-				} else {
-					//set reconnecttimer to 10 seconds
-					reconnectTimer = new Timer(10 * 1000, 1);
-					reconnectTimer.addEventListener(TimerEvent.TIMER, reconnect);
-					reconnectTimer.start();
-				}
-				
-				//start timer to verify if new reading was received on time
-				if (checkReadingTimer != null && checkReadingTimer.running) {
-					myTrace("checkReadingTimer already running, not restarting");
-				} else {
-					//set checkReadingTimer to 5 minutes and 20 seconds
-					resetCheckReadingTimer(5 * 60 + 20);
-				}
+				resetCheckReadingTimer(5 * 60 + 20);
 			}
 		}
 		
