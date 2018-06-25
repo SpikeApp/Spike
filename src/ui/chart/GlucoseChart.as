@@ -2589,8 +2589,10 @@ package ui.chart
 		{
 			/* Calculate Font Sizes */
 			deviceFontMultiplier = DeviceInfo.getFontMultipier();
-			glucoseDisplayFont = (!DeviceInfo.isTablet() ? 44 : 48) * deviceFontMultiplier * userBGFontMultiplier;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X) glucoseDisplayFont = 54 * deviceFontMultiplier * userBGFontMultiplier;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X) 
+				glucoseDisplayFont = 54 * deviceFontMultiplier * userBGFontMultiplier;
+			else
+				glucoseDisplayFont = (!DeviceInfo.isTablet() ? 44 : 48) * deviceFontMultiplier * userBGFontMultiplier;
 			timeDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			retroDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
