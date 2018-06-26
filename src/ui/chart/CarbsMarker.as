@@ -25,7 +25,7 @@ package ui.chart
 		private var fontSize:int = 11;
 		private var backgroundColor:uint;
 		private var strokeColor:uint;
-		private var initialRadius:Number = 4;
+		private var initialRadius:Number = 6;
 		private var chartTimeline:Number;
 		private var numSides:int = 30;
 		private const strokeThickness:Number = 0.8;
