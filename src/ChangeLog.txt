@@ -20,6 +20,7 @@ ENHANCEMENT: Different delta calculation for speech/watch functionality to work 
 ENHANCEMENT: Added glucose value and time to the confirmation popup when user tries to delete a reading. (Miguel)
 ENHANCEMENT: Nightscout exercise treatments are now displayed as notes in Spike. (Miguel)
 ENHANCEMENT: Improved Spike Follower compatibility for Nightscout sites hosted on Windows servers. (Miguel)
+ENHANCEMENT: Some iPhone X layout improvements. More to come in the next update. (Miguel)
 FIX: Layout issues with the x axis label of the Chart Today Widget on small screen devices. (Miguel)
 FIX: Specific Nightscout treatments like "Pump Site Change", "Profile Switch", etc.. that are added in Spike as notes were being reuploaded overwriting the original ones. This is now fixed! (Miguel)
 FIX: Bug that prevented the "Resize On Out Of Bounds" chart setting to work correctly when off. (Miguel)
