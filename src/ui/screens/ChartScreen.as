@@ -189,7 +189,7 @@ package ui.screens
 			var chartX:Number = 0;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
 			{
-				chartWidth -= 30;
+				chartWidth -= Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 45 : 30;
 				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					chartX = 30;
 			}

@@ -534,24 +534,18 @@ package ui.chart
 			//Pills
 			repositionTreatmentPills();
 			
-			//iPhone X mask for landscape mode
+			//iPhone X masks for landscape mode
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
 			{
-				if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
-				{
-					xRightMask = new Quad(60, scrollerChart.y, fakeChartMaskColor);
-					xRightMask.y = chartTopPadding;
-					xRightMask.x = _graphWidth;
-					addChild(xRightMask);
-				}
+				xRightMask = new Quad(60, scrollerChart.y, fakeChartMaskColor);
+				xRightMask.y = chartTopPadding;
+				xRightMask.x = _graphWidth;
+				addChild(xRightMask);
 				
-				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
-				{
-					xLeftMask = new Quad(60, scrollerChart.y, fakeChartMaskColor);
-					xLeftMask.y = chartTopPadding;
-					xLeftMask.x = -xLeftMask.width;
-					addChild(xLeftMask);
-				}
+				xLeftMask = new Quad(60, scrollerChart.y, fakeChartMaskColor);
+				xLeftMask.y = chartTopPadding;
+				xLeftMask.x = -xLeftMask.width;
+				addChild(xLeftMask);
 			}
 		}
 		
