@@ -59,12 +59,12 @@ package services
 			if (treatment != null)
 			{
 				//Store in HealthKit
-				if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS) && treatment.insulinAmount > 0)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Bolus, Quantity: " + treatment.insulinAmount + "U, Time: " + new Date(treatment.timestamp).toString());
 					SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
 				}
-				else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
+				else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION && treatment.carbs > 0)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Carbs, Quantity: " + treatment.carbs + "g, Time: " + new Date(treatment.timestamp).toString());
 					SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
@@ -72,8 +72,10 @@ package services
 				else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Meal, Insulin Quantity: " + treatment.insulinAmount + "U, Carbs Quantity: " + treatment.carbs + "g, Time: " + new Date(treatment.timestamp).toString());
-					SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
-					SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
+					if (treatment.insulinAmount > 0)
+						SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
+					if (treatment.carbs > 0)
+						SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
 				}
 			}
 		}
