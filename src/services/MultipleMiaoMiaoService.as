@@ -99,7 +99,6 @@ package services
 		}
 		
 		private static function resetCheckReadingTimer(delayInSeconds:Number):void {
-			myTrace("in resetCheckReadingTimer");
 			if (checkReadingTimer != null && checkReadingTimer.running) {
 				checkReadingTimer.stop();
 			}
@@ -115,6 +114,8 @@ package services
 		
 		private static function checkLatestReading(event:Event = null):void {
 			var now:Number = (new Date()).valueOf();
+			//resetting checkreadingtimer, just in case it does'nt get reset anymore, although it should while processing received readings and/or calibrations
+			resetCheckReadingTimer(now + 5 * 60 * 1000);
 			if (isMiaoMiaoMultiple() && Sensor.getActiveSensor() != null) {
 				myTrace("in checkLatestReading");
 
@@ -159,9 +160,6 @@ package services
 				
 				NetworkConnector.createNSConnector(nightscoutDownloadURL + parameters.toString(), nightscoutDownloadAPISecret != "" ? nightscoutDownloadAPISecret : null, URLRequestMethod.GET, null, MODE_GLUCOSE_READING_GET, onDownloadGlucoseReadingsComplete, onConnectionFailed);
 			}
-			
-			//resetting checkreadingtimer, just in case it does'nt get reset anymore, although it should while processing received readings and/or calibrations
-			resetCheckReadingTimer(now + 5 * 60 * 1000);
 		}
 		
 		private static function checkTimeStampLatestReadingAtNS(event:Event = null):void {
@@ -250,6 +248,7 @@ package services
 
 			var glucoseData:GlucoseData;
 			var now:Number = (new Date()).valueOf();
+			var lastBgReading = BgReading.lastNoSensor();
 
 			var response:String = getResponseAndDisposeLoader(e, onDownloadGlucoseReadingsComplete, onConnectionFailed);
 			
@@ -257,7 +256,7 @@ package services
 			if (!waitingForNSData || (now - lastNSDownloadAttempt > TIME_4_MINUTES_30_SECONDS)) {
 				myTrace("in onDownloadGlucoseReadingsComplete, Not waiting for data or last download attempt was more than 4 minutes, 30 seconds ago. Ignoring!");
 				waitingForNSData = false;
-				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds(now, BgReading.lastNoSensor()));
+				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds(now, lastBgReading));
 				return;
 			}
 			
@@ -266,7 +265,7 @@ package services
 			//Validate response
 			if (response.length == 0) {
 				myTrace("in onDownloadGlucoseReadingsComplete, Server's gave an empty response. Retry later.");
-				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds(now, BgReading.lastNoSensor()));
+				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds(now, lastBgReading));
 				return;
 			}
 						
@@ -283,11 +282,15 @@ package services
 							NSDownloadReadingDate.setMinutes(NSDownloadReadingDate.minutes + nightscoutDownloadOffset);
 							var NSDownloadReadingTime:Number = NSDownloadReadingDate.valueOf();
 							if (NSDownloadReadingTime >= timeOfFirstBgReadingToDowload) {
-								glucoseData = new GlucoseData();
-								glucoseData.glucoseLevelRaw = NSDownloadReading.unfiltered as int;
-								glucoseData.realDate = NSDownloadReadingTime;
-								bgReadingAndCalibrationsList.push(glucoseData);
-								myTrace("in onDownloadGlucoseReadingsComplete, adding glucosedata with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " and value = " + glucoseData.glucoseLevelRaw);
+								if (NSDownloadReading.unfiltered as int > 0) {
+									glucoseData = new GlucoseData();
+									glucoseData.glucoseLevelRaw = NSDownloadReading.unfiltered as int;
+									glucoseData.realDate = NSDownloadReadingTime;
+									bgReadingAndCalibrationsList.push(glucoseData);
+									myTrace("in onDownloadGlucoseReadingsComplete, adding glucosedata with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " and value = " + glucoseData.glucoseLevelRaw);
+								} else {
+									myTrace("in onDownloadGlucoseReadingsComplete, NSDownloadReading.unfiltered as int <= 0, ignoring this reading");
+								}
 							} else {
 								myTrace("in onDownloadGlucoseReadingsComplete, ignored with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " because timestamp < " + (new Date(timeOfFirstBgReadingToDowload)).toString());
 							}
@@ -307,8 +310,6 @@ package services
 			{
 				myTrace("in onDownloadGlucoseReadingsComplete, Error parsing Nightscout responde! Error: " + error.message + " Response: " + response);
 			}
-			
-			resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds(now, BgReading.lastNoSensor()));
 		}
 		
 		private static function processReadingsAndCalibrations():void {
@@ -371,8 +372,6 @@ package services
 		}
 		
 		private static function onDownloadCalibrationsComplete(e:Event):void {
-			myTrace("in onDownloadCalibrationsComplete");
-			
 			var calibrationData:CalibrationData;
 			var now:Number = (new Date()).valueOf();
 			
@@ -413,10 +412,9 @@ package services
 									calibrationData.glucoseLevelRaw = NSDownloadCalibration.glucose as int;
 									calibrationData.realDate = NSDownloadReadingTime;
 									bgReadingAndCalibrationsList.push(calibrationData);
-									myTrace("in onDownloadCalibrationsComplete, with timestamp = " + calibrationData.realDate);
 									myTrace("in onDownloadCalibrationsComplete, adding CalibrationData with realdate =  " + (new Date(calibrationData.realDate)).toString() + " and value = " + calibrationData.glucoseLevelRaw);
 								} else {
-									myTrace("in onDownloadCalibrationsComplete, ignored with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " because timestamp < " + (new Date(timeOfFirstCalibrationToDowload)).toString());
+									myTrace("in onDownloadCalibrationsComplete, data ignored with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " because timestamp < " + (new Date(timeOfFirstCalibrationToDowload)).toString());
 								}
 							} else {
 								myTrace("in onDownloadCalibrationsComplete, Nightscout has returned a reading without glucose. Ignoring!");
