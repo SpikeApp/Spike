@@ -482,6 +482,8 @@ package ui.screens
 			var textFormat:flash.text.TextFormat = sNativeFormat;
 			var maxTextWidth:int  = Constants.stageWidth - (Constants.isPortrait ? Constants.stageWidth * 0.2 : Constants.stageWidth * 0.1);
 			var maxTextHeight:int = Constants.stageHeight - Constants.headerHeight;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				maxTextHeight -= maxTextHeight * 0.35;
 			
 			if (isNaN(maxTextWidth) || isNaN(maxTextHeight)) return;
 			
