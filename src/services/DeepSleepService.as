@@ -28,7 +28,7 @@ package services
 		private static const VERY_AGGRESSIVE_MODE:int = 5 * 1000;
 		private static const AUTOMATIC_DEXCOM:int = 10 * 1000;
 		private static const AUTOMATIC_NON_DEXCOM:int = 5 * 1000;
-		private static const AUTOMATIC_FOLLOWER:int = 30 * 1000;
+		private static const AUTOMATIC_FOLLOWER:int = 10 * 1000;
 		private static const TIME_1_MINUTE:int = 1 * 60 * 1000;
 		
 		/* Objects */
