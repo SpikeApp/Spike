@@ -189,11 +189,11 @@ package ui.screens
 			var chartX:Number = 0;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
 			{
-				chartWidth -= 45;
+				chartWidth -= 40;
 				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					chartX = 30;
 				else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
-					chartX = 15;
+					chartX = 10;
 			}
 			
 			glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight);
@@ -234,11 +234,11 @@ package ui.screens
 				var chartX:Number = 0;
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
 				{
-					chartWidth -= 45;
+					chartWidth -= 40;
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 						chartX = 30;
 					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
-						chartX = 15;
+						chartX = 10;
 				}
 				
 				//Create new chart
