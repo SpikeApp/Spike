@@ -559,8 +559,8 @@ package services
 				if (now - latestBGReading.timestamp >= TIME_5_MINUTES_30_SECONDS)
 				{
 					//Some users are uploading values to nightscout with a bigger delay than it was supposed (>10 seconds)... 
-					//This will make Spike retry in 30sec so they don't see outdated values in the chart.
-					nextFollowDownloadTime = now + TIME_30_SECONDS; 
+					//This will make Spike retry in 10sec so they don't see outdated values in the chart.
+					nextFollowDownloadTime = now + TIME_10_SECONDS; 
 				}
 				else
 				{
