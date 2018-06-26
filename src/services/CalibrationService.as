@@ -755,14 +755,14 @@ package services
 		private static function commonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE) {
 				var currentSensorAgeInMinutes:int = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
-				if (currentSensorAgeInMinutes > 14.5 * 24 * 60) {
+				if (currentSensorAgeInMinutes > 14.5 * 24 * 60 && BlueToothDevice.knowsFSLAge()) {
 					myTrace("in commonSettingChanged, sensorage more than 14.5 * 24 * 60 minutes, no further processing. Stop sensor if sensor is active");
 					if (Sensor.getActiveSensor() != null) {
 						//start sensor without user intervention 
 						Sensor.stopSensor();
 						giveSensorWarning("libre_14_dot_5_days_warning");
 					}
-				} else if (currentSensorAgeInMinutes > 14 * 24 * 60 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN) == "false") {
+				} else if (currentSensorAgeInMinutes > 14 * 24 * 60 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN) == "false" && BlueToothDevice.knowsFSLAge()) {
 					myTrace("in commonSettingChanged, sensorage more than 14 * 24 * 60 minutes, give warning that sensor will expiry in half a day ");
 					if (Sensor.getActiveSensor() != null) {
 						giveSensorWarning("libre_14days_warning");
