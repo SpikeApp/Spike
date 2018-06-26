@@ -681,11 +681,19 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         } else if activeDisplayMode == .expanded {
             self.preferredContentSize = CGSize(width: maxSize.width, height: 300)
         }
+    }
+    
+    override func viewWillAppear(_ animated: Bool)
+    {
+        super.viewWillAppear(animated)
         
-        print("maxSize.width")
-        print(maxSize.width)
-        
-        
+        if let superview = view.superview
+        {
+            if (parseChartData())
+            {
+                setChart(chartSize: superview.frame.size.width + 10)
+            }
+        }
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
