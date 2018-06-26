@@ -24,6 +24,7 @@ ENHANCEMENT: Some iPhone X layout improvements. More to come in the next update.
 FIX: Layout issues with the x axis label of the Chart Today Widget on small screen devices. (Miguel)
 FIX: Specific Nightscout treatments like "Pump Site Change", "Profile Switch", etc.. that are added in Spike as notes were being reuploaded overwriting the original ones. This is now fixed! (Miguel)
 FIX: Bug that prevented the "Resize On Out Of Bounds" chart setting to work correctly when off. (Miguel)
+FIX: Bugs related to sensor age with BluCon transmitters. (Johan)
 FIX: As usual, other small bug fixes and improvements. (Miguel)
 
 2.1.1
