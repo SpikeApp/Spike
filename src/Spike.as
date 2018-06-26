@@ -156,6 +156,7 @@ package
 			/* Initialize Constants */
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			Constants.isPortrait = starling.stage.stageWidth < starling.stage.stageHeight;
+			Constants.currentOrientation = stage.orientation;
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);

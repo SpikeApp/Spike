@@ -123,6 +123,7 @@ package ui.screens
 			setupContent();
 			setupEventListeners();
 			adjustMainMenu();
+			updateInfo();
 		}
 		
 		/**
@@ -158,7 +159,7 @@ package ui.screens
 			glucoseList = ModelLocator.bgReadings;
 			
 			//Calculate Values
-			SystemUtil.executeWhenApplicationIsActive( calculateValues );
+			calculateValues();
 		}
 		
 		private function setupContent():void
