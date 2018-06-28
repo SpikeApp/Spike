@@ -55,10 +55,7 @@ package utils
 				}
 				else
 				{
-					var screenWidthInches:Number = DeviceCapabilities.screenInchesX(Constants.appStage);
-					var screenHeightInches:Number = DeviceCapabilities.screenInchesY(Constants.appStage);
-					var hypotenuse:Number = Math.sqrt((screenWidthInches * screenWidthInches) + (screenHeightInches * screenHeightInches));
-					hypotenuse = (( hypotenuse * 10 + 0.5)  >> 0) / 10;
+					var hypotenuse:Number = getHypotenuse();
 					
 					if (hypotenuse == 3.5)
 						deviceType = IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4;
@@ -84,6 +81,16 @@ package utils
 			}
 			
 			return deviceType;
+		}
+		
+		private static function getHypotenuse():Number
+		{	
+			var screenWidthInches:Number = DeviceCapabilities.screenInchesX(Constants.appStage);
+			var screenHeightInches:Number = DeviceCapabilities.screenInchesY(Constants.appStage);
+			var hypotenuse:Number = Math.sqrt((screenWidthInches * screenWidthInches) + (screenHeightInches * screenHeightInches));
+			hypotenuse = (( hypotenuse * 10 + 0.5)  >> 0) / 10;
+			
+			return hypotenuse;
 		}
 		
 		public static function isDeviceCompatible():Boolean
@@ -201,7 +208,9 @@ package utils
 		
 		public static function isTablet():Boolean
 		{
-			return Constants.deviceModel == IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == IPAD_PRO_105 || Constants.deviceModel == IPAD_PRO_129 || Constants.deviceModel == IPAD_MINI_1_2_3_4;
+			var internalHypotenuse:Number = getHypotenuse();
+			
+			return Constants.deviceModel == IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == IPAD_PRO_105 || Constants.deviceModel == IPAD_PRO_129 || Constants.deviceModel == IPAD_MINI_1_2_3_4 || internalHypotenuse >= 9.7;
 		}
 		
 		public static function isIpad():Boolean
