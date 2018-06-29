@@ -174,6 +174,10 @@ package database
 			"targetglucoserates STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
+		private static const CREATE_TABLE_HEALTHKIT_TREATMENTS:String = "CREATE TABLE IF NOT EXISTS healthkittreatments(" +
+			"id STRING PRIMARY KEY," +
+			"timestamp TIMESTAMP NOT NULL)";
+		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
 		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
 		
@@ -645,7 +649,7 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				finishedCreatingTables();
+				createHealthKitTreatmentsTable();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -653,6 +657,27 @@ package database
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				dispatchInformation('failed_to_create_profiles_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createHealthKitTreatmentsTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_HEALTHKIT_TREATMENTS;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				finishedCreatingTables();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create healthkittreatments table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_healthkittreatments_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -2479,6 +2504,92 @@ package database
 			} finally {
 				if (conn.connected) conn.close();
 				return userStats;
+			}
+		}
+		
+		/**
+		 * Get Healthkit Treatments synchronously
+		 */
+		public static function getHealthkitTreatmentsSynchronous(from:Number, until:Number):Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text =  "SELECT * FROM healthkittreatments WHERE timestamp BETWEEN " + from + " AND " + until;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_healthkittreatments', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_healthkittreatments',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		/**
+		 * inserts a healthkittreatment in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertHealthkitTreatmentSynchronous(id:String, timestamp:Number):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO healthkittreatments (";
+				text += "id, ";
+				text += "timestamp) ";
+				text += "VALUES (";
+				text += "'" + id + "', ";
+				text += timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_healthkittreatment_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Deletes healthkit treatments older than 24H (not needed any more)
+		 */
+		public static function deleteOldHealthkitTreatments():void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from healthkittreatments WHERE timestamp < " + (new Date().valueOf() - (24 * 60 * 60 * 1000));
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_old_healthkitt_treatments_in_db', error.message + " - " + error.details);
 			}
 		}
 		

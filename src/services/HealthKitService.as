@@ -3,10 +3,12 @@ package services
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
+	import flash.utils.Dictionary;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.CommonSettings;
+	import database.Database;
 	import database.LocalSettings;
 	
 	import events.CalibrationServiceEvent;
@@ -24,7 +26,14 @@ package services
 	
 	public class HealthKitService
 	{
-		private static var _instance:HealthKitService = new HealthKitService(); 
+		//Constants
+		private static const TIME_24_HOURS:Number = 24 * 60 * 60 * 1000;
+		
+		//Properties
+		private static var _instance:HealthKitService = new HealthKitService();
+		private static var hkTreatmentsList:Dictionary = new Dictionary();
+		
+		//Variables
 		private static var initialStart:Boolean = true;
 		
 		public function HealthKitService()
@@ -34,17 +43,34 @@ package services
 			}
 		}
 		
-		public static function init():void {
+		public static function init():void 
+		{
 			if (!initialStart)
 				return;
 			else
 				initialStart = false;
 			
+			//Get existing HK treatments from DB
+			var now:Number = new Date().valueOf();
+			var hkTreatments:Array = Database.getHealthkitTreatmentsSynchronous(now - TIME_24_HOURS, now);
+			var numTreatments:uint = hkTreatments.length;
+			for (var i:int = 0; i < numTreatments; i++) 
+			{
+				var hkTreatment:Object = hkTreatments[i] as Object;
+				hkTreatmentsList[hkTreatment.id] = hkTreatment.timestamp;
+			}
+			
+			//Delete old HK treatments from DB (older than 24H)
+			Database.deleteOldHealthkitTreatments();
+			
+			//Set event listeners
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, bgReadingReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, processInitialBackfillData);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			
+			//Init ANE
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
 				SpikeANE.initHealthKit();
 			}
@@ -56,26 +82,43 @@ package services
 				return;
 			
 			var treatment:Treatment = e.treatment;
-			if (treatment != null)
+			if (treatment != null && hkTreatmentsList[treatment.ID] == null)
 			{
 				//Store in HealthKit
+				var treatmentAdded:Boolean = false;
+				
 				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS) && treatment.insulinAmount > 0)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Bolus, Quantity: " + treatment.insulinAmount + "U, Time: " + new Date(treatment.timestamp).toString());
 					SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
+					treatmentAdded = true;
 				}
 				else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION && treatment.carbs > 0)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Carbs, Quantity: " + treatment.carbs + "g, Time: " + new Date(treatment.timestamp).toString());
 					SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
+					treatmentAdded = true;
 				}
 				else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
 				{
 					Trace.myTrace("HealthKitService.as", "Treatment Type: Meal, Insulin Quantity: " + treatment.insulinAmount + "U, Carbs Quantity: " + treatment.carbs + "g, Time: " + new Date(treatment.timestamp).toString());
 					if (treatment.insulinAmount > 0)
+					{
 						SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
+						treatmentAdded = true;
+					}
 					if (treatment.carbs > 0)
+					{
 						SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
+						treatmentAdded = true;
+					}
+				}
+				
+				//Add treatment to memory and database to avoid duplicates on the next run
+				if (treatmentAdded)
+				{
+					hkTreatmentsList[treatment.ID] = treatment.timestamp;
+					Database.insertHealthkitTreatmentSynchronous(treatment.ID, treatment.timestamp);
 				}
 			}
 		}
