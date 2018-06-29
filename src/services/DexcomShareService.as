@@ -122,7 +122,8 @@ package services
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME) != "" &&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != "")
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != "" &&
+				!BlueToothDevice.isFollower())
 			{
 				setupDexcomShareProperties();
 				nextFunctionToCall = getInitialGlucoseReadings;
@@ -1049,6 +1050,24 @@ package services
 				nextFunctionToCall = getInitialGlucoseReadings;
 				login();
 			} 
+			
+			if (e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE)
+			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE) == "Follow")
+					deactivateService();
+				else
+				{
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true" &&
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME) != "" &&
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != "" &&
+						!BlueToothDevice.isFollower())
+					{
+						setupDexcomShareProperties();
+						nextFunctionToCall = getInitialGlucoseReadings;
+						activateService();
+					}
+				}
+			}
 		}
 		
 		private static function onServiceTimer(e:TimerEvent):void
