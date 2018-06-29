@@ -31,7 +31,7 @@ package ui.screens.display.settings.treatments
 	
 	import ui.AppInterface;
 	import ui.chart.ColorPicker;
-	import ui.popups.TreatmentsConfigSender;
+	import ui.popups.WorkflowConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
@@ -211,7 +211,7 @@ package ui.screens.display.settings.treatments
 			loadInstructions.addEventListener(Event.TRIGGERED, onLoadInstructions);
 			
 			//Email configuration files
-			emailConfigurationFiles = LayoutFactory.createButton(Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_label") : ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_iphone_x_label"));
+			emailConfigurationFiles = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_configurations_label"));
 			emailConfigurationFiles.pivotX = -3;
 			emailConfigurationFiles.addEventListener(Event.TRIGGERED, onSendConfigurationFiles);
 			
@@ -331,7 +331,7 @@ package ui.screens.display.settings.treatments
 		
 		private function onSendConfigurationFiles(e:Event):void
 		{
-			TreatmentsConfigSender.displayTreatmentsConfigSender();
+			WorkflowConfigSender.displayWorkflowConfigSender(WorkflowConfigSender.WORKFLOW_TREATMENTS);
 		}
 		
 		private function onColorPaletteOpened(e:Event):void

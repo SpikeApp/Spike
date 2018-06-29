@@ -65,7 +65,7 @@ package ui.screens.display.transmitter
 	import ui.AppInterface;
 	import ui.InterfaceController;
 	import ui.popups.AlertManager;
-	import ui.popups.TreatmentsConfigSender;
+	import ui.popups.WorkflowConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
@@ -597,7 +597,7 @@ package ui.screens.display.transmitter
 				
 				if (BlueToothDevice.isMiaoMiao())
 				{
-					miaomiaoWidgetWatchConfigSender = LayoutFactory.createButton(Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_label") : ModelLocator.resourceManagerInstance.getString('treatments',"email_configurations_iphone_x_label"));
+					miaomiaoWidgetWatchConfigSender = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_configurations_label"));
 					miaomiaoWidgetWatchConfigSender.addEventListener(Event.TRIGGERED, onSendMiaoMiaoConfigurationFiles);
 				}
 				
@@ -840,7 +840,7 @@ package ui.screens.display.transmitter
 		
 		private function onSendMiaoMiaoConfigurationFiles(e:Event):void
 		{
-			TreatmentsConfigSender.displayTreatmentsConfigSender(true);
+			WorkflowConfigSender.displayWorkflowConfigSender(WorkflowConfigSender.WORKFLOW_MIAOMIAO_ON_DEMAND);
 		}
 		
 		private function onStarlingResize(event:ResizeEvent):void 

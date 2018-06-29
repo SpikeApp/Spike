@@ -15,6 +15,8 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
+	import services.AlarmService;
+	
 	import stats.BasicUserStats;
 	import stats.StatsManager;
 	
@@ -299,6 +301,45 @@ package network.httpserver.API
 		{
 			if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
 				SpikeANE.sendStartReadingCommmandToMiaoMia();
+			
+			return responseSuccess("OK");
+		}
+		
+		public function spikesnooze(params:URLVariables):String
+		{
+			var snoozeTime:Number = 60;
+			if (params.snoozeTime != null)
+				snoozeTime = Number(params.snoozeTime);
+			
+			AlarmService.snoozeVeryHighAlert(0, snoozeTime);
+			AlarmService.snoozeHighAlert(0, snoozeTime);
+			AlarmService.snoozeLowAlert(0, snoozeTime);
+			AlarmService.snoozeVeyLowAlert(0, snoozeTime);
+			AlarmService.snoozeMissedReadingAlert(0, snoozeTime);
+			AlarmService.snoozePhoneMutedAlert(0, snoozeTime);
+			
+			return responseSuccess("Snoozed for " + snoozeTime + " minutes");
+		}
+		
+		public function spikeunsnooze(params:URLVariables):String
+		{
+			if (AlarmService.veryHighAlertSnoozed())
+				AlarmService.resetVeryHighAlert();
+			
+			if (AlarmService.highAlertSnoozed())
+				AlarmService.resetHighAlert();
+			
+			if (AlarmService.lowAlertSnoozed())
+				AlarmService.resetLowAlert();
+			
+			if (AlarmService.veryLowAlertSnoozed())
+				AlarmService.resetVeryLowAlert();
+			
+			if (AlarmService.missedReadingAlertSnoozed())
+				AlarmService.resetMissedReadingAlert();
+			
+			if (AlarmService.phoneMutedAlertSnoozed())
+				AlarmService.resetPhoneMutedAlert();
 			
 			return responseSuccess("OK");
 		}

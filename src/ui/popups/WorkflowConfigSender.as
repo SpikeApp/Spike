@@ -35,39 +35,42 @@ package ui.popups
 
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("treatments")]
+	[ResourceBundle("alarmsettingsscreen")]
+	[ResourceBundle("transmittersettingsscreen")]
 	
-	public class TreatmentsConfigSender
+	public class WorkflowConfigSender
 	{
+		/* Constants */
+		public static const WORKFLOW_TREATMENTS:String = "treatments";
+		public static const WORKFLOW_MIAOMIAO_ON_DEMAND:String = "miaomiaoOnDemand";
+		public static const WORKFLOW_ALARMS:String = "alarms";
+		
 		/* Display Objects */
-		private static var treatmentsConfigSenderCallout:Callout;
+		private static var workflowConfigSenderCallout:Callout;
 		private static var emailField:TextInput;
 		private static var emailLabel:Label;
 		private static var sendButton:Button;
-		private static var isMiaoMiaoConfig:Boolean;
+		private static var selectedWorkflow:String;
 		
 		/* Properties */
 		private static var dataProvider:ArrayCollection;
-
 		private static var mainContainer:LayoutGroup;
-
 		private static var actionButtonsContainer:LayoutGroup;
-
 		private static var cancelButton:Button;
-
 		private static var positionHelper:Sprite;
 		
-		public function TreatmentsConfigSender()
+		public function WorkflowConfigSender()
 		{
 			//Don't allow class to be instantiated
-			throw new IllegalOperationError("TreatmentsConfigSender class is not meant to be instantiated!");
+			throw new IllegalOperationError("WorkflowConfigSender class is not meant to be instantiated!");
 		}
 		
 		/**
 		 * Functionality
 		 */
-		public static function displayTreatmentsConfigSender(isMiaoMiao:Boolean = false):void
+		public static function displayWorkflowConfigSender(workflow:String):void
 		{
-			isMiaoMiaoConfig = isMiaoMiao;
+			selectedWorkflow = workflow;
 			
 			createDisplayObjects();
 			displayCallout();
@@ -79,13 +82,13 @@ package ui.popups
 				return
 			
 			//Close the callout
-			if (PopUpManager.isPopUp(treatmentsConfigSenderCallout))
-				PopUpManager.removePopUp(treatmentsConfigSenderCallout, false);
-			else if (treatmentsConfigSenderCallout != null)
-				treatmentsConfigSenderCallout.close(false);
+			if (PopUpManager.isPopUp(workflowConfigSenderCallout))
+				PopUpManager.removePopUp(workflowConfigSenderCallout, false);
+			else if (workflowConfigSenderCallout != null)
+				workflowConfigSenderCallout.close(false);
 			
 			//Display callout
-			PopUpManager.addPopUp(treatmentsConfigSenderCallout, false, false);
+			PopUpManager.addPopUp(workflowConfigSenderCallout, false, false);
 		}
 		
 		private static function createDisplayObjects():void
@@ -138,11 +141,11 @@ package ui.popups
 			Starling.current.stage.addChild(positionHelper);
 			
 			/* Callout Creation */
-			if (treatmentsConfigSenderCallout != null) treatmentsConfigSenderCallout.removeFromParent(true);
-			treatmentsConfigSenderCallout = new Callout();
-			treatmentsConfigSenderCallout.content = mainContainer;
-			treatmentsConfigSenderCallout.origin = positionHelper;
-			treatmentsConfigSenderCallout.minWidth = 240;
+			if (workflowConfigSenderCallout != null) workflowConfigSenderCallout.removeFromParent(true);
+			workflowConfigSenderCallout = new Callout();
+			workflowConfigSenderCallout.content = mainContainer;
+			workflowConfigSenderCallout.origin = positionHelper;
+			workflowConfigSenderCallout.minWidth = 240;
 			
 			emailField.setFocus();
 		}
@@ -150,10 +153,10 @@ package ui.popups
 		private static function closeCallout():void
 		{
 			//Close the callout
-			if (PopUpManager.isPopUp(treatmentsConfigSenderCallout))
-				PopUpManager.removePopUp(treatmentsConfigSenderCallout, true);
-			else if (treatmentsConfigSenderCallout != null)
-				treatmentsConfigSenderCallout.close(true);
+			if (PopUpManager.isPopUp(workflowConfigSenderCallout))
+				PopUpManager.removePopUp(workflowConfigSenderCallout, true);
+			else if (workflowConfigSenderCallout != null)
+				workflowConfigSenderCallout.close(true);
 		}
 		
 		/**
@@ -183,11 +186,30 @@ package ui.popups
 			
 			sendButton.isEnabled = false;
 			
+			//Subject and Body
+			var emailSubject:String;
+			var emailBody:String;
+			if (selectedWorkflow == WORKFLOW_MIAOMIAO_ON_DEMAND)
+			{
+				emailSubject = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen',"workflow_miaomiao_email_subject");
+				emailBody = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen',"workflow_miaomiao_email_body");
+			}
+			else if (selectedWorkflow == WORKFLOW_ALARMS)
+			{
+				emailSubject = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"workflow_alarms_email_subject");
+				emailBody = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"workflow_alarms_email_body");
+			}
+			else if (selectedWorkflow == WORKFLOW_TREATMENTS)
+			{
+				emailSubject = ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_subject");
+				emailBody = ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_body");
+			}
+			
 			//Create URL Request 
 			var vars:URLVariables = new URLVariables();
 			vars.mimeType = "text/html";
-			vars.emailSubject = !isMiaoMiaoConfig ? ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_subject") : ModelLocator.resourceManagerInstance.getString('treatments',"workflow_miaomiao_email_subject");
-			vars.emailBody = !isMiaoMiaoConfig ? ModelLocator.resourceManagerInstance.getString('treatments',"workflow_email_body") : ModelLocator.resourceManagerInstance.getString('treatments',"workflow__miaomiao_email_body");
+			vars.emailSubject = emailSubject;
+			vars.emailBody = emailBody;
 			vars.userEmail = emailField.text.replace(" ", "");
 				
 			//Send data
@@ -212,7 +234,7 @@ package ui.popups
 				AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('treatments','configuration_sent_successfully'),
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','configuration_sent_successfully'),
 					Number.NaN
 				);
 				
@@ -225,7 +247,7 @@ package ui.popups
 				AlertManager.showActionAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('treatments','configuration_not_sent') + " " + response.statuscode,
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','configuration_not_sent') + " " + response.statuscode,
 					Number.NaN,
 					[
 						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },	
@@ -235,7 +257,7 @@ package ui.popups
 				
 				function onTryAgain(e:starling.events.Event):void
 				{
-					Starling.juggler.delayCall(displayTreatmentsConfigSender, 0.5);
+					Starling.juggler.delayCall(displayWorkflowConfigSender, 0.5);
 				}
 			}
 		}

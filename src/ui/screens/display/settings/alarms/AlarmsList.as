@@ -4,12 +4,16 @@ package ui.screens.display.settings.alarms
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
+	import feathers.controls.Button;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -22,6 +26,7 @@ package ui.screens.display.settings.alarms
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
+	import ui.popups.WorkflowConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.LayoutFactory;
@@ -29,6 +34,7 @@ package ui.screens.display.settings.alarms
 	import utils.Constants;
 	
 	[ResourceBundle("alarmsettingsscreen")]
+	[ResourceBundle("globaltranslations")]
 
 	public class AlarmsList extends List 
 	{
@@ -45,12 +51,13 @@ package ui.screens.display.settings.alarms
 		private var lowIconImage:Image;
 		private var highIconImage:Image;
 		private var urgentHighIconImage:Image;
+		private var widgetWatchConfigSender:Button;
+		private var actionsContainer:LayoutGroup;
 		
 		/* Properties */
 		private var muteOverrideValue:Boolean;
-
 		private var appInactiveValue:Boolean;
-		
+
 		public function AlarmsList()
 		{
 			super();
@@ -103,6 +110,14 @@ package ui.screens.display.settings.alarms
 			lowIconImage = new Image(chevronTexture);
 			highIconImage = new Image(chevronTexture);
 			urgentHighIconImage = new Image(chevronTexture);
+			var actionsLayout:HorizontalLayout = new HorizontalLayout();
+			actionsLayout.horizontalAlign = HorizontalAlign.CENTER;
+			actionsContainer = new LayoutGroup();
+			actionsContainer.layout = actionsLayout;
+			actionsContainer.width = width - 20;
+			widgetWatchConfigSender = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_configurations_label"));
+			widgetWatchConfigSender.addEventListener(Event.TRIGGERED, onSendConfigurationFiles);
+			actionsContainer.addChild(widgetWatchConfigSender);
 			
 			/* Data */
 			var dataSectionsContainer:Array = [];
@@ -118,6 +133,7 @@ package ui.screens.display.settings.alarms
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"phone_muted_label"), accessory: phoneMutedIconImage, alarmID: CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED });
 			if (!BlueToothDevice.isLimitter() && !BlueToothDevice.isFollower())
 				dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"transmitter_low_battery_label"), accessory: batteryLowIconImage, alarmID: CommonSettings.COMMON_SETTING_BATTERY_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY });
+			dataSectionsContainer.push({ screen: null, label: "", accessory: actionsContainer, selectable:false });
 			
 			var dataContainer:ListCollection = new ListCollection(dataSectionsContainer);
 			dataProvider = dataContainer;
@@ -176,6 +192,11 @@ package ui.screens.display.settings.alarms
 				
 				AppInterface.instance.navigator.pushScreen( screenName );
 			}
+		}
+		
+		private function onSendConfigurationFiles(e:Event):void
+		{
+			WorkflowConfigSender.displayWorkflowConfigSender(WorkflowConfigSender.WORKFLOW_ALARMS);
 		}
 		
 		private function onStarlingResize(event:ResizeEvent):void 
@@ -242,15 +263,27 @@ package ui.screens.display.settings.alarms
 				lowIconImage.dispose();
 				lowIconImage = null;
 			}
-			if(highIconImage)
+			if(highIconImage != null)
 			{
 				highIconImage.dispose();
 				highIconImage = null;
 			}
-			if(urgentHighIconImage)
+			if(urgentHighIconImage != null)
 			{
 				urgentHighIconImage.dispose();
 				urgentHighIconImage = null;
+			}
+			if(widgetWatchConfigSender != null)
+			{
+				widgetWatchConfigSender.removeEventListener(Event.TRIGGERED, onSendConfigurationFiles);
+				widgetWatchConfigSender.removeFromParent();
+				widgetWatchConfigSender.dispose();
+				widgetWatchConfigSender = null;
+			}
+			if(actionsContainer != null)
+			{
+				actionsContainer.dispose();
+				actionsContainer = null;
 			}
 			
 			super.dispose();
