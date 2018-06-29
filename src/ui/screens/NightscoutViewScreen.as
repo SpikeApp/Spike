@@ -2,6 +2,7 @@ package ui.screens
 {
 	import flash.system.System;
 	
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.DragGesture;
@@ -77,7 +78,7 @@ package ui.screens
 		
 		private function setupInitialContent():void
 		{
-			nightscoutURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
+			nightscoutURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL);
 			if (nightscoutURL.indexOf('http') == -1)
 				nightscoutURL = "https://" + nightscoutURL;
 		}

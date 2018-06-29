@@ -1,7 +1,6 @@
 package ui.screens.display.extraoptions
 {
 	import com.spikeapp.spike.airlibrary.SpikeANE;
-	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
@@ -28,6 +27,7 @@ package ui.screens.display.extraoptions
 	import model.ModelLocator;
 	
 	import services.AlarmService;
+	import services.NightscoutService;
 	
 	import starling.display.Image;
 	import starling.events.Event;
@@ -116,15 +116,7 @@ package ui.screens.display.extraoptions
 			preventRotationEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
 			
 			/* Get Nightscout Setting from Database */
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" && 
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" && 
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "YOUR_SITE.azurewebsites.net" &&
-				StageWebView.isSupported)
-			{
-				nightscoutEnabled = true;
-			}
-			else
-				nightscoutEnabled = false;
+			nightscoutEnabled = (NightscoutService.serviceActive || (NightscoutService.followerModeEnabled && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")) && StageWebView.isSupported ? true : false;
 			
 			//Skin Speech Icon Accordingly
 			buildSpeechIcon();
