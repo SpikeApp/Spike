@@ -86,6 +86,12 @@ package ui.screens
 				Starling.juggler.delayCall(TutorialService.ninethStep, .2);
 		}
 		
+		override protected function onTransitionInComplete(e:Event):void
+		{
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
+		}
+		
 		/**
 		 * Utility
 		 */

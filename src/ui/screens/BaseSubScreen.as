@@ -6,6 +6,7 @@ package ui.screens
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.ScrollBarDisplayMode;
+	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -43,6 +44,7 @@ package ui.screens
 			headerProperties.disposeItems = true;
 			
 			setupLayoutManager();
+			setupEventListeners();
 		}
 		
 		override protected function initialize():void {
@@ -67,6 +69,12 @@ package ui.screens
 			addChild(screenRenderer);
 		}
 		
+		private function setupEventListeners():void
+		{
+			this.addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
+			this.addEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onBackButtonTriggered);
+		}
+		
 		override protected function draw():void
 		{
 			super.draw();
@@ -84,6 +92,11 @@ package ui.screens
 				AppInterface.instance.menu.selectedIndex = 0;
 			}
 			
+		}
+		
+		protected function onTransitionInComplete(event:Event):void
+		{
+			//Meant to be overriden
 		}
 		
 		protected function getScreenIcon(texture:Texture):Sprite

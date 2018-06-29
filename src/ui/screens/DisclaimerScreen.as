@@ -124,6 +124,12 @@ package ui.screens
 			developersContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
 		}
 		
+		override protected function onTransitionInComplete(e:Event):void
+		{
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
+		}
+		
 		/**
 		 * Utility
 		 */

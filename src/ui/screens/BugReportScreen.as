@@ -11,6 +11,7 @@ package ui.screens
 	import model.ModelLocator;
 	
 	import starling.display.DisplayObject;
+	import starling.events.Event;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -72,6 +73,15 @@ package ui.screens
 				AppInterface.instance.menu.selectedIndex = 5;
 			else
 				AppInterface.instance.menu.selectedIndex = 2;
+		}
+		
+		/**
+		 * Event Handlers
+		 */
+		override protected function onTransitionInComplete(e:Event):void
+		{
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
 		}
 		
 		/**

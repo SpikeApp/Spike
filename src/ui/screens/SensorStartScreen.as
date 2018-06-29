@@ -224,6 +224,12 @@ package ui.screens
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 		}
 		
+		override protected function onTransitionInComplete(e:Event):void
+		{
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
 		/**
 		 * Utility
 		 */

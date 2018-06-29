@@ -813,6 +813,12 @@ package ui.screens
 			}
 		}
 		
+		override protected function onTransitionInComplete(e:starling.events.Event):void
+		{
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
+		}
+		
 		/**
 		 * Utility
 		 */

@@ -93,6 +93,12 @@ package ui.screens
 			dispatchEventWith(Event.COMPLETE);
 		}
 		
+		override protected function onTransitionInComplete(e:Event):void
+		{
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
 		/**
 		 * Utility
 		 */

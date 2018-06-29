@@ -72,6 +72,12 @@ package ui.screens
 			AppInterface.instance.menu.selectedIndex = 0;
 		}
 		
+		override protected function onTransitionInComplete(e:Event):void
+		{
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
+		}
+		
 		/**
 		 * Utility
 		 */

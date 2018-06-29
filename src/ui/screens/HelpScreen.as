@@ -82,6 +82,12 @@ package ui.screens
 			onBackButtonTriggered(null);
 		}
 		
+		override protected function onTransitionInComplete(e:Event):void
+		{
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
+		}
+		
 		/**
 		 * Utility
 		 */

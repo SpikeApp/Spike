@@ -11,6 +11,7 @@ package ui.screens
 	import feathers.controls.Callout;
 	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
+	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -57,6 +58,7 @@ package ui.screens
 			
 			setupProperties();
 			setupContent();
+			setupEventListeners();
 		}
 		
 		/**
@@ -109,6 +111,11 @@ package ui.screens
 				treatmentsButton,
 				moreButton
 			];
+		}
+		
+		private function setupEventListeners():void
+		{
+			this.addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
 		}
 		
 		/**
@@ -164,6 +171,11 @@ package ui.screens
 		{
 			if(!AppInterface.instance.drawers.isLeftDrawerOpen)
 				dispatchEventWith( ScreenEvent.TOGGLE_MENU );
+		}
+		
+		protected function onTransitionInComplete(e:Event):void
+		{
+			//Meant to be overriden
 		}
 		
 		/**

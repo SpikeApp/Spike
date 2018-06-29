@@ -42,7 +42,6 @@ package ui.screens
 			
 			setupScreen();
 			adjustMainMenu();
-			setupEventListeners();
 		}
 		
 		/**
@@ -73,22 +72,22 @@ package ui.screens
 				AppInterface.instance.menu.selectedIndex = 1;
 		}
 		
-		private function setupEventListeners():void
-		{
-			if( TutorialService.isActive && TutorialService.secondStepActive)
-				addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
-		}
-		
 		/**
 		 * Event Handlers
 		 */
-		private function onTransitionInComplete(e:Event):void
+		override protected function onTransitionInComplete(e:Event):void
 		{
-			if( TutorialService.isActive)
-				removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
+			/*if( TutorialService.isActive)
+				removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);*/
 			
 			if( TutorialService.isActive && TutorialService.secondStepActive)
 				Starling.juggler.delayCall(TutorialService.thirdStep, .2);
+			
+			//Swipe to pop functionality
+			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
+			
+			//Re-adjust menu
+			adjustMainMenu();
 		}
 		
 		/**

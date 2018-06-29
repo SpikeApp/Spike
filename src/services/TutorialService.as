@@ -175,7 +175,7 @@ package services
 			fourthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','fourth_step_message'), calloutLocationHelper, new <String>[RelativePosition.TOP], false);
 			fourthStepCallout.textRendererFactory = calloutTextRenderer;
 			
-			Starling.juggler.delayCall( closeCallout, 12, fourthStepCallout );
+			Starling.juggler.delayCall( closeCallout, 14, fourthStepCallout );
 		}
 		
 		public static function fifthStep():void
@@ -206,7 +206,7 @@ package services
 			sixthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','sixth_step_message'), calloutLocationHelper, null, false);
 			sixthStepCallout.textRendererFactory = calloutTextRenderer;
 			
-			Starling.juggler.delayCall( closeCallout, 25, sixthStepCallout );
+			Starling.juggler.delayCall( closeCallout, 27, sixthStepCallout );
 		}
 		
 		public static function seventhStep():void
