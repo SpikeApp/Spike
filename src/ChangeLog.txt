@@ -1,6 +1,7 @@
 2.1.3
 ENHANCEMENT: Followers can now access the master's Nightscout site directly inside Spike by going to the "three dots menu" -> Nightscout. (Miguel) 
 FIX: No more duplicate HealthKit entries for treatments. (Miguel)
+FIX: As usual, other small bug fixes and improvements. (Miguel)
 
 2.1.2
 FEATURE: iPad support! The iPad version also works on iPhone/iPodTouch but it doesn't have HealthKit functionality. This is the preferred Spike version for users < 13 years old, even if using an iPhone/iPodTouch. Request a TestFlight invite for the iPad version at https://spike-app.com (Miguel)
