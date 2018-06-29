@@ -282,6 +282,9 @@ package com.spikeapp.spike.airlibrary
 			} else if (event.code == "StatusEvent_stoppedScanningMiaoMiaoBecauseConnected") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_STOPPED_SCANNING_BECAUSE_CONNECTED);
 				_instance.dispatchEvent(spikeANEEvent);
+			} else if (event.code == "StatusEvent_didRecieveInitialUpdateValueForCharacteristic") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED);
+				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "phoneMuted") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.PHONE_MUTED);
 				_instance.dispatchEvent(spikeANEEvent);

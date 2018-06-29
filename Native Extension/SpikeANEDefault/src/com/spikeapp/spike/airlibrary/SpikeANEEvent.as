@@ -13,6 +13,7 @@ package com.spikeapp.spike.airlibrary
 	[Event(name="miaoMiaoConnected",type="events.SpikeANEEVent")]
 	[Event(name="miaoMiaoDisconnected",type="events.SpikeANEEVent")]
 	[Event(name="stoppedScanningMiaoMiaoBecauseConnected",type="events.SpikeANEEVent")]
+	[Event(name="didRecieveInitialUpdateValueForCharacteristic",type="events.SpikeANEEVent")]
 	
 	public class SpikeANEEvent extends Event
 	{
@@ -33,8 +34,8 @@ package com.spikeapp.spike.airlibrary
 		public static const MIAOMIAO_CONNECTED:String = "miaoMiaoConnected";
 		public static const MIAOMIAO_DISCONNECTED:String = "miaoMiaoDisconnected";
 		public static const MIAOMIAO_STOPPED_SCANNING_BECAUSE_CONNECTED:String = "stoppedScanningMiaoMiaoBecauseConnected";
+		public static const MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED:String = "didRecieveInitialUpdateValueForCharacteristic";
 
-		
 		public var data:Object;
 		public function SpikeANEEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
 		{

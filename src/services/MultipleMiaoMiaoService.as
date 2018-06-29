@@ -46,7 +46,8 @@ package services
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
 		private static const TIME_4_MINUTES_30_SECONDS:int = (4 * 60 * 1000) + 30000;
 		private static const MODE_GLUCOSE_READING_GET:String = "glucoseReadingGet";
-		private static const MODE_CALIBRATION:String = "calibration";
+		private static const MODE_CALIBRATION_CHECK:String = "calibrationcheck";
+		private static const MODE_INTERMEDIATE_CALIBRATION_CHECK:String = "intermediatecalibrationcheck";
 		private static const MODE_CHECK_LATEST_NS_TIMESTAMP:String = "checkLatestNSTimestamp";
 
 		//timers
@@ -63,6 +64,13 @@ package services
 		private static var timeOfFirstBgReadingToDowload:Number;
 		private static var timeOfFirstCalibrationToDowload:Number;
 		private static var bgReadingAndCalibrationsList:Array;//arraylist of glucosedata and calibrations
+		private static var _intermediateCalibrationsList:Array = new Array();
+		public static function get intermediateCalibrationsList():Array
+		{
+			return _intermediateCalibrationsList;
+		}
+
+//array of calibrations, to be used only for intermediate calibrations download
 		private static var firstTime:Boolean;
 		
 		/* Objects */
@@ -132,7 +140,7 @@ package services
 					resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds(now, latestBGReading));
 					timeOfFirstBgReadingToDowload = latestBGReading.timestamp + 1;//value will be used in checkLatestCalibration
 					//there might be a recent calibration uploaded by another device
-					checkLatestCalibration();
+					checkLatestCalibration(onDownloadCalibrationsComplete, MODE_CALIBRATION_CHECK);
 					return;
 				}
 
@@ -200,15 +208,17 @@ package services
 			if (mode == MODE_GLUCOSE_READING_GET) {
 				myTrace("in onConnectionFailed. Can't make connection to the server while trying to download glucose readings. Error: " +  error.message);
 				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
-			} else if (mode == MODE_CALIBRATION) {
+			} else if (mode == MODE_CALIBRATION_CHECK) {
 				myTrace("in onConnectionFailed. Can't make connection to the server while trying to download calibration. Error: " +  error.message);
 				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
 				//there might be glucose readings waiting to be processed
 				processReadingsAndCalibrations();
+			} else if (mode == MODE_INTERMEDIATE_CALIBRATION_CHECK) {
+				myTrace("in onConnectionFailed. Can't make connection to the server while trying to download calibration. Error: " +  error.message);
+				waitingForNSData = false;
 			} else if (mode == MODE_CHECK_LATEST_NS_TIMESTAMP) {
 				myTrace("in onConnectionFailed. Can't make connection to the server while trying to find latest NS reading " +  error.message);
 			}
-			
 		}
 		
 		private static function onCheckTimeStampLatestReadingAtNSComplete(e:Event):void {
@@ -300,7 +310,7 @@ package services
 								myTrace("in onDownloadGlucoseReadingsComplete, Reading ID: " + NSDownloadReading._id);
 						}
 					}
-					if (!checkLatestCalibration())
+					if (!checkLatestCalibration(onDownloadCalibrationsComplete, MODE_CALIBRATION_CHECK))
 						processReadingsAndCalibrations();
 				} 
 				else 
@@ -315,7 +325,6 @@ package services
 		private static function processReadingsAndCalibrations():void {
 			//process readings and calibrations that have been downloaded from NS
 			var newBGReading:Boolean = false;
-			var newCalibration:Boolean = false;
 			
 			//temporary remove the eventlistener, because BGREADING_EVENTs are going to be dispatched 
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
@@ -343,9 +352,8 @@ package services
 				} else {
 					var calibration:CalibrationData = bgReadingAndCalibrationsList[cntr] as CalibrationData;
 					if (calibration.glucoseLevelRaw > 0) {
-						newCalibration = true;
-						myTrace("in processReadingsAndCalibrations, created calibration");
 						Calibration.create(calibration.glucoseLevelRaw,  calibration.realDate).saveToDatabaseSynchronous();
+						myTrace("in processReadingsAndCalibrations, created calibration");
 						
 						//to avoid that NightScoutService would re-upload the readings to NightScout, set COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP
 						if (calibration.realDate > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP))) {
@@ -375,6 +383,9 @@ package services
 			var calibrationData:CalibrationData;
 			var now:Number = (new Date()).valueOf();
 			
+			//re-initalizing because it might be that the list has calibrations which are downloaded again
+			_intermediateCalibrationsList = new Array();
+			
 			var response:String = getResponseAndDisposeLoader(e, onDownloadCalibrationsComplete, onConnectionFailed);
 			
 			//Validate call
@@ -398,15 +409,12 @@ package services
 				var NSResponseJSON:Object = SpikeJSON.parse(response);
 				if (NSResponseJSON is Array) {
 					var NSCalibrations:Array = NSResponseJSON as Array;
-					var newData:Boolean = false;
 					myTrace("in onDownloadCalibrationsComplete, received " + NSCalibrations.length + " calibrations.");
 					for(var arrayCounter:int = NSCalibrations.length - 1 ; arrayCounter >= 0; arrayCounter--) {
 						var NSDownloadCalibration:Object = NSCalibrations[arrayCounter];
 						if (NSDownloadCalibration.created_at) {
 							if (NSDownloadCalibration.glucose) {
 								var NSDownloadReadingTime:Number = DateTimeUtilities.parseDateTimeString(NSDownloadCalibration.created_at).valueOf();
-								myTrace(" NSDownloadReadingTime = " + NSDownloadReadingTime);
-								myTrace(" timeOfFirstCalibrationToDowload = " + timeOfFirstCalibrationToDowload);
 								if (NSDownloadReadingTime >= timeOfFirstCalibrationToDowload) {
 									calibrationData = new CalibrationData();
 									calibrationData.glucoseLevelRaw = NSDownloadCalibration.glucose as int;
@@ -440,8 +448,8 @@ package services
 		}
 		
 		//if return value false, it means checkLatestCalibration failed
-		private static function checkLatestCalibration():Boolean {
-				myTrace("in checkLatestCalibration");
+		private static function checkLatestCalibration(completeHandler:Function, mode:String):Boolean {
+				myTrace("in checkLatestCalibration with mode = " + mode);
 				
 				if (nightscoutTreatmentsURL == "") {
 					myTrace("in checkLatestCalibration, nightscoutTreatmentsURL is not set. Aborting!");
@@ -471,7 +479,7 @@ package services
 				waitingForNSData = true;
 				lastNSDownloadAttempt = (new Date()).valueOf();
 				
-				NetworkConnector.createNSConnector(nightscoutTreatmentsURL + parameters.toString(), nightscoutDownloadAPISecret != "" ? nightscoutDownloadAPISecret : null, URLRequestMethod.GET, null, MODE_CALIBRATION, onDownloadCalibrationsComplete, onConnectionFailed);
+				NetworkConnector.createNSConnector(nightscoutTreatmentsURL + parameters.toString(), nightscoutDownloadAPISecret != "" ? nightscoutDownloadAPISecret : null, URLRequestMethod.GET, null, mode, completeHandler, onConnectionFailed);
 				return true;
 		}
 		
@@ -532,6 +540,7 @@ package services
 				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
 				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, central_peripheralConnectHandler);
 				NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, checkTimeStampLatestReadingAtNS);
+				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED, onInitialCharacteristicUpdate);
 				setupNightScoutDownloadProperties();
 			} else {
 				myTrace("in setupService and not ismiaomiaomultiple");
@@ -543,6 +552,7 @@ package services
 				}
 				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
 				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, central_peripheralConnectHandler);
+				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED, onInitialCharacteristicUpdate);
 				NetworkInfo.networkInfo.removeEventListener(NetworkInfoEvent.CHANGE, checkTimeStampLatestReadingAtNS);
 			}
 		}
@@ -554,7 +564,79 @@ package services
 			//This to avoid that multiple devices would start uploading to NightScout duplicates
 			checkTimeStampLatestReadingAtNS();
 		}
+		
+		private static function onInitialCharacteristicUpdate(event:flash.events.Event):void {
+			var latestBGReading:BgReading = BgReading.lastNoSensor();
+			if (latestBGReading != null && !isNaN(latestBGReading.timestamp)) {
+				timeOfFirstBgReadingToDowload = latestBGReading.timestamp + 1;
+			} else {
+				timeOfFirstBgReadingToDowload = 0;
+			}
 
+			checkLatestCalibration(onIntermediateCalibrationCheckComplete, MODE_INTERMEDIATE_CALIBRATION_CHECK);
+		}
+		
+		private static function onIntermediateCalibrationCheckComplete(e:Event):void {
+			var calibrationData:CalibrationData;
+			var now:Number = (new Date()).valueOf();
+			
+			var response:String = getResponseAndDisposeLoader(e, onIntermediateCalibrationCheckComplete, onConnectionFailed);
+			
+			//Validate call
+			if (!waitingForNSData) {
+				myTrace("in onIntermediateCalibrationCheckComplete, Not waiting for data. Ignoring!");
+				waitingForNSData = false;
+				return;
+			}
+			
+			waitingForNSData = false;
+			
+			//Validate response
+			if (response.length == 0) {
+				myTrace("in onIntermediateCalibrationCheckComplete, Server's gave an empty response.");
+				return;
+			}
+
+			_intermediateCalibrationsList = new Array();
+			
+			try {
+				var NSResponseJSON:Object = SpikeJSON.parse(response);
+				if (NSResponseJSON is Array) {
+					var NSCalibrations:Array = NSResponseJSON as Array;
+					myTrace("in onIntermediateCalibrationCheckComplete, received " + NSCalibrations.length + " calibrations.");
+					for(var arrayCounter:int = NSCalibrations.length - 1 ; arrayCounter >= 0; arrayCounter--) {
+						var NSDownloadCalibration:Object = NSCalibrations[arrayCounter];
+						if (NSDownloadCalibration.created_at) {
+							if (NSDownloadCalibration.glucose) {
+								var NSDownloadReadingTime:Number = DateTimeUtilities.parseDateTimeString(NSDownloadCalibration.created_at).valueOf();
+								if (NSDownloadReadingTime >= timeOfFirstCalibrationToDowload) {
+									calibrationData = new CalibrationData();
+									calibrationData.glucoseLevelRaw = NSDownloadCalibration.glucose as int;
+									calibrationData.realDate = NSDownloadReadingTime;
+									_intermediateCalibrationsList.push(calibrationData);
+									myTrace("in onIntermediateCalibrationCheckComplete, adding CalibrationData with realdate =  " + (new Date(calibrationData.realDate)).toString() + " and value = " + calibrationData.glucoseLevelRaw);
+								} else {
+									myTrace("in onIntermediateCalibrationCheckComplete, data ignored with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " because timestamp < " + (new Date(timeOfFirstCalibrationToDowload)).toString());
+								}
+							} else {
+								myTrace("in onIntermediateCalibrationCheckComplete, Nightscout has returned a reading without glucose. Ignoring!");
+							}
+						} else {
+							myTrace("in onIntermediateCalibrationCheckComplete, Nightscout has returned a calibration without created_at. Ignoring!");
+							if (NSDownloadCalibration._id)
+								myTrace("in onIntermediateCalibrationCheckComplete, Reading ID: " + NSDownloadCalibration._id);
+						}
+					}
+				} 
+				else 
+					myTrace("in onIntermediateCalibrationCheckComplete, Nightscout response was not a JSON array. Ignoring! Response: " + response);
+			} 
+			catch (error:Error) 
+			{
+				myTrace("in onIntermediateCalibrationCheckComplete, Error parsing Nightscout responde! Error: " + error.message + " Response: " + response);
+			}
+		}
+		
 		private static function setupNightScoutDownloadProperties():void
 		{
 			nightscoutDownloadURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);

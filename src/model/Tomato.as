@@ -13,6 +13,7 @@ package model
 	import database.CommonSettings;
 	import database.Sensor;
 	
+	import services.MultipleMiaoMiaoService;
 	import services.NotificationService;
 	import services.TransmitterService;
 	
@@ -108,6 +109,9 @@ package model
 			} 
 			
 			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
+			mResult = mResult.concat(MultipleMiaoMiaoService.intermediateCalibrationsList);
+			mResult.sortOn(["realDate"], Array.NUMERIC);
+
 			//LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
 			if (LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)) {
 				TransmitterService.dispatchLastBgReadingReceivedEvent();

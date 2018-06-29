@@ -313,8 +313,9 @@
     if (_startDate) {
         NSTimeInterval timer = [[NSDate date]timeIntervalSinceDate:_startDate];
         if (timer > 10) {
-            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateValueForCharacteristic, more than 10 seconds since last packet, resetting buffer"]);
+            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateValueForCharacteristic, more than 10 seconds since last packet, resetting buffer and disatching StatusEvent_didRecieveInitialUpdateValueForCharacteristic"]);
             [self reset];
+            FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_didRecieveInitialUpdateValueForCharacteristic", (const uint8_t*) "");
         }
     }
     
