@@ -474,10 +474,10 @@ package services
 				
 				var parameters:URLVariables = new URLVariables();
 				//don't try to download calibrations that are older than latest stored bgreading
-				logstring = "Parameter list = " + "find[created_at][$gte]=" + formatter.format(Math.max(timeOfFirstBgReadingToDowload, timeOfFirstCalibrationToDowload)).replace("000+0000", "000Z") + "&find[eventType]=BG Check";
+				//logstring = "Parameter list = " + "find[created_at][$gte]=" + formatter.format(Math.max(timeOfFirstBgReadingToDowload, timeOfFirstCalibrationToDowload)).replace("000+0000", "000Z") + "&find[eventType]=BG Check";
 				parameters["find[created_at][$gte]"] = formatter.format(Math.max(timeOfFirstBgReadingToDowload, timeOfFirstCalibrationToDowload)).replace("000+0000", "000Z");
 				parameters["find[eventType]"] = "BG Check";
-				myTrace("in checkLatestCalibration, calling ns, with parameters = " + parameters.toString());
+				//myTrace("in checkLatestCalibration, calling ns, with parameters = " + parameters.toString());
 				
 				waitingForNSData = true;
 				lastNSDownloadAttempt = (new Date()).valueOf();
