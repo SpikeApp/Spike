@@ -761,7 +761,7 @@ package services
 		}
 		
 		public static function dispatchCalibrationEvent():void {
-			var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
+			var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
 			_instance.dispatchEvent(calibrationServiceEvent);
 		}
 
