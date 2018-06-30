@@ -69,8 +69,11 @@ package services
 		{
 			return _intermediateCalibrationsList;
 		}
+		
+		public static function resetIntermediateCalibrationsList():void {
+			_intermediateCalibrationsList = new Array();
+		}
 
-//array of calibrations, to be used only for intermediate calibrations download
 		private static var firstTime:Boolean;
 		
 		/* Objects */
@@ -123,7 +126,7 @@ package services
 		private static function checkLatestReading(event:Event = null):void {
 			var now:Number = (new Date()).valueOf();
 			//resetting checkreadingtimer, just in case it does'nt get reset anymore, although it should while processing received readings and/or calibrations
-			resetCheckReadingTimer(now + 5 * 60 * 1000);
+			resetCheckReadingTimer(5 * 60);
 			if (isMiaoMiaoMultiple() && Sensor.getActiveSensor() != null) {
 				myTrace("in checkLatestReading");
 
@@ -258,7 +261,7 @@ package services
 
 			var glucoseData:GlucoseData;
 			var now:Number = (new Date()).valueOf();
-			var lastBgReading = BgReading.lastNoSensor();
+			var lastBgReading:BgReading = BgReading.lastNoSensor();
 
 			var response:String = getResponseAndDisposeLoader(e, onDownloadGlucoseReadingsComplete, onConnectionFailed);
 			

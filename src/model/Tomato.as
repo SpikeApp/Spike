@@ -110,6 +110,7 @@ package model
 			
 			var mResult:Array = LibreAlarmReceiver.parseData("tomato", data);
 			mResult = mResult.concat(MultipleMiaoMiaoService.intermediateCalibrationsList);
+			MultipleMiaoMiaoService.resetIntermediateCalibrationsList();
 			mResult.sortOn(["realDate"], Array.NUMERIC);
 
 			//LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)
