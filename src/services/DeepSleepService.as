@@ -32,7 +32,7 @@ package services
 		private static const AUTOMATIC_NON_DEXCOM:int = 5 * 1000;
 		private static const AUTOMATIC_FOLLOWER:int = 30 * 1000;
 		private static const TIME_1_MINUTE:int = 1 * 60 * 1000;
-		private static const MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE:int = TIME_1_MINUTE;
+		private static const MIAOMIAO_CONNECTED_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE:int = 0.5 * TIME_1_MINUTE;
 		private static const MIAOMIAO_DISCONNECTED_MODE:int = NO_SUSPENSION_PREVENTION_MODE;
 		private static const MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE:int = 10 * 1000;
 		private static const NO_SUSPENSION_PREVENTION_MODE:int = 1000000;
@@ -277,9 +277,9 @@ package services
 		private static function onMiaoMiaoInitialUpdateCharacteristicReceived(event:Event):void 
 		{
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true") {
-				if (deepSleepInterval != MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE) {
-					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE = " + MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE/1000 + " seconds");
-					deepSleepInterval = MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE;
+				if (deepSleepInterval != MIAOMIAO_CONNECTED_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE) {
+					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE = " + MIAOMIAO_CONNECTED_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE/1000 + " seconds");
+					deepSleepInterval = MIAOMIAO_CONNECTED_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE;
 					startDeepSleepInterval();
 				}
 			}

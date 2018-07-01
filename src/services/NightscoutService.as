@@ -283,6 +283,12 @@ package services
 			if(latestGlucoseReading == null || (latestGlucoseReading.calculatedValue == 0 && latestGlucoseReading.calibration == null))
 				return;
 			
+			//Trace.myTrace("NightscoutService.as", "in onBgreadingReceived, COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP = " + (new Date(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP)))).toLocaleString());
+			//Trace.myTrace("NightscoutService.as", "in onBgreadingReceived, latestGlucoseReading.timestamp = " + (new Date(latestGlucoseReading.timestamp)).toLocaleString());
+			if (!(latestGlucoseReading.timestamp > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP)))) {
+				//Trace.myTrace("NightscoutService.as", "in onBgreadingReceived, ignoring the reading");
+				return;
+			}
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
 			
