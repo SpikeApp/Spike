@@ -3108,6 +3108,12 @@ package ui.chart
 			if (Calibration.allForSensor().length <= 1) //Don't run on first calibration
 				return;
 			
+			if (!SystemUtil.isApplicationActive)
+			{
+				SystemUtil.executeWhenApplicationIsActive(onCaibrationReceived, e);
+				return;
+			}
+			
 			//Adjust last glucose marker and display texts
 			if (mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
