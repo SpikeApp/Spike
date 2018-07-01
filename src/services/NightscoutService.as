@@ -1540,6 +1540,10 @@ package services
 			
 			var lastCalibration:Calibration = Calibration.last();
 			
+			if (!(lastCalibration.timestamp > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP)))) {
+				return;
+			}
+			
 			activeCalibrations.push(createCalibrationObject(lastCalibration));
 			var visualCalibration:Object = createVisualCalibrationObject(lastCalibration);
 			activeVisualCalibrations.push(visualCalibration);
