@@ -33,7 +33,9 @@ package services
 		private static const AUTOMATIC_FOLLOWER:int = 30 * 1000;
 		private static const TIME_1_MINUTE:int = 1 * 60 * 1000;
 		private static const MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE:int = TIME_1_MINUTE;
-		private static const MIAOMIAO_DISCONNECTED_MODE:int = 5 * 1000;
+		private static const MIAOMIAO_DISCONNECTED_MODE:int = NO_SUSPENSION_PREVENTION_MODE;
+		private static const MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE:int = 10 * 1000;
+		private static const NO_SUSPENSION_PREVENTION_MODE:int = 1000000;
 		
 		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
@@ -81,13 +83,14 @@ package services
 				//if that's the case, Spike may get suspended before that timer expires, hence it would never expire.
 				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED, onMiaoMiaoInitialUpdateCharacteristicReceived);
 				//Why listening to disconnected ?
-				//the app may get suspended and never be able to reconnect, although in theory this should not be a problem
-				//but it's mainly for the multiplemiaomiaoservice that this is important. If disconnected, and if multiplemiaomiao enabled, then Spike will try to fetch data from NS
-				//onMiaoMiaoDisConnected will decrease the suspension prevention timer to a very low value to avoid suspension
+				//When disconnected then suspension prevention can be disabled IS THIS RIGHT ??? TO BE TESTED
 				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, onMiaoMiaoDisConnected);
+				//When connected but no initial characteristic update received, then suspension prevention must be set to a minimum value
+				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, onMiaoMiaoConnected);
 			} else {
 				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED, onMiaoMiaoInitialUpdateCharacteristicReceived);
 				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, onMiaoMiaoDisConnected);
+				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, onMiaoMiaoConnected);
 			}
 		}
 		
@@ -121,9 +124,9 @@ package services
 				}
 				else if (CGMBlueToothDevice.isMiaoMiao())
 				{
-					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_DISCONNECTED");
-					//start with disconnected, even though miaomiao may already be connected, will surely change later on as miaomiao dis/reconnects
-					deepSleepInterval = MIAOMIAO_DISCONNECTED_MODE;
+					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE");
+					//start with highest level of suspension prevention
+					deepSleepInterval = MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE;
 				}
 				else
 				{
@@ -160,13 +163,16 @@ package services
 		
 		private static function startDeepSleepInterval():void 
 		{
-			Trace.myTrace("DeepSleepService.as", "Starting deep sleep interval!");
-			
 			//Clear any previous intervals
 			clearInterval( intervalID );
 			
-			//Start new interval
-			intervalID = setInterval( playSound, deepSleepInterval);
+			if (deepSleepInterval != NO_SUSPENSION_PREVENTION_MODE) {
+				//Start new interval
+				Trace.myTrace("DeepSleepService.as", "Starting deep sleep interval!");
+				intervalID = setInterval( playSound, deepSleepInterval);
+			} else {
+				Trace.myTrace("DeepSleepService.as", "deepSleepInterval set to maximum value, not starting deep sleep timer");
+			}
 		}
 		
 		private static function playSound():void 
@@ -271,20 +277,35 @@ package services
 		private static function onMiaoMiaoInitialUpdateCharacteristicReceived(event:Event):void 
 		{
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true") {
-				Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_CONNECTED");
-				deepSleepInterval = MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE;
-				startDeepSleepInterval();
+				if (deepSleepInterval != MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE) {
+					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE = " + MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE/1000 + " seconds");
+					deepSleepInterval = MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE;
+					startDeepSleepInterval();
+				}
 			}
 		}
 		
 		private static function onMiaoMiaoDisConnected(event:Event):void 
 		{
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true") {
-				Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_DISCONNECTED");
-				deepSleepInterval = MIAOMIAO_DISCONNECTED_MODE;
-				startDeepSleepInterval();
+				if (deepSleepInterval != MIAOMIAO_DISCONNECTED_MODE) {
+					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_DISCONNECTED_MODE = " + MIAOMIAO_DISCONNECTED_MODE/1000 + " seconds");
+					deepSleepInterval = MIAOMIAO_DISCONNECTED_MODE;
+					startDeepSleepInterval();
+				}
 			}
 		}
+		
+		private static function onMiaoMiaoConnected(event:Event):void 
+		{
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true") {
+				if (deepSleepInterval != MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE) {
+					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE = " + MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE/1000 + " seconds");
+					deepSleepInterval = MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE;
+					startDeepSleepInterval();
+				}
+			}
+		}		
 		
 		/**
 		 * Getters & Setters
