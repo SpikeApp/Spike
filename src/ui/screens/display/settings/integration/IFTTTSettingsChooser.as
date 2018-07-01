@@ -1,28 +1,24 @@
 package ui.screens.display.settings.integration
 {
-	import feathers.controls.List;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("integrationsettingsscreen")]
 	
-	public class IFTTTSettingsChooser extends List 
+	public class IFTTTSettingsChooser extends SpikeList 
 	{
 		/* Display Objects */
 		private var IFTTTIconImage:Image;
@@ -35,8 +31,6 @@ package ui.screens.display.settings.integration
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -65,15 +59,6 @@ package ui.screens.display.settings.integration
 					{ screen: Screens.SETTINGS_IFTTT, label: ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','settings_label'), accessory: IFTTTIconImage },
 				]);
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
-			
 			addEventListener( Event.CHANGE, onMenuChanged );
 		}
 		
@@ -86,18 +71,11 @@ package ui.screens.display.settings.integration
 			AppInterface.instance.navigator.pushScreen( screenName );
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (chevronIconTexture != null)
 			{
 				chevronIconTexture.dispose();

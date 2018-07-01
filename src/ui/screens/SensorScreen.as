@@ -2,8 +2,7 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import ui.screens.display.sensor.SensorStartStopList;
-	
+	import feathers.controls.ScrollPolicy;
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -17,6 +16,7 @@ package ui.screens
 	import starling.events.Event;
 	
 	import ui.AppInterface;
+	import ui.screens.display.sensor.SensorStartStopList;
 	
 	import utils.Constants;
 	
@@ -41,6 +41,8 @@ package ui.screens
 			setupScreen();
 			adjustMainMenu();
 			setupEventHandlers();
+			
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 		}
 		
 		/**

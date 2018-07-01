@@ -1,5 +1,6 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import database.BlueToothDevice;
@@ -13,6 +14,7 @@ package ui.screens
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -23,6 +25,7 @@ package ui.screens
 	import ui.screens.display.settings.share.NotificationSettingsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("sharesettingsscreen")]
 
@@ -153,6 +156,28 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
+		override protected function onStarlingBaseResize(e:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (notificationsLabel != null) notificationsLabel.paddingLeft = 30;
+				if (appBadgeLabel != null) appBadgeLabel.paddingLeft = 30;
+				if (healthkitLabel != null) healthkitLabel.paddingLeft = 30;
+				if (dexcomLabel != null) dexcomLabel.paddingLeft = 30;
+				if (nightscoutLabel != null) nightscoutLabel.paddingLeft = 30;
+			}
+			else
+			{
+				if (notificationsLabel != null) notificationsLabel.paddingLeft = 0;
+				if (appBadgeLabel != null) appBadgeLabel.paddingLeft = 0;
+				if (healthkitLabel != null) healthkitLabel.paddingLeft = 0;
+				if (dexcomLabel != null) dexcomLabel.paddingLeft = 0;
+				if (nightscoutLabel != null) nightscoutLabel.paddingLeft = 0;
+			}
+			
+			setupHeaderSize();
 		}
 		
 		/**

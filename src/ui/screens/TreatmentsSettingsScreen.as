@@ -1,5 +1,6 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
@@ -11,6 +12,7 @@ package ui.screens
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -18,6 +20,7 @@ package ui.screens
 	import ui.screens.display.settings.treatments.TreatmentsSettingsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("treatments")]
 	
@@ -100,6 +103,22 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
+		override protected function onStarlingBaseResize(e:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (treatmentsLabel != null) treatmentsLabel.paddingLeft = 30;
+				if (infoPillLabel != null) infoPillLabel.paddingLeft = 30;
+			}
+			else
+			{
+				if (treatmentsLabel != null) treatmentsLabel.paddingLeft = 0;
+				if (infoPillLabel != null) infoPillLabel.paddingLeft = 0;
+			}
+			
+			setupHeaderSize();
 		}
 		
 		/**

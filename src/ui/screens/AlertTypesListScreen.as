@@ -1,5 +1,6 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
@@ -11,12 +12,14 @@ package ui.screens
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.alarms.AlertsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("alertsettingsscreen")]
 
@@ -91,6 +94,20 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
+		override protected function onStarlingBaseResize(e:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (alertTypesLabel != null) alertTypesLabel.paddingLeft = 30;
+			}
+			else
+			{
+				if (alertTypesLabel != null) alertTypesLabel.paddingLeft = 0;
+			}
+			
+			setupHeaderSize();
 		}
 		
 		/**

@@ -2,26 +2,22 @@ package ui.screens.display.settings.widget
 {
 	import database.CommonSettings;
 	
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("widgetsettingsscreen")]
 	
-	public class HistorySettingsList extends List
+	public class HistorySettingsList extends SpikeList
 	{
 		/* Display Objects */
 		private var historyStepper:NumericStepper;
@@ -32,9 +28,7 @@ package ui.screens.display.settings.widget
 		
 		public function HistorySettingsList()
 		{
-			super();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			super(true);
 			
 			setupProperties();
 			stupInitialContent();
@@ -67,16 +61,6 @@ package ui.screens.display.settings.widget
 			historyStepper.pivotX = -8;
 			historyStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
-			
 			//Set Data
 			dataProvider = new ArrayCollection
 			(
@@ -108,18 +92,11 @@ package ui.screens.display.settings.widget
 			save();
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (historyStepper != null)
 			{
 				historyStepper.removeEventListener(Event.CHANGE, onSettingsChanged);

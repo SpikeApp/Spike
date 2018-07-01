@@ -1,9 +1,6 @@
 package ui.screens.display.settings.integration
 {
 	import feathers.controls.Button;
-	import feathers.controls.List;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
@@ -11,16 +8,16 @@ package ui.screens.display.settings.integration
 	
 	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.SiDiary;
 	
 	[ResourceBundle("sidiarysettingsscreen")]
 
-	public class SiDiarySettingsList extends List 
+	public class SiDiarySettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var exportBtn:Button;
@@ -33,8 +30,6 @@ package ui.screens.display.settings.integration
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -60,16 +55,6 @@ package ui.screens.display.settings.integration
 			exportBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen','export_button_label'));
 			exportBtn.addEventListener(Event.TRIGGERED, onGenerateCSV);
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				
-				return itemRenderer;
-			};
-			
 			dataProvider = new ArrayCollection
 			(
 				[ { label: ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen','export_section_label'), accessory: exportBtn } ]
@@ -93,18 +78,11 @@ package ui.screens.display.settings.integration
 				exportBtn.label = ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen','export_button_label');
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */		
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (exportBtn != null)
 			{
 				exportBtn.removeEventListener(Event.TRIGGERED, onGenerateCSV);

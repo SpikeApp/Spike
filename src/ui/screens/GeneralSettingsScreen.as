@@ -1,5 +1,6 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
@@ -15,6 +16,7 @@ package ui.screens
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -24,6 +26,7 @@ package ui.screens
 	import ui.screens.display.settings.general.UpdateSettingsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 
 	[ResourceBundle("generalsettingsscreen")]
 	
@@ -159,6 +162,26 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
+		override protected function onStarlingBaseResize(e:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (dataCollectionLabel != null) dataCollectionLabel.paddingLeft = 30;
+				if (chartDateFormatLabel != null) chartDateFormatLabel.paddingLeft = 30;
+				if (glucoseLabel != null) glucoseLabel.paddingLeft = 30;
+				if (updateLabel != null) updateLabel.paddingLeft = 30;
+			}
+			else
+			{
+				if (dataCollectionLabel != null) dataCollectionLabel.paddingLeft = 0;
+				if (chartDateFormatLabel != null) chartDateFormatLabel.paddingLeft = 0;
+				if (glucoseLabel != null) glucoseLabel.paddingLeft = 0;
+				if (updateLabel != null) updateLabel.paddingLeft = 0;
+			}
+			
+			setupHeaderSize();
 		}
 		
 		/**

@@ -12,6 +12,7 @@ package ui.screens
 	import feathers.controls.Button;
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.ScrollPolicy;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
@@ -70,6 +71,8 @@ package ui.screens
 			setupContent();
 			adjustMainMenu();
 			setupEventListeners();
+			
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 		}
 		
 		/**

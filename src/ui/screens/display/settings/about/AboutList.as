@@ -1,6 +1,7 @@
 package ui.screens.display.settings.about
 {
 	
+	import flash.display.StageOrientation;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
@@ -9,7 +10,9 @@ package ui.screens.display.settings.about
 	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;
+	import feathers.controls.renderers.DefaultGroupedListHeaderOrFooterRenderer;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
+	import feathers.controls.renderers.IGroupedListHeaderRenderer;
 	import feathers.controls.renderers.IGroupedListItemRenderer;
 	import feathers.data.HierarchicalCollection;
 	import feathers.layout.HorizontalAlign;
@@ -126,12 +129,16 @@ package ui.screens.display.settings.about
 			);	
 			
 			/* Set Content Renderer */
-			this.itemRendererFactory = function ():IGroupedListItemRenderer {
+			itemRendererFactory = function ():IGroupedListItemRenderer {
 				const itemRenderer:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.iconField = "icon";
 				itemRenderer.accessoryField = "accessory";
 				itemRenderer.gap = 8;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					itemRenderer.paddingLeft = 30;
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					itemRenderer.paddingRight = 30;
 				itemRenderer.labelFunction = function( item:Object ):String
 				{
 					if (item.label == ModelLocator.resourceManagerInstance.getString('aboutsettingsscreen','device_label'))
@@ -144,6 +151,26 @@ package ui.screens.display.settings.about
 				};
 				
 				return itemRenderer;
+			};
+			
+			headerRendererFactory = function():IGroupedListHeaderRenderer
+			{
+				var headerRenderer:DefaultGroupedListHeaderOrFooterRenderer = new DefaultGroupedListHeaderOrFooterRenderer();
+				headerRenderer.contentLabelField = "label";
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						headerRenderer.paddingLeft = 30;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						headerRenderer.paddingRight = 30;
+					}
+				}
+				
+				return headerRenderer;
 			};
 		}
 		

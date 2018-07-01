@@ -13,8 +13,6 @@ package ui.screens.display.settings.share
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
@@ -35,6 +33,7 @@ package ui.screens.display.settings.share
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	import ui.screens.display.dexcomshare.DexcomShareFollowersList;
 	
 	import utils.Constants;
@@ -43,7 +42,7 @@ package ui.screens.display.settings.share
 	[ResourceBundle("sharesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class DexcomSettingsList extends List 
+	public class DexcomSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var dsUsername:TextInput;
@@ -76,8 +75,6 @@ package ui.screens.display.settings.share
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupIntitialState();
@@ -201,15 +198,6 @@ package ui.screens.display.settings.share
 			nonDexcomInstructions.width = width - 10;
 			nonDexcomInstructions.paddingTop = nonDexcomInstructions.paddingBottom = 10;
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
-			
 			//Define Dexcom Share Settings Data
 			reloadDexcomShareSettings(isDexcomEnabled);
 		}
@@ -283,7 +271,19 @@ package ui.screens.display.settings.share
 			//Position helper for the callout
 			positionHelper = new Sprite();
 			positionHelper.x = Constants.stageWidth / 2;
-			positionHelper.y = 70;
+			
+			var yPos:Number = 0;
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			
+			positionHelper.y = yPos;
 			Starling.current.stage.addChild(positionHelper);
 		}
 		
@@ -383,12 +383,17 @@ package ui.screens.display.settings.share
 			}
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			if (nonDexcomInstructions != null)
-				nonDexcomInstructions.width = width - 10;
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+					nonDexcomInstructions.width = width - 40;
+				else
+					nonDexcomInstructions.width = width - 10;
+			}
 			
 			if (dsUsername != null)
 			{
@@ -416,6 +421,8 @@ package ui.screens.display.settings.share
 			
 			if (positionHelper != null)
 				positionHelper.x = Constants.stageWidth / 2;
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -431,8 +438,6 @@ package ui.screens.display.settings.share
 		
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(dsUsername != null)
 			{
 				dsUsername.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );

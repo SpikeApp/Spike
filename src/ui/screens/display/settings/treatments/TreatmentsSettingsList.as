@@ -1,5 +1,6 @@
 package ui.screens.display.settings.treatments
 {
+	import flash.display.StageOrientation;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
@@ -8,7 +9,6 @@ package ui.screens.display.settings.treatments
 	
 	import feathers.controls.Button;
 	import feathers.controls.Check;
-	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.ScrollPolicy;
 	import feathers.controls.ToggleSwitch;
@@ -23,10 +23,8 @@ package ui.screens.display.settings.treatments
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
@@ -34,6 +32,7 @@ package ui.screens.display.settings.treatments
 	import ui.popups.WorkflowConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -41,7 +40,7 @@ package ui.screens.display.settings.treatments
 	[ResourceBundle("treatments")]
 	[ResourceBundle("globaltranslations")]
 	
-	public class TreatmentsSettingsList extends List 
+	public class TreatmentsSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var chevronIconTexture:Texture;
@@ -88,8 +87,6 @@ package ui.screens.display.settings.treatments
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -215,17 +212,6 @@ package ui.screens.display.settings.treatments
 			emailConfigurationFiles.pivotX = -3;
 			emailConfigurationFiles.addEventListener(Event.TRIGGERED, onSendConfigurationFiles);
 			
-			/* Renderer */
-			itemRendererFactory = function():IListItemRenderer 
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.accessoryField = "accessory";
-				item.itemHasSelectable = true;
-				item.selectableField = "selectable";
-				return item;
-			};
-			
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
 			addEventListener( Event.CHANGE, onMenuChanged );
 			
@@ -305,6 +291,27 @@ package ui.screens.display.settings.treatments
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED, String(pumpUserEnabledValue));
 			
 			needsSave = false;
+		}
+		
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer 
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.accessoryField = "accessory";
+				item.itemHasSelectable = true;
+				item.selectableField = "selectable";
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						item.paddingLeft = 30;
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						item.paddingRight = 30;
+				}
+				return item;
+			};
 		}
 		
 		/**
@@ -444,17 +451,11 @@ package ui.screens.display.settings.treatments
 			AppInterface.instance.navigator.pushScreen( screenName );
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility 
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			removeEventListener( Event.CHANGE, onMenuChanged );
 			
 			if (chevronIconTexture != null)

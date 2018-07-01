@@ -247,7 +247,19 @@ package utils
 			/* Callout Position Helper Creation */
 			positionHelper = new Sprite();
 			positionHelper.x = Constants.stageWidth / 2;
-			positionHelper.y = 70;
+			
+			var yPos:Number = 0;
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			
+			positionHelper.y = yPos;
 			Starling.current.stage.addChild(positionHelper);
 			
 			/* Callout Creation */

@@ -2,6 +2,7 @@
 FEATURE: Ability to snooze and un-snooze alarms directly from the Today Widget and Apple Watch. Get the Workflow configuration info in settings -> alarms at the bottom of the screen. (Miguel)
 ENHANCEMENT; Full swipe navigation. You can now swipe from the left edge of the screen on all Spike screens to navigate back, no need to click the Back button. (Miguel)
 ENHANCEMENT: Followers can now access the master's Nightscout site directly from inside Spike by going to the "three dots menu" -> Nightscout. (Miguel) 
+ENHANCEMENT: Full layout adjustments for iPhone X. All Spike screens should now display correctly in portrait and landscape. (Miguel)
 FIX: No more duplicate HealthKit entries for treatments. (Miguel)
 FIX: As usual, other small bug fixes and improvements. (Miguel)
 

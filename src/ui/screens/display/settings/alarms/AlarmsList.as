@@ -1,12 +1,13 @@
 package ui.screens.display.settings.alarms
 {
+	import flash.display.StageOrientation;
+	
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
 	import feathers.controls.Button;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
@@ -19,7 +20,6 @@ package ui.screens.display.settings.alarms
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
@@ -30,13 +30,15 @@ package ui.screens.display.settings.alarms
 	import ui.screens.Screens;
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("alarmsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class AlarmsList extends List 
+	public class AlarmsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var muteOverride:ToggleSwitch;
@@ -66,8 +68,6 @@ package ui.screens.display.settings.alarms
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -155,6 +155,27 @@ package ui.screens.display.settings.alarms
 			addEventListener( Event.CHANGE, onMenuChanged );
 		}
 		
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer 
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.accessoryField = "accessory";
+				item.itemHasSelectable = true;
+				item.selectableField = "selectable";
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						item.paddingLeft = 30;
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						item.paddingRight = 30;
+				}
+				return item;
+			};
+		}
+		
 		/**
 		 * Event Listeners
 		 */
@@ -199,9 +220,13 @@ package ui.screens.display.settings.alarms
 			WorkflowConfigSender.displayWorkflowConfigSender(WorkflowConfigSender.WORKFLOW_ALARMS);
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (actionsContainer != null) actionsContainer.width = width - 20;
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -209,8 +234,6 @@ package ui.screens.display.settings.alarms
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(muteOverride != null)
 			{
 				muteOverride.removeEventListener(Event.CHANGE, onOverrideMute);

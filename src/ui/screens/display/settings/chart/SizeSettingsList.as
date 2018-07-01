@@ -2,28 +2,25 @@ package ui.screens.display.settings.chart
 {
 	import database.CommonSettings;
 	
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.Slider;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("chartsettingsscreen")]
 
-	public class SizeSettingsList extends List 
+	public class SizeSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var glucoseMarkerRadius:NumericStepper;
@@ -40,13 +37,12 @@ package ui.screens.display.settings.chart
 		
 		public function SizeSettingsList()
 		{
-			super();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			super(true);
 			
 			setupProperties();
 			setupContent();
 			setupInitialState();
+			setupRenderFactory();
 		}
 		
 		/**
@@ -99,24 +95,14 @@ package ui.screens.display.settings.chart
 				axisFontSize.width += 100;
 			axisFontSize.pivotX = 10;
 			
-			//Set Size Settings Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
-			
 			//Set Colors Data
 			dataProvider = new ArrayCollection(
-				[
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_marker_radius'), accessory: glucoseMarkerRadius },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_font_size'), accessory: glucoseDisplayFontSize },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','time_ago_font_size'), accessory: timeAgoDisplayFontSize },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_size'), accessory: axisFontSize }
-				]);
+			[
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_marker_radius'), accessory: glucoseMarkerRadius },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_font_size'), accessory: glucoseDisplayFontSize },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','time_ago_font_size'), accessory: timeAgoDisplayFontSize },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_size'), accessory: axisFontSize }
+			]);
 		}
 		
 		private function setupInitialState():void
@@ -207,7 +193,7 @@ package ui.screens.display.settings.chart
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
@@ -234,6 +220,8 @@ package ui.screens.display.settings.chart
 						axisFontSize.width += 100;
 				}
 			}
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -241,8 +229,6 @@ package ui.screens.display.settings.chart
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (glucoseMarkerRadius != null)
 			{
 				glucoseMarkerRadius.removeEventListener(Event.CHANGE, onSizeChange);

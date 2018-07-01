@@ -2,9 +2,6 @@ package ui.screens.display.settings.main
 {
 	import database.BlueToothDevice;
 	
-	import feathers.controls.List;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -12,20 +9,19 @@ package ui.screens.display.settings.main
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.display.Image;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("mainsettingsscreen")]
 
-	public class SettingsList extends List 
+	public class SettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var chevronIconTexture:Texture;
@@ -49,8 +45,6 @@ package ui.screens.display.settings.main
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -104,15 +98,6 @@ package ui.screens.display.settings.main
 			
 			dataProvider = new ListCollection(data);
 			
-			/* Renderer */
-			itemRendererFactory = function():IListItemRenderer 
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.accessoryField = "accessory";
-				item.isQuickHitAreaEnabled = true;
-				return item;
-			};
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
 			addEventListener( Event.CHANGE, onMenuChanged );
 		}
@@ -126,17 +111,11 @@ package ui.screens.display.settings.main
 			AppInterface.instance.navigator.pushScreen( screenName );
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility 
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			removeEventListener( Event.CHANGE, onMenuChanged );
 			
 			if(chevronIconTexture != null)

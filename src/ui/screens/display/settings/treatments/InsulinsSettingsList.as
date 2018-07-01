@@ -7,7 +7,6 @@ package ui.screens.display.settings.treatments
 	import feathers.controls.Check;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
@@ -23,7 +22,6 @@ package ui.screens.display.settings.treatments
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
@@ -31,6 +29,7 @@ package ui.screens.display.settings.treatments
 	import treatments.ProfileManager;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -38,7 +37,7 @@ package ui.screens.display.settings.treatments
 	[ResourceBundle("profilesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class InsulinsSettingsList extends List 
+	public class InsulinsSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var addInsulinButton:Button;
@@ -64,13 +63,12 @@ package ui.screens.display.settings.treatments
 		
 		public function InsulinsSettingsList()
 		{
-			super();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			super(true);
 			
 			setupProperties();
 			setupInitialContent();	
 			setupContent();
+			
 		}
 		
 		/**
@@ -199,23 +197,23 @@ package ui.screens.display.settings.treatments
 					insulinAccessory.addEventListener(InsulinManagerAccessory.EDIT, onEditInsulin);
 					insulinAccessory.addEventListener(InsulinManagerAccessory.DELETE, onDeleteInsulin);
 					accessoryList.push(insulinAccessory);
-					data.push( { text: insulin.name, accessory: insulinAccessory, insulin: insulin } );
+					data.push( { label: insulin.name, accessory: insulinAccessory, insulin: insulin } );
 				}
 			}
 			
-			data.push( { text: "", accessory: addInsulinButton } );
+			data.push( { label: "", accessory: addInsulinButton } );
 			
 			if (newInsulinMode || editInsulinMode)
 			{
 				modeLabel.text = newInsulinMode ? ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','new_insulin_label') : ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','edit_insulin_label');
-				data.push( { text: "", accessory: modeLabel } );
-				data.push( { text: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','name_label'), accessory: insulinName } );
-				data.push( { text: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','type_label'), accessory: insulinTypesPicker } );
-				data.push( { text: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','dia_label'), accessory: insulinDIA } );
-				data.push( { text: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','default_insulin_label'), accessory: defaultInsulinCheck } );
-				data.push( { text: "", accessory: actionsContainer } );
-				data.push( { text: "", accessory: insulinSettingsExplanation } );
-				data.push( { text: "", accessory: guideContainer } );
+				data.push( { label: "", accessory: modeLabel } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','name_label'), accessory: insulinName } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','type_label'), accessory: insulinTypesPicker } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','dia_label'), accessory: insulinDIA } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','default_insulin_label'), accessory: defaultInsulinCheck } );
+				data.push( { label: "", accessory: actionsContainer } );
+				data.push( { label: "", accessory: insulinSettingsExplanation } );
+				data.push( { label: "", accessory: guideContainer } );
 			}
 			
 			dataProvider = new ArrayCollection(data);
@@ -378,24 +376,7 @@ package ui.screens.display.settings.treatments
 			navigateToURL(new URLRequest("https://www.waltzingthedragon.ca/diabetes/managing-bg/adjusting-insulin-pump-duration-of-insulin-action-dia/"));
 		}
 		
-		/**
-		 * Utility
-		 */
-		override protected function draw():void
-		{
-			try
-			{
-				(layout as VerticalLayout).hasVariableItemDimensions = true;
-			} 
-			catch(error:Error) {}
-			
-			if (saveInsulinButton != null)
-				saveInsulinButton.isEnabled = isSaveEnabled;
-			
-			super.draw();
-		}
-		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
@@ -413,12 +394,29 @@ package ui.screens.display.settings.treatments
 				insulinName.width = Constants.isPortrait ? 140: 240;
 				if (DeviceInfo.isTablet()) insulinName.width += 100;
 			}
+			
+			setupRenderFactory();
+		}
+		
+		/**
+		 * Utility
+		 */
+		override protected function draw():void
+		{
+			try
+			{
+				(layout as VerticalLayout).hasVariableItemDimensions = true;
+			} 
+			catch(error:Error) {}
+			
+			if (saveInsulinButton != null)
+				saveInsulinButton.isEnabled = isSaveEnabled;
+			
+			super.draw();
 		}
 		
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (accessoryList != null)
 			{
 				for (var i:int = 0; i < accessoryList.length; i++) 

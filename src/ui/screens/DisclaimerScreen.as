@@ -1,10 +1,12 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import database.BlueToothDevice;
 	
 	import feathers.controls.Label;
+	import feathers.controls.ScrollPolicy;
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -20,6 +22,7 @@ package ui.screens
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("disclaimerscreen")]
 
@@ -61,6 +64,9 @@ package ui.screens
 			
 			/* Adjust Menu */
 			adjustMainMenu();
+			
+			/* Scroll Policy */
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 		}
 		
 		/**
@@ -102,6 +108,8 @@ package ui.screens
 			
 			developersContentLabel = LayoutFactory.createContentLabel(ModelLocator.resourceManagerInstance.getString('disclaimerscreen','developers_content'), Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2), true, true);
 			screenRenderer.addChild(developersContentLabel);
+			
+			onStarlingResize(null);
 		}
 		
 		private function adjustMainMenu():void
@@ -117,11 +125,39 @@ package ui.screens
 		 */
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			licenseContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
-			disclaimerContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
-			noticeContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
-			acknowledgmentsContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
-			developersContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
+			if (Constants.isPortrait || Constants.deviceModel != DeviceInfo.IPHONE_X)
+			{
+				screenRenderer.x = 0;
+				licenseContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
+				disclaimerContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
+				noticeContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
+				acknowledgmentsContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
+				developersContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
+			}
+			else
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						screenRenderer.x = 30;
+						licenseContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+						disclaimerContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+						noticeContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+						acknowledgmentsContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+						developersContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						screenRenderer.x = 0;
+						licenseContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+						disclaimerContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+						noticeContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+						acknowledgmentsContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+						developersContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2) - 30;
+					}
+				}
+			}
 		}
 		
 		override protected function onTransitionInComplete(e:Event):void

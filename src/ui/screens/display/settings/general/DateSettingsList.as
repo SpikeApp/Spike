@@ -2,27 +2,23 @@ package ui.screens.display.settings.general
 {
 	import database.CommonSettings;
 	
-	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.popups.DropDownPopUpContentManager;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("generalsettingsscreen")]
 
-	public class DateSettingsList extends List 
+	public class DateSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var dateFormatPicker:PickerList;
@@ -34,13 +30,11 @@ package ui.screens.display.settings.general
 		
 		public function DateSettingsList()
 		{
-			super();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			super(true);
 			
 			setupProperties();
 			setupContent();
-			setupInitialState();	
+			setupInitialState();
 		}
 		
 		/**
@@ -77,21 +71,11 @@ package ui.screens.display.settings.general
 			dateFormatPicker.popUpContentManager = new DropDownPopUpContentManager();
 			dateFormatPicker.dataProvider = dateFormatList;
 			
-			/* Set Date Settings Item Renderer */
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
-			
 			/* Set Date Settings Content */
 			dataProvider = new ArrayCollection(
-				[
-					{ text: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','chart_date_format_label'), accessory: dateFormatPicker }
-				]);
+			[
+				{ label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','chart_date_format_label'), accessory: dateFormatPicker }
+			]);
 		}
 		
 		private function setupInitialState():void
@@ -125,18 +109,11 @@ package ui.screens.display.settings.general
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (dateFormatPicker != null)
 			{
 				dateFormatPicker.removeEventListener(Event.CHANGE, onDateFormatChange);

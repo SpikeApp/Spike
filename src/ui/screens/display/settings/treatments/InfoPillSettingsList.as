@@ -1,9 +1,10 @@
 package ui.screens.display.settings.treatments
 {
+	import flash.display.StageOrientation;
+	
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
-	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
@@ -13,18 +14,18 @@ package ui.screens.display.settings.treatments
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("globaltranslations")]
 	
-	public class InfoPillSettingsList extends List 
+	public class InfoPillSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var infoPillEnabled:ToggleSwitch;
@@ -71,8 +72,6 @@ package ui.screens.display.settings.treatments
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -275,6 +274,27 @@ package ui.screens.display.settings.treatments
 			needsSave = false;
 		}
 		
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer 
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.accessoryField = "accessory";
+				item.itemHasSelectable = true;
+				item.selectableField = "selectable";
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						item.paddingLeft = 30;
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						item.paddingRight = 30;
+				}
+				return item;
+			};
+		}
+		
 		/**
 		 * Event Handlers
 		 */
@@ -302,18 +322,11 @@ package ui.screens.display.settings.treatments
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility 
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (infoPillEnabled != null)
 			{
 				infoPillEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);

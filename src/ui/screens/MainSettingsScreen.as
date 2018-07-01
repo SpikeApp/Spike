@@ -5,7 +5,7 @@ package ui.screens
 	
 	import database.BlueToothDevice;
 	
-	import feathers.events.FeathersEventType;
+	import feathers.controls.ScrollPolicy;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -42,6 +42,8 @@ package ui.screens
 			
 			setupScreen();
 			adjustMainMenu();
+			
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 		}
 		
 		/**

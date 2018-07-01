@@ -1,5 +1,6 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import database.BlueToothDevice;
@@ -13,6 +14,7 @@ package ui.screens
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -22,6 +24,7 @@ package ui.screens
 	import ui.screens.display.settings.chart.SizeSettingsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("chartsettingsscreen")]
 
@@ -137,6 +140,26 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
+		override protected function onStarlingBaseResize(e:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (chartGlucoseDistributionLabel != null) chartGlucoseDistributionLabel.paddingLeft = 30;
+				if (chartModeLabel != null) chartModeLabel.paddingLeft = 30;
+				if (chartSizeLabel != null) chartSizeLabel.paddingLeft = 30;
+				if (chartColorLabel != null) chartColorLabel.paddingLeft = 30;
+			}
+			else
+			{
+				if (chartGlucoseDistributionLabel != null) chartGlucoseDistributionLabel.paddingLeft = 0;
+				if (chartModeLabel != null) chartModeLabel.paddingLeft = 0;
+				if (chartSizeLabel != null) chartSizeLabel.paddingLeft = 0;
+				if (chartColorLabel != null) chartColorLabel.paddingLeft = 0;
+			}
+			
+			setupHeaderSize();
 		}
 		
 		/**

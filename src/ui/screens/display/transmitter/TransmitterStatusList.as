@@ -9,6 +9,7 @@ package ui.screens.display.transmitter
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
+	import flash.display.StageOrientation;
 	import flash.events.TimerEvent;
 	import flash.system.Capabilities;
 	import flash.utils.Timer;
@@ -34,8 +35,12 @@ package ui.screens.display.transmitter
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.TextCallout;
+	import feathers.controls.renderers.DefaultGroupedListHeaderOrFooterRenderer;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IGroupedListHeaderRenderer;
 	import feathers.controls.renderers.IGroupedListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.controls.text.TextBlockTextRenderer;
 	import feathers.core.ITextRenderer;
 	import feathers.data.HierarchicalCollection;
@@ -633,11 +638,44 @@ package ui.screens.display.transmitter
 				item.iconField = "icon";
 				item.accessoryField = "accessory";
 				item.gap = 8;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						item.paddingLeft = 30;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						item.paddingRight = 30;
+					}
+				}
+				
 				if(transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
 					item.addEventListener(TouchEvent.TOUCH, onDisplayBatteryStatus);
 				
 				return item;
 			};	
+			
+			this.headerRendererFactory = function():IGroupedListHeaderRenderer
+			{
+				var headerRenderer:DefaultGroupedListHeaderOrFooterRenderer = new DefaultGroupedListHeaderOrFooterRenderer();
+				headerRenderer.contentLabelField = "label";
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						headerRenderer.paddingLeft = 30;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						headerRenderer.paddingRight = 30;
+					}
+				}
+				
+				return headerRenderer;
+			};
 		}
 		
 		private function setupEventListeners():void

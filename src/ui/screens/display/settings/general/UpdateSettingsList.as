@@ -2,27 +2,23 @@ package ui.screens.display.settings.general
 {
 	import database.CommonSettings;
 	
-	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
 
-	public class UpdateSettingsList extends List 
+	public class UpdateSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var updatesToggle:ToggleSwitch;
@@ -38,8 +34,6 @@ package ui.screens.display.settings.general
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupContent();
@@ -72,15 +66,6 @@ package ui.screens.display.settings.general
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: updatesToggle }
 				]);
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
 		}
 		
 		private function setupInitialState():void
@@ -113,18 +98,11 @@ package ui.screens.display.settings.general
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(updatesToggle != null)
 			{
 				updatesToggle.removeEventListener( Event.CHANGE, onUpdatesOnOff );

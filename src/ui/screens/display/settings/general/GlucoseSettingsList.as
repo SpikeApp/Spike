@@ -1,11 +1,12 @@
 package ui.screens.display.settings.general
 {
+	import flash.display.StageOrientation;
+	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.popups.DropDownPopUpContentManager;
@@ -16,18 +17,17 @@ package ui.screens.display.settings.general
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("generalsettingsscreen")]
 
-	public class GlucoseSettingsList extends List 
+	public class GlucoseSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var glucoseUnitsPicker:PickerList;
@@ -55,8 +55,6 @@ package ui.screens.display.settings.general
 		{
 			super.initialize();
 			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			setupProperties();
 			
 			/* Glucose Unit */
@@ -69,6 +67,7 @@ package ui.screens.display.settings.general
 			
 			setupContent();
 			setupInitialState();
+			setupRenderFactory();
 		}
 		
 		/**
@@ -146,6 +145,36 @@ package ui.screens.display.settings.general
 				itemRenderer.paddingRight = 0;
 				if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 					itemRenderer.paddingRight = -40;
+				return itemRenderer;
+			};
+		}
+		
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						itemRenderer.paddingLeft = 30;
+						itemRenderer.paddingRight = -40;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						itemRenderer.paddingRight = -10;
+					}
+				}
+				else
+				{
+					if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+						itemRenderer.paddingRight = -40;
+					else
+						itemRenderer.paddingRight = 0;
+				}
 				return itemRenderer;
 			};
 		}
@@ -505,18 +534,11 @@ package ui.screens.display.settings.general
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{	
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(glucoseUnitsPicker != null)
 			{
 				glucoseUnitsPicker.removeEventListener(Event.CHANGE, onUnitsChanged);

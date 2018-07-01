@@ -1,13 +1,13 @@
 package ui.screens.display.settings.alarms
 {
+	import flash.display.StageOrientation;
+	
 	import database.AlertType;
 	import database.Database;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
-	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
@@ -16,13 +16,13 @@ package ui.screens.display.settings.alarms
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -30,7 +30,7 @@ package ui.screens.display.settings.alarms
 	[ResourceBundle("alertsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class AlertsList extends List 
+	public class AlertsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var addAlertButton:Button;
@@ -49,8 +49,6 @@ package ui.screens.display.settings.alarms
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -110,16 +108,6 @@ package ui.screens.display.settings.alarms
 			listContent.push( { label: "", accessory: addAlertButton } );
 			
 			dataProvider = listContent;
-			
-			/* Renderer */
-			itemRendererFactory = function():IListItemRenderer 
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.accessoryField = "accessory";
-				
-				return item;
-			};
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
 		}
 		
@@ -233,12 +221,19 @@ package ui.screens.display.settings.alarms
 			alertCreatorCallout.close(true);
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			if (positionHelper != null)
 				positionHelper.x = (Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2)) / 2;
+			
+			if (addAlertButton != null && Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+				addAlertButton.pivotX = -6;
+			else
+				addAlertButton.pivotX = -12;
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -246,8 +241,6 @@ package ui.screens.display.settings.alarms
 		 */
 		override public function dispose():void
 		{	
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(addAlertButton != null)
 			{
 				addAlertButton.addEventListener(Event.TRIGGERED, onAddAlert);

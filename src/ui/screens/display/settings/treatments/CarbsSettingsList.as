@@ -6,10 +6,7 @@ package ui.screens.display.settings.treatments
 	import feathers.controls.Button;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
@@ -18,7 +15,6 @@ package ui.screens.display.settings.treatments
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
@@ -26,12 +22,14 @@ package ui.screens.display.settings.treatments
 	import treatments.ProfileManager;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("profilesettingsscreen")]
 	
-	public class CarbsSettingsList extends List 
+	public class CarbsSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var carbAbsorptionRateStepper:NumericStepper;
@@ -46,13 +44,12 @@ package ui.screens.display.settings.treatments
 		
 		public function CarbsSettingsList()
 		{
-			super();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			super(true);
 			
 			setupProperties();
 			setupInitialContent();	
 			setupContent();
+			
 		}
 		
 		/**
@@ -107,20 +104,10 @@ package ui.screens.display.settings.treatments
 			
 			//Set screen content
 			var data:Array = [];
-			data.push( { text: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','carb_absorption_rate_label'), accessory: carbAbsorptionRateStepper } );
-			data.push( { text: "", accessory: carbAbsorptionRateDescription } );
-			data.push( { text: "", accessory: actionContainer } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','carb_absorption_rate_label'), accessory: carbAbsorptionRateStepper } );
+			data.push( { label: "", accessory: carbAbsorptionRateDescription } );
+			data.push( { label: "", accessory: actionContainer } );
 			dataProvider = new ArrayCollection(data);
-			
-			/* Set Item Renderer */
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
 		}
 		
 		public function save():void
@@ -145,15 +132,22 @@ package ui.screens.display.settings.treatments
 			navigateToURL(new URLRequest("https://diyps.org/2014/05/29/determining-your-carbohydrate-absorption-rate-diyps-lessons-learned/"));
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			if (carbAbsorptionRateDescription != null)
-				carbAbsorptionRateDescription.width = width;
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+					carbAbsorptionRateDescription.width = width - 30;
+				else
+					carbAbsorptionRateDescription.width = width;
+			}
 			
 			if (actionContainer != null)
 				actionContainer.width = width;
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -169,8 +163,6 @@ package ui.screens.display.settings.treatments
 		
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (carbAbsorptionRateStepper != null)
 			{
 				carbAbsorptionRateStepper.removeEventListener(Event.CHANGE, onSettingsChanged);

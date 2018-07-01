@@ -19,7 +19,6 @@ package ui.screens.display.settings.watch
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
-	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
@@ -52,6 +51,7 @@ package ui.screens.display.settings.watch
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DataValidator;
@@ -61,7 +61,7 @@ package ui.screens.display.settings.watch
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("watchsettingsscreen")]
 
-	public class WatchSettingsList extends List 
+	public class WatchSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var watchComplicationToggle:ToggleSwitch;
@@ -104,8 +104,6 @@ package ui.screens.display.settings.watch
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -235,16 +233,6 @@ package ui.screens.display.settings.watch
 			sendEmail = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','email_button_label'), false, MaterialDeepGreyAmberMobileThemeIcons.sendTexture);
 			sendEmail.addEventListener(starling.events.Event.TRIGGERED, onSendEmail);
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				
-				return itemRenderer;
-			};
-			
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			
 			refreshContent();
@@ -255,30 +243,30 @@ package ui.screens.display.settings.watch
 			Trace.myTrace("WatchSettingsList.as", "refreshContent called!");
 			
 			var content:Array = [];
-			content.push({ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: watchComplicationToggle });
+			content.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: watchComplicationToggle });
 			if (watchComplicationEnabled)
 			{
 				if (isDeviceAuthorized || Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED)
 				{
 					populateCalendarList();
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','calendar_label'), accessory: calendarPickerList });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_name_label'), accessory: displayNameToggle });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','calendar_label'), accessory: calendarPickerList });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_name_label'), accessory: displayNameToggle });
 					if (displayNameEnabled)
-						content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','your_name_label'), accessory: displayNameTextInput });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_iob_label'), accessory: displayIOBCheck });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_cob_label'), accessory: displayCOBCheck });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_trend_label'), accessory: displayTrend });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_delta_label'), accessory: displayDelta });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_units_label'), accessory: displayUnits });
-					content.push({ text: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','gap_fix_label'), accessory: gapFixCheck });
+						content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','your_name_label'), accessory: displayNameTextInput });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_iob_label'), accessory: displayIOBCheck });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_cob_label'), accessory: displayCOBCheck });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_trend_label'), accessory: displayTrend });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_delta_label'), accessory: displayDelta });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_units_label'), accessory: displayUnits });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','gap_fix_label'), accessory: gapFixCheck });
 				}
 				else
-					content.push({ text: "", accessory: authorizeButton });
+					content.push({ label: "", accessory: authorizeButton });
 			}
 			
-			content.push({ text: "", accessory: instructionsTitleLabel });
-			content.push({ text: "", accessory: instructionsDescriptionLabel });
-			content.push({ text: "", accessory: sendEmail });
+			content.push({ label: "", accessory: instructionsTitleLabel });
+			content.push({ label: "", accessory: instructionsDescriptionLabel });
+			content.push({ label: "", accessory: sendEmail });
 			
 			
 			dataProvider = new ArrayCollection(content);
@@ -572,7 +560,19 @@ package ui.screens.display.settings.watch
 			/* Callout Position Helper Creation */
 			var positionHelper:Sprite = new Sprite();
 			positionHelper.x = Constants.stageWidth / 2;
-			positionHelper.y = 70;
+			
+			var yPos:Number = 0;
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			
+			positionHelper.y = yPos;
 			Starling.current.stage.addChild(positionHelper);
 			
 			/* Callout Creation */
@@ -692,8 +692,10 @@ package ui.screens.display.settings.watch
 				instructionsSenderCallout.close(true);
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
 			if (displayNameTextInput != null)
 			{
 				displayNameTextInput.width = Constants.isPortrait ? 140 : 240;
@@ -702,12 +704,22 @@ package ui.screens.display.settings.watch
 			}
 			
 			if (instructionsTitleLabel != null)
-				instructionsTitleLabel.width = width - 20;
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+					instructionsTitleLabel.width = width - 40;
+				else
+					instructionsTitleLabel.width = width - 20;
+			}
 			
 			if (instructionsDescriptionLabel != null)
-				instructionsDescriptionLabel.width = width - 20;
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+					instructionsDescriptionLabel.width = width - 40;
+				else
+					instructionsDescriptionLabel.width = width - 20;
+			}
 			
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			setupRenderFactory();
 		}
 		
 		/**
@@ -723,8 +735,6 @@ package ui.screens.display.settings.watch
 		
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(watchComplicationToggle != null)
 			{
 				watchComplicationToggle.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);

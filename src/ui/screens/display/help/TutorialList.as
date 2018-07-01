@@ -1,9 +1,6 @@
 package ui.screens.display.help
 {
 	import feathers.controls.Button;
-	import feathers.controls.List;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
@@ -11,16 +8,16 @@ package ui.screens.display.help
 	
 	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("helpscreen")]
 
-	public class TutorialList extends List 
+	public class TutorialList extends SpikeList 
 	{
 		/* Display Objects */
 		private var tutorialButton:Button;
@@ -64,15 +61,6 @@ package ui.screens.display.help
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString('helpscreen','tutorial_label'), accessory: tutorialButton }
 				]);
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
 		}
 		
 		/**
@@ -81,11 +69,6 @@ package ui.screens.display.help
 		private function onShowTutorial(event:Event):void
 		{
 			dispatchEventWith(Event.COMPLETE);
-		}
-		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 		}
 		
 		/**

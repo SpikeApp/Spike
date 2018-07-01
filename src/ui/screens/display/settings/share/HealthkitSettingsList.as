@@ -2,27 +2,23 @@ package ui.screens.display.settings.share
 {
 	import database.LocalSettings;
 	
-	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("sharesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class HealthkitSettingsList extends List 
+	public class HealthkitSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var hkToggle:ToggleSwitch;
@@ -38,8 +34,6 @@ package ui.screens.display.settings.share
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -77,15 +71,6 @@ package ui.screens.display.settings.share
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: hkToggle },
 				]);
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
 		}
 		
 		public function save():void
@@ -112,18 +97,12 @@ package ui.screens.display.settings.share
 			save();
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
 		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(hkToggle != null)
 			{
 				hkToggle.removeEventListener(Event.CHANGE, onSettingsChanged);

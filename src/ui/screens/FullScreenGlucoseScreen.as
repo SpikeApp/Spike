@@ -21,6 +21,7 @@ package ui.screens
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.ScrollPolicy;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
 	import feathers.layout.AnchorLayoutData;
@@ -116,6 +117,7 @@ package ui.screens
 			
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 			
 			setupHeader();
 			setupLayout();

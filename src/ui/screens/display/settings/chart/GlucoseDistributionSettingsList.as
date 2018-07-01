@@ -4,22 +4,18 @@ package ui.screens.display.settings.chart
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
-	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -27,7 +23,7 @@ package ui.screens.display.settings.chart
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("chartsettingsscreen")]
 
-	public class GlucoseDistributionSettingsList extends List 
+	public class GlucoseDistributionSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var enableGlucoseDistribution:ToggleSwitch;
@@ -48,9 +44,7 @@ package ui.screens.display.settings.chart
 		
 		public function GlucoseDistributionSettingsList()
 		{
-			super();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			super(true);
 			
 			setupProperties();
 			setupInitialState();	
@@ -139,34 +133,24 @@ package ui.screens.display.settings.chart
 			displayInLandscapeCheck = LayoutFactory.createCheckMark(displayInLandscapeValue);
 			displayInLandscapeCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
-			/* Set List Item Renderer */
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
-			
 			refreshContent();
 		}
 		
 		private function refreshContent():void
 		{
 			var data:Array = [];
-			data.push( { text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: enableGlucoseDistribution } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: enableGlucoseDistribution } );
 			if (pieChartEnabledValue)
 			{
-				if (DeviceInfo.isTablet())
-					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','display_in_landscape_label'), accessory: displayInLandscapeCheck } );
+				if (DeviceInfo.isTablet() || ModelLocator.IS_IPAD)
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','display_in_landscape_label'), accessory: displayInLandscapeCheck } );
 				if (!BlueToothDevice.isFollower())
 				{
-					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','thresholds_range_label'), accessory: percentageRangePicker } );
-					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','average_glucose_range_label'), accessory: avgRangePicker } );
-					data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_range_label'), accessory: a1cRangePicker } );
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','thresholds_range_label'), accessory: percentageRangePicker } );
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','average_glucose_range_label'), accessory: avgRangePicker } );
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_range_label'), accessory: a1cRangePicker } );
 				}
-				data.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_ifcc_label'), accessory: a1cIFCCCheck } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_ifcc_label'), accessory: a1cIFCCCheck } );
 			}
 			
 			dataProvider = new ArrayCollection( data );
@@ -218,18 +202,11 @@ package ui.screens.display.settings.chart
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (enableGlucoseDistribution != null)
 			{
 				enableGlucoseDistribution.removeEventListener(Event.CHANGE, onEnableGlucoseDistributionChanged);

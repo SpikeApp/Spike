@@ -1,9 +1,11 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
+	import feathers.controls.ScrollPolicy;
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -15,6 +17,7 @@ package ui.screens
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.popups.AlertManager;
@@ -22,6 +25,7 @@ package ui.screens
 	import ui.screens.display.settings.transmitter.TransmitterSettingsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("transmittersettingsscreen")]
 
@@ -126,6 +130,20 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
+		override protected function onStarlingBaseResize(e:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (transmitterLabel != null) transmitterLabel.paddingLeft = 30;
+			}
+			else
+			{
+				if (transmitterLabel != null) transmitterLabel.paddingLeft = 0;
+			}
+			
+			setupHeaderSize();
 		}
 		
 		/**

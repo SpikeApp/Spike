@@ -10,11 +10,8 @@ package ui.screens.display.settings.integration
 	import feathers.controls.Callout;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.List;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.controls.text.HyperlinkTextFieldTextRenderer;
 	import feathers.core.ITextRenderer;
 	import feathers.core.PopUpManager;
@@ -40,6 +37,7 @@ package ui.screens.display.settings.integration
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DataValidator;
@@ -48,7 +46,7 @@ package ui.screens.display.settings.integration
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("httpserversettingsscreen")]
 
-	public class HTTPServerSettingsList extends List 
+	public class HTTPServerSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var loopOfflineToggle:ToggleSwitch;
@@ -80,8 +78,6 @@ package ui.screens.display.settings.integration
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -189,16 +185,6 @@ package ui.screens.display.settings.integration
 			sendEmail.addEventListener(starling.events.Event.TRIGGERED, onSendEmail);
 			actionsContainer.addChild(sendEmail);
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				
-				return itemRenderer;
-			};
-			
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			
 			refreshContent();
@@ -207,17 +193,17 @@ package ui.screens.display.settings.integration
 		private function refreshContent():void
 		{
 			var content:Array = [];
-			content.push({ text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: loopOfflineToggle });
+			content.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: loopOfflineToggle });
 			if (httpServiceEnabled)
 			{
-				content.push({ text: "", accessory: dexcomCredentialsLabel });
-				content.push({ text: ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','username_label_title'), accessory: userNameTextInput });
-				content.push({ text: ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','password_label_title'), accessory: passwordTextInput });
-				content.push({ text: "", accessory: instructionsTitleLabel });
-				content.push({ text: "", accessory: instructionsDescriptionLabel });
-				content.push({ text: "", accessory: actionsContainer });
-				content.push({ text: "", accessory: developersAPITitleLabel });
-				content.push({ text: "", accessory: developersAPIDescriptionLabel });
+				content.push({ label: "", accessory: dexcomCredentialsLabel });
+				content.push({ label: ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','username_label_title'), accessory: userNameTextInput });
+				content.push({ label: ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','password_label_title'), accessory: passwordTextInput });
+				content.push({ label: "", accessory: instructionsTitleLabel });
+				content.push({ label: "", accessory: instructionsDescriptionLabel });
+				content.push({ label: "", accessory: actionsContainer });
+				content.push({ label: "", accessory: developersAPITitleLabel });
+				content.push({ label: "", accessory: developersAPIDescriptionLabel });
 			}
 			
 			dataProvider = new ArrayCollection(content);
@@ -287,7 +273,19 @@ package ui.screens.display.settings.integration
 			/* Callout Position Helper Creation */
 			positionHelper = new Sprite();
 			positionHelper.x = Constants.stageWidth / 2;
-			positionHelper.y = 70;
+			
+			var yPos:Number = 0;
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			
+			positionHelper.y = yPos;
 			Starling.current.stage.addChild(positionHelper);
 			
 			/* Callout Creation */
@@ -437,7 +435,7 @@ package ui.screens.display.settings.integration
 				save();
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
@@ -459,13 +457,23 @@ package ui.screens.display.settings.integration
 				instructionsTitleLabel.width = width - 20;
 			
 			if (instructionsDescriptionLabel != null)
-				instructionsDescriptionLabel.width = width - 20;
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+					instructionsDescriptionLabel.width = width - 40;
+				else
+					instructionsDescriptionLabel.width = width - 20;
+			}
 			
 			if (developersAPITitleLabel != null)
 				developersAPITitleLabel.width = width - 20;
 			
 			if (developersAPIDescriptionLabel != null)
-				developersAPIDescriptionLabel.width = width - 20;
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+					developersAPIDescriptionLabel.width = width - 40;
+				else
+					developersAPIDescriptionLabel.width = width - 20;
+			}
 			
 			if (actionsContainer != null)
 				actionsContainer.width = width - 20;
@@ -475,6 +483,8 @@ package ui.screens.display.settings.integration
 			
 			if (emailField != null)
 				emailField.clearFocus();
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -482,8 +492,6 @@ package ui.screens.display.settings.integration
 		 */		
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (positionHelper != null)
 			{
 				positionHelper.removeFromParent();

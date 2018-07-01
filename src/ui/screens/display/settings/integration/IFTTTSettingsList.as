@@ -11,12 +11,9 @@ package ui.screens.display.settings.integration
 	import feathers.controls.Check;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
@@ -25,11 +22,11 @@ package ui.screens.display.settings.integration
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -37,7 +34,7 @@ package ui.screens.display.settings.integration
 	[ResourceBundle("iftttsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class IFTTTSettingsList extends List 
+	public class IFTTTSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var IFTTTToggle:ToggleSwitch;
@@ -137,8 +134,6 @@ package ui.screens.display.settings.integration
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -414,21 +409,6 @@ package ui.screens.display.settings.integration
 			treatmentNoteDeletedCheck = LayoutFactory.createCheckMark(isIFTTTnoteTreatmentDeletedEnabled);
 			treatmentNoteDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				{
-					itemRenderer.paddingRight = 2;
-					itemRenderer.paddingLeft = 3;
-					itemRenderer.gap = 0;
-				}
-				return itemRenderer;
-			};
-			
 			reloadContent();
 		}
 		
@@ -689,7 +669,7 @@ package ui.screens.display.settings.integration
 			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/IFTTT"));
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
@@ -711,6 +691,8 @@ package ui.screens.display.settings.integration
 				if (!Constants.isPortrait)
 					makerKeyTextInput.width += 100;
 			}
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -718,8 +700,6 @@ package ui.screens.display.settings.integration
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(IFTTTToggle != null)
 			{
 				IFTTTToggle.removeEventListener( Event.CHANGE, onSettingsReload );

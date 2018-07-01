@@ -2,28 +2,24 @@ package ui.screens.display.settings.share
 {
 	import database.LocalSettings;
 	
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.ToggleSwitch;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("sharesettingsscreen")]
 
-	public class NotificationSettingsList extends List 
+	public class NotificationSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var notificationsToggle:ToggleSwitch;
@@ -41,8 +37,6 @@ package ui.screens.display.settings.share
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -81,15 +75,6 @@ package ui.screens.display.settings.share
 			notificationsIntervalStepper = LayoutFactory.createNumericStepper(1, 1000, notificationsIntervalValue, 1);
 			notificationsIntervalStepper.pivotX = -10;
 			notificationsIntervalStepper.addEventListener(Event.CHANGE, onSettingsChanged);
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
 			
 			refreshContent();
 		}
@@ -134,18 +119,11 @@ package ui.screens.display.settings.share
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(notificationsToggle != null)
 			{
 				notificationsToggle.removeEventListener(Event.CHANGE, onSettingsChanged);

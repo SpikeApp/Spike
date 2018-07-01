@@ -472,6 +472,8 @@ package ui.screens
 			var sectionMultiplier:Number = 3;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				sectionMultiplier = 2.5;
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+				sectionMultiplier = 3.1;
 			
 			pieChartHeight = (sectionMultiplier * dummyPieChartStatsSection.title.height) + (sectionMultiplier * dummyPieChartStatsSection.message.height);
 			

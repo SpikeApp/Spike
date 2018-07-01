@@ -1,5 +1,6 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
@@ -13,6 +14,7 @@ package ui.screens
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -21,6 +23,7 @@ package ui.screens
 	import ui.screens.display.settings.integration.SiDiarySettingsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("integrationsettingsscreen")]
 
@@ -123,6 +126,26 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
+		override protected function onStarlingBaseResize(e:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (iFTTTLabel != null) iFTTTLabel.paddingLeft = 30;
+				if (siDiaryLabel != null) siDiaryLabel.paddingLeft = 30;
+				if (httpServerSectionLabel != null) httpServerSectionLabel.paddingLeft = 30;
+				if (httpServerSectionSubLabel != null) httpServerSectionSubLabel.paddingLeft = 30;
+			}
+			else
+			{
+				if (iFTTTLabel != null) iFTTTLabel.paddingLeft = 0;
+				if (siDiaryLabel != null) siDiaryLabel.paddingLeft = 0;
+				if (httpServerSectionLabel != null) httpServerSectionLabel.paddingLeft = 0;
+				if (httpServerSectionSubLabel != null) httpServerSectionSubLabel.paddingLeft = 0;
+			}
+			
+			setupHeaderSize();
 		}
 		
 		/**

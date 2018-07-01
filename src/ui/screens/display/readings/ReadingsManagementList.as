@@ -1,5 +1,6 @@
 package ui.screens.display.readings
 {
+	import flash.display.StageOrientation;
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
@@ -10,7 +11,6 @@ package ui.screens.display.readings
 	import feathers.controls.Button;
 	import feathers.controls.ImageLoader;
 	import feathers.controls.Label;
-	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -21,26 +21,26 @@ package ui.screens.display.readings
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.display.Canvas;
 	import starling.display.Image;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	import starling.textures.RenderTexture;
 	import starling.textures.SubTexture;
 	import starling.textures.Texture;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.BgGraphBuilder;
 	import utils.Constants;
+	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
 	import utils.TimeSpan;
 	
 	[ResourceBundle("globaltranslations")]
 
-	public class ReadingsManagementList extends List 
+	public class ReadingsManagementList extends SpikeList 
 	{
 		/* Display Objects */
 		private var urgentHighCanvas:Canvas;
@@ -80,8 +80,6 @@ package ui.screens.display.readings
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -216,8 +214,13 @@ package ui.screens.display.readings
 				dataList.push({ icon: icon, label: label, glucoseValue: glucoseValue, time: timeFormatted, bgReading: reading, id: i });
 			}
 			
-			dataProvider = new ArrayCollection(dataList);
+			setupRenderFactory();
 			
+			dataProvider = new ArrayCollection(dataList);
+		}
+		
+		override protected function setupRenderFactory():void
+		{
 			//Define Item Renderer
 			itemRendererFactory = function itemRendererFactory():IListItemRenderer
 			{
@@ -230,6 +233,15 @@ package ui.screens.display.readings
 				}
 				itemRenderer.iconOffsetX = 10;
 				itemRenderer.labelField = "label";
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						itemRenderer.paddingLeft = 30;
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						itemRenderer.paddingRight = 30;
+				}
+				
 				itemRenderer.accessoryFunction = function(item:Object):Button
 				{
 					var deleteButton:Button = accessoryDictionary[ item ];
@@ -299,9 +311,9 @@ package ui.screens.display.readings
 			}
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onCreationComplete(e:Event):void
 		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			//Do nothing
 		}
 		
 		/**
@@ -309,7 +321,6 @@ package ui.screens.display.readings
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			var i:int;
 			
 			//Clear accessories

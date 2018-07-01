@@ -4,24 +4,20 @@ package ui.screens.display.settings.speech
 	import database.LocalSettings;
 	
 	import feathers.controls.Alert;
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.VerticalCenteredPopUpContentManager;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -29,7 +25,7 @@ package ui.screens.display.settings.speech
 	[ResourceBundle("speechsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class SpeechSettingsList extends List 
+	public class SpeechSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var speechToggle:ToggleSwitch;
@@ -55,8 +51,6 @@ package ui.screens.display.settings.speech
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -136,15 +130,6 @@ package ui.screens.display.settings.speech
 			languagePopUp.margin = 10;
 			languagePicker.popUpContentManager = languagePopUp;
 			languagePicker.addEventListener( Event.CHANGE, onSettingsChanged);
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
 			
 			reloadSpeechSettings(isSpeechEnabled);
 		}
@@ -268,18 +253,11 @@ package ui.screens.display.settings.speech
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED, "true");
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(speechToggle != null)
 			{
 				speechToggle.removeEventListener( Event.CHANGE, onSpeechOnOff );

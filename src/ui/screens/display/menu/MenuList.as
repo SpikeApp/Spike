@@ -1,10 +1,11 @@
 package ui.screens.display.menu 
 {
+	import flash.display.StageOrientation;
+	
 	import database.BlueToothDevice;
 	
 	import events.ScreenEvent;
 	
-	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
@@ -13,17 +14,19 @@ package ui.screens.display.menu
 	import model.ModelLocator;
 	
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("mainmenu")]
 	
-	public class MenuList extends List 
+	public class MenuList extends SpikeList 
 	{
 		/* Textures */
 		private var graphIconTexture:Texture;
@@ -52,14 +55,12 @@ package ui.screens.display.menu
 		 */
 		private function setupProperties():void
 		{
-			if (Constants.deviceModel != DeviceInfo.IPHONE_X)
-				paddingTop = 20; //Statusbar Size
-			else
-				paddingTop = 50; //Statusbar Size
 			minWidth = Constants.stageWidth >> 2;
 			minWidth += 85;
 			hasElasticEdges = false;
 			clipContent = false;
+			
+			setTopPadding();
 		}
 		
 		private function setupContent():void
@@ -106,6 +107,24 @@ package ui.screens.display.menu
 			};
 		}
 		
+		private function setTopPadding():void
+		{
+			if (Constants.isPortrait)
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					paddingTop = 102;
+				else
+					paddingTop = 70;
+			}
+			else
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					paddingTop = 12;
+				else
+					paddingTop = 20;
+			}
+		}
+		
 		/**
 		 * Event Listeners
 		 */
@@ -121,6 +140,44 @@ package ui.screens.display.menu
 				dispatchEventWith( ScreenEvent.SWITCH, false, { screen: screenName } );
 			}
 		}	
+		
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer 
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.iconSourceField = "icon";
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					item.paddingLeft = 40;
+				return item;
+			};
+		}
+		
+		override protected function onStarlingResize(event:ResizeEvent):void 
+		{
+			setupRenderFactory();
+			
+			if (Constants.isPortrait)
+			{
+				minWidth = Constants.stageWidth >> 2;
+				minWidth += 85;
+			}
+			else
+			{
+				minWidth = Constants.stageHeight >> 2;
+				minWidth += 85;
+			}
+			
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				minWidth = Constants.stageHeight >> 2;
+				minWidth += 130;
+			}
+			
+			setTopPadding();
+		}
 		
 		/**
 		 * Utility

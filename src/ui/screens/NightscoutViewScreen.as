@@ -8,6 +8,7 @@ package ui.screens
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.ScrollPolicy;
 	import feathers.controls.WebView;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.AnchorLayout;
@@ -60,6 +61,8 @@ package ui.screens
 			adjustMainMenu();
 			
 			addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onSetupContent);
+			
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 		}
 		
 		/**

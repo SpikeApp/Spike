@@ -3,11 +3,8 @@ package ui.screens.display.settings.share
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
-	import feathers.controls.List;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
@@ -17,12 +14,12 @@ package ui.screens.display.settings.share
 	
 	import services.NightscoutService;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -30,7 +27,7 @@ package ui.screens.display.settings.share
 	[ResourceBundle("sharesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class NightscoutSettingsList extends List 
+	public class NightscoutSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var nsToggle:ToggleSwitch;
@@ -51,8 +48,6 @@ package ui.screens.display.settings.share
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -105,15 +100,6 @@ package ui.screens.display.settings.share
 			nsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
 			nsLogin.pivotX = -3;
 			nsLogin.addEventListener(Event.TRIGGERED, onNightscoutLogin);
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
 			
 			//Define Nightscout Settings Data
 			reloadNightscoutSettings(nsToggle.isSelected);
@@ -222,7 +208,7 @@ package ui.screens.display.settings.share
 			NightscoutService.ignoreSettingsChanged = false;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
@@ -241,6 +227,8 @@ package ui.screens.display.settings.share
 				if (!Constants.isPortrait) nsAPISecret.width += 100;
 				if (DeviceInfo.isTablet()) nsAPISecret.width += 100;
 			}
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -248,8 +236,6 @@ package ui.screens.display.settings.share
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(nsToggle != null)
 			{
 				nsToggle.removeEventListener( Event.CHANGE, onNightscoutOnOff );

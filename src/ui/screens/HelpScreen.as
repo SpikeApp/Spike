@@ -2,6 +2,7 @@ package ui.screens
 {
 	import flash.system.System;
 	
+	import feathers.controls.ScrollPolicy;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -39,6 +40,8 @@ package ui.screens
 			
 			setupContent();
 			adjustMainMenu();
+			
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 		}
 		
 		/**

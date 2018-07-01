@@ -1,5 +1,6 @@
 package ui.screens.display.sensor
 {
+	import flash.display.StageOrientation;
 	import flash.system.Capabilities;
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
@@ -17,7 +18,9 @@ package ui.screens.display.sensor
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.renderers.DefaultGroupedListHeaderOrFooterRenderer;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
+	import feathers.controls.renderers.IGroupedListHeaderRenderer;
 	import feathers.controls.renderers.IGroupedListItemRenderer;
 	import feathers.data.HierarchicalCollection;
 	import feathers.layout.HorizontalAlign;
@@ -256,7 +259,40 @@ package ui.screens.display.sensor
 				item.labelField = "label";
 				item.iconField = "icon";
 				item.accessoryField = "accessory";
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						item.paddingLeft = 30;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						item.paddingRight = 30;
+					}
+				}
+				
 				return item;
+			};
+			
+			this.headerRendererFactory = function():IGroupedListHeaderRenderer
+			{
+				var headerRenderer:DefaultGroupedListHeaderOrFooterRenderer = new DefaultGroupedListHeaderOrFooterRenderer();
+				headerRenderer.contentLabelField = "label";
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						headerRenderer.paddingLeft = 30;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						headerRenderer.paddingRight = 30;
+					}
+				}
+				
+				return headerRenderer;
 			};
 			
 			if (inSensorCountdown)

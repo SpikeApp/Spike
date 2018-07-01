@@ -1,15 +1,14 @@
 package ui.screens.display.settings.advanced
 {
+	import flash.display.StageOrientation;
+	
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
 	import feathers.controls.Label;
-	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.controls.text.HyperlinkTextFieldTextRenderer;
 	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
@@ -20,17 +19,18 @@ package ui.screens.display.settings.advanced
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("advancedsettingsscreen")]
 
-	public class DeepSleepSettingsList extends List 
+	public class DeepSleepSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var manageSuspensionToggle:ToggleSwitch;
@@ -49,9 +49,7 @@ package ui.screens.display.settings.advanced
 		
 		public function DeepSleepSettingsList()
 		{
-			super();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			super(true);
 			
 			setupProperties();
 			setupInitialContent();
@@ -114,16 +112,6 @@ package ui.screens.display.settings.advanced
 			alternativeMethod2Check = LayoutFactory.createCheckMark(alternativeMode2Active);
 			alternativeMethod2Check.addEventListener(Event.CHANGE, onAlternativeMethod2Changed);
 			
-			/* Set Item Renderer */
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
-			
 			//Instructions Title Label
 			instructionsTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','instructions_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 17, true);
 			instructionsTitleLabel.width = width;
@@ -151,14 +139,14 @@ package ui.screens.display.settings.advanced
 		private function refreshContent():void
 		{
 			var content:Array = [];
-			content.push( { text: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','user_defined_label'), accessory: manageSuspensionToggle } );
+			content.push( { label: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','user_defined_label'), accessory: manageSuspensionToggle } );
 			if (userManagesSuspension)
 			{
-				content.push( { text: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','mode_label'), accessory: suspensionModePicker } );
-				content.push( { text: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','alternative_method_1'), accessory: alternativeMethod1Check } );
-				content.push( { text: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','alternative_method_2'), accessory: alternativeMethod2Check } );
-				content.push({ text: "", accessory: instructionsTitleLabel });
-				content.push({ text: "", accessory: instructionsDescriptionLabel });
+				content.push( { label: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','mode_label'), accessory: suspensionModePicker } );
+				content.push( { label: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','alternative_method_1'), accessory: alternativeMethod1Check } );
+				content.push( { label: ModelLocator.resourceManagerInstance.getString('advancedsettingsscreen','alternative_method_2'), accessory: alternativeMethod2Check } );
+				content.push({ label: "", accessory: instructionsTitleLabel });
+				content.push({ label: "", accessory: instructionsDescriptionLabel });
 			}
 			
 			dataProvider = new ArrayCollection(content);
@@ -223,11 +211,27 @@ package ui.screens.display.settings.advanced
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			instructionsTitleLabel.width = width;
-			instructionsDescriptionLabel.width = width;
+			
+			if (instructionsTitleLabel != null)
+				instructionsTitleLabel.width = width;
+			
+			if (instructionsDescriptionLabel != null)
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						instructionsDescriptionLabel.width = width - 30;
+					if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						instructionsDescriptionLabel.width = width - 40;
+				}
+				else
+					instructionsDescriptionLabel.width = width;
+			}
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -241,8 +245,6 @@ package ui.screens.display.settings.advanced
 		
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (suspensionModePicker != null)
 			{
 				suspensionModePicker.removeEventListener(Event.CHANGE, onSuspensionModeChanged);

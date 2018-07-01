@@ -3,11 +3,8 @@ package ui.screens.display.settings.chart
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
-	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.ScrollPolicy;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
@@ -15,18 +12,17 @@ package ui.screens.display.settings.chart
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.chart.ColorPicker;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("chartsettingsscreen")]
 
-	public class ColorSettingsList extends List 
+	public class ColorSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var urgentHighColorPicker:ColorPicker;
@@ -64,11 +60,9 @@ package ui.screens.display.settings.chart
 		
 		public function ColorSettingsList(parentDisplayObject:PanelScreen)
 		{
-			super();
+			super(true);
 			
 			this._parent = parentDisplayObject;
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -233,34 +227,24 @@ package ui.screens.display.settings.chart
 			resetColors = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','load_default_colors'));
 			resetColors.addEventListener(Event.TRIGGERED, onResetColor);
 			
-			//Set Color Settings Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
-			
 			//Set Colors Data
 			dataProvider = new ArrayCollection(
-				[
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_high_title'), accessory: urgentHighColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','high_title'), accessory: highColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','in_range_title'), accessory: inRangeColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','low_title'), accessory: lowColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_high_color_title'), accessory: pieHighColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_in_range_color_title'), accessory: pieInRangeColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_low_color_title'), accessory: pieLowColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','old_data_title'), accessory: oldDataColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_title'), accessory: axisColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_font_title'), accessory: chartFontColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_title'), accessory: axisFontColorPicker },
-					{ text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_chart_font_title'), accessory: pieChartFontColorPicker },
-					{ text: "", accessory: resetColors },
-				]);
+			[
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_high_title'), accessory: urgentHighColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','high_title'), accessory: highColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','in_range_title'), accessory: inRangeColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','low_title'), accessory: lowColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_high_color_title'), accessory: pieHighColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_in_range_color_title'), accessory: pieInRangeColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_low_color_title'), accessory: pieLowColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','old_data_title'), accessory: oldDataColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_title'), accessory: axisColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_font_title'), accessory: chartFontColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_title'), accessory: axisFontColorPicker },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_chart_font_title'), accessory: pieChartFontColorPicker },
+				{ label: "", accessory: resetColors },
+			]);
 		}
 		
 		public function save():void
@@ -494,11 +478,6 @@ package ui.screens.display.settings.chart
 			}
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
@@ -510,8 +489,6 @@ package ui.screens.display.settings.chart
 		
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(urgentHighColorPicker != null)
 			{
 				urgentHighColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);

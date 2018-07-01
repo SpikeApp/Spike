@@ -5,12 +5,9 @@ package ui.screens.display.settings.widget
 	import feathers.controls.Button;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.List;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.ScrollPolicy;
 	import feathers.controls.Slider;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
@@ -19,19 +16,19 @@ package ui.screens.display.settings.widget
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
 	import ui.chart.ColorPicker;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("widgetsettingsscreen")]
 
-	public class ColorSettingsList extends List 
+	public class ColorSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var urgentHighColorPicker:ColorPicker;
@@ -77,8 +74,6 @@ package ui.screens.display.settings.widget
 			super();
 			
 			this._parent = parentDisplayObject;
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			stupInitialContent();
@@ -273,35 +268,25 @@ package ui.screens.display.settings.widget
 			copyColors = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','copy_main_chart_colors'));
 			copyColors.addEventListener(Event.TRIGGERED, onCopyColor);
 			
-			//Set Color Settings Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
-			
 			//Set Colors Data
 			var dataList:Array = [];
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','urgent_high_title'), accessory: urgentHighColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','high_title'), accessory: highColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','in_range_title'), accessory: inRangeColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','low_title'), accessory: lowColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','old_data_title'), accessory: oldDataColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','display_font_title'), accessory: displayFontColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','axis_title'), accessory: axisColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','axis_font_title'), accessory: axisFontColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','glucose_marker_title'), accessory: glucoseMarkerColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','urgent_high_title'), accessory: urgentHighColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','high_title'), accessory: highColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','in_range_title'), accessory: inRangeColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','low_title'), accessory: lowColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','old_data_title'), accessory: oldDataColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','display_font_title'), accessory: displayFontColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','axis_title'), accessory: axisColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','axis_font_title'), accessory: axisFontColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','glucose_marker_title'), accessory: glucoseMarkerColorPicker });
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
-				dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','main_line'), accessory: mainLineColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','grid_lines'), accessory: gridLinesColorPicker });
-			dataList.push({ text: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background'), accessory: backgroundColorPicker });
-			dataList.push({ text: Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer });
-			dataList.push({ text: "", accessory: resetColors });
-			dataList.push({ text: "", accessory: copyColors });
+				dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','main_line'), accessory: mainLineColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','grid_lines'), accessory: gridLinesColorPicker });
+			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background'), accessory: backgroundColorPicker });
+			dataList.push({ label: Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer });
+			dataList.push({ label: "", accessory: resetColors });
+			dataList.push({ label: "", accessory: copyColors });
 			
 			dataProvider = new ArrayCollection(dataList);
 		}
@@ -618,12 +603,14 @@ package ui.screens.display.settings.widget
 			}
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			if (backgroundOpacitySlider != null)
 				backgroundOpacitySlider.width = Constants.isPortrait ? 110 : 210;
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -638,8 +625,6 @@ package ui.screens.display.settings.widget
 		
 		override public function dispose():void
 		{
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(urgentHighColorPicker != null)
 			{
 				urgentHighColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);

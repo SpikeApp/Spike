@@ -4,28 +4,24 @@ package ui.screens.display.settings.chart
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
-	import feathers.controls.List;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.popups.DropDownPopUpContentManager;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
-	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("chartsettingsscreen")]
 
-	public class ModeSettingsList extends List 
+	public class ModeSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var scaleFormatPicker:PickerList;
@@ -44,9 +40,7 @@ package ui.screens.display.settings.chart
 		
 		public function ModeSettingsList()
 		{
-			super();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			super(true);
 			
 			setupProperties();
 			setupInitialContent();
@@ -129,27 +123,18 @@ package ui.screens.display.settings.chart
 			resizeBoundsMark.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			/* Set Item Renderer */
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				return itemRenderer;
-			};
-			
 			refreshContent();
 		}
 		
 		private function refreshContent():void
 		{
 			var content:Array = [];
-			content.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_mode'), accessory: scaleFormatPicker } );
+			content.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_mode'), accessory: scaleFormatPicker } );
 			if (!scaleFormatIsDynamic)
 			{
-				content.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_max_value'), accessory: chartMaxValueStepper } );
-				content.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_min_value'), accessory: chartMinValueStepper } );
-				content.push( { text: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_resize_out_of_bounds'), accessory: resizeBoundsMark } );
+				content.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_max_value'), accessory: chartMaxValueStepper } );
+				content.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_min_value'), accessory: chartMinValueStepper } );
+				content.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_resize_out_of_bounds'), accessory: resizeBoundsMark } );
 			}
 			
 			dataProvider = new ArrayCollection(content);
@@ -217,18 +202,11 @@ package ui.screens.display.settings.chart
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
-		{
-			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-		}
-		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (scaleFormatPicker != null)
 			{
 				scaleFormatPicker.removeEventListener(Event.CHANGE, onScaleFormatChange);

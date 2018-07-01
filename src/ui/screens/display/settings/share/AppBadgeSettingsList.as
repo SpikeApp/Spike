@@ -5,10 +5,7 @@ package ui.screens.display.settings.share
 	
 	import feathers.controls.Check;
 	import feathers.controls.Label;
-	import feathers.controls.List;
 	import feathers.controls.ToggleSwitch;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalLayout;
@@ -16,18 +13,18 @@ package ui.screens.display.settings.share
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("sharesettingsscreen")]
 
-	public class AppBadgeSettingsList extends List 
+	public class AppBadgeSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var appBadgeToggle:ToggleSwitch;
@@ -46,8 +43,6 @@ package ui.screens.display.settings.share
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -93,15 +88,6 @@ package ui.screens.display.settings.share
 			mmolMultiplierLabel.width = width - 20;
 			mmolMultiplierLabel.paddingTop = mmolMultiplierLabel.paddingBottom = 10;
 			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "text";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
-			
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			
 			refreshContent();
@@ -110,11 +96,11 @@ package ui.screens.display.settings.share
 		private function refreshContent():void
 		{
 			var content:Array = [];
-			content.push( { text: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: appBadgeToggle } );
+			content.push( { label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled'), accessory: appBadgeToggle } );
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
 			{
-				content.push( { text: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','mmol_multiplier_label'), accessory: mmolMultiplierCheck } );
-				content.push( { text: "", accessory: mmolMultiplierLabel } );
+				content.push( { label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','mmol_multiplier_label'), accessory: mmolMultiplierCheck } );
+				content.push( { label: "", accessory: mmolMultiplierLabel } );
 			}
 				
 			
@@ -147,12 +133,14 @@ package ui.screens.display.settings.share
 			needsSave = true;
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			if (mmolMultiplierLabel != null)
 				mmolMultiplierLabel.width = width - 20;
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -160,8 +148,6 @@ package ui.screens.display.settings.share
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if(appBadgeToggle != null)
 			{
 				appBadgeToggle.removeEventListener(Event.CHANGE, onAppBadgeChanged);

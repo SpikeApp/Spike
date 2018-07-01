@@ -3,6 +3,7 @@ package ui.screens.display.bugreport
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
+	import flash.display.StageOrientation;
 	import flash.events.Event;
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
@@ -44,6 +45,7 @@ package ui.screens.display.bugreport
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DataValidator;
@@ -54,7 +56,7 @@ package ui.screens.display.bugreport
 	[ResourceBundle("bugreportsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 	
-	public class BugReportSettingsList extends List 
+	public class BugReportSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var traceToggle:ToggleSwitch;
@@ -77,11 +79,10 @@ package ui.screens.display.bugreport
 		{
 			super.initialize();
 			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			setupProperties();
 			setupInitialContent();
 			setupContent();
+			setupRenderFactory();
 		}
 		
 		/**
@@ -478,15 +479,58 @@ package ui.screens.display.bugreport
 			messageField.clearFocus();
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			SystemUtil.executeWhenApplicationIsActive( setupContent );
+			SystemUtil.executeWhenApplicationIsActive( setupRenderFactory );
+		}
+		
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				itemRenderer.accessoryField = "accessory";
+				itemRenderer.paddingBottom = itemRenderer.paddingTop = 10;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						itemRenderer.paddingLeft = 30;
+						if (warningDescriptionLabel != null)warningDescriptionLabel.width = width - 40;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						itemRenderer.paddingRight = 30;
+						if (warningDescriptionLabel != null) warningDescriptionLabel.width = width - 30;
+					}
+				}
+				else
+				{
+					itemRenderer.paddingRight = 0;
+					if (warningDescriptionLabel != null) warningDescriptionLabel.width = width;
+				}
+				
+				itemRenderer.labelFunction = function( item:Object ):String
+				{
+					if (item.label == ModelLocator.resourceManagerInstance.getString('bugreportsettingsscreen','message_label'))
+						itemRenderer.verticalAlign = VerticalAlign.TOP;
+					
+					return item.label;
+				};
+				
+				return itemRenderer;
+			};
 		}
 		
 		/**
 		 * Utilty
 		 */
+		
 		override public function dispose():void
 		{
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);

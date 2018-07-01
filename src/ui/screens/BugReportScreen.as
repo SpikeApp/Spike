@@ -1,23 +1,28 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import database.BlueToothDevice;
 	
 	import feathers.controls.Label;
+	import feathers.controls.ScrollPolicy;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.bugreport.BugReportSettingsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("bugreportsettingsscreen")]
 
@@ -40,6 +45,11 @@ package ui.screens
 			
 			setupContent();
 			adjustMainMenu();
+			onStarlingResize(null);
+			
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 		}
 		
 		/**
@@ -84,11 +94,23 @@ package ui.screens
 			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
 		}
 		
+		private function onStarlingResize(event:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT && bugReportLabel != null)
+			{
+				bugReportLabel.paddingLeft = 30;
+			}
+			else
+				bugReportLabel.paddingLeft = 0;
+		}
+		
 		/**
 		 * Utility
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (bugReportSettings != null)
 			{
 				bugReportSettings.removeFromParent();

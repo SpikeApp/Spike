@@ -1,5 +1,6 @@
 package ui.screens.display.settings.alarms
 {
+	import flash.display.StageOrientation;
 	import flash.utils.ByteArray;
 	
 	import database.BgReading;
@@ -8,7 +9,6 @@ package ui.screens.display.settings.alarms
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
-	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
@@ -27,6 +27,7 @@ package ui.screens.display.settings.alarms
 	import ui.popups.AlertManager;
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -35,7 +36,7 @@ package ui.screens.display.settings.alarms
 	[ResourceBundle("alarmsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class AlarmCustomizerList extends List 
+	public class AlarmCustomizerList extends SpikeList 
 	{
 		/* Constants */
 		private const TIME_1_MINUTE:int = 1000 * 60;
@@ -69,8 +70,6 @@ package ui.screens.display.settings.alarms
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -221,8 +220,11 @@ package ui.screens.display.settings.alarms
 			
 			//Set list content
 			dataProvider = listData;
-			
-			//List Renderer
+		}
+		
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
 			itemRendererFactory = function():IListItemRenderer 
 			{
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
@@ -231,11 +233,22 @@ package ui.screens.display.settings.alarms
 					item.fontStyles = new TextFormat("Roboto", 11, 0xEEEEEE, "left", "top");
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 					item.fontStyles = new TextFormat("Roboto", 12, 0xEEEEEE, "left", "top");
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					item.fontStyles = new TextFormat("Roboto", 9, 0xEEEEEE, "left", "top");
 				item.accessoryField = "accessory";
 				item.accessoryOffsetX = -8;
-				item.paddingRight = -10;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						item.paddingRight = -10;
+						item.paddingLeft = 30;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						item.paddingRight = 30;
+				}
+				else
+					item.paddingRight = -10;
+				
 				return item;
 			};
 		}
@@ -575,12 +588,14 @@ package ui.screens.display.settings.alarms
 			}
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			if (positionHelper != null)
 				positionHelper.x = (Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2)) / 2;
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -588,8 +603,6 @@ package ui.screens.display.settings.alarms
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			if (alarmCustomizerCallout != null)
 			{
 				alarmCustomizerCallout.dispose();

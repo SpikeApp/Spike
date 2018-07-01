@@ -1,5 +1,6 @@
 package ui.screens
 {
+	import flash.display.StageOrientation;
 	import flash.system.System;
 	
 	import feathers.controls.DragGesture;
@@ -11,6 +12,7 @@ package ui.screens
 	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -20,6 +22,7 @@ package ui.screens
 	import ui.screens.display.settings.widget.SizeSettingsList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("widgetsettingsscreen")]
 
@@ -132,6 +135,26 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
+		}
+		
+		override protected function onStarlingBaseResize(e:ResizeEvent):void 
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (historyLabel != null) historyLabel.paddingLeft = 30;
+				if (chartSettingsLabel != null) chartSettingsLabel.paddingLeft = 30;
+				if (sizeSettingsLabel != null) sizeSettingsLabel.paddingLeft = 30;
+				if (chartColorLabel != null) chartColorLabel.paddingLeft = 30;
+			}
+			else
+			{
+				if (historyLabel != null) historyLabel.paddingLeft = 0;
+				if (chartSettingsLabel != null) chartSettingsLabel.paddingLeft = 0;
+				if (sizeSettingsLabel != null) sizeSettingsLabel.paddingLeft = 0;
+				if (chartColorLabel != null) chartColorLabel.paddingLeft = 0;
+			}
+			
+			setupHeaderSize();
 		}
 		
 		/**

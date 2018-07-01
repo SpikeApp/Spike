@@ -37,6 +37,7 @@ package ui.screens
 			super.initialize();
 			
 			addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionComplete);
+			
 			setupContent();
 		}
 		

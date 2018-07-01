@@ -1,5 +1,6 @@
 package ui.screens.display.treatments
 {
+	import flash.display.StageOrientation;
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
@@ -11,7 +12,6 @@ package ui.screens.display.treatments
 	import feathers.controls.Callout;
 	import feathers.controls.ImageLoader;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.List;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
@@ -23,7 +23,6 @@ package ui.screens.display.treatments
 	
 	import model.ModelLocator;
 	
-	import starling.core.Starling;
 	import starling.display.Canvas;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
@@ -38,6 +37,7 @@ package ui.screens.display.treatments
 	
 	import ui.chart.GlucoseFactory;
 	import ui.popups.AlertManager;
+	import ui.screens.display.SpikeList;
 	import ui.shapes.SpikeNGon;
 	
 	import utils.Constants;
@@ -48,7 +48,7 @@ package ui.screens.display.treatments
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("treatments")]
 
-	public class TreatmentsManagementList extends List 
+	public class TreatmentsManagementList extends SpikeList 
 	{
 		/* Display Objects */
 		private var bolusCanvas:Canvas;
@@ -87,8 +87,6 @@ package ui.screens.display.treatments
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialContent();
@@ -214,7 +212,10 @@ package ui.screens.display.treatments
 			}
 			
 			dataProvider = new ArrayCollection(dataList);
-			
+		}
+		
+		override protected function setupRenderFactory():void
+		{
 			itemRendererFactory = function itemRendererFactory():IListItemRenderer
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
@@ -226,6 +227,13 @@ package ui.screens.display.treatments
 				}
 				itemRenderer.iconOffsetX = 0;
 				itemRenderer.paddingRight = -25;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						itemRenderer.paddingLeft = 30;
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						itemRenderer.paddingRight = 5;
+				}
 				itemRenderer.accessoryOffsetX = -30;
 				itemRenderer.labelField = "label";
 				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -271,41 +279,6 @@ package ui.screens.display.treatments
 				
 				return itemRenderer;
 			}
-		}
-		
-		private function onEditTreatment(e:Event):void
-		{
-			var item:Object = (((e.currentTarget as Button).parent as LayoutGroup).parent as DefaultListItemRenderer).data as Object;
-			var treatment:Treatment = item.treatment as Treatment;
-			
-			setupCalloutPosition();
-			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatment.type == Treatment.TYPE_MEAL_BOLUS)
-			{
-				positionHelper.y -= 10;	
-			}
-			
-			treatmentEditor = new TreatmentEditorList(treatment);
-			treatmentEditor.addEventListener(Event.CANCEL, onCancelTreatmentEditor);
-			treatmentEditor.addEventListener(Event.CHANGE, onRefreshContent);
-			
-			treatmentEditorCallout = new Callout();
-			treatmentEditorCallout.content = treatmentEditor;
-			treatmentEditorCallout.origin = positionHelper;
-			
-			PopUpManager.addPopUp(treatmentEditorCallout, false, false);
-		}
-		
-		private function onCancelTreatmentEditor(e:Event):void
-		{
-			treatmentEditorCallout.close(true);
-		}
-		
-		private function onRefreshContent(e:Event):void
-		{
-			treatmentEditorCallout.close(true);
-			
-			setupContent();
 		}
 		
 		private function setupCalloutPosition():void
@@ -367,6 +340,41 @@ package ui.screens.display.treatments
 		/**
 		 * Event Handlers
 		 */
+		private function onEditTreatment(e:Event):void
+		{
+			var item:Object = (((e.currentTarget as Button).parent as LayoutGroup).parent as DefaultListItemRenderer).data as Object;
+			var treatment:Treatment = item.treatment as Treatment;
+			
+			setupCalloutPosition();
+			
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				positionHelper.y -= 10;	
+			}
+			
+			treatmentEditor = new TreatmentEditorList(treatment);
+			treatmentEditor.addEventListener(Event.CANCEL, onCancelTreatmentEditor);
+			treatmentEditor.addEventListener(Event.CHANGE, onRefreshContent);
+			
+			treatmentEditorCallout = new Callout();
+			treatmentEditorCallout.content = treatmentEditor;
+			treatmentEditorCallout.origin = positionHelper;
+			
+			PopUpManager.addPopUp(treatmentEditorCallout, false, false);
+		}
+		
+		private function onCancelTreatmentEditor(e:Event):void
+		{
+			treatmentEditorCallout.close(true);
+		}
+		
+		private function onRefreshContent(e:Event):void
+		{
+			treatmentEditorCallout.close(true);
+			
+			setupContent();
+		}
+		
 		private function onDeleteTreatment(e:Event):void
 		{
 			//Get list row properties
@@ -395,11 +403,13 @@ package ui.screens.display.treatments
 			}
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			SystemUtil.executeWhenApplicationIsActive( setupCalloutPosition );
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -407,8 +417,6 @@ package ui.screens.display.treatments
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			
 			//Clear accessories
 			if (accessoryDictionary != null)
 			{

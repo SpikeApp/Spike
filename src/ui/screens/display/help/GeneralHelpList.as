@@ -1,9 +1,6 @@
 package ui.screens.display.help
 {
 	import feathers.controls.Label;
-	import feathers.controls.List;
-	import feathers.controls.renderers.DefaultListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.controls.text.HyperlinkTextFieldTextRenderer;
 	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
@@ -17,12 +14,15 @@ package ui.screens.display.help
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
+	import ui.screens.display.SpikeList;
+	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("helpscreen")]
 
-	public class GeneralHelpList extends List 
+	public class GeneralHelpList extends SpikeList 
 	{
 		/* Display Objects */
 		private var missedReadingsDescriptionLabel:Label;
@@ -31,6 +31,7 @@ package ui.screens.display.help
 		{
 			super();
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
@@ -74,21 +75,20 @@ package ui.screens.display.help
 				return textRenderer;
 			};
 			
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+			{
+				if (missedReadingsDescriptionLabel != null)
+					missedReadingsDescriptionLabel.width = width - 40;
+			}
+			else if (missedReadingsDescriptionLabel != null)
+				missedReadingsDescriptionLabel.width = width - 20;
+			
 			//Define Notifications Settings Data
 			dataProvider = new ArrayCollection(
-				[
-					{ label: ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_label') },
-					{ label: "", accessory: missedReadingsDescriptionLabel}
-				]);
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				return itemRenderer;
-			};
+			[
+				{ label: ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_label')},
+				{ label: "", accessory: missedReadingsDescriptionLabel}
+			]);
 			
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 		}
@@ -97,9 +97,10 @@ package ui.screens.display.help
 		 * Event Handlers
 		 */
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			setupRenderFactory();
 			SystemUtil.executeWhenApplicationIsActive( setupContent );
 		}
 		

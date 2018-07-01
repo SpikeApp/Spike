@@ -8,7 +8,6 @@ package ui.screens.display.settings.transmitter
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
-	import feathers.controls.List;
 	import feathers.controls.PickerList;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
@@ -31,6 +30,7 @@ package ui.screens.display.settings.transmitter
 	import ui.AppInterface;
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -39,7 +39,7 @@ package ui.screens.display.settings.transmitter
 	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globaltranslations")]
 
-	public class TransmitterSettingsList extends List 
+	public class TransmitterSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var transmitterID:TextInput;
@@ -55,13 +55,11 @@ package ui.screens.display.settings.transmitter
 		
 		public function TransmitterSettingsList()
 		{
-			super();
+			super(true);
 		}
 		override protected function initialize():void 
 		{
 			super.initialize();
-			
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			setupProperties();
 			setupInitialState();
@@ -165,17 +163,6 @@ package ui.screens.display.settings.transmitter
 			transmitterID.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
 			transmitterID.addEventListener(Event.CHANGE, onTransmitterIDChange);
 			transmitterID.addEventListener( FeathersEventType.FOCUS_OUT, onValidateTransmitterID );
-			
-			//Set Item Renderer
-			itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				itemRenderer.accessoryField = "accessory";
-				itemRenderer.paddingRight = 0;
-				
-				return itemRenderer;
-			};
 			
 			//Set Data Provider
 			dataProvider = new ArrayCollection(
@@ -356,7 +343,7 @@ package ui.screens.display.settings.transmitter
 			}
 			else
 				warnUser = false;
-			}
+		}
 		
 		/**
 		 * Event Handlers
@@ -457,12 +444,14 @@ package ui.screens.display.settings.transmitter
 			populateTransmitterIDPrompt();
 		}
 		
-		private function onStarlingResize(event:ResizeEvent):void 
+		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 			
 			if (transmitterID != null)
 				transmitterID.width = Constants.isPortrait ? 100 : 150;
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -470,7 +459,6 @@ package ui.screens.display.settings.transmitter
 		 */
 		override public function dispose():void
 		{
-			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			
 			if(transmitterID != null)
