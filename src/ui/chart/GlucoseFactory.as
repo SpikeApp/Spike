@@ -112,7 +112,7 @@ package ui.chart
 			return {glucoseOutput: glucoseOutput, glucoseValueFormatted: glucoseValueFormatted};
 		}
 		
-		public static function getGlucoseSlope(previousGlucoseValue:Number, previousGlucoseValueFormatted:Number, glucoseValue:Number, glucoseValueFormatted:Number):String
+		public static function getGlucoseSlope(previousGlucoseValue:Number, previousGlucoseValueFormatted:Number, glucoseValue:Number, glucoseValueFormatted:Number, textToSpeechEnabled:Boolean = false):String
 		{
 			var glucoseUnit:String;
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
@@ -153,7 +153,10 @@ package ui.chart
 					if ( glucoseDifference % 1 == 0 && (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 						glucoseDifferenceOutput += ".0";
 						
-					slopeOutput = "- " + glucoseDifferenceOutput;
+					if (!textToSpeechEnabled)
+						slopeOutput = "- " + glucoseDifferenceOutput;
+					else
+						slopeOutput = "-" + glucoseDifferenceOutput;
 				}
 			}
 			

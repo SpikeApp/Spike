@@ -169,7 +169,7 @@ package services
 							
 						//Get current delta
 						//var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
-						var currentDelta:String = GlucoseHelper.calculateLatestDelta();
+						var currentDelta:String = GlucoseHelper.calculateLatestDelta(false, true);
 						
 						//If user wants trend to be spoken...
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")

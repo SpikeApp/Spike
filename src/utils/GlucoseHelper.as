@@ -64,7 +64,7 @@ package utils
 			return optimalCalibrationCondition;
 		}
 		
-		public static function calculateLatestDelta(trimWhiteSpace:Boolean = false):String
+		public static function calculateLatestDelta(trimWhiteSpace:Boolean = false, textToSpeechEnabled:Boolean = false):String
 		{
 			var delta:String = "uknown";	
 			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length >= 2)
@@ -85,7 +85,8 @@ package utils
 						previousBgReading.calculatedValue,
 						previousBgReadingGlucoseValueFormatted,
 						lastBgReading.calculatedValue,
-						lastBgReadingGlucoseValueFormatted
+						lastBgReadingGlucoseValueFormatted,
+						textToSpeechEnabled
 					);
 				}
 			}

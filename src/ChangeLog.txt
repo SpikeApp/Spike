@@ -4,6 +4,7 @@ ENHANCEMENT; Full swipe navigation. You can now swipe from the left edge of the 
 ENHANCEMENT: Followers can now access the master's Nightscout site directly from inside Spike by going to the "three dots menu" -> Nightscout. (Miguel) 
 ENHANCEMENT: Full layout adjustments for iPhone X. All Spike screens should now display correctly in portrait and landscape. (Miguel)
 FIX: No more duplicate HealthKit entries for treatments. (Miguel)
+FIX: Negative deltas where not being correctly spoken when speech was enabled. It's now fixed. (Miguel)
 FIX: As usual, other small bug fixes and improvements. (Miguel)
 
 2.1.2
