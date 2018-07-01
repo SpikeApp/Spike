@@ -455,7 +455,7 @@ package ui.screens.display.transmitter
 					}
 					else
 					{
-						if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 60) //OK Battery
+						if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 50) //OK Battery
 							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryOkTexture;
 						else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 30) //Alert Battery
 							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryAlertTexture;

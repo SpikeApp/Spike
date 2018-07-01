@@ -385,7 +385,7 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue >= 60)
+					if (transmitterValue > 50)
 						transmitterBatteryColor = 0x4bef0a;
 					else if (transmitterValue > 30)
 						transmitterBatteryColor = 0xff671c;
@@ -406,7 +406,7 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue >= 60)
+					if (transmitterValue > 50)
 						transmitterBatteryColor = 0x4bef0a;
 					else if (transmitterValue > 30)
 						transmitterBatteryColor = 0xff671c;
@@ -427,7 +427,7 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue >= 60)
+					if (transmitterValue > 50)
 						transmitterBatteryColor = 0x4bef0a;
 					else if (transmitterValue > 30)
 						transmitterBatteryColor = 0xff671c;
@@ -445,7 +445,7 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue >= 60)
+					if (transmitterValue > 50)
 						transmitterBatteryColor = 0x4bef0a;
 					else if (transmitterValue > 30)
 						transmitterBatteryColor = 0xff671c;
@@ -465,7 +465,7 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue >= 60)
+					if (transmitterValue > 50)
 						transmitterBatteryColor = 0x4bef0a;
 					else if (transmitterValue > 30)
 						transmitterBatteryColor = 0xff671c;
