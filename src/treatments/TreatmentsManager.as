@@ -1293,6 +1293,8 @@ package treatments
 			var numNightscoutTreatments:int = nsTreatments.length;
 			var firstReadingTimestamp:Number;
 			var lastReadingTimestamp:Number;
+			var now:Number = new Date().valueOf();
+			
 			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
 			{
 				firstReadingTimestamp = (ModelLocator.bgReadings[0] as BgReading).timestamp;
@@ -1319,9 +1321,9 @@ package treatments
 				var treatmentGlucose:Number = 0;
 				var treatmentNote:String = "";
 				
-				if (treatmentTimestamp < firstReadingTimestamp || treatmentTimestamp > lastReadingTimestamp)
+				if (treatmentTimestamp < firstReadingTimestamp)
 				{
-					//Treatment is outside timespan of first/last bg readings in spike. Let's ignore it
+					//Treatment is outside timespan of first bg reading in spike. Let's ignore it
 					continue;
 				}
 				
@@ -1457,6 +1459,10 @@ package treatments
 							treatmentNote,
 							treatmentID
 						);
+						
+						//If it's a future treatment let's mark that it needs adjustment for proper displaying on the chart
+						if (treatmentTimestamp > now)
+							treatment.needsAdjustment = true;
 						
 						//Add treatment to Spike and Databse
 						addNightscoutTreatment(treatment);
