@@ -15,8 +15,6 @@ package services
 	
 	import model.ModelLocator;
 	
-	import ui.chart.GlucoseFactory;
-	
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
 	import utils.Trace;
@@ -34,6 +32,9 @@ package services
 		private static var speakInterval:int = 1;
 		private static var receivedReadings:int = 0;
 		private static var speechLanguageCode:String;
+		private static var glucoseThresholdsActivated:Boolean = false;
+		private static var glucoseThresholdHigh:Number = 0;
+		private static var glucoseThresholdLow:Number = 0;
 
 		public function TextToSpeechService()
 		{
@@ -48,6 +49,9 @@ package services
 				//Instantiate objects and variables
 				initiated = true;
 				speakInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
+				glucoseThresholdsActivated = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_ON) == "true";
+				glucoseThresholdHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH));
+				glucoseThresholdLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW));
 				
 				//Register event listener for changed settings
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
@@ -184,6 +188,10 @@ package services
 				var currentBgReading:BgReading = BgReading.lastNoSensor();
 				if (currentBgReading != null) 
 				{
+					//Validate thresholds
+					if (glucoseThresholdsActivated && glucoseThresholdHigh != 0 && glucoseThresholdLow != 0 && currentBgReading.calculatedValue != 0 && currentBgReading.calculatedValue > glucoseThresholdLow && currentBgReading.calculatedValue < glucoseThresholdHigh)
+						return;
+					
 					if ((new Date()).valueOf() - currentBgReading.timestamp < 4.5 * 60 * 1000) 
 					{
 						//Speech Output
@@ -329,6 +337,15 @@ package services
 				
 				//Set locale chain
 				setLocaleChain();
+			}
+			else if (event.data == CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_ON) 
+			{
+				glucoseThresholdsActivated = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_ON) == "true";
+			}
+			else if (event.data == CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH || event.data == CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW) 
+			{
+				glucoseThresholdHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH));
+				glucoseThresholdLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW));
 			}
 		}
 	}
