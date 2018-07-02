@@ -360,6 +360,9 @@ package services
 			if ((new Date()).valueOf() - timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed < RETRY_TIME_FOR_MAX_AUTHENTICATION_RETRIES * 60 * 1000) 
 				return;
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN())
+				return;
+			
 			if (dexcomShareSessionID == "")
 			{
 				nextFunctionToCall = syncGlucoseReadings;
@@ -872,7 +875,7 @@ package services
 		
 		private static function activateTimer():void
 		{
-			serviceTimer = new Timer(60 * 1000);
+			serviceTimer = new Timer(2.5 * 60 * 1000);
 			serviceTimer.addEventListener(TimerEvent.TIMER, onServiceTimer, false, 0, true);
 			serviceTimer.start();
 		}

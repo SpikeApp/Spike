@@ -36,6 +36,7 @@ package ui.screens.display.settings.share
 		private var nsAPISecret:TextInput;
 		private var nsLogin:Button;
 		private var batteryUploader:Check;
+		private var wifiOnlyUploaderCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -43,6 +44,7 @@ package ui.screens.display.settings.share
 		private var selectedURL:String;
 		private var selectedAPISecret:String;
 		private var isBatteryUploaderEnabled:Boolean;
+		private var isWifiOnlyUploaderEnabled:Boolean;
 		
 		public function NightscoutSettingsList()
 		{
@@ -75,6 +77,7 @@ package ui.screens.display.settings.share
 			selectedURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
 			selectedAPISecret = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
 			isBatteryUploaderEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) == "true";
+			isWifiOnlyUploaderEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -108,6 +111,10 @@ package ui.screens.display.settings.share
 			//Battery Uploader
 			batteryUploader = LayoutFactory.createCheckMark(isBatteryUploaderEnabled);
 			batteryUploader.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Wi-Fi Only Sync
+			wifiOnlyUploaderCheck = LayoutFactory.createCheckMark(isWifiOnlyUploaderEnabled);
+			wifiOnlyUploaderCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Define Nightscout Settings Data
 			reloadNightscoutSettings(nsToggle.isSelected);
@@ -153,6 +160,10 @@ package ui.screens.display.settings.share
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) != String(isBatteryUploaderEnabled))
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON, String(isBatteryUploaderEnabled));
 				
+				//Wi-Fi Only Uploader
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) != String(isWifiOnlyUploaderEnabled))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON, String(isWifiOnlyUploaderEnabled));
+				
 				//Credentials Recheck
 				if (needsCredentialRechek)
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED, "false");
@@ -167,6 +178,7 @@ package ui.screens.display.settings.share
 			nsURL.text = nsURL.text.replace(" ", "");
 			selectedURL = nsURL.text.replace(" ", "");
 			isBatteryUploaderEnabled = batteryUploader.isSelected;
+			isWifiOnlyUploaderEnabled = wifiOnlyUploaderCheck.isSelected;
 			
 			needsSave = true;
 		}
@@ -190,6 +202,7 @@ package ui.screens.display.settings.share
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_url_label'), accessory: nsURL },
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_api_label'), accessory: nsAPISecret },
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_battery_upload_label'), accessory: batteryUploader },
+						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','wifi_only_sync_label'), accessory: wifiOnlyUploaderCheck },
 						{ label: "", accessory: nsLogin },
 					]);
 			}
@@ -281,6 +294,12 @@ package ui.screens.display.settings.share
 				batteryUploader.removeEventListener(Event.CHANGE, onSettingsChanged);
 				batteryUploader.dispose();
 				batteryUploader = null;
+			}
+			if(wifiOnlyUploaderCheck != null)
+			{
+				wifiOnlyUploaderCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				wifiOnlyUploaderCheck.dispose();
+				wifiOnlyUploaderCheck = null;
 			}
 			
 			super.dispose();

@@ -272,6 +272,9 @@ package services
 			if (Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) 
 				return;
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+				return;
+			
 			syncGlucoseReadingsActive = true;
 			
 			//Upload Glucose Readings
@@ -378,8 +381,11 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "uploadBatteryStatus called");
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+				return;
+			
 			phoneBatteryLevel = BatteryInfo.getBatteryLevel();
-			if ((String(phoneBatteryLevel) == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED) || Math.abs(phoneBatteryLevel - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED))) <= 3) && new Date().valueOf() - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP)) < TIME_24_MINUTES)
+			if ((String(phoneBatteryLevel) == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED) || Math.abs(phoneBatteryLevel - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED))) < 3) && new Date().valueOf() - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP)) < TIME_24_MINUTES)
 			{
 				Trace.myTrace("NightscoutService.as", "Battery level has not changed and is current. Skipping...");
 				return;
@@ -455,6 +461,9 @@ package services
 					
 					return;
 				}
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+					return;
 				
 				//Define API secret
 				var profileAPISecret:String = "";
@@ -980,6 +989,9 @@ package services
 			if (BlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to upload/update: " + activeTreatmentsUpload.length);
 			
 			syncTreatmentsUploadActive = true;
@@ -1055,6 +1067,9 @@ package services
 			if (BlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "in syncTreatmentsUpload. Number of treatments to delete: " + activeTreatmentsDelete.length);
 			
 			syncTreatmentsDeleteActive = true;
@@ -1066,7 +1081,16 @@ package services
 		public static function deleteTreatmentByID(id:String):void
 		{
 			if (syncTreatmentsDeleteActive || !NetworkInfo.networkInfo.isReachable())
+			{
+				setTimeout(deleteTreatmentByID, 3 * TIME_5_MINUTES, id);
 				return;
+			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+			{
+				setTimeout(deleteTreatmentByID, 3 * TIME_5_MINUTES, id);
+				return;
+			}
 			
 			if (!BlueToothDevice.isFollower() && !serviceActive)
 				return;
@@ -1302,6 +1326,9 @@ package services
 				return;
 			}
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+				return;
+			
 			var now:Number = new Date().valueOf();
 			
 			if (now - lastRemotePebbleSync < TIME_30_SECONDS)
@@ -1428,6 +1455,9 @@ package services
 				
 				return;
 			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+				return;
 			
 			if ((activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0) && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 			{	
@@ -1634,6 +1664,9 @@ package services
 			if (BlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+				return;
+			
 			syncCalibrationsActive = true;
 			
 			//Upload Glucose Readings
@@ -1738,6 +1771,9 @@ package services
 			if (BlueToothDevice.isFollower() && !followerModeEnabled)
 				return;
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
+				return;
+			
 			syncVisualCalibrationsActive = true;
 			
 			//Upload Glucose Readings
@@ -1791,6 +1827,9 @@ package services
 				return;
 			
 			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+				return;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !BlueToothDevice.isFollower())
 				return;
 			
 			syncSensorStartActive = true;
@@ -2040,7 +2079,7 @@ package services
 		{
 			if (serviceTimer == null || !serviceTimer.running)
 			{
-				serviceTimer = new Timer(60 * 1000);
+				serviceTimer = new Timer(2.5 * 60 * 1000);
 				serviceTimer.addEventListener(TimerEvent.TIMER, onServiceTimer, false, 0, true);
 				serviceTimer.start();
 			}

@@ -5,6 +5,7 @@ package ui.screens.display.settings.share
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
+	import feathers.controls.Check;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
@@ -58,6 +59,7 @@ package ui.screens.display.settings.share
 		private var followerManagerCallout:Callout;
 		private var followerManagerContainer:ScrollContainer;
 		private var nonDexcomInstructions:Label;
+		private var wifiSyncOnlyCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -67,6 +69,7 @@ package ui.screens.display.settings.share
 		private var selectedServerCode:String;
 		private var selectedServerIndex:int;
 		private var selectedDexcomShareSerialNumber:String;
+		private var isSyncWifiOnly:Boolean;
 		
 		public function DexcomSettingsList()
 		{
@@ -101,15 +104,9 @@ package ui.screens.display.settings.share
 			isDexcomEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true";
 			selectedUsername = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME);
 			selectedPassword = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true")
-				selectedServerCode = "us";
-			else
-				selectedServerCode = "non-us";
-			
-			if (!BlueToothDevice.isDexcomG5())
-				selectedDexcomShareSerialNumber = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER).toUpperCase();
-			else
-				selectedDexcomShareSerialNumber = "";
+			selectedServerCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true" ? "us" : "non-us";
+			selectedDexcomShareSerialNumber = !BlueToothDevice.isDexcomG5() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER).toUpperCase() : "";
+			isSyncWifiOnly = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_WIFI_ONLY_UPLOADER_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -172,7 +169,11 @@ package ui.screens.display.settings.share
 				
 				return list;
 			};
-			dsServer.addEventListener(Event.CHANGE, onServerChanged);
+			dsServer.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Wi-Fi Sync Only
+			wifiSyncOnlyCheck = LayoutFactory.createCheckMark(isSyncWifiOnly);
+			wifiSyncOnlyCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Actions Container
 			var actionsLayout:HorizontalLayout = new HorizontalLayout();
@@ -234,6 +235,10 @@ package ui.screens.display.settings.share
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) != dexcomServerValue)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL, dexcomServerValue);
 			
+			//Wi-Fi Only
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_WIFI_ONLY_UPLOADER_ON) != String(isSyncWifiOnly))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_WIFI_ONLY_UPLOADER_ON, String(isSyncWifiOnly));
+			
 			needsSave = false;
 		}
 		
@@ -249,6 +254,7 @@ package ui.screens.display.settings.share
 				if (!BlueToothDevice.isDexcomG5())
 					listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','serial_label'), accessory: dsSerial });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_label'), accessory: dsServer });
+				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','wifi_only_sync_label'), accessory: wifiSyncOnlyCheck });
 				listDataProviderItems.push({ label: "", accessory: actionsContainer });
 				if (!BlueToothDevice.isDexcomG4() && !BlueToothDevice.isDexcomG5())
 					listDataProviderItems.push({ label: "", accessory: nonDexcomInstructions });
@@ -301,9 +307,10 @@ package ui.screens.display.settings.share
 			needsSave = true;
 		}
 		
-		private function onServerChanged(e:Event):void
+		private function onSettingsChanged(e:Event):void
 		{
 			selectedServerCode = dsServer.selectedItem.code;
+			isSyncWifiOnly = wifiSyncOnlyCheck.isSelected;
 			
 			needsSave = true;
 		}
@@ -453,7 +460,7 @@ package ui.screens.display.settings.share
 			}
 			if(dsServer != null)
 			{
-				dsServer.removeEventListener(Event.CHANGE, onServerChanged);
+				dsServer.removeEventListener(Event.CHANGE, onSettingsChanged);
 				dsServer.dispose();
 				dsServer = null;
 			}
@@ -520,6 +527,12 @@ package ui.screens.display.settings.share
 			{
 				nonDexcomInstructions.dispose();
 				nonDexcomInstructions = null;
+			}
+			if(wifiSyncOnlyCheck != null)
+			{
+				wifiSyncOnlyCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				wifiSyncOnlyCheck.dispose();
+				wifiSyncOnlyCheck = null;
 			}
 			
 			super.dispose();
