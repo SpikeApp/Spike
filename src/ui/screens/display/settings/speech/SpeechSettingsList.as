@@ -1,5 +1,6 @@
 package ui.screens.display.settings.speech
 {
+	import database.BgReading;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
@@ -33,6 +34,9 @@ package ui.screens.display.settings.speech
 		private var deltaToggle:ToggleSwitch;
 		private var speechInterval:NumericStepper;
 		private var languagePicker:PickerList;
+		private var glucoseThresholdsToggle:ToggleSwitch;
+		private var highGlucoseStepper:NumericStepper;
+		private var lowGlucoseStepper:NumericStepper;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -43,6 +47,10 @@ package ui.screens.display.settings.speech
 		private var isDeltaEnabled:Boolean;
 		private var selectedInterval:int;
 		private var initialInstructionsDisplayed:Boolean;
+		private var useGlucoseThresholds:Boolean;
+		private var glucoseThresholdHigh:Number;
+		private var glucoseThresholdLow:Number;
+		private var glucoseUnit:String;
 		
 		public function SpeechSettingsList()
 		{
@@ -80,6 +88,12 @@ package ui.screens.display.settings.speech
 			isDeltaEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true";
 			selectedInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
 			initialInstructionsDisplayed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED) == "true";
+			glucoseUnit = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mgdl" : "mmol";
+			useGlucoseThresholds = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_ON) == "true";
+			glucoseThresholdHigh = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH) == "0" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) : Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH));
+			if (glucoseUnit != "mgdl") glucoseThresholdHigh = Math.round(BgReading.mgdlToMmol(glucoseThresholdHigh) * 10) / 10;
+			glucoseThresholdLow = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW) == "0" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK)) : Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW));
+			if (glucoseUnit != "mgdl") glucoseThresholdLow = Math.round(BgReading.mgdlToMmol(glucoseThresholdLow) * 10) / 10;
 		}
 		
 		private function setupContent():void
@@ -95,6 +109,17 @@ package ui.screens.display.settings.speech
 			//Delta Toggle
 			deltaToggle = LayoutFactory.createToggleSwitch(isDeltaEnabled);
 			deltaToggle.addEventListener( Event.CHANGE, onSettingsChanged);
+			
+			//Thresholds On/Off Toggle
+			glucoseThresholdsToggle = LayoutFactory.createToggleSwitch(useGlucoseThresholds);
+			glucoseThresholdsToggle.addEventListener( Event.CHANGE, onGlucoseThresholdToggleChanged);
+			
+			//High/Low Thresholds
+			highGlucoseStepper = LayoutFactory.createNumericStepper(glucoseUnit == "mgdl" ? 50 : Math.round(BgReading.mgdlToMmol(50) * 10) / 10, glucoseUnit == "mgdl" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, glucoseThresholdHigh, glucoseUnit == "mgdl" ? 1 : 0.1);
+			highGlucoseStepper.addEventListener( Event.CHANGE, onGlucoseThresholdHighChanged);
+			
+			lowGlucoseStepper = LayoutFactory.createNumericStepper(glucoseUnit == "mgdl" ? 40 : Math.round(BgReading.mgdlToMmol(40) * 10) / 10, glucoseUnit == "mgdl" ? 390 : Math.round(BgReading.mgdlToMmol(390) * 10) / 10, glucoseThresholdLow, glucoseUnit == "mgdl" ? 1 : 0.1);
+			lowGlucoseStepper.addEventListener( Event.CHANGE, onGlucoseThresholdLowChanged);
 			
 			//Interval
 			speechInterval = LayoutFactory.createNumericStepper(1, 1000, 1);
@@ -146,35 +171,26 @@ package ui.screens.display.settings.speech
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL, String(selectedInterval));
 			
 			//Speech Enabled
-			var speechValueToSave:String
-			if (isSpeechEnabled)
-				speechValueToSave = "true";
-			else
-				speechValueToSave = "false";
-			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) != speechValueToSave)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON, speechValueToSave);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) != String(isSpeechEnabled))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON, String(isSpeechEnabled));
 			
 			//Trend Enabled
-			var trendValueToSave:String
-			if (isTrendEnabled)
-				trendValueToSave = "true";
-			else
-				trendValueToSave = "false";
-			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) != trendValueToSave)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON, trendValueToSave);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) != String(isTrendEnabled))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON, String(isTrendEnabled));
 			
 			//Delta Enabled
-			var deltaValueToSave:String
-			if (isDeltaEnabled)
-				deltaValueToSave = "true";
-			else
-				deltaValueToSave = "false";
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) != String(isDeltaEnabled))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON, String(isDeltaEnabled));
 			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) != deltaValueToSave)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON, deltaValueToSave);
+			//Thresholds
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_ON) != String(useGlucoseThresholds))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_ON, String(useGlucoseThresholds));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH) != String(glucoseUnit == "mgdl" ? glucoseThresholdHigh : Math.round(BgReading.mmolToMgdl(glucoseThresholdHigh))))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH, String(glucoseUnit == "mgdl" ? glucoseThresholdHigh : Math.round(BgReading.mmolToMgdl(glucoseThresholdHigh))));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW) != String(glucoseUnit == "mgdl" ? glucoseThresholdLow : Math.round(BgReading.mmolToMgdl(glucoseThresholdLow))))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW, String(glucoseUnit == "mgdl" ? glucoseThresholdLow : Math.round(BgReading.mmolToMgdl(glucoseThresholdLow))));
 			
 			needsSave = false;
 		}
@@ -183,21 +199,27 @@ package ui.screens.display.settings.speech
 		{
 			if(fullDisplay)
 			{
-				dataProvider = new ArrayCollection(
-					[
-						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_title'), accessory: speechToggle },
-						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_trend_title'), accessory: trendToggle },
-						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_delta_title'), accessory: deltaToggle },
-						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_interval_title'), accessory: speechInterval },
-						{ label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_language_title'), accessory: languagePicker },
-					]);
+				var data:Array = [];
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_title'), accessory: speechToggle } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_trend_title'), accessory: trendToggle } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_delta_title'), accessory: deltaToggle } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_interval_title'), accessory: speechInterval } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','use_glucose_thresholds_label'), accessory: glucoseThresholdsToggle } );
+				if (useGlucoseThresholds)
+				{
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','high_threshold_label'), accessory: highGlucoseStepper } );
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','low_threshold_label'), accessory: lowGlucoseStepper } );
+				}
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_language_title'), accessory: languagePicker } );
+				
+				dataProvider = new ArrayCollection(data);
 			}
 			else
 			{
 				dataProvider = new ArrayCollection(
-					[
-						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: speechToggle },
-					]);
+				[
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: speechToggle },
+				]);
 			}
 		}
 		
@@ -212,6 +234,42 @@ package ui.screens.display.settings.speech
 			selectedInterval = speechInterval.value;
 			selectedLanguageCode = languagePicker.selectedItem.code;
 			
+			needsSave = true;
+		}
+		
+		private function onGlucoseThresholdToggleChanged(E:Event):void
+		{
+			/* Update Internal Variables */
+			useGlucoseThresholds = glucoseThresholdsToggle.isSelected;
+			
+			needsSave = true;
+			
+			if(speechToggle.isSelected) reloadSpeechSettings(true);
+		}
+		
+		private function onGlucoseThresholdHighChanged(E:Event):void
+		{
+			glucoseThresholdHigh = highGlucoseStepper.value;
+			
+			if (glucoseThresholdHigh <= glucoseThresholdLow)
+			{
+				glucoseThresholdLow = glucoseThresholdHigh - (glucoseUnit == "mgdl" ? 1 : 0.1);
+				lowGlucoseStepper.value = glucoseThresholdLow;
+			}
+			
+			needsSave = true;
+		}
+		
+		private function onGlucoseThresholdLowChanged(E:Event):void
+		{
+			glucoseThresholdLow = lowGlucoseStepper.value;
+			
+			if (glucoseThresholdLow >= glucoseThresholdHigh)
+			{
+				glucoseThresholdHigh = glucoseThresholdHigh + (glucoseUnit == "mgdl" ? 1 : 0.1);
+				highGlucoseStepper.value = glucoseThresholdHigh;
+			}
+				
 			needsSave = true;
 		}
 		
@@ -287,6 +345,24 @@ package ui.screens.display.settings.speech
 				languagePicker.removeEventListener( Event.CHANGE, onSettingsChanged);	
 				languagePicker.dispose();
 				languagePicker = null;
+			}
+			if(glucoseThresholdsToggle != null)
+			{
+				glucoseThresholdsToggle.removeEventListener( Event.CHANGE, onGlucoseThresholdToggleChanged);	
+				glucoseThresholdsToggle.dispose();
+				glucoseThresholdsToggle = null;
+			}
+			if(highGlucoseStepper != null)
+			{
+				highGlucoseStepper.removeEventListener( Event.CHANGE, onGlucoseThresholdHighChanged);	
+				highGlucoseStepper.dispose();
+				highGlucoseStepper = null;
+			}
+			if(lowGlucoseStepper != null)
+			{
+				lowGlucoseStepper.removeEventListener( Event.CHANGE, onGlucoseThresholdLowChanged);	
+				lowGlucoseStepper.dispose();
+				lowGlucoseStepper = null;
 			}
 			
 			super.dispose();
