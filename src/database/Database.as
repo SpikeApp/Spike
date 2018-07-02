@@ -11,6 +11,7 @@ package database
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
+	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -614,24 +615,46 @@ package database
 				
 				sqlStatement.clearParameters();
 				
-				//Check if table needs to be updated for new Spike format
-				sqlStatement.text = "SELECT carbtype, duration FROM treatments";
-				sqlStatement.addEventListener(SQLEvent.RESULT,checkPerformed);
-				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkError);
+				//Check if table needs to be updated for new Spike format #1
+				sqlStatement.text = "SELECT duration FROM treatments";
+				sqlStatement.addEventListener(SQLEvent.RESULT,check1Performed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,check1Error);
 				sqlStatement.execute();
 				
-				function checkPerformed(se:SQLEvent):void 
+				function check1Performed(se:SQLEvent):void 
 				{
-					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
-					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkError);
-					createInsulinsTable();
+					sqlStatement.removeEventListener(SQLEvent.RESULT,check1Performed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check1Error);
+					sqlStatement.clearParameters();
+					
+					//Check if table needs to be updated for new Spike format #2
+					sqlStatement.text = "SELECT carbtype FROM treatments";
+					sqlStatement.addEventListener(SQLEvent.RESULT,check2Performed);
+					sqlStatement.addEventListener(SQLErrorEvent.ERROR,check2Error);
+					sqlStatement.execute();
+					
+					function check2Performed(se:SQLEvent):void 
+					{
+						sqlStatement.removeEventListener(SQLEvent.RESULT,check2Performed);
+						sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check2Error);
+						sqlStatement.clearParameters();
+						createInsulinsTable();
+					}
+					
+					function check2Error(see:SQLErrorEvent):void 
+					{
+						if (debugMode) trace("Database.as : carbtype column not found in treatments table (old version of Spike). Updating table...");
+						sqlStatement.clearParameters();
+						sqlStatement.text = "ALTER TABLE treatments ADD COLUMN carbtype REAL;";
+						sqlStatement.execute();
+					}
 				}
 				
-				function checkError(see:SQLErrorEvent):void 
+				function check1Error(see:SQLErrorEvent):void 
 				{
-					if (debugMode) trace("Database.as : carbtype or duration column not found in treatments table (old version of Spike). Updating table...");
+					if (debugMode) trace("Database.as : duration column not found in treatments table (old version of Spike). Updating table...");
 					sqlStatement.clearParameters();
-					sqlStatement.text = "ALTER TABLE treatments ADD carbtype REAL, duration REAL;";
+					sqlStatement.text = "ALTER TABLE treatments ADD COLUMN duration REAL;";
 					sqlStatement.execute();
 				}
 			}
