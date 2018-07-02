@@ -134,7 +134,7 @@ package ui.screens
 		private function setupHeader():void
 		{
 			/* Set Header Title */
-			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				title = ModelLocator.resourceManagerInstance.getString('fullscreenglucosescreen','screen_title');
 			else
 				title = ModelLocator.resourceManagerInstance.getString('fullscreenglucosescreen','screen_title_small');
