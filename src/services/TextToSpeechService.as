@@ -139,6 +139,39 @@ package services
 			SpikeANE.say(text, language);		
 		}
 		
+		//Remove all spaces in the string.
+		private static function removeSpaces(text:String):String
+		{
+			var rex:RegExp = /[\s\r\n]+/gim;
+			return text.replace(rex,'');
+		}
+		
+		private static function assertFractionalDigits(number:String):String 
+		{
+			if(!isNaN(Number(removeSpaces(number))))
+			{	
+				if(number.indexOf(".") == -1)
+				{
+					//Assert at least one fractional digit.	
+					return number.concat(".0");
+				}
+			}
+			return number;
+		}
+		
+		private static function formatLocaleSpecific(number:String):String 
+		{
+			if(!isNaN(Number(removeSpaces(number))))
+			{
+				//For some languages it is important that the string is formatted with the locale specific decimal separator.
+				if (speechLanguageCode == "de-DE")
+				{
+					return number.replace(".", ",");
+				}
+			}
+			return number;
+		}
+		
 		private static function speakReading():void
 		{
 			//Update received readings counter
@@ -158,7 +191,14 @@ package services
 						
 						//Get current glucose
 						var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-							
+						
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
+						{
+							currentBgReadingFormatted = assertFractionalDigits(currentBgReadingFormatted);
+						}						
+						
+						currentBgReadingFormatted = formatLocaleSpecific(currentBgReadingFormatted);
+						
 						if (currentBgReadingFormatted == "HIGH")
 							currentBgReadingFormatted = ". " + ModelLocator.resourceManagerInstance.getString('texttospeech','high');
 						else if (currentBgReadingFormatted == "LOW") 
@@ -202,6 +242,8 @@ package services
 							
 							if (currentDelta == "0.0" || currentDelta == "+0" || currentDelta == "+ 0" || currentDelta == "-0" || currentDelta == "- 0")
 								currentDelta = "0";
+							
+							currentDelta = formatLocaleSpecific(currentDelta);
 						}
 						
 						//Create output text
