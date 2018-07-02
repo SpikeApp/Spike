@@ -153,6 +153,8 @@ package database
 			"glucose REAL, " +
 			"glucoseestimated REAL, " +
 			"note STRING, " +
+			"carbtype REAL, " +
+			"duration REAL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -597,20 +599,45 @@ package database
 			}
 		}
 		
-		private static function createTreatmentsTable():void {
+		private static function createTreatmentsTable():void 
+		{
 			sqlStatement.clearParameters();
 			sqlStatement.text = CREATE_TABLE_TREATMENTS;
 			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
 			sqlStatement.execute();
 			
-			function tableCreated(se:SQLEvent):void {
+			function tableCreated(se:SQLEvent):void 
+			{
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				createInsulinsTable();
+				
+				sqlStatement.clearParameters();
+				
+				//Check if table needs to be updated for new Spike format
+				sqlStatement.text = "SELECT carbtype, duration FROM treatments";
+				sqlStatement.addEventListener(SQLEvent.RESULT,checkPerformed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkError);
+				sqlStatement.execute();
+				
+				function checkPerformed(se:SQLEvent):void 
+				{
+					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkError);
+					createInsulinsTable();
+				}
+				
+				function checkError(see:SQLErrorEvent):void 
+				{
+					if (debugMode) trace("Database.as : carbtype or duration column not found in treatments table (old version of Spike). Updating table...");
+					sqlStatement.clearParameters();
+					sqlStatement.text = "ALTER TABLE treatments ADD carbtype REAL, duration REAL;";
+					sqlStatement.execute();
+				}
 			}
 			
-			function tableCreationError(see:SQLErrorEvent):void {
+			function tableCreationError(see:SQLErrorEvent):void 
+			{
 				if (debugMode) trace("Database.as : Failed to create insulins table");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
