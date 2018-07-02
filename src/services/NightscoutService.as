@@ -45,8 +45,11 @@ package services
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
+	import ui.chart.GlucoseFactory;
 	import ui.popups.AlertManager;
 	
+	import utils.BatteryInfo;
+	import utils.Constants;
 	import utils.SpikeJSON;
 	import utils.TimeSpan;
 	import utils.Trace;
@@ -71,10 +74,12 @@ package services
 		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
 		private static const MODE_PEBBLE_GET:String = "pebbleGet";
 		private static const MODE_USER_INFO_GET:String = "userInfoGet";
+		private static const MODE_BATTERY_UPLOAD:String = "batteryUpload";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
 		private static const MAX_RETRIES_FOR_TREATMENTS:int = 1;
 		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
 		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
+		private static const TIME_24_MINUTES:int = 24 * 60 * 1000;
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
 		private static const TIME_5_MINUTES_30_SECONDS:int = (5 * 60 * 1000) + 30000;
 		private static const TIME_5_MINUTES_10_SECONDS:int = (5 * 60 * 1000) + 10000;
@@ -134,6 +139,7 @@ package services
 		private static var nightscoutFollowAPISecret:String = "";
 		private static var nightscoutProfileURL:String = "";
 		private static var isNSProfileSet:Boolean = false;
+		private static var nightscoutDeviceStatusURL:String = "";
 		
 		private static var _instance:NightscoutService = new NightscoutService();
 
@@ -157,6 +163,7 @@ package services
 		private static var lastRemoteProfileSync:Number = 0;
 		private static var lastRemotePebbleSync:Number = 0;
 		private static var pumpUserEnabled:Boolean;
+		private static var phoneBatteryLevel:Number = 0;
 
 		public function NightscoutService()
 		{
@@ -350,6 +357,10 @@ package services
 					else
 						getPebbleEndpoint();
 				}
+				
+				//Upload battery status
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) == "true")
+					uploadBatteryStatus()
 			}
 			else
 			{
@@ -357,6 +368,56 @@ package services
 			}
 			
 			syncGlucoseReadingsActive = false;
+		}
+		
+		/**
+		 * BATTERY STATUS
+		 */
+		
+		private static function uploadBatteryStatus():void
+		{
+			Trace.myTrace("NightscoutService.as", "uploadBatteryStatus called");
+			
+			phoneBatteryLevel = BatteryInfo.getBatteryLevel();
+			if (String(phoneBatteryLevel) == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED) && new Date().valueOf() - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP)) < TIME_24_MINUTES)
+			{
+				Trace.myTrace("NightscoutService.as", "Battery level has not changed and is current. Skipping...");
+				return;
+			}
+			
+			var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
+			var deviceModel:String = "Spike " + Constants.deviceModelName;
+			
+			var uploaderBatteryStatus:Object = {};
+			uploaderBatteryStatus["device"] = deviceModel;
+			uploaderBatteryStatus["uploader"] = { name: deviceModel, battery: phoneBatteryLevel, tName: BlueToothDevice.getTransmitterName(), tBatteryValue: batteryStatus.level, tBatteryColor: batteryStatus.color };
+			
+			NetworkConnector.createNSConnector(nightscoutDeviceStatusURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(uploaderBatteryStatus), MODE_BATTERY_UPLOAD, onUploadBatteryStatusComplete, onConnectionFailed);
+		}
+		
+		private static function onUploadBatteryStatusComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onUploadBatteryStatusComplete called!");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onUploadBatteryStatusComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
+			loader = null;
+			
+			if (response.indexOf("uploader") != -1)
+			{
+				Trace.myTrace("NightscoutService.as", "Battery status uploaded successfully!");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED, String(phoneBatteryLevel));
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP, String(new Date().valueOf()));
+			}
+			else
+				Trace.myTrace("NightscoutService.as", "Error uploading battery status! Response: " + response);
 		}
 		
 		/**
@@ -1097,14 +1158,12 @@ package services
 				try
 				{
 					var userInfoProperties:Object = SpikeJSON.parse(response) as Object;
-					
 					if (userInfoProperties != null)
 					{
 						var currentBG:Number = userInfoProperties.bgnow != null && userInfoProperties.bgnow.mean != null ? Number(userInfoProperties.bgnow.mean) : Number.NaN;
 						var basal:String = userInfoProperties.basal != null && userInfoProperties.basal.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_ON) == "true" ? String(userInfoProperties.basal.display) : "";
 						var raw:Number = userInfoProperties.rawbg != null && userInfoProperties.rawbg.mgdl != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true" ? Number(userInfoProperties.rawbg.mgdl) : Number.NaN;
 						!isNaN(raw) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? raw = Math.round((BgReading.mgdlToMmol(raw)) * 10) / 10 : raw = raw;
-						var uploaderBattery:String = userInfoProperties.upbat != null && userInfoProperties.upbat.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON) == "true" ? userInfoProperties.upbat.display : "";
 						var outcome:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.outcomeDisplay != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON) == "true" ? Number(userInfoProperties.bwp.outcomeDisplay) : Number.NaN;
 						!isNaN(outcome) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? outcome = Math.round((BgReading.mgdlToMmol(outcome)) * 10) / 10 : outcome = outcome;
 						var effect:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.effectDisplay != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON) == "true" ? Number(userInfoProperties.bwp.effectDisplay) : Number.NaN;
@@ -1119,6 +1178,43 @@ package services
 						var sage:String =  userInfoProperties.sage != null && userInfoProperties.sage["Sensor Start"] != null && userInfoProperties.sage["Sensor Start"].display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) == "true" ? String(userInfoProperties.sage["Sensor Start"].display) : "";
 						var iage:String =  userInfoProperties.iage != null && userInfoProperties.iage.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON) == "true" ? String(userInfoProperties.iage.display) : "";
 						var loopLastMoment:Number =  userInfoProperties.loop != null && userInfoProperties.loop.lastOkMoment != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOOP_MOMENT_ON) == "true" ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.loop.lastOkMoment), new Date()).minutes : Number.NaN;
+						var isSpikeMaster:Boolean = false;
+						var spikeMasterPhoneBattery:String = "";
+						var spikeMasterTransmitterName:String = "";
+						var spikeMasterTransmitterBattery:String = "";
+						var spikeMasterTransmitterBatteryColor:uint = 0;
+						
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON) == "true" && userInfoProperties.upbat != null && userInfoProperties.upbat.devices != null)
+						{
+							for(var key:String in userInfoProperties.upbat.devices)
+							{
+								if (key.indexOf("Spike") != -1)
+								{
+									//It's a Spike master
+									isSpikeMaster = true;
+									
+									if (userInfoProperties.upbat.devices[key].min != null)
+									{
+										if (userInfoProperties.upbat.devices[key].min.display != null)
+											spikeMasterPhoneBattery = String(userInfoProperties.upbat.devices[key].min.display);
+										
+										if (userInfoProperties.upbat.devices[key].min.tBatteryValue != null)
+											spikeMasterTransmitterName = String(userInfoProperties.upbat.devices[key].min.tName);
+										
+										if (userInfoProperties.upbat.devices[key].min.tBatteryValue != null)
+											spikeMasterTransmitterBattery = String(userInfoProperties.upbat.devices[key].min.tBatteryValue);
+										
+										if (userInfoProperties.upbat.devices[key].min.tBatteryColor != null)
+											spikeMasterTransmitterBatteryColor = uint(userInfoProperties.upbat.devices[key].min.tBatteryColor);
+										
+									}
+									
+									break;
+								}
+							}
+						}
+						
+						var uploaderBattery:String = !isSpikeMaster && userInfoProperties.upbat != null && userInfoProperties.upbat.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON) == "true" ? userInfoProperties.upbat.display : "";
 						
 						_instance.dispatchEvent
 						(
@@ -1141,7 +1237,11 @@ package services
 									pumpTime: pumpTime,
 									cage: cage,
 									sage: sage,
-									iage: iage
+									iage: iage,
+									spikeMasterPhoneBattery: spikeMasterPhoneBattery,
+									spikeMasterTransmitterName: spikeMasterTransmitterName,
+									spikeMasterTransmitterBattery: spikeMasterTransmitterBattery,
+									spikeMasterTransmitterBatteryColor: spikeMasterTransmitterBatteryColor
 								}
 							)
 						);
@@ -1975,6 +2075,9 @@ package services
 			nightscoutUserInfoURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v2/properties" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v2/properties";
 			if (nightscoutUserInfoURL.indexOf('http') == -1) nightscoutUserInfoURL = "https://" + nightscoutUserInfoURL;
 			
+			nightscoutDeviceStatusURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/devicestatus.json" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/devicestatus.json";
+			if (nightscoutDeviceStatusURL.indexOf('http') == -1) nightscoutDeviceStatusURL = "https://" + nightscoutDeviceStatusURL;
+			
 			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 			nightscoutTreatmentsSyncEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
 			pumpUserEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true";
@@ -2093,6 +2196,10 @@ package services
 			else if (mode == MODE_USER_INFO_GET)
 			{
 				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting user info. Error: " + error.message);
+			}
+			else if (mode == MODE_BATTERY_UPLOAD)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error uploading battery levels. Error: " + error.message);
 			}
 		}
 		

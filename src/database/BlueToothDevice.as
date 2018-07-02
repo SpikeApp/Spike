@@ -1,5 +1,7 @@
 package database
 {
+	import model.ModelLocator;
+	
 	import services.BluetoothService;
 	
 	import utils.Trace;
@@ -25,6 +27,9 @@ package database
 	 * <br>
 	 * - xbridgr : requested by Marek Macner. Uses an adapted version of the xbridge protocol, for FSL
 	 */
+	
+	[ResourceBundle("transmitterscreen")]
+	
 	public class BlueToothDevice extends SuperDatabaseClass
 	{
 		public static const DEFAULT_BLUETOOTH_DEVICE_ID:String = "1465501584186cb0d5f60b3c";
@@ -238,6 +243,21 @@ package database
 			if (isxBridgeR())
 				return "xBridgeR";
 			return "unknown";
+		}
+		
+		public static function getTransmitterName():String
+		{
+			var transmitterName:String = "";
+			
+			if (BlueToothDevice.isDexcomG5()) transmitterName = "G5";
+			else if (BlueToothDevice.isDexcomG4()) transmitterName = "G4";
+			else if (BlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
+			else if (BlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
+			else if (BlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
+			else if (BlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
+			else if (BlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
+			
+			return transmitterName;
 		}
 
 		private static function myTrace(log:String):void {

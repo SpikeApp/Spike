@@ -3,6 +3,7 @@ package ui.screens.display.settings.share
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
+	import feathers.controls.Check;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
 	import feathers.data.ArrayCollection;
@@ -34,12 +35,14 @@ package ui.screens.display.settings.share
 		private var nsURL:TextInput;
 		private var nsAPISecret:TextInput;
 		private var nsLogin:Button;
+		private var batteryUploader:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
 		private var isNSEnabled:Boolean;
 		private var selectedURL:String;
 		private var selectedAPISecret:String;
+		private var isBatteryUploaderEnabled:Boolean;
 		
 		public function NightscoutSettingsList()
 		{
@@ -71,6 +74,7 @@ package ui.screens.display.settings.share
 			isNSEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true";
 			selectedURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
 			selectedAPISecret = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
+			isBatteryUploaderEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -100,6 +104,10 @@ package ui.screens.display.settings.share
 			nsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
 			nsLogin.pivotX = -3;
 			nsLogin.addEventListener(Event.TRIGGERED, onNightscoutLogin);
+			
+			//Battery Uploader
+			batteryUploader = LayoutFactory.createCheckMark(isBatteryUploaderEnabled);
+			batteryUploader.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Define Nightscout Settings Data
 			reloadNightscoutSettings(nsToggle.isSelected);
@@ -141,6 +149,10 @@ package ui.screens.display.settings.share
 					needsCredentialRechek = true;
 				}
 				
+				//Battery Uploader
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) != String(isBatteryUploaderEnabled))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON, String(isBatteryUploaderEnabled));
+				
 				//Credentials Recheck
 				if (needsCredentialRechek)
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED, "false");
@@ -154,6 +166,7 @@ package ui.screens.display.settings.share
 			selectedAPISecret = nsAPISecret.text.replace(" ", "");
 			nsURL.text = nsURL.text.replace(" ", "");
 			selectedURL = nsURL.text.replace(" ", "");
+			isBatteryUploaderEnabled = batteryUploader.isSelected;
 			
 			needsSave = true;
 		}
@@ -176,6 +189,7 @@ package ui.screens.display.settings.share
 						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: nsToggle },
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_url_label'), accessory: nsURL },
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_api_label'), accessory: nsAPISecret },
+						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_battery_upload_label'), accessory: batteryUploader },
 						{ label: "", accessory: nsLogin },
 					]);
 			}
@@ -261,6 +275,12 @@ package ui.screens.display.settings.share
 				nsLogin.removeEventListener(Event.TRIGGERED, onNightscoutLogin);
 				nsLogin.dispose();
 				nsLogin = null;
+			}
+			if(batteryUploader != null)
+			{
+				batteryUploader.removeEventListener(Event.CHANGE, onSettingsChanged);
+				batteryUploader.dispose();
+				batteryUploader = null;
 			}
 			
 			super.dispose();

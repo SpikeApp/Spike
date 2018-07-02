@@ -430,6 +430,13 @@ package database
 		 * Pie Chart #3 
 		 */
 		 public static const COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE:int = 161;
+		 
+		 /**
+		  * NIGHTSCOUT BATTERY UPLOADER 
+		  */
+		 public static const COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON:int = 162;
+		 public static const COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED:int = 163;
+		 public static const COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP:int = 164;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -593,7 +600,10 @@ package database
 			 "true",//COMMON_SETTING_SAGE_ON
 			 "true",//COMMON_SETTING_IAGE_ON
 			 "true",//COMMON_SETTING_TRANSMITTER_BATTERY_ON
-			 "false"//COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE
+			 "false",//COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE
+			 "false",//COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON
+			 "",//COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED
+			 "0"//COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP
 		 ];
 
 		 public function CommonSettings()

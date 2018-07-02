@@ -24,6 +24,163 @@ package utils
 		
 		public function DeviceInfo(){}
 		
+		public static function getDeviceModel():String
+		{
+			var deviceModel:String = "Spike";
+			
+			if(Capabilities.cpuArchitecture == "ARM") 
+			{
+				var deviceSpecs:String = Capabilities.os;
+				
+				if (deviceSpecs.indexOf("iPhone1,1") != -1)
+				{
+					deviceModel = "iPhone 2G";
+				}
+				else if (deviceSpecs.indexOf("iPhone1,2") != -1)
+				{
+					deviceModel = "iPhone 3G";
+				}
+				else if (deviceSpecs.indexOf("iPhone2,1") != -1)
+				{
+					deviceModel = "iPhone 3GS";
+				}
+				else if (deviceSpecs.indexOf("iPhone3,1") != -1 || deviceSpecs.indexOf("iPhone3,2") != -1 || deviceSpecs.indexOf("iPhone3,3") != -1)
+				{
+					deviceModel = "iPhone 4";
+				}
+				else if (deviceSpecs.indexOf("iPhone4,1") != -1)
+				{
+					deviceModel = "iPhone 4S";
+				}
+				else if (deviceSpecs.indexOf("iPhone5,1") != -1 || deviceSpecs.indexOf("iPhone5,2") != -1)
+				{
+					deviceModel = "iPhone 5";
+				}
+				else if (deviceSpecs.indexOf("iPhone5,3") != -1 || deviceSpecs.indexOf("iPhone5,4") != -1)
+				{
+					deviceModel = "iPhone 5C";
+				}
+				else if (deviceSpecs.indexOf("iPhone6,1") != -1 || deviceSpecs.indexOf("iPhone6,2") != -1)
+				{
+					deviceModel = "iPhone 5S";
+				}
+				else if (deviceSpecs.indexOf("iPhone8,4") != -1)
+				{
+					deviceModel = "iPhone SE";
+				}
+				else if (deviceSpecs.indexOf("iPhone7,2") != -1)
+				{
+					deviceModel = "iPhone 6";
+				}
+				else if (deviceSpecs.indexOf("iPhone8,1") != -1)
+				{
+					deviceModel = "iPhone 6S";
+				}
+				else if (deviceSpecs.indexOf("iPhone9,1") != -1 || deviceSpecs.indexOf("iPhone9,3") != -1)
+				{
+					deviceModel = "iPhone 7";
+				}
+				else if (deviceSpecs.indexOf("iPhone10,1") != -1 || deviceSpecs.indexOf("iPhone10,4") != -1)
+				{
+					deviceModel = "iPhone 8";
+				}
+				else if (deviceSpecs.indexOf("iPhone7,1") != -1)
+				{
+					deviceModel = "iPhone 6 Plus";
+				}
+				else if (deviceSpecs.indexOf("iPhone8,2") != -1)
+				{
+					deviceModel = "iPhone 6S Plus";
+				}
+				else if (deviceSpecs.indexOf("iPhone9,2") != -1 || deviceSpecs.indexOf("iPhone9,4") != -1)
+				{
+					deviceModel = "iPhone 7 Plus";
+				}
+				else if (deviceSpecs.indexOf("iPhone10,2") != -1 || deviceSpecs.indexOf("iPhone10,5") != -1)
+				{
+					deviceModel = "iPhone 8 Plus";
+				}
+				else if (deviceSpecs.indexOf("iPhone10,3") != -1 || deviceSpecs.indexOf("iPhone10,6") != -1)
+				{
+					deviceModel = "iPhone X";
+				}
+				else if (deviceSpecs.indexOf("iPod2,1") != -1)
+				{
+					deviceModel = "iPod Touch 2nd Gen";
+				}
+				else if (deviceSpecs.indexOf("iPod3,1") != -1)
+				{
+					deviceModel = "iPod Touch 3rd Gen";
+				}
+				else if (deviceSpecs.indexOf("iPod4,1") != -1)
+				{
+					deviceModel = "iPod Touch 4th Gen";
+				}
+				else if (deviceSpecs.indexOf("iPod5,1") != -1)
+				{
+					deviceModel = "iPod Touch 5th Gen";
+				}
+				else if (deviceSpecs.indexOf("iPod7,1") != -1)
+				{
+					deviceModel = "iPod Touch 6th Gen";
+				}
+				else if (deviceSpecs.indexOf("iPad1,1") != -1)
+				{
+					deviceModel = "iPad 1";
+				}
+				else if (deviceSpecs.indexOf("iPad2,1") != -1 || deviceSpecs.indexOf("iPad2,2") != -1 || deviceSpecs.indexOf("iPad2,3") != -1 || deviceSpecs.indexOf("iPad2,4") != -1)
+				{
+					deviceModel = "iPad 2";
+				}
+				else if (deviceSpecs.indexOf("iPad3,1") != -1 || deviceSpecs.indexOf("iPad3,2") != -1 || deviceSpecs.indexOf("iPad3,3") != -1)
+				{
+					deviceModel = "iPad 3";
+				}
+				else if (deviceSpecs.indexOf("iPad3,4") != -1 || deviceSpecs.indexOf("iPad3,5") != -1 || deviceSpecs.indexOf("iPad3,6") != -1)
+				{
+					deviceModel = "iPad 4";
+				}
+				else if (deviceSpecs.indexOf("iPad4,1") != -1 || deviceSpecs.indexOf("iPad4,2") != -1 || deviceSpecs.indexOf("iPad4,3") != -1)
+				{
+					deviceModel = "iPad Air 1";
+				}
+				else if (deviceSpecs.indexOf("iPad5,3") != -1 || deviceSpecs.indexOf("iPad5,4") != -1)
+				{
+					deviceModel = "iPad Air 2";
+				}
+				else if (deviceSpecs.indexOf("iPad6,11") != -1 || deviceSpecs.indexOf("iPad6,12") != -1)
+				{
+					deviceModel = "iPad 9.7-Inch 5th Gen";
+				}
+				else if (deviceSpecs.indexOf("iPad7,3") != -1 || deviceSpecs.indexOf("iPad7,4") != -1)
+				{
+					deviceModel = "iPad Pro 10.5-Inch";
+				}
+				else if (deviceSpecs.indexOf("iPad7,1") != -1 || deviceSpecs.indexOf("iPad7,2") != -1 || deviceSpecs.indexOf("iPad6,7") != -1 || deviceSpecs.indexOf("iPad6,8") != -1)
+				{
+					deviceModel = "iPad Pro 12.9-Inch";
+				}
+				else if (deviceSpecs.indexOf("iPad2,5") != -1 || deviceSpecs.indexOf("iPad2,6") != -1 || deviceSpecs.indexOf("iPad2,7") != -1)
+				{
+					deviceModel = "iPad Mini 1";
+				}
+				else if (deviceSpecs.indexOf("iPad4,4") != -1 || deviceSpecs.indexOf("iPad4,5") != -1 || deviceSpecs.indexOf("iPad4,6") != -1)
+				{
+					deviceModel = "iPad Mini 2";
+				}
+				else if (deviceSpecs.indexOf("iPad4,7") != -1 || deviceSpecs.indexOf("iPad4,8") != -1 || deviceSpecs.indexOf("iPad4,9") != -1)
+				{
+					deviceModel = "iPad Mini 3";
+				}
+				else if (deviceSpecs.indexOf("iPad5,1") != -1 || deviceSpecs.indexOf("iPad5,2") != -1)
+				{
+					deviceModel = "iPad Mini 4";
+				}
+			}
+			
+			return deviceModel;
+		}
+		
 		public static function getDeviceType():String
 		{
 			if (deviceType == null)

@@ -22,6 +22,7 @@ package utils
 		private static var _noLockEnabled:Boolean;
 		public static var appInForeground:Boolean = true;
 		public static var deviceModel:String;
+		public static var deviceModelName:String;
 		public static var isPortrait:Boolean = true;
 		public static var currentOrientation:String = "default";
 		public static var headerHeight:Number = Number.NaN;

@@ -70,7 +70,6 @@ package ui.chart
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("treatments")]
-	[ResourceBundle("transmitterscreen")]
 	[ResourceBundle("globaltranslations")]
 	
 	public class GlucoseChart extends Sprite
@@ -276,6 +275,8 @@ package ui.chart
 		private var iagePill:ChartTreatmentPill;
 		private var tBatteryPill:ChartTreatmentPill;
 		private var userInfoErrorLabel:Label;
+		private var spikeMasterPhoneBatteryPill:ChartTreatmentPill;
+		private var spikeMasterTransmitterBatteryPill:ChartTreatmentPill;
 
 		//Absorption curves
 		private var absorptionGraph:LayoutGroup;
@@ -3584,15 +3585,7 @@ package ui.chart
 					{
 						var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
 						if (tBatteryPill != null) tBatteryPill.dispose();
-						var transmitterName:String = "";
-						if (BlueToothDevice.isDexcomG5()) transmitterName = "G5";
-						else if (BlueToothDevice.isDexcomG4()) transmitterName = "G4";
-						else if (BlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
-						else if (BlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
-						else if (BlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
-						else if (BlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
-						else if (BlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
-						tBatteryPill = new ChartTreatmentPill(transmitterName + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
+						tBatteryPill = new ChartTreatmentPill(BlueToothDevice.getTransmitterName() + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
 						tBatteryPill.setValue(batteryStatus.level);
 						tBatteryPill.colorizeLabel(batteryStatus.color);
 						tBatteryPill.touchable = false;
@@ -3677,6 +3670,39 @@ package ui.chart
 			
 			if (BlueToothDevice.isFollower())
 			{
+				//Spike Master Phone Battery
+				if (spikeMasterPhoneBatteryPill != null) spikeMasterPhoneBatteryPill.dispose();
+				if (e.userInfo.spikeMasterPhoneBattery != null && e.userInfo.spikeMasterPhoneBattery != "")
+				{
+					spikeMasterPhoneBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','spike_master_phone_battery'));
+					spikeMasterPhoneBatteryPill.setValue(e.userInfo.spikeMasterPhoneBattery);
+					
+					var masterPhoneBatteryLevel:Number = Number(String(e.userInfo.spikeMasterPhoneBattery).replace("%", ""));
+					if (!isNaN(masterPhoneBatteryLevel))
+					{
+						if (masterPhoneBatteryLevel > 50)
+							spikeMasterPhoneBatteryPill.colorizeLabel(0x4bef0a);
+						else if (masterPhoneBatteryLevel > 30)
+							spikeMasterPhoneBatteryPill.colorizeLabel(0xff671c);
+						else
+							spikeMasterPhoneBatteryPill.colorizeLabel(0xff1c1c);
+					}
+					
+					spikeMasterPhoneBatteryPill.touchable = false;
+					infoContainer.addChild(spikeMasterPhoneBatteryPill);
+				}
+				
+				//Spike Master Transmitter Battery
+				if (spikeMasterTransmitterBatteryPill != null) spikeMasterTransmitterBatteryPill.dispose();
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_ON) == "true" && e.userInfo.spikeMasterTransmitterName != null && e.userInfo.spikeMasterTransmitterName != "" && e.userInfo.spikeMasterTransmitterBattery != null && e.userInfo.spikeMasterTransmitterBattery != "" && e.userInfo.spikeMasterTransmitterBatteryColor != null && e.userInfo.spikeMasterTransmitterBatteryColor != 0)
+				{
+					spikeMasterTransmitterBatteryPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','spike_master_transmitter_battery').replace("{transmitter}", e.userInfo.spikeMasterTransmitterName));
+					spikeMasterTransmitterBatteryPill.setValue(e.userInfo.spikeMasterTransmitterBattery);
+					spikeMasterTransmitterBatteryPill.colorizeLabel(e.userInfo.spikeMasterTransmitterBatteryColor);
+					spikeMasterTransmitterBatteryPill.touchable = false;
+					infoContainer.addChild(spikeMasterTransmitterBatteryPill);
+				}
+				
 				//Raw Blood Glucose
 				if (rawPill != null) rawPill.dispose();
 				if (e.userInfo.raw != null && !isNaN(e.userInfo.raw))
@@ -4026,6 +4052,20 @@ package ui.chart
 				loopMomentPill.removeFromParent();
 				loopMomentPill.dispose();
 				loopMomentPill = null;
+			}
+			
+			if (spikeMasterPhoneBatteryPill != null)
+			{
+				spikeMasterPhoneBatteryPill.removeFromParent();
+				spikeMasterPhoneBatteryPill.dispose();
+				spikeMasterPhoneBatteryPill = null;
+			}
+			
+			if (spikeMasterTransmitterBatteryPill != null)
+			{
+				spikeMasterTransmitterBatteryPill.removeFromParent();
+				spikeMasterTransmitterBatteryPill.dispose();
+				spikeMasterTransmitterBatteryPill = null;
 			}
 			
 			if (infoContainer != null)

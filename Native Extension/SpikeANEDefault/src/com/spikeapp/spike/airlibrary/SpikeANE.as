@@ -136,6 +136,12 @@ package com.spikeapp.spike.airlibrary
 		public static function vibrate():void {
 		}
 		
+		public static function getBatteryLevel():void {
+		}
+		
+		public static function getBatteryStatus():void {
+		}
+		
 		/************
 		 ** UTILITIES
 		 ************/

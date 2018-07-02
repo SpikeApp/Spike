@@ -207,6 +207,14 @@ package com.spikeapp.spike.airlibrary
 		public static function vibrate():void {
 				context.call("vibrate");
 		}
+		
+		public static function getBatteryLevel():Number {
+			return (context.call("getBatteryLevel") as Number);
+		}
+		
+		public static function getBatteryStatus():int {
+			return (context.call("getBatteryStatus") as int);
+		}
 
 		/************
 		 ** UTILITIES

@@ -206,6 +206,26 @@ FREObject checkMute(FREContext ctx, void* funcData, uint32_t argc, FREObject arg
     return nil;
 }
 
+FREObject getBatteryLevel(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m getBatteryLevel");
+    
+    UIDevice *spikeDevice = [UIDevice currentDevice];
+    [spikeDevice setBatteryMonitoringEnabled:YES];
+    double batteryPercentage = (float)[spikeDevice batteryLevel] * 100;
+    
+    return FPANE_DoubleToFREObject(batteryPercentage);
+}
+
+FREObject getBatteryStatus(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m getBatteryStatus");
+    
+    UIDevice *spikeDevice = [UIDevice currentDevice];
+    [spikeDevice setBatteryMonitoringEnabled:YES];
+    int batteryState = [spikeDevice batteryState];
+    
+    return FPANE_IntToFREObject(batteryState);
+}
+
 /************
  ** UTILITIES
  ************/
@@ -452,33 +472,41 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[26].name = (const uint8_t*) "vibrate";
     func[26].functionData = NULL;
     func[26].function = &vibrate;
+    
+    func[27].name = (const uint8_t*) "getBatteryLevel";
+    func[27].functionData = NULL;
+    func[27].function = &getBatteryLevel;
+    
+    func[28].name = (const uint8_t*) "getBatteryStatus";
+    func[28].functionData = NULL;
+    func[28].function = &getBatteryStatus;
 
     /************
      ** UTILITIES
      ************/
-    func[27].name = (const uint8_t*) "generateHMAC_SHA1";
-    func[27].functionData = NULL;
-    func[27].function = &generateHMAC_SHA1;
-    
-    func[28].name = (const uint8_t*) "AESEncryptWithKey";
-    func[28].functionData = NULL;
-    func[28].function = &AESEncryptWithKey;
-    
-    func[29].name = (const uint8_t*) "startMonitoringAndRangingBeaconsInRegion";
+    func[29].name = (const uint8_t*) "generateHMAC_SHA1";
     func[29].functionData = NULL;
-    func[29].function = &startMonitoringAndRangingBeaconsInRegion;
+    func[29].function = &generateHMAC_SHA1;
     
-    func[30].name = (const uint8_t*) "stopMonitoringAndRangingBeaconsInRegion";
+    func[30].name = (const uint8_t*) "AESEncryptWithKey";
     func[30].functionData = NULL;
-    func[30].function = &stopMonitoringAndRangingBeaconsInRegion;
-
-    func[31].name = (const uint8_t*) "writeTraceToFile";
+    func[30].function = &AESEncryptWithKey;
+    
+    func[31].name = (const uint8_t*) "startMonitoringAndRangingBeaconsInRegion";
     func[31].functionData = NULL;
-    func[31].function = &writeTraceToFile;
-
-    func[32].name = (const uint8_t*) "resetTraceFilePath";
+    func[31].function = &startMonitoringAndRangingBeaconsInRegion;
+    
+    func[32].name = (const uint8_t*) "stopMonitoringAndRangingBeaconsInRegion";
     func[32].functionData = NULL;
-    func[32].function = &resetTraceFilePath;
+    func[32].function = &stopMonitoringAndRangingBeaconsInRegion;
+
+    func[33].name = (const uint8_t*) "writeTraceToFile";
+    func[33].functionData = NULL;
+    func[33].function = &writeTraceToFile;
+
+    func[34].name = (const uint8_t*) "resetTraceFilePath";
+    func[34].functionData = NULL;
+    func[34].function = &resetTraceFilePath;
 
     *functionsToSet = func;
 }

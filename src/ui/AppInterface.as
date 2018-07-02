@@ -73,6 +73,7 @@ package ui
 		public function start():void 
 		{
 			Constants.deviceModel = DeviceInfo.getDeviceType();
+			Constants.deviceModelName = DeviceInfo.getDeviceModel()
 			InterfaceController.init();
 		}
 		
