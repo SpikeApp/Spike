@@ -15,6 +15,7 @@ package services
 	
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
+	import database.LocalSettings;
 	
 	import events.SettingsServiceEvent;
 	
@@ -34,8 +35,9 @@ package services
 		private static const TIME_1_MINUTE:int = 1 * 60 * 1000;
 		private static const MIAOMIAO_CONNECTED_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE:int = 0.5 * TIME_1_MINUTE;
 		private static const MIAOMIAO_DISCONNECTED_MODE:int = NO_SUSPENSION_PREVENTION_MODE;
-		private static const MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE:int = 10 * 1000;
+		private static const MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE:int = 5 * 1000;
 		private static const NO_SUSPENSION_PREVENTION_MODE:int = 1000000;
+		private static const MAXIMIZE_SUSPENSION_PREVENTION:int = 5000;
 		
 		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
@@ -71,6 +73,7 @@ package services
 			
 			//Event Listeners
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
+			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
 			addOrRemoveMiaoMiaoEventListeners();
 		}
 		
@@ -124,9 +127,15 @@ package services
 				}
 				else if (CGMBlueToothDevice.isMiaoMiao())
 				{
-					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE");
-					//start with highest level of suspension prevention
-					deepSleepInterval = MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true") {
+						Trace.myTrace("DeepSleepService.as", "Setting interval to MAXIMIZE_SUSPENSION_PREVENTION");
+						//start with highest level of suspension prevention
+						deepSleepInterval = MAXIMIZE_SUSPENSION_PREVENTION;
+					} else {
+						Trace.myTrace("DeepSleepService.as", "Setting interval to NO_SUSPENSION_PREVENTION_MODE");
+						//start with highest level of suspension prevention
+						deepSleepInterval = NO_SUSPENSION_PREVENTION_MODE;
+					}
 				}
 				else
 				{
@@ -171,7 +180,7 @@ package services
 				Trace.myTrace("DeepSleepService.as", "Starting deep sleep interval!");
 				intervalID = setInterval( playSound, deepSleepInterval);
 			} else {
-				Trace.myTrace("DeepSleepService.as", "deepSleepInterval set to maximum value, not starting deep sleep timer");
+				Trace.myTrace("DeepSleepService.as", "deepSleepInterval disabled");
 			}
 		}
 		
@@ -257,6 +266,17 @@ package services
 			}
 		}
 		
+		private static function onLocalSettingsChanged(event:SettingsServiceEvent):void {
+			if (event.data == LocalSettings.LOCAL_SETTING_MIAOMIAO_FOLLOWER_ENABLED)
+			{
+				Trace.myTrace("DeepSleepService.as", "Settings changed. Defining new interval!");
+				if (deepSleepInterval != MAXIMIZE_SUSPENSION_PREVENTION) {
+					deepSleepInterval = MAXIMIZE_SUSPENSION_PREVENTION;
+					startDeepSleepInterval();
+				}
+			}
+		}
+		
 		/**
 		 * Event Listeners
 		 */
@@ -264,7 +284,8 @@ package services
 		{
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE ||
 				event.data == CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON ||
-				event.data == CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE
+				event.data == CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE ||
+				event.data == CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON
 			) 
 			{
 				Trace.myTrace("DeepSleepService.as", "Settings changed. Defining new interval!");
@@ -276,7 +297,7 @@ package services
 		
 		private static function onMiaoMiaoInitialUpdateCharacteristicReceived(event:Event):void 
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true") {
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true") {
 				if (deepSleepInterval != MIAOMIAO_CONNECTED_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE) {
 					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_DID_RECEIVE_INITIAL_UPDATE_CHARACTERISTIC_MODE = " + MIAOMIAO_CONNECTED_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE/1000 + " seconds");
 					deepSleepInterval = MIAOMIAO_CONNECTED_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE;
@@ -287,7 +308,7 @@ package services
 		
 		private static function onMiaoMiaoDisConnected(event:Event):void 
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true") {
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true") {
 				if (deepSleepInterval != MIAOMIAO_DISCONNECTED_MODE) {
 					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_DISCONNECTED_MODE = " + MIAOMIAO_DISCONNECTED_MODE/1000 + " seconds");
 					deepSleepInterval = MIAOMIAO_DISCONNECTED_MODE;
@@ -298,7 +319,7 @@ package services
 		
 		private static function onMiaoMiaoConnected(event:Event):void 
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true") {
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true") {
 				if (deepSleepInterval != MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE) {
 					Trace.myTrace("DeepSleepService.as", "Setting interval to MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE = " + MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE/1000 + " seconds");
 					deepSleepInterval = MIAOMIAO_CONNECTED_BUT_NO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED_MODE;
