@@ -379,7 +379,7 @@ package services
 			Trace.myTrace("NightscoutService.as", "uploadBatteryStatus called");
 			
 			phoneBatteryLevel = BatteryInfo.getBatteryLevel();
-			if (String(phoneBatteryLevel) == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED) && new Date().valueOf() - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP)) < TIME_24_MINUTES)
+			if ((String(phoneBatteryLevel) == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED) || Math.abs(phoneBatteryLevel - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED))) <= 3) && new Date().valueOf() - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP)) < TIME_24_MINUTES)
 			{
 				Trace.myTrace("NightscoutService.as", "Battery level has not changed and is current. Skipping...");
 				return;
