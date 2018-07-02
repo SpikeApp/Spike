@@ -154,8 +154,8 @@ package database
 			"glucose REAL, " +
 			"glucoseestimated REAL, " +
 			"note STRING, " +
-			"carbtype REAL, " +
-			"duration REAL, " +
+			"carbtime REAL, " +
+			"basalduration REAL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -616,7 +616,7 @@ package database
 				sqlStatement.clearParameters();
 				
 				//Check if table needs to be updated for new Spike format #1
-				sqlStatement.text = "SELECT duration FROM treatments";
+				sqlStatement.text = "SELECT basalduration FROM treatments";
 				sqlStatement.addEventListener(SQLEvent.RESULT,check1Performed);
 				sqlStatement.addEventListener(SQLErrorEvent.ERROR,check1Error);
 				sqlStatement.execute();
@@ -628,7 +628,7 @@ package database
 					sqlStatement.clearParameters();
 					
 					//Check if table needs to be updated for new Spike format #2
-					sqlStatement.text = "SELECT carbtype FROM treatments";
+					sqlStatement.text = "SELECT carbtime FROM treatments";
 					sqlStatement.addEventListener(SQLEvent.RESULT,check2Performed);
 					sqlStatement.addEventListener(SQLErrorEvent.ERROR,check2Error);
 					sqlStatement.execute();
@@ -643,18 +643,18 @@ package database
 					
 					function check2Error(see:SQLErrorEvent):void 
 					{
-						if (debugMode) trace("Database.as : carbtype column not found in treatments table (old version of Spike). Updating table...");
+						if (debugMode) trace("Database.as : carbtime column not found in treatments table (old version of Spike). Updating table...");
 						sqlStatement.clearParameters();
-						sqlStatement.text = "ALTER TABLE treatments ADD COLUMN carbtype REAL;";
+						sqlStatement.text = "ALTER TABLE treatments ADD COLUMN carbtime REAL;";
 						sqlStatement.execute();
 					}
 				}
 				
 				function check1Error(see:SQLErrorEvent):void 
 				{
-					if (debugMode) trace("Database.as : duration column not found in treatments table (old version of Spike). Updating table...");
+					if (debugMode) trace("Database.as : basalduration column not found in treatments table (old version of Spike). Updating table...");
 					sqlStatement.clearParameters();
-					sqlStatement.text = "ALTER TABLE treatments ADD COLUMN duration REAL;";
+					sqlStatement.text = "ALTER TABLE treatments ADD COLUMN basalduration REAL;";
 					sqlStatement.execute();
 				}
 			}
