@@ -105,15 +105,9 @@ package utils
 					getSaveStream();
 				
 				stringToWrite += traceText.replace(" spiketrace ", " ");
-				if (!SystemUtil.isApplicationActive && SpikeANE.appIsInBackground() && !Constants.appInForeground)
-					stringToWrite += "\n"; 
-				
 				//Write to log only if Spike is in the foreground, otherwise queue it for later. This is to avoid crashes on some specific devices and/or iOS versions
-				if (SystemUtil.isApplicationActive && !SpikeANE.appIsInBackground() && Constants.appInForeground)
-				{
-					SpikeANE.writeTraceToFile(filePath, stringToWrite);
+				SpikeANE.writeTraceToFile(filePath, stringToWrite);
 					stringToWrite = "";
-				}
 			}
 		}
 		

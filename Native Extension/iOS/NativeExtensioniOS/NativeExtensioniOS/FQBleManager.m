@@ -15,6 +15,10 @@
 @property (strong ,nonatomic) NSTimer *sendStartCommandTimer;
 @property (assign ,nonatomic) NSInteger bufLen;
 @property (assign ,nonatomic) BOOL receivedEnoughPackets;
+
+//if true, Spike is connected to MiaoMiao but has not yet received the first packet
+//once a packet is received, the value will be set to false
+@property (assign ,nonatomic) BOOL waitingFirstPacketAfterConnect;
 @property (assign,nonatomic) NSInteger timeIntervalInSeconds;
 
 //if false, then when diddisconnect is entered, then no automatic reconnect required, even if peripheral exists
@@ -182,6 +186,7 @@
 {
     //by default, whenever a disconnect occurs, try to reconnect
     _reconnectAfterDisconnect = true;
+    _waitingFirstPacketAfterConnect = true;
     
     NSUUID *uuid = peripheral.identifier;
     [FQToolsUtil saveUserDefaults:uuid.UUIDString key:self.selectMAC];
@@ -310,12 +315,17 @@
         return;
     }
     
+    if (_waitingFirstPacketAfterConnect) {
+        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateValueForCharacteristic, dispatching StatusEvent_didRecieveInitialUpdateValueForCharacteristic"]);
+        _waitingFirstPacketAfterConnect = false;
+        FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_didRecieveInitialUpdateValueForCharacteristic", (const uint8_t*) "");
+    }
+
     if (_startDate) {
         NSTimeInterval timer = [[NSDate date]timeIntervalSinceDate:_startDate];
         if (timer > 10) {
-            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateValueForCharacteristic, more than 10 seconds since last packet, resetting buffer and dispatching StatusEvent_didRecieveInitialUpdateValueForCharacteristic"]);
+            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateValueForCharacteristic, more than 10 seconds since last packet, resetting buffer"]);
             [self reset];
-            FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_didRecieveInitialUpdateValueForCharacteristic", (const uint8_t*) "");
         }
     }
     
