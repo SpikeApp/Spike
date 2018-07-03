@@ -11,11 +11,6 @@
 
 @implementation FQApi
 
-+(void)disconnectDevice{
-    FQBleManager *manager = [FQBleManager shared];
-    [manager disconnectDevice];
-}
-
 +(void)reconnectDevice{
     FQBleManager *manager = [FQBleManager shared];
     [manager reconnectDevice];

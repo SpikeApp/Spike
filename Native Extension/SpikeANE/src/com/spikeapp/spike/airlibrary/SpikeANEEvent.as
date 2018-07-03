@@ -12,7 +12,6 @@ package com.spikeapp.spike.airlibrary
 	[Event(name="miaoMiaoChangeTimeIntervalChangedSuccess",type="events.SpikeANEEVent")]
 	[Event(name="miaoMiaoConnected",type="events.SpikeANEEVent")]
 	[Event(name="miaoMiaoDisconnected",type="events.SpikeANEEVent")]
-	[Event(name="stoppedScanningMiaoMiaoBecauseConnected",type="events.SpikeANEEVent")]
 	[Event(name="didRecieveInitialUpdateValueForCharacteristic",type="events.SpikeANEEVent")]
 	
 	public class SpikeANEEvent extends Event
@@ -33,7 +32,6 @@ package com.spikeapp.spike.airlibrary
 		public static const MIAOMIAO_TIME_INTERVAL_CHANGED_SUCCESS:String = "miaoMiaoChangeTimeIntervalChangedSuccess";
 		public static const MIAOMIAO_CONNECTED:String = "miaoMiaoConnected";
 		public static const MIAOMIAO_DISCONNECTED:String = "miaoMiaoDisconnected";
-		public static const MIAOMIAO_STOPPED_SCANNING_BECAUSE_CONNECTED:String = "stoppedScanningMiaoMiaoBecauseConnected";
 		/**
 		 * Will be used when first characteristic update in a series is received<br>
 		 * This is to trigger that a new reading is on the way. This can be several seconds later, because MiaoMiao receives 20 packets in total

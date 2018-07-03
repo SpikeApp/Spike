@@ -59,9 +59,6 @@ package com.spikeapp.spike.airlibrary
 		public static function confirmSensorChangeMiaoMiao():void {
 		}
 		
-		public static function disconnectMiaoMiao():void {
-		}		
-		
 		public static function reconnectMiaoMiao():void {
 		}
 		

@@ -84,11 +84,6 @@ FREObject confirmSensorChangeMiaoMiao(FREContext ctx, void* funcData, uint32_t a
     return nil;
 }
 
-FREObject disconnectMiaoMiao(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
-    [FQApi disconnectDevice];
-    return nil;
-}
-
 FREObject reconnectMiaoMiao(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
     [FQApi reconnectDevice];
     return nil;
@@ -374,9 +369,6 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[11].name = (const uint8_t*) "confirmSensorChangeMiaoMiao";
     func[11].functionData = NULL;
     func[11].function = &confirmSensorChangeMiaoMiao;
-    func[33].name = (const uint8_t*) "disconnectMiaoMiao";
-    func[33].functionData = NULL;
-    func[33].function = &disconnectMiaoMiao;
     func[34].name = (const uint8_t*) "reconnectMiaoMiao";
     func[34].functionData = NULL;
     func[34].function = &reconnectMiaoMiao;

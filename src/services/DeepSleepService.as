@@ -76,20 +76,8 @@ package services
 		
 		private static function addOrRemoveMiaoMiaoEventListeners():void {
 			if (CGMBlueToothDevice.isMiaoMiao()) {
-				//Why listening to MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED ?
-				//because the suspension prevention timer can be increased back to higher value, when this is received
-				//why not sooner , why not as soon as it is connected ?
-				//because the Spike ANE may have delayed the sending of F0 (startreading command), the ANE may have started a timer
-				//if that's the case, Spike may get suspended before that timer expires, hence it would never expire.
-				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED, onMiaoMiaoInitialUpdateCharacteristicReceived);
-				//Why listening to disconnected ?
-				//When disconnected then suspension prevention can be disabled IS THIS RIGHT ??? TO BE TESTED
-				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, onMiaoMiaoDisConnected);
-				//When connected but no initial characteristic update received, then suspension prevention must be set to a minimum value
 				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, onMiaoMiaoConnected);
 			} else {
-				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED, onMiaoMiaoInitialUpdateCharacteristicReceived);
-				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, onMiaoMiaoDisConnected);
 				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, onMiaoMiaoConnected);
 			}
 		}
@@ -278,61 +266,20 @@ package services
 		}
 		
 		//MiaoMiao is connected and Spike receives the first characteristic update
-		private static function onMiaoMiaoInitialUpdateCharacteristicReceived(event:Event):void 
+		private static function onMiaoMiaoConnected(event:Event):void 
 		{
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true" && !SpikeShouldNeverSuspend()) {
 				if (deepSleepInterval != NO_SUSPENSION_PREVENTION_MODE) {
-					Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoInitialUpdateCharacteristicReceived, Setting interval to NO_SUSPENSION_PREVENTION_MODE");
+					Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoConnected, Setting interval to NO_SUSPENSION_PREVENTION_MODE");
 					deepSleepInterval = NO_SUSPENSION_PREVENTION_MODE;
 					startDeepSleepInterval();
 				} else {
-					Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoInitialUpdateCharacteristicReceived, interval already NO_SUSPENSION_PREVENTION_MODE");
+					Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoConnected, interval already NO_SUSPENSION_PREVENTION_MODE");
 					return;
 				}
 			} else {
-			 	//reset to user defined value
-				Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoInitialUpdateCharacteristicReceived, reset to user defined interval");
-				setDeepSleepInterval();
 			}
-			Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoInitialUpdateCharacteristicReceived, call startDeepSleepInterval");
-			startDeepSleepInterval();
 		}
-		
-		private static function onMiaoMiaoDisConnected(event:Event):void 
-		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true" && !SpikeShouldNeverSuspend()) {
-				if (deepSleepInterval != NO_SUSPENSION_PREVENTION_MODE) {
-					Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoDisConnected, Setting interval to NO_SUSPENSION_PREVENTION_MODE");
-					deepSleepInterval = NO_SUSPENSION_PREVENTION_MODE;
-				} else {
-					Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoDisConnected, interval already NO_SUSPENSION_PREVENTION_MODE");
-					return;
-				}
-			} else {
-				//reset to user defined value
-				Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoDisConnected, reset to user defined interval");
-				setDeepSleepInterval();
-			}
-			Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoDisConnected, call startDeepSleepInterval");
-			startDeepSleepInterval();
-		}
-		
-		private static function onMiaoMiaoConnected(event:Event):void 
-		{
-			if (deepSleepInterval != MAXIMIZE_SUSPENSION_PREVENTION) {
-				//as long as onMiaoMiaoInitialUpdateCharacteristicReceived is not triggered, Spike might not have send startreadingcommand to MiaoMiao
-				//as a result Spike my suspend and never be able to receive data
-				//to avoid this, set maximum suspension prevention
-				//do this independent of value COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON
-				Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoConnected Setting interval to MAXIMIZE_SUSPENSION_PREVENTION");
-				deepSleepInterval = MAXIMIZE_SUSPENSION_PREVENTION;
-			} else {
-				Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoConnected, interval already MAXIMIZE_SUSPENSION_PREVENTION");
-				return;
-			}
-			Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoConnected, call startDeepSleepInterval");
-			startDeepSleepInterval();
-		}	
 		
 		private static function SpikeShouldNeverSuspend():Boolean {
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true")

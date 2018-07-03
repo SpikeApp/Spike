@@ -86,14 +86,6 @@ package com.spikeapp.spike.airlibrary
 		}
 
 		/**
-		* disconnect without forgetting device, and without automatically reconnecting<br>
-		* <br>
-		*/
-		public static function disconnectMiaoMiao():void {
-			context.call("disconnectMiaoMiao");
-		}
-
-		/**
 		* reconnect to known peripheral, can only be used if previously disconnect was done with disconnectMiaoMiao
 		*/
 		public static function reconnectMiaoMiao():void {
@@ -278,9 +270,6 @@ package com.spikeapp.spike.airlibrary
 				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "StatusEvent_disconnectedMiaoMiao") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_DISCONNECTED);
-				_instance.dispatchEvent(spikeANEEvent);
-			} else if (event.code == "StatusEvent_stoppedScanningMiaoMiaoBecauseConnected") {
-				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_STOPPED_SCANNING_BECAUSE_CONNECTED);
 				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "StatusEvent_didRecieveInitialUpdateValueForCharacteristic") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED);

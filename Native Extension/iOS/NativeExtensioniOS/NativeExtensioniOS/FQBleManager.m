@@ -12,17 +12,8 @@
 @property (strong ,nonatomic) CBCharacteristic *notifyCharacteristic;
 
 @property (strong ,nonatomic) NSMutableString *bufStr;
-@property (strong ,nonatomic) NSTimer *sendStartCommandTimer;
 @property (assign ,nonatomic) NSInteger bufLen;
 @property (assign ,nonatomic) BOOL receivedEnoughPackets;
-
-//if true, Spike is connected to MiaoMiao but has not yet received the first packet
-//once a packet is received, the value will be set to false
-@property (assign ,nonatomic) BOOL waitingFirstPacketAfterConnect;
-@property (assign,nonatomic) NSInteger timeIntervalInSeconds;
-
-//if false, then when diddisconnect is entered, then no automatic reconnect required, even if peripheral exists
-@property (assign ,nonatomic) BOOL reconnectAfterDisconnect;
 
 @end
 
@@ -69,15 +60,6 @@
     } else {
         FPANE_Log(@"spiketrace ANE FQBLEManager.m in reconnectDevice, self.peripheral is nil, not trying to connect");
     }
-}
-
-//to be used when app wants to force a disconnect without forgetting the device completely
-//also no automatic reconnect required
-- (void)disconnectDevice
-{
-    FPANE_Log(@"spiketrace ANE FQBLEManager.m in disconnectDevice, disconnecting");
-    _reconnectAfterDisconnect = false;
-    [self.manager cancelPeripheralConnection:_peripheral];
 }
 
 - (void)disCoverServiceWith:(CBPeripheral *)peripheral{
@@ -161,7 +143,6 @@
 
             //stop scanning because we will try to connect to this device
             [self.manager stopScan];
-            FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_stoppedScanningMiaoMiaoBecauseConnected", (const uint8_t*) "");
             
             self.peripheral = peripheral;
             
@@ -184,10 +165,6 @@
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
-    //by default, whenever a disconnect occurs, try to reconnect
-    _reconnectAfterDisconnect = true;
-    _waitingFirstPacketAfterConnect = true;
-    
     NSUUID *uuid = peripheral.identifier;
     [FQToolsUtil saveUserDefaults:uuid.UUIDString key:self.selectMAC];
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didConnectPeripheral, connected peripheral name:%@ MAC: %@, uuid:%@", peripheral.name, self.selectMAC, uuid]);
@@ -210,13 +187,11 @@
     
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m >>>peripheral didDisconnect %@: %@\n", [peripheral name], [error localizedDescription]]);
     FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_disconnectedMiaoMiao", (const uint8_t*) "");
-    if (self.peripheral && _reconnectAfterDisconnect) {
+    if (self.peripheral) {
         FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, self.peripheral not nil and _reconnectAfterDisconnect = true, trying to reconnect");
         [self.manager connectPeripheral:self.peripheral options:nil];
     } else if (!self.peripheral) {
         FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, self.peripheral = nil");
-    } else if (!_reconnectAfterDisconnect) {
-        FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, _reconnectAfterDisconnect = false");
     }
     
 }
@@ -257,31 +232,16 @@
     if (characteristic.isNotifying == YES) {
         FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateNotificationStateForCharacteristic, characteristic.isNotifying == YES"]);
         if (self.dateLastCompletePacketReceived) {
-            NSTimeInterval timediff =
-                (_timeIntervalInSeconds ? _timeIntervalInSeconds:300) - [[NSDate date]timeIntervalSinceDate:self.dateLastCompletePacketReceived];//default value 5 minutes before wanting a new packet
-            if (timediff > 0) {
-                FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateNotificationStateForCharacteristic, timediff > 0, starting resetSendStartCommandTimer with delay %f", timediff]);
-                [self resetSendStartCommandTimer];
-                _sendStartCommandTimer = [NSTimer scheduledTimerWithTimeInterval:timediff
-                                                 target:self
-                                               selector:@selector(sendStartReadingCommand)
-                                               userInfo:nil
-                                                repeats:NO];
-            } else {
-                FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateNotificationStateForCharacteristic, timediff <=0"]);
-                [self resetSendStartCommandTimer];
-                [self sendStartReadingCommand];
-            }
+            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateNotificationStateForCharacteristic, timediff <=0"]);
+            [self sendStartReadingCommand];
         } else {
             FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateNotificationStateForCharacteristic, self.dateLastCompletePacketReceived is nil"]);
-            [self resetSendStartCommandTimer];
             [self sendStartReadingCommand];
         }
     }
 }
 
 - (void) sendStartReadingCommand {
-    [self resetSendStartCommandTimer];
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in sendStartReadingCommand"]);
         [self reset];
         Byte value[1] = {0xF0};
@@ -315,12 +275,6 @@
         return;
     }
     
-    if (_waitingFirstPacketAfterConnect) {
-        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateValueForCharacteristic, dispatching StatusEvent_didRecieveInitialUpdateValueForCharacteristic"]);
-        _waitingFirstPacketAfterConnect = false;
-        FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_didRecieveInitialUpdateValueForCharacteristic", (const uint8_t*) "");
-    }
-
     if (_startDate) {
         NSTimeInterval timer = [[NSDate date]timeIntervalSinceDate:_startDate];
         if (timer > 10) {
@@ -341,10 +295,12 @@
             self.bufLen = MIN(380, strtoul([len_s UTF8String],0,16));
             [self.bufStr appendString:data_s];
 			_startDate = [NSDate date];
-        }else{
+            FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_didRecieveInitialUpdateValueForCharacteristic", (const uint8_t*) "");
+        } else {
             [self.bufStr appendString:data_s];
         }
     }
+    
     if ((self.bufStr.length == self.bufLen * 2) && !_receivedEnoughPackets) {
         _receivedEnoughPackets = true;
         self.dateLastCompletePacketReceived = [NSDate date];
@@ -357,7 +313,6 @@
         }
     } else {
         //received enough packets, no further processing
-        //FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateValueForCharacteristic, enough packets received"]);
     }
 }
 
@@ -416,13 +371,6 @@
     _startDate = [NSDate date];
     [self.bufStr setString:@""];
     _receivedEnoughPackets = false;
-}
-
-- (void) resetSendStartCommandTimer {
-    if (_sendStartCommandTimer != nil) {
-        [_sendStartCommandTimer invalidate];
-        _sendStartCommandTimer = nil;
-    }
 }
 
 @end
