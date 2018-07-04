@@ -9,6 +9,7 @@ ENHANCEMENT: Followers can now access the master's Nightscout site directly from
 ENHANCEMENT: Full layout adjustment for iPhone X. All Spike screens should now display correctly in portrait and landscape. (Miguel)
 ENHANCEMENT: Better handling of Nightscout treatments set in the future (Bolus Wizard, Meal, etc.). (Miguel)
 ENHANCEMENT: Improved speech output for some languages, including German. (Sascha)
+FIX: Fixes an issue where snoozing an alarm could also snooze other alarms. (Miguel);
 FIX: No more duplicate HealthKit entries for treatments. (Miguel)
 FIX: Negative deltas where not being correctly spoken when speech was enabled. It's now fixed. (Miguel)
 FIX: As usual, other small bug fixes and improvements. (Miguel)

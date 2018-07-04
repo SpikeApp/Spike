@@ -594,25 +594,28 @@ package services
 			}
 			
 			function calibrationRequestSnoozePicker_closedHandler(event:starling.events.Event): void {
-				SpikeANE.stopPlayingSound();
 				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, calibrationRequestSnoozePicker_closedHandler);
 				disableRepeatAlert(0);
+				SpikeANE.stopPlayingSound();
 				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function batteryLevelSnoozePicker_closedHandler(event:starling.events.Event): void {
-				SpikeANE.stopPlayingSound();
 				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, batteryLevelSnoozePicker_closedHandler);
 				disableRepeatAlert(6);
+				SpikeANE.stopPlayingSound();
 				_batteryLevelAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function phoneMutedSnoozePicker_closedHandler(event:starling.events.Event): void {
-				SpikeANE.stopPlayingSound();
 				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, phoneMutedSnoozePicker_closedHandler);
 				disableRepeatAlert(7);
+				SpikeANE.stopPlayingSound();
 				_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_phoneMutedAlertSnoozePeriodInMinutes));
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -620,9 +623,10 @@ package services
 			}
 			
 			function missedReadingSnoozePicker_closedHandler(event:starling.events.Event): void {
-				SpikeANE.stopPlayingSound();
 				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, missedReadingSnoozePicker_closedHandler);
 				disableRepeatAlert(5);
+				SpikeANE.stopPlayingSound();
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_missedReadingAlertSnoozePeriodInMinutes));
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -631,6 +635,7 @@ package services
 			
 			function lowSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, lowSnoozePicker_closedHandler);
 				disableRepeatAlert(1);
 				SpikeANE.stopPlayingSound();
 				_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -641,6 +646,7 @@ package services
 			
 			function highSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, highSnoozePicker_closedHandler);
 				disableRepeatAlert(3);
 				SpikeANE.stopPlayingSound();
 				_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
@@ -651,6 +657,7 @@ package services
 			
 			function veryHighSnoozePicker_closedHandler(event:starling.events.Event): void {
 				myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, veryHighSnoozePicker_closedHandler);
 				disableRepeatAlert(4);
 				SpikeANE.stopPlayingSound();
 				_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
