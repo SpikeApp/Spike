@@ -8,7 +8,7 @@ FEATURE: Ability to select carb type (fast, medium and slow) when entering a car
 ENHANCEMENT: Insulin name and dia as well as carb type are now synced to Nightscout. This means followers will now also be able to see the insulin the master used and both dia and carb type will influence the follower's IOB and COB. (Miguel)
 ENHANCEMENT; Full swipe navigation. You can now swipe from the left edge of the screen on all Spike screens to navigate back, no need to click the Back button. (Miguel)
 ENHANCEMENT: Followers can now access the master's Nightscout site directly from inside Spike by going to the "three dots menu" -> Nightscout. (Miguel) 
-ENHANCEMENT: Full layout adjustment for iPhone X. All Spike screens should now display correctly in portrait and landscape. (Miguel)
+ENHANCEMENT: Full layout adjustment for iPhone X. All Spike screens should now display correctly in portrait and landscape mode. (Miguel)
 ENHANCEMENT: Better handling of Nightscout treatments set in the future (Bolus Wizard, Meal, etc.). (Miguel)
 ENHANCEMENT: Improved speech output for some languages, including German. (Sascha)
 FIX: No more duplicate HealthKit entries for treatments. (Miguel)
