@@ -34,7 +34,6 @@
 @property (weak ,nonatomic) id<FQBleManagerDelegate> delegate;
 @property (strong ,nonatomic) CBCentralManager *manager;
 @property (strong ,nonatomic) CBPeripheral *peripheral;
-@property (strong, nonatomic) NSDate *dateLastCompletePacketReceived;
 
 @property (copy,nonatomic)NSString *selectMAC;
 

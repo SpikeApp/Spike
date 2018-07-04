@@ -104,7 +104,6 @@
     FPANE_Log(@"spiketrace ANE FQApi.m in forgetPeripheral");
         FQBleManager *manager = [FQBleManager shared];
         manager.peripheral = nil;
-        manager.dateLastCompletePacketReceived = nil;
 }
 
 @end

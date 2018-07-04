@@ -231,13 +231,7 @@
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
     if (characteristic.isNotifying == YES) {
         FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateNotificationStateForCharacteristic, characteristic.isNotifying == YES"]);
-        if (self.dateLastCompletePacketReceived) {
-            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateNotificationStateForCharacteristic, timediff <=0"]);
-            [self sendStartReadingCommand];
-        } else {
-            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didUpdateNotificationStateForCharacteristic, self.dateLastCompletePacketReceived is nil"]);
-            [self sendStartReadingCommand];
-        }
+        [self sendStartReadingCommand];
     }
 }
 
@@ -303,7 +297,6 @@
     
     if ((self.bufStr.length == self.bufLen * 2) && !_receivedEnoughPackets) {
         _receivedEnoughPackets = true;
-        self.dateLastCompletePacketReceived = [NSDate date];
         FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m hexStr = %@",self.bufStr]);
         if (error) {
             FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m error = %@",error.localizedDescription]);
