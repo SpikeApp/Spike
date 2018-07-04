@@ -537,7 +537,7 @@ package services
 						isNSProfileSet = true; //Mark profile as downloaded
 							
 						//Add nightscout insulin to Spike and don't save it to DB
-						ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", BlueToothDevice.isFollower() ? true : false, "000000", !BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING ? true : false);
+						ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", BlueToothDevice.isFollower() ? true : false, "000000", !BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING ? true : false, true);
 							
 						//Add nightscout carbs absorption rate and don't save it to DB
 						ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
@@ -863,11 +863,15 @@ package services
 			{
 				newTreatment["eventType"] = "Correction Bolus";	
 				newTreatment["insulin"] = treatment.insulinAmount;	
+				newTreatment["dia"] = treatment.dia;	
+				newTreatment["insulinName"] = ProfileManager.getInsulin(treatment.insulinID) != null ? ProfileManager.getInsulin(treatment.insulinID).name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");	
+				newTreatment["insulinID"] = treatment.insulinID;	
 			}
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 			{
 				newTreatment["eventType"] = "Carb Correction";	
 				newTreatment["carbs"] = treatment.carbs;	
+				newTreatment["carbDelayTime"] = treatment.carbDelayTime;	
 			}
 			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
@@ -879,7 +883,11 @@ package services
 			{
 				newTreatment["eventType"] = "Meal Bolus";
 				newTreatment["insulin"] = treatment.insulinAmount;
+				newTreatment["dia"] = treatment.dia;	
+				newTreatment["insulinName"] = ProfileManager.getInsulin(treatment.insulinID) != null ? ProfileManager.getInsulin(treatment.insulinID).name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
 				newTreatment["carbs"] = treatment.carbs;
+				newTreatment["carbDelayTime"] = treatment.carbDelayTime;
+				newTreatment["insulinID"] = treatment.insulinID;
 			}
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{
@@ -938,7 +946,6 @@ package services
 					treatment.note.indexOf("Announcement") != -1
 				)
 					return;
-				
 				
 				//Add treatment to queue
 				activeTreatmentsUpload.push(createTreatmentObject(treatment));

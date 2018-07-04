@@ -29,8 +29,10 @@ package treatments
 		public var ID:String;
 		private var insulinScaleFactor:Number;
 		public var needsAdjustment:Boolean = false;
+		public var carbDelayTime:Number = 20;
+		public var basalDuration:Number = 0;
 		
-		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null)
+		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = 20, basalDuration:Number = 0)
 		{
 			this.type = type;
 			this.insulinAmount = insulin;
@@ -48,6 +50,8 @@ package treatments
 			this.timestamp = timestamp;
 			this.insulinScaleFactor = 3 / dia;
 			this.ID = treatmentID == null ? UniqueId.createEventId() : treatmentID;
+			this.carbDelayTime = carbDelayTime;
+			this.basalDuration = basalDuration;
 		}
 		
 		public function calculateIOB(time:Number):Number
@@ -131,7 +135,7 @@ package treatments
 		public function calculateCOB(lastDecayedBy:Number, time:Number):CobCalc
 		{
 			var absorptionRate:int = ProfileManager.getCarbAbsorptionRate();
-			var delay:int = 20;
+			var delay:int = int(carbDelayTime);
 			var isDecaying:int = 0;
 			
 			if (carbs > 0)

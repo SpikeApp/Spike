@@ -49,11 +49,18 @@ package treatments
 							dbInsulin.dia,
 							dbInsulin.type,
 							dbInsulin.isdefault == "true" ? true : false,
-							dbInsulin.lastmodifiedtimestamp
+							dbInsulin.lastmodifiedtimestamp,
+							dbInsulin.ishidden != null && dbInsulin.ishidden == "true" ? true : false
 						);
 						
 						insulinsList.push(insulin);
 						insulinsMap[dbInsulin.id] = insulin;
+						
+						if (insulin.ID == "000000" && !insulin.isHidden) //Hide Nightscout insulin from UI
+						{
+							insulin.isHidden = true;
+							updateInsulin(insulin);
+						}
 					}
 					insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
 					
@@ -135,7 +142,7 @@ package treatments
 			return insulinsMap[ID];
 		}
 		
-		public static function addInsulin(name:String, dia:Number, type:String, isDefault:Boolean = false, insulinID:String = null, saveToDatabase:Boolean = true):void
+		public static function addInsulin(name:String, dia:Number, type:String, isDefault:Boolean = false, insulinID:String = null, saveToDatabase:Boolean = true, isHidden:Boolean = false):void
 		{
 			Trace.myTrace("ProfileManager.as", "addInsulin called!");
 			
@@ -158,7 +165,8 @@ package treatments
 					dia,
 					type,
 					isDefault,
-					new Date().valueOf()
+					new Date().valueOf(),
+					isHidden
 				);
 				
 				//Add to Spike
@@ -178,6 +186,7 @@ package treatments
 				var existingNSInsulin:Insulin = insulinsMap[newInsulinID] as Insulin;
 				existingNSInsulin.dia = dia;
 				existingNSInsulin.timestamp = new Date().valueOf();
+				existingNSInsulin.isHidden = true;
 				Database.updateInsulinSynchronous(existingNSInsulin);
 			}
 		}

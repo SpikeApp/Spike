@@ -49,7 +49,6 @@ package ui.screens.display.settings.treatments
 			setupProperties();
 			setupInitialContent();	
 			setupContent();
-			
 		}
 		
 		/**

@@ -2,6 +2,8 @@ package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.BlueToothDevice;
 	import database.CommonSettings;
@@ -48,6 +50,7 @@ package network.httpserver.API
 					var treatmentCarbs:Number = 0;
 					var treatmentGlucose:Number = 0;
 					var treatmentNote:String = "";
+					var treatmentCarbDelayTime:Number = 20;
 					
 					if (treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_BOLUS)
 					{
@@ -70,6 +73,16 @@ package network.httpserver.API
 							treatmentInsulinID = ProfileManager.getDefaultInsulinID();
 							treatmentCarbs = Number(String(params.carbs).replace(",", "."));
 						}
+						
+						if (params.carbtype != null)
+						{
+							if (params.carbtype == "fast")
+								treatmentCarbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+							else if (params.carbtype == "medium")
+								treatmentCarbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+							else if (params.carbtype == "slow")
+								treatmentCarbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+						}
 					}
 					else if (treatmentType == Treatment.TYPE_CARBS_CORRECTION)
 					{
@@ -77,6 +90,16 @@ package network.httpserver.API
 							treatmentCarbs = Number(String(params.carbs).replace(",", "."));
 						else
 							response = "ERROR";
+						
+						if (params.carbtype != null)
+						{
+							if (params.carbtype == "fast")
+								treatmentCarbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+							else if (params.carbtype == "medium")
+								treatmentCarbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+							else if (params.carbtype == "slow")
+								treatmentCarbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+						}
 					}
 					else if (treatmentType == Treatment.TYPE_GLUCOSE_CHECK)
 					{
@@ -104,7 +127,9 @@ package network.httpserver.API
 							treatmentCarbs,
 							treatmentGlucose,
 							treatmentType != Treatment.TYPE_GLUCOSE_CHECK ? TreatmentsManager.getEstimatedGlucose(treatmentTimestamp) : treatmentGlucose,
-							treatmentNote
+							treatmentNote,
+							null,
+							treatmentCarbDelayTime
 						);
 						TreatmentsManager.addExternalTreatment(treatment);
 					}

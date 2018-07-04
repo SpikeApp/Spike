@@ -153,6 +153,8 @@ package database
 			"glucose REAL, " +
 			"glucoseestimated REAL, " +
 			"note STRING, " +
+			"carbdelay REAL, " +
+			"basalduration REAL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -161,6 +163,7 @@ package database
 			"dia REAL, " +
 			"type STRING, " +
 			"isdefault STRING, " +
+			"ishidden STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_PROFILE:String = "CREATE TABLE IF NOT EXISTS profiles(" +
@@ -597,20 +600,67 @@ package database
 			}
 		}
 		
-		private static function createTreatmentsTable():void {
+		private static function createTreatmentsTable():void 
+		{
 			sqlStatement.clearParameters();
 			sqlStatement.text = CREATE_TABLE_TREATMENTS;
 			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
 			sqlStatement.execute();
 			
-			function tableCreated(se:SQLEvent):void {
+			function tableCreated(se:SQLEvent):void 
+			{
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				createInsulinsTable();
+				
+				sqlStatement.clearParameters();
+				
+				//Check if table needs to be updated for new Spike format #1
+				sqlStatement.text = "SELECT basalduration FROM treatments";
+				sqlStatement.addEventListener(SQLEvent.RESULT,check1Performed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,check1Error);
+				sqlStatement.execute();
+				
+				function check1Performed(se:SQLEvent):void 
+				{
+					sqlStatement.removeEventListener(SQLEvent.RESULT,check1Performed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check1Error);
+					sqlStatement.clearParameters();
+					
+					//Check if table needs to be updated for new Spike format #2
+					sqlStatement.text = "SELECT carbdelay FROM treatments";
+					sqlStatement.addEventListener(SQLEvent.RESULT,check2Performed);
+					sqlStatement.addEventListener(SQLErrorEvent.ERROR,check2Error);
+					sqlStatement.execute();
+					
+					function check2Performed(se:SQLEvent):void 
+					{
+						sqlStatement.removeEventListener(SQLEvent.RESULT,check2Performed);
+						sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check2Error);
+						sqlStatement.clearParameters();
+						createInsulinsTable();
+					}
+					
+					function check2Error(see:SQLErrorEvent):void 
+					{
+						if (debugMode) trace("Database.as : carbdelay column not found in treatments table (old version of Spike). Updating table...");
+						sqlStatement.clearParameters();
+						sqlStatement.text = "ALTER TABLE treatments ADD COLUMN carbdelay REAL;";
+						sqlStatement.execute();
+					}
+				}
+				
+				function check1Error(see:SQLErrorEvent):void 
+				{
+					if (debugMode) trace("Database.as : basalduration column not found in treatments table (old version of Spike). Updating table...");
+					sqlStatement.clearParameters();
+					sqlStatement.text = "ALTER TABLE treatments ADD COLUMN basalduration REAL;";
+					sqlStatement.execute();
+				}
 			}
 			
-			function tableCreationError(see:SQLErrorEvent):void {
+			function tableCreationError(see:SQLErrorEvent):void 
+			{
 				if (debugMode) trace("Database.as : Failed to create insulins table");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
@@ -628,14 +678,38 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				createProfilesTable();
+				
+				sqlStatement.clearParameters();
+				
+				//Check if table needs to be updated for new Spike format
+				sqlStatement.text = "SELECT ishidden FROM insulins";
+				sqlStatement.addEventListener(SQLEvent.RESULT,checkPerformed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkError);
+				sqlStatement.execute();
+				
+				function checkPerformed(se:SQLEvent):void 
+				{
+					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkPerformed);
+					sqlStatement.clearParameters();
+					
+					createProfilesTable();
+				}
+				
+				function checkError(see:SQLErrorEvent):void 
+				{
+					if (debugMode) trace("Database.as : ishidden column not found in insulins table (old version of Spike). Updating table...");
+					sqlStatement.clearParameters();
+					sqlStatement.text = "ALTER TABLE insulins ADD COLUMN ishidden STRING;";
+					sqlStatement.execute();
+				}
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
-				if (debugMode) trace("Database.as : Failed to create treatments table");
+				if (debugMode) trace("Database.as : Failed to create insulins table");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_treatments_table', see != null ? see.error.message:null);
+				dispatchInformation('failed_to_create_insulins_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -2065,7 +2139,9 @@ package database
 				text += "glucose, ";
 				text += "glucoseestimated, ";
 				text += "note, ";
-				text += "lastmodifiedtimestamp) ";
+				text += "lastmodifiedtimestamp, ";
+				text += "carbdelay, ";
+				text += "basalduration) ";
 				text += "VALUES (";
 				text += "'" + treatment.ID + "', ";
 				text += "'" + treatment.type + "', ";
@@ -2075,7 +2151,9 @@ package database
 				text += treatment.glucose + ", ";
 				text += treatment.glucoseEstimated + ", ";
 				text += "'" + treatment.note + "', ";
-				text += treatment.timestamp + ")";
+				text += treatment.timestamp + ", ";
+				text += treatment.carbDelayTime + ", ";
+				text += treatment.basalDuration + ")";
 				
 				insertRequest.text = text;
 				insertRequest.execute();
@@ -2113,7 +2191,9 @@ package database
 				"glucose = " + treatment.glucose + ", " +
 				"glucoseestimated = " + treatment.glucoseEstimated + ", " +
 				"note = '" + treatment.note + "', " +
-				"lastmodifiedtimestamp = " + treatment.timestamp + " " +
+				"lastmodifiedtimestamp = " + treatment.timestamp + ", " +
+				"carbdelay = " + treatment.carbDelayTime + ", " +
+				"basalduration = " + treatment.basalDuration + " " +
 				"WHERE id = '" + treatment.ID + "'";
 				updateRequest.execute();
 				conn.commit();
@@ -2201,6 +2281,7 @@ package database
 				text += "dia, ";
 				text += "type, ";
 				text += "isdefault, ";
+				text += "ishidden, ";
 				text += "lastmodifiedtimestamp) ";
 				text += "VALUES (";
 				text += "'" + insulin.ID + "', ";
@@ -2208,6 +2289,7 @@ package database
 				text += insulin.dia + ", ";
 				text += "'" + insulin.type + "', ";
 				text += "'" + insulin.isDefault + "', ";
+				text += "'" + insulin.isHidden + "', ";
 				text += insulin.timestamp + ")";
 				
 				insertRequest.text = text;
@@ -2243,6 +2325,7 @@ package database
 					"dia = " + insulin.dia + ", " +
 					"type = '" + insulin.type + "', " +
 					"isdefault = '" + insulin.isDefault + "', " +
+					"ishidden = '" + insulin.isHidden + "', " +
 					"lastmodifiedtimestamp = " + insulin.timestamp + " " +
 					"WHERE id = '" + insulin.ID + "'";
 				updateRequest.execute();
