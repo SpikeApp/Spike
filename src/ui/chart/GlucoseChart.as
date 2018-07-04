@@ -2,7 +2,6 @@ package ui.chart
 { 
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	
-	import flash.display.StageOrientation;
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
@@ -1144,11 +1143,11 @@ package ui.chart
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 				{
-					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + "\n" + treatment.treatment.carbs + "g";
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + ": " + treatment.treatment.carbs + "g" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','carbs_type_label') + ": " + TreatmentsManager.getCarbTypeName(treatment.treatment);
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 				{
-					treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal') + "\n" + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + " / " + treatment.treatment.carbs + "g";
+					treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ": " + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + ": " + treatment.treatment.carbs + "g" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','carbs_type_label') + ": " + TreatmentsManager.getCarbTypeName(treatment.treatment);
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 				{
@@ -1323,7 +1322,7 @@ package ui.chart
 				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
 				{
 					var treatment:ChartTreatment = treatmentsList[i];
-					if (treatment.treatment.timestamp < firstBGReadingTimeStamp)
+					if (treatment.treatment.timestamp < firstBGReadingTimeStamp && treatment.treatment.type != Treatment.TYPE_SENSOR_START)
 					{
 						//Treatment has expired (>24H). Dispose it
 						treatmentsContainer.removeChild(treatment);

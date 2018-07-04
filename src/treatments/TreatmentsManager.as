@@ -25,10 +25,12 @@ package treatments
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
+	import feathers.controls.Radio;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.core.ToggleGroup;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
@@ -98,12 +100,14 @@ package treatments
 		private static var addButton:Button;
 		private static var calloutPositionHelper:Sprite;
 		private static var treatmentCallout:Callout;
-
 		private static var extendedCarbContainer:LayoutGroup;
-
 		private static var carbOffSet:NumericStepper;
-
 		private static var carbOffsetSuffix:Label;
+		private static var carbDelayContainer:LayoutGroup;
+		private static var fastCarb:Radio;
+		private static var mediumCarb:Radio;
+		private static var slowCarb:Radio;
+		private static var carbDelayGroup:ToggleGroup;
 		
 		public function TreatmentsManager()
 		{
@@ -145,7 +149,10 @@ package treatments
 							dbTreatment.carbs,
 							dbTreatment.glucose,
 							dbTreatment.glucoseestimated,
-							dbTreatment.note
+							dbTreatment.note,
+							null,
+							dbTreatment.carbdelay,
+							dbTreatment.basalduration
 						);
 						treatment.ID = dbTreatment.id;
 						
@@ -545,7 +552,7 @@ package treatments
 					carbOffSet = LayoutFactory.createNumericStepper(-300, 300, 0, 5);
 					carbOffSet.validate();
 					if (carbOffsetSuffix != null) carbOffsetSuffix.removeFromParent(true);
-					carbOffsetSuffix = LayoutFactory.createLabel("min", HorizontalAlign.RIGHT);
+					carbOffsetSuffix = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','minutes_small_label'), HorizontalAlign.RIGHT);
 					carbOffsetSuffix.validate();
 				}
 				
@@ -566,6 +573,26 @@ package treatments
 				}
 				else
 					treatmentInserterContainer.addChild(carbsTextInput);
+				
+				//Carb absorption delay
+				var carbDelayLayout:HorizontalLayout = new HorizontalLayout();
+				carbDelayLayout.distributeWidths = true;
+				carbDelayLayout.paddingTop = carbDelayLayout.paddingBottom = 8;
+				if (carbDelayContainer != null) carbDelayContainer.removeFromParent(true);
+				carbDelayContainer = new LayoutGroup();
+				carbDelayContainer.layout = carbDelayLayout;
+				carbDelayGroup = new ToggleGroup();
+				if (fastCarb != null) fastCarb.removeFromParent(true);
+				fastCarb = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','carbs_fast_label'), carbDelayGroup);
+				if (mediumCarb != null) mediumCarb.removeFromParent(true);
+				mediumCarb = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','carbs_medium_label'), carbDelayGroup);
+				if (slowCarb != null) slowCarb.removeFromParent(true);
+				slowCarb = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label'), carbDelayGroup);
+				carbDelayGroup.selectedItem = slowCarb;
+				carbDelayContainer.addChild(fastCarb);
+				carbDelayContainer.addChild(mediumCarb);
+				carbDelayContainer.addChild(slowCarb);
+				treatmentInserterContainer.addChild(carbDelayContainer);
 				
 				if (carbSpacer != null) carbSpacer.removeFromParent(true);
 				carbSpacer = new Sprite();
@@ -603,11 +630,15 @@ package treatments
 			if (type == Treatment.TYPE_GLUCOSE_CHECK)
 				glucoseTextInput.width = treatmentTime.width;
 			if (type == Treatment.TYPE_CARBS_CORRECTION)
+			{
 				carbsTextInput.width = treatmentTime.width;
+				carbDelayContainer.width = treatmentTime.width;
+			}
 			else if (type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				extendedCarbContainer.width = treatmentTime.width;
 				carbsTextInput.width = treatmentTime.width - carbOffSet.width - carbOffsetSuffix.width;
+				carbDelayContainer.width = treatmentTime.width;
 			}
 			
 			treatmentInserterTitleLabel.width = treatmentTime.width;
@@ -637,7 +668,7 @@ package treatments
 					for (var i:int = 0; i < numInsulins; i++) 
 					{
 						var insulin:Insulin = userInsulins[i];
-						if (insulin.name.indexOf("Nightscout") == -1)
+						if (insulin.name.indexOf("Nightscout") == -1 && !insulin.isHidden)
 						{
 							insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
 							askForInsulinConfiguration = false;
@@ -834,6 +865,16 @@ package treatments
 				}
 				else
 				{
+					//Carb absorption delay
+					var selectedCarbDelayIndex:int = carbDelayGroup != null && carbDelayGroup.selectedIndex >= 0 ? carbDelayGroup.selectedIndex : -1;
+					var carbDelayMinutes:Number = 20;
+					if (selectedCarbDelayIndex == 0)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+					else if (selectedCarbDelayIndex == 1)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+					else if (selectedCarbDelayIndex == 2)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+					
 					var treatment:Treatment = new Treatment
 					(
 						Treatment.TYPE_CARBS_CORRECTION,
@@ -843,7 +884,9 @@ package treatments
 						carbsValue,
 						0,
 						getEstimatedGlucose(treatmentTime.value.valueOf()),
-						notes.text
+						notes.text,
+						null,
+						carbDelayMinutes
 					);
 					
 					//Add to list
@@ -911,6 +954,16 @@ package treatments
 				}
 				else
 				{
+					//Carb absorption delay
+					var selectedCarbDelayIndex:int = carbDelayGroup != null && carbDelayGroup.selectedIndex >= 0 ? carbDelayGroup.selectedIndex : -1;
+					var carbDelayMinutes:Number = 20;
+					if (selectedCarbDelayIndex == 0)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+					else if (selectedCarbDelayIndex == 1)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+					else if (selectedCarbDelayIndex == 2)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+					
 					if (carbOffSet.value == 0)
 					{
 						var treatment:Treatment = new Treatment
@@ -922,7 +975,9 @@ package treatments
 							carbsValue,
 							0,
 							getEstimatedGlucose(treatmentTime.value.valueOf()),
-							notes.text
+							notes.text,
+							null,
+							carbDelayMinutes
 						);
 						
 						//Add to list
@@ -962,7 +1017,7 @@ package treatments
 						
 						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatmentInsulin.type);
 						
-						//Insulin portion
+						//Carb portion
 						var carbTime:Number = treatmentTime.value.valueOf() + (carbOffSet.value * 60 * 1000);
 						var nowTime:Number = new Date().valueOf();
 						var treatmentCarbs:Treatment = new Treatment
@@ -974,7 +1029,9 @@ package treatments
 							carbsValue,
 							0,
 							getEstimatedGlucose(carbTime <= nowTime ? carbTime : treatmentTime.value.valueOf()),
-							notes.text
+							notes.text,
+							null,
+							carbDelayMinutes
 						);
 						if (carbTime > nowTime) treatmentCarbs.needsAdjustment = true;
 						
@@ -983,7 +1040,6 @@ package treatments
 						treatmentsMap[treatmentCarbs.ID] = treatmentCarbs;
 						
 						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatmentCarbs.type);
-						
 						
 						//Notify listeners
 						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentInsulin));
@@ -1316,10 +1372,13 @@ package treatments
 				nightscoutTreatmentsMap[treatmentID] = nsTreatment;
 				var treatmentType:String = "";
 				var treatmentInsulinAmount:Number = 0;
-				var treatmentInsulinID:String = "";
+				var treatmentInsulinID:String = "000000"; //Nightscout insulin
 				var treatmentCarbs:Number = 0;
 				var treatmentGlucose:Number = 0;
 				var treatmentNote:String = "";
+				var treatmentInsulinName:String = "";
+				var treatmentInsulinDIA:Number = Number.NaN;
+				var treatmentCarbDelayTime:Number = 20;
 				
 				if (treatmentTimestamp < firstReadingTimestamp)
 				{
@@ -1333,19 +1392,37 @@ package treatments
 					continue;
 				}
 				
+				//Insulin
+				if (nsTreatment.insulinID != null)
+				{
+					//It's a treatment from Spike Master
+					treatmentInsulinID = String(nsTreatment.insulinID);
+					
+					if (ProfileManager.getInsulin(treatmentInsulinID) == null)
+					{
+						//Let's create this insulin in memory
+						treatmentInsulinName = nsTreatment.insulinName != null ? nsTreatment.insulinName : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
+						treatmentInsulinDIA = nsTreatment.dia != null ? nsTreatment.dia : ProfileManager.getInsulin("000000").dia;
+						
+						ProfileManager.addInsulin(treatmentInsulinName, treatmentInsulinDIA, "Nightscout", false, treatmentInsulinID, false, true);
+					}
+				}
+				
+				//Carb Delay Time
+				if (nsTreatment.carbDelayTime != null)
+					treatmentCarbDelayTime = nsTreatment.carbDelayTime;
+				
 				if (treatmentEventType == "Correction Bolus" || treatmentEventType == "Bolus" || treatmentEventType == "Correction")
 				{
 					treatmentType = Treatment.TYPE_BOLUS;
 					if (nsTreatment.insulin != null)
 						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
-					treatmentInsulinID = "000000";
 				}
 				else if (treatmentEventType == "Meal Bolus" || treatmentEventType == "Snack Bolus")
 				{
 					treatmentType = Treatment.TYPE_MEAL_BOLUS;
 					if (nsTreatment.insulin != null)
 						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
-					treatmentInsulinID = "000000";
 					if (nsTreatment.carbs != null)
 						treatmentCarbs = Number(nsTreatment.carbs);
 				}
@@ -1416,7 +1493,6 @@ package treatments
 						//Bolus treatment
 						treatmentType = Treatment.TYPE_BOLUS;
 						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
-						treatmentInsulinID = "000000";
 					}
 					else if (((nsTreatment.carbs != null || !isNaN(nsTreatment.carbs)) && Number(nsTreatment.carbs) != 0)  && (nsTreatment.insulin == null || isNaN(nsTreatment.insulin)))
 					{
@@ -1429,7 +1505,6 @@ package treatments
 						//Meal treatment
 						treatmentType = Treatment.TYPE_MEAL_BOLUS;
 						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
-						treatmentInsulinID = "000000";
 						treatmentCarbs = Number(nsTreatment.carbs);
 					}
 				}
@@ -1457,7 +1532,8 @@ package treatments
 							treatmentGlucose,
 							treatmentEventType != "BG Check" ? getEstimatedGlucose(treatmentTimestamp) : treatmentGlucose,
 							treatmentNote,
-							treatmentID
+							treatmentID,
+							treatmentCarbDelayTime
 						);
 						
 						//If it's a future treatment let's mark that it needs adjustment for proper displaying on the chart
@@ -1479,6 +1555,11 @@ package treatments
 							spikeTreatment.carbs = treatmentCarbs;
 							wasTreatmentModified = true;
 						}
+						if (!isNaN(treatmentCarbDelayTime) && spikeTreatment.carbDelayTime != treatmentCarbDelayTime)
+						{
+							spikeTreatment.carbDelayTime = treatmentCarbDelayTime;
+							wasTreatmentModified = true;
+						}
 						if (!isNaN(treatmentGlucose) && Math.abs(spikeTreatment.glucose - treatmentGlucose) >= 1) //Nightscout rounds values so we just check if the glucose value differnce is bigger than 1 to avoid triggering this on every treatment
 						{
 							spikeTreatment.glucose = treatmentGlucose;
@@ -1487,6 +1568,16 @@ package treatments
 						if (!isNaN(treatmentInsulinAmount) && spikeTreatment.insulinAmount != treatmentInsulinAmount)
 						{
 							spikeTreatment.insulinAmount = treatmentInsulinAmount;
+							wasTreatmentModified = true;
+						}
+						if (!isNaN(treatmentInsulinDIA) && spikeTreatment.dia != treatmentInsulinDIA)
+						{
+							spikeTreatment.dia = treatmentInsulinDIA;
+							wasTreatmentModified = true;
+						}
+						if (treatmentInsulinID != "000000" && spikeTreatment.insulinID != treatmentInsulinID)
+						{
+							spikeTreatment.insulinID = treatmentInsulinID;
 							wasTreatmentModified = true;
 						}
 						if (spikeTreatment.note != treatmentNote)
@@ -1515,28 +1606,25 @@ package treatments
 			
 			//Check for deleted treatments in Nightscout
 			var numSpikeTreatments:int = treatmentsList.length;
-			if (numNightscoutTreatments < numSpikeTreatments)
+			for (var j:int = 0; j <numSpikeTreatments; j++) 
 			{
-				for (var j:int = 0; j <numSpikeTreatments; j++) 
+				var internalTreatment:Treatment = treatmentsList[j];
+					
+				if (internalTreatment.type == Treatment.TYPE_GLUCOSE_CHECK && internalTreatment.note == ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
 				{
-					var internalTreatment:Treatment = treatmentsList[j];
+					//Don't delete calibration treatments
+					continue;
+				}
 					
-					if (internalTreatment.type == Treatment.TYPE_GLUCOSE_CHECK && internalTreatment.note == ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
-					{
-						//Don't delete calibration treatments
-						continue;
-					}
-					
-					if (nightscoutTreatmentsMap[internalTreatment.ID] == null)
-					{
-						Trace.myTrace("TreatmentsManager.as", "User deleted treatment in Nightscout. Deleting in Spike as well. Type: " + internalTreatment.type);
+				if (nightscoutTreatmentsMap[internalTreatment.ID] == null)
+				{
+					Trace.myTrace("TreatmentsManager.as", "User deleted treatment in Nightscout. Deleting in Spike as well. Type: " + internalTreatment.type);
 						
-						//Notify Listeners
-						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalTreatment));
+					//Notify Listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalTreatment));
 						
-						//Treatment is not present in Nightscout. User has deleted it
-						deleteTreatment(internalTreatment, false);
-					}
+					//Treatment is not present in Nightscout. User has deleted it
+					deleteTreatment(internalTreatment, false);
 				}
 			}
 			
@@ -1666,11 +1754,27 @@ package treatments
 			
 			return { timestamp: firstTreatmentTimestamp, carbs: activeTotalCarbs };
 		}
+		
+		public static function getCarbTypeName(treatment:Treatment):String
+		{
+			var carbTypeName:String = ModelLocator.resourceManagerInstance.getString('treatments','carbs_unknown_label');
+			
+			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			{
+				if (treatment.carbDelayTime == Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME)))
+					carbTypeName = ModelLocator.resourceManagerInstance.getString('treatments','carbs_fast_label');
+				else if (treatment.carbDelayTime == Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME)))
+					carbTypeName = ModelLocator.resourceManagerInstance.getString('treatments','carbs_medium_label');
+				else if (treatment.carbDelayTime == Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME)))
+					carbTypeName = ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label');
+			}
+			
+			return carbTypeName;
+		}
 
 		public static function get instance():TreatmentsManager
 		{
 			return _instance;
 		}
-
 	}
 }

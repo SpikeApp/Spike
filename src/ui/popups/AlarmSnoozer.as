@@ -207,7 +207,6 @@ package ui.popups
 		 */
 		private static function onClose(e:Event):void
 		{
-			
 			_instance.dispatchEventWith(CLOSED, false, { index: snoozePickerList.selectedIndex });
 			
 			SystemUtil.executeWhenApplicationIsActive (closeCallout );

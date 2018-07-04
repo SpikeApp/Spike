@@ -57,13 +57,13 @@ package ui.screens.display.treatments
 		private var carbsAmountStepper:NumericStepper;
 		private var glucoseAmountStepper:NumericStepper;
 		private var noteTextArea:TextArea;
+		private var treatmentTimeConatiner:LayoutGroup;
+		private var carbTypePicker:PickerList;
 		
 		/* Properties */
 		private var treatment:Treatment;
 		private var isMgDl:Boolean;
 
-		private var treatmentTimeConatiner:LayoutGroup;
-		
 		public function TreatmentEditorList(treatment:Treatment)
 		{
 			super();
@@ -103,10 +103,10 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			var treatmentType:String;
-			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				//Treatment Type
-				if (treatment.type == Treatment.TYPE_BOLUS)
+				if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 					treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_bolus");
 				
 				//User's insulins
@@ -120,10 +120,13 @@ package ui.screens.display.treatments
 					{
 						var insulin:Insulin = userInsulins[i];
 						
-						insulinsList.push( {label: insulin.name, id: insulin.ID} );
-						
-						if (insulin.ID == treatment.insulinID)
-							selectedInsulin = i;
+						if (!insulin.isHidden)
+						{
+							insulinsList.push( {label: insulin.name, id: insulin.ID} );
+							
+							if (insulin.ID == treatment.insulinID)
+								selectedInsulin = i;
+						}
 					}
 				}
 				insulinsPicker.labelField = "label";
@@ -153,6 +156,37 @@ package ui.screens.display.treatments
 				carbsAmountStepper = LayoutFactory.createNumericStepper(1, 1000, treatment.carbs, 0.5);
 				carbsAmountStepper.pivotX = -10;
 				carbsAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+				
+				//Carb absorption delay
+				carbTypePicker = LayoutFactory.createPickerList();
+				carbTypePicker.popUpContentManager = new DropDownPopUpContentManager();
+				carbTypePicker.labelField = "label";
+				carbTypePicker.itemRendererFactory = function():IListItemRenderer
+				{
+					var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+					renderer.paddingRight = renderer.paddingLeft = 20;
+					return renderer;
+				};
+				
+				var carbTypeListDataProvider:ArrayCollection = new ArrayCollection();
+				carbTypeListDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','carbs_fast_label') } );
+				carbTypeListDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','carbs_medium_label') } );
+				carbTypeListDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label') } );
+				
+				carbTypePicker.dataProvider = carbTypeListDataProvider;
+				
+				//Get current carb type
+				var carbType:String = TreatmentsManager.getCarbTypeName(treatment);
+				if (carbType == ModelLocator.resourceManagerInstance.getString('treatments','carbs_fast_label'))
+					carbTypePicker.selectedIndex = 0;
+				else if (carbType == ModelLocator.resourceManagerInstance.getString('treatments','carbs_medium_label'))
+					carbTypePicker.selectedIndex = 1;
+				else if (carbType == ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label'))
+					carbTypePicker.selectedIndex = 2;
+				
+				carbTypePicker.addEventListener(Event.CHANGE, onSettingsChanged);
+				
+				
 			}
 			if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
@@ -234,6 +268,7 @@ package ui.screens.display.treatments
 			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_carbs_amount_label"), accessory: carbsAmountStepper });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"carbs_type_label"), accessory: carbTypePicker });
 			}
 			if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
@@ -262,7 +297,8 @@ package ui.screens.display.treatments
 		
 		private function onSettingsChanged(e:Event):void
 		{
-			saveTreatment.isEnabled = true;
+			if (saveTreatment != null)
+				saveTreatment.isEnabled = true;
 		}
 		
 		/**
@@ -293,6 +329,8 @@ package ui.screens.display.treatments
 			treatment.timestamp = treatmentTime.value.valueOf();
 			treatment.note = noteTextArea.text;
 			
+			var carbDelayTime:Number;
+			
 			//Update treatment properties specific to each treatment type
 			if(treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 			{
@@ -305,6 +343,16 @@ package ui.screens.display.treatments
 			{
 				treatment.carbs = carbsAmountStepper.value;
 				treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatment.timestamp);
+				
+				if (carbTypePicker.selectedIndex == 0)
+					carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+				else if (carbTypePicker.selectedIndex == 1)
+					carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+				else if (carbTypePicker.selectedIndex == 2)
+					carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+				
+				treatment.carbDelayTime = carbDelayTime;
+				
 			}
 			else if(treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
@@ -318,6 +366,15 @@ package ui.screens.display.treatments
 				treatment.dia = ProfileManager.getInsulin(treatment.insulinID).dia;
 				treatment.carbs = carbsAmountStepper.value;
 				treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatment.timestamp);
+				
+				if (carbTypePicker.selectedIndex == 0)
+					carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+				else if (carbTypePicker.selectedIndex == 1)
+					carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+				else if (carbTypePicker.selectedIndex == 2)
+					carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+				
+				treatment.carbDelayTime = carbDelayTime;
 			}
 			
 			//Update treatment in Spike and DB
@@ -406,6 +463,13 @@ package ui.screens.display.treatments
 				noteTextArea.removeEventListener(Event.CHANGE, onSettingsChanged);
 				noteTextArea.dispose();
 				noteTextArea = null;
+			}
+			
+			if (carbTypePicker != null)
+			{
+				carbTypePicker.removeEventListener(Event.CHANGE, onSettingsChanged);
+				carbTypePicker.dispose();
+				carbTypePicker = null;
 			}
 			
 			super.dispose();

@@ -643,8 +643,18 @@ package network.httpserver.API
 						responseTreatment["_id"] = spikeTreatment.ID;
 						responseTreatment["created_at"] = nsFormatter.format(spikeTreatment.timestamp).replace("000+0000", "000Z");
 						responseTreatment.eventType = responseTreatmentType;
-						responseTreatment.insulin = spikeTreatment.insulinAmount;
-						responseTreatment.carbs = spikeTreatment.carbs;
+						if (responseTreatmentType == "Bolus" || responseTreatmentType == "Correction Bolus" || responseTreatmentType == "Meal Bolus")
+						{
+							responseTreatment.insulin = spikeTreatment.insulinAmount;
+							responseTreatment.insulinID = spikeTreatment.insulinID;
+							responseTreatment.insulinName = ProfileManager.getInsulin(spikeTreatment.insulinID).name;
+							responseTreatment.dia = spikeTreatment.dia;
+						}
+						if (responseTreatmentType == "Meal Bolus" || responseTreatmentType == "Carb Correction")
+						{
+							responseTreatment.carbs = spikeTreatment.carbs;
+							responseTreatment.carbDelayTime = spikeTreatment.carbDelayTime;
+						}
 						responseTreatment.glucose = spikeTreatment.glucose;
 						responseTreatment.notes = spikeTreatment.note;
 						

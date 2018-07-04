@@ -154,7 +154,7 @@ package database
 			"glucose REAL, " +
 			"glucoseestimated REAL, " +
 			"note STRING, " +
-			"carbtime REAL, " +
+			"carbdelay REAL, " +
 			"basalduration REAL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
@@ -628,7 +628,7 @@ package database
 					sqlStatement.clearParameters();
 					
 					//Check if table needs to be updated for new Spike format #2
-					sqlStatement.text = "SELECT carbtime FROM treatments";
+					sqlStatement.text = "SELECT carbdelay FROM treatments";
 					sqlStatement.addEventListener(SQLEvent.RESULT,check2Performed);
 					sqlStatement.addEventListener(SQLErrorEvent.ERROR,check2Error);
 					sqlStatement.execute();
@@ -643,9 +643,9 @@ package database
 					
 					function check2Error(see:SQLErrorEvent):void 
 					{
-						if (debugMode) trace("Database.as : carbtime column not found in treatments table (old version of Spike). Updating table...");
+						if (debugMode) trace("Database.as : carbdelay column not found in treatments table (old version of Spike). Updating table...");
 						sqlStatement.clearParameters();
-						sqlStatement.text = "ALTER TABLE treatments ADD COLUMN carbtime REAL;";
+						sqlStatement.text = "ALTER TABLE treatments ADD COLUMN carbdelay REAL;";
 						sqlStatement.execute();
 					}
 				}
@@ -2115,7 +2115,9 @@ package database
 				text += "glucose, ";
 				text += "glucoseestimated, ";
 				text += "note, ";
-				text += "lastmodifiedtimestamp) ";
+				text += "lastmodifiedtimestamp, ";
+				text += "carbdelay, ";
+				text += "basalduration) ";
 				text += "VALUES (";
 				text += "'" + treatment.ID + "', ";
 				text += "'" + treatment.type + "', ";
@@ -2125,7 +2127,9 @@ package database
 				text += treatment.glucose + ", ";
 				text += treatment.glucoseEstimated + ", ";
 				text += "'" + treatment.note + "', ";
-				text += treatment.timestamp + ")";
+				text += treatment.timestamp + ", ";
+				text += treatment.carbDelayTime + ", ";
+				text += treatment.basalDuration + ")";
 				
 				insertRequest.text = text;
 				insertRequest.execute();
@@ -2163,7 +2167,9 @@ package database
 				"glucose = " + treatment.glucose + ", " +
 				"glucoseestimated = " + treatment.glucoseEstimated + ", " +
 				"note = '" + treatment.note + "', " +
-				"lastmodifiedtimestamp = " + treatment.timestamp + " " +
+				"lastmodifiedtimestamp = " + treatment.timestamp + ", " +
+				"carbdelay = " + treatment.carbDelayTime + ", " +
+				"basalduration = " + treatment.basalDuration + " " +
 				"WHERE id = '" + treatment.ID + "'";
 				updateRequest.execute();
 				conn.commit();
