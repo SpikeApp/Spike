@@ -142,7 +142,7 @@ package ui.screens.display.settings.chart
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: enableGlucoseDistribution } );
 			if (pieChartEnabledValue)
 			{
-				if (DeviceInfo.isTablet() || ModelLocator.IS_IPAD)
+				if (DeviceInfo.isTablet())
 					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','display_in_landscape_label'), accessory: displayInLandscapeCheck } );
 				if (!BlueToothDevice.isFollower())
 				{

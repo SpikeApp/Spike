@@ -509,140 +509,6 @@ package ui.screens
 			if (isNaN(glucoseFontSize)) glucoseFontSize = 130;
 		}
 		
-		/*private function calculateFontSize():void
-		{
-			if (latestGlucoseOutput == null)
-				return;
-			
-			var sNativeFormat:flash.text.TextFormat = new flash.text.TextFormat();
-			sNativeFormat.font = "OpenSansBold";
-			sNativeFormat.bold = true;
-			sNativeFormat.color = 0xFFFFFF;
-			sNativeFormat.size = 600;
-			
-			var formattedGlucoseOutput:String = Constants.isPortrait ? latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n")) : latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf(" "));
-			if (!Constants.isPortrait && DeviceInfo.isTablet()) formattedGlucoseOutput += " -";
-			else if (!Constants.isPortrait) formattedGlucoseOutput += " ";
-			
-			var nativeTextField:flash.text.TextField = new flash.text.TextField();
-			nativeTextField.defaultTextFormat = sNativeFormat;
-			nativeTextField.width  = Constants.isPortrait ? Constants.stageWidth: Constants.stageHeight;
-			nativeTextField.height = Constants.isPortrait ? Constants.stageHeight : Constants.stageWidth;
-			nativeTextField.selectable = false;
-			nativeTextField.multiline = true;
-			nativeTextField.wordWrap = false;
-			nativeTextField.embedFonts = true;
-			nativeTextField.text = formattedGlucoseOutput;
-			
-			var textFormat:flash.text.TextFormat = sNativeFormat;
-			var maxTextWidth:int  = nativeTextField.width;
-			if (Constants.isPortrait && !DeviceInfo.isTablet()) maxTextWidth -= 90;
-			else if (Constants.isPortrait && DeviceInfo.isTablet()) maxTextWidth -= 140;
-			else if (!Constants.isPortrait  && !DeviceInfo.isTablet()) maxTextWidth -= 70;
-			else if (!Constants.isPortrait  && DeviceInfo.isTablet()) maxTextWidth -= 100;
-			var size:Number = Number(textFormat.size);
-			
-			while (nativeTextField.textWidth > maxTextWidth)
-			{
-				if (size <= 4) break;
-				
-				textFormat.size = size--;
-				nativeTextField.defaultTextFormat = textFormat;
-				
-				nativeTextField.text = formattedGlucoseOutput;
-			}
-			
-			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
-			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-			
-			glucoseFontSize =  Number(textFormat.size);
-			if (isNaN(glucoseFontSize)) glucoseFontSize = 130;
-		}*/
-		
-		/*private function calculateFontSize():void
-		{
-			if (latestGlucoseOutput == null)
-				return;
-			
-			var formattedGlucoseOutput:String;
-			if (Constants.isPortrait)
-				formattedGlucoseOutput = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf("\n"));
-			else
-				formattedGlucoseOutput = latestGlucoseOutput.substring(0, latestGlucoseOutput.indexOf(" "));
-			
-			if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 160;	
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 150;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 120;
-			}
-			else if(Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8)
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 210;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 175;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 145;
-				
-			}
-			else if(Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 200;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 170;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 135;
-				
-			}
-			else if(Constants.deviceModel == DeviceInfo.IPHONE_X)
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 155;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 135;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 105;
-				
-			}
-			else if(Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 345;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 305;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 260;
-				
-			}
-			else if(Constants.deviceModel == DeviceInfo.IPAD_PRO_105)
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 330;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 300;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 235;
-				
-			}
-			else if(Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 410;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 380;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 300;
-				
-			}
-			else if(Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 220;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 180;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 155;
-				
-			}
-			else if(DeviceInfo.isTablet())
-			{
-				if(formattedGlucoseOutput.length == 2 || formattedGlucoseOutput.length == 3) glucoseFontSize = 330;
-				else if(formattedGlucoseOutput.length == 4) glucoseFontSize = 300;
-				else if(formattedGlucoseOutput.length == 5) glucoseFontSize = 235;
-				
-			}
-			
-			if (isNaN(glucoseFontSize))
-				glucoseFontSize = 130;
-			
-			if ((formattedGlucoseOutput == "LOW" || formattedGlucoseOutput == "HIGH") && Constants.isPortrait)
-				glucoseFontSize -= 20;
-			
-			var deviceFontMultiplier:Number = DeviceInfo.getFontMultipier();
-			infoFontSize = 22 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-		}*/
-		
 		/**
 		 * Event Listeners
 		 */
@@ -819,6 +685,7 @@ package ui.screens
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
+			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 		}
 		
 		/**
