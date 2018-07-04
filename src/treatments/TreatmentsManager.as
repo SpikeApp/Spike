@@ -1404,7 +1404,7 @@ package treatments
 						treatmentInsulinName = nsTreatment.insulinName != null ? nsTreatment.insulinName : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
 						treatmentInsulinDIA = nsTreatment.dia != null ? nsTreatment.dia : ProfileManager.getInsulin("000000").dia;
 						
-						ProfileManager.addInsulin(treatmentInsulinName, treatmentInsulinDIA, "Nightscout", false, treatmentInsulinID, false, true);
+						ProfileManager.addInsulin(treatmentInsulinName, treatmentInsulinDIA, "Unknown", false, treatmentInsulinID, true, true);
 					}
 				}
 				

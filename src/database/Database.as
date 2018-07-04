@@ -11,7 +11,6 @@ package database
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
-	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -164,6 +163,7 @@ package database
 			"dia REAL, " +
 			"type STRING, " +
 			"isdefault STRING, " +
+			"ishidden STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_PROFILE:String = "CREATE TABLE IF NOT EXISTS profiles(" +
@@ -678,14 +678,38 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				createProfilesTable();
+				
+				sqlStatement.clearParameters();
+				
+				//Check if table needs to be updated for new Spike format
+				sqlStatement.text = "SELECT ishidden FROM insulins";
+				sqlStatement.addEventListener(SQLEvent.RESULT,checkPerformed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkError);
+				sqlStatement.execute();
+				
+				function checkPerformed(se:SQLEvent):void 
+				{
+					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkPerformed);
+					sqlStatement.clearParameters();
+					
+					createProfilesTable();
+				}
+				
+				function checkError(see:SQLErrorEvent):void 
+				{
+					if (debugMode) trace("Database.as : ishidden column not found in insulins table (old version of Spike). Updating table...");
+					sqlStatement.clearParameters();
+					sqlStatement.text = "ALTER TABLE insulins ADD COLUMN ishidden STRING;";
+					sqlStatement.execute();
+				}
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
-				if (debugMode) trace("Database.as : Failed to create treatments table");
+				if (debugMode) trace("Database.as : Failed to create insulins table");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_treatments_table', see != null ? see.error.message:null);
+				dispatchInformation('failed_to_create_insulins_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -2257,6 +2281,7 @@ package database
 				text += "dia, ";
 				text += "type, ";
 				text += "isdefault, ";
+				text += "ishidden, ";
 				text += "lastmodifiedtimestamp) ";
 				text += "VALUES (";
 				text += "'" + insulin.ID + "', ";
@@ -2264,6 +2289,7 @@ package database
 				text += insulin.dia + ", ";
 				text += "'" + insulin.type + "', ";
 				text += "'" + insulin.isDefault + "', ";
+				text += "'" + insulin.isHidden + "', ";
 				text += insulin.timestamp + ")";
 				
 				insertRequest.text = text;
@@ -2299,6 +2325,7 @@ package database
 					"dia = " + insulin.dia + ", " +
 					"type = '" + insulin.type + "', " +
 					"isdefault = '" + insulin.isDefault + "', " +
+					"ishidden = '" + insulin.isHidden + "', " +
 					"lastmodifiedtimestamp = " + insulin.timestamp + " " +
 					"WHERE id = '" + insulin.ID + "'";
 				updateRequest.execute();

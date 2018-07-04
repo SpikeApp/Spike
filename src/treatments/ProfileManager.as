@@ -49,14 +49,18 @@ package treatments
 							dbInsulin.dia,
 							dbInsulin.type,
 							dbInsulin.isdefault == "true" ? true : false,
-							dbInsulin.lastmodifiedtimestamp
+							dbInsulin.lastmodifiedtimestamp,
+							dbInsulin.ishidden != null && dbInsulin.ishidden == "true" ? true : false
 						);
-						
-						if (insulin.ID == "000000") //Hide Nightscout insulin from UI
-							insulin.isHidden = true;
 						
 						insulinsList.push(insulin);
 						insulinsMap[dbInsulin.id] = insulin;
+						
+						if (insulin.ID == "000000" && !insulin.isHidden) //Hide Nightscout insulin from UI
+						{
+							insulin.isHidden = true;
+							updateInsulin(insulin);
+						}
 					}
 					insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
 					
