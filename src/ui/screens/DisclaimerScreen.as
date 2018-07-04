@@ -117,7 +117,7 @@ package ui.screens
 			if (!BlueToothDevice.isFollower())
 				AppInterface.instance.menu.selectedIndex = 6;
 			else
-				AppInterface.instance.menu.selectedIndex = 3;
+				AppInterface.instance.menu.selectedIndex = 4;
 		}
 		
 		/**

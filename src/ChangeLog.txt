@@ -12,6 +12,7 @@ ENHANCEMENT: Full layout adjustment for iPhone X. All Spike screens should now d
 ENHANCEMENT: Better handling of Nightscout treatments set in the future (Bolus Wizard, Meal, etc.). (Miguel)
 ENHANCEMENT: Improved speech output for some languages, including German. (Sascha)
 ENHANCEMENT: Spike watch complication is now selectable directly from the Watch app on iPhone/iPad/iPodTouch. (Miguel)
+ENHANCEMENT: Added help menu to followers. (Miguel)
 FIX: Fixes an issue where snoozing an alarm could also snooze other alarms. (Miguel);
 FIX: No more duplicate HealthKit entries for treatments. (Miguel)
 FIX: Negative deltas where not being correctly spoken when speech was enabled. It's now fixed. (Miguel)

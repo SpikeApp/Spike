@@ -1,5 +1,7 @@
 package ui.screens.display.help
 {
+	import database.BlueToothDevice;
+	
 	import feathers.controls.Label;
 	import feathers.controls.text.HyperlinkTextFieldTextRenderer;
 	import feathers.core.ITextRenderer;
@@ -60,7 +62,7 @@ package ui.screens.display.help
 		{	
 			//Missed Readings Description Label
 			missedReadingsDescriptionLabel = new Label();
-			missedReadingsDescriptionLabel.text = ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_ldescription');
+			missedReadingsDescriptionLabel.text = !BlueToothDevice.isFollower() ? ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_description') : ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_description_follower');
 			missedReadingsDescriptionLabel.width = width - 20;
 			missedReadingsDescriptionLabel.wordWrap = true;
 			missedReadingsDescriptionLabel.paddingTop = 10;

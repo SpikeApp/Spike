@@ -2,6 +2,8 @@ package ui.screens
 {
 	import flash.system.System;
 	
+	import database.BlueToothDevice;
+	
 	import feathers.controls.ScrollPolicy;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
@@ -62,9 +64,12 @@ package ui.screens
 		private function setupContent():void
 		{
 			//Tutorial Section
-			tutorialSection = new TutorialList();
-			tutorialSection.addEventListener(Event.COMPLETE, onShowTutorial);
-			screenRenderer.addChild(tutorialSection);
+			if (!BlueToothDevice.isFollower())
+			{
+				tutorialSection = new TutorialList();
+				tutorialSection.addEventListener(Event.COMPLETE, onShowTutorial);
+				screenRenderer.addChild(tutorialSection);
+			}
 			
 			//General Help Section
 			generalHelpSection = new GeneralHelpList();
@@ -73,7 +78,10 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 4;
+			if (!BlueToothDevice.isFollower())
+				AppInterface.instance.menu.selectedIndex = 4;
+			else
+				AppInterface.instance.menu.selectedIndex = 2;
 		}
 		
 		/**
