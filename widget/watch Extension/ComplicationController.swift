@@ -46,24 +46,29 @@ class Cowmplication: NSObject, CLKComplicationDataSource {
     }
     
     func getPlaceholderTemplate(for complication: CLKComplication, withHandler handler: @escaping (CLKComplicationTemplate?) -> Void) {
-        var template: CLKComplicationTemplate? = nil
-        switch complication.family
-        {
-            case .modularSmall:
-                let template = CLKComplicationTemplateModularSmallRingImage()
-                template.imageProvider = CLKImageProvider(onePieceImage: UIImage (named: "Complication/Modular")!)
-            case .modularLarge:
-                template = nil
-            case .utilitarianSmall:
-                template = nil
-            case .utilitarianLarge:
-                template = nil
-            case .circularSmall:
-                let template = CLKComplicationTemplateCircularSmallRingImage()
-                template.imageProvider = CLKImageProvider(onePieceImage: UIImage (named: "Complication/Circular")!)
-            default: break
+        if complication.family == .utilitarianSmall {
+            let smallFlat = CLKComplicationTemplateUtilitarianSmallFlat()
+            smallFlat.textProvider = CLKSimpleTextProvider(text: "")
+            smallFlat.imageProvider = CLKImageProvider(onePieceImage: UIImage (named: "Complication/Utilitarian")!)
+            handler(smallFlat)
+        } else if complication.family == .utilitarianSmallFlat {
+            let smallFlat = CLKComplicationTemplateUtilitarianSmallFlat()
+            smallFlat.textProvider = CLKSimpleTextProvider(text: "")
+            smallFlat.imageProvider = CLKImageProvider(onePieceImage: UIImage (named: "Complication/Utilitarian")!)
+            handler(smallFlat)
+        } else if complication.family == .utilitarianLarge {
+            let largeFlat = CLKComplicationTemplateUtilitarianLargeFlat()
+            largeFlat.textProvider = CLKSimpleTextProvider(text: "", shortText:"")
+            largeFlat.imageProvider = CLKImageProvider(onePieceImage: UIImage (named: "Complication/Utilitarian")!)
+            handler(largeFlat)
+        } else if complication.family == .circularSmall {
+            let circularSmall = CLKComplicationTemplateCircularSmallRingImage()
+            circularSmall.imageProvider = CLKImageProvider(onePieceImage: UIImage (named: "Complication/Circular")!)
+            handler(circularSmall)
+        } else if complication.family == .modularSmall {
+            let modularSmall = CLKComplicationTemplateModularSmallRingImage()
+            modularSmall.imageProvider = CLKImageProvider(onePieceImage: UIImage (named: "Complication/Modular")!)
+            handler(modularSmall)
         }
-        
-        handler(template)
     }
 }
