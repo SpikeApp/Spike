@@ -370,6 +370,12 @@ package services
 				return;
 			}
 			
+			if (BlueToothDevice.isFollower())
+			{
+				deactivateService();
+				return;
+			}
+			
 			syncGlucoseReadingsActive = true;
 			
 			var data:Object = new Object();

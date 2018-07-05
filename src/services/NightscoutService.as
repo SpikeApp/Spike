@@ -926,8 +926,14 @@ package services
 		
 		public static function uploadTreatment(treatment:Treatment):void
 		{
-			if (!serviceActive)
+			if (!BlueToothDevice.isFollower() && !serviceActive)
 				return;
+			
+			if (BlueToothDevice.isFollower() && !followerModeEnabled)
+				return;
+			
+			if (BlueToothDevice.isFollower() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
+				return
 			
 			Trace.myTrace("NightscoutService.as", "in uploadTreatment.");
 			
@@ -2104,7 +2110,7 @@ package services
 		
 		private static function setupNightscoutProperties():void
 		{
-			apiSecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET)))));
+			apiSecret = !BlueToothDevice.isFollower() ? Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET))))) : Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)))));
 			
 			nightscoutEventsURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";
 			if (nightscoutEventsURL.indexOf('http') == -1) nightscoutEventsURL = "https://" + nightscoutEventsURL;

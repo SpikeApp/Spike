@@ -499,8 +499,8 @@ package network.httpserver.API
 			if (params.method == "POST") //Insert treatment in Spike
 			{
 				//Validation
-				if (BlueToothDevice.isFollower())
-					return responseSuccess("Followers can't add treatments!");
+				if (BlueToothDevice.isFollower() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
+					return responseSuccess("Follower doesn't have enough privileges to add treatments!");
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")
 					return responseSuccess("Treatments are not enabled in Spike!");

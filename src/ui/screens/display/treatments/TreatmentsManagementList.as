@@ -236,7 +236,7 @@ package ui.screens.display.treatments
 				}
 				itemRenderer.accessoryOffsetX = -30;
 				itemRenderer.labelField = "label";
-				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				if (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				{
 					itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
 					{

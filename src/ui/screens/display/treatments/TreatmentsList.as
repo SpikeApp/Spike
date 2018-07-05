@@ -95,7 +95,7 @@ package ui.screens.display.treatments
 				calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
 				calibrationImage = new Image(calibrationTexture);
 			}
-			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
+			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
 			{
 				bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
 				bolusImage = new Image(bolusTexture);
@@ -121,16 +121,16 @@ package ui.screens.display.treatments
 			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
-			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || ModelLocator.INTERNAL_TESTING == true)
+			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				canAddTreatments = true;
 			
-			if (numBgReadings > 2 || ModelLocator.INTERNAL_TESTING == true)
+			if (numBgReadings > 2 || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				canSeeTreatments = true;
 			
 			var menuData:Array = [];
 			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
-			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
+			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
 			{
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: canAddTreatments, id: 2 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: canAddTreatments, id: 3 } );

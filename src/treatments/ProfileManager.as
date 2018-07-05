@@ -3,9 +3,8 @@ package treatments
 	import flash.utils.Dictionary;
 	
 	import database.BlueToothDevice;
+	import database.CommonSettings;
 	import database.Database;
-	
-	import model.ModelLocator;
 	
 	import utils.Trace;
 	import utils.UniqueId;
@@ -27,7 +26,7 @@ package treatments
 		{
 			Trace.myTrace("ProfileManager.as", "init called!");
 			
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 			{
 				//Common variables
 				var i:int;
@@ -191,14 +190,15 @@ package treatments
 			}
 		}
 		
-		public static function updateInsulin(insulin:Insulin):void
+		public static function updateInsulin(insulin:Insulin, saveToDatabase:Boolean = true):void
 		{
 			Trace.myTrace("ProfileManager.as", "updateInsulin called!");
 			
 			if (insulinsMap[insulin.ID] != null)
 			{
 				Trace.myTrace("ProfileManager.as", "Updating insulin " + insulin.name);
-				Database.updateInsulinSynchronous(insulin);
+				if (saveToDatabase)
+					Database.updateInsulinSynchronous(insulin);
 			}
 			else
 				Trace.myTrace("ProfileManager.as", "Can't update an insulin that doesn't exist!");
@@ -237,13 +237,15 @@ package treatments
 			
 			var insulinID:String = "";
 			var foundDefault:Boolean = false;
+			var i:int = 0;
+			var insulin:Insulin;
 			
 			insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
 			
-			for (var i:int = 0; i < insulinsList.length; i++) 
+			for (i = 0; i < insulinsList.length; i++) 
 			{
-				var insulin:Insulin = insulinsList[i];
-				if (insulin.isDefault)
+				insulin = insulinsList[i];
+				if (insulin.isDefault && !insulin.isHidden)
 				{
 					insulinID = insulin.ID;
 					foundDefault = true;
@@ -253,10 +255,17 @@ package treatments
 			
 			if (!foundDefault && insulinsList.length > 0)
 			{
-				Trace.myTrace("ProfileManager.as", "Found default insulin: " + (insulinsList[0] as Insulin).name);
-				
-				insulinID = (insulinsList[0] as Insulin).ID;
-				foundDefault;
+				for (i = 0; i < insulinsList.length; i++) 
+				{
+					insulin = insulinsList[i];
+					if (!insulin.isHidden)
+					{
+						Trace.myTrace("ProfileManager.as", "Found default insulin: " + insulin.name);
+						insulinID = insulin.ID;
+						foundDefault = true;
+						break;
+					}
+				}
 			}
 			
 			if (insulinsList.length == 0 && !foundDefault)

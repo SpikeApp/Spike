@@ -68,7 +68,6 @@ package ui.screens.display.settings.treatments
 			setupProperties();
 			setupInitialContent();	
 			setupContent();
-			
 		}
 		
 		/**
@@ -191,7 +190,7 @@ package ui.screens.display.settings.treatments
 			for (var i:int = 0; i < userInsulins.length; i++) 
 			{
 				var insulin:Insulin = userInsulins[i];
-				if (insulin.name.indexOf("Nightscout") == -1)
+				if (insulin.name.indexOf("Nightscout") == -1 && !insulin.isHidden)
 				{
 					var insulinAccessory:InsulinManagerAccessory = new InsulinManagerAccessory();
 					insulinAccessory.addEventListener(InsulinManagerAccessory.EDIT, onEditInsulin);

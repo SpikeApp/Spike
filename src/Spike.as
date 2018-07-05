@@ -11,6 +11,7 @@ package
 	import flash.events.UncaughtErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
+	import flash.system.Capabilities;
 	import flash.system.System;
 	import flash.utils.setTimeout;
 	
@@ -113,12 +114,12 @@ package
 			
 			lastCrashReportTimestamp = now;
 			
-			error = "Spike Version: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) + "\n\n" + error;
+			error = "Device Model: " + Constants.deviceModelName + "\n\n" + "Spike Version: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) + "\n\n" + error;
 			
 			//Create URL Request 
 			var vars:URLVariables = new URLVariables();
 			vars.mimeType = "text/html";
-			vars.emailSubject = "Spike Uncaught Error";
+			vars.emailSubject = "Spike Error";
 			vars.emailBody = error;
 			vars.userName = "";
 			vars.userEmail = "bug@spike-app.com";

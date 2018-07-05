@@ -373,7 +373,7 @@ package treatments
 			pumpCOB = value;
 		}
 		
-		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
+		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true, nullifyTreatment:Boolean = true):void
 		{
 			Trace.myTrace("TreatmentsManager.as", "deleteTreatment called!");
 			
@@ -401,7 +401,7 @@ package treatments
 							Database.deleteTreatmentSynchronous(spikeTreatment);
 						
 						treatmentsMap[spikeTreatment.ID] = null;
-						spikeTreatment = null;
+						if (nullifyTreatment) spikeTreatment = null;
 						break;
 					}
 				}
@@ -1295,7 +1295,8 @@ package treatments
 			if (treatmentsMap[treatment.ID] == null) //New treatment
 			{
 				//Insert in DB
-				Database.insertTreatmentSynchronous(treatment);
+				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					Database.insertTreatmentSynchronous(treatment);
 				
 				//Add to list
 				treatmentsList.push(treatment);
@@ -1328,7 +1329,8 @@ package treatments
 			if (treatmentsMap[treatment.ID] == null) //New treatment
 			{
 				//Insert in DB
-				Database.insertTreatmentSynchronous(treatment);
+				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					Database.insertTreatmentSynchronous(treatment);
 				
 				//Add to list
 				treatmentsList.push(treatment);
@@ -1619,12 +1621,15 @@ package treatments
 				if (nightscoutTreatmentsMap[internalTreatment.ID] == null)
 				{
 					Trace.myTrace("TreatmentsManager.as", "User deleted treatment in Nightscout. Deleting in Spike as well. Type: " + internalTreatment.type);
-						
+					
+					//Treatment is not present in Nightscout. User has deleted it
+					deleteTreatment(internalTreatment, false, false);
+					
 					//Notify Listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalTreatment));
-						
-					//Treatment is not present in Nightscout. User has deleted it
-					deleteTreatment(internalTreatment, false);
+					
+					//Nullify treatment
+					internalTreatment = null;
 				}
 			}
 			
