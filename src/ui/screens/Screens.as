@@ -30,5 +30,6 @@ package ui.screens
 		public static const DISCLAIMER:String = "disclaimer";
 		public static const HELP:String = "help";
 		public static const ALL_TREATMENTS:String = "allTreatments";
+		public static const DONATE:String = "donate";
 	}
 }

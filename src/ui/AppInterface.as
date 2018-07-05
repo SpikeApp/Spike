@@ -27,6 +27,7 @@ package ui
 	import ui.screens.ChartScreen;
 	import ui.screens.ChartSettingsScreen;
 	import ui.screens.DisclaimerScreen;
+	import ui.screens.DonateScreen;
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
 	import ui.screens.GlucoseManagementScreen;
@@ -254,6 +255,13 @@ package ui
 			disclaimerScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
 			disclaimerScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.DISCLAIMER, disclaimerScreenItem );
+			
+			/* Donate Screen */
+			var donateScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( DonateScreen );
+			donateScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			donateScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			donateScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.DONATE, donateScreenItem );
 			
 			/* Treatments Management Screen */
 			var treatmentsManagementScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TreatmentsManagementScreen );

@@ -36,6 +36,7 @@ package ui.screens.display.menu
 		private var bugReportIconTexture:Texture;
 		private var disclaimerIconTexture:Texture;
 		private var helpIconTexture:Texture;
+		private var donateIconTexture:Texture;
 
 		public function MenuList() 
 		{
@@ -72,6 +73,7 @@ package ui.screens.display.menu
 			bugReportIconTexture = MaterialDeepGreyAmberMobileThemeIcons.bugReportTexture;
 			disclaimerIconTexture = MaterialDeepGreyAmberMobileThemeIcons.disclaimerTexture;
 			helpIconTexture = MaterialDeepGreyAmberMobileThemeIcons.spikeHelpTexture;
+			donateIconTexture = MaterialDeepGreyAmberMobileThemeIcons.donateTexture;
 			
 			refreshContent();
 			
@@ -91,6 +93,7 @@ package ui.screens.display.menu
 			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture } );
 			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture } );
 			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture } );
+			menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture } );
 			
 			dataProvider = new ListCollection(menuItems);
 			selectedIndex = 0;
@@ -223,6 +226,12 @@ package ui.screens.display.menu
 			{
 				helpIconTexture.dispose();
 				helpIconTexture = null;
+			}
+			
+			if(donateIconTexture != null)
+			{
+				donateIconTexture.dispose();
+				donateIconTexture = null;
 			}
 			
 			super.dispose();
