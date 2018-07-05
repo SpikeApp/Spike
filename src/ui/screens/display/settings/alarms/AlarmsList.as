@@ -53,6 +53,8 @@ package ui.screens.display.settings.alarms
 		private var lowIconImage:Image;
 		private var highIconImage:Image;
 		private var urgentHighIconImage:Image;
+		private var fastRiseIconImage:Image;
+		private var fastDropIconImage:Image;
 		private var widgetWatchConfigSender:Button;
 		private var actionsContainer:LayoutGroup;
 		
@@ -110,6 +112,8 @@ package ui.screens.display.settings.alarms
 			lowIconImage = new Image(chevronTexture);
 			highIconImage = new Image(chevronTexture);
 			urgentHighIconImage = new Image(chevronTexture);
+			fastRiseIconImage = new Image(chevronTexture);
+			fastDropIconImage = new Image(chevronTexture);
 			var actionsLayout:HorizontalLayout = new HorizontalLayout();
 			actionsLayout.horizontalAlign = HorizontalAlign.CENTER;
 			actionsContainer = new LayoutGroup();
@@ -128,6 +132,8 @@ package ui.screens.display.settings.alarms
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"high_label"), accessory: highIconImage, alarmID: CommonSettings.COMMON_SETTING_HIGH_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"low_label"), accessory: lowIconImage, alarmID: CommonSettings.COMMON_SETTING_LOW_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"urgent_low_label"), accessory: urgentLowIconImage, alarmID: CommonSettings.COMMON_SETTING_VERY_LOW_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"fast_rise_label"), accessory: fastRiseIconImage, alarmID: CommonSettings.COMMON_SETTING_FAST_RISE_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE });
+			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"fast_drop_label"), accessory: fastDropIconImage, alarmID: CommonSettings.COMMON_SETTING_FAST_DROP_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"calibration_label"), accessory: calibrationIconImage, alarmID: CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_CALIBRATION });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"missed_reading_label"), accessory: missedReadingIconImage, alarmID: CommonSettings.COMMON_SETTING_MISSED_READING_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_MISSED_READING });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"phone_muted_label"), accessory: phoneMutedIconImage, alarmID: CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED });
@@ -295,6 +301,16 @@ package ui.screens.display.settings.alarms
 			{
 				urgentHighIconImage.dispose();
 				urgentHighIconImage = null;
+			}
+			if(fastRiseIconImage != null)
+			{
+				fastRiseIconImage.dispose();
+				fastRiseIconImage = null;
+			}
+			if(fastDropIconImage != null)
+			{
+				fastDropIconImage.dispose();
+				fastDropIconImage = null;
 			}
 			if(widgetWatchConfigSender != null)
 			{

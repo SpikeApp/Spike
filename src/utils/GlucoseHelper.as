@@ -96,5 +96,48 @@ package utils
 			
 			return delta;
 		}
+		
+		public static function isGlucoseChangingFast(value:Number, direction:String = "down"):Boolean
+		{
+			var isFastChanging:Boolean = false;
+			
+			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length >= 3)
+			{
+				//We have at least 3 readings
+				var lastReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading;
+				var middleReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 2] as BgReading;
+				var firstReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 3] as BgReading;
+				
+				if (lastReading != null && lastReading.calculatedValue != 0 && middleReading != null && middleReading.calculatedValue != 0 && firstReading != null && firstReading.calculatedValue != 0)
+				{
+					//Last 3 readings are valid
+					if (new Date().valueOf() - lastReading.timestamp < TIME_6_MINUTES && lastReading.timestamp - middleReading.timestamp < TIME_6_MINUTES && middleReading.timestamp - firstReading.timestamp < TIME_6_MINUTES)
+					{
+						//All readings are not more than 6 minutes apart
+						var lastReadingSlope:Number = Math.abs(lastReading.calculatedValue - middleReading.calculatedValue);
+						var middleReadingSlope:Number = Math.abs(middleReading.calculatedValue - firstReading.calculatedValue);
+						
+						if (direction == "down")
+						{
+							if (middleReadingSlope <= -1 * (value) && lastReadingSlope <= -1 * (value))
+							{
+								//It's dropping fast
+								isFastChanging = true;
+							}
+						}
+						else if (direction == "up")
+						{
+							if (middleReadingSlope >= Math.abs(value) && lastReadingSlope >= Math.abs(value))
+							{
+								//It's rising fast
+								isFastChanging = true;
+							}
+						}
+					}
+				}
+			}
+			
+			return isFastChanging;
+		}
 	}
 }

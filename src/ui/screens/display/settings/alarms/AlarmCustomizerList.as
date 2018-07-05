@@ -89,7 +89,7 @@ package ui.screens.display.settings.alarms
 		private function setupInitialContent():void
 		{
 			/* Set Internal Variables */
-			if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE)
+			if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE || alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
 				glucoseUnit = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? UNIT_MGDL : UNIT_MMOL;
 			
 			/* Parse Alarm Settings */
@@ -179,7 +179,7 @@ package ui.screens.display.settings.alarms
 				
 				//Define alarm value
 				var valueOutput:String = String(alarmData[i].value);
-				if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE)
+				if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE || alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
 				{
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
 						valueOutput = String(Math.round(((BgReading.mgdlToMmol((Number(alarmData[i].value)))) * 10)) / 10);

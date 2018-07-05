@@ -5,6 +5,7 @@ package ui.screens.data
 		/* Constants */
 		public static const ALARM_TYPE_CALIBRATION:String = "calibration";
 		public static const ALARM_TYPE_GLUCOSE:String = "glucose";
+		public static const ALARM_TYPE_GLUCOSE_CHANGE:String = "glucoseChange";
 		public static const ALARM_TYPE_MISSED_READING:String = "missedReading";
 		public static const ALARM_TYPE_PHONE_MUTED:String = "phoneMuted";
 		public static const ALARM_TYPE_TRANSMITTER_LOW_BATTERY:String = "transmitterLowBattery";

@@ -457,6 +457,12 @@ package database
 		 public static const COMMON_SETTING_CARB_FAST_ABSORTION_TIME:int = 170;
 		 public static const COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME:int = 171;
 		 public static const COMMON_SETTING_CARB_SLOW_ABSORTION_TIME:int = 172;
+		 
+		 /**
+		  * FAST RISE/DROP ALARMS 
+		  */
+		 public static const COMMON_SETTING_FAST_RISE_ALERT:int = 173;
+		 public static const COMMON_SETTING_FAST_DROP_ALERT:int = 174;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -631,7 +637,9 @@ package database
 			 "0",//COMMON_SETTING_SPEECH_THRESHOLD_LOW
 			 "5",//COMMON_SETTING_CARB_FAST_ABSORTION_TIME
 			 "10",//COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME
-			 "20"//COMMON_SETTING_CARB_SLOW_ABSORTION_TIME
+			 "20",//COMMON_SETTING_CARB_SLOW_ABSORTION_TIME
+			 "00:00>0>DefaultNoAlertToBeReplaced",//COMMON_SETTING_FAST_RISE_ALERT
+			 "00:00>0>DefaultNoAlertToBeReplaced"//COMMON_SETTING_FAST_DROP_ALERT
 		 ];
 
 		 public function CommonSettings()
@@ -683,6 +691,22 @@ package database
 					 newString = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_HIGH_ALERT, newString);
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_FAST_RISE_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_FAST_RISE_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_FAST_RISE_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_FAST_RISE_ALERT, newString);
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_FAST_DROP_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_FAST_DROP_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_FAST_DROP_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_FAST_DROP_ALERT, newString);
 				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_MISSED_READING_ALERT) {

@@ -136,6 +136,19 @@ package ui.screens.display.settings.alarms
 					maximumStepperValue = Math.round(((BgReading.mgdlToMmol((maximumStepperValue))) * 10)) / 10;
 				}
 			}
+			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
+			{
+				valueLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"bg_change_label");
+				valueStepperStep = 1;
+				minimumStepperValue = 1;
+				maximumStepperValue = 200;
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
+				{
+					valueStepperStep = 0.1;
+					minimumStepperValue = Math.round(((BgReading.mgdlToMmol((minimumStepperValue))) * 10)) / 10;
+					maximumStepperValue = Math.round(((BgReading.mgdlToMmol((maximumStepperValue))) * 10)) / 10;
+				}
+			}
 			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION)
 			{
 				valueLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"calibration_value_label");
@@ -183,6 +196,12 @@ package ui.screens.display.settings.alarms
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
 						alarmValue = Math.round(((BgReading.mgdlToMmol((alarmValue))) * 10)) / 10;
 				}
+				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE && (alarmData.alarmID == CommonSettings.COMMON_SETTING_FAST_RISE_ALERT || alarmData.alarmID == CommonSettings.COMMON_SETTING_FAST_DROP_ALERT))
+				{
+					alarmValue = 10;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
+						alarmValue = Math.round(((BgReading.mgdlToMmol((alarmValue))) * 10)) / 10;
+				}
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT)
 					alarmValue = 12;
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING && alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT)
@@ -196,7 +215,7 @@ package ui.screens.display.settings.alarms
 				startDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, Number(alarmData.startHour), Number(alarmData.startMinutes), 0, 0);
 				endDate = new Date (nowDate.fullYear, nowDate.month, nowDate.date, Number(alarmData.endHour), Number(alarmData.endMinutes), 0, 0);
 				alarmValue = Number(alarmData.value);
-				if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
+				if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE || alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
 					alarmValue = Math.round(((BgReading.mgdlToMmol((alarmValue))) * 10)) / 10;
 				alertTypeValue = alarmData.alertType;
 			}
@@ -366,6 +385,8 @@ package ui.screens.display.settings.alarms
 				itemRenderer.labelField = "label";
 				itemRenderer.iconSourceField = "accessory";
 				itemRenderer.paddingLeft = -5;
+				if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
+					itemRenderer.paddingTop = itemRenderer.paddingBottom = 5;
 				
 				return itemRenderer;
 			};
