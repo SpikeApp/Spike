@@ -11,11 +11,6 @@
 
 @implementation FQApi
 
-+(void)reconnectDevice{
-    FQBleManager *manager = [FQBleManager shared];
-    [manager reconnectDevice];
-}
-
 +(void)startScaning{
     id d = UIApplication.sharedApplication.delegate;
 	FQBleManager *manager = [FQBleManager shared];

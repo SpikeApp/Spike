@@ -52,9 +52,6 @@
 //stop scaning
 - (void)startScanning;
 
-
-//reconnect device
-- (void)reconnectDevice;
 //cancel connect
 - (void)cancelConnectDevice;
 

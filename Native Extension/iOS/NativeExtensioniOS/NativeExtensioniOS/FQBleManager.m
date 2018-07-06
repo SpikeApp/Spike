@@ -48,20 +48,6 @@
     }
 }
 
-- (void)reconnectDevice
-{
-    if (self.peripheral) {
-        if(self.peripheral.state != CBPeripheralStateConnected ) {
-            FPANE_Log(@"spiketrace ANE FQBLEManager.m in reconnectDevice, self.peripheral not nil, trying to connect");
-            [self.manager connectPeripheral:self.peripheral options:nil];
-        } else {
-            FPANE_Log(@"spiketrace ANE FQBLEManager.m in reconnectDevice, self.peripheral not nil but already connected, not trying to connect");
-        }
-    } else {
-        FPANE_Log(@"spiketrace ANE FQBLEManager.m in reconnectDevice, self.peripheral is nil, not trying to connect");
-    }
-}
-
 - (void)disCoverServiceWith:(CBPeripheral *)peripheral{
     [peripheral discoverServices:nil];
 }
@@ -188,7 +174,7 @@
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m >>>peripheral didDisconnect %@: %@\n", [peripheral name], [error localizedDescription]]);
     FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_disconnectedMiaoMiao", (const uint8_t*) "");
     if (self.peripheral) {
-        FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, self.peripheral not nil and _reconnectAfterDisconnect = true, trying to reconnect");
+        FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, trying to reconnect");
         [self.manager connectPeripheral:self.peripheral options:nil];
     } else if (!self.peripheral) {
         FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDisconnectPeripheral, self.peripheral = nil");

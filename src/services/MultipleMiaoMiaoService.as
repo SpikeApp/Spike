@@ -505,18 +505,6 @@ package services
 			return (nextNSDownloadTimeStamp - now)/1000;
 		}
 		
-		/**
-		 * OS device will try to reconnect, <br>
-		 * bluetoothperipheral must be known already, meaning it must be a miaomiao which already had a connection in the past <br><br>
-		 * If that reconnect doesn't succeed immediately (because miaomiao is not in range are already connected to another iOS device)
-		 * then iOS will store internally the "wish" to connect. As soon as the MiaoMiao comes in range not connected to any other device, then it will connect<br>
-		 */
-		private static function reconnect(event:Event):void {
-			if (isMiaoMiaoMultiple()) {
-				SpikeANE.reconnectMiaoMiao();
-			}
-		}
-
 		private static function commonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE 
 				|| event.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL
