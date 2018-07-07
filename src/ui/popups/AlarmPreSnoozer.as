@@ -305,7 +305,9 @@ package ui.popups
 					AlarmService.lowAlertSnoozed() ||
 					AlarmService.veryLowAlertSnoozed() ||
 					AlarmService.missedReadingAlertSnoozed() ||
-					AlarmService.phoneMutedAlertSnoozed() 
+					AlarmService.phoneMutedAlertSnoozed() ||
+					AlarmService.fastRiseAlertSnoozed() ||
+					AlarmService.fastDropAlertSnoozed()
 					)
 				{
 					actionButtonsContainer.addChild(preSnoozeButton);
@@ -322,6 +324,26 @@ package ui.popups
 				}
 			}
 			else if (selectedAlarmIndex == 1)
+			{
+				//Fast Rise Alarm
+				if (AlarmService.fastRiseAlertSnoozed())
+				{
+					snoozeStatusLabel.text = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"snoozed_for") + " " + AlarmService.fastRiseAlertSnoozeAsString();
+					mainContainer.addChildAt(snoozeStatusLabel, 2);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeFastRiseAlert
+					unSnoozeAction = AlarmService.resetFastRiseAlert;
+					actionButtonsContainer.addChild(unSnoozeButton);
+				}
+				else
+				{
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeFastRiseAlert
+				}
+			}
+			else if (selectedAlarmIndex == 2)
 			{
 				//Urgent High Alarm
 				if (AlarmService.veryHighAlertSnoozed())
@@ -341,7 +363,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeVeryHighAlert
 				}
 			}
-			else if (selectedAlarmIndex == 2)
+			else if (selectedAlarmIndex == 3)
 			{
 				//High Alarm
 				if (AlarmService.highAlertSnoozed())
@@ -361,7 +383,27 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeHighAlert;
 				}
 			}
-			else if (selectedAlarmIndex == 3)
+			else if (selectedAlarmIndex == 4)
+			{
+				//Fast Drop
+				if (AlarmService.fastDropAlertSnoozed())
+				{
+					snoozeStatusLabel.text = ModelLocator.resourceManagerInstance.getString('alarmpresnoozer',"snoozed_for") + " " + AlarmService.fastDropAlertSnoozeAsString();
+					mainContainer.addChildAt(snoozeStatusLabel, 2);
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeFastDropAlert;
+					unSnoozeAction = AlarmService.resetFastDropAlert;
+					actionButtonsContainer.addChild(unSnoozeButton);
+				}
+				else
+				{
+					actionButtonsContainer.addChild(preSnoozeButton);
+					createSecondPhase();
+					snoozeAction = AlarmService.snoozeFastDropAlert;
+				}
+			}
+			else if (selectedAlarmIndex == 5)
 			{
 				//Low Alarm
 				if (AlarmService.lowAlertSnoozed())
@@ -381,7 +423,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeLowAlert;
 				}
 			}
-			else if (selectedAlarmIndex == 4)
+			else if (selectedAlarmIndex == 6)
 			{
 				//Urgent Low Alarm
 				if (AlarmService.veryLowAlertSnoozed())
@@ -402,7 +444,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeVeyLowAlert;
 				}
 			}
-			else if (selectedAlarmIndex == 5)
+			else if (selectedAlarmIndex == 7)
 			{
 				//Missed Readings
 				if (AlarmService.missedReadingAlertSnoozed())
@@ -422,7 +464,7 @@ package ui.popups
 					snoozeAction = AlarmService.snoozeMissedReadingAlert;
 				}
 			}
-			else if (selectedAlarmIndex == 6)
+			else if (selectedAlarmIndex == 8)
 			{
 				//Muted
 				if (AlarmService.phoneMutedAlertSnoozed())
@@ -465,6 +507,8 @@ package ui.popups
 			AlarmService.snoozeVeyLowAlert(snoozePickerList.selectedIndex);
 			AlarmService.snoozeMissedReadingAlert(snoozePickerList.selectedIndex);
 			AlarmService.snoozePhoneMutedAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeFastRiseAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeFastDropAlert(snoozePickerList.selectedIndex);
 			
 			closeCallout();
 		}
@@ -498,6 +542,12 @@ package ui.popups
 				
 			if (AlarmService.phoneMutedAlertSnoozed())
 				AlarmService.resetPhoneMutedAlert();
+			
+			if (AlarmService.fastRiseAlertSnoozed())
+				AlarmService.resetFastRiseAlert();
+			
+			if (AlarmService.fastDropAlertSnoozed())
+				AlarmService.resetFastDropAlert();
 			
 			closeCallout();
 		}

@@ -84,6 +84,14 @@ package services
 		private static var isIFTTTnoteTreatmentDeletedEnabled:Boolean;
 		private static var isIFTTTiobUpdatedEnabled:Boolean;
 		private static var isIFTTTcobUpdatedEnabled:Boolean;
+
+		private static var isIFTTTFastRiseTriggeredEnabled:Boolean;
+
+		private static var isIFTTTFastRiseSnoozedEnabled:Boolean;
+
+		private static var isIFTTTFastDropTriggeredEnabled:Boolean;
+
+		private static var isIFTTTFastDropSnoozedEnabled:Boolean;
 		
 		public function IFTTTService()
 		{
@@ -109,6 +117,8 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_CALIBRATION_SNOOZED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_HIGH_TRIGGERED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_HIGH_SNOOZED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_TRIGGERED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_SNOOZED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_LOW_TRIGGERED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_LOW_SNOOZED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MISSED_READINGS_TRIGGERED_ON ||
@@ -119,6 +129,8 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_TRANSMITTER_LOW_BATTERY_SNOOZED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_URGENT_HIGH_TRIGGERED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_URGENT_HIGH_SNOOZED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_TRIGGERED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_SNOOZED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_URGENT_LOW_TRIGGERED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_URGENT_LOW_SNOOZED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY ||
@@ -154,8 +166,12 @@ package services
 		private static function getInitialProperties():void
 		{
 			isIFTTTEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_ON) == "true";
+			isIFTTTFastRiseTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_TRIGGERED_ON) == "true";
+			isIFTTTFastRiseSnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_SNOOZED_ON) == "true";
 			isIFTTTUrgentHighTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_URGENT_HIGH_TRIGGERED_ON) == "true";
 			isIFTTTHighTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HIGH_TRIGGERED_ON) == "true";
+			isIFTTTFastDropTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_TRIGGERED_ON) == "true";
+			isIFTTTFastDropSnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_SNOOZED_ON) == "true";
 			isIFTTTLowTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_LOW_TRIGGERED_ON) == "true";
 			isIFTTTUrgentLowTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_URGENT_LOW_TRIGGERED_ON) == "true";
 			isIFTTTCalibrationTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_CALIBRATION_TRIGGERED_ON) == "true";
@@ -198,6 +214,16 @@ package services
 		
 		private static function configureService():void
 		{
+			if (isIFTTTFastRiseTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
+				AlarmService.instance.addEventListener(AlarmServiceEvent.FAST_RISE_TRIGGERED, onFastRiseGlucoseTriggered);
+			else
+				AlarmService.instance.removeEventListener(AlarmServiceEvent.FAST_RISE_TRIGGERED, onFastRiseGlucoseTriggered);
+			
+			if (isIFTTTFastRiseSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
+				AlarmService.instance.addEventListener(AlarmServiceEvent.FAST_RISE_SNOOZED, onFastRiseGlucoseSnoozed);
+			else
+				AlarmService.instance.removeEventListener(AlarmServiceEvent.FAST_RISE_SNOOZED, onFastRiseGlucoseSnoozed);
+			
 			if (isIFTTTUrgentHighTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_TRIGGERED, onUrgentHighGlucoseTriggered);
 			else
@@ -217,6 +243,16 @@ package services
 				AlarmService.instance.addEventListener(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED, onHighGlucoseSnoozed);
 			else
 				AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED, onHighGlucoseSnoozed);
+			
+			if (isIFTTTFastDropTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
+				AlarmService.instance.addEventListener(AlarmServiceEvent.FAST_DROP_TRIGGERED, onFastDropGlucoseTriggered);
+			else
+				AlarmService.instance.removeEventListener(AlarmServiceEvent.FAST_DROP_TRIGGERED, onFastDropGlucoseTriggered);
+			
+			if (isIFTTTFastDropSnoozedEnabled && isIFTTTEnabled && makerKeyValue != "")
+				AlarmService.instance.addEventListener(AlarmServiceEvent.FAST_DROP_SNOOZED, onFastDropGlucoseSnoozed);
+			else
+				AlarmService.instance.removeEventListener(AlarmServiceEvent.FAST_DROP_SNOOZED, onFastDropGlucoseSnoozed);
 				
 			if (isIFTTTLowTriggeredEnabled && isIFTTTEnabled && makerKeyValue != "")
 				AlarmService.instance.addEventListener(AlarmServiceEvent.LOW_GLUCOSE_TRIGGERED, onLowGlucoseTriggered);
@@ -552,6 +588,40 @@ package services
 			}
 		}
 		
+		private static function onFastRiseGlucoseTriggered(e:AlarmServiceEvent):void
+		{
+			var lastReading:BgReading;
+			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			else lastReading = BgReading.lastWithCalculatedValue();
+			
+			var info:Object = {};
+			info.value1 = ModelLocator.resourceManagerInstance.getString("alarmservice","fast_rise_alert_notification_alert_text");
+			info.value2 = BgGraphBuilder.unitizedString(lastReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+			info.value3 = (!lastReading.hideSlope ? lastReading.slopeArrow() + " " : "\u21C4 ") + BgGraphBuilder.unitizedDeltaString(true, true);
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-high-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-fast-rising-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
+			}
+		}
+		
+		private static function onFastRiseGlucoseSnoozed(e:AlarmServiceEvent):void
+		{
+			var info:Object = {};
+			info.value1 = e.data.type;
+			info.value2 = e.data.time;
+			info.value3 = "";
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-urgent-high-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-fast-rising-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
+			}
+		}
+		
 		private static function onUrgentHighGlucoseTriggered(e:AlarmServiceEvent):void
 		{
 			var lastReading:BgReading;
@@ -617,6 +687,40 @@ package services
 				var key:String = makerKeyList[i] as String;
 				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-high-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
 				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-high-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
+			}
+		}
+		
+		private static function onFastDropGlucoseTriggered(e:AlarmServiceEvent):void
+		{
+			var lastReading:BgReading;
+			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			else lastReading = BgReading.lastWithCalculatedValue();
+			
+			var info:Object = {};
+			info.value1 = ModelLocator.resourceManagerInstance.getString("alarmservice","fast_drop_alert_notification_alert_text");
+			info.value2 = BgGraphBuilder.unitizedString(lastReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+			info.value3 = (!lastReading.hideSlope ? lastReading.slopeArrow() + " " : "\u21C4 ") + BgGraphBuilder.unitizedDeltaString(true, true);
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-low-triggered").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-fast-drop-triggered").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
+			}
+		}
+		
+		private static function onFastDropGlucoseSnoozed(e:AlarmServiceEvent):void
+		{
+			var info:Object = {};
+			info.value1 = e.data.type;
+			info.value2 = e.data.time;
+			info.value3 = "";
+			
+			for (var i:int = 0; i < makerKeyList.length; i++) 
+			{
+				var key:String = makerKeyList[i] as String;
+				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-low-snoozed").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
+				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-fast-drop-snoozed").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
 		}
 		

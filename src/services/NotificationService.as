@@ -102,6 +102,8 @@ package services
 		public static const ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO:int = 22;
 		public static const ID_FOR_LIBRE_SENSOR_14DAYS:int = 23;
 		public static const ID_FOR_G5_RESET_DONE:int = 24;
+		public static const ID_FOR_FAST_RISE_ALERT:int = 25;
+		public static const ID_FOR_FAST_DROP_ALERT:int = 26;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
@@ -111,6 +113,8 @@ package services
 		public static const ID_FOR_ALERT_VERY_LOW_CATEGORY:String = "VERY_LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_VERY_HIGH_CATEGORY:String = "VERY_HIGH_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_MISSED_READING_CATEGORY:String = "MISSED_READING_ALERT_CATEGORY";
+		public static const ID_FOR_ALERT_FAST_RISE_CATEGORY:String = "FAST_RISE_ALERT_CATEGORY";
+		public static const ID_FOR_ALERT_FAST_DROP_CATEGORY:String = "FAST_DROP_ALERT_CATEGORY";
 
 		public static const ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER:String = "LOW_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "HIGH_ALERT_SNOOZE_IDENTIFIER";
@@ -120,6 +124,8 @@ package services
 		public static const ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER:String = "VERY_LOW_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "VERY_HIGH_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER:String = "MISSED_READING_ALERT_SNOOZE_IDENTIFIER";
+		public static const ID_FOR_FAST_RISE_ALERT_SNOOZE_IDENTIFIER:String = "FAST_RISE_ALERT_SNOOZE_IDENTIFIER";
+		public static const ID_FOR_FAST_DROP_ALERT_SNOOZE_IDENTIFIER:String = "FAST_DROP_ALERT_SNOOZE_IDENTIFIER";
 		
 		private static var timeStampSinceLastNotifForPatchReadError:Number = 0;
 		public static var testTextToSpeechTimer:Timer;
@@ -274,6 +280,28 @@ package services
 					new ActionBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
 					.setIdentifier(ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER)
+					.build()
+				)
+				.build()
+			);
+			service.categories.push( 
+				new CategoryBuilder()
+				.setIdentifier(ID_FOR_ALERT_FAST_RISE_CATEGORY)
+				.addAction( 
+					new ActionBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setIdentifier(ID_FOR_FAST_RISE_ALERT_SNOOZE_IDENTIFIER)
+					.build()
+				)
+				.build()
+			);
+			service.categories.push( 
+				new CategoryBuilder()
+				.setIdentifier(ID_FOR_ALERT_FAST_DROP_CATEGORY)
+				.addAction( 
+					new ActionBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setIdentifier(ID_FOR_FAST_DROP_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
 				.build()
@@ -499,6 +527,10 @@ package services
 				returnValue = "ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO";
 			else if (id == ID_FOR_LIBRE_SENSOR_14DAYS)
 				returnValue = "ID_FOR_LIBRE_SENSOR_14DAYS";
+			else if (id == ID_FOR_FAST_RISE_ALERT)
+				returnValue = "ID_FOR_FAST_RISE_ALERT";
+			else if (id == ID_FOR_FAST_DROP_ALERT)
+				returnValue = "ID_FOR_FAST_DROP_ALERT";
 			return returnValue;
 		}
 		

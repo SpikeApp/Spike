@@ -82,6 +82,10 @@ package ui.screens.display.settings.integration
 		private var treatmentNoteAddedCheck:Check;
 		private var treatmentNoteUpdatedCheck:Check;
 		private var treatmentNoteDeletedCheck:Check;
+		private var fastRiseGlucoseTriggeredCheck:Check;
+		private var fastRiseGlucoseSnoozedCheck:Check;
+		private var fastDropGlucoseTriggeredCheck:Check;
+		private var fastDropGlucoseSnoozedCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -126,6 +130,10 @@ package ui.screens.display.settings.integration
 		private var isIFTTTnoteTreatmentDeletedEnabled:Boolean;
 		private var isIFTTTiobUpdatedEnabled:Boolean;
 		private var isIFTTTcobUpdatedEnabled:Boolean;
+		private var isIFTTTFastRiseTriggeredEnabled:Boolean;
+		private var isIFTTTFastRiseSnoozedEnabled:Boolean;
+		private var isIFTTTFastDropTriggeredEnabled:Boolean;
+		private var isIFTTTFastDropSnoozedEnabled:Boolean;
 
 		public function IFTTTSettingsList()
 		{
@@ -158,10 +166,14 @@ package ui.screens.display.settings.integration
 		{
 			/* Get data from database */
 			isIFTTTEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_ON) == "true";
+			isIFTTTFastRiseTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_TRIGGERED_ON) == "true";
+			isIFTTTFastRiseSnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_SNOOZED_ON) == "true";
 			isIFTTTUrgentHighTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_URGENT_HIGH_TRIGGERED_ON) == "true";
 			isIFTTTUrgentHighSnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_URGENT_HIGH_SNOOZED_ON) == "true";
 			isIFTTTHighTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HIGH_TRIGGERED_ON) == "true";
 			isIFTTTHighSnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HIGH_SNOOZED_ON) == "true";
+			isIFTTTFastDropTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_TRIGGERED_ON) == "true";
+			isIFTTTFastDropSnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_SNOOZED_ON) == "true";
 			isIFTTTLowTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_LOW_TRIGGERED_ON) == "true";
 			isIFTTTLowSnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_LOW_SNOOZED_ON) == "true";
 			isIFTTTUrgentLowTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_URGENT_LOW_TRIGGERED_ON) == "true";
@@ -273,6 +285,14 @@ package ui.screens.display.settings.integration
 			alarmsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","alarms_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, 15, true);
 			alarmsLabel.width = width - 20;
 			
+			//Fast Rise Glucose Triggered
+			fastRiseGlucoseTriggeredCheck = LayoutFactory.createCheckMark(isIFTTTFastRiseTriggeredEnabled);
+			fastRiseGlucoseTriggeredCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Fast Rise Glucose Snoozed
+			fastRiseGlucoseSnoozedCheck = LayoutFactory.createCheckMark(isIFTTTFastRiseSnoozedEnabled);
+			fastRiseGlucoseSnoozedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			//Urgent High Glucose Triggered
 			urgentHighGlucoseTriggeredCheck = LayoutFactory.createCheckMark(isIFTTTUrgentHighTriggeredEnabled);
 			urgentHighGlucoseTriggeredCheck.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -288,6 +308,14 @@ package ui.screens.display.settings.integration
 			//High Glucose Snoozed
 			highGlucoseSnoozedCheck = LayoutFactory.createCheckMark(isIFTTTHighSnoozedEnabled);
 			highGlucoseSnoozedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Fast Drop Glucose Triggered
+			fastDropGlucoseTriggeredCheck = LayoutFactory.createCheckMark(isIFTTTFastDropTriggeredEnabled);
+			fastDropGlucoseTriggeredCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Fast Drop Glucose Snoozed
+			fastDropGlucoseSnoozedCheck = LayoutFactory.createCheckMark(isIFTTTFastDropSnoozedEnabled);
+			fastDropGlucoseSnoozedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Low Glucose Triggered
 			lowGlucoseTriggeredCheck = LayoutFactory.createCheckMark(isIFTTTLowTriggeredEnabled);
@@ -431,10 +459,14 @@ package ui.screens.display.settings.integration
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_readings_label"), accessory: glucoseReadingCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","http_server_errors"), accessory: httpServerErrorsCheck } );
 				screenContent.push( { label: "", accessory: alarmsLabel } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","fast_rise_glucose_triggered_label"), accessory: fastRiseGlucoseTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","fast_rise_glucose_snoozed_label"), accessory: fastRiseGlucoseSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_high_glucose_triggered_label"), accessory: urgentHighGlucoseTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_high_glucose_snoozed_label"), accessory: urgentHighGlucoseSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","high_glucose_triggered_label"), accessory: highGlucoseTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","high_glucose_snoozed_label"), accessory: highGlucoseSnoozedCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","fast_drop_glucose_triggered_label"), accessory: fastDropGlucoseTriggeredCheck } );
+				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","fast_drop_glucose_snoozed_label"), accessory: fastDropGlucoseSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_glucose_triggered_label"), accessory: lowGlucoseTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_glucose_snoozed_label"), accessory: lowGlucoseSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_low_glucose_triggered_label"), accessory: urgentLowGlucoseTriggeredCheck } );
@@ -476,6 +508,12 @@ package ui.screens.display.settings.integration
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_ON) != String(isIFTTTEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_ON, String(isIFTTTEnabled));
 			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_TRIGGERED_ON) != String(isIFTTTFastRiseTriggeredEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_TRIGGERED_ON, String(isIFTTTFastRiseTriggeredEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_SNOOZED_ON) != String(isIFTTTFastRiseSnoozedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_RISE_SNOOZED_ON, String(isIFTTTFastRiseSnoozedEnabled));
+			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_URGENT_HIGH_TRIGGERED_ON) != String(isIFTTTUrgentHighTriggeredEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_URGENT_HIGH_TRIGGERED_ON, String(isIFTTTUrgentHighTriggeredEnabled));
 			
@@ -487,6 +525,12 @@ package ui.screens.display.settings.integration
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HIGH_SNOOZED_ON) != String(isIFTTTHighSnoozedEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_HIGH_SNOOZED_ON, String(isIFTTTHighSnoozedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_TRIGGERED_ON) != String(isIFTTTFastDropTriggeredEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_TRIGGERED_ON, String(isIFTTTFastDropTriggeredEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_SNOOZED_ON) != String(isIFTTTFastDropSnoozedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_FAST_DROP_SNOOZED_ON, String(isIFTTTFastDropSnoozedEnabled));
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_LOW_TRIGGERED_ON) != String(isIFTTTLowTriggeredEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_LOW_TRIGGERED_ON, String(isIFTTTLowTriggeredEnabled));
@@ -614,10 +658,14 @@ package ui.screens.display.settings.integration
 		private function onSettingsChanged(E:Event):void
 		{
 			/* Update Internal Variables */
+			isIFTTTFastRiseTriggeredEnabled = fastRiseGlucoseTriggeredCheck.isSelected;
+			isIFTTTFastRiseSnoozedEnabled = fastRiseGlucoseSnoozedCheck.isSelected;
 			isIFTTTUrgentHighTriggeredEnabled = urgentHighGlucoseTriggeredCheck.isSelected;
 			isIFTTTUrgentHighSnoozedEnabled = urgentHighGlucoseSnoozedCheck.isSelected;
 			isIFTTTHighTriggeredEnabled = highGlucoseTriggeredCheck.isSelected;
 			isIFTTTHighSnoozedEnabled = highGlucoseSnoozedCheck.isSelected;
+			isIFTTTFastDropTriggeredEnabled = fastDropGlucoseTriggeredCheck.isSelected;
+			isIFTTTFastDropSnoozedEnabled = fastDropGlucoseSnoozedCheck.isSelected;
 			isIFTTTLowTriggeredEnabled = lowGlucoseTriggeredCheck.isSelected;
 			isIFTTTLowSnoozedEnabled = lowGlucoseSnoozedCheck.isSelected;
 			isIFTTTUrgentLowTriggeredEnabled = urgentLowGlucoseTriggeredCheck.isSelected;
@@ -714,6 +762,20 @@ package ui.screens.display.settings.integration
 				glucoseThresholdsSwitch = null;
 			}
 			
+			if(fastRiseGlucoseTriggeredCheck != null)
+			{
+				fastRiseGlucoseTriggeredCheck.removeEventListener( Event.CHANGE, onSettingsChanged);
+				fastRiseGlucoseTriggeredCheck.dispose();
+				fastRiseGlucoseTriggeredCheck = null;
+			}
+			
+			if(fastRiseGlucoseSnoozedCheck != null)
+			{
+				fastRiseGlucoseSnoozedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);
+				fastRiseGlucoseSnoozedCheck.dispose();
+				fastRiseGlucoseSnoozedCheck = null;
+			}
+			
 			if(urgentHighGlucoseTriggeredCheck != null)
 			{
 				urgentHighGlucoseTriggeredCheck.removeEventListener( Event.CHANGE, onSettingsChanged);
@@ -740,6 +802,20 @@ package ui.screens.display.settings.integration
 				highGlucoseSnoozedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);
 				highGlucoseSnoozedCheck.dispose();
 				highGlucoseSnoozedCheck = null;
+			}
+			
+			if(fastDropGlucoseTriggeredCheck != null)
+			{
+				fastDropGlucoseTriggeredCheck.removeEventListener( Event.CHANGE, onSettingsChanged);
+				fastDropGlucoseTriggeredCheck.dispose();
+				fastDropGlucoseTriggeredCheck = null;
+			}
+			
+			if(fastDropGlucoseSnoozedCheck != null)
+			{
+				fastDropGlucoseSnoozedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);
+				fastDropGlucoseSnoozedCheck.dispose();
+				fastDropGlucoseSnoozedCheck = null;
 			}
 			
 			if(lowGlucoseTriggeredCheck != null)

@@ -317,6 +317,8 @@ package network.httpserver.API
 			AlarmService.snoozeVeyLowAlert(0, snoozeTime);
 			AlarmService.snoozeMissedReadingAlert(0, snoozeTime);
 			AlarmService.snoozePhoneMutedAlert(0, snoozeTime);
+			AlarmService.snoozeFastRiseAlert(0, snoozeTime);
+			AlarmService.snoozeFastDropAlert(0, snoozeTime);
 			
 			return responseSuccess("Snoozed for " + snoozeTime + " minutes");
 		}
@@ -340,6 +342,12 @@ package network.httpserver.API
 			
 			if (AlarmService.phoneMutedAlertSnoozed())
 				AlarmService.resetPhoneMutedAlert();
+			
+			if (AlarmService.fastRiseAlertSnoozed())
+				AlarmService.resetFastRiseAlert();
+			
+			if (AlarmService.fastDropAlertSnoozed())
+				AlarmService.resetFastDropAlert();
 			
 			return responseSuccess("OK");
 		}

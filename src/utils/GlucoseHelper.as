@@ -114,12 +114,12 @@ package utils
 					if (new Date().valueOf() - lastReading.timestamp < TIME_6_MINUTES && lastReading.timestamp - middleReading.timestamp < TIME_6_MINUTES && middleReading.timestamp - firstReading.timestamp < TIME_6_MINUTES)
 					{
 						//All readings are not more than 6 minutes apart
-						var lastReadingSlope:Number = Math.abs(lastReading.calculatedValue - middleReading.calculatedValue);
-						var middleReadingSlope:Number = Math.abs(middleReading.calculatedValue - firstReading.calculatedValue);
+						var lastReadingSlope:Number = lastReading.calculatedValue - middleReading.calculatedValue;
+						var middleReadingSlope:Number = middleReading.calculatedValue - firstReading.calculatedValue;
 						
 						if (direction == "down")
 						{
-							if (middleReadingSlope <= -1 * (value) && lastReadingSlope <= -1 * (value))
+							if (middleReadingSlope <= -1 * Math.abs(value) && lastReadingSlope <= -1 * Math.abs(value))
 							{
 								//It's dropping fast
 								isFastChanging = true;

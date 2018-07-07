@@ -1,4 +1,5 @@
 2.1.3
+FEATURE: Fast Rise and Fast Drop alarms! Configure them in Settings -> Alarm. The value you define for each of these alarms is the amount of glucose that needs to go up or down in 2 consecutive readings. Pre-snooze, IFTTT, etc. has also been added for these alarms. (Miguel)
 FEATURE: Due to popular demand, followers can now add treatments to the master. Only available if a Nightscout API Secret is set in Settings -> General -> Data Collection. (Miguel)
 FEATURE: Ability to snooze and un-snooze alarms directly from the Today Widget and Apple Watch. Get the Workflow configuration info in settings -> alarms at the bottom of the screen. (Miguel)
 FEATURE: Masters can now upload battery levels to Nightscout by going to Settings -> Share -> Nightscout -> Upload Battery Info. With this setting on, followers will also be able to see master's device and transmitter battery levels as long as Uploader Battery and Transmitter Battery options are enabled in Setings -> Treatments -> Info Pill. (Miguel)

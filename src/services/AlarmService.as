@@ -106,6 +106,34 @@ package services
 		 */
 		private static var _veryHighAlertPreSnoozed:Boolean = false;
 		
+		//fast rise alert
+		/**
+		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
+		 */
+		private static var _fastRiseAlertSnoozePeriodInMinutes:int = 0;
+		/**
+		 * timestamp when alert was snoozed, ms 
+		 */
+		private static var _fastRiseAlertLatestSnoozeTimeInMs:Number = Number.NaN;
+		/**
+		 * true means snooze is set by user
+		 */
+		private static var _fastRiseAlertPreSnoozed:Boolean = false;
+		
+		//fast drop alert
+		/**
+		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
+		 */
+		private static var _fastDropAlertSnoozePeriodInMinutes:int = 0;
+		/**
+		 * timestamp when alert was snoozed, ms 
+		 */
+		private static var _fastDropAlertLatestSnoozeTimeInMs:Number = Number.NaN;
+		/**
+		 * true means snooze is set by user
+		 */
+		private static var _fastDropAlertPreSnoozed:Boolean = false;
+		
 		/**
 		 * if lastbgreading is older than MAX_AGE_OF_READING_IN_MINUTES minutes, then no low or high alert will be generated  
 		 */
@@ -176,39 +204,39 @@ package services
 		//for repeat of alarms every minute, this is only for non-snoozed alerts
 		//each element in an array represents certain alarm 
 		/**
-		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 * true means alert is active, repeat check is necessary (not necessarily repeat, that depends on the setting in the alert type)<br>
 		 * also used to check if an alert is active when the notification is coming from back to foreground<br>
 		 */
-		private static var activeAlertsArray:Array = [false,false,false,false,false,false,false,false,false];
+		private static var activeAlertsArray:Array = [false,false,false,false,false,false,false,false,false,false,false];
 		/**
-		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 * last timestamp the alert was fired
 		 */
-		private static var repeatAlertsLastFireTimeStampArray:Array = [0,0,0,0,0,0,0,0,0];
+		private static var repeatAlertsLastFireTimeStampArray:Array = [0,0,0,0,0,0,0,0,0,0,0];
 		/**
-		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 * the name of the alert type to be used when repeating the alert, and also to check if it needs to be repeated
 		 */
-		private static var repeatAlertsAlertTypeNameArray:Array = ["","","","","","","","",""];
+		private static var repeatAlertsAlertTypeNameArray:Array = ["","","","","","","","","","",""];
 		/**
-		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 * alert texts for the alert
 		 */
-		private static var repeatAlertsTexts:Array = ["","","","","","","","",""];
+		private static var repeatAlertsTexts:Array = ["","","","","","","","","","",""];
 		/**
-		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 * body texts for the alert
 		 */
-		private static var repeatAlertsBodies:Array = ["","","","","","","","",""];
+		private static var repeatAlertsBodies:Array = ["","","","","","","","","","",""];
 		/**
-		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 * how many times repeated
 		 */
-		private static var repeatAlertsRepeatCount:Array = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+		private static var repeatAlertsRepeatCount:Array = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 		/**
 		 * list of notification ids<br>
-		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 */
 		private static const repeatAlertsNotificationIds:Array = [
 			NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT,
@@ -218,10 +246,12 @@ package services
 			NotificationService.ID_FOR_VERY_HIGH_ALERT,
 			NotificationService.ID_FOR_MISSED_READING_ALERT,
 			NotificationService.ID_FOR_BATTERY_ALERT,
-			NotificationService.ID_FOR_PHONEMUTED_ALERT];
+			NotificationService.ID_FOR_PHONEMUTED_ALERT,
+			NotificationService.ID_FOR_FAST_RISE_ALERT,
+			NotificationService.ID_FOR_FAST_DROP_ALERT];
 		/**
 		 * list of category ids<br>
-		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 */
 		private static const repeatAlertsCategoryIds:Array = [
 			NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY,
@@ -231,7 +261,9 @@ package services
 			NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY,
 			NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
 			NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY,
-			NotificationService.ID_FOR_PHONE_MUTED_CATEGORY];
+			NotificationService.ID_FOR_PHONE_MUTED_CATEGORY,
+			NotificationService.ID_FOR_ALERT_FAST_RISE_CATEGORY,
+			NotificationService.ID_FOR_ALERT_FAST_DROP_CATEGORY];
 		
 		private static var alarmTimer:Timer;
 		
@@ -285,6 +317,12 @@ package services
 			_phoneMutedAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_SNOOZE_PERIOD_IN_MINUTES));
 			_phoneMutedAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS));
 			_phoneMutedAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED) == "true";
+			_fastRiseAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_SNOOZE_PERIOD_IN_MINUTES));
+			_fastRiseAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_LATEST_SNOOZE_TIME_IN_MS));
+			_fastRiseAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_PRESNOOZED) == "true";
+			_fastDropAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_SNOOZE_PERIOD_IN_MINUTES));
+			_fastDropAlertLatestSnoozeTimeInMs = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_LATEST_SNOOZE_TIME_IN_MS));
+			_fastDropAlertPreSnoozed = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_PRESNOOZED) == "true";
 			
 			//listen to NOTIFICATION_EVENT. This even is received only if the app is in the foreground. The function notificationReceived will shows the snooze dialog
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
@@ -397,7 +435,45 @@ package services
 				
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
 				myTrace("in notificationReceived, event != null, id = " + NotificationService.notificationIdToText(notificationEvent.id));
-				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
+				if (notificationEvent.id == NotificationService.ID_FOR_FAST_DROP_ALERT) {
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(9);
+					}
+					
+					if ((now.valueOf() - _fastDropAlertLatestSnoozeTimeInMs) > _fastDropAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_fastDropAlertLatestSnoozeTimeInMs)) {
+						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT),
+							NotificationService.ID_FOR_FAST_DROP_ALERT,
+							notificationEvent,
+							fastDropSnoozePicker_closedHandler,
+							"snooze_text_fast_drop_alert",
+							NotificationService.ID_FOR_FAST_DROP_ALERT_SNOOZE_IDENTIFIER,
+							setFastDropAlertSnooze);
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _fastDropAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_fastDropAlertLatestSnoozeTimeInMs)) + ", _fastDropAlertSnoozePeriodInMinutes = " + _fastDropAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					}
+				}
+				else if (notificationEvent.id == NotificationService.ID_FOR_FAST_RISE_ALERT) {
+					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(8);
+					}
+					
+					if ((now.valueOf() - _fastRiseAlertLatestSnoozeTimeInMs) > _fastRiseAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_fastRiseAlertLatestSnoozeTimeInMs)) {
+						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT),
+							NotificationService.ID_FOR_FAST_RISE_ALERT,
+							notificationEvent,
+							fastRiseSnoozePicker_closedHandler,
+							"snooze_text_fast_rise_alert",
+							NotificationService.ID_FOR_FAST_RISE_ALERT_SNOOZE_IDENTIFIER,
+							setFastRiseAlertSnooze);
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _fastRiseAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_fastRiseAlertLatestSnoozeTimeInMs)) + ", _fastRiseAlertSnoozePeriodInMinutes = " + _fastRiseAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					}
+				}
+				else if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
 					if (SpikeANE.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
 						disableRepeatAlert(1);
 					}
@@ -665,6 +741,28 @@ package services
 				_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_veryHighAlertLatestSnoozeTimeInMs));
 			}
+			
+			function fastDropSnoozePicker_closedHandler(event:starling.events.Event): void {
+				myTrace("in fastDropSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, fastDropSnoozePicker_closedHandler);
+				disableRepeatAlert(9);
+				SpikeANE.stopPlayingSound();
+				_fastDropAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastDropAlertSnoozePeriodInMinutes));
+				_fastDropAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastDropAlertLatestSnoozeTimeInMs));
+			}
+			
+			function fastRiseSnoozePicker_closedHandler(event:starling.events.Event): void {
+				myTrace("in fastRiseSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+				AlarmSnoozer.instance.removeEventListener(AlarmSnoozer.CLOSED, fastRiseSnoozePicker_closedHandler);
+				disableRepeatAlert(8);
+				SpikeANE.stopPlayingSound();
+				_fastRiseAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastRiseAlertSnoozePeriodInMinutes));
+				_fastRiseAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastRiseAlertLatestSnoozeTimeInMs));
+			}
 		}
 		
 		private static function snoozePickerChangedOrCanceledHandler(event:starling.events.Event): void {
@@ -773,6 +871,40 @@ package services
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 		}
 		
+		public static function snoozeFastDropAlert(index:int, explicitMinutes:Number = Number.NaN):void {
+			if (isNaN(explicitMinutes))
+				myTrace("in snoozeFastDropAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
+			else
+				myTrace("in snoozeFastDropAlert. Snoozing for " + explicitMinutes + " minutes");
+			_fastDropAlertPreSnoozed = true;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_PRESNOOZED, String(_fastDropAlertPreSnoozed));
+			Notifications.service.cancel(NotificationService.ID_FOR_FAST_DROP_ALERT);
+			resetFastDropAlertPreSnooze();
+			disableRepeatAlert(9);
+			SpikeANE.stopPlayingSound();
+			_fastDropAlertSnoozePeriodInMinutes = isNaN(explicitMinutes) ? snoozeValueMinutes[index] : explicitMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastDropAlertSnoozePeriodInMinutes));
+			_fastDropAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastDropAlertLatestSnoozeTimeInMs));
+		}
+		
+		public static function snoozeFastRiseAlert(index:int, explicitMinutes:Number = Number.NaN):void {
+			if (isNaN(explicitMinutes))
+				myTrace("in snoozeFastRiseAlert. Snoozing for " + snoozeValueMinutes[index] + " minutes");
+			else
+				myTrace("in snoozeFastRiseAlert. Snoozing for " + explicitMinutes + " minutes");
+			_fastRiseAlertPreSnoozed = true;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_PRESNOOZED, String(_fastRiseAlertPreSnoozed));
+			Notifications.service.cancel(NotificationService.ID_FOR_FAST_RISE_ALERT);
+			resetFastRiseAlertPreSnooze();
+			disableRepeatAlert(8);
+			SpikeANE.stopPlayingSound();
+			_fastRiseAlertSnoozePeriodInMinutes = isNaN(explicitMinutes) ? snoozeValueMinutes[index] : explicitMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastRiseAlertSnoozePeriodInMinutes));
+			_fastRiseAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastRiseAlertLatestSnoozeTimeInMs));
+		}
+		
 		private static function openSnoozePickerDialog(alertSetting:String, notificationId:int, notificationEvent:NotificationEvent, 
 													   snoozePickerClosedHandler:Function, 
 													   snoozeText:String, alertSnoozeIdentifier:String, snoozeValueSetter:Function, presnoozeResetFunction:Function = null):void {
@@ -803,10 +935,14 @@ package services
 					snoozeText == "verylow_alert_notification_alert_text" ||
 					snoozeText == "high_alert_notification_alert_text" ||
 					snoozeText == "veryhigh_alert_notification_alert_text" ||
+					snoozeText == "fast_drop_alert_notification_alert_text" ||
+					snoozeText == "fast_rise_alert_notification_alert_text" ||
 					snoozeText == "snooze_text_low_alert" ||
 					snoozeText == "snooze_text_very_low_alert" ||
 					snoozeText == "snooze_text_high_alert" ||
-					snoozeText == "snooze_text_very_high_alert"
+					snoozeText == "snooze_text_very_high_alert" ||
+					snoozeText == "snooze_text_fast_drop_alert" ||
+					snoozeText == "snooze_text_fast_rise_alert"
 				)
 				{
 					SystemUtil.executeWhenApplicationIsActive
@@ -906,6 +1042,28 @@ package services
 			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.PHONE_MUTED_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert"),time: _phoneMutedAlertSnoozePeriodInMinutes}));
 		}
 		
+		private static function setFastDropAlertSnooze(periodInMinutes:int):void {
+			_fastDropAlertSnoozePeriodInMinutes = periodInMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastDropAlertSnoozePeriodInMinutes));
+			myTrace("in notificationReceived with id = ID_FOR_FAST_DROP_ALERT, snoozing the notification for " + _fastDropAlertSnoozePeriodInMinutes + " minutes");
+			_fastDropAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastDropAlertLatestSnoozeTimeInMs));
+			
+			//Notify Services (ex: IFTTT)
+			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.FAST_DROP_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_fast_drop_alert"),time: _fastDropAlertSnoozePeriodInMinutes}));
+		}
+		
+		private static function setFastRiseAlertSnooze(periodInMinutes:int):void {
+			_fastRiseAlertSnoozePeriodInMinutes = periodInMinutes;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastRiseAlertSnoozePeriodInMinutes));
+			myTrace("in notificationReceived with id = ID_FOR_FAST_RISE_ALERT, snoozing the notification for " + _fastRiseAlertSnoozePeriodInMinutes + " minutes");
+			_fastRiseAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastRiseAlertLatestSnoozeTimeInMs));
+			
+			//Notify Services (ex: IFTTT)
+			_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.FAST_RISE_SNOOZED,false,false,{type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_fast_rise_alert"),time: _fastRiseAlertSnoozePeriodInMinutes}));
+		}
+		
 		private static function lowSnoozePicker_closedHandler(event:starling.events.Event): void {
 			myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
 			disableRepeatAlert(1);
@@ -967,6 +1125,26 @@ package services
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_phoneMutedAlertLatestSnoozeTimeInMs));
 		}
 		
+		private static function fastDropSnoozePicker_closedHandler(event:starling.events.Event): void {
+			myTrace("in fastDropSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+			disableRepeatAlert(9);
+			SpikeANE.stopPlayingSound();
+			_fastDropAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastDropAlertSnoozePeriodInMinutes));
+			_fastDropAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastDropAlertLatestSnoozeTimeInMs));
+		}
+		
+		private static function fastRiseSnoozePicker_closedHandler(event:starling.events.Event): void {
+			myTrace("in fastRiseSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.data.index]);
+			disableRepeatAlert(8);
+			SpikeANE.stopPlayingSound();
+			_fastRiseAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastRiseAlertSnoozePeriodInMinutes));
+			_fastRiseAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastRiseAlertLatestSnoozeTimeInMs));
+		}
+		
 		private static function checkAlarms(be:flash.events.Event):void {
 			myTrace("in checkAlarms");
 			var now:Date = new Date();
@@ -974,26 +1152,68 @@ package services
 			var alertActive:Boolean = false;
 			
 			var lastbgreading:BgReading = BgReading.lastNoSensor();
-			if (lastbgreading != null) {
-				if (now.valueOf() - lastbgreading.timestamp < MAX_AGE_OF_READING_IN_MINUTES * 60 * 1000) {
-					alertActive = checkVeryLowAlert(now);
-					if(!alertActive) {
-						alertActive = checkLowAlert(now);
-						if (!alertActive) {
-							alertActive = checkVeryHighAlert(now);
-							if (!alertActive) {
-								alertActive = checkHighAlert(now);
-							} else {
+			if (lastbgreading != null) 
+			{
+				if (now.valueOf() - lastbgreading.timestamp < MAX_AGE_OF_READING_IN_MINUTES * 60 * 1000) 
+				{
+					alertActive = checkFastDropAlert(now);
+					if (!alertActive)
+					{
+						alertActive = checkFastRiseAlert(now);
+						if (!alertActive)
+						{
+							alertActive = checkVeryLowAlert(now);
+							if(!alertActive) 
+							{
+								alertActive = checkLowAlert(now);
+								if (!alertActive) 
+								{
+									alertActive = checkVeryHighAlert(now);
+									if (!alertActive) 
+									{
+										alertActive = checkHighAlert(now);
+									} else 
+									{
+										if (!_highAlertPreSnoozed)
+											resetHighAlert();
+									}
+								} 
+								else 
+								{
+									if (!_highAlertPreSnoozed)
+										resetHighAlert();
+									if (!_veryHighAlertPreSnoozed)
+										resetVeryHighAlert();
+								}
+							} 
+							else 
+							{
 								if (!_highAlertPreSnoozed)
 									resetHighAlert();
+								if (!_veryHighAlertPreSnoozed)
+									resetVeryHighAlert();
+								if (!_lowAlertPreSnoozed)
+									resetLowAlert();
 							}
-						} else {
+						}
+						else
+						{
+							if (!_veryLowAlertPreSnoozed)
+								resetVeryLowAlert();
 							if (!_highAlertPreSnoozed)
 								resetHighAlert();
 							if (!_veryHighAlertPreSnoozed)
 								resetVeryHighAlert();
+							if (!_lowAlertPreSnoozed)
+								resetLowAlert();
 						}
-					} else {
+					}
+					else
+					{
+						if (!_fastRiseAlertPreSnoozed)
+							resetFastRiseAlert();
+						if (!_veryLowAlertPreSnoozed)
+							resetVeryLowAlert();
 						if (!_highAlertPreSnoozed)
 							resetHighAlert();
 						if (!_veryHighAlertPreSnoozed)
@@ -1003,12 +1223,14 @@ package services
 					}
 				}
 				checkMissedReadingAlert();
-				if (!alertActive && !BlueToothDevice.isFollower()) {
+				if (!alertActive && !BlueToothDevice.isFollower()) 
+				{
 					//to avoid that the arrival of a notification of a checkCalibrationRequestAlert stops the sounds of a previous low or high alert
 					checkCalibrationRequestAlert(now);
 				}
 			}
-			if (!alertActive && !BlueToothDevice.isFollower()) {
+			if (!alertActive && !BlueToothDevice.isFollower()) 
+			{
 				//to avoid that the arrival of a notification of a checkBatteryLowAlert stops the sounds of a previous low or high alert
 				checkBatteryLowAlert(now);
 			}
@@ -1092,7 +1314,7 @@ package services
 		}
 		
 		/**
-		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br>
 		 */
 		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, alertBody:String = " "):void {	
 			cancelInactiveAlert(); //so it doesn't overlap with the alarm sound
@@ -1188,6 +1410,10 @@ package services
 				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_TRIGGERED));
 			else if (notificationId == NotificationService.ID_FOR_PHONEMUTED_ALERT)
 				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.PHONE_MUTED_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_FAST_RISE_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.FAST_RISE_TRIGGERED));
+			else if (notificationId == NotificationService.ID_FOR_FAST_DROP_ALERT)
+				_instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.FAST_DROP_TRIGGERED));
 		}
 		
 		private static function queueAlertSound(sound:String):void {
@@ -1714,6 +1940,125 @@ package services
 			 return returnValue;
 		 }
 		
+		/**
+		 * returns true of alarm fired or if snoozed
+		 */
+		private static function checkFastDropAlert(now:Date):Boolean {
+			 var listOfAlerts:FromtimeAndValueArrayCollection;
+			 var alertValue:Number;
+			 var alertName:String;
+			 var alertType:AlertType;
+			 var returnValue:Boolean = false;
+			 
+			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT), true);
+			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			 alertType = Database.getAlertType(alertName);
+			 if (alertType != null && alertType.enabled) {
+				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+				 if ((now.valueOf() - _fastDropAlertLatestSnoozeTimeInMs) > _fastDropAlertSnoozePeriodInMinutes * 60 * 1000
+					 ||
+					 isNaN(_fastDropAlertLatestSnoozeTimeInMs)) {
+					 myTrace("in checkAlarms, fastDrop alert not snoozed ");
+					 //not snoozed
+					 
+					 var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+					 if (GlucoseHelper.isGlucoseChangingFast(alertValue, "down")) {
+						 myTrace("in checkAlarms, glucose is dropping fast");
+						 fireAlert(
+							 9,
+							 alertType, 
+							 NotificationService.ID_FOR_FAST_DROP_ALERT, 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","fast_drop_alert_notification_alert_text"), 
+							 alertType.enableVibration,
+							 alertType.enableLights,
+							 NotificationService.ID_FOR_ALERT_FAST_DROP_CATEGORY,
+							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
+						 ); 
+						 _fastDropAlertLatestSnoozeTimeInMs = Number.NaN;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastDropAlertLatestSnoozeTimeInMs));
+						 _fastDropAlertSnoozePeriodInMinutes = 0;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastDropAlertSnoozePeriodInMinutes));
+						 returnValue = true;
+					 } else {
+						 myTrace("cancel any existing alert for ID_FOR_FAST_DROP_ALERT");
+						 Notifications.service.cancel(NotificationService.ID_FOR_FAST_DROP_ALERT);
+						 disableRepeatAlert(9);
+					 }
+				 } else {
+					 //snoozed no need to do anything, set returnvalue to true because there's no need to further check
+					 returnValue = true;
+					 myTrace("in checkAlarms, alarm snoozed, _fastDropAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_fastDropAlertLatestSnoozeTimeInMs)) + ", _fastDropAlertSnoozePeriodInMinutes = " + _fastDropAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				 }
+			 } else {
+				 //if not presnoozed then remove fastDrop notification, even if there isn't any
+				 if (!_fastDropAlertPreSnoozed) {
+					 resetFastDropAlert();
+				 }
+			 }
+			 return returnValue;
+		 }
+		
+		/**
+		 * returns true of alarm fired or if snoozed
+		 */private static function checkFastRiseAlert(now:Date):Boolean {
+			 var listOfAlerts:FromtimeAndValueArrayCollection;
+			 var alertValue:Number;
+			 var alertName:String;
+			 var alertType:AlertType;
+			 var returnValue:Boolean = false;
+			 
+			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT), true);
+			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			 alertType = Database.getAlertType(alertName);
+			 if (alertType != null && alertType.enabled) {
+				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+				 if ((now.valueOf() - _fastRiseAlertLatestSnoozeTimeInMs) > _fastRiseAlertSnoozePeriodInMinutes * 60 * 1000
+					 ||
+					 isNaN(_fastRiseAlertLatestSnoozeTimeInMs)) {
+					 myTrace("in checkAlarms, fastRise alert not snoozed ");
+					 //not snoozed
+					 
+					 var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+					 if (GlucoseHelper.isGlucoseChangingFast(alertValue, "up")) {
+						 myTrace("in checkAlarms, glucose is rising fast");
+						 fireAlert(
+							 8,
+							 alertType, 
+							 NotificationService.ID_FOR_FAST_RISE_ALERT, 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","fast_rise_alert_notification_alert_text"), 
+							 alertType.enableVibration,
+							 alertType.enableLights,
+							 NotificationService.ID_FOR_ALERT_FAST_RISE_CATEGORY,
+							 BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + (lastBgReading.hideSlope ? "":(lastBgReading.slopeArrow())) + " " + BgGraphBuilder.unitizedDeltaString(true, true)
+						 ); 
+						 _fastRiseAlertLatestSnoozeTimeInMs = Number.NaN;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastRiseAlertLatestSnoozeTimeInMs));
+						 _fastRiseAlertSnoozePeriodInMinutes = 0;
+						 LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastRiseAlertSnoozePeriodInMinutes));
+						 returnValue = true;
+					 } else {
+						 myTrace("cancel any existing alert for ID_FOR_FAST_RISE_ALERT");
+						 Notifications.service.cancel(NotificationService.ID_FOR_FAST_RISE_ALERT);
+						 disableRepeatAlert(8);
+					 }
+				 } else {
+					 //snoozed no need to do anything, set returnvalue to true because there's no need to further check
+					 returnValue = true;
+					 myTrace("in checkAlarms, alarm snoozed, _fastRiseAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_fastRiseAlertLatestSnoozeTimeInMs)) + ", _fastRiseAlertSnoozePeriodInMinutes = " + _fastRiseAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				 }
+			 } else {
+				 //if not presnoozed then remove fastDrop notification, even if there isn't any
+				 if (!_fastRiseAlertPreSnoozed) {
+					 resetFastRiseAlert();
+				 }
+			 }
+			 return returnValue;
+		 }
+		
 		public static function resetVeryHighAlert():void {
 			myTrace("in resetVeryHighAlert");
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
@@ -1786,6 +2131,30 @@ package services
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED, String(_phoneMutedAlertPreSnoozed));
 		}
 		
+		public static function resetFastDropAlert():void {
+			myTrace("in resetFastDropAlert");
+			Notifications.service.cancel(NotificationService.ID_FOR_FAST_DROP_ALERT);
+			disableRepeatAlert(9);
+			_fastDropAlertLatestSnoozeTimeInMs = Number.NaN;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastDropAlertLatestSnoozeTimeInMs));
+			_fastDropAlertSnoozePeriodInMinutes = 0;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastDropAlertSnoozePeriodInMinutes));
+			_fastDropAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_PRESNOOZED, String(_fastDropAlertPreSnoozed));
+		}
+		
+		public static function resetFastRiseAlert():void {
+			myTrace("in resetFastRiseAlert");
+			Notifications.service.cancel(NotificationService.ID_FOR_FAST_RISE_ALERT);
+			disableRepeatAlert(8);
+			_fastRiseAlertLatestSnoozeTimeInMs = Number.NaN;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_LATEST_SNOOZE_TIME_IN_MS, String(_fastRiseAlertLatestSnoozeTimeInMs));
+			_fastRiseAlertSnoozePeriodInMinutes = 0;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_SNOOZE_PERIOD_IN_MINUTES, String(_fastRiseAlertSnoozePeriodInMinutes));
+			_fastRiseAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_PRESNOOZED, String(_fastRiseAlertPreSnoozed));
+		}
+		
 		private static function localSettingChanged(event:SettingsServiceEvent):void {
 			/*if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT || event.data == CommonSettings.COMMON_SETTING_LANGUAGE) {
 			//if user changes language, alert needs to be replanned because notification text may have changed
@@ -1842,6 +2211,10 @@ package services
 			if ((event.data >= CommonSettings.COMMON_SETTING_LOW_ALERT && event.data <= CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) 
 				||
 				(event.data >= CommonSettings.COMMON_SETTING_BATTERY_ALERT && event.data <= CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT)
+				||
+				event.data == CommonSettings.COMMON_SETTING_FAST_DROP_ALERT
+				||
+				event.data == CommonSettings.COMMON_SETTING_FAST_RISE_ALERT
 			) {
 				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
 					CommonSettings.getCommonSetting(event.data), false);
@@ -1872,6 +2245,12 @@ package services
 							break;
 						case CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT:
 							disableRepeatAlert(7);
+							break;
+						case CommonSettings.COMMON_SETTING_FAST_RISE_ALERT:
+							disableRepeatAlert(8);
+							break;
+						case CommonSettings.COMMON_SETTING_FAST_DROP_ALERT:
+							disableRepeatAlert(9);
 							break;
 					}
 				}
@@ -1917,7 +2296,7 @@ package services
 		 * low/very low , high/very high : check will be done a number of repeats, if max reached then reset to false
 		 */
 		private static function repeatAlerts():void {
-			//id ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br
+			//id ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted, 8:Fast Rise, 9:Fast Drop<br
 			if (activeAlertsArray == null || repeatAlertsLastFireTimeStampArray == null) return;
 			for (var cntr:int = 0;cntr < activeAlertsArray.length;cntr++) {
 				if (activeAlertsArray[cntr] == true) {
@@ -1942,8 +2321,8 @@ package services
 								repeatAlertsBodies[cntr]);
 							enableRepeatAlert(cntr, repeatAlertsAlertTypeNameArray[cntr], repeatAlertsTexts[cntr], repeatAlertsBodies[cntr], repeatAlertsRepeatCount[cntr] + 1);
 							
-							//if it's a low, very low, high or very high alert, 
-							if (cntr == 1 || cntr == 2 || cntr == 3 || cntr == 4) {
+							//if it's a low, very low, high, very high alert, fast rise or fast drop, 
+							if (cntr == 1 || cntr == 2 || cntr == 3 || cntr == 4 || cntr == 8 || cntr == 9) {
 								if (repeatAlertsRepeatCount[cntr] > MAX_REPEATS_FOR_ALERTS) {
 									disableRepeatAlert(cntr);
 								}
@@ -2043,6 +2422,14 @@ package services
 			return snoozeUntilAsString(_missedReadingAlertSnoozePeriodInMinutes, _missedReadingAlertLatestSnoozeTimeInMs);
 		}
 		
+		public static function fastRiseAlertSnoozeAsString():String {
+			return snoozeUntilAsString(_fastRiseAlertSnoozePeriodInMinutes, _fastRiseAlertLatestSnoozeTimeInMs);
+		}
+		
+		public static function fastDropAlertSnoozeAsString():String {
+			return snoozeUntilAsString(_fastDropAlertSnoozePeriodInMinutes, _fastDropAlertLatestSnoozeTimeInMs);
+		}
+		
 		public static function veryLowAlertSnoozed():Boolean 
 		{
 			var returnValue:Boolean = true;
@@ -2109,6 +2496,28 @@ package services
 			
 			return returnValue;
 		}
+		public static function fastRiseAlertSnoozed():Boolean 
+		{
+			var returnValue:Boolean = true;
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _fastRiseAlertLatestSnoozeTimeInMs + _fastRiseAlertSnoozePeriodInMinutes * 60 * 1000;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_fastRiseAlertLatestSnoozeTimeInMs))
+				returnValue = false;
+			
+			return returnValue;
+		}
+		public static function fastDropAlertSnoozed():Boolean 
+		{
+			var returnValue:Boolean = true;
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _fastDropAlertLatestSnoozeTimeInMs + _fastDropAlertSnoozePeriodInMinutes * 60 * 1000;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_fastDropAlertLatestSnoozeTimeInMs))
+				returnValue = false;
+			
+			return returnValue;
+		}
 		
 		private static function resetVeryLowAlertPreSnooze():void {
 			_veryLowAlertPreSnoozed = false;
@@ -2127,6 +2536,12 @@ package services
 		}
 		private static function resetPhoneMutedAlertPreSnooze():void {
 			_phoneMutedAlertPreSnoozed = false;
+		}
+		private static function resetFastDropAlertPreSnooze():void {
+			_fastDropAlertPreSnoozed = false;
+		}
+		private static function resetFastRiseAlertPreSnooze():void {
+			_fastRiseAlertPreSnoozed = false;
 		}
 	}
 }

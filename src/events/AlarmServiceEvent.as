@@ -20,6 +20,10 @@ package events
 		[Event(name="phoneMutedSnoozed",type="events.AlarmServiceEvent")]
 		[Event(name="transmitterLowBatteryTriggered",type="events.AlarmServiceEvent")]
 		[Event(name="transmitterLowBatterySnoozed",type="events.AlarmServiceEvent")]
+		[Event(name="fastDropTriggered",type="events.AlarmServiceEvent")]
+		[Event(name="fastDropSnoozed",type="events.AlarmServiceEvent")]
+		[Event(name="fastRiseTriggered",type="events.AlarmServiceEvent")]
+		[Event(name="fastRiseSnoozed",type="events.AlarmServiceEvent")]
 		
 		public static const URGENT_HIGH_GLUCOSE_TRIGGERED:String = "urgentHighGlucoseTriggered";
 		public static const URGENT_HIGH_GLUCOSE_SNOOZED:String = "urgentHighGlucoseSnoozed";
@@ -37,6 +41,10 @@ package events
 		public static const PHONE_MUTED_SNOOZED:String = "phoneMutedSnoozed";
 		public static const TRANSMITTER_LOW_BATTERY_TRIGGERED:String = "transmitterLowBatteryTriggered";
 		public static const TRANSMITTER_LOW_BATTERY_SNOOZED:String = "transmitterLowBatterySnoozed";
+		public static const FAST_RISE_TRIGGERED:String = "fastRiseTriggered";
+		public static const FAST_RISE_SNOOZED:String = "fastRiseSnoozed";
+		public static const FAST_DROP_TRIGGERED:String = "fastDropTriggered";
+		public static const FAST_DROP_SNOOZED:String = "fastDropSnoozed";
 		
 		public var data:*;
 		
