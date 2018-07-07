@@ -34,7 +34,6 @@ package services
 		private static const AUTOMATIC_FOLLOWER:int = 5 * 1000;
 		private static const TIME_1_MINUTE:int = 1 * 60 * 1000;
 		private static const NO_SUSPENSION_PREVENTION_MODE:int = 1000000;
-		private static const MAXIMIZE_SUSPENSION_PREVENTION:int = 5 * 1000;
 		
 		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
@@ -165,11 +164,8 @@ package services
 				var now:Number = nowDate.valueOf();
 				var hours:Number = nowDate.hours;
 				
-				if (now - lastLogPlaySoundTimeStamp > TIME_1_MINUTE) 
-				{
 					Trace.myTrace("DeepSleepService.as", "Playing deep sleep sound...");
 					lastLogPlaySoundTimeStamp = now;
-				}
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) == "true")
 				{
