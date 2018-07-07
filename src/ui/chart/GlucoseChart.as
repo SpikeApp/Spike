@@ -9,6 +9,7 @@ package ui.chart
 	import flash.system.System;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
+	import flash.utils.getTimer;
 	
 	import database.BgReading;
 	import database.BlueToothDevice;
@@ -33,6 +34,8 @@ package ui.chart
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
+	import feathers.motion.Cover;
+	import feathers.motion.Reveal;
 	
 	import model.ModelLocator;
 	
@@ -59,6 +62,7 @@ package ui.chart
 	
 	import ui.AppInterface;
 	import ui.popups.AlertManager;
+	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
 	
@@ -293,6 +297,9 @@ package ui.chart
 		private var carbsCurveCallout:Callout;
 		private var insulinCurve:LayoutGroup;
 		private var insulinCurveCallout:Callout;
+
+		//Main Glucose Touch
+		private var mainGlucoseTimer:Number = Number.NaN;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number)
 		{
@@ -2600,7 +2607,8 @@ package ui.chart
 			
 			//Glucose Value Display
 			glucoseValueDisplay = GraphLayoutFactory.createChartStatusText("0", chartFontColor, glucoseDisplayFont, Align.RIGHT, true, 400);
-			glucoseValueDisplay.touchable = false;
+			glucoseValueDisplay.addEventListener(TouchEvent.TOUCH, onMainGlucoseTouch);
+			//glucoseValueDisplay.touchable = false;
 			glucoseValueDisplay.x = _graphWidth - glucoseValueDisplay.width -glucoseStatusLabelsMargin;
 			glucoseValueDisplay.validate();
 			var glucoseValueDisplayHeight:Number = glucoseValueDisplay.height;
@@ -2685,6 +2693,39 @@ package ui.chart
 			}
 			
 			glucoseTimeAgoPill.setValue("", "", chartFontColor);
+		}
+		
+		private function onMainGlucoseTouch(e:TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				mainGlucoseTimer = getTimer();
+				addEventListener(starling.events.Event.ENTER_FRAME, onMainGlucoseHold);
+			}
+			
+			if(touch != null && touch.phase == TouchPhase.ENDED)
+			{
+				mainGlucoseTimer = Number.NaN;
+				removeEventListener(starling.events.Event.ENTER_FRAME, onMainGlucoseHold);
+			}
+		}
+		
+		private function onMainGlucoseHold(e:starling.events.Event):void
+		{
+			if (isNaN(mainGlucoseTimer))
+				return;
+			
+			if (getTimer() - mainGlucoseTimer > 1000)
+			{
+				mainGlucoseTimer = Number.NaN;
+				removeEventListener(starling.events.Event.ENTER_FRAME, onMainGlucoseHold);
+				
+				//Push Chart Settings Screen
+				AppInterface.instance.chartSettingsScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+				AppInterface.instance.chartSettingsScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+				AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_CHART );
+			}
 		}
 		
 		public function showLine():void
