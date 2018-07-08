@@ -2,7 +2,7 @@
 FEATURE: Fast Rise and Fast Drop alarms! Configure them in Settings -> Alarms. The value you define for each of these alarms is the amount of glucose that needs to go up or down on 2 consecutive readings. Pre-snooze, IFTTT, etc. support has also been added for both alarms. (Miguel)
 FEATURE: Due to popular demand, followers can now add treatments to the master. Only available if a Nightscout API Secret is set in Settings -> General -> Data Collection. (Miguel)
 FEATURE: Ability to snooze and un-snooze alarms directly from the Today Widget and Apple Watch. Get the Workflow configuration info in Settings -> Alarms at the bottom of the screen. (Miguel)
-FEATURE: Ability to select carb type (fast, medium and slow) when entering a carb or meal treatment. This option determines the amount of time it takes for carbs to enter the bloodstream. Fast = 5, Medium = 10 and Slow (Default) = 20 minutes. If you use Workflow to enter treatments, go to Settings -> Treatments and request the updated Workflow email for carbs and meal treatments. (Miguel)
+FEATURE: Ability to select carb type (fast, medium and slow) when entering a carb or meal treatment. This option determines the amount of time it takes for carbs to enter the bloodstream. Fast = 5, Medium = 10 and Slow (Default) = 20 minutes. You can change these values in Settings -> Treatments -> Profile. If you use Workflow to enter treatments, go to Settings -> Treatments and request the updated Workflow email for carbs and meal treatments. (Miguel)
 FEATURE: Masters can now upload battery levels to Nightscout by going to Settings -> Share -> Nightscout -> Upload Battery Info. With this setting on, followers will also be able to see master's device AND transmitter battery levels as long as Uploader Battery and Transmitter Battery options are enabled in Settings -> Treatments -> Info Pill. (Miguel)
 FEATURE: Ability to only sync data between Spike and Nightscout when the device is connected to a Wi-Fi network. If Nightscout is only used to backup data or access reports this setting can save battery life. Enable it in Settings -> Share -> Nightscout -> Sync on Wi-Fi Only. (Miguel)
 FEATURE: Same as above but for Dexcom Share. Enable it in Settings -> Share -> Dexcom Share -> Sync on Wi-Fi Only. (Miguel)
@@ -17,6 +17,7 @@ ENHANCEMENT: Better handling of Nightscout treatments set in the future (Bolus W
 ENHANCEMENT: Improved speech output for some languages, including German. (Sascha)
 ENHANCEMENT: Spike watch complication is now selectable directly from the Apple Watch app on iPhone/iPad/iPodTouch. (Miguel)
 ENHANCEMENT: Added help menu to followers. (Miguel)
+ENHANCEMENT: Notes field when inserting treatments now auto-capitalizes the first word and allows keyboard predictions. (Miguel)
 FIX: Fixes an issue where snoozing an alarm could also snooze other alarms. (Miguel);
 FIX: No more duplicate HealthKit entries for treatments. (Miguel)
 FIX: Negative deltas were not being correctly spoken when speech was enabled. It's now fixed. (Miguel)

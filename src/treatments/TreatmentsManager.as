@@ -588,7 +588,15 @@ package treatments
 				mediumCarb = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','carbs_medium_label'), carbDelayGroup);
 				if (slowCarb != null) slowCarb.removeFromParent(true);
 				slowCarb = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label'), carbDelayGroup);
-				carbDelayGroup.selectedItem = slowCarb;
+				var defaultCarbType:String = ProfileManager.getDefaultTimeAbsortionCarbType();
+				if (defaultCarbType == "fast")
+					carbDelayGroup.selectedItem = fastCarb;
+				else if (defaultCarbType == "medium")
+					carbDelayGroup.selectedItem = mediumCarb;
+				else if (defaultCarbType == "slow")
+					carbDelayGroup.selectedItem = slowCarb;
+				else
+					carbDelayGroup.selectedItem = slowCarb;
 				carbDelayContainer.addChild(fastCarb);
 				carbDelayContainer.addChild(mediumCarb);
 				carbDelayContainer.addChild(slowCarb);
@@ -698,7 +706,7 @@ package treatments
 			}
 			
 			if (notes != null) notes.removeFromParent(true);
-			notes = LayoutFactory.createTextInput(false, false, treatmentTime.width, HorizontalAlign.CENTER);
+			notes = LayoutFactory.createTextInput(false, false, treatmentTime.width, HorizontalAlign.CENTER, false, false, false, true, true);
 			notes.addEventListener(FeathersEventType.ENTER, onClearFocus);
 			notes.prompt = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
 			notes.maxChars = 50;
@@ -1380,7 +1388,7 @@ package treatments
 				var treatmentNote:String = "";
 				var treatmentInsulinName:String = "";
 				var treatmentInsulinDIA:Number = Number.NaN;
-				var treatmentCarbDelayTime:Number = 20;
+				var treatmentCarbDelayTime:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME));
 				
 				if (treatmentTimestamp < firstReadingTimestamp)
 				{
@@ -1406,7 +1414,7 @@ package treatments
 						treatmentInsulinName = nsTreatment.insulinName != null ? nsTreatment.insulinName : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
 						treatmentInsulinDIA = nsTreatment.dia != null ? nsTreatment.dia : ProfileManager.getInsulin("000000").dia;
 						
-						ProfileManager.addInsulin(treatmentInsulinName, treatmentInsulinDIA, "Unknown", false, treatmentInsulinID, true, true);
+						ProfileManager.addInsulin(treatmentInsulinName, treatmentInsulinDIA, nsTreatment.insulinType == null ? "Unknown" : String(nsTreatment.insulinType), false, treatmentInsulinID, true, true);
 					}
 				}
 				

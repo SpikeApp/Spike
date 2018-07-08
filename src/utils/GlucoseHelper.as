@@ -12,6 +12,7 @@ package utils
 	public class GlucoseHelper
 	{
 		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
+		private static const TIME_9_MINUTES:int = 6 * 60 * 1000;
 		
 		public static function getGlucoseUnit():String
 		{
@@ -111,7 +112,7 @@ package utils
 				if (lastReading != null && lastReading.calculatedValue != 0 && middleReading != null && middleReading.calculatedValue != 0 && firstReading != null && firstReading.calculatedValue != 0)
 				{
 					//Last 3 readings are valid
-					if (new Date().valueOf() - lastReading.timestamp < TIME_6_MINUTES && lastReading.timestamp - middleReading.timestamp < TIME_6_MINUTES && middleReading.timestamp - firstReading.timestamp < TIME_6_MINUTES)
+					if (new Date().valueOf() - lastReading.timestamp < TIME_9_MINUTES && lastReading.timestamp - middleReading.timestamp < TIME_9_MINUTES && middleReading.timestamp - firstReading.timestamp < TIME_9_MINUTES)
 					{
 						//All readings are not more than 6 minutes apart
 						var lastReadingSlope:Number = lastReading.calculatedValue - middleReading.calculatedValue;

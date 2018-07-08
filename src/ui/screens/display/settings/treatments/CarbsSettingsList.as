@@ -3,10 +3,16 @@ package ui.screens.display.settings.treatments
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
+	import database.CommonSettings;
+	
 	import feathers.controls.Button;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
+	import feathers.controls.PickerList;
+	import feathers.controls.popups.DropDownPopUpContentManager;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
@@ -28,6 +34,7 @@ package ui.screens.display.settings.treatments
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("profilesettingsscreen")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class CarbsSettingsList extends SpikeList 
 	{
@@ -36,11 +43,20 @@ package ui.screens.display.settings.treatments
 		private var carbAbsorptionRateDescription:Label;
 		private var actionContainer:LayoutGroup;
 		private var guide:Button;
+		private var fastAbsorptionTime:NumericStepper;
+		private var mediumAbsorptionTime:NumericStepper;
+		private var slowAbsorptionTime:NumericStepper;
+		private var defaultCarbAbsorptionTime:PickerList;
+		private var carbAbsorptionTimeDescription:Label;
 		
 		/* Properties */
 		private var userProfiles:Array;
 		private var currentProfile:Profile;
 		public var needsSave:Boolean;
+		private var fastAbsortionTimeValue:Number;
+		private var mediumAbsortionTimeValue:Number;
+		private var slowAbsortionTimeValue:Number;
+		private var defaultAbsortionTimeValue:Number;
 		
 		public function CarbsSettingsList()
 		{
@@ -76,10 +92,59 @@ package ui.screens.display.settings.treatments
 				userProfiles = ProfileManager.profilesList;
 				currentProfile = userProfiles[0];
 			}
+			
+			fastAbsortionTimeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+			mediumAbsortionTimeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+			slowAbsortionTimeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+			defaultAbsortionTimeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME));
 		}
 		
 		private function setupContent():void
 		{	
+			//Carb absorption time
+			fastAbsorptionTime = LayoutFactory.createNumericStepper(1, 120, fastAbsortionTimeValue, 1);
+			fastAbsorptionTime.addEventListener(Event.CHANGE, onSettingsChanged);
+			mediumAbsorptionTime = LayoutFactory.createNumericStepper(1, 120, mediumAbsortionTimeValue, 1);
+			mediumAbsorptionTime.addEventListener(Event.CHANGE, onSettingsChanged);
+			slowAbsorptionTime = LayoutFactory.createNumericStepper(1, 120, slowAbsortionTimeValue, 1);
+			slowAbsorptionTime.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			defaultCarbAbsorptionTime = LayoutFactory.createPickerList();
+			defaultCarbAbsorptionTime.prompt = ModelLocator.resourceManagerInstance.getString('globaltranslations','picker_select')
+			var carbTypesNamesList:Array = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','all_carb_types_list').split(",");
+			var carbTypeList:ArrayCollection = new ArrayCollection();
+			for (var i:int = 0; i < carbTypesNamesList.length; i++) 
+			{
+				carbTypeList.push({label: carbTypesNamesList[i], id: i});
+			}
+			carbTypesNamesList.length = 0;
+			carbTypesNamesList = null;
+			defaultCarbAbsorptionTime.popUpContentManager = new DropDownPopUpContentManager();
+			defaultCarbAbsorptionTime.dataProvider = carbTypeList;
+			
+			if (defaultAbsortionTimeValue == fastAbsortionTimeValue)
+				defaultCarbAbsorptionTime.selectedIndex = 0;
+			else if (defaultAbsortionTimeValue == mediumAbsortionTimeValue)
+				defaultCarbAbsorptionTime.selectedIndex = 1;
+			else if (defaultAbsortionTimeValue == slowAbsortionTimeValue)
+				defaultCarbAbsorptionTime.selectedIndex = 2;
+			else
+				defaultCarbAbsorptionTime.selectedIndex = -1;
+				
+			defaultCarbAbsorptionTime.itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				return itemRenderer;
+			}
+			defaultCarbAbsorptionTime.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Description
+			carbAbsorptionTimeDescription = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','carb_absorption_time_description_label'), HorizontalAlign.JUSTIFY);
+			carbAbsorptionTimeDescription.wordWrap = true;
+			carbAbsorptionTimeDescription.width = width;
+			carbAbsorptionTimeDescription.paddingTop = carbAbsorptionTimeDescription.paddingBottom = 10;
+			
 			//Carb absorption rate stepper
 			carbAbsorptionRateStepper = LayoutFactory.createNumericStepper(0.5, 500, currentProfile.carbsAbsorptionRate, 0.5);
 			carbAbsorptionRateStepper.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -103,6 +168,13 @@ package ui.screens.display.settings.treatments
 			
 			//Set screen content
 			var data:Array = [];
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','absorption_time_label') } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','fast_absorption_time_label'), accessory: fastAbsorptionTime } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','medium_absorption_time_label'), accessory: mediumAbsorptionTime } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','slow_absorption_time_label'), accessory: slowAbsorptionTime } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','default_carb_type_label'), accessory: defaultCarbAbsorptionTime } );
+			data.push( { label: "", accessory: carbAbsorptionTimeDescription } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','absorption_rate_label') } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','carb_absorption_rate_label'), accessory: carbAbsorptionRateStepper } );
 			data.push( { label: "", accessory: carbAbsorptionRateDescription } );
 			data.push( { label: "", accessory: actionContainer } );
@@ -116,6 +188,20 @@ package ui.screens.display.settings.treatments
 				currentProfile.carbsAbsorptionRate = carbAbsorptionRateStepper.value;
 				ProfileManager.updateProfile(currentProfile);
 			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME) != String(fastAbsortionTimeValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME, String(fastAbsortionTimeValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME) != String(mediumAbsortionTimeValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME, String(mediumAbsortionTimeValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME) != String(slowAbsortionTimeValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME, String(slowAbsortionTimeValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME) != String(defaultAbsortionTimeValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME, String(defaultAbsortionTimeValue));
+			
+			needsSave = false;
 		}
 		
 		/**
@@ -123,6 +209,17 @@ package ui.screens.display.settings.treatments
 		 */
 		private function onSettingsChanged(e:Event):void
 		{
+			fastAbsortionTimeValue = fastAbsorptionTime.value;
+			mediumAbsortionTimeValue = mediumAbsorptionTime.value;
+			slowAbsortionTimeValue = slowAbsorptionTime.value;
+			
+			if (defaultCarbAbsorptionTime.selectedIndex == 0)
+				defaultAbsortionTimeValue = fastAbsortionTimeValue;
+			else if (defaultCarbAbsorptionTime.selectedIndex == 1)
+				defaultAbsortionTimeValue = mediumAbsortionTimeValue;
+			else if (defaultCarbAbsorptionTime.selectedIndex == 2)
+				defaultAbsortionTimeValue = slowAbsortionTimeValue;
+			
 			needsSave = true;
 		}
 		
@@ -141,6 +238,14 @@ package ui.screens.display.settings.treatments
 					carbAbsorptionRateDescription.width = width - 30;
 				else
 					carbAbsorptionRateDescription.width = width;
+			}
+			
+			if (carbAbsorptionTimeDescription != null)
+			{
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+					carbAbsorptionTimeDescription.width = width - 30;
+				else
+					carbAbsorptionTimeDescription.width = width;
 			}
 			
 			if (actionContainer != null)
@@ -187,6 +292,40 @@ package ui.screens.display.settings.treatments
 			{
 				actionContainer.dispose();
 				actionContainer = null; 
+			}
+			
+			if (fastAbsorptionTime != null)
+			{
+				fastAbsorptionTime.removeEventListener(Event.CHANGE, onSettingsChanged);
+				fastAbsorptionTime.dispose();
+				fastAbsorptionTime = null;
+			}
+			
+			if (mediumAbsorptionTime != null)
+			{
+				mediumAbsorptionTime.removeEventListener(Event.CHANGE, onSettingsChanged);
+				mediumAbsorptionTime.dispose();
+				mediumAbsorptionTime = null;
+			}
+			
+			if (slowAbsorptionTime != null)
+			{
+				slowAbsorptionTime.removeEventListener(Event.CHANGE, onSettingsChanged);
+				slowAbsorptionTime.dispose();
+				slowAbsorptionTime = null;
+			}
+			
+			if (defaultCarbAbsorptionTime != null)
+			{
+				defaultCarbAbsorptionTime.removeEventListener(Event.CHANGE, onSettingsChanged);
+				defaultCarbAbsorptionTime.dispose();
+				defaultCarbAbsorptionTime = null;
+			}
+			
+			if (carbAbsorptionTimeDescription != null)
+			{
+				carbAbsorptionTimeDescription.dispose();
+				carbAbsorptionTimeDescription = null;
 			}
 			
 			super.dispose();

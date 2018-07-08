@@ -463,6 +463,11 @@ package database
 		  */
 		 public static const COMMON_SETTING_FAST_RISE_ALERT:int = 173;
 		 public static const COMMON_SETTING_FAST_DROP_ALERT:int = 174;
+		 
+		 /**
+		  * CARB DELAY SETTINGS #2
+		  */
+		 public static const COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME:int = 175;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -639,7 +644,8 @@ package database
 			 "10",//COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME
 			 "20",//COMMON_SETTING_CARB_SLOW_ABSORTION_TIME
 			 "00:00>0>DefaultNoAlertToBeReplaced",//COMMON_SETTING_FAST_RISE_ALERT
-			 "00:00>0>DefaultNoAlertToBeReplaced"//COMMON_SETTING_FAST_DROP_ALERT
+			 "00:00>0>DefaultNoAlertToBeReplaced",//COMMON_SETTING_FAST_DROP_ALERT
+			 "20"//COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME
 		 ];
 
 		 public function CommonSettings()

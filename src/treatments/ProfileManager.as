@@ -306,5 +306,23 @@ package treatments
 			
 			return carbAbsorptionRate;
 		}
+		
+		public static function getDefaultTimeAbsortionCarbType():String
+		{
+			var carbType:String = "Unknown";
+			var fastAbsortionTimeValue:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+			var mediumAbsortionTimeValue:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+			var slowAbsortionTimeValue:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+			var defaultAbsortionTimeValue:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME));
+			
+			if (defaultAbsortionTimeValue == fastAbsortionTimeValue)
+				carbType = "fast";
+			else if (defaultAbsortionTimeValue == mediumAbsortionTimeValue)
+				carbType = "medium";
+			else if (defaultAbsortionTimeValue == slowAbsortionTimeValue)
+				carbType = "slow";
+			
+			return carbType;
+		}
 	}
 }

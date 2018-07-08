@@ -1,5 +1,6 @@
 package ui.screens.display
 {
+	import flash.text.AutoCapitalize;
 	import flash.text.SoftKeyboardType;
 	import flash.text.engine.LineJustification;
 	import flash.text.engine.SpaceJustifier;
@@ -43,7 +44,7 @@ package ui.screens.display
 		}
 		
 		//Input Text Fields
-		public static function createTextInput(isPassword:Boolean = false, isNumeric: Boolean = false, width:Number = 140, horizontalAlign:String = null, isNumericExtended:Boolean = false, isEmail:Boolean = false, isURL:Boolean = false):TextInput
+		public static function createTextInput(isPassword:Boolean = false, isNumeric: Boolean = false, width:Number = 140, horizontalAlign:String = null, isNumericExtended:Boolean = false, isEmail:Boolean = false, isURL:Boolean = false, capitalizeOnFirstFocus:Boolean = false, autoCorrect:Boolean = false):TextInput
 		{
 			var inputField:TextInput = new TextInput();
 			inputField.displayAsPassword = isPassword;
@@ -74,6 +75,16 @@ package ui.screens.display
 			else if (isURL)
 			{
 				inputField.textEditorProperties.softKeyboardType = SoftKeyboardType.URL;
+			}
+			
+			if (capitalizeOnFirstFocus)
+			{
+				inputField.textEditorProperties.autoCapitalize = AutoCapitalize.SENTENCE;
+			}
+			
+			if (autoCorrect)
+			{
+				inputField.textEditorProperties.autoCorrect = true;
 			}
 			
 			return inputField;

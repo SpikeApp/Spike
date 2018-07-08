@@ -41,6 +41,7 @@ package services
 	
 	import network.NetworkConnector;
 	
+	import treatments.Insulin;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
@@ -859,12 +860,15 @@ package services
 		private static function createTreatmentObject(treatment:Treatment):Object
 		{
 			var newTreatment:Object = new Object();
+			var usedInsulin:Insulin;
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 			{
+				usedInsulin = ProfileManager.getInsulin(treatment.insulinID);
 				newTreatment["eventType"] = "Correction Bolus";	
 				newTreatment["insulin"] = treatment.insulinAmount;	
 				newTreatment["dia"] = treatment.dia;	
-				newTreatment["insulinName"] = ProfileManager.getInsulin(treatment.insulinID) != null ? ProfileManager.getInsulin(treatment.insulinID).name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");	
+				newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");	
+				newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";	
 				newTreatment["insulinID"] = treatment.insulinID;	
 			}
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
@@ -881,10 +885,12 @@ package services
 			}
 			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
+				usedInsulin = ProfileManager.getInsulin(treatment.insulinID);
 				newTreatment["eventType"] = "Meal Bolus";
 				newTreatment["insulin"] = treatment.insulinAmount;
 				newTreatment["dia"] = treatment.dia;	
-				newTreatment["insulinName"] = ProfileManager.getInsulin(treatment.insulinID) != null ? ProfileManager.getInsulin(treatment.insulinID).name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
+				newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
+				newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";
 				newTreatment["carbs"] = treatment.carbs;
 				newTreatment["carbDelayTime"] = treatment.carbDelayTime;
 				newTreatment["insulinID"] = treatment.insulinID;
