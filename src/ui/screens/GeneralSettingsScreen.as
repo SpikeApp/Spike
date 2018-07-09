@@ -81,12 +81,12 @@ package ui.screens
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
 			//Language Section Label
-			//languageLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','language_title'), true);
-			//screenRenderer.addChild(languageLabel);
+			languageLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','language_title'), true);
+			screenRenderer.addChild(languageLabel);
 			
 			//Language Settings
-			//languageSettings = new LanguageSettingsList();
-			//screenRenderer.addChild(languageSettings);
+			languageSettings = new LanguageSettingsList();
+			screenRenderer.addChild(languageSettings);
 			
 			//Data Collection Section Label
 			dataCollectionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','data_collection_title'), true);

@@ -1,3 +1,6 @@
+2.2.2
+FEATURE: Multilanguage support!
+
 2.2.1
 ENHANCEMENT: Force PayPal donation page to always display in English. (Miguel)
 ENHANCEMENT: Few tweaks were done to the on-screen guide. (Miguel)
