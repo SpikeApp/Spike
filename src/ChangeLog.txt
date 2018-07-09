@@ -18,7 +18,7 @@ ENHANCEMENT: Improved speech output for some languages, including German. (Sasch
 ENHANCEMENT: Spike watch complication is now selectable directly from the Apple Watch app on iPhone/iPad/iPodTouch. (Miguel)
 ENHANCEMENT: Added help menu to followers. (Miguel)
 ENHANCEMENT: Notes field when inserting treatments now auto-capitalizes the first word and allows keyboard predictions. (Miguel)
-FIX: Fixes an issue where snoozing an alarm could also snooze other alarms. (Miguel);
+FIX: Fixes an issue where snoozing an alarm could also snooze other alarms. (Miguel)
 FIX: No more duplicate HealthKit entries for treatments. (Miguel)
 FIX: Negative deltas were not being correctly spoken when speech was enabled. It's now fixed. (Miguel)
 FIX: As usual, other small bug fixes and improvements. (Miguel)
