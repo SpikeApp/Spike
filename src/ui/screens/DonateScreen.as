@@ -161,6 +161,7 @@ package ui.screens
 			variables.no_shipping = "0";
 			variables.undefined_quantity = "1";
 			variables.rn = "1";
+			variables.lc = "en_US";
 			variables.shipping = "0";
 			variables.shopping_url = "https://spike-app.com";
 			variables["return"] = "https://spike-app.com/thank-you/";
