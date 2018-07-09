@@ -1,3 +1,6 @@
+2.2.1
+ENHANCEMENT: Few tweaks were done in the on-screen guide. (Miguel)
+
 2.2.0
 FEATURE: Fast Rise and Fast Drop alarms! Configure them in Settings -> Alarms. The value you define for each of these alarms is the amount of glucose that needs to go up or down on 2 consecutive readings. Pre-snooze, IFTTT, etc. support has also been added for both alarms. (Miguel)
 FEATURE: Due to popular demand, followers can now add treatments to the master. Only available if a Nightscout API Secret is set in Settings -> General -> Data Collection. (Miguel)
