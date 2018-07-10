@@ -215,7 +215,8 @@ package services.bluetooth
 		 * Use G5_RequestReset to set to true
 		 */
 		private static var G5_RESET_REQUESTED:Boolean = false;
-		private static var G5ResetTimeStamp:Number =0;
+		private static var G5ResetTimeStamp:Number =0 ;
+		private static var useSpikeANEForG5:Boolean = false;
 				
 		//Transmiter_PL variables
 		private static var timeStampSinceLastSensorAgeUpdate_Transmiter_PL:Number = 0;
@@ -313,6 +314,12 @@ package services.bluetooth
 				if (CGMBlueToothDevice.known()) {
 					SpikeANE.setMiaoMiaoMac(CGMBlueToothDevice.address);
 				}
+			} else if (CGMBlueToothDevice.isDexcomG5() && useSpikeANEForG5) {
+				SpikeANE.startScanDeviceG5();
+				if (CGMBlueToothDevice.known()) {
+					SpikeANE.setG5Mac(CGMBlueToothDevice.address);
+				}
+				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID));
 			}
 			
 			setPeripheralUUIDs();
@@ -332,6 +339,8 @@ package services.bluetooth
 					case AuthorisationStatus.AUTHORISED:				
 						if (CGMBlueToothDevice.isMiaoMiao()) {
 							addMiaoMiaoEventListeners();
+						} else if (CGMBlueToothDevice.isDexcomG5() && useSpikeANEForG5) {
+							addG5EventListeners();
 						} else {
 							addBluetoothLEEventListeners();
 						}
@@ -395,6 +404,9 @@ package services.bluetooth
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 				myTrace("in commonSettingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE");
 				
+				//set transmitter id in spike ane, doesn't matter if it's a G5 or not , or if the transmitter id is just an empty string or whatever
+				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID));
+
 				//new peripheraltype, all bluetoothe uuid's need to get  new values
 				setPeripheralUUIDs();
 				
@@ -418,14 +430,19 @@ package services.bluetooth
 				CGMBlueToothDevice.forgetBlueToothDevice();
 				
 				if (CGMBlueToothDevice.isMiaoMiao()) {
-					SpikeANE.startScanDeviceMiaoMiao();
 					addMiaoMiaoEventListeners();
+				} else if (CGMBlueToothDevice.isDexcomG5() && useSpikeANEForG5) {
+					addG5EventListeners();
 				} else {
-					SpikeANE.stopScanDeviceMiaoMiao();
 					addBluetoothLEEventListeners();
 				}
+				
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in commonSettingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
+
+				//set transmitter id in spike ane, doesn't matter if it's a G5 or not , or if the transmitter id is just an empty string or whatever
+				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID));
+
 				CGMBlueToothDevice.forgetBlueToothDevice();
 				if (CGMBlueToothDevice.transmitterIdKnown() && CGMBlueToothDevice.alwaysScan()) {
 					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
@@ -539,8 +556,9 @@ package services.bluetooth
 			//Stop scanning for both miaomiao and for the ANE
 			//Not sure here which one is scanning
 			
-			//stop scanning the miaomiao
+			//stop scanning the miaomiao & G5 (if G5 via ANE) - doesn't matter if it's scanning or not
 			SpikeANE.stopScanningMiaoMiao();
+			SpikeANE.stopScanningG5();
 			
 			//stop scanning the ANE
 			if (BluetoothLE.service.centralManager.isScanning) {
@@ -567,6 +585,11 @@ package services.bluetooth
 				return;
 			}
 			
+			if (CGMBlueToothDevice.isDexcomG5() && useSpikeANEForG5) {
+				myTrace("in central_peripheralDiscoveredHandler, G5, but using SpikeANE, ignore");
+				return;
+			}
+			
 			if (CGMBlueToothDevice.isDexcomG5()) {
 				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
 					myTrace("in central_peripheralDiscoveredHandler, G5 but last reading was less than 1 minute ago, ignoring this peripheral discovery. restart scan");
@@ -584,20 +607,7 @@ package services.bluetooth
 			
 			//event.peripheral contains a Peripheral object with information about the Peripheral
 			//only for DexcomG5 and Blucon we look at the device name. For the others we don't care about the device name
-			var expectedPeripheralName:String;
-			if (CGMBlueToothDevice.isDexcomG5()) {
-				expectedPeripheralName = "DEXCOM" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).substring(4,6);
-				myTrace("in central_peripheralDiscoveredHandler, expected g5 peripheral name = " + expectedPeripheralName);
-			} else if (CGMBlueToothDevice.isBluKon()) {
-				expectedPeripheralName = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).toUpperCase();
-				if (expectedPeripheralName.toUpperCase().indexOf("BLU") < 0) {
-					while (expectedPeripheralName.length < 5) {
-						expectedPeripheralName = "0" + expectedPeripheralName;
-					}
-					expectedPeripheralName = "BLU" + expectedPeripheralName;
-				}
-				myTrace("in central_peripheralDiscoveredHandler, expected blukon peripheral name = " + expectedPeripheralName);
-			}
+			var expectedPeripheralName:String = expectedPeripheralName();
 			
 			if (
 				!(CGMBlueToothDevice.alwaysScan()) //if always scan peripheral, we don't look at the name of the peripheral
@@ -2184,6 +2194,11 @@ package services.bluetooth
 			SpikeANE.instance.addEventListener(SpikeANEEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorChangedFromMiaoMiao);
 		}
 		
+		private static function addG5EventListeners():void {
+			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_NEW_MAC, receivedG5DeviceAddress);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_DATA_PACKET_RECEIVED, receivedG5DataPacket);
+		}
+		
 		private static function receivedSensorChangedFromMiaoMiao(event:flash.events.Event):void {
 			myTrace("in receivedSensorChangedFromMiaoMiao");
 			Tomato.receivedSensorChangedFromMiaoMiao();
@@ -2211,6 +2226,16 @@ package services.bluetooth
 			}
 		}
 		
+		//
+		private static function receivedG5DeviceAddress(event:SpikeANEEvent):void {
+			if (!CGMBlueToothDevice.isDexcomG5()) {
+				myTrace("in receivedG5DeviceAddress but not G5 device, not processing");
+			} else {
+				CGMBlueToothDevice.address = event.data.MAC;
+				CGMBlueToothDevice.name = expectedPeripheralName();
+			}
+		}
+				
 		private static function receivedMiaoMiaoDataPacket(event:SpikeANEEvent):void {
 			Notifications.service.cancel(NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO);
 			_amountOfConsecutiveSensorNotDetectedForMiaoMiao = 0;
@@ -2221,6 +2246,27 @@ package services.bluetooth
 			}
 		}
 		
+		private static function receivedG5DataPacket(event:SpikeANEEvent):void {
+			myTrace("in receivedG5DataPacket, TO BE COMPLETED");
+		}
+		
+		private static function expectedPeripheralName():String {
+			var expectedPeripheralName:String = "";
+			if (CGMBlueToothDevice.isDexcomG5()) {
+				expectedPeripheralName = "DEXCOM" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).substring(4,6);
+				myTrace("in expectedPeripheralName, expected g5 peripheral name = " + expectedPeripheralName);
+			} else if (CGMBlueToothDevice.isBluKon()) {
+				expectedPeripheralName = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).toUpperCase();
+				if (expectedPeripheralName.toUpperCase().indexOf("BLU") < 0) {
+					while (expectedPeripheralName.length < 5) {
+						expectedPeripheralName = "0" + expectedPeripheralName;
+					}
+					expectedPeripheralName = "BLU" + expectedPeripheralName;
+				}
+				myTrace("in expectedPeripheralName, expected blukon peripheral name = " + expectedPeripheralName);
+			}
+			return expectedPeripheralName;
+		}
 		/**
 		 * sets  G5_RESET_REQUESTED to true<br>
 		 * this will initiate a G5 reset next time the G5 connects

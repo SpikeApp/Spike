@@ -13,6 +13,10 @@ package com.spikeapp.spike.airlibrary
 	[Event(name="miaoMiaoConnected",type="events.SpikeANEEVent")]
 	[Event(name="miaoMiaoDisconnected",type="events.SpikeANEEVent")]
 	[Event(name="didRecieveInitialUpdateValueForCharacteristic",type="events.SpikeANEEVent")]
+	[Event(name="G5DataPacketReceived",type="events.SpikeANEEVent")]
+	[Event(name="G5DeviceAddress",type="events.SpikeANEEVent")]
+	[Event(name="G5Disconnected",type="events.SpikeANEEVent")]
+	[Event(name="G5Connected",type="events.SpikeANEEVent")]
 	
 	public class SpikeANEEvent extends Event
 	{
@@ -37,6 +41,12 @@ package com.spikeapp.spike.airlibrary
 		 * This is to trigger that a new reading is on the way. This can be several seconds later, because MiaoMiao receives 20 packets in total
 		 */
 		public static const MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED:String = "didRecieveInitialUpdateValueForCharacteristic";
+
+		//G5
+		public static const G5_DATA_PACKET_RECEIVED:String = "G5DataPacketReceived";
+		public static const G5_NEW_MAC:String = "G5DeviceAddress";
+		public static const G5_DISCONNECTED:String = "G5Disconnected";
+		public static const G5_CONNECTED:String = "G5Connected";
 
 		public var data:Object;
 		public function SpikeANEEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)

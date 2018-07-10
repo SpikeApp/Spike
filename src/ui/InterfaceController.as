@@ -320,6 +320,8 @@ package ui
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, bluetoothDeviceConnectionCompleted);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, central_peripheralDisconnectHandler);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_CONNECTED, bluetoothDeviceConnectionCompleted);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_DISCONNECTED, central_peripheralDisconnectHandler);
 		}
 		
 		private static function deviceNotPaired(event:flash.events.Event):void 

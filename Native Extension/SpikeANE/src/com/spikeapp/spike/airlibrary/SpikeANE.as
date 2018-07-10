@@ -85,13 +85,49 @@ package com.spikeapp.spike.airlibrary
 			context.call("confirmSensorChangeMiaoMiao");
 		}
 
-		/**
-		* reconnect to known peripheral, can only be used if previously disconnect was done with disconnectMiaoMiao
-		*/
-		public static function reconnectMiaoMiao():void {
-			context.call("reconnectMiaoMiao");
+		/******************
+		 ** G5 FUNCTIONS
+		 * ****************/
+		public static function startScanningForG5():void {
+			context.call("ScanAndConnectToG5Device");
 		}
-
+		
+		public static function setG5Mac(newMac:String):void {
+			context.call("setG5MAC", newMac);
+		}
+		
+		public static function resetG5Mac():void {
+			context.call("resetG5Mac");
+		}
+		
+		public static function cancelG5Connection(MAC:String):void {
+			if (MAC == null)
+				return;
+			if (MAC.length == 0)
+				return;
+			context.call("cancelG5ConnectionWithMAC", MAC);
+		}
+		
+		public static function stopScanningG5():void {
+			context.call("stopScanningG5");
+		}
+		
+		public static function forgetG5Peripheral():void {
+			context.call("forgetG5");
+		}
+		
+		public static function startScanDeviceG5():void {
+			context.call("startScanDeviceG5");
+		}
+		
+		public static function stopScanDeviceG5():void {
+			context.call("stopScanDeviceG5");
+		}
+		
+		public static function setTransmitterIdG5(transmitterID:String):void {
+			context.call("setTransmitterIdG5", transmitterID);
+		}
+		
 		/**********************
 		 * ** HEALTHKIT
 		 * *******************/
@@ -253,6 +289,11 @@ package com.spikeapp.spike.airlibrary
 				spikeANEEvent.data = new Object();
 				spikeANEEvent.data.MAC = event.level;
 				_instance.dispatchEvent(spikeANEEvent);
+			}  else if (event.code == "StatusEvent_newG5Mac") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_NEW_MAC);
+				spikeANEEvent.data = new Object();
+				spikeANEEvent.data.MAC = event.level;
+				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "StatusEvent_sensorChangeMessageReceived") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO);
 				_instance.dispatchEvent(spikeANEEvent);
@@ -268,8 +309,14 @@ package com.spikeapp.spike.airlibrary
 			} else if (event.code == "StatusEvent_connectedMiaoMiao") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_CONNECTED);
 				_instance.dispatchEvent(spikeANEEvent);
+			}  else if (event.code == "StatusEvent_connectedG5") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_CONNECTED);
+				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "StatusEvent_disconnectedMiaoMiao") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_DISCONNECTED);
+				_instance.dispatchEvent(spikeANEEvent);
+			} else if (event.code == "StatusEvent_disconnectedG5") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_DISCONNECTED);
 				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "StatusEvent_didRecieveInitialUpdateValueForCharacteristic") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED);

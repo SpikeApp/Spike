@@ -14,6 +14,7 @@
 #import "Context.h"
 #import "UIKit/UIKit.h"
 #import "Trace.h"
+#import "G5Api.h"
 
 MuteChecker * _muteChecker;
 PlaySound * _soundPlayer;
@@ -84,11 +85,61 @@ FREObject confirmSensorChangeMiaoMiao(FREContext ctx, void* funcData, uint32_t a
     return nil;
 }
 
-FREObject reconnectMiaoMiao(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
-    [FQApi reconnectDevice];
+/**********************
+ **  G5 FUNCTIONS
+ *********************/
+FREObject ScanAndConnectToG5Device (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    [G5Api startScaning];
     return nil;
 }
 
+FREObject setG5MAC (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    NSString * MAC = [FPANE_FREObjectToNSString(argv[0]) mutableCopy];
+    FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m in setG5MAC, MAC = : %@", MAC]);
+    [G5Api setSelectMAC:MAC];
+    return nil;
+}
+
+FREObject resetG5Mac (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    [G5Api setSelectMAC:NULL];
+    return nil;
+}
+
+FREObject cancelG5ConnectionWithMAC (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    NSString * MAC = [FPANE_FREObjectToNSString(argv[0]) mutableCopy];
+    [G5Api cancelConnectWithMAC:MAC];
+    return nil;
+}
+
+FREObject stopScanningG5(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    [G5Api stopScaning];
+    return nil;
+}
+
+FREObject forgetG5(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    [G5Api forgetPeripheral];
+    return nil;
+}
+
+FREObject startScanDeviceG5(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    [G5Api startScanDevice];
+    return nil;
+}
+
+FREObject stopScanDeviceG5(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    [G5Api stopScanDevice];
+    return nil;
+}
+
+//setTransmitterIdG5
+FREObject setTransmitterIdG5(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    NSString * transmitterId = [FPANE_FREObjectToNSString(argv[0]) mutableCopy];
+    [G5Api setTransmitterIdWithId:transmitterId];
+    return nil;
+}
 
 /*************************************
  ** SOUND AND SPEECH RELATED FUNCTIONS
@@ -318,7 +369,7 @@ void NativeExtensionInitializer( void** extDataToSet, FREContextInitializer* ctx
 
 void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FREContext ctx, uint32_t* numFunctionsToTest, const FRENamedFunction** functionsToSet) {
     
-    *numFunctionsToTest = 35;
+    *numFunctionsToTest = 42;
     
     FRENamedFunction * func = (FRENamedFunction *) malloc(sizeof(FRENamedFunction) * *numFunctionsToTest);
 
@@ -369,9 +420,6 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[11].name = (const uint8_t*) "confirmSensorChangeMiaoMiao";
     func[11].functionData = NULL;
     func[11].function = &confirmSensorChangeMiaoMiao;
-    func[34].name = (const uint8_t*) "reconnectMiaoMiao";
-    func[34].functionData = NULL;
-    func[34].function = &reconnectMiaoMiao;
 
     /*********************
      * ** HEALTHKIT
@@ -471,6 +519,37 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[32].name = (const uint8_t*) "resetTraceFilePath";
     func[32].functionData = NULL;
     func[32].function = &resetTraceFilePath;
+
+    /**********************
+     **  G5 FUNCTIONS
+     *********************/
+    func[33].name = (const uint8_t*) "ScanAndConnectToG5Device";
+    func[33].functionData = NULL;
+    func[33].function = &ScanAndConnectToG5Device;
+    func[34].name = (const uint8_t*) "setG5MAC";
+    func[34].functionData = NULL;
+    func[34].function = &setG5MAC;
+    func[35].name = (const uint8_t*) "resetG5Mac";
+    func[35].functionData = NULL;
+    func[35].function = &resetG5Mac;
+    func[36].name = (const uint8_t*) "cancelG5ConnectionWithMAC";
+    func[36].functionData = NULL;
+    func[36].function = &cancelG5ConnectionWithMAC;
+    func[37].name = (const uint8_t*) "stopScanningG5";
+    func[37].functionData = NULL;
+    func[37].function = &stopScanningG5;
+    func[38].name = (const uint8_t*) "forgetG5";
+    func[38].functionData = NULL;
+    func[38].function = &forgetG5;
+    func[39].name = (const uint8_t*) "startScanDeviceG5";
+    func[39].functionData = NULL;
+    func[39].function = &startScanDeviceG5;
+    func[40].name = (const uint8_t*) "stopScanDeviceG5";
+    func[40].functionData = NULL;
+    func[40].function = &stopScanDeviceG5;
+    func[41].name = (const uint8_t*) "setTransmitterIdG5";
+    func[41].functionData = NULL;
+    func[41].function = &setTransmitterIdG5;
 
     *functionsToSet = func;
 }
