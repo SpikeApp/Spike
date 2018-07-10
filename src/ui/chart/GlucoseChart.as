@@ -4675,5 +4675,11 @@ package ui.chart
 		{
 			_displayLine = value;
 		}
+		
+		public function getLatestReading():BgReading {
+			if (_dataSource.length == 0)
+				return null;
+			return (_dataSource[_dataSource.length - 1]) as BgReading;
+		}
 	}
 }
