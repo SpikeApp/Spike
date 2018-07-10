@@ -373,7 +373,7 @@ package treatments
 			pumpCOB = value;
 		}
 		
-		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true, nullifyTreatment:Boolean = true):void
+		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true, nullifyTreatment:Boolean = true, deleteFromDatabase:Boolean = true):void
 		{
 			Trace.myTrace("TreatmentsManager.as", "deleteTreatment called!");
 			
@@ -397,11 +397,12 @@ package treatments
 							NightscoutService.deleteTreatment(spikeTreatment);
 						
 						//Delete from databse
-						if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						if ((!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING) && deleteFromDatabase)
 							Database.deleteTreatmentSynchronous(spikeTreatment);
 						
 						treatmentsMap[spikeTreatment.ID] = null;
 						if (nullifyTreatment) spikeTreatment = null;
+						
 						break;
 					}
 				}
@@ -1631,7 +1632,7 @@ package treatments
 					Trace.myTrace("TreatmentsManager.as", "User deleted treatment in Nightscout. Deleting in Spike as well. Type: " + internalTreatment.type);
 					
 					//Treatment is not present in Nightscout. User has deleted it
-					deleteTreatment(internalTreatment, false, false);
+					deleteTreatment(internalTreatment, false, false, now - internalTreatment.timestamp < TIME_24_HOURS);
 					
 					//Notify Listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalTreatment));

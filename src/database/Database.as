@@ -2159,12 +2159,16 @@ package database
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
+				
+				trace("TREATMENT ADDED TO DABATASE!!!!");
+				
 			} catch (error:SQLError) {
 				if (conn.connected) {
 					conn.rollback();
 					conn.close();
 				}
 				dispatchInformation('error_while_inserting_treatment_in_db', error.message + " - " + error.details);
+				trace("ERROR ADDING TREATMENT  TO DABATASE!!!!",  error.message + " - " + error.details);
 			}
 		}
 		
@@ -2222,6 +2226,9 @@ package database
 				deleteRequest.execute();
 				conn.commit();
 				conn.close();
+				
+				trace("TREATMENT DELETED FROM DATABASE");
+				
 			} catch (error:SQLError) {
 				if (conn.connected) {
 					conn.rollback();
