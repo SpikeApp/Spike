@@ -1,22 +1,21 @@
 package ui.screens
-{	
+{
 	import flash.display.StageOrientation;
 	import flash.system.System;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
-	import database.BgReading;
 	import database.BlueToothDevice;
-	import database.Calibration;
 	import database.CommonSettings;
+	import database.Database;
 	
-	import events.CalibrationServiceEvent;
-	import events.FollowerEvent;
-	import events.SpikeEvent;
-	import events.TransmitterServiceEvent;
-	import events.TreatmentsEvent;
+	import events.DatabaseEvent;
 	
+	import feathers.controls.Button;
 	import feathers.controls.Check;
+	import feathers.controls.DateTimeMode;
+	import feathers.controls.DateTimeSpinner;
+	import feathers.controls.PanelScreen;
 	import feathers.controls.Radio;
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollPolicy;
@@ -26,11 +25,8 @@ package ui.screens
 	
 	import model.ModelLocator;
 	
-	import services.CalibrationService;
-	import services.NightscoutService;
-	import services.TransmitterService;
-	
 	import starling.core.Starling;
+	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
@@ -48,16 +44,14 @@ package ui.screens
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
-	import utils.Trace;
 	
-	[ResourceBundle("chartscreen")]
-	
-	public class ChartScreen extends BaseScreen
+	[ResourceBundle("globaltranslations")]
+
+	public class HistoryChartScreen extends PanelScreen
 	{
 		//Objects
 		private var chartData:Array;
-		private var newReadingsList:Array = [];
-		private var newReadingsListFollower:Array = [];
+		private var chartTreatments:Array;
 		private var timeRangeGroup:ToggleGroup;
 		
 		//Visual variables
@@ -94,17 +88,37 @@ package ui.screens
 		private var h1:Radio;
 		private var displayLines:Check;
 		private var delimitter:SpikeLine;
+		private var datePicker:DateTimeSpinner;
+		private var backButton:Button;
 		
-		public function ChartScreen() 
+		public function HistoryChartScreen() 
 		{
 			super();
+			
 			styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_HEADER_WITH_SHADOW );
 			styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_PANEL_WITHOUT_PADDING );
+			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
+			headerProperties.disposeItems = true;
+			
+			//Scroll Policies
+			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
+			horizontalScrollPolicy = ScrollPolicy.OFF;
+			verticalScrollPolicy = ScrollPolicy.OFF;
+			
+			//Event listeners
+			setupEventListeners();
 		}
 		
 		override protected function initialize():void 
 		{
 			super.initialize();
+			
+			/* Add default back button to the header */
+			backButton = new Button();
+			backButton.label = ModelLocator.resourceManagerInstance.getString('globaltranslations','back');
+			backButton.styleNameList.add( Button.ALTERNATE_STYLE_NAME_BACK_BUTTON );
+			headerProperties.leftItems = new <DisplayObject>[backButton];
+			backButton.addEventListener(Event.TRIGGERED, onBackButtonTriggered);
 			
 			//Set Properties From Database
 			selectedTimelineRange = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE));
@@ -115,35 +129,106 @@ package ui.screens
 			displayIOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
 			displayCOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
 			
-			//Event listeners
-			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
-			Spike.instance.addEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
-			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onInitialCalibrationReceived);
-			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
-			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
-			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
-			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
-			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			//Initial chart data
+			chartData = ModelLocator.bgReadings.concat();
+			chartTreatments = TreatmentsManager.treatmentsList.concat();
 			
-			//Scroll Policies
-			scrollBarDisplayMode = ScrollBarDisplayMode.NONE;
-			horizontalScrollPolicy = ScrollPolicy.OFF;
-			verticalScrollPolicy = ScrollPolicy.OFF;
-			
-			//Reset Transitions
-			AppInterface.instance.chartSettingsScreenItem.pushTransition = null;
-			AppInterface.instance.chartSettingsScreenItem.popTransition = null;
-			
-			//Reset Menu
-			AppInterface.instance.menu.selectedIndex = 0;
+			/* Adjust Menu */
+			adjustMainMenu();
 		}
 		
 		/**
-		 * Display Objects Creation and Positioning
+		 * Functionality
 		 */
+		private function createDateSelector():void
+		{
+			var now:Date = new Date();
+			var before:Date = new Date();
+			before.month -= 3;
+			
+			datePicker = new DateTimeSpinner();
+			datePicker.editingMode = DateTimeMode.DATE;
+			datePicker.minimum = before;
+			datePicker.maximum = now;
+			datePicker.value = now;
+			datePicker.maxHeight = 35;
+			datePicker.addEventListener(Event.CHANGE, onDateChanged);
+			
+			headerProperties.rightItems = new <DisplayObject>[
+				datePicker
+			];
+		}
+		
+		private function onDateChanged(e:Event):void
+		{
+			//Remove previous display objects
+			disposeDisplayObjects();
+			
+			//Clear Chart Data
+			if (chartData != null) chartData.length = 0;
+			if (chartTreatments != null) chartTreatments.length = 0;
+			
+			//Define start and end date
+			var selectedTimeStamp:Number = datePicker.value.valueOf();
+			
+			var startDate:Date = new Date(selectedTimeStamp);
+			startDate.hours = 0;
+			startDate.minutes = 0;
+			startDate.seconds = 0;
+			startDate.milliseconds = 0;
+			
+			var endDate:Date = new Date(selectedTimeStamp);
+			endDate.hours = 23;
+			endDate.minutes = 59;
+			endDate.seconds = 59;
+			endDate.milliseconds = 999;
+			
+			var startTimestamp:Number = startDate.valueOf();
+			var endTimestamp:Number = endDate.valueOf();
+			
+			//Get treatments from database
+			var dbTreatments:Array = Database.getTreatmentsSynchronous(startTimestamp, endTimestamp);
+			if (dbTreatments != null && dbTreatments.length > 0)
+			{
+				for (var i:int = 0; i < dbTreatments.length; i++) 
+				{
+					var dbTreatment:Object = dbTreatments[i] as Object;
+					if (dbTreatment == null)
+						continue;
+					
+					var treatment:Treatment = new Treatment
+					(
+						dbTreatment.type,
+						dbTreatment.lastmodifiedtimestamp,
+						dbTreatment.insulinamount,
+						dbTreatment.insulinid,
+						dbTreatment.carbs,
+						dbTreatment.glucose,
+						dbTreatment.glucoseestimated,
+						dbTreatment.note,
+						null,
+						dbTreatment.carbdelay,
+						dbTreatment.basalduration
+					);
+					treatment.ID = dbTreatment.id;
+					chartTreatments.push(treatment);
+				}
+			}
+			
+			//Get readings from database
+			Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+			Database.getBgReadings(startTimestamp, endTimestamp);
+		}
+		
+		private function bgReadingsReceivedFromDatabase(de:DatabaseEvent):void 
+		{
+			Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+			
+			chartData = de.data as Array;
+			createChart();
+			redrawChartForTreatmentsAndLine();
+		}
+		
 		private function createChart():void
 		{	
 			//When in landscape mode and device is iPhone X, make the header height same as oher models, we don't need to worry about the extra status bar size
@@ -181,9 +266,6 @@ package ui.screens
 					mainChartHeight -= calculatePieChartSize();
 			}
 			
-			//Get glucose data;
-			chartData = ModelLocator.bgReadings.concat();
-			
 			//Create and setup glucose chart
 			var chartWidth:Number = Constants.stageWidth;
 			var chartX:Number = 0;
@@ -196,16 +278,14 @@ package ui.screens
 					chartX = 10;
 			}
 			
-			glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight);
+			glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight, true, true, true, true);
 			glucoseChart.x = Math.round(chartX);
 			glucoseChart.y = Math.round(glucoseChartTopPadding);
 			glucoseChart.dataSource = chartData;
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
-			glucoseChart.addAllTreatments();
+			glucoseChart.addAllHistoricalTreatments(chartTreatments);
 			var now:Number = new Date().valueOf();
-			glucoseChart.calculateTotalIOB( now );
-			glucoseChart.calculateTotalCOB( now );
 			addChild(glucoseChart);
 			
 			if (Constants.isPortrait || (DeviceInfo.isTablet() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE) == "true"))
@@ -242,16 +322,14 @@ package ui.screens
 				}
 				
 				//Create new chart
-				glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight);
+				glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight, true, true, true, true);
 				glucoseChart.x = Math.round(chartX);
 				glucoseChart.y = Math.round(glucoseChartTopPadding);
 				glucoseChart.dataSource = chartData;
 				glucoseChart.displayLine = drawLineChart;
 				glucoseChart.drawGraph();
-				glucoseChart.addAllTreatments();
+				glucoseChart.addAllHistoricalTreatments(chartTreatments);
 				var now:Number = new Date().valueOf();
-				glucoseChart.calculateTotalIOB( now );
-				glucoseChart.calculateTotalCOB( now );
 				addChild(glucoseChart);
 			}
 			else
@@ -320,82 +398,6 @@ package ui.screens
 			redrawChartTimeoutID = setTimeout(redrawChart, 1500);
 		}
 		
-		private function processQueue():void
-		{
-			clearTimeout(queueTimeout);
-			
-			if(!SystemUtil.isApplicationActive)
-			{
-				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
-				
-				return;
-			}
-			
-			try
-			{
-				if (appInBackground)
-				{
-					var queueAddedToChart:Boolean = false;
-					var queueAddedToPie:Boolean = false;
-					
-					appInBackground = false;
-					
-					if (!BlueToothDevice.isFollower())
-					{
-						if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
-						{
-							if (glucoseChart.addGlucose(newReadingsList))
-								queueAddedToChart = true;
-							
-							if (displayPieChart && pieChart != null)
-							{
-								if (pieChart.drawChart())
-									queueAddedToPie = true;
-							}
-							else
-								queueAddedToPie = true;
-							
-							if (queueAddedToChart && queueAddedToPie)
-								newReadingsList.length = 0;
-						}
-						else
-							if (glucoseChart != null)
-								glucoseChart.calculateDisplayLabels();
-					}
-					else
-					{
-						if (newReadingsListFollower != null && newReadingsListFollower.length > 0 && glucoseChart != null)
-						{
-							if (glucoseChart.addGlucose(newReadingsListFollower))
-								queueAddedToChart = true;
-							
-							if (displayPieChart && pieChart != null)
-							{
-								if (pieChart.drawChart())
-									queueAddedToPie = true;
-							}
-							else
-								queueAddedToPie = true;
-							
-							if (queueAddedToChart && queueAddedToPie)
-								newReadingsListFollower.length = 0;
-						}	
-						else if (glucoseChart != null)
-							glucoseChart.calculateDisplayLabels();
-					}
-				}
-			} 
-			catch(error:Error)
-			{
-				Trace.myTrace("ChartScreen.as", "Error adding queue to chart when app came to the foreground. Error: " + error.message);
-				
-				queueTimeout = setTimeout(processQueue, 150); //retry in 150ms
-			}
-		}
-		
-		/**
-		 * Display Objects Size Calculators
-		 */
 		private function calculateChartSettingsSize():Number
 		{
 			var chartSettingsHeight:Number = 0;
@@ -485,139 +487,83 @@ package ui.screens
 			return pieChartTotalHeight;
 		}
 		
+		private function setupEventListeners():void
+		{
+			this.addEventListener(FeathersEventType.CREATION_COMPLETE, onScreenCreationComplete);
+			this.addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
+			this.addEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onBackButtonTriggered);
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
+		}
+		
+		private function setupHeaderSize():void
+		{
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			{
+				if (this.header != null)
+				{
+					if (Constants.isPortrait)
+					{
+						this.header.height = 108;
+						this.header.maxHeight = 108;	
+					}
+					else
+					{
+						this.header.height = 78;
+						this.header.maxHeight = 78;
+					}
+				}
+			}
+			else
+			{
+				if (this.header != null)
+				{
+					this.header.height = 78;
+					this.header.maxHeight = 78;
+				}
+			}
+			
+			if (this.header != null)
+				Constants.headerHeight = this.header.maxHeight;
+		}
+		
+		private function adjustMainMenu():void
+		{
+			if (!BlueToothDevice.isFollower())
+				AppInterface.instance.menu.selectedIndex = 6;
+			else
+				AppInterface.instance.menu.selectedIndex = 4;
+		}
+		
 		/**
 		 * Event Handlers
 		 */
 		private function onCreation(event:Event):void
 		{
+			createDateSelector();
 			createChart();
 			redrawChartForTreatmentsAndLine();
 		}
 		
-		private function onBgReadingReceivedFollower(e:FollowerEvent):void
+		private function onDisplayLine(event:Event):void
 		{
-			Trace.myTrace("ChartScreen.as", "on onBgReadingReceivedFollower!");
-			
-			if (!BlueToothDevice.isFollower())
-				Trace.myTrace("ChartScreen.as", "User is not a follower. Ignoring");
-			
-			try
+			var check:Check = Check( event.currentTarget );
+			if(check.isSelected)
 			{
-				var readings:Array = e.data;
-				if (readings != null && readings.length > 0)
-				{
-					if (glucoseChart != null && SystemUtil.isApplicationActive)
-					{
-						glucoseChart.addGlucose(readings);
-						if (displayPieChart)
-							pieChart.drawChart();
-					}
-					else
-					{
-						newReadingsListFollower = newReadingsListFollower.concat(readings);
-					}		
-				}	
-			} 
-			catch(error:Error) 
-			{
-				Trace.myTrace("ChartScreen.as", "Error adding glucose to chart. Error: " + error.message);
+				glucoseChart.showLine();
+				drawLineChart = true;
 			}
-		}
-		
-		private function onBgReadingReceived(event:TransmitterServiceEvent):void
-		{
-			Trace.myTrace("ChartScreen.as", "on onBgReadingReceived!");
-			
-			if (BlueToothDevice.isFollower())
+			else
 			{
-				Trace.myTrace("ChartScreen.as", "User is a follower. Ignoring");
-				return;
+				glucoseChart.hideLine();
+				drawLineChart = false;
 			}
 			
-			try
-			{
-				var reading:BgReading = BgReading.lastNoSensor();
-				
-				if(reading == null || reading.calculatedValue == 0 || Calibration.allForSensor().length < 2)
-				{
-					Trace.myTrace("ChartScreen.as", "Bad Reading or not enough calibrations. Not adding it to the chart.");
-					return;
-				}
-				
-				if (glucoseChart != null && SystemUtil.isApplicationActive)
-				{
-					Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
-					glucoseChart.addGlucose([reading]);
-					if (displayPieChart)
-						pieChart.drawChart();
-				}
-				else
-				{
-					Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
-					newReadingsList.push(reading);
-				}
-			} 
-			catch(error:Error) 
-			{
-				Trace.myTrace("ChartScreen.as", "Error adding readings to chart. Error: " + error.message)
-			}
-		}
-		
-		private function onInitialCalibrationReceived(e:CalibrationServiceEvent):void
-		{
-			onBgReadingReceived(null);
-		}
-		
-		private function onUpdateIOBCOB(e:TreatmentsEvent):void
-		{
-			if (glucoseChart == null || !SystemUtil.isApplicationActive)
-				return;
-			
-			Trace.myTrace("ChartScreen.as", "Updating IOB/COB");
-			
-			var now:Number = new Date().valueOf();
-			SystemUtil.executeWhenApplicationIsActive(glucoseChart.calculateTotalIOB, now);
-			SystemUtil.executeWhenApplicationIsActive(glucoseChart.calculateTotalCOB, now);
-		}
-		
-		private function onTreatmentAdded(e:TreatmentsEvent):void
-		{
-			var treatment:Treatment = e.treatment;
-			if (treatment != null && glucoseChart != null)
-			{
-				Trace.myTrace("ChartScreen.as", "Adding treatment to the chart: Type: " + treatment.type);
-				SystemUtil.executeWhenApplicationIsActive(glucoseChart.addTreatment, treatment);
-			}
-		}
-		
-		private function onTreatmentExternallyModified(e:TreatmentsEvent):void
-		{
-			var treatment:Treatment = e.treatment;
-			if (treatment != null && glucoseChart != null)
-			{
-				Trace.myTrace("ChartScreen.as", "Sending externally modified treatment to the chart: Type: " + treatment.type);
-				SystemUtil.executeWhenApplicationIsActive(glucoseChart.updateExternallyModifiedTreatment, treatment);
-			}
-		}
-		
-		private function onTreatmentExternallyDeleted(e:TreatmentsEvent):void
-		{
-			var treatment:Treatment = e.treatment;
-			if (treatment != null && glucoseChart != null)
-			{
-				Trace.myTrace("ChartScreen.as", "Sending externally deleted treatment to the chart: Type: " + treatment.type);
-				SystemUtil.executeWhenApplicationIsActive(glucoseChart.updateExternallyDeletedTreatment, treatment);
-			}
-		}
-		
-		private function onAppInBackground (e:SpikeEvent):void
-		{
-			appInBackground = true;
-		}
-		
-		private function onAppInForeground (e:SpikeEvent):void
-		{
-			SystemUtil.executeWhenApplicationIsActive( processQueue );
+			//Save setting to database
+			if (drawLineChart)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "true");
+			else
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "false");
 		}
 		
 		private function onTimeRangeChange(event:Event):void
@@ -653,43 +599,35 @@ package ui.screens
 				selectedTimelineRange = GlucoseChart.TIMELINE_24H;
 				redrawChart();
 			}
-			
-			//Save timerange in database
-			if (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE)) != selectedTimelineRange)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE, String(selectedTimelineRange));
 		}
 		
-		private function onDisplayLine(event:Event):void
+		private function onBackButtonTriggered(event:Event):void
 		{
-			var check:Check = Check( event.currentTarget );
-			if(check.isSelected)
+			//Pop this screen off
+			dispatchEventWith(Event.COMPLETE);
+			
+			if(AppInterface.instance.navigator.activeScreenID == Screens.GLUCOSE_CHART)
 			{
-				glucoseChart.showLine();
-				drawLineChart = true;
-			}
-			else
-			{
-				glucoseChart.hideLine();
-				drawLineChart = false;
+				//Select menu button from left menu
+				AppInterface.instance.menu.selectedIndex = 0;
 			}
 			
-			//Save setting to database
-			if (drawLineChart)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "true");
-			else
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "false");
 		}
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			SystemUtil.executeWhenApplicationIsActive(disposeDisplayObjects);
-			SystemUtil.executeWhenApplicationIsActive(createChart);
+			setupHeaderSize();
 		}
 		
-		override protected function onTransitionInComplete(e:Event):void
+		protected function onTransitionInComplete(e:Event):void
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
+		}
+		
+		private function onScreenCreationComplete(event:Event):void
+		{
+			onStarlingResize(null)
 		}
 		
 		/**
@@ -773,19 +711,13 @@ package ui.screens
 		{
 			/* Timers */
 			clearTimeout(redrawChartTimeoutID);
-
+			
 			/* Event Listeners */
-			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
-			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
-			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onInitialCalibrationReceived);
-			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
-			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
-			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
-			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
-			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
-			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
+			removeEventListener(FeathersEventType.CREATION_COMPLETE, onScreenCreationComplete);
+			removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
+			removeEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onBackButtonTriggered);
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			
 			/* Display Objects */
 			SystemUtil.executeWhenApplicationIsActive(disposeDisplayObjects);
@@ -797,15 +729,16 @@ package ui.screens
 				chartData = null;
 			}
 			
-			if (newReadingsList != null)
-			{
-				newReadingsList.length = 0;
-				newReadingsList = null;
-			}
-			
 			super.dispose();
 			
 			System.pauseForGCIfCollectionImminent(0);
+		}
+		
+		override protected function draw():void 
+		{
+			super.draw();
+			if (datePicker != null)
+				datePicker.x = Constants.stageWidth - datePicker.width - BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding;
 		}
 	}
 }

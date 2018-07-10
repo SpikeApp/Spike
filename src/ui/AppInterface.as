@@ -32,6 +32,7 @@ package ui
 	import ui.screens.GeneralSettingsScreen;
 	import ui.screens.GlucoseManagementScreen;
 	import ui.screens.HelpScreen;
+	import ui.screens.HistoryChartScreen;
 	import ui.screens.IFTTTSettingsScreen;
 	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
@@ -262,6 +263,13 @@ package ui
 			donateScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
 			donateScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.DONATE, donateScreenItem );
+			
+			/* History Screen */
+			var historyScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( HistoryChartScreen );
+			historyScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			historyScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			historyScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.HISTORY, historyScreenItem );
 			
 			/* Treatments Management Screen */
 			var treatmentsManagementScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TreatmentsManagementScreen );

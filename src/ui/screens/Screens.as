@@ -31,5 +31,6 @@ package ui.screens
 		public static const HELP:String = "help";
 		public static const ALL_TREATMENTS:String = "allTreatments";
 		public static const DONATE:String = "donate";
+		public static const HISTORY:String = "history";
 	}
 }

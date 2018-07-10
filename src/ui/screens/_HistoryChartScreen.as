@@ -52,7 +52,7 @@ package ui.screens
 	
 	[ResourceBundle("chartscreen")]
 	
-	public class ChartScreen extends BaseScreen
+	public class HistoryChartScreen extends BaseScreen
 	{
 		//Objects
 		private var chartData:Array;
@@ -95,7 +95,7 @@ package ui.screens
 		private var displayLines:Check;
 		private var delimitter:SpikeLine;
 		
-		public function ChartScreen() 
+		public function HistoryChartScreen() 
 		{
 			super();
 			styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_HEADER_WITH_SHADOW );

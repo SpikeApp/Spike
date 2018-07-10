@@ -297,12 +297,18 @@ package ui.chart
 		private var carbsCurveCallout:Callout;
 		private var insulinCurve:LayoutGroup;
 		private var insulinCurveCallout:Callout;
+		
+		//Historial Data
+		private var isHistoricalData:Boolean;
 
 		//Main Glucose Touch
 		private var mainGlucoseTimer:Number = Number.NaN;
 		
-		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number)
+		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
+			//Data
+			this.isHistoricalData = isHistoricalData;
+			
 			//Unit
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
 				glucoseUnit = "mg/dL";
@@ -350,8 +356,8 @@ package ui.chart
 			//Treatments
 			treatmentsActive = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 			displayTreatmentsOnChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
-			displayIOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
-			displayCOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
+			displayIOBEnabled = dontDisplayIOB == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
+			displayCOBEnabled = dontDisplayCOB == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
 			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
@@ -372,7 +378,7 @@ package ui.chart
 			if (!Constants.isPortrait && userTimeAgoFontMultiplier == 1.2)
 				userTimeAgoFontMultiplier = 1; 
 			
-			createStatusTextDisplays();
+			createStatusTextDisplays(dontDisplayInfoPill);
 			
 			var extraPadding:int = 15;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || !Constants.isPortrait)
@@ -449,7 +455,8 @@ package ui.chart
 			/**
 			 * Treatments
 			 */
-			addAllTreatments();
+			if (!isHistoricalData)
+				addAllTreatments();
 			
 			/**
 			 * Scroller
@@ -508,9 +515,12 @@ package ui.chart
 			/**
 			 * Status Timer and Update events
 			 */
-			statusUpdateTimer = new Timer(15 * 1000);
-			statusUpdateTimer.addEventListener(TimerEvent.TIMER, onUpdateTimerRefresh, false, 0, true);
-			statusUpdateTimer.start();
+			if (!isHistoricalData)
+			{
+				statusUpdateTimer = new Timer(15 * 1000);
+				statusUpdateTimer.addEventListener(TimerEvent.TIMER, onUpdateTimerRefresh, false, 0, true);
+				statusUpdateTimer.start();
+			}
 			
 			/**
 			 * Initial variables
@@ -568,7 +578,7 @@ package ui.chart
 			if (!dummyModeActive)
 			{
 				firstBGReadingTimeStamp = Number(_dataSource[0].timestamp);
-				lastBGreadingTimeStamp = (new Date()).valueOf();
+				lastBGreadingTimeStamp = !isHistoricalData ? (new Date()).valueOf() : Number(_dataSource[_dataSource.length - 1].timestamp);
 			}
 			else
 			{
@@ -589,7 +599,9 @@ package ui.chart
 				mainChartXFactor = scaleXFactor;
 			}
 			else if (chartType == SCROLLER_CHART)
+			{
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
+			}
 			
 			/**
 			 * Calculation of Y Axis scale factor
@@ -784,7 +796,7 @@ package ui.chart
 			}
 			
 			//Creat dummy marker in case the current timestamp is bigger than the latest bgreading timestamp
-			if (!dummyModeActive)
+			if (!dummyModeActive && !isHistoricalData)
 			{
 				if (lastBGreadingTimeStamp > Number(_dataSource[_dataSource.length - 1].timestamp) && lastBGreadingTimeStamp - Number(_dataSource[_dataSource.length - 1].timestamp) > (4.5 * 60 * 1000) && chartType == MAIN_CHART)
 				{
@@ -825,7 +837,7 @@ package ui.chart
 		
 		public function calculateTotalIOB(time:Number):void
 		{
-			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled || isHistoricalData)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -843,7 +855,7 @@ package ui.chart
 		
 		public function calculateTotalCOB(time:Number):void
 		{
-			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled || isHistoricalData)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -892,7 +904,7 @@ package ui.chart
 		
 		public function addAllTreatments():void
 		{
-			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || isHistoricalData)
 				return;
 			
 			if (TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && treatmentsActive && !dummyModeActive && !allTreatmentsAdded)
@@ -915,9 +927,25 @@ package ui.chart
 			}
 		}
 		
+		public function addAllHistoricalTreatments(treatmentsList:Array):void
+		{
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			if (treatmentsList != null && treatmentsList.length > 0 && treatmentsActive && !dummyModeActive)
+			{
+				for (var i:int = 0; i < treatmentsList.length; i++) 
+				{
+					var treatment:Treatment = treatmentsList[i] as Treatment;
+					if (treatment != null)
+						addTreatment(treatment);
+				}
+			}
+		}
+		
 		public function updateExternallyModifiedTreatment(treatment:Treatment):void
 		{
-			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !isHistoricalData)
 				return;
 			
 			var modifiedTreatment:ChartTreatment = treatmentsMap[treatment.ID] as ChartTreatment;
@@ -940,7 +968,7 @@ package ui.chart
 		
 		public function updateExternallyDeletedTreatment(treatment:Treatment):void
 		{
-			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !isHistoricalData)
 				return;
 			
 			if (treatment != null)
@@ -1008,7 +1036,7 @@ package ui.chart
 				treatmentsList.push(insulinMarker);
 				treatmentsMap[treatment.ID] = insulinMarker;
 				
-				if (displayIOBEnabled)
+				if (displayIOBEnabled && !isHistoricalData)
 					calculateTotalIOB(getTimelineTimestamp());
 				
 				chartTreatment = insulinMarker;
@@ -1024,7 +1052,7 @@ package ui.chart
 				treatmentsList.push(carbsMarker);
 				treatmentsMap[treatment.ID] = carbsMarker;
 				
-				if (displayCOBEnabled)
+				if (displayCOBEnabled && !isHistoricalData)
 					calculateTotalCOB(getTimelineTimestamp());
 				
 				chartTreatment = carbsMarker;
@@ -1041,9 +1069,9 @@ package ui.chart
 				treatmentsMap[treatment.ID] = mealMarker;
 				
 				var timelineTimestamp:Number = getTimelineTimestamp();
-				if (displayIOBEnabled)
+				if (displayIOBEnabled && !isHistoricalData)
 					calculateTotalIOB(timelineTimestamp);
-				if (displayCOBEnabled)
+				if (displayCOBEnabled && !isHistoricalData)
 					calculateTotalCOB(timelineTimestamp);
 				
 				chartTreatment = mealMarker;
@@ -1211,30 +1239,33 @@ package ui.chart
 				}
 				
 				//Action Buttons
-				if (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+				if (!isHistoricalData)
 				{
-					if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+					if (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 					{
-						if (moveBtn != null) moveBtn.removeFromParent(true);
-						if (deleteBtn != null) deleteBtn.removeFromParent(true);
-						var actionsLayout:HorizontalLayout = new HorizontalLayout();
-						actionsLayout.gap = 5;
-						if (actionsContainer != null) actionsContainer.removeFromParent(true);
-						actionsContainer = new LayoutGroup();
-						actionsContainer.layout = actionsLayout;
-							
-						if (treatment.treatment.type != Treatment.TYPE_SENSOR_START)
+						if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 						{
-							moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
-							moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
-							actionsContainer.addChild(moveBtn);
-						}
+							if (moveBtn != null) moveBtn.removeFromParent(true);
+							if (deleteBtn != null) deleteBtn.removeFromParent(true);
+							var actionsLayout:HorizontalLayout = new HorizontalLayout();
+							actionsLayout.gap = 5;
+							if (actionsContainer != null) actionsContainer.removeFromParent(true);
+							actionsContainer = new LayoutGroup();
+							actionsContainer.layout = actionsLayout;
+								
+							if (treatment.treatment.type != Treatment.TYPE_SENSOR_START)
+							{
+								moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
+								moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+								actionsContainer.addChild(moveBtn);
+							}
+							
+							deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
+							deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+							actionsContainer.addChild(deleteBtn);
 						
-						deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
-						deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
-						actionsContainer.addChild(deleteBtn);
-					
-						treatmentContainer.addChild(actionsContainer);
+							treatmentContainer.addChild(actionsContainer);
+						}
 					}
 				}
 				
@@ -1329,7 +1360,7 @@ package ui.chart
 				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
 				{
 					var treatment:ChartTreatment = treatmentsList[i];
-					if (treatment.treatment.timestamp < firstBGReadingTimeStamp && treatment.treatment.type != Treatment.TYPE_SENSOR_START)
+					if (treatment.treatment.timestamp < firstBGReadingTimeStamp && treatment.treatment.type != Treatment.TYPE_SENSOR_START && !isHistoricalData)
 					{
 						//Treatment has expired (>24H). Dispose it
 						treatmentsContainer.removeChild(treatment);
@@ -2545,7 +2576,20 @@ package ui.chart
 					var timestampDifference:Number = nowTimestamp - latestMarkerTimestamp;
 					var timestampDifferenceInSeconds:Number = timestampDifference / 1000;
 					
-					if (timestampDifference <= TIME_16_MINUTES)
+					if (isHistoricalData)
+					{
+						trace("YA");
+						//Glucose Value Display
+						glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
+						glucoseValueDisplay.fontStyles.color = latestMarker.color;
+						
+						//Marker Date Time
+						glucoseTimeAgoPill.setValue(latestMarker.timeFormatted, retroOutput, chartFontColor);
+						
+						//Marker Slope
+						glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, chartFontColor);
+					}
+					else if (timestampDifference <= TIME_16_MINUTES)
 					{
 						//Glucose Value Display
 						glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
@@ -2586,7 +2630,7 @@ package ui.chart
 			currentNumberOfMakers == previousNumberOfMakers
 		}
 		
-		private function createStatusTextDisplays():void
+		private function createStatusTextDisplays(dontDisplayInfoPill:Boolean = false):void
 		{
 			/* Calculate Font Sizes */
 			deviceFontMultiplier = DeviceInfo.getFontMultipier();
@@ -2682,7 +2726,7 @@ package ui.chart
 			}
 			
 			//Info pill
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_ON) == "true")
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_ON) == "true" && !dontDisplayInfoPill)
 			{
 				infoPill = new ChartTreatmentPill(" + ");
 				infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
