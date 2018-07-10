@@ -17,6 +17,8 @@ package ui.screens
 	import events.TreatmentsEvent;
 	
 	import feathers.controls.Check;
+	import feathers.controls.DateTimeMode;
+	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.Radio;
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollPolicy;
@@ -74,6 +76,7 @@ package ui.screens
 		private var displayPieChart:Boolean;
 		private var redrawChartTimeoutID:int;
 		private var isPortrait:Boolean;
+		private var dateSelectorOffset:int = 55;
 		
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
@@ -144,6 +147,27 @@ package ui.screens
 		/**
 		 * Display Objects Creation and Positioning
 		 */
+		private function createDateSelector():void
+		{
+			var now:Date = new Date();
+			var before:Date = new Date();
+			before.month -= 3;
+			
+			var datePicker:DateTimeSpinner = new DateTimeSpinner();
+			datePicker.editingMode = DateTimeMode.DATE;
+			datePicker.minimum = before;
+			datePicker.maximum = now;
+			datePicker.value = now;
+			datePicker.height = 30;
+			datePicker.validate();
+			datePicker.y = Constants.stageHeight - this.header.height - datePicker.height - 10;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X) datePicker.y -= 15;
+			datePicker.x = (Constants.stageWidth / 2) - (datePicker.width / 2);
+			
+			addChild(datePicker);
+		}
+		
+		
 		private function createChart():void
 		{	
 			//When in landscape mode and device is iPhone X, make the header height same as oher models, we don't need to worry about the extra status bar size
@@ -161,7 +185,7 @@ package ui.screens
 				}
 			}
 			
-			var availableScreenHeight:Number = Constants.stageHeight - this.header.height;
+			var availableScreenHeight:Number = Constants.stageHeight - this.header.height - dateSelectorOffset;
 			Constants.isPortrait ? glucoseChartTopPadding = 7 : glucoseChartTopPadding = 0;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4) glucoseChartTopPadding = 0;
 			if (glucoseChartTopPadding == 0) availableScreenHeight += 7;
@@ -490,8 +514,10 @@ package ui.screens
 		 */
 		private function onCreation(event:Event):void
 		{
+			createDateSelector();
 			createChart();
 			redrawChartForTreatmentsAndLine();
+			
 		}
 		
 		private function onBgReadingReceivedFollower(e:FollowerEvent):void
