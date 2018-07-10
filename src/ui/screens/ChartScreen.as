@@ -549,7 +549,7 @@ package ui.screens
 							if (glucoseChart != null && SystemUtil.isApplicationActive)
 							{
 								Trace.myTrace("ChartScreen.as", "Adding reading to the list: Value: " + bgReading.calculatedValue);
-								newReadingsListAddedWhileInForeground.push(bgReading);
+								newReadingsListAddedWhileInForeground.insertAt(0, bgReading);
 							} 
 							else 
 							{
