@@ -13,6 +13,7 @@ package ui.screens.display.transmitter
 	import flash.events.TimerEvent;
 	import flash.system.Capabilities;
 	import flash.utils.Timer;
+	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
 	import spark.formatters.DateTimeFormatter;
@@ -37,10 +38,8 @@ package ui.screens.display.transmitter
 	import feathers.controls.TextCallout;
 	import feathers.controls.renderers.DefaultGroupedListHeaderOrFooterRenderer;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
-	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IGroupedListHeaderRenderer;
 	import feathers.controls.renderers.IGroupedListItemRenderer;
-	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.controls.text.TextBlockTextRenderer;
 	import feathers.core.ITextRenderer;
 	import feathers.data.HierarchicalCollection;
@@ -139,6 +138,8 @@ package ui.screens.display.transmitter
 		private var transmitterFirmwareValue:String = "";
 		private var transmitterOtherFirmwareValue:String = "";
 		private var transmitterBTFirmwareValue:String = "";
+		private var timeOut1:uint = 0;
+		private var timeOut2:uint = 0;
 
 		/* Objects */
 		private var refreshTimer:Timer;
@@ -858,14 +859,14 @@ package ui.screens.display.transmitter
 			{
 				refreshSecondsElapsed = 4;
 				setupInitialState();
-				setupContent();
+				SystemUtil.executeWhenApplicationIsActive(setupContent);
 				if (InterfaceController.peripheralConnected)
 				{
 					disposeRefreshTimer();
 					//Ensure that the battery levels are displayed correctly by refreshing the screen after 3 seconds 
 					//so Spike has enough time to get battery info from the transmitter
-					setTimeout(setupInitialState, 3000);
-					setTimeout(setupContent, 3300); 
+					timeOut1 = setTimeout(setupInitialState, 3000);
+					timeOut2 = setTimeout(setupContent, 3300); 
 				}
 			}
 			else
@@ -914,13 +915,18 @@ package ui.screens.display.transmitter
 		
 		override public function dispose():void
 		{
+			//Timers and timeouts
+			disposeRefreshTimer();
+			clearTimeout(timeOut1);
+			clearTimeout(timeOut2);
+			
+			//Event listeners
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 			BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
 			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded);
 			
-			disposeRefreshTimer();
-			
+			//Display Objects
 			if(voltageAIconTexture != null)
 			{
 				voltageAIconTexture.dispose();
