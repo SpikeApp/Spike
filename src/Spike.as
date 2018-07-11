@@ -11,7 +11,6 @@ package
 	import flash.events.UncaughtErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
-	import flash.system.Capabilities;
 	import flash.system.System;
 	import flash.utils.setTimeout;
 	
