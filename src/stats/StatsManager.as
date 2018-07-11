@@ -18,7 +18,7 @@ package stats
 			throw new Error("StatsManager is not meant to be instantiated!");
 		}
 		
-		public static function getBasicUserStats():BasicUserStats
+		public static function getBasicUserStats(fromTime:Number = Number.NaN, untilTime:Number = Number.NaN):BasicUserStats
 		{
 			var now:Number = new Date().valueOf();
 			var lowTreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
@@ -26,7 +26,7 @@ package stats
 			
 			if (!BlueToothDevice.isFollower())
 			{
-				var masterUserStats:BasicUserStats = Database.getBasicUserStats();
+				var masterUserStats:BasicUserStats = Database.getBasicUserStats(fromTime, untilTime);
 				if (masterUserStats == null)
 					masterUserStats = new BasicUserStats();
 				
