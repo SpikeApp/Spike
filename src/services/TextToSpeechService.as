@@ -63,9 +63,6 @@ package services
 				//Set speech language
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
 				
-				//Set locale chain
-				setLocaleChain();
-				
 				myTrace("TextToSpeech started. Enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | Interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) + " | Language: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
 			}
 		}
@@ -194,6 +191,9 @@ package services
 					
 					if ((new Date()).valueOf() - currentBgReading.timestamp < 4.5 * 60 * 1000) 
 					{
+						//Set locale chain
+						setLocaleChain();
+						
 						//Speech Output
 						var currentBgReadingOutput:String;
 						
@@ -259,6 +259,9 @@ package services
 						var currentTrendPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currenttrend');
 						var currentDeltaPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currentdelta');
 						
+						//Reset locale chain
+						ModelLocator.resourceManagerInstance.localeChain = [CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE),"en_US"];
+						
 						//Glucose
 						currentBgReadingOutput = currentBgPrefix + " " + currentBgReadingFormatted + ". ";
 						
@@ -286,7 +289,6 @@ package services
 		/**
 		*Utility functions
 		*/
-		
 		private static function myTrace(log:String):void 
 		{
 			Trace.myTrace("TextToSpeech.as", log);
@@ -334,9 +336,6 @@ package services
 				
 				//Set new language code in database
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
-				
-				//Set locale chain
-				setLocaleChain();
 			}
 			else if (event.data == CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_ON) 
 			{

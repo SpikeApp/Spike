@@ -137,9 +137,9 @@ package services
 			secondStepActive = true;
 			
 			calloutLocationHelper.x = 85;
-			calloutLocationHelper.y = 205;
+			calloutLocationHelper.y = 255;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				calloutLocationHelper.y += 15;
+				calloutLocationHelper.y += 30;
 			
 			secondStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','second_step_message'), calloutLocationHelper, null, false);
 			secondStepCallout.pivotX += 5;
@@ -155,7 +155,7 @@ package services
 			calloutLocationHelper.x = 25;
 			calloutLocationHelper.y = 105;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				calloutLocationHelper.y += 15;
+				calloutLocationHelper.y += 25;
 			
 			thirdStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','third_step_message'), calloutLocationHelper, null, false);
 			
@@ -168,9 +168,9 @@ package services
 			fourthStepActive = true;
 			
 			calloutLocationHelper.x = Constants.stageWidth / 2;
-			calloutLocationHelper.y = 305;
+			calloutLocationHelper.y = 370;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				calloutLocationHelper.y += 15;
+				calloutLocationHelper.y += 25;
 			
 			fourthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','fourth_step_message'), calloutLocationHelper, new <String>[RelativePosition.TOP], false);
 			fourthStepCallout.textRendererFactory = calloutTextRenderer;
@@ -186,7 +186,7 @@ package services
 			calloutLocationHelper.x = 25;
 			calloutLocationHelper.y = 155;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				calloutLocationHelper.y += 15;
+				calloutLocationHelper.y += 25;
 			
 			fifthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','fifth_step_message'), calloutLocationHelper, null, false);
 			
@@ -201,7 +201,7 @@ package services
 			calloutLocationHelper.x = Constants.stageWidth / 2;
 			calloutLocationHelper.y = 205;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				calloutLocationHelper.y += 15;
+				calloutLocationHelper.y += 25;
 			
 			sixthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','sixth_step_message'), calloutLocationHelper, null, false);
 			sixthStepCallout.textRendererFactory = calloutTextRenderer;
@@ -254,9 +254,9 @@ package services
 			eighthStepActive = true;
 			
 			calloutLocationHelper.x = 85;
-			calloutLocationHelper.y = 105;
+			calloutLocationHelper.y = 155;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				calloutLocationHelper.y += 15;
+				calloutLocationHelper.y += 30;
 			
 			eighthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','eighth_step_message'), calloutLocationHelper, null, false);
 			eighthStepCallout.pivotX += 5;
@@ -272,7 +272,7 @@ package services
 			calloutLocationHelper.x = Constants.stageWidth - 55;
 			calloutLocationHelper.y = 265;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				calloutLocationHelper.y += 15;
+				calloutLocationHelper.y += 25;
 			
 			ninethStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','nineth_step_message'), calloutLocationHelper, null, false);
 			

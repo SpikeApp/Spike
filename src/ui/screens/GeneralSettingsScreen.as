@@ -23,6 +23,7 @@ package ui.screens
 	import ui.screens.display.settings.general.DataCollectionSettingsList;
 	import ui.screens.display.settings.general.DateSettingsList;
 	import ui.screens.display.settings.general.GlucoseSettingsList;
+	import ui.screens.display.settings.general.LanguageSettingsList;
 	import ui.screens.display.settings.general.UpdateSettingsList;
 	
 	import utils.Constants;
@@ -41,7 +42,8 @@ package ui.screens
 		private var updateLabel:Label;
 		private var dataCollectionLabel:Label;
 		private var dataCollectionSettings:DataCollectionSettingsList;
-		
+		private var languageLabel:Label;
+		private var languageSettings:LanguageSettingsList;
 		
 		public function GeneralSettingsScreen() 
 		{
@@ -78,11 +80,19 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
+			//Language Section Label
+			languageLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','language_title'), true);
+			screenRenderer.addChild(languageLabel);
+			
+			//Language Settings
+			languageSettings = new LanguageSettingsList();
+			screenRenderer.addChild(languageSettings);
+			
 			//Data Collection Section Label
 			dataCollectionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','data_collection_title'), true);
 			screenRenderer.addChild(dataCollectionLabel);
 			
-			//Time Format Settings
+			//Data Collection Settings
 			dataCollectionSettings = new DataCollectionSettingsList();
 			screenRenderer.addChild(dataCollectionSettings);
 			
@@ -121,7 +131,7 @@ package ui.screens
 		
 		private function setupEventHandlers():void
 		{
-			if( TutorialService.isActive && TutorialService.thirdStepActive)
+			if (TutorialService.isActive && TutorialService.thirdStepActive)
 				addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onScreenIn);
 		}
 		
@@ -139,6 +149,8 @@ package ui.screens
 		override protected function onBackButtonTriggered(event:Event):void
 		{
 			//Save Settings
+			if (languageSettings != null && languageSettings.needsSave)
+				languageSettings.save();
 			if (glucoseSettings.needsSave)
 				glucoseSettings.save();
 			if (updatesSettingsList != null && updatesSettingsList.needsSave)
@@ -168,6 +180,7 @@ package ui.screens
 		{
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
+				if (languageLabel != null) languageLabel.paddingLeft = 30;
 				if (dataCollectionLabel != null) dataCollectionLabel.paddingLeft = 30;
 				if (chartDateFormatLabel != null) chartDateFormatLabel.paddingLeft = 30;
 				if (glucoseLabel != null) glucoseLabel.paddingLeft = 30;
@@ -175,6 +188,7 @@ package ui.screens
 			}
 			else
 			{
+				if (languageLabel != null) languageLabel.paddingLeft = 0;
 				if (dataCollectionLabel != null) dataCollectionLabel.paddingLeft = 0;
 				if (chartDateFormatLabel != null) chartDateFormatLabel.paddingLeft = 0;
 				if (glucoseLabel != null) glucoseLabel.paddingLeft = 0;
@@ -247,6 +261,20 @@ package ui.screens
 				dataCollectionSettings.removeFromParent();
 				dataCollectionSettings.dispose();
 				dataCollectionSettings = null;
+			}
+			
+			if (languageSettings != null)
+			{
+				languageSettings.removeFromParent();
+				languageSettings.dispose();
+				languageSettings = null;
+			}
+			
+			if (languageLabel != null)
+			{
+				languageLabel.removeFromParent();
+				languageLabel.dispose();
+				languageLabel = null;
 			}
 			
 			super.dispose();

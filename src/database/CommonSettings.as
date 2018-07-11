@@ -468,6 +468,11 @@ package database
 		  * CARB DELAY SETTINGS #2
 		  */
 		 public static const COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME:int = 175;
+		 
+		 /**
+		 * App Language
+		 */
+		 public static const COMMON_SETTING_APP_LANGUAGE:int = 176;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -645,7 +650,8 @@ package database
 			 "20",//COMMON_SETTING_CARB_SLOW_ABSORTION_TIME
 			 "00:00>0>DefaultNoAlertToBeReplaced",//COMMON_SETTING_FAST_RISE_ALERT
 			 "00:00>0>DefaultNoAlertToBeReplaced",//COMMON_SETTING_FAST_DROP_ALERT
-			 "20"//COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME
+			 "20",//COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME
+			 "en_US"//COMMON_SETTING_APP_LANGUAGE
 		 ];
 
 		 public function CommonSettings()
