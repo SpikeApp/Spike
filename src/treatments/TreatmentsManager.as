@@ -749,6 +749,8 @@ package treatments
 			addButton.addEventListener(Event.TRIGGERED, actionFunction);
 			actionContainer.addChild(addButton);
 			
+			actionContainer.validate();
+			
 			//Callout
 			if (calloutPositionHelper != null) calloutPositionHelper.removeFromParent(true);
 			calloutPositionHelper = new Sprite();
@@ -781,6 +783,32 @@ package treatments
 				glucoseTextInput.setFocus();
 			else if (type == Treatment.TYPE_CARBS_CORRECTION)
 				carbsTextInput.setFocus();
+			
+			//Final Layout Adjustments
+			if (actionContainer.width > treatmentTime.width)
+			{
+				if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
+					insulinTextInput.width = actionContainer.width;
+				if (type == Treatment.TYPE_GLUCOSE_CHECK)
+					glucoseTextInput.width = actionContainer.width;
+				if (type == Treatment.TYPE_CARBS_CORRECTION)
+				{
+					carbsTextInput.width = actionContainer.width;
+					carbDelayContainer.width = actionContainer.width;
+				}
+				else if (type == Treatment.TYPE_MEAL_BOLUS)
+				{
+					extendedCarbContainer.width = actionContainer.width;
+					carbsTextInput.width = actionContainer.width - carbOffSet.width - carbOffsetSuffix.width;
+					carbDelayContainer.width = actionContainer.width;
+				}
+				
+				notes.width = actionContainer.width;
+				treatmentInserterTitleLabel.width = actionContainer.width;
+				treatmentInserterContainer.validate();
+				treatmentTime.paddingLeft += (actionContainer.width - treatmentTime.width) / 2;
+				treatmentInserterContainer.validate();
+			}
 			
 			function closeCallout(e:Event):void
 			{
