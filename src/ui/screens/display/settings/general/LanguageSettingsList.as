@@ -1,5 +1,11 @@
 package ui.screens.display.settings.general
 {
+	import com.adobe.utils.StringUtil;
+	
+	import flash.globalization.Collator;
+	import flash.globalization.CollatorMode;
+	import flash.utils.Dictionary;
+	
 	import database.CommonSettings;
 	
 	import feathers.controls.PickerList;
@@ -61,24 +67,49 @@ package ui.screens.display.settings.general
 			//Collection Picker List
 			appLanguagePicker = LayoutFactory.createPickerList();
 			
+			//Disabled Languages
+			var disabledLanguages:Dictionary = new Dictionary();
+			disabledLanguages["ar_SA"] = true;
+			disabledLanguages["bg_BG"] = true;
+			disabledLanguages["zh_CN"] = true;
+			disabledLanguages["cs_CZ"] = true;
+			disabledLanguages["da_DK"] = true;
+			disabledLanguages["fi_FI"] = true;
+			disabledLanguages["fr_FR"] = true;
+			disabledLanguages["de_DE"] = true;
+			disabledLanguages["hu_HU"] = true;
+			disabledLanguages["it_IT"] = true;
+			disabledLanguages["no_NO"] = true;
+			disabledLanguages["pl_PL"] = true;
+			disabledLanguages["ru_RU"] = true;
+			disabledLanguages["es_ES"] = true;
+			disabledLanguages["sv_SE"] = true;
+			
 			/* Set DateFormatPicker Data */
 			var appLanguageLabelsList:Array = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','app_language_labels_list').split(",");
 			var appLanguageCodesList:Array = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','app_language_codes_list').split(",");
-			var appLanguageList:ArrayCollection = new ArrayCollection();
+			var appLanguageList:Array = new Array();
 			var selectedIndex:int = 0;
+			var numIteratons:int = 0;
 			for (var i:int = 0; i < appLanguageLabelsList.length; i++) 
 			{
-				appLanguageList.push( { label: appLanguageLabelsList[i], code: appLanguageCodesList[i] } );
-				if (appLanguageCodesList[i] == appLanguageValue)
-					selectedIndex = i;
+				if (disabledLanguages[StringUtil.trim(appLanguageCodesList[i])] == null)
+				{
+					appLanguageList.push( { label: StringUtil.trim(appLanguageLabelsList[i]), code: StringUtil.trim(appLanguageCodesList[i]) } );
+					if (appLanguageCodesList[i] == appLanguageValue)
+						selectedIndex = numIteratons;
+					
+					numIteratons++;
+				}
 			}
+			appLanguageList.sortOn(["label"], Array.CASEINSENSITIVE)
 			appLanguageLabelsList.length = 0;
 			appLanguageLabelsList = null;
 			appLanguageCodesList.length = 0;
 			appLanguageCodesList = null;
 			appLanguagePicker.labelField = "label";
 			appLanguagePicker.popUpContentManager = new DropDownPopUpContentManager();
-			appLanguagePicker.dataProvider = appLanguageList;
+			appLanguagePicker.dataProvider = new ArrayCollection(appLanguageList);
 			appLanguagePicker.selectedIndex = selectedIndex;
 			appLanguagePicker.addEventListener(Event.CHANGE, onLanguageChanged);
 			
