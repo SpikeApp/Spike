@@ -44,6 +44,8 @@ package ui.chart
 		private var highTreshold:Number;
 		private var lowTreshold:Number;
 		private var pieTimer:Number;
+		private var fromTime:Number = Number.NaN;
+		private var untilTime:Number = Number.NaN;
 		
 		//Display Variables
 		private var numSides:int = 150;
@@ -84,11 +86,13 @@ package ui.chart
 		
 		[ResourceBundle("globaltranslations")]
 		
-		public function DistributionChart(pieSize:Number, dataSource:Array)
+		public function DistributionChart(pieSize:Number, dataSource:Array, fromTime:Number = Number.NaN, untilTime:Number = Number.NaN)
 		{
 			this.pieSize = pieSize;
 			this.pieRadius = pieSize - piePadding;
 			this._dataSource = dataSource;
+			this.fromTime = fromTime;
+			this.untilTime = untilTime;
 			
 			setupInitialState();
 			setupProperties();
@@ -248,7 +252,7 @@ package ui.chart
 			if (!SystemUtil.isApplicationActive)
 				return false;
 			
-			var userStats:BasicUserStats = StatsManager.getBasicUserStats();
+			var userStats:BasicUserStats = StatsManager.getBasicUserStats(fromTime, untilTime);
 			
 			//If there's no good readings then activate dummy mode.
 			if (userStats.numReadingsDay == 0)

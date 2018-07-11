@@ -15,12 +15,18 @@ package ui.screens
 	import feathers.controls.Check;
 	import feathers.controls.DateTimeMode;
 	import feathers.controls.DateTimeSpinner;
+	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.PanelScreen;
 	import feathers.controls.Radio;
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollPolicy;
 	import feathers.core.ToggleGroup;
 	import feathers.events.FeathersEventType;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -32,7 +38,6 @@ package ui.screens
 	import starling.utils.SystemUtil;
 	
 	import treatments.Treatment;
-	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
 	import ui.chart.DistributionChart;
@@ -46,12 +51,13 @@ package ui.screens
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("chartscreen")]
 
 	public class HistoryChartScreen extends PanelScreen
 	{
 		//Objects
-		private var chartData:Array;
-		private var chartTreatments:Array;
+		private var chartData:Array = [];
+		private var chartTreatments:Array = [];
 		private var timeRangeGroup:ToggleGroup;
 		
 		//Visual variables
@@ -68,15 +74,13 @@ package ui.screens
 		private var displayPieChart:Boolean;
 		private var redrawChartTimeoutID:int;
 		private var isPortrait:Boolean;
+		private var startTimestamp:Number = Number.NaN;
+		private var endTimestamp:Number = Number.NaN;
 		
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
-		private var appInBackground:Boolean = false;
-		private var queueTimeout:int = -1;
 		private var treatmentsEnabled:Boolean = false;
 		private var chartTreatmentsEnabled:Boolean = false;
-		private var displayIOBEnabled:Boolean = false;
-		private var displayCOBEnabled:Boolean = false;
 		
 		//Display Objects
 		private var glucoseChart:GlucoseChart;
@@ -90,6 +94,10 @@ package ui.screens
 		private var delimitter:SpikeLine;
 		private var datePicker:DateTimeSpinner;
 		private var backButton:Button;
+		private var dateSelectorContainer:LayoutGroup;
+		private var goButton:Button;
+		private var renderingLabel:Label;
+		private var renderingLabelContainer:LayoutGroup;
 		
 		public function HistoryChartScreen() 
 		{
@@ -126,12 +134,19 @@ package ui.screens
 			displayPieChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_GLUCOSE_DISTRIBUTION) == "true";
 			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 			chartTreatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
-			displayIOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
-			displayCOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
 			
-			//Initial chart data
-			chartData = ModelLocator.bgReadings.concat();
-			chartTreatments = TreatmentsManager.treatmentsList.concat();
+			//Define start and end date
+			calculateTimerangeDates(new Date().valueOf());
+			
+			//Rendering label
+			var containerLayout:VerticalLayout = new VerticalLayout();
+			containerLayout.horizontalAlign = HorizontalAlign.CENTER;
+			containerLayout.verticalAlign = VerticalAlign.MIDDLE;
+			renderingLabelContainer = new LayoutGroup();
+			renderingLabelContainer.layout = containerLayout;
+			
+			renderingLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','history_preloader_label'), HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 14, true);
+			renderingLabelContainer.addChild(renderingLabel);
 			
 			/* Adjust Menu */
 			adjustMainMenu();
@@ -142,6 +157,13 @@ package ui.screens
 		 */
 		private function createDateSelector():void
 		{
+			var dateSelectorLayout:HorizontalLayout = new HorizontalLayout();
+			dateSelectorLayout.verticalAlign = VerticalAlign.MIDDLE;
+			dateSelectorLayout.gap = 9;
+			
+			dateSelectorContainer = new LayoutGroup();
+			dateSelectorContainer.layout = dateSelectorLayout;
+			
 			var now:Date = new Date();
 			var before:Date = new Date();
 			before.month -= 3;
@@ -152,24 +174,24 @@ package ui.screens
 			datePicker.maximum = now;
 			datePicker.value = now;
 			datePicker.maxHeight = 35;
-			datePicker.addEventListener(Event.CHANGE, onDateChanged);
+			datePicker.scale = 0.8;
+			dateSelectorContainer.addChild(datePicker);
+			
+			goButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('chartscreen','history_go_button_label'));
+			goButton.addEventListener(Event.TRIGGERED, onDateChanged);
+			dateSelectorContainer.addChild(goButton);
+			
+			dateSelectorContainer.validate();
+			goButton.y += 2
 			
 			headerProperties.rightItems = new <DisplayObject>[
-				datePicker
+				dateSelectorContainer
 			];
 		}
 		
-		private function onDateChanged(e:Event):void
+		private function calculateTimerangeDates(baseTimestamp:Number):void
 		{
-			//Remove previous display objects
-			disposeDisplayObjects();
-			
-			//Clear Chart Data
-			if (chartData != null) chartData.length = 0;
-			if (chartTreatments != null) chartTreatments.length = 0;
-			
-			//Define start and end date
-			var selectedTimeStamp:Number = datePicker.value.valueOf();
+			var selectedTimeStamp:Number = baseTimestamp;
 			
 			var startDate:Date = new Date(selectedTimeStamp);
 			startDate.hours = 0;
@@ -183,10 +205,14 @@ package ui.screens
 			endDate.seconds = 59;
 			endDate.milliseconds = 999;
 			
-			var startTimestamp:Number = startDate.valueOf();
-			var endTimestamp:Number = endDate.valueOf();
+			startTimestamp = startDate.valueOf();
+			endTimestamp = endDate.valueOf();
+		}
+		
+		private function getHistoricalTreatments():void
+		{
+			chartTreatments.length = 0;
 			
-			//Get treatments from database
 			var dbTreatments:Array = Database.getTreatmentsSynchronous(startTimestamp, endTimestamp);
 			if (dbTreatments != null && dbTreatments.length > 0)
 			{
@@ -197,23 +223,44 @@ package ui.screens
 						continue;
 					
 					var treatment:Treatment = new Treatment
-					(
-						dbTreatment.type,
-						dbTreatment.lastmodifiedtimestamp,
-						dbTreatment.insulinamount,
-						dbTreatment.insulinid,
-						dbTreatment.carbs,
-						dbTreatment.glucose,
-						dbTreatment.glucoseestimated,
-						dbTreatment.note,
-						null,
-						dbTreatment.carbdelay,
-						dbTreatment.basalduration
-					);
+						(
+							dbTreatment.type,
+							dbTreatment.lastmodifiedtimestamp,
+							dbTreatment.insulinamount,
+							dbTreatment.insulinid,
+							dbTreatment.carbs,
+							dbTreatment.glucose,
+							dbTreatment.glucoseestimated,
+							dbTreatment.note,
+							null,
+							dbTreatment.carbdelay,
+							dbTreatment.basalduration
+						);
 					treatment.ID = dbTreatment.id;
 					chartTreatments.push(treatment);
 				}
 			}
+		}
+		
+		private function onDateChanged(e:Event):void
+		{
+			//Remove previous display objects
+			disposeDisplayObjects();
+			
+			//Add rendering label
+			renderingLabelContainer.width = Constants.stageWidth;
+			renderingLabelContainer.height = Constants.stageHeight - this.header.height;
+			addChild(renderingLabelContainer);
+			
+			//Clear Chart Data
+			if (chartData != null) chartData.length = 0;
+			if (chartTreatments != null) chartTreatments.length = 0;
+			
+			//Define start and end date
+			calculateTimerangeDates(datePicker.value.valueOf());
+			
+			//Get treatments from database
+			getHistoricalTreatments();
 			
 			//Get readings from database
 			Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
@@ -236,14 +283,19 @@ package ui.screens
 			{
 				if (Constants.isPortrait)
 				{
-					this.header.height = 108;
-					this.header.maxHeight = 108;	
+					this.header.height = 123;
+					this.header.maxHeight = 123;	
 				}
 				else
 				{
-					this.header.height = 78;
-					this.header.maxHeight = 78;
+					this.header.height = 93;
+					this.header.maxHeight = 93;
 				}
+			}
+			else
+			{
+				this.header.height = 93;
+				this.header.maxHeight = 93;
 			}
 			
 			var availableScreenHeight:Number = Constants.stageHeight - this.header.height;
@@ -285,7 +337,7 @@ package ui.screens
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
 			glucoseChart.addAllHistoricalTreatments(chartTreatments);
-			var now:Number = new Date().valueOf();
+			renderingLabelContainer.removeFromParent();
 			addChild(glucoseChart);
 			
 			if (Constants.isPortrait || (DeviceInfo.isTablet() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE) == "true"))
@@ -329,7 +381,6 @@ package ui.screens
 				glucoseChart.displayLine = drawLineChart;
 				glucoseChart.drawGraph();
 				glucoseChart.addAllHistoricalTreatments(chartTreatments);
-				var now:Number = new Date().valueOf();
 				addChild(glucoseChart);
 			}
 			else
@@ -387,7 +438,7 @@ package ui.screens
 			delimitter.y = h24.y + h24.height + delimitterTopPadding;
 			addChild(delimitter);
 			
-			pieChart = new DistributionChart((pieChartHeight / 2), chartData);
+			pieChart = new DistributionChart((pieChartHeight / 2), chartData, startTimestamp, endTimestamp);
 			pieChart.y = Math.round(delimitter.y + delimitter.height + pieTopPadding);
 			pieChart.x = 10;
 			addChild(pieChart);
@@ -489,42 +540,10 @@ package ui.screens
 		
 		private function setupEventListeners():void
 		{
-			this.addEventListener(FeathersEventType.CREATION_COMPLETE, onScreenCreationComplete);
 			this.addEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
 			this.addEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onBackButtonTriggered);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
-		}
-		
-		private function setupHeaderSize():void
-		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-			{
-				if (this.header != null)
-				{
-					if (Constants.isPortrait)
-					{
-						this.header.height = 108;
-						this.header.maxHeight = 108;	
-					}
-					else
-					{
-						this.header.height = 78;
-						this.header.maxHeight = 78;
-					}
-				}
-			}
-			else
-			{
-				if (this.header != null)
-				{
-					this.header.height = 78;
-					this.header.maxHeight = 78;
-				}
-			}
-			
-			if (this.header != null)
-				Constants.headerHeight = this.header.maxHeight;
 		}
 		
 		private function adjustMainMenu():void
@@ -541,8 +560,13 @@ package ui.screens
 		private function onCreation(event:Event):void
 		{
 			createDateSelector();
-			createChart();
-			redrawChartForTreatmentsAndLine();
+			
+			//Initial treaments data
+			getHistoricalTreatments();
+			
+			//Get readings from database
+			Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+			Database.getBgReadings(startTimestamp, endTimestamp);
 		}
 		
 		private function onDisplayLine(event:Event):void
@@ -616,18 +640,19 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			setupHeaderSize();
+			if (renderingLabelContainer != null)
+			{
+				renderingLabelContainer.width = Constants.stageWidth;
+				renderingLabelContainer.height = Constants.stageHeight - this.header.height;
+			}
+			SystemUtil.executeWhenApplicationIsActive(disposeDisplayObjects);
+			SystemUtil.executeWhenApplicationIsActive(createChart);
 		}
 		
 		protected function onTransitionInComplete(e:Event):void
 		{
 			//Swipe to pop functionality
 			AppInterface.instance.navigator.isSwipeToPopEnabled = false;
-		}
-		
-		private function onScreenCreationComplete(event:Event):void
-		{
-			onStarlingResize(null)
 		}
 		
 		/**
@@ -707,13 +732,60 @@ package ui.screens
 			}
 		}
 		
+		private function disposeHeaderObjects():void
+		{
+			if (goButton != null)
+			{
+				goButton.removeEventListener( Event.CHANGE, onDateChanged );
+				goButton.removeFromParent();
+				goButton.dispose();
+				goButton = null;
+			}
+			
+			if (datePicker != null)
+			{
+				datePicker.removeFromParent();
+				datePicker.dispose();
+				datePicker = null;
+			}
+			
+			if (dateSelectorContainer != null)
+			{
+				dateSelectorContainer.dispose();
+				dateSelectorContainer = null;
+			}
+			
+			if (backButton != null)
+			{
+				backButton.removeEventListener(Event.TRIGGERED, onBackButtonTriggered);
+				backButton.dispose();
+				backButton = null;
+			}
+		}
+		
+		private function disposePreloader():void
+		{
+			if (renderingLabel != null)
+			{
+				renderingLabel.removeFromParent();
+				renderingLabel.dispose();
+				renderingLabel = null;
+			}
+			
+			if (renderingLabelContainer != null)
+			{
+				renderingLabelContainer.removeFromParent();
+				renderingLabelContainer.dispose();
+				renderingLabelContainer = null;
+			}
+		}
+		
 		override public function dispose():void
 		{
 			/* Timers */
 			clearTimeout(redrawChartTimeoutID);
 			
 			/* Event Listeners */
-			removeEventListener(FeathersEventType.CREATION_COMPLETE, onScreenCreationComplete);
 			removeEventListener(FeathersEventType.TRANSITION_IN_COMPLETE, onTransitionInComplete);
 			removeEventListener(FeathersEventType.TRANSITION_OUT_COMPLETE, onBackButtonTriggered);
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
@@ -721,12 +793,20 @@ package ui.screens
 			
 			/* Display Objects */
 			SystemUtil.executeWhenApplicationIsActive(disposeDisplayObjects);
+			SystemUtil.executeWhenApplicationIsActive(disposeHeaderObjects);
+			SystemUtil.executeWhenApplicationIsActive(disposePreloader);
 			
 			/* Objects */
 			if (chartData != null)
 			{
 				chartData.length = 0;
 				chartData = null;
+			}
+			
+			if (chartTreatments != null)
+			{
+				chartTreatments.length = 0;
+				chartTreatments = null;
 			}
 			
 			super.dispose();
@@ -737,8 +817,8 @@ package ui.screens
 		override protected function draw():void 
 		{
 			super.draw();
-			if (datePicker != null)
-				datePicker.x = Constants.stageWidth - datePicker.width - BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding;
+			if (dateSelectorContainer != null)
+				dateSelectorContainer.x = Constants.stageWidth - dateSelectorContainer.width - BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding;
 		}
 	}
 }

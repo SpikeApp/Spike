@@ -75,7 +75,7 @@ package ui.screens.display.menu
 			disclaimerIconTexture = MaterialDeepGreyAmberMobileThemeIcons.disclaimerTexture;
 			helpIconTexture = MaterialDeepGreyAmberMobileThemeIcons.spikeHelpTexture;
 			donateIconTexture = MaterialDeepGreyAmberMobileThemeIcons.donateTexture;
-			historyIconTexture = MaterialDeepGreyAmberMobileThemeIcons.donateTexture;
+			historyIconTexture = MaterialDeepGreyAmberMobileThemeIcons.historyTexture;
 			
 			refreshContent();
 			
@@ -94,7 +94,8 @@ package ui.screens.display.menu
 			menuItems.push( { screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture } );
 			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture } );
 			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture } );
-			menuItems.push( { screen: Screens.HISTORY, label: "History", icon: disclaimerIconTexture } );
+			if (!BlueToothDevice.isFollower())
+				menuItems.push( { screen: Screens.HISTORY, label: ModelLocator.resourceManagerInstance.getString('mainmenu','history_menu_item'), icon: historyIconTexture } );
 			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture } );
 			menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture } );
 			

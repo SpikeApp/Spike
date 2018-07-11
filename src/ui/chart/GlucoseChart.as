@@ -1220,6 +1220,7 @@ package ui.chart
 				treatmentTimeSpinner.paddingTop = treatmentTimeSpinner.paddingBottom = 0;
 				if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 					treatmentTimeSpinner.isEnabled = false;
+				if (isHistoricalData) treatmentTimeSpinner.isEnabled = false;
 				if (timeSpacer != null) timeSpacer.removeFromParent(true);
 				timeSpacer = new Sprite();
 				timeSpacer.height = 10;
@@ -2578,7 +2579,6 @@ package ui.chart
 					
 					if (isHistoricalData)
 					{
-						trace("YA");
 						//Glucose Value Display
 						glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
 						glucoseValueDisplay.fontStyles.color = latestMarker.color;
