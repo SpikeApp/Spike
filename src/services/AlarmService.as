@@ -267,11 +267,6 @@ package services
 		
 		private static var alarmTimer:Timer;
 		
-		private static var soundsAsDisplayed:String;
-		private static var soundsAsStoredInAssets:String;
-		private static var soundsAsDisplayedSplitted:Array;
-		private static var soundsAsStoredInAssetsSplitted:Array;
-		
 		private static var queuedAlertSound:String = "";
 		private static var lastQueuedAlertSoundTimeStamp:Number = 0;
 		
@@ -352,16 +347,6 @@ package services
 			
 			checkMuted(null);
 			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
-			
-			soundsAsDisplayed = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","alert_sounds_names");
-			soundsAsStoredInAssets = ModelLocator.resourceManagerInstance.getString("alertsettingsscreen","alert_sounds_files");
-			soundsAsDisplayedSplitted = soundsAsDisplayed.split(',');
-			soundsAsStoredInAssetsSplitted = soundsAsStoredInAssets.split(',');
-			
-			/*soundsAsDisplayed = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
-			soundsAsStoredInAssets = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
-			soundsAsDisplayedSplitted = soundsAsDisplayed.split(',');
-			soundsAsStoredInAssetsSplitted = soundsAsStoredInAssets.split(',');*/
 		}
 		
 		private static function setTimer():void
@@ -1341,15 +1326,8 @@ package services
 			} else if (StringUtil.trim(alertType.sound) == "no_sound") {
 				//keep soundToSet = "";
 			} else {	
-				//if sound not found in assets, take xdrip sound - this could happen if different languages have different sets of sounds and user switches language
-				soundToSet = "";
-				for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
-					newSound = StringUtil.trim(soundsAsDisplayedSplitted[cntr]);//using trim because during tests sometimes the soundname had a preceding white space
-					if (newSound == StringUtil.trim(alertType.sound)) {//using trim because during tests sometimes the soundname had a preceding white space
-						soundToSet = soundsAsStoredInAssetsSplitted[cntr];
-						break;
-					}
-				}
+				soundToSet = StringUtil.trim(alertType.sound);
+				if (soundToSet.indexOf(".caf") == -1) soundToSet += ".caf";
 			}
 			
 			if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default") && !(StringUtil.trim(alertType.sound) == "")) {//check against default for backward compability. Default sound can't be played with playSound
@@ -1368,7 +1346,6 @@ package services
 			else 
 			{
 				queueAlertSound("../assets/sounds/" + soundToSet);
-				
 			}
 			
 			if (soundToSet == "default")
@@ -2192,22 +2169,7 @@ package services
 				else 
 					cancelInactiveAlert();
 			} 
-			/*else if (event.data == CommonSettings.COMMON_SETTING_LANGUAGE) {
-			var newSoundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
-			var newSoundsAsDisplayedSplitted:Array = newSoundsAsDisplayed.split(',');
-			var existingAlertTypes:ArrayCollection = Database.getAllAlertTypes();
-			for (var alertTypeCntr:int = 0; alertTypeCntr < existingAlertTypes.length; alertTypeCntr++) {
-			for(var soundCntr:int = 0; soundCntr < soundsAsDisplayedSplitted.length; soundCntr++) {
-			if ((StringUtil.trim(soundsAsDisplayedSplitted[soundCntr] as String)).toUpperCase() == StringUtil.trim((existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).sound).toUpperCase()) {
-			(existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).sound = newSoundsAsDisplayedSplitted[soundCntr] as String;
-			(existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).updateInDatabase();
-			break;
-			}
-			}
-			}
-			soundsAsDisplayed = newSoundsAsDisplayed;
-			soundsAsDisplayedSplitted = newSoundsAsDisplayedSplitted;
-			}*/
+			
 			if ((event.data >= CommonSettings.COMMON_SETTING_LOW_ALERT && event.data <= CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) 
 				||
 				(event.data >= CommonSettings.COMMON_SETTING_BATTERY_ALERT && event.data <= CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT)
