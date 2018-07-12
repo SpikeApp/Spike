@@ -15,6 +15,7 @@ package ui.screens.display.settings.general
 	
 	import starling.events.Event;
 	
+	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	
@@ -130,6 +131,9 @@ package ui.screens.display.settings.general
 			{
 				ModelLocator.resourceManagerInstance.localeChain = [appLanguageValue,"en_US"];
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE, appLanguageValue);
+				
+				//Refresh main menu with new translations
+				AppInterface.instance.menu.refreshContent();
 			}
 			
 			needsSave = false;
