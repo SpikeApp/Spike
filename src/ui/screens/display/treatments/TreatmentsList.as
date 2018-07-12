@@ -118,7 +118,7 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			/* Content */
-			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
+			if ((Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower()) || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
 			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
