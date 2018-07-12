@@ -1,5 +1,6 @@
 package services
 {
+	import com.adobe.utils.StringUtil;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
@@ -413,7 +414,7 @@ package services
 		{
 			var glucoseDate:Date = new Date(timestamp);
 			
-			return months[glucoseDate.month] + " " + glucoseDate.date;
+			return StringUtil.trim(months[glucoseDate.month]) + " " + glucoseDate.date;
 		}
 		
 		private static function getGlucoseTimeFormatted(timestamp:Number, formatForChartLabel:Boolean):String

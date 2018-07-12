@@ -1,5 +1,7 @@
 package ui.screens.display.settings.chart
 {
+	import com.adobe.utils.StringUtil;
+	
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
@@ -92,8 +94,8 @@ package ui.screens.display.settings.chart
 			percentageRangePicker.dataProvider = new ArrayCollection();
 			for (i = 0; i < rangesLabels.length; i++) 
 			{
-				value = Number(rangesValues[i]);
-				percentageRangePicker.dataProvider.push( { label: rangesLabels[i], value: value } );
+				value = Number(StringUtil.trim(rangesValues[i]));
+				percentageRangePicker.dataProvider.push( { label: StringUtil.trim(rangesLabels[i]), value: value } );
 				if (value == percentageRangeValue)
 					percentageRangePicker.selectedIndex = i;
 			}
@@ -105,8 +107,8 @@ package ui.screens.display.settings.chart
 			avgRangePicker.dataProvider = new ArrayCollection();
 			for (i = 0; i < rangesLabels.length; i++) 
 			{
-				value = Number(rangesValues[i]);
-				avgRangePicker.dataProvider.push( { label: rangesLabels[i], value: value } );
+				value = Number(StringUtil.trim(rangesValues[i]));
+				avgRangePicker.dataProvider.push( { label: StringUtil.trim(rangesLabels[i]), value: value } );
 				if (value == avgRangeValue)
 					avgRangePicker.selectedIndex = i;
 			}
@@ -118,7 +120,7 @@ package ui.screens.display.settings.chart
 			a1cRangePicker.dataProvider = new ArrayCollection();
 			for (i = 0; i < rangesLabels.length; i++) 
 			{
-				value = Number(rangesValues[i]);
+				value = Number(StringUtil.trim(rangesValues[i]));
 				a1cRangePicker.dataProvider.push( { label: rangesLabels[i], value: value } );
 				if (value == a1cRangeValue)
 					a1cRangePicker.selectedIndex = i;

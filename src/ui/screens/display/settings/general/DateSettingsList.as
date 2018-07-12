@@ -1,5 +1,7 @@
 package ui.screens.display.settings.general
 {
+	import com.adobe.utils.StringUtil;
+	
 	import database.CommonSettings;
 	
 	import feathers.controls.PickerList;
@@ -61,8 +63,8 @@ package ui.screens.display.settings.general
 			var dateFormatList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < dateFormatLabelsList.length; i++) 
 			{
-				dateFormatList.push({label: dateFormatLabelsList[i], id: i});
-				if(dateFormatLabelsList[i] == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT))
+				dateFormatList.push({label: StringUtil.trim(dateFormatLabelsList[i]), id: i});
+				if(StringUtil.trim(dateFormatLabelsList[i]) == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT))
 					currentDateFormatIndex = i;
 			}
 			dateFormatLabelsList.length = 0;

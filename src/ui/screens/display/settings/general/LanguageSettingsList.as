@@ -2,8 +2,6 @@ package ui.screens.display.settings.general
 {
 	import com.adobe.utils.StringUtil;
 	
-	import flash.globalization.Collator;
-	import flash.globalization.CollatorMode;
 	import flash.utils.Dictionary;
 	
 	import database.CommonSettings;

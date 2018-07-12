@@ -120,8 +120,8 @@ package ui.screens.display.settings.transmitter
 			var transmitterTypeList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < transitterNamesList.length; i++) 
 			{
-				transmitterTypeList.push({label: transitterNamesList[i], id: i});
-				if(transitterNamesList[i] == transmitterTypeValue)
+				transmitterTypeList.push({label: StringUtil.trim(transitterNamesList[i]), id: i});
+				if(StringUtil.trim(transitterNamesList[i]) == transmitterTypeValue)
 					currentTransmitterIndex = i;
 			}
 			transitterNamesList.length = 0;

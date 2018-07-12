@@ -1,5 +1,7 @@
 package ui.popups
 {	
+	import com.adobe.utils.StringUtil;
+	
 	import flash.errors.IllegalOperationError;
 	
 	import feathers.controls.Button;
@@ -232,7 +234,7 @@ package ui.popups
 			var numAlarmTypesLabels:uint = alarmTypesLabels.length;
 			for (var i:int = 0; i < numAlarmTypesLabels; i++) 
 			{
-				alarmTypesDataProvider.push( { label: alarmTypesLabels[i] } );
+				alarmTypesDataProvider.push( { label: StringUtil.trim(alarmTypesLabels[i]) } );
 			}
 			if (alarmTypesPicker != null)
 			{

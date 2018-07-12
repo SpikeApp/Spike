@@ -1,5 +1,6 @@
 package ui.screens.display.settings.alarms
 {
+	import com.adobe.utils.StringUtil;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import database.AlertType;
@@ -203,11 +204,11 @@ package ui.screens.display.settings.alarms
 			for (var i:int = 0; i < soundListLength; i++) 
 			{
 				/* Set Label */
-				var labelValue:String = soundLabelsList[i];
+				var labelValue:String = StringUtil.trim(soundLabelsList[i]);
 				
 				/* Set Accessory */
 				var accessoryValue:DisplayObject;
-				if (soundFilesList[i] == "no_sound" || soundFilesList[i] == "default")
+				if (StringUtil.trim(soundFilesList[i]) == "no_sound" || StringUtil.trim(soundFilesList[i]) == "default")
 					accessoryValue = new Sprite();
 				else
 				{
@@ -219,10 +220,10 @@ package ui.screens.display.settings.alarms
 				
 				/* Set Sound File */
 				var soundFileValue:String;
-				if (soundFilesList[i] != "no_sound" && soundFilesList[i] != "default")
-					soundFileValue = "../assets/sounds/" + soundFilesList[i];
+				if (StringUtil.trim(soundFilesList[i]) != "no_sound" && StringUtil.trim(soundFilesList[i]) != "default")
+					soundFileValue = "../assets/sounds/" + StringUtil.trim(soundFilesList[i]);
 				else
-					soundFileValue = soundFilesList[i];
+					soundFileValue = StringUtil.trim(soundFilesList[i]);
 				
 				soundListProvider.push( { label: labelValue, accessory: accessoryValue, soundFile: soundFileValue } );
 				

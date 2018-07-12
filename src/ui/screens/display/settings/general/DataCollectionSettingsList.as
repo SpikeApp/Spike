@@ -1,5 +1,7 @@
 package ui.screens.display.settings.general
 {
+	import com.adobe.utils.StringUtil;
+	
 	import flash.display.StageOrientation;
 	
 	import database.CommonSettings;
@@ -86,7 +88,7 @@ package ui.screens.display.settings.general
 			var collectionModestList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < collectionModesLabelsList.length; i++) 
 			{
-				collectionModestList.push({label: collectionModesLabelsList[i], id: i});
+				collectionModestList.push({label: StringUtil.trim(collectionModesLabelsList[i]), id: i});
 			}
 			collectionModesLabelsList.length = 0;
 			collectionModesLabelsList = null;

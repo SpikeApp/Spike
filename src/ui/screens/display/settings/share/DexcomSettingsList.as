@@ -1,5 +1,7 @@
 package ui.screens.display.settings.share
 {
+	import com.adobe.utils.StringUtil;
+	
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
@@ -152,8 +154,8 @@ package ui.screens.display.settings.share
 			var dataLength:int = serversLabelsList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
-				dsServerList.push({ label: serversLabelsList[i], code: serversCodeList[i] });
-				if (selectedServerCode == serversCodeList[i])
+				dsServerList.push({ label: StringUtil.trim(serversLabelsList[i]), code: StringUtil.trim(serversCodeList[i]) });
+				if (selectedServerCode == StringUtil.trim(serversCodeList[i]))
 					selectedServerIndex = i;
 			}
 			

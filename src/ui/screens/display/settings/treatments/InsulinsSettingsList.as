@@ -1,5 +1,7 @@
 package ui.screens.display.settings.treatments
 {
+	import com.adobe.utils.StringUtil;
+	
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
@@ -111,7 +113,7 @@ package ui.screens.display.settings.treatments
 			var insulinTypesList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < insulinTypesLabelList.length; i++) 
 			{
-				insulinTypesList.push( {label: insulinTypesLabelList[i] } );
+				insulinTypesList.push( {label: StringUtil.trim(insulinTypesLabelList[i]) } );
 			}
 			insulinTypesPicker = LayoutFactory.createPickerList();
 			insulinTypesPicker.labelField = "label";

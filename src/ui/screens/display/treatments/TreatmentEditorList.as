@@ -146,6 +146,7 @@ package ui.screens.display.treatments
 				insulinAmountStepper.pivotX = -10;
 				insulinAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
+			
 			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				//Treatment Type
@@ -185,9 +186,8 @@ package ui.screens.display.treatments
 					carbTypePicker.selectedIndex = 2;
 				
 				carbTypePicker.addEventListener(Event.CHANGE, onSettingsChanged);
-				
-				
 			}
+			
 			if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
 				//Treatment Type
@@ -204,8 +204,10 @@ package ui.screens.display.treatments
 				glucoseAmountStepper.pivotX = -10;
 				glucoseAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
+			
 			if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
 				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_meal"); //Treatment Type
+			
 			if (treatment.type == Treatment.TYPE_NOTE)
 				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_note"); //Treatment Type
 			

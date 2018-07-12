@@ -1,5 +1,7 @@
 package ui.screens.display.settings.speech
 {
+	import com.adobe.utils.StringUtil;
+	
 	import database.BgReading;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -137,8 +139,8 @@ package ui.screens.display.settings.speech
 			var dataLength:int = languagesLabelsList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
-				languagePickerList.push({ label: languagesLabelsList[i], code: languagesCodesList[i] });
-				if (selectedLanguageCode == languagesCodesList[i])
+				languagePickerList.push({ label: StringUtil.trim(languagesLabelsList[i]), code: StringUtil.trim(languagesCodesList[i]) });
+				if (selectedLanguageCode == StringUtil.trim(languagesCodesList[i]))
 					selectedLanguageIndex = i;
 			}
 			

@@ -1,5 +1,7 @@
 package ui.screens.display.settings.chart
 {
+	import com.adobe.utils.StringUtil;
+	
 	import database.BgReading;
 	import database.CommonSettings;
 	
@@ -90,7 +92,7 @@ package ui.screens.display.settings.chart
 			var scaleFormatList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < scaleFormatLabelsList.length; i++) 
 			{
-				scaleFormatList.push({label: scaleFormatLabelsList[i], id: i});
+				scaleFormatList.push({label: StringUtil.trim(scaleFormatLabelsList[i]), id: i});
 			}
 			if(scaleFormatIsDynamic)
 				currentScaleFormatIndex = 0;
