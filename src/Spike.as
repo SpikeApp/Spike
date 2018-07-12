@@ -99,6 +99,8 @@ package
 				error.indexOf("RangeError: Error #1125 at BatchProcessor/getBatchAt() at starling.rendering::Painter/drawFromCache()") != -1 ||
 				error.indexOf("DropDownPopUpContentManager/stage_enterFrameHandler()") != -1 ||
 				error.indexOf("feathers.utils.touch::TapToEvent/target_touchHandler()") != -1 ||
+				error.indexOf("#2004 at flash.text.engine::ElementFormat()") != -1 ||
+				error.indexOf("#1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
 				error.indexOf("Graphic/getBounds()") != -1
 				)
 			{
