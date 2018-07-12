@@ -239,6 +239,8 @@ package ui.screens.display.dexcomshare
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
 				item.accessoryField = "accessory";
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
 				
 				return item;
 			};

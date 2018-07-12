@@ -284,6 +284,8 @@ package ui.screens.display.settings.treatments
 				item.accessoryField = "accessory";
 				item.itemHasSelectable = true;
 				item.selectableField = "selectable";
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)

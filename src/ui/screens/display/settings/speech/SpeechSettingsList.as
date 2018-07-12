@@ -135,15 +135,19 @@ package ui.screens.display.settings.speech
 			//Temp Data Objects
 			var languagesLabelsList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistdescription').split(",");
 			var languagesCodesList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistcodes').split(",");
-			var languagePickerList:ArrayCollection = new ArrayCollection();
+			var languagePickerList:Array = new Array();
 			var dataLength:int = languagesLabelsList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				languagePickerList.push({ label: StringUtil.trim(languagesLabelsList[i]), code: StringUtil.trim(languagesCodesList[i]) });
-				if (selectedLanguageCode == StringUtil.trim(languagesCodesList[i]))
+			}
+			languagePickerList.sortOn(["label"], Array.CASEINSENSITIVE);
+			for (i = 0; i < languagePickerList.length; i++) 
+			{
+				var object:Object = languagePickerList[i];
+				if (StringUtil.trim(selectedLanguageCode) == object.code)
 					selectedLanguageIndex = i;
 			}
-			
 			languagesLabelsList.length = 0;
 			languagesLabelsList = null
 			languagesCodesList.length = 0;
@@ -151,7 +155,7 @@ package ui.screens.display.settings.speech
 			
 			// Populate data and define renderers
 			languagePicker.labelField = "label";
-			languagePicker.dataProvider = languagePickerList;
+			languagePicker.dataProvider = new ArrayCollection(languagePickerList);
 			languagePicker.selectedIndex = selectedLanguageIndex;
 			var languagePopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
 			languagePopUp.margin = 10;
@@ -165,8 +169,8 @@ package ui.screens.display.settings.speech
 		{
 			/* Save data to database */
 			//Language Code
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) != selectedLanguageCode)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, selectedLanguageCode);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) != StringUtil.trim(selectedLanguageCode))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, StringUtil.trim(selectedLanguageCode));
 			
 			//Speak Interval
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) != String(selectedInterval))

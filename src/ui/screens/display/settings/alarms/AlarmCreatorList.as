@@ -384,6 +384,8 @@ package ui.screens.display.settings.alarms
 				var itemRenderer:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.iconSourceField = "accessory";
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
 				itemRenderer.paddingLeft = -5;
 				if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
 					itemRenderer.paddingTop = itemRenderer.paddingBottom = 5;

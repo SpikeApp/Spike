@@ -17,7 +17,6 @@ package ui.screens.display.bugreport
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Label;
-	import feathers.controls.List;
 	import feathers.controls.TextArea;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
@@ -494,6 +493,8 @@ package ui.screens.display.bugreport
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.accessoryField = "accessory";
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
 				itemRenderer.paddingBottom = itemRenderer.paddingTop = 10;
 				
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)

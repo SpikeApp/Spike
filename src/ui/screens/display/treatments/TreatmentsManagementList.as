@@ -220,6 +220,8 @@ package ui.screens.display.treatments
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.iconSourceField = "icon";
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
 				itemRenderer.iconLoaderFactory = function():ImageLoader
 				{
 					var loader:ImageLoader = new ImageLoader();

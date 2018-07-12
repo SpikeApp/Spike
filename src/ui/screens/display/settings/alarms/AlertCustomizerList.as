@@ -268,6 +268,8 @@ package ui.screens.display.settings.alarms
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 					item.paddingRight = -2;
 				item.accessoryOffsetX = -10;
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
 					
 				return item;
 			};

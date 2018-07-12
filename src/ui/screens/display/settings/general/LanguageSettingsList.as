@@ -88,19 +88,22 @@ package ui.screens.display.settings.general
 			var appLanguageCodesList:Array = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','app_language_codes_list').split(",");
 			var appLanguageList:Array = new Array();
 			var selectedIndex:int = 0;
-			var numIteratons:int = 0;
 			for (var i:int = 0; i < appLanguageLabelsList.length; i++) 
 			{
 				if (disabledLanguages[StringUtil.trim(appLanguageCodesList[i])] == null)
 				{
 					appLanguageList.push( { label: StringUtil.trim(appLanguageLabelsList[i]), code: StringUtil.trim(appLanguageCodesList[i]) } );
-					if (appLanguageCodesList[i] == appLanguageValue)
-						selectedIndex = numIteratons;
-					
-					numIteratons++;
 				}
 			}
-			appLanguageList.sortOn(["label"], Array.CASEINSENSITIVE)
+			appLanguageList.sortOn(["label"], Array.CASEINSENSITIVE);
+			
+			for (i = 0; i < appLanguageList.length; i++) 
+			{
+				var object:Object = appLanguageList[i];
+				if (object.code == appLanguageValue)
+					selectedIndex = i;
+			}
+			
 			appLanguageLabelsList.length = 0;
 			appLanguageLabelsList = null;
 			appLanguageCodesList.length = 0;

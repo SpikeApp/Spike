@@ -45,6 +45,8 @@ package ui.screens.display
 				item.labelField = "label";
 				item.accessoryField = "accessory";
 				item.iconSourceField = "icon";
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
 				
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
 				{

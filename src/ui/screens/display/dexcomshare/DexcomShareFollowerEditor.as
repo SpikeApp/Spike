@@ -282,6 +282,8 @@ package ui.screens.display.dexcomshare
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.accessoryField = "accessory";
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
 				
 				return itemRenderer;
 			};

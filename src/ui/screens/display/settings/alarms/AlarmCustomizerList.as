@@ -235,6 +235,8 @@ package ui.screens.display.settings.alarms
 					item.fontStyles = new TextFormat("Roboto", 12, 0xEEEEEE, "left", "top");
 				item.accessoryField = "accessory";
 				item.accessoryOffsetX = -8;
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
 				
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
 				{

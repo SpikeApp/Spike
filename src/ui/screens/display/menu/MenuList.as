@@ -153,6 +153,8 @@ package ui.screens.display.menu
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
 				item.iconSourceField = "icon";
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					item.paddingLeft = 40;
 				return item;
