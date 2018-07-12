@@ -164,8 +164,10 @@ package services
 				var now:Number = nowDate.valueOf();
 				var hours:Number = nowDate.hours;
 				
+				if (now - lastLogPlaySoundTimeStamp > TIME_1_MINUTE) {
 					Trace.myTrace("DeepSleepService.as", "Playing deep sleep sound...");
 					lastLogPlaySoundTimeStamp = now;
+				}
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_ALTERNATIVE_MODE) == "true")
 				{

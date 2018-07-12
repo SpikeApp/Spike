@@ -539,6 +539,9 @@ package ui.screens
 
 				var latestAddedReading:BgReading = glucoseChart.getLatestReading();
 				var timeStampLatestReading:Number = latestAddedReading == null ? 0:latestAddedReading.timestamp;
+				if (newReadingsList.length > 0) {
+					timeStampLatestReading = Math.max(timeStampLatestReading, (newReadingsList[newReadingsList.length - 1] as BgReading).timestamp);
+				}
 				
 				var cntr:int = ModelLocator.bgReadings.length - 1;
 				while (cntr > -1) {
