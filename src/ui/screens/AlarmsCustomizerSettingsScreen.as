@@ -61,7 +61,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 3;
+			AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 4 : 3;
 		}
 		
 		/**

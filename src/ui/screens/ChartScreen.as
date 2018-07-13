@@ -138,7 +138,7 @@ package ui.screens
 			AppInterface.instance.chartSettingsScreenItem.popTransition = null;
 			
 			//Reset Menu
-			AppInterface.instance.menu.selectedIndex = 0;
+			AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 1 : 0;
 		}
 		
 		/**

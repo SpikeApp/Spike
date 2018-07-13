@@ -79,9 +79,9 @@ package ui.screens
 		private function adjustMainMenu():void
 		{
 			if (!BlueToothDevice.isFollower())
-				AppInterface.instance.menu.selectedIndex = 4;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 5 : 4;
 			else
-				AppInterface.instance.menu.selectedIndex = 2;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 3 : 2;
 		}
 		
 		/**

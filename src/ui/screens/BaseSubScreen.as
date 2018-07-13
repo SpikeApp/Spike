@@ -127,7 +127,7 @@ package ui.screens
 			if(AppInterface.instance.navigator.activeScreenID == Screens.GLUCOSE_CHART)
 			{
 				//Select menu button from left menu
-				AppInterface.instance.menu.selectedIndex = 0;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 1 : 0;
 			}
 			
 		}

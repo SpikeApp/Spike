@@ -549,9 +549,9 @@ package ui.screens
 		private function adjustMainMenu():void
 		{
 			if (!BlueToothDevice.isFollower())
-				AppInterface.instance.menu.selectedIndex = 6;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 7 : 6;
 			else
-				AppInterface.instance.menu.selectedIndex = 4;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 5 : 4;
 		}
 		
 		/**
@@ -633,7 +633,7 @@ package ui.screens
 			if(AppInterface.instance.navigator.activeScreenID == Screens.GLUCOSE_CHART)
 			{
 				//Select menu button from left menu
-				AppInterface.instance.menu.selectedIndex = 0;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 1 : 0;
 			}
 			
 		}

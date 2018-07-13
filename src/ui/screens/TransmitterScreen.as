@@ -62,7 +62,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 2;
+			AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 3 : 2;
 		}
 		
 		/**
@@ -71,7 +71,6 @@ package ui.screens
 		override protected function onBackButtonTriggered(event:Event):void
 		{
 			dispatchEventWith(Event.COMPLETE);
-			AppInterface.instance.menu.selectedIndex = 0;
 		}
 		
 		override protected function onTransitionInComplete(e:Event):void

@@ -6,13 +6,19 @@ package ui.screens.display.menu
 	
 	import events.ScreenEvent;
 	
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ListCollection;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
+	import starling.display.Image;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.textures.Texture;
@@ -38,6 +44,12 @@ package ui.screens.display.menu
 		private var helpIconTexture:Texture;
 		private var donateIconTexture:Texture;
 		private var historyIconTexture:Texture;
+		private var spikeLogoIconTexture:Texture;
+		private var logoImage:Image;
+		private var logoContainer:LayoutGroup;
+		private var initialLogoX:Number;
+		private var previousSelectedIndex:int;
+		private var initialStart:Boolean = true;
 
 		public function MenuList() 
 		{
@@ -61,8 +73,12 @@ package ui.screens.display.menu
 			minWidth += 85;
 			hasElasticEdges = false;
 			clipContent = false;
+			isSelectable = true;
 			
 			setTopPadding();
+			
+			selectedIndex = 1;
+			previousSelectedIndex = 1;
 		}
 		
 		private function setupContent():void
@@ -76,8 +92,28 @@ package ui.screens.display.menu
 			helpIconTexture = MaterialDeepGreyAmberMobileThemeIcons.spikeHelpTexture;
 			donateIconTexture = MaterialDeepGreyAmberMobileThemeIcons.donateTexture;
 			historyIconTexture = MaterialDeepGreyAmberMobileThemeIcons.historyTexture;
+			spikeLogoIconTexture = MaterialDeepGreyAmberMobileThemeIcons.spikeLogoColorTexture;
+			
+			var logoContainerLayout:HorizontalLayout = new HorizontalLayout();
+			logoContainerLayout.horizontalAlign = HorizontalAlign.CENTER;
+			logoContainerLayout.verticalAlign = VerticalAlign.MIDDLE;
+			logoContainerLayout.paddingBottom = logoContainerLayout.paddingTop = 15;
+			logoContainer = new LayoutGroup();
+			logoContainer.layout = logoContainerLayout;
+			logoContainer.width = width;
+			
+			logoImage = new Image(spikeLogoIconTexture);
+			logoContainer.addChild(logoImage);
+			
+			logoContainer.validate();
+			
+			initialLogoX = logoImage.x;
 			
 			refreshContent();
+			
+			selectedIndex = previousSelectedIndex;
+			
+			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			
 			addEventListener( Event.CHANGE, onMenuChanged );
 		}
@@ -85,30 +121,26 @@ package ui.screens.display.menu
 		public function refreshContent():void
 		{
 			var menuItems:Array = [];
-			menuItems.push( { screen: Screens.GLUCOSE_CHART, label: ModelLocator.resourceManagerInstance.getString('mainmenu','graph_menu_item'), icon: graphIconTexture } );
+			if (Constants.isPortrait) menuItems.push( { label: "", accessory: logoContainer, selectable: false } );
+			menuItems.push( { screen: Screens.GLUCOSE_CHART, label: ModelLocator.resourceManagerInstance.getString('mainmenu','graph_menu_item'), icon: graphIconTexture, selectable: true } );
 			if (!BlueToothDevice.isFollower())
 			{
-				menuItems.push( { screen: Screens.SENSOR_STATUS, label: ModelLocator.resourceManagerInstance.getString('mainmenu','sensor_menu_item'), icon: sensorIconTexture } );
-				menuItems.push( { screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture } );
+				menuItems.push( { screen: Screens.SENSOR_STATUS, label: ModelLocator.resourceManagerInstance.getString('mainmenu','sensor_menu_item'), icon: sensorIconTexture, selectable: true } );
+				menuItems.push( { screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture, selectable: true } );
 			}
-			menuItems.push( { screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture } );
-			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture } );
-			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture } );
+			menuItems.push( { screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture, selectable: true } );
+			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture, selectable: true } );
+			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture, selectable: true } );
 			if (!BlueToothDevice.isFollower())
-				menuItems.push( { screen: Screens.HISTORY, label: ModelLocator.resourceManagerInstance.getString('mainmenu','history_menu_item'), icon: historyIconTexture } );
-			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture } );
-			menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture } );
+				menuItems.push( { screen: Screens.HISTORY, label: ModelLocator.resourceManagerInstance.getString('mainmenu','history_menu_item'), icon: historyIconTexture, selectable: true } );
+			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture, selectable: true } );
+			menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture, selectable: true } );
 			
 			dataProvider = new ListCollection(menuItems);
-			selectedIndex = 0;
 			
-			itemRendererFactory = function():IListItemRenderer 
-			{
-				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
-				item.labelField = "label";
-				item.iconSourceField = "icon";
-				return item;
-			};
+			removeEventListener( Event.CHANGE, onMenuChanged );
+			selectedIndex = previousSelectedIndex;
+			addEventListener( Event.CHANGE, onMenuChanged );
 		}
 		
 		private function setTopPadding():void
@@ -116,9 +148,9 @@ package ui.screens.display.menu
 			if (Constants.isPortrait)
 			{
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-					paddingTop = 102;
+					paddingTop = 33;
 				else
-					paddingTop = 70;
+					paddingTop = 1;
 			}
 			else
 			{
@@ -134,8 +166,21 @@ package ui.screens.display.menu
 		 */
 		private function onMenuChanged():void 
 		{
+			if (selectedItem == null) return;
+			
+			if (selectedItem != null && selectedItem.screen == null) 
+			{
+				removeEventListener( Event.CHANGE, onMenuChanged );
+				selectedIndex = previousSelectedIndex;
+				addEventListener( Event.CHANGE, onMenuChanged );
+				
+				return;
+			}
+			
 			if(AppInterface.instance.drawers.isLeftDrawerOpen)
 			{
+				previousSelectedIndex = selectedIndex;
+				
 				//Notify special screens like the chart settings screen that a new sceen is about to enter
 				dispatchEventWith( ScreenEvent.BEGIN_SWITCH);
 				
@@ -153,6 +198,7 @@ package ui.screens.display.menu
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
 				item.labelField = "label";
 				item.iconSourceField = "icon";
+				item.selectableField = "selectable";
 				item.accessoryLabelProperties.wordWrap = true;
 				item.defaultLabelProperties.wordWrap = true;
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
@@ -183,11 +229,26 @@ package ui.screens.display.menu
 			}
 			
 			setTopPadding();
+			
+			if (!initialStart)
+				previousSelectedIndex = !Constants.isPortrait ? previousSelectedIndex - 1 : previousSelectedIndex + 1;
+			else
+				initialStart = false;
+			
+			refreshContent();
 		}
 		
 		/**
 		 * Utility
 		 */
+		override protected function draw():void
+		{
+			if (logoImage != null)
+				logoImage.x = initialLogoX - 10;
+			
+			super.draw();
+		}
+		
 		override public function dispose():void
 		{
 			removeEventListener( Event.CHANGE, onMenuChanged );
@@ -244,6 +305,25 @@ package ui.screens.display.menu
 			{
 				historyIconTexture.dispose();
 				historyIconTexture = null;
+			}
+			
+			if(spikeLogoIconTexture != null)
+			{
+				spikeLogoIconTexture.dispose();
+				spikeLogoIconTexture = null;
+			}
+			
+			if(logoImage != null)
+			{
+				logoImage.removeFromParent();
+				logoImage.dispose();
+				logoImage = null;
+			}
+			
+			if(logoContainer != null)
+			{
+				logoContainer.dispose();
+				logoContainer = null;
 			}
 			
 			super.dispose();
