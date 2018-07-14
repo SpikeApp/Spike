@@ -1,5 +1,6 @@
 2.2.2
-FEATURE: Multilanguage support!
+FEATURE: Multilanguage support! Spike is now also available in Portugues, French and Chinese. More languages soon. Many thanks to our translators! Choose your desired language in Settings -> General -> Language. (Miguel & Traslators)
+ENHANCEMENT: Added Spike's logo to main menu.
 
 2.2.1
 ENHANCEMENT: Force PayPal donation page to always display in English. (Miguel)

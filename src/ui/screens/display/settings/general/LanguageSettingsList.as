@@ -70,7 +70,6 @@ package ui.screens.display.settings.general
 			var disabledLanguages:Dictionary = new Dictionary();
 			disabledLanguages["ar_SA"] = true;
 			disabledLanguages["bg_BG"] = true;
-			disabledLanguages["zh_CN"] = true;
 			disabledLanguages["cs_CZ"] = true;
 			disabledLanguages["da_DK"] = true;
 			disabledLanguages["fi_FI"] = true;
