@@ -119,10 +119,9 @@ package ui.screens.display.settings.alarms
 		
 		private function setupInitialState(glucoseUnit:String = null):void
 		{
-			if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED && alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) ||
-				(alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT))
-					hideValue = true;
-					
+			if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED && alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) || BlueToothDevice.isBluKon())
+				hideValue = true;
+			
 			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE)
 			{
 				valueLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"bg_value_label");
@@ -163,6 +162,32 @@ package ui.screens.display.settings.alarms
 				minimumStepperValue = 10;
 				maximumStepperValue = 999;
 			}
+			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && !BlueToothDevice.isBluKon())
+			{
+				valueLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"battery_value_label");
+				valueStepperStep = 1;
+				
+				if (BlueToothDevice.isDexcomG5())
+				{
+					minimumStepperValue = 260;
+					maximumStepperValue = 380;
+				}
+				else if (BlueToothDevice.isDexcomG4())
+				{
+					minimumStepperValue = 170;
+					maximumStepperValue = 240;
+				}
+				else if (BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL())
+				{
+					minimumStepperValue = 5;
+					maximumStepperValue = 90;
+				}
+				else if (BlueToothDevice.isMiaoMiao())
+				{
+					minimumStepperValue = 10;
+					maximumStepperValue = 90;
+				}
+			}
 			
 			nowDate = new Date();
 			if (mode == MODE_ADD)
@@ -201,6 +226,15 @@ package ui.screens.display.settings.alarms
 					alarmValue = 10;
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
 						alarmValue = Math.round(((BgReading.mgdlToMmol((alarmValue))) * 10)) / 10;
+				}
+				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT && !BlueToothDevice.isBluKon())
+				{
+					if (BlueToothDevice.isDexcomG5())
+						alarmValue = 300;
+					else if (BlueToothDevice.isDexcomG4())
+						alarmValue = 210;
+					else if (BlueToothDevice.isMiaoMiao() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL())
+						alarmValue = 20;
 				}
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT)
 					alarmValue = 12;
@@ -547,17 +581,13 @@ package ui.screens.display.settings.alarms
 				alarmData.value = 0;
 			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT)
 			{
-				if (BlueToothDevice.isDexcomG5())
-					alarmData.value = 300;
-				else if (BlueToothDevice.isDexcomG4())
-					alarmData.value = 210;
-				else if (BlueToothDevice.isBluKon())
+				if (!BlueToothDevice.isBluKon())
+					alarmData.value = valueStepper.value;
+				else
 					alarmData.value = 5;
-				else if (BlueToothDevice.isMiaoMiao() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL())
-					alarmData.value = 20;
 			}
 			else if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING && alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) || (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT))
-				alarmData.value = valueStepper.value
+				alarmData.value = valueStepper.value;
 			else
 			{
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
