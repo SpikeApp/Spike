@@ -4,6 +4,7 @@ FEATURE: Historical data! You will now be able to see historical data by pressin
 ENHANCEMENT: Ability to select battery level when adding "Transmitter Low Battery" alarms. Defaults: G5 -> 300 (Voltage A), G4 -> 210, MiaoMiao/BlueReader/TransmitterPL/Limitter -> 20. This option is not available for BluCon users because BluCon doesn't report battery levels, it reports either 100% (OK) or less than 5% (about to die) so, for BluCon users, the alarm will always trigger when battery goes below 5%. (Miguel) 
 ENHANCEMENT: Added Spike's logo to main menu.
 ENHANCEMENT: Several small layout adjustments overall.
+FIX: As usual, other small bug fixes and improvements. (Miguel)
 
 2.2.1
 ENHANCEMENT: Force PayPal donation page to always display in English. (Miguel)
