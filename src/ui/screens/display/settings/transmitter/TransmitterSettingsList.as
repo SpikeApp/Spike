@@ -2,6 +2,9 @@ package ui.screens.display.settings.transmitter
 {
 	import com.adobe.utils.StringUtil;
 	
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
+	
 	import database.BlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
@@ -52,6 +55,7 @@ package ui.screens.display.settings.transmitter
 		private var transmitterIDValue:String;
 		private var currentTransmitterIndex:int;
 		private var transmitterIDisEnabled:Boolean;
+		private var sensorWarningTimeout:uint = 0;
 		
 		public function TransmitterSettingsList()
 		{
@@ -102,13 +106,7 @@ package ui.screens.display.settings.transmitter
 			
 			if (((transmitterTypeValue != "" && transmitterTypeValue.toUpperCase() != "FOLLOW") || transmitterIDValue != "") && !TutorialService.isActive)
 			{
-				Starling.juggler.delayCall
-				(
-					AlertManager.showSimpleAlert,
-					2,
-					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_sensor_warning')
-				);
+				sensorWarningTimeout = setTimeout(displaySensorWarning, 2000);
 			}
 		}
 		
@@ -172,6 +170,15 @@ package ui.screens.display.settings.transmitter
 				]);
 			
 			checkWarn();
+		}
+		
+		private function displaySensorWarning():void
+		{
+			AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_sensor_warning')
+				)
 		}
 		
 		private function populateTransmitterIDPrompt():void
@@ -459,6 +466,7 @@ package ui.screens.display.settings.transmitter
 		 */
 		override public function dispose():void
 		{
+			clearTimeout(sensorWarningTimeout);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			
 			if(transmitterID != null)
