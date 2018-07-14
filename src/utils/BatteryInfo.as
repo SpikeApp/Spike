@@ -17,7 +17,7 @@ package utils
 		
 		public static function getBatteryLevel():Number
 		{
-			return SpikeANE.getBatteryLevel();
+			return Math.round(SpikeANE.getBatteryLevel());
 		}
 		
 		public static function getBatteryStatus():int
