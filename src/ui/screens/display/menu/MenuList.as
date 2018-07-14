@@ -247,7 +247,7 @@ package ui.screens.display.menu
 					if (logoContainer != null) 
 					{
 						logoContainer.width = width;
-						logoImage.x = (width / 2) - 10;
+						logoImage.x = (width / 2) - 5;
 					}
 				}
 			}
