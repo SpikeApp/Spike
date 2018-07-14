@@ -6,6 +6,7 @@ package ui.screens.display.menu
 	
 	import events.ScreenEvent;
 	
+	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
@@ -47,9 +48,10 @@ package ui.screens.display.menu
 		private var spikeLogoIconTexture:Texture;
 		private var logoImage:Image;
 		private var logoContainer:LayoutGroup;
-		private var initialLogoX:Number;
 		private var previousSelectedIndex:int;
 		private var initialStart:Boolean = true;
+		private var maxTempWidth:Number = 0;
+		private var lastCalculatedWidth:Number = 0;
 
 		public function MenuList() 
 		{
@@ -69,16 +71,16 @@ package ui.screens.display.menu
 		 */
 		private function setupProperties():void
 		{
-			minWidth = Constants.stageWidth >> 2;
-			minWidth += 85;
+			width = Constants.stageWidth >> 2;
+			width += 85;
 			hasElasticEdges = false;
 			clipContent = false;
 			isSelectable = true;
 			
-			setTopPadding();
+			selectedIndex = Constants.isPortrait ? 1 : 0;
+			previousSelectedIndex = selectedIndex;
 			
-			selectedIndex = 1;
-			previousSelectedIndex = 1;
+			setTopPadding();
 		}
 		
 		private function setupContent():void
@@ -104,15 +106,11 @@ package ui.screens.display.menu
 			
 			logoImage = new Image(spikeLogoIconTexture);
 			logoContainer.addChild(logoImage);
-			
 			logoContainer.validate();
-			
-			initialLogoX = logoImage.x;
 			
 			refreshContent();
 			
 			selectedIndex = previousSelectedIndex;
-			
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			
 			addEventListener( Event.CHANGE, onMenuChanged );
@@ -120,6 +118,9 @@ package ui.screens.display.menu
 		
 		public function refreshContent():void
 		{
+			maxTempWidth = 0;
+			setupRenderFactory();
+			
 			var menuItems:Array = [];
 			if (Constants.isPortrait) menuItems.push( { label: "", accessory: logoContainer, selectable: false } );
 			menuItems.push( { screen: Screens.GLUCOSE_CHART, label: ModelLocator.resourceManagerInstance.getString('mainmenu','graph_menu_item'), icon: graphIconTexture, selectable: true } );
@@ -193,6 +194,8 @@ package ui.screens.display.menu
 		override protected function setupRenderFactory():void
 		{
 			/* List Item Renderer */
+			maxTempWidth = 0;
+			
 			itemRendererFactory = function():IListItemRenderer 
 			{
 				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
@@ -201,6 +204,16 @@ package ui.screens.display.menu
 				item.selectableField = "selectable";
 				item.accessoryLabelProperties.wordWrap = true;
 				item.defaultLabelProperties.wordWrap = true;
+				item..labelFunction = function( item:Object ):String
+				{
+					var tempLabel:Label = new Label();
+					tempLabel.text = item.label;
+					tempLabel.validate();
+					if (tempLabel.width > maxTempWidth) maxTempWidth = tempLabel.width;
+					
+					return item.label;
+				};
+				
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					item.paddingLeft = 40;
 				return item;
@@ -210,24 +223,6 @@ package ui.screens.display.menu
 		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			setupRenderFactory();
-			
-			if (Constants.isPortrait)
-			{
-				minWidth = Constants.stageWidth >> 2;
-				minWidth += 85;
-			}
-			else
-			{
-				minWidth = Constants.stageHeight >> 2;
-				minWidth += 85;
-			}
-			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
-			{
-				minWidth = Constants.stageHeight >> 2;
-				minWidth += 130;
-			}
-			
 			setTopPadding();
 			
 			if (!initialStart)
@@ -243,8 +238,26 @@ package ui.screens.display.menu
 		 */
 		override protected function draw():void
 		{
-			if (logoImage != null)
-				logoImage.x = initialLogoX - 10;
+			if (Constants.isPortrait || Constants.deviceModel != DeviceInfo.IPHONE_X || (Constants.deviceModel == DeviceInfo.IPHONE_X && Constants.currentOrientation != StageOrientation.ROTATED_RIGHT))
+			{
+				if (maxTempWidth != 0)
+				{
+					width = maxTempWidth + 85;
+					lastCalculatedWidth = width;
+					if (logoContainer != null) 
+					{
+						logoContainer.width = width;
+						logoImage.x = (width / 2) - 10;
+					}
+				}
+			}
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			{
+				if (lastCalculatedWidth == 0) maxTempWidth + 85;
+				width = lastCalculatedWidth + 45;
+			}
+			
+			AppInterface.instance.drawers.invalidate();
 			
 			super.draw();
 		}
