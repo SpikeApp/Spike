@@ -280,6 +280,8 @@ package services
 		private static function processChartGlucoseValues():void
 		{
 			activeGlucoseReadingsList = removeDuplicates(activeGlucoseReadingsList);
+			if (activeGlucoseReadingsList.length == 0) return;
+			
 			activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
 			
 			var currentTimestamp:Number

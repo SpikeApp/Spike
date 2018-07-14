@@ -55,6 +55,9 @@ package ui.screens
 
 	public class HistoryChartScreen extends PanelScreen
 	{
+		//Constants
+		private var time3months:Number = 0;
+		
 		//Objects
 		private var chartData:Array = [];
 		private var chartTreatments:Array = [];
@@ -98,6 +101,10 @@ package ui.screens
 		private var goButton:Button;
 		private var renderingLabel:Label;
 		private var renderingLabelContainer:LayoutGroup;
+		private var controlsContainer:LayoutGroup;
+		private var previousButton:Button;
+		private var nextButton:Button;
+		private var prevNextContainer:LayoutGroup;
 		
 		public function HistoryChartScreen() 
 		{
@@ -122,11 +129,11 @@ package ui.screens
 			super.initialize();
 			
 			/* Add default back button to the header */
-			backButton = new Button();
+			/*backButton = new Button();
 			backButton.label = ModelLocator.resourceManagerInstance.getString('globaltranslations','back');
 			backButton.styleNameList.add( Button.ALTERNATE_STYLE_NAME_BACK_BUTTON );
 			headerProperties.leftItems = new <DisplayObject>[backButton];
-			backButton.addEventListener(Event.TRIGGERED, onBackButtonTriggered);
+			backButton.addEventListener(Event.TRIGGERED, onBackButtonTriggered);*/
 			
 			//Set Properties From Database
 			selectedTimelineRange = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE));
@@ -157,16 +164,36 @@ package ui.screens
 		 */
 		private function createDateSelector():void
 		{
+			/* Prev & Next Buttons */
+			var prevNextContainerLayout:HorizontalLayout = new HorizontalLayout();
+			prevNextContainerLayout.gap = 5;
+			prevNextContainer = new LayoutGroup();
+			prevNextContainer.layout = prevNextContainerLayout;
+			
+			previousButton = LayoutFactory.createButton("<");
+			previousButton.paddingLeft = previousButton.paddingRight = 0;
+			previousButton.addEventListener(Event.TRIGGERED, onPreviousButtonTriggered);
+			nextButton = LayoutFactory.createButton(">");
+			nextButton.paddingLeft = nextButton.paddingRight = 0;
+			nextButton.addEventListener(Event.TRIGGERED, onNextButtonTriggered);
+			prevNextContainer.addChild(previousButton);
+			prevNextContainer.addChild(nextButton);
+			prevNextContainer.validate();
+			
+			previousButton.y += 2;
+			nextButton.y += 2;
+			
+			/* Date Selector */
 			var dateSelectorLayout:HorizontalLayout = new HorizontalLayout();
 			dateSelectorLayout.verticalAlign = VerticalAlign.MIDDLE;
-			dateSelectorLayout.gap = 9;
-			
+			dateSelectorLayout.gap = 10;
 			dateSelectorContainer = new LayoutGroup();
 			dateSelectorContainer.layout = dateSelectorLayout;
 			
 			var now:Date = new Date();
 			var before:Date = new Date();
 			before.month -= 3;
+			time3months = before.valueOf();
 			
 			datePicker = new DateTimeSpinner();
 			datePicker.editingMode = DateTimeMode.DATE;
@@ -175,17 +202,28 @@ package ui.screens
 			datePicker.value = now;
 			datePicker.maxHeight = 35;
 			datePicker.scale = 0.8;
+			datePicker.validate();
 			dateSelectorContainer.addChild(datePicker);
 			
 			goButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('chartscreen','history_go_button_label'));
 			goButton.addEventListener(Event.TRIGGERED, onDateChanged);
 			dateSelectorContainer.addChild(goButton);
+			dateSelectorContainer.addChild(prevNextContainer);
 			
 			dateSelectorContainer.validate();
-			goButton.y += 2
+			goButton.y += 2;
 			
-			headerProperties.rightItems = new <DisplayObject>[
-				dateSelectorContainer
+			/* All Controls */
+			var controlsContainerLayout:VerticalLayout; = new VerticalLayout();
+			controlsContainerLayout.horizontalAlign = HorizontalAlign.RIGHT;
+			controlsContainerLayout.gap = 5;
+			controlsContainer = new LayoutGroup();
+			controlsContainer.layout = controlsContainerLayout;
+			controlsContainer.addChild(dateSelectorContainer);
+			controlsContainer.validate();
+			
+			headerProperties.centerItems = new <DisplayObject>[
+				controlsContainer
 			];
 		}
 		
@@ -258,6 +296,80 @@ package ui.screens
 			
 			//Define start and end date
 			calculateTimerangeDates(datePicker.value.valueOf());
+			
+			//Get treatments from database
+			getHistoricalTreatments();
+			
+			//Get readings from database
+			Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+			Database.getBgReadings(startTimestamp, endTimestamp);
+		}
+		
+		private function onPreviousButtonTriggered(e:Event):void
+		{
+			//Define start and end date
+			var selectorDate:Date = new Date(datePicker.value.valueOf());
+			selectorDate.date -= 1;
+			var selectorDateTimestamp:Number = selectorDate.valueOf();
+			var now:Number = new Date().valueOf();
+			var timestampToVisualize:Number = 0;
+			if (selectorDateTimestamp < now - time3months)
+				return;
+			else
+				timestampToVisualize = selectorDateTimestamp;
+			
+			//Remove previous display objects
+			disposeDisplayObjects();
+			
+			//Add rendering label
+			renderingLabelContainer.width = Constants.stageWidth;
+			renderingLabelContainer.height = Constants.stageHeight - this.header.height;
+			addChild(renderingLabelContainer);
+			
+			//Clear Chart Data
+			if (chartData != null) chartData.length = 0;
+			if (chartTreatments != null) chartTreatments.length = 0;
+			
+			datePicker.value = new Date(selectorDateTimestamp);
+			
+			calculateTimerangeDates(selectorDateTimestamp);
+			
+			//Get treatments from database
+			getHistoricalTreatments();
+			
+			//Get readings from database
+			Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+			Database.getBgReadings(startTimestamp, endTimestamp);
+		}
+		
+		private function onNextButtonTriggered(e:Event):void
+		{
+			//Define start and end date
+			var selectorDate:Date = new Date(datePicker.value.valueOf());
+			selectorDate.date += 1;
+			var selectorDateTimestamp:Number = selectorDate.valueOf();
+			var now:Number = new Date().valueOf();
+			var timestampToVisualize:Number = 0;
+			if (selectorDateTimestamp > now)
+				return;
+			else
+				timestampToVisualize = selectorDateTimestamp;
+			
+			//Remove previous display objects
+			disposeDisplayObjects();
+			
+			//Add rendering label
+			renderingLabelContainer.width = Constants.stageWidth;
+			renderingLabelContainer.height = Constants.stageHeight - this.header.height;
+			addChild(renderingLabelContainer);
+			
+			//Clear Chart Data
+			if (chartData != null) chartData.length = 0;
+			if (chartTreatments != null) chartTreatments.length = 0;
+			
+			datePicker.value = new Date(selectorDateTimestamp);
+			
+			calculateTimerangeDates(selectorDateTimestamp);
 			
 			//Get treatments from database
 			getHistoricalTreatments();
@@ -355,6 +467,8 @@ package ui.screens
 		{
 			if (SystemUtil.isApplicationActive)
 			{
+				if (glucoseChart == null || glucoseChart.dataSource == null) return;
+				
 				chartData = glucoseChart.dataSource;
 				
 				//Remove previous chart
@@ -751,6 +865,7 @@ package ui.screens
 			
 			if (dateSelectorContainer != null)
 			{
+				dateSelectorContainer.removeFromParent();
 				dateSelectorContainer.dispose();
 				dateSelectorContainer = null;
 			}
@@ -760,6 +875,33 @@ package ui.screens
 				backButton.removeEventListener(Event.TRIGGERED, onBackButtonTriggered);
 				backButton.dispose();
 				backButton = null;
+			}
+			
+			if (previousButton != null)
+			{
+				previousButton.removeEventListener(Event.TRIGGERED, onPreviousButtonTriggered);
+				previousButton.dispose();
+				previousButton = null;
+			}
+			
+			if (nextButton != null)
+			{
+				nextButton.removeEventListener(Event.TRIGGERED, onNextButtonTriggered);
+				nextButton.dispose();
+				nextButton = null;
+			}
+			
+			if (prevNextContainer != null)
+			{
+				prevNextContainer.removeFromParent();
+				prevNextContainer.dispose();
+				prevNextContainer = null;
+			}
+			
+			if (controlsContainer != null)
+			{
+				controlsContainer.dispose();
+				controlsContainer = null;
 			}
 		}
 		
@@ -812,13 +954,6 @@ package ui.screens
 			super.dispose();
 			
 			System.pauseForGCIfCollectionImminent(0);
-		}
-		
-		override protected function draw():void 
-		{
-			super.draw();
-			if (dateSelectorContainer != null)
-				dateSelectorContainer.x = Constants.stageWidth - dateSelectorContainer.width - BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding;
 		}
 	}
 }
