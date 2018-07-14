@@ -82,8 +82,8 @@ package ui.popups
 			}
 			
 			var alert:Alert = new Alert();
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
-				alert.maxWidth = 270;
+			//if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+				//alert.maxWidth = 270;
 			
 			/* Define Alert Buttons */
 			var buttonCollection:ListCollection

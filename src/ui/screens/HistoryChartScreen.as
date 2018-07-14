@@ -105,6 +105,7 @@ package ui.screens
 		private var previousButton:Button;
 		private var nextButton:Button;
 		private var prevNextContainer:LayoutGroup;
+		private var separator:SpikeLine;
 		
 		public function HistoryChartScreen() 
 		{
@@ -206,12 +207,20 @@ package ui.screens
 			dateSelectorContainer.addChild(datePicker);
 			
 			goButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('chartscreen','history_go_button_label'));
+			goButton.validate();
 			goButton.addEventListener(Event.TRIGGERED, onDateChanged);
 			dateSelectorContainer.addChild(goButton);
-			dateSelectorContainer.addChild(prevNextContainer);
 			
+			//Separator
+			separator = GraphLayoutFactory.createVerticalLine(goButton.height - 4, 1, 0x34353d);
+			dateSelectorContainer.addChild(separator);
+			dateSelectorContainer.addChild(prevNextContainer);
 			dateSelectorContainer.validate();
+			
+			//Layout adjustments
 			goButton.y += 2;
+			separator.y += 1;
+			separator.x += 0.5;
 			
 			/* All Controls */
 			var controlsContainerLayout:VerticalLayout = new VerticalLayout();
@@ -862,6 +871,13 @@ package ui.screens
 				datePicker.removeFromParent();
 				datePicker.dispose();
 				datePicker = null;
+			}
+			
+			if (separator != null)
+			{
+				separator.removeFromParent();
+				separator.dispose();
+				separator = null;
 			}
 			
 			if (dateSelectorContainer != null)
