@@ -36,6 +36,8 @@ package services
 
 	[ResourceBundle("generalsettingsscreen")]
 	[ResourceBundle("widgetservice")]
+	[ResourceBundle("chartscreen")]
+	[ResourceBundle("treatments")]
 	
 	public class WidgetService
 	{
@@ -70,8 +72,6 @@ package services
 			
 			SpikeANE.initUserDefaults();
 			
-			months = ModelLocator.resourceManagerInstance.getString('widgetservice','months').split(",");
-			
 			if (!BlueToothDevice.isFollower())
 				Starling.juggler.delayCall(setInitialGraphData, 3);
 			
@@ -97,7 +97,8 @@ package services
 				e.data == CommonSettings.COMMON_SETTING_HIGH_MARK ||
 				e.data == CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK ||
 				e.data == CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT || 
-				e.data == CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN
+				e.data == CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN ||
+				e.data == CommonSettings.COMMON_SETTING_APP_LANGUAGE
 			)
 			{
 				setInitialGraphData();
@@ -146,6 +147,8 @@ package services
 		{
 			Trace.myTrace("WidgetService.as", "Setting initial widget data!");
 			
+			months = ModelLocator.resourceManagerInstance.getString('widgetservice','months').split(",");
+			
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 			historyTimespan = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN));
 			widgetHistory = historyTimespan * TIME_1_HOUR;
@@ -192,6 +195,7 @@ package services
 			}
 			
 			activeGlucoseReadingsList.reverse();
+			processChartGlucoseValues();
 			
 			//Graph Data
 			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
@@ -265,6 +269,10 @@ package services
 			SpikeANE.setUserDefaultsData("ago", ModelLocator.resourceManagerInstance.getString('widgetservice','ago'));
 			SpikeANE.setUserDefaultsData("now", ModelLocator.resourceManagerInstance.getString('widgetservice','now'));
 			SpikeANE.setUserDefaultsData("openSpike", ModelLocator.resourceManagerInstance.getString('widgetservice','open_spike'));
+			SpikeANE.setUserDefaultsData("high", ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_high'));
+			SpikeANE.setUserDefaultsData("low", ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_low'));
+			SpikeANE.setUserDefaultsData("IOBString", ModelLocator.resourceManagerInstance.getString('treatments','iob_label'));
+			SpikeANE.setUserDefaultsData("COBString", ModelLocator.resourceManagerInstance.getString('treatments','cob_label'));
 			
 			initialGraphDataSet = true;
 		}

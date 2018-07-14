@@ -44,6 +44,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var latestGlucoseSlopeArrow:String = ""
     var latestGlucoseDelta:String = ""
     var latestGlucoseTime:String = ""
+    var highString:String = ""
+    var lowString:String = ""
     var glucoseUnit:String = ""
     var glucoseUnitInternal:String = ""
     var chartData:String = ""
@@ -79,6 +81,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var markerRadius:NSString = ""
     var IOB:String = "0.00U"
     var COB:String = "0.00g"
+    var IOBString:String = ""
+    var COBString:String = ""
     
     //Constants
     let millisecondsInHour = 3600000
@@ -229,7 +233,11 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             externalData["showMarkerLabel"] == nil ||
             externalData["showGridLines"] == nil ||
             externalData["lineThickness"] == nil ||
-            externalData["markerRadius"] == nil
+            externalData["markerRadius"] == nil ||
+            externalData["high"] == nil ||
+            externalData["low"] == nil ||
+            externalData["IOBString"] == nil ||
+            externalData["COBString"] == nil
         {
             print("Missing data in database!")
             noData.text = "Missing data in database!"
@@ -266,6 +274,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         displayLabelsColor = (externalData["displayLabelsColor"] as? String)!
         hourAgo = (externalData["hourAgo"] as? String)!
         minAgo = (externalData["minAgo"] as? String)!
+        highString = (externalData["high"] as? String)!
+        lowString = (externalData["low"] as? String)!
         ago = (externalData["ago"] as? String)!
         now = (externalData["now"] as? String)!
         openSpike = (externalData["openSpike"] as? String)!
@@ -275,6 +285,9 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         showGridLines = (externalData["showGridLines"] as? String)!
         lineThickness = (externalData["lineThickness"] as? NSString)!
         markerRadius = (externalData["markerRadius"] as? NSString)!
+        IOBString = (externalData["IOBString"] as? String)!
+        COBString = (externalData["COBString"] as? String)!
+        
         if (externalData["IOB"] != nil)
         {
             IOB = (externalData["IOB"] as? String)!
@@ -317,9 +330,11 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+                glucoseDisplay.text = lowString + " " + latestGlucoseSlopeArrow
             }
             else if latestGlucoseValue == "HIGH"
             {
+                glucoseDisplay.text = highString + " " + latestGlucoseSlopeArrow
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
             }
             else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentLowThresholdInteger = Int(urgenLowThreshold), latestGlucoseValueInteger <= urgentLowThresholdInteger
@@ -352,10 +367,12 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+                glucoseDisplay.text = lowString + " " + latestGlucoseSlopeArrow
             }
             else if latestGlucoseValue == "HIGH"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+                glucoseDisplay.text = highString + " " + latestGlucoseSlopeArrow
             }
             else if let latestGlucoseValueFloat = Float(latestGlucoseValue), let urgentLowThresholdFloat = Float(urgenLowThreshold), latestGlucoseValueFloat <= urgentLowThresholdFloat
             {
@@ -402,7 +419,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         openApp.setTitle(openSpike, for: .normal)
         openApp.setTitleColor(UIColor.colorFromHex(hexString: displayLabelsColor), for: .normal)
         
-        treatmentsLabel.text = "COB:" + COB + "   IOB:" + IOB
+        treatmentsLabel.text = COBString + ":" + COB + "   " + IOBString + ":" + IOB
         treatmentsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
     }
     
