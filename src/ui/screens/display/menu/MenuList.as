@@ -99,7 +99,7 @@ package ui.screens.display.menu
 			var logoContainerLayout:HorizontalLayout = new HorizontalLayout();
 			logoContainerLayout.horizontalAlign = HorizontalAlign.CENTER;
 			logoContainerLayout.verticalAlign = VerticalAlign.MIDDLE;
-			logoContainerLayout.paddingBottom = logoContainerLayout.paddingTop = 15;
+			logoContainerLayout.paddingBottom = logoContainerLayout.paddingTop = 20;
 			logoContainer = new LayoutGroup();
 			logoContainer.layout = logoContainerLayout;
 			logoContainer.width = width;
