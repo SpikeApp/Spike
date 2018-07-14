@@ -89,7 +89,7 @@ package ui.chart
 		override public function labelUp():void
 		{
 			if (label != null)
-				label.y = -label.height + 6;
+				label.y = -label.height;
 		}
 		
 		override public function labelDown():void
