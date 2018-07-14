@@ -130,10 +130,10 @@ package ui.screens.display.menu
 				menuItems.push( { screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture, selectable: true } );
 			}
 			menuItems.push( { screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture, selectable: true } );
-			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture, selectable: true } );
-			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture, selectable: true } );
 			if (!BlueToothDevice.isFollower())
 				menuItems.push( { screen: Screens.HISTORY, label: ModelLocator.resourceManagerInstance.getString('mainmenu','history_menu_item'), icon: historyIconTexture, selectable: true } );
+			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture, selectable: true } );
+			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture, selectable: true } );
 			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture, selectable: true } );
 			menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture, selectable: true } );
 			
