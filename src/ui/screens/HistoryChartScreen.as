@@ -214,7 +214,7 @@ package ui.screens
 			goButton.y += 2;
 			
 			/* All Controls */
-			var controlsContainerLayout:VerticalLayout; = new VerticalLayout();
+			var controlsContainerLayout:VerticalLayout = new VerticalLayout();
 			controlsContainerLayout.horizontalAlign = HorizontalAlign.RIGHT;
 			controlsContainerLayout.gap = 5;
 			controlsContainer = new LayoutGroup();
@@ -384,6 +384,7 @@ package ui.screens
 			Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
 			
 			chartData = de.data as Array;
+			
 			createChart();
 			redrawChartForTreatmentsAndLine();
 		}
