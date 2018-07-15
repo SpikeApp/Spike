@@ -1465,6 +1465,25 @@ package treatments
 					if (nsTreatment.carbs != null)
 						treatmentCarbs = Number(nsTreatment.carbs);
 				}
+				else if (treatmentEventType == "Combo Bolus")
+				{
+					if (nsTreatment.insulin != null && nsTreatment.carbs != null)
+					{
+						treatmentType = Treatment.TYPE_MEAL_BOLUS;
+						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
+						treatmentCarbs = Number(nsTreatment.carbs);
+					}
+					else if (nsTreatment.insulin != null && nsTreatment.carbs == null)
+					{
+						treatmentType = Treatment.TYPE_BOLUS;
+						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
+					}
+					else if (nsTreatment.insulin == null && nsTreatment.carbs != null)
+					{
+						treatmentType = Treatment.TYPE_CARBS_CORRECTION;
+						treatmentCarbs = Number(nsTreatment.carbs);
+					}
+				}
 				else if (treatmentEventType == "Carb Correction" || treatmentEventType == "Carbs")
 				{
 					treatmentType = Treatment.TYPE_CARBS_CORRECTION;
