@@ -132,7 +132,6 @@ package utils
 					if (isThresholdsEnabled && !isNaN(highThreshold) && !isNaN(lowThreshold) && (lastReading.calculatedValue < lowThreshold || lastReading.calculatedValue > highThreshold))
 					{
 						//Reading is outside user defined thresholds
-						trace("OUTSIDE!!!!");
 						isFastChanging = false;
 					}	
 					else if (new Date().valueOf() - lastReading.timestamp < TIME_9_MINUTES && lastReading.timestamp - middleReading.timestamp < TIME_9_MINUTES && middleReading.timestamp - firstReading.timestamp < TIME_9_MINUTES)
