@@ -2062,6 +2062,125 @@ package services
 			externalAuthenticationCall = false;
 		}
 		
+		
+		
+		
+		
+		
+		
+		
+		public static function testNightscoutCredentialsFollower():void
+		{
+			Trace.myTrace("NightscoutService.as", "testNightscoutCredentialsFollower called.");
+			
+			setupNightscoutProperties();
+			setupFollowerProperties();
+			
+			if (nightscoutTreatmentsURL == "" || apiSecret == "")
+				return;
+			
+			if (NetworkInfo.networkInfo.isReachable()) 
+			{
+				credentialsTesterID = UniqueId.createEventId();
+				var credentialsTester:Object = new Object();
+				credentialsTester["_id"] = credentialsTesterID;
+				credentialsTester["eventType"] = "Note";
+				credentialsTester["duration"] = 30;
+				credentialsTester["notes"] = "Spike Authentication Test";
+				
+				//NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, JSON.stringify(credentialsTester), MODE_TEST_CREDENTIALS, onTestCredentialsComplete, onConnectionFailed);
+				NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, SpikeJSON.stringify(credentialsTester), MODE_TEST_CREDENTIALS, onTestCredentialsFollowerComplete, onConnectionFailed);
+			}
+			else
+			{
+				Trace.myTrace("NightscoutService.as", "Can't check NS credentials. No Internet connection!");
+				
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","call_to_nightscout_to_verify_url_and_secret_can_not_be_made"),
+					60
+				);
+			}
+		}
+		
+		private static function onTestCredentialsFollowerComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onTestCredentialsFollowerComplete called");
+			
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			var response:String = loader.data;
+			loader = null;
+			
+			if (response != "")
+			{
+				if (response.indexOf("Cannot PUT /api/v1/treatments") != -1)
+				{
+					Trace.myTrace("NightscoutService.as", "NS Authentication failed! Careportal not enabled.");
+					
+					if (externalAuthenticationCall)
+					{
+						AlertManager.showSimpleAlert(
+							ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+							ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok") + " " + ModelLocator.resourceManagerInstance.getString("nightscoutservice","care_portal_should_be_enabled"),
+							Number.NaN
+						);
+					}
+				}
+				else
+				{
+					var responseInfo:Object = SpikeJSON.parse(response);
+					if (responseInfo.ok != null && responseInfo.ok == 1)
+					{
+						Trace.myTrace("NightscoutService.as", "NS Authentication follower successful!");
+						
+						//Alert user
+						AlertManager.showSimpleAlert(
+							ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+							ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"),
+							Number.NaN,
+							null,
+							HorizontalAlign.CENTER
+						);
+						
+						//Delete credential test treatment
+						NetworkConnector.createNSConnector(nightscoutTreatmentsURL + "/" + credentialsTesterID, apiSecret, URLRequestMethod.DELETE);
+					}
+					else if (responseInfo.status != null)
+					{
+						Trace.myTrace("NightscoutService.as", "Authentication failed! Wrong api secret?");
+						Trace.myTrace("NightscoutService.as", "Error:", responseInfo.status + " " + responseInfo.message);
+						
+						//Alert User
+						var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_authentication_failed");
+						errorMessage += " " + responseInfo.status + " " + responseInfo.message;
+							
+						AlertManager.showSimpleAlert(
+							ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+							errorMessage,
+							Number.NaN
+						);
+					}
+					else
+					{
+						Trace.myTrace("NightscoutService.as", "Something when wrong! ResponseInfo: " + ObjectUtil.toString(responseInfo));
+					}
+				}
+			}
+			else
+			{
+				Trace.myTrace("NightscoutService.as", "Authentication failed! URL not found. Response: " + response);
+				
+				//Alert user
+				AlertManager.showSimpleAlert(
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_url_not_found"),
+					Number.NaN,
+					null,
+					HorizontalAlign.CENTER
+				);
+			}
+		}
+		
 		/**
 		 * Functionality
 		 */

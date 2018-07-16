@@ -6,6 +6,7 @@ package ui.screens.display.settings.general
 	
 	import database.CommonSettings;
 	
+	import feathers.controls.Button;
 	import feathers.controls.Label;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
@@ -18,6 +19,8 @@ package ui.screens.display.settings.general
 	
 	import model.ModelLocator;
 	
+	import services.NightscoutService;
+	
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
@@ -29,6 +32,7 @@ package ui.screens.display.settings.general
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("generalsettingsscreen")]
+	[ResourceBundle("sharesettingsscreen")]
 
 	public class DataCollectionSettingsList extends SpikeList 
 	{
@@ -38,6 +42,7 @@ package ui.screens.display.settings.general
 		private var nightscoutOffsetStepper:NumericStepper;
 		private var nightscoutAPISecretTextInput:TextInput;
 		private var nightscoutAPIDescription:Label;
+		private var nsLogin:Button;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -120,6 +125,10 @@ package ui.screens.display.settings.general
 			nightscoutAPISecretTextInput.text = nightscoutAPISecretValue;
 			nightscoutAPISecretTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
+			//NS Login
+			nsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
+			nsLogin.addEventListener(Event.TRIGGERED, onNightscoutLogin);
+			
 			//API Secret Description
 			nightscoutAPIDescription = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','api_secret_description'), HorizontalAlign.JUSTIFY);
 			nightscoutAPIDescription.wordWrap = true;
@@ -138,6 +147,7 @@ package ui.screens.display.settings.general
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','follower_ns_url'), accessory: nightscoutURLInput } );
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','time_offset'), accessory: nightscoutOffsetStepper } );
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','api_secret'), accessory: nightscoutAPISecretTextInput } );
+				data.push( { label: "", accessory: nsLogin } );
 				data.push( { label:"", accessory: nightscoutAPIDescription } );
 			}
 			
@@ -201,6 +211,19 @@ package ui.screens.display.settings.general
 			nightscoutAPISecretValue = nightscoutAPISecretTextInput.text.replace(" ", "");
 			
 			needsSave = true;
+		}
+		
+		private function onNightscoutLogin(event:Event):void
+		{
+			//Workaround so the NightscoutService doesn't test credentials twice
+			NightscoutService.ignoreSettingsChanged = true;
+			
+			//Save values to database
+			save();
+			
+			//Test Credentials
+			NightscoutService.testNightscoutCredentialsFollower();
+			NightscoutService.ignoreSettingsChanged = false;
 		}
 		
 		/**
@@ -272,6 +295,13 @@ package ui.screens.display.settings.general
 				nightscoutAPISecretTextInput.removeEventListener(Event.CHANGE, onSettingsChanged);
 				nightscoutAPISecretTextInput.dispose();
 				nightscoutAPISecretTextInput = null;
+			}
+			
+			if (nsLogin != null)
+			{
+				nsLogin.removeEventListener(Event.TRIGGERED, onNightscoutLogin);
+				nsLogin.dispose();
+				nsLogin = null;
 			}
 			
 			if (nightscoutAPIDescription != null)

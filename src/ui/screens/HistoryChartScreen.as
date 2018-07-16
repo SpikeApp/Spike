@@ -84,6 +84,7 @@ package ui.screens
 		private var chartRequiresReload:Boolean = true;
 		private var treatmentsEnabled:Boolean = false;
 		private var chartTreatmentsEnabled:Boolean = false;
+		private var hasRedrawn:Boolean = false;
 		
 		//Display Objects
 		private var glucoseChart:GlucoseChart;
@@ -212,15 +213,21 @@ package ui.screens
 			dateSelectorContainer.addChild(goButton);
 			
 			//Separator
-			separator = GraphLayoutFactory.createVerticalLine(goButton.height - 4, 1, 0x34353d);
-			dateSelectorContainer.addChild(separator);
+			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			{
+				separator = GraphLayoutFactory.createVerticalLine(goButton.height - 4, 1, 0x34353d);
+				dateSelectorContainer.addChild(separator);
+			}
 			dateSelectorContainer.addChild(prevNextContainer);
 			dateSelectorContainer.validate();
 			
 			//Layout adjustments
 			goButton.y += 2;
-			separator.y += 1;
-			separator.x += 0.5;
+			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			{
+				separator.y += 1;
+				separator.x += 0.5;
+			}
 			
 			/* All Controls */
 			var controlsContainerLayout:VerticalLayout = new VerticalLayout();
@@ -395,7 +402,8 @@ package ui.screens
 			chartData = de.data as Array;
 			
 			createChart();
-			redrawChartForTreatmentsAndLine();
+			if (!hasRedrawn)
+				redrawChartForTreatmentsAndLine();
 		}
 		
 		private function createChart():void
@@ -571,6 +579,8 @@ package ui.screens
 		private function redrawChartForTreatmentsAndLine():void
 		{
 			redrawChartTimeoutID = setTimeout(redrawChart, 1500);
+			if (chartData != null && chartData.length > 0)
+				hasRedrawn = true;
 		}
 		
 		private function calculateChartSettingsSize():Number
