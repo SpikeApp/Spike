@@ -109,10 +109,33 @@ package utils
 				var middleReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 2] as BgReading;
 				var firstReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 3] as BgReading;
 				
+				//Check Thresholds
+				var isThresholdsEnabled:Boolean;
+				var highThreshold:Number;
+				var lowThreshold:Number;
+				if (direction == "up")
+				{
+					isThresholdsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_GLUCOSE_THRESHOLDS_ON) == "true";
+					highThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_HIGH_GLUCOSE_THRESHOLD));
+					lowThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_LOW_GLUCOSE_THRESHOLD));
+				}
+				else if (direction == "down")
+				{
+					isThresholdsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_GLUCOSE_THRESHOLDS_ON) == "true";
+					highThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_HIGH_GLUCOSE_THRESHOLD));
+					lowThreshold = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_LOW_GLUCOSE_THRESHOLD));
+				}
+				
 				if (lastReading != null && lastReading.calculatedValue != 0 && middleReading != null && middleReading.calculatedValue != 0 && firstReading != null && firstReading.calculatedValue != 0)
 				{
 					//Last 3 readings are valid
-					if (new Date().valueOf() - lastReading.timestamp < TIME_9_MINUTES && lastReading.timestamp - middleReading.timestamp < TIME_9_MINUTES && middleReading.timestamp - firstReading.timestamp < TIME_9_MINUTES)
+					if (isThresholdsEnabled && !isNaN(highThreshold) && !isNaN(lowThreshold) && (lastReading.calculatedValue < lowThreshold || lastReading.calculatedValue > highThreshold))
+					{
+						//Reading is outside user defined thresholds
+						trace("OUTSIDE!!!!");
+						isFastChanging = false;
+					}	
+					else if (new Date().valueOf() - lastReading.timestamp < TIME_9_MINUTES && lastReading.timestamp - middleReading.timestamp < TIME_9_MINUTES && middleReading.timestamp - firstReading.timestamp < TIME_9_MINUTES)
 					{
 						//All readings are not more than 6 minutes apart
 						var lastReadingSlope:Number = lastReading.calculatedValue - middleReading.calculatedValue;

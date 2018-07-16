@@ -272,7 +272,7 @@ package ui.screens.display.settings.speech
 			
 			if (glucoseThresholdLow >= glucoseThresholdHigh)
 			{
-				glucoseThresholdHigh = glucoseThresholdHigh + (glucoseUnit == "mgdl" ? 1 : 0.1);
+				glucoseThresholdHigh = glucoseThresholdLow + (glucoseUnit == "mgdl" ? 1 : 0.1);
 				highGlucoseStepper.value = glucoseThresholdHigh;
 			}
 				
