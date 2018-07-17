@@ -2637,9 +2637,9 @@ package ui.chart
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X) 
 				glucoseDisplayFont = 54 * deviceFontMultiplier * userBGFontMultiplier;
 			else
-				glucoseDisplayFont = (!DeviceInfo.isTablet() ? 42 : 48) * deviceFontMultiplier * userBGFontMultiplier;
+				glucoseDisplayFont = (!DeviceInfo.isTablet() ? 39 : 48) * deviceFontMultiplier * userBGFontMultiplier;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
-				glucoseDisplayFont -= 8;
+				glucoseDisplayFont -= 5;
 			
 			timeDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			retroDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
