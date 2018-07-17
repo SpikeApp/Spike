@@ -436,6 +436,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         {
             chartGlucoseValues.removeAll()
             chartGlucoseTimes.removeAll()
+            
             let decoder = JSONDecoder()
             let externalDataJSON = try decoder.decode([ChartData].self, from: externalDataEncoded)
             for (chartData) in externalDataJSON
@@ -709,6 +710,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             if (parseChartData())
             {
                 setChart(chartSize: superview.frame.size.width + 10)
+                setChart(chartSize: superview.frame.size.width + 10)
             }
         }
     }
@@ -719,6 +721,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         
         if (parseChartData())
         {
+            setChart(chartSize: size.width + 10)
             setChart(chartSize: size.width + 10)
         }
     }

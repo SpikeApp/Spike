@@ -7,6 +7,7 @@ ENHANCEMENT: Added support for Nightscout Combo Bolus treatments. (Miguel)
 ENHANCEMENT; Added ability to test Nightscout credentials when in follower mode. Settings -> General -> Data Collection. (Miguel)
 ENHANCEMENT: Added Spike's logo to main menu. (Miguel)
 ENHANCEMENT: Several small layout adjustments overall. (Miguel)
+FIX: Workaround for an iOS bug that sometimes prevented the Chart Today Widget from rendering correctly. (Miguel)
 FIX: As usual, other small bug fixes and improvements. (Miguel)
 
 2.2.1
