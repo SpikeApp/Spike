@@ -37,6 +37,7 @@ package services
 	
 	import utils.BadgeBuilder;
 	import utils.GlucoseHelper;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	/**
@@ -198,10 +199,7 @@ package services
 			
 			initialCalibrationActive = false;
 			
-			var warmupTimeInMs:Number = 2 * 3600 * 1000;
-			if (BlueToothDevice.isTypeLimitter()) {
-				warmupTimeInMs = 1 * 3600 * 1000;
-			}
+			var warmupTimeInMs:int = BlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_30_MINUTES : TimeSpan.TIME_1_HOUR;
 			
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			if (Calibration.allForSensor().length < 2) 

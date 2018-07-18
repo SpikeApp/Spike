@@ -56,10 +56,6 @@ package ui.screens.display.sensor
 
 	public class SensorStartStopList extends GroupedList 
 	{
-		/* Constants */
-		private const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
-		private const TIME_1_HOUR:int = 1 * 60 * 60 * 1000;
-		
 		/* Display Objects */
 		private var actionButton:Button;
 		private var sensorStartDateLabel:Label;
@@ -121,7 +117,7 @@ package ui.screens.display.sensor
 		private function setupInitialState():void
 		{
 			/* Warmup Time */
-			warmupTime = BlueToothDevice.isTypeLimitter() ? TIME_1_HOUR : TIME_2_HOURS;
+			warmupTime = BlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_30_MINUTES : TimeSpan.TIME_1_HOUR;
 			
 			/* Sensor Start Date */
 			if (Sensor.getActiveSensor() != null)

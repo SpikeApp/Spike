@@ -10,6 +10,13 @@ package utils
 	public class TimeSpan
 	{
 		/**
+		 * Constants that hold time in milliseconds
+		 */
+		public static const TIME_1_HOUR:int = 3600000;
+		public static const TIME_30_MINUTES:int = 1800000;
+		
+		
+		/**
 		 * The number of milliseconds in one day
 		 */ 
 		public static const MILLISECONDS_IN_DAY : Number = 86400000;
