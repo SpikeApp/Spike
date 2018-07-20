@@ -94,7 +94,7 @@ package treatments
 						profilesList.push(profile);
 						profilesMap[dbProfile.id] = profile;
 					}
-					profilesList.sortOn(["name"], Array.CASEINSENSITIVE);
+					profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
 					
 					Trace.myTrace("ProfileManager.as", "Got profile from database!");
 				}
@@ -283,6 +283,54 @@ package treatments
 			
 			//Update Database
 			Database.updateProfileSynchronous(profile);
+			
+			//Sort profile list by time
+			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+		}
+		
+		public static function insertProfile(profile:Profile):void
+		{	
+			Trace.myTrace("ProfileManager.as", "insertProfile called!");
+			
+			//Push to memory
+			profilesList.push(profile);
+			profilesMap[profile.ID] = profile;
+			
+			//Save to Database
+			Database.insertProfileSynchronous(profile);
+			
+			//Sort profile list by time
+			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+		}
+		
+		public static function deleteProfile(profile:Profile):void
+		{
+			Trace.myTrace("ProfileManager.as", "deleteProfile called!");
+			
+			if (profilesMap[profile.ID] != null)
+			{
+				//Find Profile
+				for (var i:int = 0; i < profilesList.length; i++) 
+				{
+					var userProfile:Profile = profilesList[i];
+					if (userProfile.ID == profile.ID)
+					{
+						Trace.myTrace("ProfileManager.as", "Deleting profile... Name: " + profile.name + ", Time: " + profile.time);
+						
+						//Profile found. Remove it from Spike.
+						profilesList.removeAt(i);
+						profilesMap[profile.ID] = null;
+						
+						//Delete from database
+						Database.deleteProfileSynchronous(userProfile);
+						
+						//Sort profile list by time
+						profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+						
+						break;
+					}
+				}
+			}
 		}
 		
 		public static function insertProfile(profile:Profile):void

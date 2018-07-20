@@ -194,9 +194,9 @@ package ui.screens.display.settings.treatments
 				var insulin:Insulin = userInsulins[i];
 				if (insulin.name.indexOf("Nightscout") == -1 && !insulin.isHidden)
 				{
-					var insulinAccessory:InsulinManagerAccessory = new InsulinManagerAccessory();
-					insulinAccessory.addEventListener(InsulinManagerAccessory.EDIT, onEditInsulin);
-					insulinAccessory.addEventListener(InsulinManagerAccessory.DELETE, onDeleteInsulin);
+					var insulinAccessory:TreatmentManagerAccessory = new TreatmentManagerAccessory();
+					insulinAccessory.addEventListener(TreatmentManagerAccessory.EDIT, onEditInsulin);
+					insulinAccessory.addEventListener(TreatmentManagerAccessory.DELETE, onDeleteInsulin);
 					accessoryList.push(insulinAccessory);
 					data.push( { label: insulin.name, accessory: insulinAccessory, insulin: insulin } );
 				}
@@ -268,7 +268,7 @@ package ui.screens.display.settings.treatments
 		private function onEditInsulin(e:Event):void
 		{
 			//Set display controls to insulin properties
-			var insulin:Insulin = (((e.currentTarget as InsulinManagerAccessory).parent as Object).data as Object).insulin as Insulin;
+			var insulin:Insulin = (((e.currentTarget as TreatmentManagerAccessory).parent as Object).data as Object).insulin as Insulin;
 			insulinName.text = insulin.name;
 			defaultInsulinCheck.isSelected = insulin.isDefault;
 			insulinDIA.value = insulin.dia;
@@ -298,7 +298,7 @@ package ui.screens.display.settings.treatments
 		
 		private function onDeleteInsulin(e:Event):void
 		{
-			var insulin:Insulin = (((e.currentTarget as InsulinManagerAccessory).parent as Object).data as Object).insulin as Insulin;
+			var insulin:Insulin = (((e.currentTarget as TreatmentManagerAccessory).parent as Object).data as Object).insulin as Insulin;
 			if (insulin != null)
 			{
 				ProfileManager.deleteInsulin(insulin);
@@ -422,9 +422,9 @@ package ui.screens.display.settings.treatments
 			{
 				for (var i:int = 0; i < accessoryList.length; i++) 
 				{
-					var accessory:InsulinManagerAccessory = accessoryList[i];
-					accessory.removeEventListener(InsulinManagerAccessory.EDIT, onEditInsulin);
-					accessory.removeEventListener(InsulinManagerAccessory.DELETE, onDeleteInsulin);
+					var accessory:TreatmentManagerAccessory = accessoryList[i];
+					accessory.removeEventListener(TreatmentManagerAccessory.EDIT, onEditInsulin);
+					accessory.removeEventListener(TreatmentManagerAccessory.DELETE, onDeleteInsulin);
 					accessory.dispose();
 					accessory = null;
 				}
