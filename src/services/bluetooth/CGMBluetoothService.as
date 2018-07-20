@@ -216,7 +216,7 @@ package services.bluetooth
 		 */
 		private static var G5_RESET_REQUESTED:Boolean = false;
 		private static var G5ResetTimeStamp:Number =0 ;
-		private static var useSpikeANEForG5:Boolean = false;
+		private static var useSpikeANEForG5:Boolean = true;
 				
 		//Transmiter_PL variables
 		private static var timeStampSinceLastSensorAgeUpdate_Transmiter_PL:Number = 0;
@@ -319,7 +319,7 @@ package services.bluetooth
 				if (CGMBlueToothDevice.known()) {
 					SpikeANE.setG5Mac(CGMBlueToothDevice.address);
 				}
-				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID));
+				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID), cryptKey());
 			}
 			
 			setPeripheralUUIDs();
@@ -405,7 +405,7 @@ package services.bluetooth
 				myTrace("in commonSettingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE");
 				
 				//set transmitter id in spike ane, doesn't matter if it's a G5 or not , or if the transmitter id is just an empty string or whatever
-				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID));
+				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID), cryptKey());
 
 				//new peripheraltype, all bluetoothe uuid's need to get  new values
 				setPeripheralUUIDs();
@@ -428,6 +428,8 @@ package services.bluetooth
 				}
 				
 				CGMBlueToothDevice.forgetBlueToothDevice();
+				SpikeANE.forgetG5Peripheral();
+				SpikeANE.forgetMiaoMiaoPeripheral();
 				
 				if (CGMBlueToothDevice.isMiaoMiao()) {
 					addMiaoMiaoEventListeners();
@@ -441,9 +443,11 @@ package services.bluetooth
 				myTrace("in commonSettingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
 
 				//set transmitter id in spike ane, doesn't matter if it's a G5 or not , or if the transmitter id is just an empty string or whatever
-				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID));
+				SpikeANE.setTransmitterIdG5(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID), cryptKey());
 
 				CGMBlueToothDevice.forgetBlueToothDevice();
+				SpikeANE.forgetG5Peripheral();
+				SpikeANE.forgetMiaoMiaoPeripheral();
 				if (CGMBlueToothDevice.transmitterIdKnown() && CGMBlueToothDevice.alwaysScan()) {
 					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
 						myTrace("in commonSettingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, restart scanning");
@@ -625,7 +629,7 @@ package services.bluetooth
 				)
 			) {
 				if (CGMBlueToothDevice.address != "") {
-					if (CGMBlueToothDevice.address != event.peripheral.uuid) {
+					if (CGMBlueToothDevice.address.toUpperCase() != event.peripheral.uuid.toUpperCase()) {
 						myTrace("in central_peripheralDiscoveredHandler, UUID of found peripheral does not match with name of the UUID stored in the database - will ignore this peripheral.");
 						startRescan(null);
 						return;
@@ -1095,10 +1099,15 @@ package services.bluetooth
 		 */
 		public static function forgetActiveBluetoothPeripheral(address:String = ""):void {
 			if (CGMBlueToothDevice.isMiaoMiao()) {
-				myTrace("in forgetActiveBluetoothPeripheral  miaomiao device");
+				myTrace("in forgetActiveBluetoothPeripheral miaomiao device");
 				SpikeANE.cancelMiaoMiaoConnection(address);
 				SpikeANE.resetMiaoMiaoMac();
 				SpikeANE.forgetMiaoMiaoPeripheral();
+			} if (CGMBlueToothDevice.isDexcomG5()) {
+				myTrace("in forgetActiveBluetoothPeripheral G5 device");
+				SpikeANE.cancelG5Connection(address);
+				SpikeANE.resetG5Mac();
+				SpikeANE.forgetG5Peripheral();
 			} else {
 				myTrace("in forgetActiveBluetoothPeripheral");
 				writeCharacteristic = null;
@@ -1170,11 +1179,12 @@ package services.bluetooth
 					break;
 				case 3:
 					buffer.position = 0;
+					//myTrace("buffer = " + utils.UniqueId.bytesToHex(buffer));
+					buffer.position = 0;
 					var authChallenge:AuthChallengeRxMessage = new AuthChallengeRxMessage(buffer);
 					if (authRequest == null) {
 						authRequest = new AuthRequestTxMessage(getTokenSize());
 					}
-					var key:ByteArray = cryptKey();
 					var challengeHash:ByteArray = calculateHash(authChallenge.challenge);
 					if (challengeHash != null) {
 						var authChallengeTx:AuthChallengeTxMessage = new AuthChallengeTxMessage(challengeHash);
@@ -2021,7 +2031,7 @@ package services.bluetooth
 		}
 		
 		private static function myTrace(log:String):void {
-			Trace.myTrace("BluetoothService.as", log);
+			Trace.myTrace("CGMBluetoothService.as", log);
 		}
 		
 		/**
@@ -2043,7 +2053,7 @@ package services.bluetooth
 		
 		private static function sendAuthRequestTxMessage(characteristic:Characteristic):void {
 			authRequest = new AuthRequestTxMessage(getTokenSize());
-			
+			//myTrace("sendAuthRequestTxMessage authRequest = " + utils.UniqueId.bytesToHex(authRequest.byteSequence));
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, authRequest.byteSequence)) {
 				myTrace("sendAuthRequestTxMessage writeValueForCharacteristic failed");
 			}

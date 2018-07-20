@@ -79,9 +79,15 @@
         manager.peripheral = nil;
 }
 
-+(void)setTransmitterIdWithId:(NSString *)transmitterId{
++(void)setTransmitterIdWithId:(NSString *)transmitterId withCryptKey:(NSString*)cryptKey{
     G5BleManager *manager = [G5BleManager shared];
     manager.transmitterID = transmitterId;
+    manager.cryptKey = cryptKey;
+}
+
++(void)setTestData:(NSData*)testData{
+    G5BleManager *manager = [G5BleManager shared];
+    manager.testdata = testData;
 }
 
 @end

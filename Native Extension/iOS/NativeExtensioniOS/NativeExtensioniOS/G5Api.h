@@ -3,7 +3,7 @@
 @interface G5Api : NSObject
 
 
-+ (void)setSelectMAC:(NSString *)newMAC;
++(void)setSelectMAC:(NSString *)newMAC;
     
 +(void)startScaning;
 
@@ -21,6 +21,8 @@
 
 +(void)stopScanDevice;
 
-+(void)setTransmitterIdWithId:(NSString *)transmitterId;
++(void)setTransmitterIdWithId:(NSString *)transmitterId withCryptKey:(NSString*)cryptKey;
 
++(void)setTestData:(NSData*)testData;
+    
 @end

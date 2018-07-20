@@ -124,8 +124,13 @@ package com.spikeapp.spike.airlibrary
 			context.call("stopScanDeviceG5");
 		}
 		
-		public static function setTransmitterIdG5(transmitterID:String):void {
-			context.call("setTransmitterIdG5", transmitterID);
+		public static function setTransmitterIdG5(transmitterID:String, cryptKey:ByteArray):void {
+			cryptKey.position = 0;
+			context.call("setTransmitterIdG5", transmitterID, cryptKey.readUTFBytes(cryptKey.length));
+		}
+		
+		public static function setTestData(testdata:ByteArray):void {
+			context.call("setTestData",testdata);
 		}
 		
 		/**********************

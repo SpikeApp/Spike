@@ -36,6 +36,8 @@
 @property (strong ,nonatomic) CBCentralManager *manager;
 @property (strong ,nonatomic) CBPeripheral *peripheral;
 @property (strong, nonatomic) NSString * transmitterID;
+@property (strong, nonatomic) NSString * cryptKey;
+@property (strong, nonatomic) NSData * testdata;
 
 @property (copy,nonatomic)NSString *selectMAC;
 
@@ -60,9 +62,7 @@
 //get servicies
 - (void)disCoverServiceWith:(CBPeripheral *)peripheral;
 
-- (void)writeFileData:(NSData *)data;
-
-- (void)writeControlData:(NSData *)data;
-
 - (void)stopScanning;
+
+- (NSString *)hexStringFromData:(NSData *)mD;
 @end

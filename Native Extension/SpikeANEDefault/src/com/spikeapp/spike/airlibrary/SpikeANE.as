@@ -90,7 +90,7 @@ package com.spikeapp.spike.airlibrary
 		public static function stopScanDeviceG5():void {
 		}
 		
-		public static function setTransmitterIdG5():void {
+		public static function setTransmitterIdG5(transmitterID:String, cryptKey:ByteArray):void {
 		}
 		
 		/****************
@@ -185,6 +185,9 @@ package com.spikeapp.spike.airlibrary
 		}
 		
 		public static function resetTraceFilePath():void {
+		}
+		
+		public static function setTestData(testdata:ByteArray):void {
 		}
 	}
 }

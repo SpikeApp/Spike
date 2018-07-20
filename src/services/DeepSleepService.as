@@ -104,10 +104,13 @@ package services
 					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_DEXCOM");
 					deepSleepInterval = AUTOMATIC_DEXCOM;
 				}
-				else if (CGMBlueToothDevice.isFollower() || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MIAOMIAO_FOLLOWER_ENABLED) == "true")
+				else if (CGMBlueToothDevice.isFollower())
 				{
 					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_FOLLOWER");
 					deepSleepInterval = AUTOMATIC_FOLLOWER;
+				}
+				else if (CGMBlueToothDevice.isMiaoMiao()) {
+					onMiaoMiaoConnected(null);
 				}
 				else
 				{
@@ -264,7 +267,7 @@ package services
 		}
 		
 		//MiaoMiao is connected and Spike receives the first characteristic update
-		private static function onMiaoMiaoConnected(event:Event):void 
+		private static function onMiaoMiaoConnected(event:Event = null):void 
 		{
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true" && !SpikeShouldNeverSuspend()) {
 				if (deepSleepInterval != NO_SUSPENSION_PREVENTION_MODE) {
@@ -286,6 +289,9 @@ package services
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true")
 				return true;
 
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MIAOMIAO_FOLLOWER_ENABLED) == "true")
+				return true;
+				
 			//TODO : add check if missed reading alert is enabled
 			return false;
 		}

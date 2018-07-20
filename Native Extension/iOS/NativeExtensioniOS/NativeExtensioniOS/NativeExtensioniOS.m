@@ -137,9 +137,22 @@ FREObject stopScanDeviceG5(FREContext ctx, void* funcData, uint32_t argc, FREObj
 //setTransmitterIdG5
 FREObject setTransmitterIdG5(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
     NSString * transmitterId = [FPANE_FREObjectToNSString(argv[0]) mutableCopy];
-    [G5Api setTransmitterIdWithId:transmitterId];
+    NSString * cryptKey = [FPANE_FREObjectToNSString(argv[1]) mutableCopy];
+    
+    [G5Api setTransmitterIdWithId:transmitterId withCryptKey:cryptKey];
     return nil;
 }
+
+FREObject setTestData(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    FREByteArray dataAsByteArray;
+    FREAcquireByteArray(argv[0], &dataAsByteArray);
+    FREReleaseByteArray(argv[0]);
+    NSData * testdata = [NSData dataWithBytes:dataAsByteArray.bytes length:dataAsByteArray.length];
+    
+    [G5Api setTestData:testdata];
+    return nil;
+}
+
 
 /*************************************
  ** SOUND AND SPEECH RELATED FUNCTIONS
@@ -284,7 +297,6 @@ FREObject AESEncryptWithKey(FREContext ctx, void* funcData, uint32_t argc, FREOb
     
     FREByteArray dataAsByteArray;
     FREAcquireByteArray(argv[1], &dataAsByteArray);
-    //NSString * data = [FPANE_FREObjectToNSString(argv[1]) mutableCopy];
     NSData * dataAsNSData = [NSData dataWithBytes:dataAsByteArray.bytes length:dataAsByteArray.length];
     FREReleaseByteArray(argv[1]);
     
@@ -369,7 +381,7 @@ void NativeExtensionInitializer( void** extDataToSet, FREContextInitializer* ctx
 
 void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FREContext ctx, uint32_t* numFunctionsToTest, const FRENamedFunction** functionsToSet) {
     
-    *numFunctionsToTest = 42;
+    *numFunctionsToTest = 43;
     
     FRENamedFunction * func = (FRENamedFunction *) malloc(sizeof(FRENamedFunction) * *numFunctionsToTest);
 
@@ -550,6 +562,10 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[41].name = (const uint8_t*) "setTransmitterIdG5";
     func[41].functionData = NULL;
     func[41].function = &setTransmitterIdG5;
+
+    func[42].name = (const uint8_t*) "setTestData";
+    func[42].functionData = NULL;
+    func[42].function = &setTestData;
 
     *functionsToSet = func;
 }
