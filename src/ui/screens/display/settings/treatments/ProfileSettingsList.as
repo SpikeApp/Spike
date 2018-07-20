@@ -31,6 +31,7 @@ package ui.screens.display.settings.treatments
 	
 	import utils.Constants;
 	import utils.MathHelper;
+	import utils.TimeSpan;
 	import utils.UniqueId;
 	
 	[ResourceBundle("profilesettingsscreen")]
@@ -61,6 +62,7 @@ package ui.screens.display.settings.treatments
 		private var unit:String;		
 		private var isDefaultEmpty:Boolean;
 		private var selectedProfile:Profile;
+		private var timeFormat:String;
 		
 		public function ProfileSettingsList()
 		{
@@ -87,11 +89,10 @@ package ui.screens.display.settings.treatments
 		
 		private function setupInitialContent():void
 		{
-			/* Get Values From Database */
-			userProfiles = ProfileManager.profilesList;
-			
 			/* Get Settings */
+			userProfiles = ProfileManager.profilesList;
 			unit = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mgdl" : "mmol";
+			timeFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 		}
 		
 		private function setupContent():void
@@ -129,6 +130,7 @@ package ui.screens.display.settings.treatments
 			//START Time
 			profileStartTime = new DateTimeSpinner();
 			profileStartTime.editingMode = DateTimeMode.TIME;
+			profileStartTime.locale = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE);
 			profileStartTime.height = 60;
 			profileStartTime.paddingTop = 5;
 			profileStartTime.paddingBottom = 5;
@@ -155,7 +157,7 @@ package ui.screens.display.settings.treatments
 			guidesContainer.addChild(ISFGuideButton);
 			
 			//Glossary
-			glossaryLabel = LayoutFactory.createLabel("ISF (Insulin Sensitivity Factor): The amount of glucose (mg/dl or mmol/L) lowered by 1U of insulin.\n\nI:C (Insulin to Carb Ratio): The amount of carbs (g) covered by 1U of insulin.\n\nTarget BG: The glucose value you're aiming at, the one you want to stay at most of the time.\n\nTo determine your I:C and ISF please read the guides below.", HorizontalAlign.JUSTIFY);
+			glossaryLabel = LayoutFactory.createLabel("ISF (Insulin Sensitivity Factor): The amount of glucose (mg/dL or mmol/L) lowered by 1U of insulin.\n\nI:C (Insulin to Carb Ratio): The amount of carbs (g) covered by 1U of insulin.\n\nTarget BG: The glucose value (mg/dL or mmol/L) you're aiming at, the one you want to stay at most of the time.\n\nTo determine your ISF and I:C please read the guides below.", HorizontalAlign.JUSTIFY);
 			glossaryLabel.wordWrap = true;
 			glossaryLabel.width = width;
 			glossaryLabel.paddingTop = glossaryLabel.paddingBottom = 10;
@@ -176,19 +178,26 @@ package ui.screens.display.settings.treatments
 				var profile:Profile = userProfiles[i];
 				if (profile.time != "" && profile.insulinSensitivityFactors != "" && profile.insulinToCarbRatios != "" && profile.targetGlucoseRates != "")
 				{
+					//Accessory
 					var profileAccessory:TreatmentManagerAccessory = new TreatmentManagerAccessory();
 					profileAccessory.addEventListener(TreatmentManagerAccessory.EDIT, onEditProfile);
 					profileAccessory.addEventListener(TreatmentManagerAccessory.DELETE, onDeleteProfile);
 					accessoryList.push(profileAccessory);
 					
-					data.push( { label: "Time: " + profile.time + ", ISF: " + profile.insulinSensitivityFactors + "," + "\n" + "I:C: " + profile.insulinToCarbRatios + ", Target BG: " + profile.targetGlucoseRates, accessory: profileAccessory, profile: profile  } );
+					//Time
+					var profileTime:Array = profile.time.split(":");
+					var profileHours:Number = Number(profileTime[0]);
+					var profileMinutes:Number = Number(profileTime[1]);
+					
+					//Data
+					data.push( { label: "Start Time: " + TimeSpan.formatHoursMinutes(profileHours, profileMinutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", ISF: " + (unit == "mgdl" ? profile.insulinSensitivityFactors : Math.round(BgReading.mgdlToMmol(Number(profile.insulinSensitivityFactors)) * 10) / 10) + "," + "\n" + "I:C: " + profile.insulinToCarbRatios + ", Target BG: " + (unit == "mgdl" ? profile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(profile.targetGlucoseRates)) * 10) / 10), accessory: profileAccessory, profile: profile  } );
 					validProfile = true;
 				}
 			}
 			
 			if (!validProfile && !editMode && !addMode)
 			{
-				data.push( { label: "Please add settings..." } );
+				data.push( { label: "Please add configuration..." } );
 			}
 			
 			//Add Components
@@ -229,6 +238,8 @@ package ui.screens.display.settings.treatments
 			var profileSugestedTime:Date = new Date();
 			profileSugestedTime.hours = 0;
 			profileSugestedTime.minutes = 0;
+			profileSugestedTime.seconds = 0;
+			profileSugestedTime.milliseconds = 0;
 			
 			isDefaultEmpty = false;
 			
@@ -239,7 +250,7 @@ package ui.screens.display.settings.treatments
 			}
 			else if (editMode && selectedProfile != null && selectedProfile.time == "00:00")
 			{
-				//Do nothing.
+				//Use default date
 			}
 			else
 			{
@@ -254,6 +265,11 @@ package ui.screens.display.settings.treatments
 				if (lastProfileMinutes == 59 && lastProfileHour < 23)
 				{
 					profileSugestedTime.hours = lastProfileHour + 1;
+					profileSugestedTime.minutes = 0;
+				}
+				else if (lastProfileMinutes == 59 && lastProfileHour == 23)
+				{
+					profileSugestedTime.hours = 12;
 					profileSugestedTime.minutes = 0;
 				}
 				else
@@ -289,7 +305,7 @@ package ui.screens.display.settings.treatments
 				{
 					ISFStepper.minimum = Math.round(BgReading.mgdlToMmol(1) * 10) / 10;
 					ISFStepper.maximum = Math.round(BgReading.mgdlToMmol(400) * 10) / 10;
-					ISFStepper.value = Math.round(BgReading.mgdlToMmol(10) * 10) / 10
+					ISFStepper.value = Math.round(BgReading.mgdlToMmol(10) * 10) / 10;
 					ISFStepper.step = 0.1;
 					
 					targetBGStepper.minimum = Math.round(BgReading.mgdlToMmol(40) * 10) / 10;
@@ -321,7 +337,7 @@ package ui.screens.display.settings.treatments
 				{
 					ISFStepper.minimum = Math.round(BgReading.mgdlToMmol(1) * 10) / 10;
 					ISFStepper.maximum = Math.round(BgReading.mgdlToMmol(400) * 10) / 10;
-					ISFStepper.value = Math.round(BgReading.mgdlToMmol(Number(selectedProfile.insulinSensitivityFactors)) * 10) / 10
+					ISFStepper.value = Math.round(BgReading.mgdlToMmol(Number(selectedProfile.insulinSensitivityFactors)) * 10) / 10;
 					ISFStepper.step = 0.1;
 					
 					targetBGStepper.minimum = Math.round(BgReading.mgdlToMmol(40) * 10) / 10;
@@ -336,7 +352,7 @@ package ui.screens.display.settings.treatments
 				ICStepper.step = 0.5;
 			}
 			
-			saveProfileButton.isEnabled = true;
+			if (saveProfileButton != null) saveProfileButton.isEnabled = true;
 		}
 		
 		private function doesProfileTimeOverlap():Boolean
@@ -422,7 +438,7 @@ package ui.screens.display.settings.treatments
 				AlertManager.showSimpleAlert
 					(
 						"Warning",
-						"Profile start time already in use. Please select a different time"
+						"Profile start time already in use. Please select a different time."
 					);
 				
 				return;
@@ -433,9 +449,9 @@ package ui.screens.display.settings.treatments
 				if (isDefaultEmpty)
 				{
 					var defaultProfile:Profile = userProfiles[0] as Profile;
-					defaultProfile.insulinSensitivityFactors = unit = "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value)));
+					defaultProfile.insulinSensitivityFactors = unit == "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value)));
 					defaultProfile.insulinToCarbRatios = String(ICStepper.value);
-					defaultProfile.targetGlucoseRates = unit = "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value)));
+					defaultProfile.targetGlucoseRates = unit == "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value)));
 					ProfileManager.updateProfile(defaultProfile);
 					
 					isDefaultEmpty = false;
@@ -448,10 +464,10 @@ package ui.screens.display.settings.treatments
 							MathHelper.formatNumberToString(profileStartTime.value.hours) + ":" + MathHelper.formatNumberToString(profileStartTime.value.minutes),
 							"Default",
 							String(ICStepper.value),
-							unit = "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value))),
+							unit == "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value))),
 							ProfileManager.getCarbAbsorptionRate(),
 							"",
-							unit = "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value))),
+							unit == "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value))),
 							new Date().valueOf()
 						);
 					
@@ -460,9 +476,9 @@ package ui.screens.display.settings.treatments
 			}
 			else if (editMode)
 			{
-				selectedProfile.insulinSensitivityFactors = unit = "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value)));
+				selectedProfile.insulinSensitivityFactors = unit == "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value)));
 				selectedProfile.insulinToCarbRatios = String(ICStepper.value);
-				selectedProfile.targetGlucoseRates = unit = "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value)));
+				selectedProfile.targetGlucoseRates = unit == "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value)));
 				ProfileManager.updateProfile(selectedProfile);
 				
 				selectedProfile = null;
