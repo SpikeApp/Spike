@@ -395,14 +395,7 @@ package treatments
 			for(var i:int = profilesList.length - 1 ; i >= 0; i--)
 			{
 				var profile:Profile = profilesList[i] as Profile;
-				var profileTime:Array = profile.time.split(":");
-				var profileHours:Number = Number(profileTime[0]);
-				var profileMinutes:Number = Number(profileTime[1]);
-				var profileDate:Date = new Date();
-				profileDate.hours = profileHours;
-				profileDate.minutes = profileMinutes;
-				profileDate.seconds = 0;
-				profileDate.milliseconds = 0;
+				var profileDate:Date = getProfileDate(profile);
 				var profileTimestamp:Number = profileDate.valueOf();
 				
 				if (requestedTimestamp >= profileTimestamp)
