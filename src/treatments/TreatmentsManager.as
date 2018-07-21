@@ -106,6 +106,24 @@ package treatments
 		private static var mediumCarb:Radio;
 		private static var slowCarb:Radio;
 		private static var carbDelayGroup:ToggleGroup;
+
+		private static var bolusWizardContainer:LayoutGroup;
+
+		private static var currentGlucoseContainer:LayoutGroup;
+
+		private static var glucoseLabel:Label;
+
+		private static var glucoseStepper:NumericStepper;
+
+		private static var bolusWizardCallout:Callout;
+
+		private static var bolusWizardTitle:Label;
+
+		private static var bolusWizardActionContainer:LayoutGroup;
+
+		private static var bolusWizardCancelButton:Button;
+
+		private static var bolusWizardAddButton:Button;
 		
 		public function TreatmentsManager()
 		{
@@ -470,6 +488,111 @@ package treatments
 					deleteTreatment(treatment);
 					break;
 				}
+			}
+		}
+		
+		public static function activateBolusWizard():void
+		{
+			//Properties
+			var contentWidth:Number = 270;
+			
+			//Display Container
+			var bolusWizardLayout:VerticalLayout = new VerticalLayout();
+			bolusWizardLayout.horizontalAlign = HorizontalAlign.LEFT;
+			bolusWizardLayout.gap = 10;
+			
+			if (bolusWizardContainer != null) bolusWizardContainer.removeFromParent(true);
+			bolusWizardContainer = new LayoutGroup();
+			bolusWizardContainer.layout = bolusWizardLayout;
+			bolusWizardContainer.width = contentWidth;
+			
+			//Title
+			if (bolusWizardTitle != null) bolusWizardTitle.removeFromParent(true);
+			bolusWizardTitle = LayoutFactory.createLabel("Bolus Wizard", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			bolusWizardTitle.width = contentWidth;
+			bolusWizardContainer.addChild(bolusWizardTitle);
+			
+			//Current Glucose
+			var currentGlucoseLayout:HorizontalLayout = new HorizontalLayout();
+			currentGlucoseLayout.horizontalAlign = HorizontalAlign.LEFT;
+			currentGlucoseLayout.verticalAlign = VerticalAlign.MIDDLE;
+			
+			if (currentGlucoseContainer != null) currentGlucoseContainer.removeFromParent(true);
+			currentGlucoseContainer = new LayoutGroup();
+			currentGlucoseContainer.layout = currentGlucoseLayout;
+			currentGlucoseContainer.width = contentWidth;
+			
+			if (glucoseLabel != null) glucoseLabel.removeFromParent(true);
+			glucoseLabel = LayoutFactory.createLabel("Blood Glucose");
+			currentGlucoseContainer.addChild(glucoseLabel);
+			
+			if (glucoseStepper != null) glucoseStepper.removeFromParent(true);
+			glucoseStepper = LayoutFactory.createNumericStepper(0, 400, Math.round((ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).calculatedValue), 1);
+			glucoseStepper.validate();
+			currentGlucoseContainer.addChild(glucoseStepper);
+			currentGlucoseContainer.validate();
+			glucoseStepper.x = contentWidth - glucoseStepper.width;
+			
+			bolusWizardContainer.addChild(currentGlucoseContainer);
+			
+			
+			
+			//Action Buttons
+			var bolusWizardActionLayout:HorizontalLayout = new HorizontalLayout();
+			bolusWizardActionLayout.horizontalAlign = HorizontalAlign.CENTER;
+			bolusWizardActionLayout.gap = 5;
+			
+			if (bolusWizardActionContainer != null) bolusWizardActionContainer.removeFromParent(true);
+			bolusWizardActionContainer = new LayoutGroup();
+			bolusWizardActionContainer.width = contentWidth;
+			bolusWizardActionContainer.layout = bolusWizardActionLayout;
+			bolusWizardContainer.addChild(bolusWizardActionContainer);
+			
+			if (bolusWizardCancelButton != null) bolusWizardCancelButton.removeFromParent(true);
+			bolusWizardCancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
+			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, closeCallout);
+			bolusWizardActionContainer.addChild(bolusWizardCancelButton);
+			
+			if (bolusWizardAddButton != null) bolusWizardAddButton.removeFromParent(true);
+			bolusWizardAddButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
+			bolusWizardAddButton.addEventListener(Event.TRIGGERED, addBolusWizardTreatment);
+			bolusWizardActionContainer.addChild(bolusWizardAddButton);
+			
+			bolusWizardContainer.addChild(bolusWizardActionContainer);
+			
+			//Callout
+			if (calloutPositionHelper != null) calloutPositionHelper.removeFromParent(true);
+			calloutPositionHelper = new Sprite();
+			var yPos:Number = 0;
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			calloutPositionHelper.y = yPos;
+			calloutPositionHelper.x = Constants.stageWidth / 2;
+			Starling.current.stage.addChild(calloutPositionHelper);
+			
+			if (bolusWizardCallout != null) bolusWizardCallout.removeFromParent(true);
+			bolusWizardCallout = Callout.show(bolusWizardContainer, calloutPositionHelper);
+			bolusWizardCallout.paddingBottom = 15;
+			bolusWizardCallout.closeOnTouchBeganOutside = false;
+			bolusWizardCallout.closeOnTouchEndedOutside = false;
+			
+			function closeCallout(e:Event):void
+			{
+				if (bolusWizardCancelButton != null) bolusWizardCancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
+				
+				if (bolusWizardCallout != null) bolusWizardCallout.removeFromParent(true);
+			}
+			
+			function addBolusWizardTreatment(e:Event):void
+			{
+				
 			}
 		}
 		
