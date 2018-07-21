@@ -184,13 +184,11 @@ package ui.screens.display.settings.treatments
 					profileAccessory.addEventListener(TreatmentManagerAccessory.DELETE, onDeleteProfile);
 					accessoryList.push(profileAccessory);
 					
-					//Time
-					var profileTime:Array = profile.time.split(":");
-					var profileHours:Number = Number(profileTime[0]);
-					var profileMinutes:Number = Number(profileTime[1]);
+					//Date
+					var profileDate:Date = ProfileManager.getProfileDate(profile);
 					
 					//Data
-					data.push( { label: "Start Time: " + TimeSpan.formatHoursMinutes(profileHours, profileMinutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", ISF: " + (unit == "mgdl" ? profile.insulinSensitivityFactors : Math.round(BgReading.mgdlToMmol(Number(profile.insulinSensitivityFactors)) * 10) / 10) + "," + "\n" + "I:C: " + profile.insulinToCarbRatios + ", Target BG: " + (unit == "mgdl" ? profile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(profile.targetGlucoseRates)) * 10) / 10), accessory: profileAccessory, profile: profile  } );
+					data.push( { label: "Start Time: " + TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", ISF: " + (unit == "mgdl" ? profile.insulinSensitivityFactors : Math.round(BgReading.mgdlToMmol(Number(profile.insulinSensitivityFactors)) * 10) / 10) + "," + "\n" + "I:C: " + profile.insulinToCarbRatios + ", Target BG: " + (unit == "mgdl" ? profile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(profile.targetGlucoseRates)) * 10) / 10), accessory: profileAccessory, profile: profile  } );
 					validProfile = true;
 				}
 			}
@@ -252,34 +250,35 @@ package ui.screens.display.settings.treatments
 			{
 				//Use default date
 			}
-			else
+			else if (!editMode)
 			{
 				//Not default profile. Get last profile
 				var lastProfile:Profile = userProfiles[userProfiles.length - 1] as Profile;
+				var lastProfileDate:Date = ProfileManager.getProfileDate(lastProfile);
 				
-				var lastProfileTotalTime:String = lastProfile.time;
-				var lastProfileDividedTime:Array = lastProfileTotalTime.split(":");
-				var lastProfileHour:Number = Number(lastProfileDividedTime[0]);
-				var lastProfileMinutes:Number = Number(lastProfileDividedTime[1]);
-				
-				if (lastProfileMinutes == 59 && lastProfileHour < 23)
+				if (lastProfileDate.minutes == 59 && lastProfileDate.hours < 23)
 				{
-					profileSugestedTime.hours = lastProfileHour + 1;
+					profileSugestedTime.hours = lastProfileDate.hours + 1;
 					profileSugestedTime.minutes = 0;
 				}
-				else if (lastProfileMinutes == 59 && lastProfileHour == 23)
+				else if (lastProfileDate.minutes == 59 && lastProfileDate.hours == 23)
 				{
 					profileSugestedTime.hours = 12;
 					profileSugestedTime.minutes = 0;
 				}
 				else
 				{
-					profileSugestedTime.hours = lastProfileHour;
-					profileSugestedTime.minutes = lastProfileMinutes + 1;
+					profileSugestedTime.hours = lastProfileDate.hours;
+					profileSugestedTime.minutes = lastProfileDate.minutes + 1;
 				}
 			}
+			else if (editMode && selectedProfile != null)
+			{
+				//Suggested date should be equal to selected profile date
+				profileSugestedTime = ProfileManager.getProfileDate(selectedProfile);
+			}
 			
-			profileStartTime.value = new Date(profileSugestedTime.valueOf());
+			profileStartTime.value = profileSugestedTime;
 			
 			if (isDefaultEmpty || (editMode && selectedProfile != null && selectedProfile.time == "00:00"))
 			{
@@ -364,11 +363,9 @@ package ui.screens.display.settings.treatments
 			for (var i:int = 0; i < userProfiles.length; i++) 
 			{
 				var existingProfile:Profile = userProfiles[i] as Profile;
-				var existingProfileTime:Array = existingProfile.time.split(":");
-				var existingProfileHour:Number = Number(existingProfileTime[0]);
-				var existingProfileMinutes:Number = Number(existingProfileTime[1]);
+				var existingProfileDate:Date = ProfileManager.getProfileDate(existingProfile);
 				
-				if (suggestedHour == existingProfileHour && suggestedMinutes == existingProfileMinutes)
+				if (suggestedHour == existingProfileDate.hours && suggestedMinutes == existingProfileDate.minutes)
 				{
 					overlapFound = true;
 					break;
@@ -458,6 +455,12 @@ package ui.screens.display.settings.treatments
 				}
 				else
 				{
+					trace("DATE", profileStartTime.value);
+					trace("HOURS", profileStartTime.value.hours);
+					trace("MINUTES", profileStartTime.value.minutes);
+					
+					trace("SAVED", MathHelper.formatNumberToString(profileStartTime.value.hours) + ":" + MathHelper.formatNumberToString(profileStartTime.value.minutes));
+					
 					var newProfile:Profile = new Profile
 						(
 							UniqueId.createEventId(),
