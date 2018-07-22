@@ -4,7 +4,6 @@ package G5Model
 	import flash.utils.Endian;
 	
 	import utils.Trace;
-	import utils.UniqueId;
 
 	public class AuthStatusRxMessage extends TransmitterMessage
 	{
@@ -13,7 +12,6 @@ package G5Model
 		public var bonded:Boolean;
 		
 		public function AuthStatusRxMessage(packet:ByteArray) {
-			myTrace("paket = " + utils.UniqueId.bytesToHex(packet));
 			if (packet.length >= 3) {
 				if (packet[0] == opcode) {
 					byteSequence = new ByteArray();

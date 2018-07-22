@@ -72,10 +72,6 @@ package com.spikeapp.spike.airlibrary
 		}
 		
 		public static function cancelG5Connection(MAC:String):void {
-			if (MAC == null)
-				return;
-			if (MAC.length == 0)
-				return;
 		}
 		
 		public static function stopScanningG5():void {
@@ -91,6 +87,18 @@ package com.spikeapp.spike.airlibrary
 		}
 		
 		public static function setTransmitterIdG5(transmitterID:String, cryptKey:ByteArray):void {
+		}
+		
+		public static function setG5Reset(resetG5:Boolean):void {
+		}
+		
+		public static function setTestData(testdata:ByteArray):void {
+		}
+		
+		public static function doG5FirmwareVersionRequest():void {
+		}
+		
+		public static function doG5BatteryInfoRequest():void {
 		}
 		
 		/****************
@@ -185,9 +193,6 @@ package com.spikeapp.spike.airlibrary
 		}
 		
 		public static function resetTraceFilePath():void {
-		}
-		
-		public static function setTestData(testdata:ByteArray):void {
 		}
 	}
 }

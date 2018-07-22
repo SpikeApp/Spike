@@ -90,4 +90,19 @@
     manager.testdata = testData;
 }
 
++(void)setG5Reset:(BOOL)value{
+    G5BleManager *manager = [G5BleManager shared];
+    manager.G5Reset = value;
+}
+
++(void)doG5FirmwareVersionRequest{
+    G5BleManager *manager = [G5BleManager shared];
+    [manager doG5FirmwareVersionRequest];
+}
+
++(void)doG5BatteryInfoRequest{
+    G5BleManager *manager = [G5BleManager shared];
+    [manager doG5BatteryInfoRequest];
+}
+
 @end

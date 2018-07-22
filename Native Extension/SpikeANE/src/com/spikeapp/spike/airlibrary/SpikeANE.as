@@ -133,6 +133,18 @@ package com.spikeapp.spike.airlibrary
 			context.call("setTestData",testdata);
 		}
 		
+		public static function setG5Reset(resetG5:Boolean):void {
+			context.call("setG5Reset",resetG5);
+		}
+		
+		public static function doG5FirmwareVersionRequest():void {
+			context.call("doG5FirmwareVersionRequest");
+		}
+		
+		public static function doG5BatteryInfoRequest():void {
+			context.call("doG5BatteryInfoRequest");
+		}
+		
 		/**********************
 		 * ** HEALTHKIT
 		 * *******************/
@@ -331,6 +343,14 @@ package com.spikeapp.spike.airlibrary
 				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "phoneNotMuted") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.PHONE_NOT_MUTED);
+				_instance.dispatchEvent(spikeANEEvent);
+			} else if (event.code == "StatusEvent_G5DeviceNotPaired") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_DEVICE_NOT_PAIRED);
+				_instance.dispatchEvent(spikeANEEvent);
+			} else if (event.code == "StatusEvent_G5DataPacketReceived") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_DATA_PACKET_RECEIVED);
+				spikeANEEvent.data = new Object();
+				spikeANEEvent.data.packet = event.level.split("JJ§§((hhd")[0];
 				_instance.dispatchEvent(spikeANEEvent);
 			} 
 		}

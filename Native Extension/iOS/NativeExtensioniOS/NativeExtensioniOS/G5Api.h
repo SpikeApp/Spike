@@ -24,5 +24,11 @@
 +(void)setTransmitterIdWithId:(NSString *)transmitterId withCryptKey:(NSString*)cryptKey;
 
 +(void)setTestData:(NSData*)testData;
-    
+
++(void)setG5Reset:(BOOL)value;
+
++(void)doG5FirmwareVersionRequest;
+
++(void)doG5BatteryInfoRequest;
+
 @end

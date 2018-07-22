@@ -134,7 +134,6 @@ FREObject stopScanDeviceG5(FREContext ctx, void* funcData, uint32_t argc, FREObj
     return nil;
 }
 
-//setTransmitterIdG5
 FREObject setTransmitterIdG5(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
     NSString * transmitterId = [FPANE_FREObjectToNSString(argv[0]) mutableCopy];
     NSString * cryptKey = [FPANE_FREObjectToNSString(argv[1]) mutableCopy];
@@ -153,6 +152,20 @@ FREObject setTestData(FREContext ctx, void* funcData, uint32_t argc, FREObject a
     return nil;
 }
 
+FREObject setG5Reset(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    [G5Api setG5Reset:FPANE_FREObjectToBool(argv[0])];
+    return nil;
+}
+
+FREObject doG5FirmwareVersionRequest(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    [G5Api doG5FirmwareVersionRequest];
+    return nil;
+}
+
+FREObject doG5BatteryInfoRequest(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    [G5Api doG5BatteryInfoRequest];
+    return nil;
+}
 
 /*************************************
  ** SOUND AND SPEECH RELATED FUNCTIONS
@@ -381,7 +394,7 @@ void NativeExtensionInitializer( void** extDataToSet, FREContextInitializer* ctx
 
 void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FREContext ctx, uint32_t* numFunctionsToTest, const FRENamedFunction** functionsToSet) {
     
-    *numFunctionsToTest = 43;
+    *numFunctionsToTest = 46;
     
     FRENamedFunction * func = (FRENamedFunction *) malloc(sizeof(FRENamedFunction) * *numFunctionsToTest);
 
@@ -562,11 +575,18 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[41].name = (const uint8_t*) "setTransmitterIdG5";
     func[41].functionData = NULL;
     func[41].function = &setTransmitterIdG5;
-
     func[42].name = (const uint8_t*) "setTestData";
     func[42].functionData = NULL;
     func[42].function = &setTestData;
-
+    func[43].name = (const uint8_t*) "setG5Reset";
+    func[43].functionData = NULL;
+    func[43].function = &setG5Reset;
+    func[44].name = (const uint8_t*) "doG5FirmwareVersionRequest";
+    func[44].functionData = NULL;
+    func[44].function = &doG5FirmwareVersionRequest;
+    func[45].name = (const uint8_t*) "doG5BatteryInfoRequest";
+    func[45].functionData = NULL;
+    func[45].function = &doG5BatteryInfoRequest;
     *functionsToSet = func;
 }
 

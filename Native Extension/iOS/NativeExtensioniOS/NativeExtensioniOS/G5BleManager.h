@@ -38,6 +38,7 @@
 @property (strong, nonatomic) NSString * transmitterID;
 @property (strong, nonatomic) NSString * cryptKey;
 @property (strong, nonatomic) NSData * testdata;
+@property (assign, nonatomic) BOOL G5Reset;
 
 @property (copy,nonatomic)NSString *selectMAC;
 
@@ -65,4 +66,8 @@
 - (void)stopScanning;
 
 - (NSString *)hexStringFromData:(NSData *)mD;
+
+- (void) doG5FirmwareVersionRequest;
+
+- (void) doG5BatteryInfoRequest;
 @end

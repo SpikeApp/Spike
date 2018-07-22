@@ -3,6 +3,7 @@ package G5Model
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
+	import utils.Trace;
 	import utils.UniqueId;
 
 	public class VersionRequestTxMessage extends TransmitterMessage

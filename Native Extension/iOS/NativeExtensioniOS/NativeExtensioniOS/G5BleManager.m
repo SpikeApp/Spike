@@ -11,11 +11,8 @@
 @property (strong ,nonatomic) CBCharacteristic *writeCharacteristic;
 @property (strong ,nonatomic) CBCharacteristic *notifyCharacteristic;
 
-@property (strong ,nonatomic) NSMutableString *bufStr;
-@property (assign ,nonatomic) NSInteger bufLen;
 @property (assign ,nonatomic) NSDate *timeStampOfLastG5Reading;
 @property (assign, nonatomic) BOOL awaitingAuthStatusRxMessage;
-//@property (assign, nonatomic) NSMutableData* authMessage;
 
 @end
 
@@ -35,10 +32,10 @@
     if (!self.manager) {
         FPANE_Log(@"spiketrace ANE G5BLEManager.m in startScanDevice");
         self.manager = [[CBCentralManager alloc]initWithDelegate:self queue:dispatch_get_main_queue()];
-        self.bufStr =  [NSMutableString string];
     } else {
         FPANE_Log(@"spiketrace ANE G5BLEManager.m in startScanDevice, but manager already exists");
     }
+    _G5Reset = false;
 }
 
 - (void)startScanning{
@@ -82,14 +79,12 @@
 - (BOOL)retrievePeripherals:(CBCentralManager *)central{
     FPANE_Log(@"spiketrace ANE G5BLEManager.m in retrievePeripherals");
     if(self.selectMAC){
-        FPANE_Log(@"spiketrace ANE G5BLEManager.m in retrievePeripherals, self.selectMAC not null");
         NSString *sUUID = [FQToolsUtil userDefaults:self.selectMAC];
         if (sUUID.length!=0) {
-            FPANE_Log(@"spiketrace ANE G5BLEManager.m in retrievePeripherals, sUUID.length!=0");
             NSUUID *uuid0 = [[NSUUID UUID] initWithUUIDString:sUUID];
             NSArray *peripheralArr = [central retrievePeripheralsWithIdentifiers:@[uuid0]];
             if (peripheralArr.count>0) {
-                FPANE_Log(@"spiketrace ANE G5BLEManager.m in retrievePeripherals, peripheralArr.count>0");
+                FPANE_Log(@"spiketrace ANE G5BLEManager.m in retrievePeripherals, found known peripherals, trying to connect");
                 self.peripheral = [peripheralArr firstObject];
                 self.peripheral.delegate = self;
                 [central connectPeripheral:self.peripheral options:nil];
@@ -178,7 +173,7 @@
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m >>>peripheral didDisconnect %@: %@\n", [peripheral name], [error localizedDescription]]);
     FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_disconnectedG5", (const uint8_t*) "");
     if (self.peripheral) {
-        FPANE_Log(@"spiketrace ANE G5BLEManager.m in didDisconnectPeripheral, self.peripheral not nil and _reconnectAfterDisconnect = true, trying to reconnect");
+        FPANE_Log(@"spiketrace ANE G5BLEManager.m in didDisconnectPeripheral, self.peripheral not nil, trying to reconnect");
         [self.manager connectPeripheral:self.peripheral options:nil];
     } else if (!self.peripheral) {
         FPANE_Log(@"spiketrace ANE G5BLEManager.m in didDisconnectPeripheral, self.peripheral = nil");
@@ -228,13 +223,12 @@
         _awaitingAuthStatusRxMessage = true;
     } else {
         FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m in didUpdateNotificationStateForCharacteristic, characteristic uuid not notify"]);
-        /*                    if (G5_RESET_REQUESTED) {
-         doG5Reset();
-         G5_RESET_REQUESTED = false;
+        if (_G5Reset) {
+            [self doG5Reset];
+            _G5Reset = false;
          } else {
-         getSensorData();
+             [self getSensorData];
          }
-         */
     }
 }
 
@@ -267,20 +261,22 @@
     _awaitingAuthStatusRxMessage = false;
 
     NSData *data = characteristic.value;
-    FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m didUpdateValueForCharacteristic data = %@",[self hexStringFromData:data]]);
+    NSString *dataAsString = [self hexStringFromData:data];
+    FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m didUpdateValueForCharacteristic data = %@", dataAsString]);
     const char *bytes = (const char *)[data bytes];
 
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m didUpdateValueForCharacteristic bytes[0] = %i",(int)bytes[0]]);
 
     if ((int)bytes[0] == 5) {
         if ([data length] >= 3) {
-            int bonded = (int)bytes[1];
+            int bonded = (int)bytes[2];
             if (bonded != 2) {
-                FPANE_Log(@"spiketrace ANE G5BLEManager.m in didUpdateValueForCharacteristic, Subscribing to WriteCharacteristic");
-                [peripheral setNotifyValue:YES forCharacteristic:self.writeCharacteristic];
             } else {
-                FPANE_Log(@"spiketrace ANE G5BLEManager.m in didUpdateValueForCharacteristic, not bonded TO DO SEND DEVICE NOT PAIRED EVENT");
+                FPANE_Log(@"spiketrace ANE G5BLEManager.m in didUpdateValueForCharacteristic, not bonded sending device not paired message");
+                FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_G5DeviceNotPaired", (const uint8_t*) "");
             }
+            FPANE_Log(@"spiketrace ANE G5BLEManager.m in didUpdateValueForCharacteristic, Subscribing to WriteCharacteristic");
+            [peripheral setNotifyValue:YES forCharacteristic:self.writeCharacteristic];
         }
     } else if ((int)bytes[0] == 3) {
         if ([data length] >= 17) {
@@ -293,6 +289,9 @@
             [dataToWrite appendBytes:[challengeHash bytes] length:8];
             [self.peripheral writeValue:dataToWrite forCharacteristic:self.notifyCharacteristic type:CBCharacteristicWriteWithResponse];
         }
+    } else {
+        
+        FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_G5DataPacketReceived", (const uint8_t*) FPANE_ConvertNSString_TO_uint8([NSString stringWithFormat:@"%@%@", dataAsString, @"JJ§§((hhd"]));
     }
 }
 
@@ -313,6 +312,40 @@
          [self.manager cancelPeripheralConnection:self.peripheral];
          self.peripheral = nil;
     }
+}
+
+- (void) getSensorData {
+    FPANE_Log(@"spiketrace ANE G5BLEManager.m in getSensorData");
+    //SensorTxMessage hardcoded
+    const unsigned char bytes[] = {0x2E,0xAC,0xC5};
+    NSData *data = [NSData dataWithBytes:bytes length:sizeof(bytes)];
+
+    [self.peripheral writeValue:data forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
+}
+
+- (void) doG5Reset {
+    FPANE_Log(@"spiketrace ANE G5BLEManager.m in doG5Reset");
+    //Sensor reset message hardcoded
+    const unsigned char bytes[] = {0x42,0x86,0x68};
+    NSData *data = [NSData dataWithBytes:bytes length:sizeof(bytes)];
+    
+    [self.peripheral writeValue:data forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
+}
+
+- (void) doG5FirmwareVersionRequest {
+    FPANE_Log(@"spiketrace ANE G5BLEManager.m in doG5FirmwareVersionRequest");
+    //FirmwareVersionRequest reset message hardcoded
+    const unsigned char bytes[] = {0x4A,0x8E,0xE9};
+    NSData *data = [NSData dataWithBytes:bytes length:sizeof(bytes)];
+    [self.peripheral writeValue:data forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
+}
+
+- (void) doG5BatteryInfoRequest {
+    FPANE_Log(@"spiketrace ANE G5BLEManager.m in doG5BatteryInfoRequest");
+    //BatteryInfoRequest reset message hardcoded
+    const unsigned char bytes[] = {0x22,0x20,0x04};
+    NSData *data = [NSData dataWithBytes:bytes length:sizeof(bytes)];
+    [self.peripheral writeValue:data forCharacteristic:self.writeCharacteristic type:CBCharacteristicWriteWithResponse];
 }
 
 - (void)setSelectMAC:(NSString *)selectMAC

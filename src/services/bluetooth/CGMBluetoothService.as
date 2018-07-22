@@ -192,7 +192,7 @@ package services.bluetooth
 		/**
 		 * is the peripheral connected or not, not applicable to MiaoMiao which is handled by BackgroundFetch ANE 
 		 */
-		private static var peripheralConnected:Boolean = false;
+		private static var peripheralConnected:Boolean = true;
 		
 		//Dexcom G5 variables
 		private static var timeStampOfLastG5Reading:Number = 0;
@@ -525,6 +525,13 @@ package services.bluetooth
 			if (CGMBlueToothDevice.isMiaoMiao()) {
 				myTrace("in startScanning, is miaomiao");
 				SpikeANE.startScanningForMiaoMiao();
+				return;
+			}
+			
+			if (CGMBlueToothDevice.isDexcomG5() && useSpikeANEForG5) {
+				myTrace("in startScanning, is dexcomG5 and useSpikeANEForG5 =  true");
+				SpikeANE.startScanDeviceG5();
+				SpikeANE.startScanningForG5();
 				return;
 			}
 
@@ -1170,7 +1177,6 @@ package services.bluetooth
 						_instance.dispatchEvent(blueToothServiceEvent);
 					}
 					
-					//probably doesn't make sense to subscribe to characteristic ? because not paired yet
 					myTrace("in processG5TransmitterData, Subscribing to WriteCharacteristic");
 					if (!activeBluetoothPeripheral.subscribeToCharacteristic(writeCharacteristic))
 					{
@@ -1210,9 +1216,9 @@ package services.bluetooth
 					}
 					
 					//if G5Reset was done less than 5 minutes ago, then ignore the reading
-					if ((new Date()).valueOf() - G5ResetTimeStamp < 5 * 60 * 1000) {
+					if ((new Date()).valueOf() - timeStampOfLastG5Reading < 5 * 60 * 1000) {
 						myTrace("in processG5TransmitterData, resettimestamp was less than 5 minutes ago, ignoring this reading");
-					} else {
+					}else {
 						//SPIKE: Save Sensor RX Timestmp for transmitter runtime display
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP) != String(sensorRx.timestamp))
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP, String(sensorRx.timestamp));
@@ -2207,6 +2213,7 @@ package services.bluetooth
 		private static function addG5EventListeners():void {
 			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_NEW_MAC, receivedG5DeviceAddress);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_DATA_PACKET_RECEIVED, receivedG5DataPacket);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_DEVICE_NOT_PAIRED, G5DeviceNotPaired);
 		}
 		
 		private static function receivedSensorChangedFromMiaoMiao(event:flash.events.Event):void {
@@ -2256,8 +2263,88 @@ package services.bluetooth
 			}
 		}
 		
+		private static function G5DeviceNotPaired(event:SpikeANEEvent):void {
+			myTrace("in G5DeviceNotPaired, not paired, dispatching DEVICE_NOT_PAIRED event");
+			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.DEVICE_NOT_PAIRED);
+			_instance.dispatchEvent(blueToothServiceEvent);
+		}
+		
 		private static function receivedG5DataPacket(event:SpikeANEEvent):void {
-			myTrace("in receivedG5DataPacket, TO BE COMPLETED");
+			myTrace("in receivedG5DataPacket");
+			var buffer:ByteArray = utils.UniqueId.hexStringToByteArray(event.data.packet as String); 
+			buffer.endian = Endian.LITTLE_ENDIAN;
+			buffer.position = 0;
+			var code:int = buffer.readByte();
+			switch (code) {
+				case 47://0x2f
+					var sensorRx:SensorRxMessage = new SensorRxMessage(buffer);
+					
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO) == "") {
+						myTrace("in receivedG5DataPacket, firmare version unknown, will request it");
+						SpikeANE.doG5FirmwareVersionRequest();
+					} else {
+						if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER)) > CGMBluetoothService.G5_BATTERY_READ_PERIOD_MS) {
+							SpikeANE.doG5BatteryInfoRequest();
+						} else {
+							//not disconnecting because this may increase G5 battery usage
+						}
+					}
+					
+					if ((new Date()).valueOf() - G5ResetTimeStamp < 5 * 60 * 1000) {
+						myTrace("in receivedG5DataPacket, G5ResetTimeStamp was less than 5 minutes ago, ignoring this reading");
+					}  if ((new Date()).valueOf() - timeStampOfLastG5Reading < 5 * 60 * 1000) {
+						myTrace("in receivedG5DataPacket, resettimestamp was less than 5 minutes ago, ignoring this reading");
+					} else {
+						//SPIKE: Save Sensor RX Timestmp for transmitter runtime display
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP) != String(sensorRx.timestamp))
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP, String(sensorRx.timestamp));
+						
+						timeStampOfLastG5Reading = (new Date()).valueOf();
+						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+						blueToothServiceEvent.data = new TransmitterDataG5Packet(sensorRx.unfiltered, sensorRx.filtered, sensorRx.timestamp, sensorRx.transmitterStatus);
+						_instance.dispatchEvent(blueToothServiceEvent);
+					}
+					break;
+				case 67:
+					//G5 reset acknowledge
+					if (buffer.length !== 4) {
+						myTrace(" in receivedG5DataPacket, received G5 Reset message, but length != 4, ignoring");
+					} else {
+						if (SpikeANE.appIsInForeground()) 
+						{
+							AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"),
+									ModelLocator.resourceManagerInstance.getString("bluetoothservice","g5_reset_done")
+								);
+							SpikeANE.vibrate();
+						} else {
+							var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+								.setId(NotificationService.ID_FOR_G5_RESET_DONE)
+								.setAlert(ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"))
+								.setTitle(ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"))
+								.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","g5_reset_done"))
+								.enableVibration(true)
+							Notifications.service.notify(notificationBuilder.build());
+						}
+					}
+					break;
+				case 35:
+					buffer.position = 0;
+					if (!setStoredBatteryBytesG5(buffer)) {
+						myTrace("in receivedG5DataPacket , Could not save out battery data!");
+					}
+					break;
+				case 75://0x4B
+					//Version request response message received
+					//store the complete buffer as string in the settings
+					myTrace("in receivedG5DataPacket, received version info, storing info and disconnecting");
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO, UniqueId.bytesToHex(buffer));
+					break;
+				default:
+					myTrace("in receivedG5DataPacket unknown code received : " + code);
+					break;
+			}
 		}
 		
 		private static function expectedPeripheralName():String {
@@ -2283,6 +2370,7 @@ package services.bluetooth
 		 */
 		public static function G5_RequestReset():void {
 			G5_RESET_REQUESTED = true;
+			SpikeANE.setG5Reset(true);
 		}
 		
 		private static function setPeripheralUUIDs():void {
