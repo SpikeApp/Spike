@@ -430,13 +430,13 @@ package ui.screens.display.settings.treatments
 		
 		private function onSaveProfile(e:Event):void
 		{
-			if (doesProfileTimeOverlap())
+			if (!isDefaultEmpty && doesProfileTimeOverlap())
 			{
 				AlertManager.showSimpleAlert
-					(
-						"Warning",
-						"Profile start time already in use. Please select a different time."
-					);
+				(
+					"Warning",
+					"Profile start time already in use. Please select a different time."
+				);
 				
 				return;
 			}

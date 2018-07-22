@@ -1,5 +1,8 @@
 package treatments
 {
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
+	
 	import database.BgReading;
 	
 	import feathers.controls.Button;
@@ -21,11 +24,15 @@ package treatments
 	
 	import model.ModelLocator;
 	
+	import starling.animation.Transitions;
+	import starling.animation.Tween;
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
+	import ui.AppInterface;
 	import ui.chart.GlucoseFactory;
+	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
@@ -37,6 +44,10 @@ package treatments
 		private static var initialStart:Boolean = true;
 		private static var contentWidth:Number = 270;
 		private static var yPos:Number = 0;
+		private static var calculationTimeout:uint = 0;
+		
+		/* Objects */
+		private static var currentProfile:Profile;
 		
 		/* Display Objects */
 		private static var calloutPositionHelper:Sprite;
@@ -78,6 +89,20 @@ package treatments
 		private static var bwNotes:TextInput;
 		private static var bwScrollContainer:ScrollContainer;
 		private static var bwSuggestionLabel:Label;
+
+		private static var missedSettingsContainer:LayoutGroup;
+
+		private static var missedSettingsTitle:Label;
+
+		private static var missedSettingsLabel:Label;
+
+		private static var missedSettingsActionsContainer:LayoutGroup;
+
+		private static var missedSettingsCancelButton:Button;
+
+		private static var missedSettingsConfigureButton:Button;
+
+		private static var bolusWizardConfigureCallout:Callout;
 		
 		public function BolusWizard()
 		{
@@ -86,6 +111,14 @@ package treatments
 		
 		public static function display():void
 		{
+			currentProfile = ProfileManager.getProfileByTime(new Date().valueOf());
+			
+			if (currentProfile == null || currentProfile.insulinSensitivityFactors == "" || currentProfile.insulinToCarbRatios == "" || currentProfile.targetGlucoseRates == "")
+			{
+				displayMissedSettingsCallout();
+				return;
+			}
+			
 			if (initialStart)
 			{
 				createDisplayObjects();
@@ -94,7 +127,99 @@ package treatments
 			}
 			
 			populateComponents();
+			performCalculations();
 			displayCallout();
+		}
+		
+		private static function displayMissedSettingsCallout():void
+		{
+			if (missedSettingsContainer != null) missedSettingsContainer.removeFromParent(true);
+			missedSettingsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
+			missedSettingsContainer.width = contentWidth;
+			
+			if (missedSettingsTitle != null) missedSettingsTitle.removeFromParent(true);
+			missedSettingsTitle = LayoutFactory.createLabel("Bolus Wizard", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			missedSettingsTitle.width = contentWidth;
+			missedSettingsContainer.addChild(missedSettingsTitle);
+			
+			if (missedSettingsLabel != null) missedSettingsLabel.removeFromParent(true);
+			missedSettingsLabel = LayoutFactory.createLabel("Profile not configured!", HorizontalAlign.CENTER);
+			missedSettingsLabel.width = contentWidth;
+			missedSettingsContainer.addChild(missedSettingsLabel);
+			
+			if (missedSettingsActionsContainer != null) missedSettingsActionsContainer.removeFromParent(true);
+			missedSettingsActionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
+			missedSettingsActionsContainer.width = contentWidth;
+			missedSettingsContainer.addChild(missedSettingsActionsContainer);
+			
+			missedSettingsCancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
+			missedSettingsCancelButton.addEventListener(Event.TRIGGERED, onCloseConfigureCallout);
+			missedSettingsActionsContainer.addChild(missedSettingsCancelButton);
+			
+			missedSettingsConfigureButton = LayoutFactory.createButton("CONFIGURE");
+			missedSettingsConfigureButton.addEventListener(Event.TRIGGERED, onPerformConfiguration);
+			missedSettingsActionsContainer.addChild(missedSettingsConfigureButton);
+			
+			setCalloutPositionHelper();
+			
+			if (bolusWizardConfigureCallout != null) bolusWizardConfigureCallout.dispose();
+			bolusWizardConfigureCallout = Callout.show(missedSettingsContainer, calloutPositionHelper);
+			bolusWizardConfigureCallout.paddingBottom = 15;
+			bolusWizardConfigureCallout.closeOnTouchBeganOutside = false;
+			bolusWizardConfigureCallout.closeOnTouchEndedOutside = false;
+		}
+		
+		private static function onCloseConfigureCallout(e:Event):void
+		{
+			if (bolusWizardConfigureCallout != null)
+				bolusWizardConfigureCallout.close(true);
+		}
+		
+		private static function onPerformConfiguration(e:Event):void
+		{
+			AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_PROFILE );
+			
+			var popupTween:Tween=new Tween(bolusWizardConfigureCallout, 0.3, Transitions.LINEAR);
+			popupTween.fadeTo(0);
+			popupTween.onComplete = function():void
+			{
+				bolusWizardConfigureCallout.removeFromParent(true);
+			}
+			Starling.juggler.add(popupTween);
+		}
+		
+		private static function performCalculations(e:Event = null):void
+		{
+			trace("Bolus Wizard Calculations");
+		}
+		
+		private static function delayCalculations(e:Event = null):void
+		{
+			clearTimeout(calculationTimeout);
+			calculationTimeout = setTimeout(performCalculations, 100);
+		}
+		
+		private static function repositonCarbTypePicker(e:Event):void
+		{
+			bwCarbTypePicker.validate();
+			bwCarbTypeContainer.validate();
+			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
+		}
+		
+		private static function showHideCarbExtras(e:Event):void
+		{
+			if (!bwCarbsCheck.isSelected)
+			{
+				bwCarbsOffsetContainer.removeFromParent();
+				bwCarbTypeContainer.removeFromParent()
+			}
+			else
+			{
+				bwMainContainer.addChildAt(bwCarbsOffsetContainer, 3);
+				bwMainContainer.addChildAt(bwCarbTypeContainer, 4);
+			}
+			
+			performCalculations();
 		}
 		
 		private static function createDisplayObjects():void
@@ -122,12 +247,14 @@ package treatments
 			bwCurrentGlucoseContainer.addChild(bwGlucoseLabelContainer);
 			
 			bwGlucoseCheck = LayoutFactory.createCheckMark(true);
+			bwGlucoseCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwGlucoseLabelContainer.addChild(bwGlucoseCheck);
 			
 			bwGlucoseLabel = LayoutFactory.createLabel("");
 			bwGlucoseLabelContainer.addChild(bwGlucoseLabel);
 			
 			bwGlucoseStepper = LayoutFactory.createNumericStepper(0, 0, 0, 1);
+			bwGlucoseStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwGlucoseStepper.validate();
 			bwCurrentGlucoseContainer.addChild(bwGlucoseStepper);
 			
@@ -141,12 +268,14 @@ package treatments
 			bwCarbsContainer.addChild(bwCarbsLabelContainer);
 			
 			bwCarbsCheck = LayoutFactory.createCheckMark(true);
+			bwCarbsCheck.addEventListener(Event.CHANGE, showHideCarbExtras);
 			bwCarbsLabelContainer.addChild(bwCarbsCheck);
 			
 			bwCarbsLabel = LayoutFactory.createLabel("");
 			bwCarbsLabelContainer.addChild(bwCarbsLabel);
 			
-			bwCarbsStepper = LayoutFactory.createNumericStepper(0, 0, 0, 0.5);
+			bwCarbsStepper = LayoutFactory.createNumericStepper(0, 500, 0, 0.5);
+			bwCarbsStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwCarbsStepper.validate();
 			bwCarbsContainer.addChild(bwCarbsStepper);
 			
@@ -160,7 +289,7 @@ package treatments
 			bwCarbsOffsetLabel = LayoutFactory.createLabel("");
 			bwCarbsOffsetContainer.addChild(bwCarbsOffsetLabel);
 			
-			bwCarbsOffsetStepper = LayoutFactory.createNumericStepper(-0, 0, 0, 5);
+			bwCarbsOffsetStepper = LayoutFactory.createNumericStepper(-300, 300, 0, 5);
 			bwCarbsOffsetStepper.validate();
 			bwCarbsOffsetContainer.addChild(bwCarbsOffsetStepper);
 			
@@ -182,6 +311,7 @@ package treatments
 					ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label')
 				]
 			);
+			bwCarbTypePicker.addEventListener(Event.CHANGE, repositonCarbTypePicker);
 			
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
 			bwCarbTypePicker.validate();
@@ -195,6 +325,7 @@ package treatments
 			bwOtherCorrectionContainer.addChild(bwOtherCorrectionLabel);
 			
 			bwOtherCorrectionStepper = LayoutFactory.createNumericStepper(0, 100, 0, 0.1);
+			bwOtherCorrectionStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwOtherCorrectionStepper.validate();
 			bwOtherCorrectionContainer.addChild(bwOtherCorrectionStepper);
 			
@@ -207,6 +338,7 @@ package treatments
 			bwIOBContainer.addChild(bwIOBLabelContainer);
 			
 			bwIOBCheck = LayoutFactory.createCheckMark(false);
+			bwIOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwIOBLabelContainer.addChild(bwIOBCheck);
 			
 			bwIOBLabel = LayoutFactory.createLabel("");
@@ -224,6 +356,7 @@ package treatments
 			bwCOBContainer.addChild(bwCOBLabelContainer);
 			
 			bwCOBCheck = LayoutFactory.createCheckMark(false);
+			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwCOBLabelContainer.addChild(bwCOBCheck);
 			
 			bwCOBLabel = LayoutFactory.createLabel("");
@@ -347,6 +480,7 @@ package treatments
 		
 		private static function setCalloutPositionHelper():void
 		{
+			if (calloutPositionHelper != null) calloutPositionHelper.removeFromParent(true);
 			calloutPositionHelper = new Sprite();
 			
 			if (!isNaN(Constants.headerHeight))
@@ -366,8 +500,11 @@ package treatments
 		
 		private static function closeCallout(e:Event):void
 		{
-			if (bolusWizardCallout != null) 
+			if (bolusWizardCallout != null)
+			{
 				bolusWizardCallout.close(false);
+				clearTimeout(calculationTimeout);
+			}
 		}
 		
 		private static function addBolusWizardTreatment(e:Event):void
