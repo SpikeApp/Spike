@@ -1,0 +1,378 @@
+package treatments
+{
+	import database.BgReading;
+	
+	import feathers.controls.Button;
+	import feathers.controls.Callout;
+	import feathers.controls.Check;
+	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
+	import feathers.controls.NumericStepper;
+	import feathers.controls.PickerList;
+	import feathers.controls.ScrollBarDisplayMode;
+	import feathers.controls.ScrollContainer;
+	import feathers.controls.TextInput;
+	import feathers.controls.popups.DropDownPopUpContentManager;
+	import feathers.data.ArrayCollection;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
+	
+	import model.ModelLocator;
+	
+	import starling.core.Starling;
+	import starling.display.Sprite;
+	import starling.events.Event;
+	
+	import ui.chart.GlucoseFactory;
+	import ui.screens.display.LayoutFactory;
+	
+	import utils.Constants;
+	import utils.DeviceInfo;
+
+	public class BolusWizard
+	{
+		/* Properties */
+		private static var initialStart:Boolean = true;
+		private static var contentWidth:Number = 270;
+		private static var yPos:Number = 0;
+		
+		/* Display Objects */
+		private static var calloutPositionHelper:Sprite;
+		private static var bwMainContainer:LayoutGroup;
+		private static var bwCurrentGlucoseContainer:LayoutGroup;
+		private static var bwGlucoseLabel:Label;
+		private static var bwGlucoseStepper:NumericStepper;
+		private static var bolusWizardCallout:Callout;
+		private static var bwTitle:Label;
+		private static var bolusWizardActionContainer:LayoutGroup;
+		private static var bolusWizardCancelButton:Button;
+		private static var bolusWizardAddButton:Button;
+		private static var bwGlucoseLabelContainer:LayoutGroup;
+		private static var bwGlucoseCheck:Check;
+		private static var bwIOBContainer:LayoutGroup;
+		private static var bwIOBLabel:Label;
+		private static var bwCurrentIOBLabel:Label;
+		private static var bwCOBContainer:LayoutGroup;
+		private static var bwCOBLabel:Label;
+		private static var bwCurrentCOBLabel:Label;
+		private static var bwCarbsContainer:LayoutGroup;
+		private static var bwCarbsLabelContainer:LayoutGroup;
+		private static var bwCarbsCheck:Check;
+		private static var bwCarbsLabel:Label;
+		private static var bwCarbsStepper:NumericStepper;
+		private static var bwCarbTypeLabel:Label;
+		private static var bwCarbsOffsetContainer:LayoutGroup;
+		private static var bwCarbsOffsetLabel:Label;
+		private static var bwCarbsOffsetStepper:NumericStepper;
+		private static var bwCarbTypeContainer:LayoutGroup;
+		private static var bwCarbTypePicker:PickerList;
+		private static var bwOtherCorrectionContainer:LayoutGroup;
+		private static var bwOtherCorrectionLabel:Label;
+		private static var bwOtherCorrectionStepper:NumericStepper;
+		private static var bwIOBLabelContainer:LayoutGroup;
+		private static var bwIOBCheck:Check;
+		private static var bwCOBLabelContainer:LayoutGroup;
+		private static var bwCOBCheck:Check;
+		private static var bwNotes:TextInput;
+		private static var bwScrollContainer:ScrollContainer;
+		private static var bwSuggestionLabel:Label;
+		
+		public function BolusWizard()
+		{
+			throw new Error("BolusWizard is not meant to be instantiated!");
+		}
+		
+		public static function display():void
+		{
+			if (initialStart)
+			{
+				createDisplayObjects();
+				setCalloutPositionHelper();
+				initialStart = false;
+			}
+			
+			populateComponents();
+			displayCallout();
+		}
+		
+		private static function createDisplayObjects():void
+		{
+			//Scroll Container
+			bwScrollContainer = new ScrollContainer();
+			bwScrollContainer.layout = new VerticalLayout();
+			bwScrollContainer.scrollBarDisplayMode = ScrollBarDisplayMode.FIXED_FLOAT;
+			bwScrollContainer.verticalScrollBarProperties.paddingRight = -10;
+			
+			//Display Container
+			bwMainContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, null, 10);
+			bwMainContainer.width = contentWidth;
+			
+			//Title
+			bwTitle = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			bwTitle.width = contentWidth;
+			bwMainContainer.addChild(bwTitle);
+			
+			//Current Glucose
+			bwCurrentGlucoseContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwCurrentGlucoseContainer.width = contentWidth;
+			
+			bwGlucoseLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwCurrentGlucoseContainer.addChild(bwGlucoseLabelContainer);
+			
+			bwGlucoseCheck = LayoutFactory.createCheckMark(true);
+			bwGlucoseLabelContainer.addChild(bwGlucoseCheck);
+			
+			bwGlucoseLabel = LayoutFactory.createLabel("");
+			bwGlucoseLabelContainer.addChild(bwGlucoseLabel);
+			
+			bwGlucoseStepper = LayoutFactory.createNumericStepper(0, 0, 0, 1);
+			bwGlucoseStepper.validate();
+			bwCurrentGlucoseContainer.addChild(bwGlucoseStepper);
+			
+			bwMainContainer.addChild(bwCurrentGlucoseContainer);
+			
+			//Carbs
+			bwCarbsContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwCarbsContainer.width = contentWidth;
+			
+			bwCarbsLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwCarbsContainer.addChild(bwCarbsLabelContainer);
+			
+			bwCarbsCheck = LayoutFactory.createCheckMark(true);
+			bwCarbsLabelContainer.addChild(bwCarbsCheck);
+			
+			bwCarbsLabel = LayoutFactory.createLabel("");
+			bwCarbsLabelContainer.addChild(bwCarbsLabel);
+			
+			bwCarbsStepper = LayoutFactory.createNumericStepper(0, 0, 0, 0.5);
+			bwCarbsStepper.validate();
+			bwCarbsContainer.addChild(bwCarbsStepper);
+			
+			bwMainContainer.addChild(bwCarbsContainer);
+			
+			//Carbs Offset
+			bwCarbsOffsetContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwCarbsOffsetContainer.width = contentWidth;
+			bwMainContainer.addChild(bwCarbsOffsetContainer);
+			
+			bwCarbsOffsetLabel = LayoutFactory.createLabel("");
+			bwCarbsOffsetContainer.addChild(bwCarbsOffsetLabel);
+			
+			bwCarbsOffsetStepper = LayoutFactory.createNumericStepper(-0, 0, 0, 5);
+			bwCarbsOffsetStepper.validate();
+			bwCarbsOffsetContainer.addChild(bwCarbsOffsetStepper);
+			
+			//Carb Type
+			bwCarbTypeContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwMainContainer.addChild(bwCarbTypeContainer);
+			
+			bwCarbTypeLabel = LayoutFactory.createLabel("");
+			bwCarbTypeContainer.addChild(bwCarbTypeLabel);
+			
+			bwCarbTypePicker = LayoutFactory.createPickerList();
+			bwCarbTypePicker.labelField = "label";
+			bwCarbTypePicker.popUpContentManager = new DropDownPopUpContentManager();
+			bwCarbTypePicker.dataProvider = new ArrayCollection
+			(
+				[
+					ModelLocator.resourceManagerInstance.getString('treatments','carbs_fast_label'),
+					ModelLocator.resourceManagerInstance.getString('treatments','carbs_medium_label'),
+					ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label')
+				]
+			);
+			
+			bwCarbTypeContainer.addChild(bwCarbTypePicker);
+			bwCarbTypePicker.validate();
+			
+			//Other Correction
+			bwOtherCorrectionContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwOtherCorrectionContainer.width = contentWidth;
+			bwMainContainer.addChild(bwOtherCorrectionContainer);
+			
+			bwOtherCorrectionLabel = LayoutFactory.createLabel("");
+			bwOtherCorrectionContainer.addChild(bwOtherCorrectionLabel);
+			
+			bwOtherCorrectionStepper = LayoutFactory.createNumericStepper(0, 100, 0, 0.1);
+			bwOtherCorrectionStepper.validate();
+			bwOtherCorrectionContainer.addChild(bwOtherCorrectionStepper);
+			
+			//Current IOB
+			bwIOBContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwIOBContainer.width = contentWidth;
+			bwMainContainer.addChild(bwIOBContainer);
+			
+			bwIOBLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwIOBContainer.addChild(bwIOBLabelContainer);
+			
+			bwIOBCheck = LayoutFactory.createCheckMark(false);
+			bwIOBLabelContainer.addChild(bwIOBCheck);
+			
+			bwIOBLabel = LayoutFactory.createLabel("");
+			bwIOBLabelContainer.addChild(bwIOBLabel);
+			
+			bwCurrentIOBLabel = LayoutFactory.createLabel("");
+			bwIOBContainer.addChild(bwCurrentIOBLabel);
+			
+			//Current COB
+			bwCOBContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwCOBContainer.width = contentWidth;
+			bwMainContainer.addChild(bwCOBContainer);
+			
+			bwCOBLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwCOBContainer.addChild(bwCOBLabelContainer);
+			
+			bwCOBCheck = LayoutFactory.createCheckMark(false);
+			bwCOBLabelContainer.addChild(bwCOBCheck);
+			
+			bwCOBLabel = LayoutFactory.createLabel("");
+			bwCOBLabelContainer.addChild(bwCOBLabel);
+			
+			bwCurrentCOBLabel = LayoutFactory.createLabel("");
+			bwCOBContainer.addChild(bwCurrentCOBLabel);
+			
+			//Notes
+			bwNotes = LayoutFactory.createTextInput(false, false, contentWidth, HorizontalAlign.CENTER, false, false, false, true, true);
+			bwNotes.prompt = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
+			bwNotes.maxChars = 50;
+			bwMainContainer.addChild(bwNotes);
+			
+			//Wizard Suggestion
+			bwSuggestionLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true, 0xFF0000);
+			bwSuggestionLabel.wordWrap = true;
+			bwSuggestionLabel.paddingTop = bwSuggestionLabel.paddingBottom = 10;
+			bwSuggestionLabel.width = contentWidth;
+			bwMainContainer.addChild(bwSuggestionLabel);
+			
+			//Action Buttons
+			var bolusWizardActionLayout:HorizontalLayout = new HorizontalLayout();
+			bolusWizardActionLayout.horizontalAlign = HorizontalAlign.CENTER;
+			bolusWizardActionLayout.gap = 5;
+			
+			bolusWizardActionContainer = new LayoutGroup();
+			bolusWizardActionContainer.width = contentWidth;
+			bolusWizardActionContainer.layout = bolusWizardActionLayout;
+			bwMainContainer.addChild(bolusWizardActionContainer);
+			
+			bolusWizardCancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
+			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, closeCallout);
+			bolusWizardActionContainer.addChild(bolusWizardCancelButton);
+			
+			bolusWizardAddButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
+			bolusWizardAddButton.addEventListener(Event.TRIGGERED, addBolusWizardTreatment);
+			bolusWizardActionContainer.addChild(bolusWizardAddButton);
+			
+			bwMainContainer.addChild(bolusWizardActionContainer);
+			
+			//Dinal Adjustments
+			bwScrollContainer.addChild(bwMainContainer);
+		}
+		
+		private static function populateComponents():void
+		{
+			bwTitle.text = "Bolus Wizard";
+			
+			bwGlucoseLabel.text = "Blood Glucose";
+			bwGlucoseCheck.isSelected = true;
+			bwGlucoseStepper.minimum = 0;
+			bwGlucoseStepper.maximum = 400;
+			bwGlucoseStepper.value = Math.round((ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).calculatedValue);
+			bwGlucoseStepper.step = 1;
+			bwCurrentGlucoseContainer.validate();
+			bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
+			
+			bwCarbsCheck.isSelected = true;
+			bwCarbsLabel.text = "Carbs";
+			bwCarbsStepper.value = 0;
+			bwCarbsContainer.validate();
+			bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
+			bwCarbsOffsetLabel.text = "Carbs Offset (Min)";
+			bwCarbsOffsetStepper.value = 0;
+			bwCarbsOffsetContainer.validate();
+			bwCarbsOffsetStepper.x = contentWidth - bwCarbsOffsetStepper.width + 12;
+			bwCarbTypeLabel.text = "Carb Type";
+			
+			var defaultCarbType:String = ProfileManager.getDefaultTimeAbsortionCarbType();
+			if (defaultCarbType == "fast")
+				bwCarbTypePicker.selectedIndex = 0;
+			else if (defaultCarbType == "medium")
+				bwCarbTypePicker.selectedIndex = 1;
+			else if (defaultCarbType == "slow")
+				bwCarbTypePicker.selectedIndex = 2;
+			else
+				bwCarbTypePicker.selectedIndex = 2;
+			
+			bwCarbTypeContainer.validate();
+			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
+			
+			bwOtherCorrectionLabel.text = "Extra Correction";
+			bwOtherCorrectionStepper.value = 0;
+			bwOtherCorrectionContainer.validate();
+			bwOtherCorrectionStepper.x = contentWidth - bwOtherCorrectionStepper.width + 12;
+			
+			bwIOBCheck.isSelected = false;
+			bwIOBLabel.text = "IOB";
+			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()));
+			bwCurrentIOBLabel.validate();
+			bwIOBContainer.validate();
+			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
+			
+			bwCOBCheck.isSelected = false;
+			bwCOBLabel.text = "COB";
+			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
+			bwCurrentCOBLabel.validate();
+			bwCOBContainer.validate();
+			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
+			
+			bwSuggestionLabel.text = "";
+			
+			bwScrollContainer.verticalScrollPosition = 0;
+		}
+		
+		private static function displayCallout():void
+		{
+			if (bolusWizardCallout != null) bolusWizardCallout.dispose();
+			bolusWizardCallout = Callout.show(bwScrollContainer, calloutPositionHelper);
+			bolusWizardCallout.disposeContent = false;
+			bolusWizardCallout.paddingBottom = 15;
+			bolusWizardCallout.closeOnTouchBeganOutside = false;
+			bolusWizardCallout.closeOnTouchEndedOutside = false;
+			bolusWizardCallout.height = Constants.stageHeight - yPos - 10;
+			bolusWizardCallout.validate();
+			bwScrollContainer.height = bolusWizardCallout.height - yPos - 35;
+			bwScrollContainer.maxHeight = bolusWizardCallout.height - yPos - 35;
+			bwScrollContainer.validate();
+		}
+		
+		private static function setCalloutPositionHelper():void
+		{
+			calloutPositionHelper = new Sprite();
+			
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			
+			calloutPositionHelper.y = yPos;
+			calloutPositionHelper.x = Constants.stageWidth / 2;
+			Starling.current.stage.addChild(calloutPositionHelper);
+		}
+		
+		private static function closeCallout(e:Event):void
+		{
+			if (bolusWizardCallout != null) 
+				bolusWizardCallout.close(false);
+		}
+		
+		private static function addBolusWizardTreatment(e:Event):void
+		{
+			
+		}
+	}
+}

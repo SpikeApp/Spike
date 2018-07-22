@@ -20,6 +20,7 @@ package ui.screens.display.treatments
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
+	import treatments.BolusWizard;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -269,7 +270,7 @@ package ui.screens.display.treatments
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
-				TreatmentsManager.activateBolusWizard();
+				BolusWizard.display();
 			}
 			else if(treatmentID == 6) //BG Check
 			{	
