@@ -430,7 +430,7 @@ package ui.screens.display.settings.treatments
 		
 		private function onSaveProfile(e:Event):void
 		{
-			if (!isDefaultEmpty && doesProfileTimeOverlap())
+			if (!isDefaultEmpty && !editMode && doesProfileTimeOverlap())
 			{
 				AlertManager.showSimpleAlert
 				(

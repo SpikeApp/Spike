@@ -3,6 +3,8 @@ package treatments
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	
 	import feathers.controls.Button;
@@ -96,6 +98,15 @@ package treatments
 		private static var missedSettingsCancelButton:Button;
 		private static var missedSettingsConfigureButton:Button;
 		private static var bolusWizardConfigureCallout:Callout;
+		
+		
+		
+		
+		////
+		
+		private static var currentIOB:Number = 0;
+		private static var currentCOB:Number = 0;
+		private static var currentBG:Number = 0;
 		
 		public function BolusWizard()
 		{
@@ -312,7 +323,8 @@ package treatments
 			bwGlucoseCheck.isSelected = true;
 			bwGlucoseStepper.minimum = 0;
 			bwGlucoseStepper.maximum = 400;
-			bwGlucoseStepper.value = Math.round((ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).calculatedValue);
+			currentBG = Math.round((ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).calculatedValue);
+			bwGlucoseStepper.value = currentBG;
 			bwGlucoseStepper.step = 1;
 			bwCurrentGlucoseContainer.validate();
 			bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
@@ -348,14 +360,16 @@ package treatments
 			
 			bwIOBCheck.isSelected = false;
 			bwIOBLabel.text = "IOB";
-			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()));
+			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
+			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(currentIOB);
 			bwCurrentIOBLabel.validate();
 			bwIOBContainer.validate();
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			bwCOBCheck.isSelected = false;
 			bwCOBLabel.text = "COB";
-			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
+			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
+			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(currentCOB);
 			bwCurrentCOBLabel.validate();
 			bwCOBContainer.validate();
 			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
@@ -438,12 +452,142 @@ package treatments
 			Starling.current.stage.addChild(calloutPositionHelper);
 		}
 		
+		private static function roundTo (x:Number, step:Number):Number
+		{
+			if (x) return Math.round(x / step) * step;
+			
+			return 0;
+		}
+		
 		/**
 		 * Event Listeners
 		 */
 		private static function performCalculations(e:Event = null):void
 		{
 			trace("Bolus Wizard Calculations");
+			
+			//Validation
+			if (currentProfile == null || currentProfile.insulinSensitivityFactors == "" || currentProfile.insulinToCarbRatios == "" || currentProfile.targetGlucoseRates == "")
+			{
+				//We don't have enough profile data. Abort!
+				return;
+			}
+			
+			var targetBGLow:Number = 70; //CHANGE ON FINAL
+			var targetBGHigh:Number = 140; //CHANGE ON FINAL
+			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
+			var ic:Number = Number(currentProfile.insulinToCarbRatios);
+			var insulincob:Number = 0;
+			var bg:Number = 0;
+			var insulinbg:Number = 0;
+			var bgdiff:Number = 0;
+			var insulincarbs:Number = 0;
+			var carbs:Number = 0;
+			var extraCorrections:Number = bwOtherCorrectionStepper.value;
+			var iob:Number = 0;
+			var cob:Number = 0;
+			
+			// Load IOB;
+			if (bwIOBCheck.isSelected) {
+				iob = currentIOB;
+			}
+			
+			// Load COB
+			if (bwCOBCheck.isSelected) {
+				cob = currentCOB;
+				insulincob = roundTo(cob / ic, 0.01);
+			}
+			
+			// Load BG
+			if (bwGlucoseCheck.isSelected)
+			{
+				bg = bwGlucoseStepper.value;
+				if (isNaN(bg))
+				{
+					bg = 0;
+				}
+				
+				if (bg <= targetBGLow)
+				{
+					bgdiff = bg - targetBGLow;
+				}
+				else if (bg >= targetBGHigh)
+				{
+					bgdiff = bg - targetBGHigh;
+				}
+				
+				bgdiff = roundTo(bgdiff, 0.1);
+				
+				if (bg !== 0){
+					insulinbg = roundTo(bgdiff / isf, 0.01);
+				}
+			}
+			
+			// Load Carbs
+			if (bwCarbsCheck.isSelected)
+			{
+				carbs = bwCarbsStepper.value;
+				if (isNaN(carbs))
+				{
+					carbs = 0;
+				}
+				
+				insulincarbs = roundTo(carbs / ic, 0.01);
+			}
+			
+			//Total & rounding
+			var total:Number = 0;
+			if (bwIOBCheck.isEnabled) 
+			{
+				total = insulinbg + insulincarbs + insulincob - currentIOB + extraCorrections;
+			}
+			
+			var insulin:Number = roundTo(total, 0.05);
+			insulin = Math.round(insulin * 100) / 100;
+			var roundingcorrection:Number = insulin - total;
+			
+			// Carbs needed if too much iob
+			var carbsneeded:Number = 0;
+			if (insulin < 0) 
+			{
+				carbsneeded = Math.ceil(-total * ic);
+			}
+			
+			//Debug
+			var record:Object = {};
+			record.targetBGLow = targetBGLow;
+			record.targetBGHigh = targetBGHigh;
+			record.isf = isf;
+			record.ic = ic;
+			record.iob = iob;
+			record.cob = cob;
+			record.insulincob = insulincob;
+			record.bg = bg;
+			record.insulinbg = insulinbg;
+			record.bgdiff = bgdiff;
+			record.carbs = carbs;
+			record.insulincarbs = insulincarbs;
+			record.othercorrection = extraCorrections;
+			record.insulin = insulin;
+			record.roundingcorrection = roundingcorrection;
+			record.carbsneeded = carbsneeded;
+			
+			trace("DEBUG:\n", ObjectUtil.toString(record));
+			
+			var outcome:Number = record.bg - record.iob * isf;
+			
+			if (record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh) 
+			{
+				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Blood glucose within target.";
+			}
+			else if (record.insulin < 0) 
+			{
+				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Carbs needed: " + record.carbsneeded + "g" + "\n" + "Insulin equivalent: " + record.insulin + "U"; 
+			}
+			else
+			{
+				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Insulin needed: " + record.insulin + "U";
+			}
 		}
 		
 		private static function onCloseConfigureCallout(e:Event):void
