@@ -2292,8 +2292,8 @@ package services.bluetooth
 					
 					if ((new Date()).valueOf() - G5ResetTimeStamp < 5 * 60 * 1000) {
 						myTrace("in receivedG5DataPacket, G5ResetTimeStamp was less than 5 minutes ago, ignoring this reading");
-					}  if ((new Date()).valueOf() - timeStampOfLastG5Reading < 5 * 60 * 1000) {
-						myTrace("in receivedG5DataPacket, resettimestamp was less than 5 minutes ago, ignoring this reading");
+					}  if ((new Date()).valueOf() - timeStampOfLastG5Reading < (5 * 60 * 1000 - 30 * 1000)) {
+						myTrace("in receivedG5DataPacket, previous reading was less than 5 minutes ago, ignoring this reading");
 					} else {
 						//SPIKE: Save Sensor RX Timestmp for transmitter runtime display
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP) != String(sensorRx.timestamp))
