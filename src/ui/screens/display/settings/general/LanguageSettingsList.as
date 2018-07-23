@@ -73,9 +73,7 @@ package ui.screens.display.settings.general
 			disabledLanguages["cs_CZ"] = true;
 			disabledLanguages["da_DK"] = true;
 			disabledLanguages["fi_FI"] = true;
-			disabledLanguages["de_DE"] = true;
 			disabledLanguages["hu_HU"] = true;
-			disabledLanguages["it_IT"] = true;
 			disabledLanguages["no_NO"] = true;
 			disabledLanguages["ru_RU"] = true;
 			disabledLanguages["es_ES"] = true;
