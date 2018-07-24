@@ -636,7 +636,8 @@ package services.bluetooth
 				)
 			) {
 				if (CGMBlueToothDevice.address != "") {
-					if (CGMBlueToothDevice.address.toUpperCase() != event.peripheral.uuid.toUpperCase()) {
+					//if (CGMBlueToothDevice.address.toUpperCase() != event.peripheral.uuid.toUpperCase()) {
+					if (CGMBlueToothDevice.address.toUpperCase().indexOf(event.peripheral.uuid.toUpperCase()) == -1) {
 						myTrace("in central_peripheralDiscoveredHandler, UUID of found peripheral does not match with name of the UUID stored in the database - will ignore this peripheral.");
 						startRescan(null);
 						return;
@@ -1290,6 +1291,10 @@ package services.bluetooth
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE, new Number(batteryInfoRxMessage.temperature).toString());
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA, new Number(batteryInfoRxMessage.voltagea).toString());
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB, new Number(batteryInfoRxMessage.voltageb).toString());
+			
+			//Save timestamp to database so we don't constantly request new battery info.
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, new Date().valueOf().toString());
+			
 			return true;
 		}
 		

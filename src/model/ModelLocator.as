@@ -162,7 +162,7 @@ package model
 				RemoteAlertService.init();
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				updateApplicationVersion();
-				MultipleMiaoMiaoService.init();
+				//MultipleMiaoMiaoService.init();
 			}
 		}
 		

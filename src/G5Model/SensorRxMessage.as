@@ -22,8 +22,8 @@ package G5Model
 					
 					transmitterStatus = TransmitterStatus.getBatteryLevel(byteSequence.readByte());
 					timestamp = byteSequence.readInt();
-					unfiltered = byteSequence.readInt();
-					filtered = byteSequence.readInt();
+					unfiltered = byteSequence.readInt() * 32;
+					filtered = byteSequence.readInt() * 32;
 					myTrace("SensorRX dbg: timestamp = " + timestamp + ", unfiltered = " + unfiltered + ", filtered = " + filtered + ", transmitterStatus = " + transmitterStatus.toString());
 				}
 				byteSequence.position = 0;
