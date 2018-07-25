@@ -9,7 +9,7 @@ package G5G6Model
 
 	public class SensorRxMessage extends TransmitterMessage
 	{
-		private const G6_SCALING:int = 32;
+		private const G6_SCALING:int = 33;
 		private var opcode:int = 0x2f;
 		public var timestamp:Number;
 		public var unfiltered:Number;
