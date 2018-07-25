@@ -9,6 +9,7 @@ package G5G6Model
 
 	public class SensorRxMessage extends TransmitterMessage
 	{
+		private const G6_SCALING:int = 32;
 		private var opcode:int = 0x2f;
 		public var timestamp:Number;
 		public var unfiltered:Number;
@@ -25,8 +26,8 @@ package G5G6Model
 					
 					transmitterStatus = TransmitterStatus.getBatteryLevel(byteSequence.readByte());
 					timestamp = byteSequence.readInt();
-					unfiltered = CGMBlueToothDevice.isDexcomG6() ? byteSequence.readInt() * 32 : byteSequence.readInt();
-					filtered = CGMBlueToothDevice.isDexcomG6() ? byteSequence.readInt() * 32 : byteSequence.readInt();
+					unfiltered = CGMBlueToothDevice.isDexcomG6() ? byteSequence.readInt() * G6_SCALING : byteSequence.readInt();
+					filtered = CGMBlueToothDevice.isDexcomG6() ? byteSequence.readInt() * G6_SCALING : byteSequence.readInt();
 					myTrace("SensorRX dbg: timestamp = " + timestamp + ", unfiltered = " + unfiltered + ", filtered = " + filtered + ", transmitterStatus = " + transmitterStatus.toString());
 				}
 				byteSequence.position = 0;
