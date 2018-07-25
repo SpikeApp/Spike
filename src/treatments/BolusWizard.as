@@ -47,6 +47,9 @@ package treatments
 		private static var contentWidth:Number = 270;
 		private static var yPos:Number = 0;
 		private static var calculationTimeout:uint = 0;
+		private static var currentIOB:Number = 0;
+		private static var currentCOB:Number = 0;
+		private static var currentBG:Number = 0;
 		
 		/* Objects */
 		private static var currentProfile:Profile;
@@ -98,15 +101,6 @@ package treatments
 		private static var missedSettingsCancelButton:Button;
 		private static var missedSettingsConfigureButton:Button;
 		private static var bolusWizardConfigureCallout:Callout;
-		
-		
-		
-		
-		////
-		
-		private static var currentIOB:Number = 0;
-		private static var currentCOB:Number = 0;
-		private static var currentBG:Number = 0;
 		
 		public function BolusWizard()
 		{
@@ -464,17 +458,22 @@ package treatments
 		 */
 		private static function performCalculations(e:Event = null):void
 		{
-			trace("Bolus Wizard Calculations");
-			
 			//Validation
 			if (currentProfile == null || currentProfile.insulinSensitivityFactors == "" || currentProfile.insulinToCarbRatios == "" || currentProfile.targetGlucoseRates == "")
 			{
-				//We don't have enough profile data. Abort!
+				//We don't have enough profile data. Show missed profile data callout and abort!
+				closeCallout(null);
+				displayMissedSettingsCallout();
+				
 				return;
 			}
 			
 			var targetBGLow:Number = 70; //CHANGE ON FINAL
 			var targetBGHigh:Number = 140; //CHANGE ON FINAL
+			
+			//var targetBGLow:Number = Number(currentProfile.targetGlucoseRates) - 10;
+			//var targetBGHigh:Number = Number(currentProfile.targetGlucoseRates) + 10;
+			
 			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 			var ic:Number = Number(currentProfile.insulinToCarbRatios);
 			var insulincob:Number = 0;
@@ -486,6 +485,10 @@ package treatments
 			var extraCorrections:Number = bwOtherCorrectionStepper.value;
 			var iob:Number = 0;
 			var cob:Number = 0;
+			var carbsneeded:Number = 0;
+			var total:Number = 0;
+			var insulin:Number = 0;
+			var roundingcorrection:Number = 0;
 			
 			// Load IOB;
 			if (bwIOBCheck.isSelected) {
@@ -518,7 +521,8 @@ package treatments
 				
 				bgdiff = roundTo(bgdiff, 0.1);
 				
-				if (bg !== 0){
+				if (bg !== 0)
+				{
 					insulinbg = roundTo(bgdiff / isf, 0.01);
 				}
 			}
@@ -536,18 +540,16 @@ package treatments
 			}
 			
 			//Total & rounding
-			var total:Number = 0;
 			if (bwIOBCheck.isEnabled) 
 			{
 				total = insulinbg + insulincarbs + insulincob - currentIOB + extraCorrections;
 			}
 			
-			var insulin:Number = roundTo(total, 0.05);
+			insulin = roundTo(total, 0.05);
 			insulin = Math.round(insulin * 100) / 100;
-			var roundingcorrection:Number = insulin - total;
+			roundingcorrection = insulin - total;
 			
-			// Carbs needed if too much iob
-			var carbsneeded:Number = 0;
+			// Carbs needed if too much IOB
 			if (insulin < 0) 
 			{
 				carbsneeded = Math.ceil(-total * ic);
@@ -578,15 +580,15 @@ package treatments
 			
 			if (record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh) 
 			{
-				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Blood glucose within target.";
+				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Blood glucose in target (" + currentProfile.targetGlucoseRates + ")  or within 10mg/dL difference.";
 			}
 			else if (record.insulin < 0) 
 			{
-				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Carbs needed: " + record.carbsneeded + "g" + "\n" + "Insulin equivalent: " + record.insulin + "U"; 
+				bwSuggestionLabel.text = "Carbs needed: " + record.carbsneeded + "g" + "\n" + "Insulin equivalent: " + record.insulin + "U"; 
 			}
 			else
 			{
-				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Insulin needed: " + record.insulin + "U";
+				bwSuggestionLabel.text = "Insulin needed: " + record.insulin + "U";
 			}
 		}
 		
