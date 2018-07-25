@@ -2,6 +2,7 @@ package ui.screens.display.settings.treatments
 {
 	import flash.display.StageOrientation;
 	
+	import database.BlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
@@ -202,7 +203,8 @@ package ui.screens.display.settings.treatments
 			if (infoPillEnabledValue)
 			{
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"transmitter_battery"), accessory: displayTransmitterBatteryEnabled, selectable: false });
-				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"raw_glucose_extended"), accessory: displayRawEnabled, selectable: false });
+				if (!BlueToothDevice.isBlueReader() && !BlueToothDevice.isBluKon() && !BlueToothDevice.isLimitter() && !BlueToothDevice.isMiaoMiao() && !BlueToothDevice.isTransmiter_PL())
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"raw_glucose_extended"), accessory: displayRawEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"sensor_age"), accessory: displaySAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"canula_age"), accessory: displayCAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"insulin_age"), accessory: displayIAGEEnabled, selectable: false });

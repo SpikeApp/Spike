@@ -1205,7 +1205,7 @@ package services
 					{
 						var currentBG:Number = userInfoProperties.bgnow != null && userInfoProperties.bgnow.mean != null ? Number(userInfoProperties.bgnow.mean) : Number.NaN;
 						var basal:String = userInfoProperties.basal != null && userInfoProperties.basal.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_ON) == "true" ? String(userInfoProperties.basal.display) : "";
-						var raw:Number = userInfoProperties.rawbg != null && userInfoProperties.rawbg.mgdl != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true" ? Number(userInfoProperties.rawbg.mgdl) : Number.NaN;
+						var raw:Number = userInfoProperties.rawbg != null && userInfoProperties.rawbg.mgdl != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true" && !BlueToothDevice.isBlueReader() && !BlueToothDevice.isBluKon() && !BlueToothDevice.isLimitter() && !BlueToothDevice.isMiaoMiao() && !BlueToothDevice.isTransmiter_PL() ? Number(userInfoProperties.rawbg.mgdl) : Number.NaN;
 						!isNaN(raw) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? raw = Math.round((BgReading.mgdlToMmol(raw)) * 10) / 10 : raw = raw;
 						var outcome:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.outcomeDisplay != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON) == "true" ? Number(userInfoProperties.bwp.outcomeDisplay) : Number.NaN;
 						!isNaN(outcome) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? outcome = Math.round((BgReading.mgdlToMmol(outcome)) * 10) / 10 : outcome = outcome;
