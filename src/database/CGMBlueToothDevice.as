@@ -141,6 +141,10 @@ package database
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "G5");
 		}
 		
+		public static function isDexcomG6():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "G6");
+		}
+		
 		public static function isBlueReader():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUEREADER");
 		}
@@ -190,15 +194,15 @@ package database
 		}
 		
 		/**
-		 * If true, then scanning can start as soon as transmitter id is chosen. For the moment this is only the case for Dexcom G5 and Blukon<br>
+		 * If true, then scanning can start as soon as transmitter id is chosen. For the moment this is only the case for Dexcom G5, G6 and Blukon<br>
 		 * For others like xdrip, bluereader, etc... scanning can only start if user initiates it, once a device is known by it' address, then scanning will always happen for those devices<br>
 		 */
 		public static function alwaysScan():Boolean {
-			return (isDexcomG5() || isBluKon()); 
+			return (isDexcomG5() || isDexcomG6() || isBluKon()); 
 		}
 
 		public static function needsTransmitterId():Boolean {
-			return (isDexcomG5() || isDexcomG4() || isBluKon() || isxBridgeR());
+			return (isDexcomG5() || isDexcomG6() || isDexcomG4() || isBluKon() || isxBridgeR());
 		}
 		
 		public static function transmitterIdKnown():Boolean {
@@ -206,13 +210,15 @@ package database
 		}
 		
 		/**
-		 * possible values : G4, G5, BlueReader, BluKon, Limitter, xBridgeR, Follow 
+		 * possible values : G4, G5, G6, BlueReader, BluKon, Limitter, xBridgeR, Follow 
 		 */
 		public static function deviceType():String {
 			if (isDexcomG4()) 
 				return "G4";
 			if (isDexcomG5())
 				return "G5";
+			if (isDexcomG6())
+				return "G6";
 			if (isBlueReader())
 				return "BlueReader";
 			if (isBluKon())
@@ -227,6 +233,7 @@ package database
 				return "MiaoMiao";
 			if (isxBridgeR())
 				return "xBridgeR";
+			
 			return "unknown";
 		}
 

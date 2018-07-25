@@ -33,10 +33,10 @@ package ui
 	
 	import model.ModelLocator;
 	
-	import services.bluetooth.CGMBluetoothService;
 	import services.CalibrationService;
 	import services.NotificationService;
 	import services.TutorialService;
+	import services.bluetooth.CGMBluetoothService;
 	
 	import starling.core.Starling;
 	import starling.events.Event;
@@ -139,20 +139,23 @@ package ui
 				
 				if (CGMBlueToothDevice.alwaysScan()) 
 				{
-					if (CGMBlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
+					if ((CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 					{
-						var alertMessageG5:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g5_info_screen');
-						if (Sensor.getActiveSensor() == null)
-							alertMessageG5 += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
+						var alertMessageG5G6:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g5_info_screen');
+						if (CGMBlueToothDevice.isDexcomG6())
+							alertMessageG5G6.replace("G5", "G6");
 							
-						var alertG5:Alert = AlertManager.showSimpleAlert
+						if (Sensor.getActiveSensor() == null)
+							alertMessageG5G6 += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
+							
+						var alertG5G6:Alert = AlertManager.showSimpleAlert
 						(
 							ModelLocator.resourceManagerInstance.getString('transmitterscreen','alert_info_title'),
-							alertMessageG5
+							alertMessageG5G6
 						);
-						alertG5.height = 400;
+						alertG5G6.height = 400;
 						
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN,"true");
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_INFO_SCREEN_SHOWN,"true");
 					} 
 					else if (CGMBlueToothDevice.isBluKon() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 					{

@@ -16,9 +16,9 @@ package ui.screens.display.transmitter
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import G5Model.G5VersionInfo;
-	import G5Model.TransmitterStatus;
-	import G5Model.VersionRequestRxMessage;
+	import G5G6Model.G5G6VersionInfo;
+	import G5G6Model.TransmitterStatus;
+	import G5G6Model.VersionRequestRxMessage;
 	
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -97,14 +97,14 @@ package ui.screens.display.transmitter
 		private var forgetButton:Button;
 		private var forgetButtonIcon:Texture;
 		private var temperatureLabel:Label;
-		private var refreshG5BatteryButton:Button;
-		private var lastG5BatteryUpdateLabel:Label;
+		private var refreshG5G6BatteryButton:Button;
+		private var lastG5G6BatteryUpdateLabel:Label;
 		private var batteryStatusG5Callout:TextCallout;
 		private var transmitterRuntimeLabel:Label;
 		private var screenRefreshLabel:Label;
 		private var transmitterFirmwareLabel:Label;
-		private var resetG5TransmitterButton:Button;
-		private var g5ActionContainer:LayoutGroup;
+		private var resetG5G6TransmitterButton:Button;
+		private var g5G6ActionContainer:LayoutGroup;
 		private var otherFirmwareLabel:Label;
 		private var bluetoothFirmwareLabel:Label;
 		private var transmitterMACAddressLabel:Label;
@@ -121,7 +121,7 @@ package ui.screens.display.transmitter
 		private var batteryLevelValue:String;
 		private var transmitterConnectionStatusValue:String;
 		private var temperatureValue:String;
-		private var lastG5BatteryUpdateValue:String;
+		private var lastG5G6BatteryUpdateValue:String;
 		private var timestampForRefresh:Number;
 		private var nowDate:Date;
 		private var transmitterRuntimeValue:String;
@@ -180,61 +180,71 @@ package ui.screens.display.transmitter
 				transmitterConnectionStatusValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','connection_status_last_connection') + " " + InterfaceController.dateFormatterForSensorStartTimeAndDate.format(new Date(InterfaceController.peripheralConnectionStatusChangeTimestamp));
 			
 			/* Battery and Transmitter Type */
-			if (CGMBlueToothDevice.isDexcomG5()) 
+			if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) 
 			{
 				/* Transmitter Type */
-				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
+				transmitterTypeValue = CGMBlueToothDevice.isDexcomG5() ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6');
 				
 				/* Transmitter Firmware */
-				var dexcomG5TransmitterInfo:VersionRequestRxMessage = G5VersionInfo.getG5VersionInfo();
+				var dexcomG5G6TransmitterInfo:VersionRequestRxMessage = G5G6VersionInfo.getG5G6VersionInfo();
 				
-				transmitterFirmwareValue = dexcomG5TransmitterInfo.firmware_version_string;
+				transmitterFirmwareValue = dexcomG5G6TransmitterInfo.firmware_version_string;
 				if (transmitterFirmwareValue == "")
 					transmitterFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 				
-				transmitterOtherFirmwareValue = dexcomG5TransmitterInfo.other_firmware_version;
+				transmitterOtherFirmwareValue = dexcomG5G6TransmitterInfo.other_firmware_version;
 				if (transmitterOtherFirmwareValue == "")
 					transmitterOtherFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 				
-				transmitterBTFirmwareValue = dexcomG5TransmitterInfo.bluetooth_firmware_version_string;
+				transmitterBTFirmwareValue = dexcomG5G6TransmitterInfo.bluetooth_firmware_version_string;
 				if (transmitterBTFirmwareValue == "")
 					transmitterBTFirmwareValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 				
-				dexcomG5TransmitterInfo = null;
+				dexcomG5G6TransmitterInfo = null;
 				
 				/* Transmitter Runtime */
-				transmitterRuntimeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME);
+				transmitterRuntimeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RUNTIME);
 				if (transmitterRuntimeValue == "unknown")
 					transmitterRuntimeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
-				sensorRxTimestamp = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP));
+				sensorRxTimestamp = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_SENSOR_RX_TIMESTAMP));
 				if (sensorRxTimestamp > 0 && transmitterRuntimeValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
 				{
 					transmitterRuntimeValue += " / " + String(int((sensorRxTimestamp / 86400) *10) / 10);
 				}
 				
 				/* Voltage A */
-				voltageAValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
+				voltageAValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA);
 				if (voltageAValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageAValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
 				if (voltageAValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown'))
-					voltageAStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok');
+				{
+					if (CGMBlueToothDevice.isDexcomG5())
+						voltageAStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok');
+					else if (CGMBlueToothDevice.isDexcomG6())
+						voltageAStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok');
+				}
 					
 				/* Voltage B */
-				voltageBValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB);
+				voltageBValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB);
 				if (voltageBValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageBValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
 				if (voltageBValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown'))
-					voltageBStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok'); 
+				{
+					if (CGMBlueToothDevice.isDexcomG5())
+						voltageBStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok'); 
+					else if (CGMBlueToothDevice.isDexcomG6())
+						voltageBStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB_G6 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok'); 
+				}
 				
 				/* Resistance */
-				resistanceValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST);
+				resistanceValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST);
 				if (resistanceValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) resistanceValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
 				if (resistanceValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown'))
-					resistanceStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_BAD ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_bad'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NOTICE ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_notice'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NORMAL ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_normal'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_good')));
+					resistanceStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_BAD ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_bad'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_NOTICE ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_notice'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_NORMAL ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_normal'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_good')));
 				
 				/* Temperature */
-				var temperatureValueNumber:Number = Math.abs(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE)));
+				var temperatureValueNumber:Number = Math.abs(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_TEMPERATURE)));
 				
 				temperatureValue = "";
 				if (isNaN(temperatureValueNumber) || String(temperatureValueNumber) == "0" || String(temperatureValueNumber) == "" || String(temperatureValueNumber).toUpperCase() == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown').toUpperCase())
@@ -259,11 +269,11 @@ package ui.screens.display.transmitter
 				}	
 				
 				/* Last Update */
-				var lastG5BatteryUpdateTimestamp:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER);
+				var lastG5G6BatteryUpdateTimestamp:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_BATTERY_FROM_MARKER);
 				
-				if (lastG5BatteryUpdateTimestamp == "0" || lastG5BatteryUpdateTimestamp == "")
+				if (lastG5G6BatteryUpdateTimestamp == "0" || lastG5G6BatteryUpdateTimestamp == "")
 				{
-					lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+					lastG5G6BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 					
 					nowDate = new Date();
 					timestampForRefresh = nowDate.setFullYear(nowDate.getFullYear() - 1);
@@ -271,11 +281,11 @@ package ui.screens.display.transmitter
 				else
 				{
 					nowDate = new Date();
-					var lastUpdateDate:Date = new Date(Number(lastG5BatteryUpdateTimestamp));
+					var lastUpdateDate:Date = new Date(Number(lastG5G6BatteryUpdateTimestamp));
 					
 					if (nowDate.fullYear - lastUpdateDate.fullYear > 1)
 					{
-						lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+						lastG5G6BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 						
 						timestampForRefresh = nowDate.setFullYear(nowDate.getFullYear() - 1);
 					}
@@ -288,7 +298,7 @@ package ui.screens.display.transmitter
 						dateFormatterForSensorStartTimeAndDate.useUTC = false;
 						dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
 						
-						lastG5BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + dateFormatterForSensorStartTimeAndDate.format(lastUpdateDate);
+						lastG5G6BatteryUpdateValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','last_update_label') + ": " + dateFormatterForSensorStartTimeAndDate.format(lastUpdateDate);
 					}
 				}
 				
@@ -381,8 +391,14 @@ package ui.screens.display.transmitter
 		
 		private function setupContent():void
 		{
+			if (!SystemUtil.isApplicationActive)
+			{
+				SystemUtil.executeWhenApplicationIsActive(setupContent);
+				return;
+			}
+			
 			/* Define Battery Status Icons*/
-			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5')) //Dexcom G5
+			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6')) //Dexcom G5/G6
 			{
 				/* Voltage A */
 				if (voltageAStatus == ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown') || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown'))
@@ -470,7 +486,7 @@ package ui.screens.display.transmitter
 			
 			if (transmitterConnectionStatusValue != null)
 				transmitterConnectionStatusLabel = LayoutFactory.createLabel(transmitterConnectionStatusValue, HorizontalAlign.RIGHT);
-			if (CGMBlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 			{
 				transmitterFirmwareLabel = LayoutFactory.createLabel(transmitterFirmwareValue, HorizontalAlign.RIGHT);
 				otherFirmwareLabel = LayoutFactory.createLabel(transmitterOtherFirmwareValue, HorizontalAlign.RIGHT);
@@ -478,29 +494,28 @@ package ui.screens.display.transmitter
 				transmitterRuntimeLabel = LayoutFactory.createLabel(transmitterRuntimeValue, HorizontalAlign.RIGHT);
 			}
 			
-			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
+			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6'))
 			{
-				
 				voltageALabel = LayoutFactory.createLabel(voltageAValue, HorizontalAlign.RIGHT);
 				voltageBLabel = LayoutFactory.createLabel(voltageBValue, HorizontalAlign.RIGHT);
 				resistanceLabel = LayoutFactory.createLabel(resistanceValue, HorizontalAlign.RIGHT);
 				temperatureLabel = LayoutFactory.createLabel(temperatureValue, HorizontalAlign.RIGHT);
-				lastG5BatteryUpdateLabel = LayoutFactory.createLabel(lastG5BatteryUpdateValue, HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
+				lastG5G6BatteryUpdateLabel = LayoutFactory.createLabel(lastG5G6BatteryUpdateValue, HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
 				
-				/* G5 Action Buttons */
-				var g5ActionLayout:HorizontalLayout = new HorizontalLayout();
-				g5ActionLayout.gap = 5;
-				g5ActionContainer = new LayoutGroup();
-				g5ActionContainer.pivotX = -15;
-				g5ActionContainer.layout = g5ActionLayout;
+				/* G5/G6 Action Buttons */
+				var g5G6ActionLayout:HorizontalLayout = new HorizontalLayout();
+				g5G6ActionLayout.gap = 5;
+				g5G6ActionContainer = new LayoutGroup();
+				g5G6ActionContainer.pivotX = -15;
+				g5G6ActionContainer.layout = g5G6ActionLayout;
 				
-				resetG5TransmitterButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('transmitterscreen',"reset_g5_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.undoTexture);
-				resetG5TransmitterButton.addEventListener(Event.TRIGGERED, onResetG5);
-				g5ActionContainer.addChild(resetG5TransmitterButton);
+				resetG5G6TransmitterButton = LayoutFactory.createButton(CGMBlueToothDevice.isDexcomG5() ? ModelLocator.resourceManagerInstance.getString('transmitterscreen',"reset_g5_button_label") : ModelLocator.resourceManagerInstance.getString('transmitterscreen',"reset_g5_button_label").replace("G5", "G6"), false, MaterialDeepGreyAmberMobileThemeIcons.undoTexture);
+				resetG5G6TransmitterButton.addEventListener(Event.TRIGGERED, onResetG5G6);
+				g5G6ActionContainer.addChild(resetG5G6TransmitterButton);
 				
-				refreshG5BatteryButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('transmitterscreen',"refresh_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
-				refreshG5BatteryButton.addEventListener(Event.TRIGGERED, onRefreshG5BatteyInfo);
-				g5ActionContainer.addChild(refreshG5BatteryButton);
+				refreshG5G6BatteryButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('transmitterscreen',"refresh_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
+				refreshG5G6BatteryButton.addEventListener(Event.TRIGGERED, onRefreshG5G6BatteyInfo);
+				g5G6ActionContainer.addChild(refreshG5G6BatteryButton);
 			}
 			else
 			{
@@ -521,7 +536,7 @@ package ui.screens.display.transmitter
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_version_label'), accessory: transmitterFirmwareLabel });
 			if (transmitterConnectionStatusValue != null)
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_connection_status_label'), accessory: transmitterConnectionStatusLabel });
-			if (CGMBlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_version_label'), accessory: transmitterFirmwareLabel });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','other_firmware_version_label'), accessory: otherFirmwareLabel });
@@ -536,15 +551,15 @@ package ui.screens.display.transmitter
 			/* Battery Section */
 			var batterySection:Object = {};
 			batterySection.header = { label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_section_label') };
-			if(transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
+			if(transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6'))
 			{
 				batterySection.children = [
 					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_a_label'), accessory: voltageALabel, icon: voltageAIcon },
 					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_b_label'), accessory: voltageBLabel, icon: voltageBIcon },
 					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_label'), accessory: resistanceLabel, icon: resistanceIcon },
 					{ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','temperature_label'), accessory: temperatureLabel },
-					{ label: "", accessory: lastG5BatteryUpdateLabel },
-					{ label: "", accessory: g5ActionContainer }
+					{ label: "", accessory: lastG5G6BatteryUpdateLabel },
+					{ label: "", accessory: g5G6ActionContainer }
 				];
 			}
 			else
@@ -620,7 +635,7 @@ package ui.screens.display.transmitter
 				item.iconField = "icon";
 				item.accessoryField = "accessory";
 				item.gap = 8;
-				if(transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
+				if(transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6'))
 					item.addEventListener(TouchEvent.TOUCH, onDisplayBatteryStatus);
 				
 				return item;
@@ -651,11 +666,11 @@ package ui.screens.display.transmitter
 		private function onSettingsChanged(event:SettingsServiceEvent):void 
 		{
 			if (
-				event.data == CommonSettings.COMMON_SETTING_G5_RESIST ||
-				event.data == CommonSettings.COMMON_SETTING_G5_RUNTIME ||
-				event.data == CommonSettings.COMMON_SETTING_G5_TEMPERATURE ||
-				event.data == CommonSettings.COMMON_SETTING_G5_VOLTAGEA ||
-				event.data == CommonSettings.COMMON_SETTING_G5_VOLTAGEB ||
+				event.data == CommonSettings.COMMON_SETTING_G5_G6_RESIST ||
+				event.data == CommonSettings.COMMON_SETTING_G5_G6_RUNTIME ||
+				event.data == CommonSettings.COMMON_SETTING_G5_G6_TEMPERATURE ||
+				event.data == CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA ||
+				event.data == CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB ||
 				event.data == CommonSettings.COMMON_SETTING_G5_STATUS
 			) 
 			{
@@ -670,7 +685,7 @@ package ui.screens.display.transmitter
 			var touch:Touch = e.getTouch(stage);
 			
 			//If a click was recorded, show callout with status info
-			if(touch != null && e != null && e.currentTarget != null && touch != null && touch.phase == TouchPhase.BEGAN && CGMBlueToothDevice.isDexcomG5())
+			if(touch != null && e != null && e.currentTarget != null && touch != null && touch.phase == TouchPhase.BEGAN && (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()))
 			{
 				var listItem:Object = (e.currentTarget as Object);
 				if (listItem == null)
@@ -709,21 +724,28 @@ package ui.screens.display.transmitter
 			}
 		}
 		
-		private function onRefreshG5BatteyInfo(e:Event):void
+		private function onRefreshG5G6BatteyInfo(e:Event):void
 		{
 			if (CGMBlueToothDevice.known())
 			{
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, String(timestampForRefresh));
-				lastG5BatteryUpdateLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen',"updating_message");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_BATTERY_FROM_MARKER, String(timestampForRefresh));
+				lastG5G6BatteryUpdateLabel.text = ModelLocator.resourceManagerInstance.getString('transmitterscreen',"updating_message");
 			}
 		}
 		
-		private function onResetG5(e:Event):void
+		private function onResetG5G6(e:Event):void
 		{
+			var alertBody:String = "";
+			
+			if (CGMBlueToothDevice.isDexcomG5())
+				alertBody = ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_g5_warning_message');
+			else if (CGMBlueToothDevice.isDexcomG6())
+				alertBody = ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_g5_warning_message').replace("G5", "G6");
+				
 			AlertManager.showActionAlert
 			(
 				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-				ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_g5_warning_message'),
+				alertBody,
 				Number.NaN,
 				[
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','no_uppercase') },
@@ -733,7 +755,7 @@ package ui.screens.display.transmitter
 			
 			function onResetTransmitter(e:Event):void
 			{
-				CGMBluetoothService.G5_RequestReset();
+				CGMBluetoothService.G5G6_RequestReset();
 				
 				AlertManager.showSimpleAlert
 				(
@@ -910,8 +932,11 @@ package ui.screens.display.transmitter
 				batteryLevelIconTexture = null;
 				batteryLevelIcon.dispose();
 				batteryLevelIconTexture = null;
-				batteryLevelLabel.dispose();
-				batteryLevelLabel = null;
+				if (batteryLevelLabel != null)
+				{
+					batteryLevelLabel.dispose();
+					batteryLevelLabel = null;
+				}
 			}
 			
 			if(transmitterTypeLabel != null)
@@ -944,10 +969,10 @@ package ui.screens.display.transmitter
 				transmitterConnectionStatusLabel = null;
 			}
 			
-			if (lastG5BatteryUpdateLabel != null)
+			if (lastG5G6BatteryUpdateLabel != null)
 			{
-				lastG5BatteryUpdateLabel.dispose();
-				lastG5BatteryUpdateLabel = null;
+				lastG5G6BatteryUpdateLabel.dispose();
+				lastG5G6BatteryUpdateLabel = null;
 			}
 			
 			if(scanButton != null)
@@ -968,26 +993,26 @@ package ui.screens.display.transmitter
 				forgetButton = null;
 			}
 			
-			if(refreshG5BatteryButton != null)
+			if(refreshG5G6BatteryButton != null)
 			{
-				refreshG5BatteryButton.removeEventListener(Event.TRIGGERED, onRefreshG5BatteyInfo)
-				refreshG5BatteryButton.removeFromParent();
-				refreshG5BatteryButton.dispose();
-				refreshG5BatteryButton = null;
+				refreshG5G6BatteryButton.removeEventListener(Event.TRIGGERED, onRefreshG5G6BatteyInfo)
+				refreshG5G6BatteryButton.removeFromParent();
+				refreshG5G6BatteryButton.dispose();
+				refreshG5G6BatteryButton = null;
 			}
 			
-			if (resetG5TransmitterButton != null)
+			if (resetG5G6TransmitterButton != null)
 			{
-				resetG5TransmitterButton.removeEventListener(Event.TRIGGERED, onResetG5);
-				resetG5TransmitterButton.removeFromParent();
-				resetG5TransmitterButton.dispose();
-				resetG5TransmitterButton = null;
+				resetG5G6TransmitterButton.removeEventListener(Event.TRIGGERED, onResetG5G6);
+				resetG5G6TransmitterButton.removeFromParent();
+				resetG5G6TransmitterButton.dispose();
+				resetG5G6TransmitterButton = null;
 			}
 			
-			if (g5ActionContainer != null)
+			if (g5G6ActionContainer != null)
 			{
-				g5ActionContainer.dispose();
-				g5ActionContainer = null;
+				g5G6ActionContainer.dispose();
+				g5G6ActionContainer = null;
 			}
 			
 			if (screenRefreshLabel != null)

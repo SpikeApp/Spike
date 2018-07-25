@@ -95,7 +95,7 @@ package services
 		public static const ID_FOR_PATCH_READ_ERROR_BLUKON:int = 14;
 		public static const ID_FOR_APP_UPDATE:int = 15; //used ?
 		public static const ID_FOR_DEAD_G5_BATTERY_INFO:int = 16;
-		public static const ID_FOR_BAD_PLACED_G5_INFO:int = 17;
+		public static const ID_FOR_BAD_PLACED_G5_G6_INFO:int = 17;
 		public static const ID_FOR_OTHER_G5_APP:int = 18;
 		public static const ID_FOR_APPLICATION_INACTIVE_ALERT:int = 19;
 		public static const ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL:int = 20;
@@ -482,7 +482,7 @@ package services
 				returnValue = "ID_FOR_APP_UPDATE";
 			else if (id == ID_FOR_DEAD_G5_BATTERY_INFO)
 				returnValue = "ID_FOR_DEAD_G5_BATTERY_INFO";
-			else if (id == ID_FOR_BAD_PLACED_G5_INFO)
+			else if (id == ID_FOR_BAD_PLACED_G5_G6_INFO)
 				returnValue = "ID_FOR_BAD_PLACED_G5_INFO";
 			else if (id == ID_FOR_OTHER_G5_APP)
 				returnValue = "ID_FOR_OTHER_G5_APP";

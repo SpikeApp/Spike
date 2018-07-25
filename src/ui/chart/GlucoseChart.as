@@ -3575,6 +3575,7 @@ package ui.chart
 						if (tBatteryPill != null) tBatteryPill.dispose();
 						var transmitterName:String = "";
 						if (CGMBlueToothDevice.isDexcomG5()) transmitterName = "G5";
+						else if (CGMBlueToothDevice.isDexcomG6()) transmitterName = "G6";
 						else if (CGMBlueToothDevice.isDexcomG4()) transmitterName = "G4";
 						else if (CGMBlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
 						else if (CGMBlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');

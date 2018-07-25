@@ -5,7 +5,7 @@ package ui.chart
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import G5Model.TransmitterStatus;
+	import G5G6Model.TransmitterStatus;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -328,25 +328,35 @@ package ui.chart
 			var transmitterValue:Number = Number.NaN;
 			var transmitterNameValue:String = CGMBlueToothDevice.known() ? CGMBlueToothDevice.name : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 			
-			if (CGMBlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 			{
-				var voltageAValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
+				var voltageAValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA);
 				if (voltageAValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageAValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
-				var voltageBValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB);
+				var voltageBValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB);
 				if (voltageBValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageBValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
-				var resistanceValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST);
+				var resistanceValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST);
 				if (resistanceValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) resistanceValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
 				transmitterBattery = "A: " + voltageAValue + ", B: " + voltageBValue + ", R: " + resistanceValue;
 				
 				if (!isNaN(Number(voltageAValue)))
 				{
-					if (Number(voltageAValue) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA)
-						transmitterBatteryColor = 0xff1c1c;
-					else
-						transmitterBatteryColor = 0x4bef0a;
+					if (CGMBlueToothDevice.isDexcomG5())
+					{
+						if (Number(voltageAValue) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA)
+							transmitterBatteryColor = 0xff1c1c;
+						else
+							transmitterBatteryColor = 0x4bef0a;
+					}
+					else if (CGMBlueToothDevice.isDexcomG6())
+					{
+						if (Number(voltageAValue) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6)
+							transmitterBatteryColor = 0xff1c1c;
+						else
+							transmitterBatteryColor = 0x4bef0a;
+					}
 				}
 			}
 			else if (CGMBlueToothDevice.isDexcomG4()) 

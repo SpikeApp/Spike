@@ -11,8 +11,8 @@ package utils
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import G5Model.G5VersionInfo;
-	import G5Model.VersionRequestRxMessage;
+	import G5G6Model.G5G6VersionInfo;
+	import G5G6Model.VersionRequestRxMessage;
 	
 	import database.AlertType;
 	import database.CGMBlueToothDevice;
@@ -24,8 +24,6 @@ package utils
 	
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
-	
-	import starling.utils.SystemUtil;
 	
 	
 	public class Trace
@@ -133,13 +131,13 @@ package utils
 				var additionalInfoToWrite:String = "";
 				additionalInfoToWrite += "Device type = " + CGMBlueToothDevice.deviceType() + ".\n";
 				additionalInfoToWrite += "Device MAC = " + CGMBlueToothDevice.address + ".\n";
-				if (CGMBlueToothDevice.isDexcomG5())
+				if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 				{
-					var dexcomG5TransmitterInfo:VersionRequestRxMessage = G5VersionInfo.getG5VersionInfo();
-					additionalInfoToWrite += "Firmware Version = " + dexcomG5TransmitterInfo.firmware_version_string + ".\n";
-					additionalInfoToWrite += "Other Firmware Version = " + dexcomG5TransmitterInfo.other_firmware_version + ".\n";
-					additionalInfoToWrite += "BT Firmware Version = " + dexcomG5TransmitterInfo.bluetooth_firmware_version_string + ".\n";
-					dexcomG5TransmitterInfo = null;
+					var dexcomG5G6TransmitterInfo:VersionRequestRxMessage = G5G6VersionInfo.getG5G6VersionInfo();
+					additionalInfoToWrite += "Firmware Version = " + dexcomG5G6TransmitterInfo.firmware_version_string + ".\n";
+					additionalInfoToWrite += "Other Firmware Version = " + dexcomG5G6TransmitterInfo.other_firmware_version + ".\n";
+					additionalInfoToWrite += "BT Firmware Version = " + dexcomG5G6TransmitterInfo.bluetooth_firmware_version_string + ".\n";
+					dexcomG5G6TransmitterInfo = null;
 				}
 				if (CGMBlueToothDevice.isMiaoMiao())
 					additionalInfoToWrite += "Firmware Version = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ".\n";

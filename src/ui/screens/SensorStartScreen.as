@@ -214,7 +214,7 @@ package ui.screens
 			
 			function onClose(e:Event):void
 			{
-				if ((TutorialService.isActive || TutorialService.eleventhStepActive) && CGMBlueToothDevice.isDexcomG5())
+				if ((TutorialService.isActive || TutorialService.eleventhStepActive) && (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()))
 					TutorialService.eleventhStep();
 			}
 		}	

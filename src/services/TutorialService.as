@@ -219,7 +219,7 @@ package services
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				calloutLocationHelper.y += 15;
 			
-			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 			{
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
 				Constants.noLockEnabled = true;
@@ -284,14 +284,14 @@ package services
 			ninethStepActive = false;
 			tenthStepActive = true;
 			
-			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 				tenthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','tenth_step_message'), target, new <String>[RelativePosition.TOP], false);
 			else
 				tenthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','tenth_step_message_non_g5'), target, new <String>[RelativePosition.TOP], false);
 			
 			tenthStepCallout.textRendererFactory = calloutTextRenderer;
 			
-			if (!CGMBlueToothDevice.isDexcomG5())
+			if (!CGMBlueToothDevice.isDexcomG5() && !CGMBlueToothDevice.isDexcomG6())
 				tenthStepCallout.addEventListener(Event.CLOSE, onTutorialFinished);
 				
 			

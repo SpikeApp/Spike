@@ -99,7 +99,7 @@ package services
 			{
 				//Spike manages suspension
 				Trace.myTrace("DeepSleepService.as", "Interval managed by Spike");
-				if (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5()) 
+				if (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) 
 				{
 					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_DEXCOM");
 					deepSleepInterval = AUTOMATIC_DEXCOM;

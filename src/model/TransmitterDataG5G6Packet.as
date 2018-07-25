@@ -1,8 +1,8 @@
 package model
 {
-	import G5Model.TransmitterStatus;
+	import G5G6Model.TransmitterStatus;
 
-	public class TransmitterDataG5Packet extends TransmitterData
+	public class TransmitterDataG5G6Packet extends TransmitterData
 	{
 		private var _rawData:Number;
 		
@@ -36,7 +36,7 @@ package model
 		 * G5 data packet<br>
 		 * There's no relation with database class, just ust for passing transmitter data from one to another<br>
 		 */
-		public function TransmitterDataG5Packet(rawData:Number, filteredData:Number, timeStamp:Number, transmitter:TransmitterStatus) {
+		public function TransmitterDataG5G6Packet(rawData:Number, filteredData:Number, timeStamp:Number, transmitter:TransmitterStatus) {
 			_rawData = rawData;
 			_filteredData = filteredData;
 			_timeStamp = timeStamp;
