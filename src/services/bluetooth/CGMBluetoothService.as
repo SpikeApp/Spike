@@ -17,6 +17,7 @@ package services.bluetooth
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
+	import flash.system.Capabilities;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
@@ -293,6 +294,9 @@ package services.bluetooth
 				initialStart = false;
 			
 			peripheralConnected = false;
+			
+			//Define G5/G6 ANE Method
+			useSpikeANEForG5G6 = Capabilities.os.indexOf("OS 8") == -1 ? true : false;
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
