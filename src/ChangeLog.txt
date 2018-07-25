@@ -6,6 +6,7 @@ ENHANCEMENT: Ability to select battery level when adding "Transmitter Low Batter
 ENHANCEMENT: Ability to only fire the Fast Rise or Fast Drop alarms if glucose is within a low and high glucose threshold defined by the user in Settings -> Alarms -> Fast Rise / Fast Drop. (Miguel)
 ENHANCEMENT: Added support for Nightscout Combo Bolus treatments. (Miguel)
 ENHANCEMENT; Added ability to test Nightscout credentials when in follower mode. Settings -> General -> Data Collection. (Miguel)
+ENHANCEMENT: Main chart is now fixed size as default for new installations. (Miguel)
 ENHANCEMENT: Added Spike's logo to main menu. (Miguel)
 ENHANCEMENT: Several small layout adjustments overall. (Miguel)
 FIX: Workaround for an iOS bug that sometimes prevented the Chart Today Widget from rendering correctly. (Miguel)
