@@ -37,6 +37,7 @@ package ui.screens.display.settings.share
 		private var nsLogin:Button;
 		private var batteryUploader:Check;
 		private var wifiOnlyUploaderCheck:Check;
+		private var ocUploader:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -45,6 +46,7 @@ package ui.screens.display.settings.share
 		private var selectedAPISecret:String;
 		private var isBatteryUploaderEnabled:Boolean;
 		private var isWifiOnlyUploaderEnabled:Boolean;
+		private var isUploadOptimalCalibrationsEnabled:Boolean;
 		
 		public function NightscoutSettingsList()
 		{
@@ -78,6 +80,7 @@ package ui.screens.display.settings.share
 			selectedAPISecret = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
 			isBatteryUploaderEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) == "true";
 			isWifiOnlyUploaderEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true";
+			isUploadOptimalCalibrationsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -111,6 +114,10 @@ package ui.screens.display.settings.share
 			//Battery Uploader
 			batteryUploader = LayoutFactory.createCheckMark(isBatteryUploaderEnabled);
 			batteryUploader.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Optimal Calibration Uploader
+			ocUploader = LayoutFactory.createCheckMark(isUploadOptimalCalibrationsEnabled);
+			ocUploader.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Wi-Fi Only Sync
 			wifiOnlyUploaderCheck = LayoutFactory.createCheckMark(isWifiOnlyUploaderEnabled);
@@ -160,6 +167,10 @@ package ui.screens.display.settings.share
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) != String(isBatteryUploaderEnabled))
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON, String(isBatteryUploaderEnabled));
 				
+				//Optimal Calibration Uploader
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON) != String(isUploadOptimalCalibrationsEnabled))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON, String(isUploadOptimalCalibrationsEnabled));
+				
 				//Wi-Fi Only Uploader
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) != String(isWifiOnlyUploaderEnabled))
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON, String(isWifiOnlyUploaderEnabled));
@@ -179,6 +190,7 @@ package ui.screens.display.settings.share
 			selectedURL = nsURL.text.replace(" ", "");
 			isBatteryUploaderEnabled = batteryUploader.isSelected;
 			isWifiOnlyUploaderEnabled = wifiOnlyUploaderCheck.isSelected;
+			isUploadOptimalCalibrationsEnabled = ocUploader.isSelected;
 			
 			needsSave = true;
 		}
@@ -202,6 +214,7 @@ package ui.screens.display.settings.share
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_url_label'), accessory: nsURL },
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_api_label'), accessory: nsAPISecret },
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_battery_upload_label'), accessory: batteryUploader },
+						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','nightscout_optimal_calibration_uploader'), accessory: ocUploader },
 						{ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','wifi_only_sync_label'), accessory: wifiOnlyUploaderCheck },
 						{ label: "", accessory: nsLogin },
 					]);
@@ -300,6 +313,12 @@ package ui.screens.display.settings.share
 				wifiOnlyUploaderCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
 				wifiOnlyUploaderCheck.dispose();
 				wifiOnlyUploaderCheck = null;
+			}
+			if(ocUploader != null)
+			{
+				ocUploader.removeEventListener(Event.CHANGE, onSettingsChanged);
+				ocUploader.dispose();
+				ocUploader = null;
 			}
 			
 			super.dispose();

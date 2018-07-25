@@ -1586,6 +1586,8 @@ package services
 							_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
 							_calibrationRequestSnoozePeriodInMinutes = 0;
 							userWarnedOfSuboptimalCalibration = false;
+							
+							NightscoutService.uploadOptimalCalibrationNotification();
 						} 
 						else 
 						{

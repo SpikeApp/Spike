@@ -307,6 +307,9 @@ package services
 					}
 				}
 				
+				//Notify Nightscout
+				NightscoutService.uploadOptimalCalibrationNotification();
+				
 				setTimeout( function():void {
 					optimalCalibrationScheduled = false;
 				}, 5000 );

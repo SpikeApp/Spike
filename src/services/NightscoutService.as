@@ -967,6 +967,30 @@ package services
 			}
 		}
 		
+		public static function uploadOptimalCalibrationNotification():void
+		{
+			//Validation
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON) != "true" || !serviceActive || !followerModeEnabled)
+			{
+				return;
+			}
+			
+			//Create Note Treatment
+			var opTreatment:Object = new Object();
+			opTreatment["_id"] = UniqueId.createEventId();
+			opTreatment["created_at"] = formatter.format(new Date().valueOf()).replace("000+0000", "000Z");
+			opTreatment["enteredBy"] = "Spike";
+			opTreatment["eventType"] = "Note";
+			opTreatment["duration"] = 60;
+			opTreatment["notes"] = ModelLocator.resourceManagerInstance.getString("nightscoutservice","optimal_conditions_met");
+			
+			//Add treatment to queue
+			activeTreatmentsUpload.push(opTreatment);
+			
+			//Sync uploads
+			syncTreatmentsUpload();
+		}
+		
 		private static function getInitialTreatments():void
 		{
 			Trace.myTrace("NightscoutService.as", "in getInitialTreatments");
