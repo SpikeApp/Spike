@@ -2,6 +2,8 @@ package ui.screens.display.settings.transmitter
 {
 	import com.adobe.utils.StringUtil;
 	
+	import G5G6Model.TransmitterStatus;
+	
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
@@ -305,9 +307,9 @@ package ui.screens.display.settings.transmitter
 			//Define Battery value
 			var batteryValue:String;
 			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
-				batteryValue = "300";
+				batteryValue = String(TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA);
 			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6'))
-				batteryValue = "285";
+				batteryValue = String(TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6);
 			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4'))
 				batteryValue = "210";
 			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'))

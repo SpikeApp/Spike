@@ -8,7 +8,7 @@ package G5G6Model
 		public static const UNKNOWN:String = "UNKNOWN";
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEA:int = 300;
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB:int = 290;
-		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6:int = 285;
+		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6:int = 290;
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB_G6:int = 270;
 		public static const RESIST_BAD:int = 1400;
 		public static const RESIST_NOTICE:int = 1000;
