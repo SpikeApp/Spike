@@ -42,6 +42,9 @@ package treatments
 
 	public class BolusWizard
 	{
+		/* Constants */
+		private static const TIME_11_MINUTES:int = 11 * 60 * 1000;
+		
 		/* Properties */
 		private static var initialStart:Boolean = true;
 		private static var contentWidth:Number = 270;
@@ -53,6 +56,7 @@ package treatments
 		
 		/* Objects */
 		private static var currentProfile:Profile;
+		private static var latestBgReading:BgReading;
 		
 		/* Display Objects */
 		private static var calloutPositionHelper:Sprite;
@@ -106,10 +110,24 @@ package treatments
 		private static var bwSicknessCheck:Check;
 		private static var bwSicknessLabel:Label;
 		private static var bwSicknessStepper:NumericStepper;
-
 		private static var bwSicknessAmountContainer:LayoutGroup;
-
 		private static var bwSicknessAmountLabel:Label;
+
+		private static var bwExerciseContainer:LayoutGroup;
+
+		private static var bwExerciseLabelContainer:LayoutGroup;
+
+		private static var bwExerciseCheck:Check;
+
+		private static var bwExerciseLabel:Label;
+
+		private static var bwExerciseSettingsContainer:LayoutGroup;
+
+		private static var bwExerciseTimeLabel:Label;
+
+		private static var bwExerciseTimeContainer:LayoutGroup;
+
+		private static var bwExerciseTimePicker:PickerList;
 		
 		public function BolusWizard()
 		{
@@ -231,6 +249,45 @@ package treatments
 			
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
 			bwCarbTypePicker.validate();
+			
+			//Exercise Adjustment
+			bwExerciseContainer = LayoutFactory.createLayoutGroup("vertical");
+			bwExerciseContainer.width = contentWidth;
+			bwMainContainer.addChild(bwExerciseContainer);
+			
+			bwExerciseLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwExerciseContainer.addChild(bwExerciseLabelContainer);
+			
+			bwExerciseCheck = LayoutFactory.createCheckMark(false);
+			bwExerciseCheck.addEventListener(Event.CHANGE, showHideExerciseAdjustment);
+			bwExerciseLabelContainer.addChild(bwExerciseCheck);
+			
+			bwExerciseLabel = LayoutFactory.createLabel("");
+			bwExerciseLabelContainer.addChild(bwExerciseLabel);
+			
+			bwExerciseSettingsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwExerciseSettingsContainer.width = contentWidth;
+			
+			bwExerciseTimeContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwExerciseTimeContainer.width = contentWidth;
+			bwExerciseSettingsContainer.addChild(bwExerciseTimeContainer);
+			
+			bwExerciseTimeLabel = LayoutFactory.createLabel("");
+			bwExerciseTimeContainer.addChild(bwExerciseTimeLabel);
+			
+			bwExerciseTimePicker = LayoutFactory.createPickerList();
+			bwExerciseTimePicker.labelField = "label";
+			bwExerciseTimePicker.popUpContentManager = new DropDownPopUpContentManager();
+			bwExerciseTimePicker.dataProvider = new ArrayCollection
+			(
+				[
+					{ label: "Before Exercise" },	
+					{ label: "After Exercise" }	
+				]
+			)
+			bwExerciseTimePicker.addEventListener(Event.CHANGE, onExerciseTimeChanged);
+			bwExerciseTimeContainer.addChild(bwExerciseTimePicker);
+			bwExerciseTimePicker.validate();
 			
 			//Sickness Adjustment
 			bwSicknessContainer = LayoutFactory.createLayoutGroup("vertical");
@@ -354,7 +411,17 @@ package treatments
 			bwGlucoseCheck.isSelected = true;
 			bwGlucoseStepper.minimum = 0;
 			bwGlucoseStepper.maximum = 400;
-			currentBG = Math.round((ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading).calculatedValue);
+			latestBgReading = BgReading.lastWithCalculatedValue();
+			if (latestBgReading != null && new Date().valueOf() - latestBgReading.timestamp <= TIME_11_MINUTES) //Only use BG readings less than 11 minutes ago.
+			{
+				currentBG = Math.round(latestBgReading.calculatedValue);
+			}
+			else
+			{
+				bwGlucoseCheck.isSelected = false
+				currentBG = 0;
+			}
+			
 			bwGlucoseStepper.value = currentBG;
 			bwGlucoseStepper.step = 1;
 			bwCurrentGlucoseContainer.validate();
@@ -384,6 +451,12 @@ package treatments
 			
 			bwCarbTypeContainer.validate();
 			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
+			
+			//Exercise Adjustment
+			bwExerciseLabel.text = "Exercise Adjustment";
+			bwExerciseTimeLabel.text = "Time";
+			bwExerciseLabelContainer.validate();
+			bwExerciseTimePicker.x = contentWidth - bwExerciseTimePicker.width;
 			
 			//Sickness Adjustment
 			bwSicknessLabel.text = "Sickness Adjustment";
@@ -693,6 +766,33 @@ package treatments
 				bwMainContainer.addChildAt(bwCarbsOffsetContainer, 3);
 				bwMainContainer.addChildAt(bwCarbTypeContainer, 4);
 			}
+			
+			performCalculations();
+		}
+		
+		private static function showHideExerciseAdjustment(e:Event):void
+		{
+			if (bwExerciseCheck.isSelected)
+			{
+				var childIndex:int = bwExerciseContainer.getChildIndex(bwExerciseLabelContainer);
+				if (childIndex != -1)
+				{
+					bwExerciseContainer.addChildAt(bwExerciseSettingsContainer, childIndex + 1);
+					bwExerciseSettingsContainer.validate();
+					bwExerciseTimePicker.x = contentWidth - bwExerciseTimePicker.width;
+				}
+			}
+			else
+				bwExerciseSettingsContainer.removeFromParent();
+			
+			performCalculations();
+		}
+		
+		private static function onExerciseTimeChanged(e:Event):void
+		{
+			bwExerciseTimePicker.validate();
+			bwExerciseTimeContainer.validate();
+			bwExerciseTimePicker.x = contentWidth - bwExerciseTimePicker.width;
 			
 			performCalculations();
 		}
