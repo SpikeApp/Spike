@@ -106,6 +106,10 @@ package treatments
 		private static var bwSicknessCheck:Check;
 		private static var bwSicknessLabel:Label;
 		private static var bwSicknessStepper:NumericStepper;
+
+		private static var bwSicknessAmountContainer:LayoutGroup;
+
+		private static var bwSicknessAmountLabel:Label;
 		
 		public function BolusWizard()
 		{
@@ -228,8 +232,8 @@ package treatments
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
 			bwCarbTypePicker.validate();
 			
-			//Sickness adjustment
-			bwSicknessContainer = LayoutFactory.createLayoutGroup("horizontal");
+			//Sickness Adjustment
+			bwSicknessContainer = LayoutFactory.createLayoutGroup("vertical");
 			bwSicknessContainer.width = contentWidth;
 			bwMainContainer.addChild(bwSicknessContainer);
 			
@@ -237,16 +241,22 @@ package treatments
 			bwSicknessContainer.addChild(bwSicknessLabelContainer);
 			
 			bwSicknessCheck = LayoutFactory.createCheckMark(false);
-			bwSicknessCheck.addEventListener(Event.CHANGE, performCalculations);
+			bwSicknessCheck.addEventListener(Event.CHANGE, showHideSicknessAdjustment);
 			bwSicknessLabelContainer.addChild(bwSicknessCheck);
 			
 			bwSicknessLabel = LayoutFactory.createLabel("");
 			bwSicknessLabelContainer.addChild(bwSicknessLabel);
 			
+			bwSicknessAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwSicknessAmountContainer.width = contentWidth;
+			
+			bwSicknessAmountLabel = LayoutFactory.createLabel("");
+			bwSicknessAmountContainer.addChild(bwSicknessAmountLabel);
+			
 			bwSicknessStepper = LayoutFactory.createNumericStepper(0, 100, 0, 1);
 			bwSicknessStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwSicknessStepper.validate();
-			bwSicknessContainer.addChild(bwSicknessStepper);
+			bwSicknessAmountContainer.addChild(bwSicknessStepper);
 			
 			//Other Correction
 			bwOtherCorrectionContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -334,10 +344,30 @@ package treatments
 			bwScrollContainer.addChild(bwMainContainer);
 		}
 		
+		private static function showHideSicknessAdjustment(e:Event):void
+		{
+			if (bwSicknessCheck.isSelected)
+			{
+				var childIndex:int = bwSicknessContainer.getChildIndex(bwSicknessLabelContainer);
+				if (childIndex != -1)
+				{
+					bwSicknessContainer.addChildAt(bwSicknessAmountContainer, childIndex + 1);
+					bwSicknessAmountContainer.validate();
+					bwSicknessStepper.x = contentWidth - bwSicknessStepper.width + 12;
+				}
+			}
+			else
+				bwSicknessAmountContainer.removeFromParent();
+			
+			performCalculations();
+		}
+		
 		private static function populateComponents():void
 		{
+			//Title
 			bwTitle.text = "Bolus Wizard";
 			
+			//Current Glucose
 			bwGlucoseLabel.text = "Blood Glucose";
 			bwGlucoseCheck.isSelected = true;
 			bwGlucoseStepper.minimum = 0;
@@ -348,6 +378,7 @@ package treatments
 			bwCurrentGlucoseContainer.validate();
 			bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
 			
+			//Carbs
 			bwCarbsCheck.isSelected = true;
 			bwCarbsLabel.text = "Carbs";
 			bwCarbsStepper.value = 0;
@@ -372,17 +403,21 @@ package treatments
 			bwCarbTypeContainer.validate();
 			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
 			
-			bwSicknessLabel.text = "Sickness Adjust. (>%)";
+			//Sickness Adjustment
+			bwSicknessLabel.text = "Sickness Adjustment";
+			bwSicknessAmountLabel.text = "Increase (%)";
 			bwSicknessCheck.isSelected = false;
 			bwSicknessStepper.value = 0;
 			bwSicknessContainer.validate();
 			bwSicknessStepper.x = contentWidth - bwSicknessStepper.width + 12;
 			
+			//Other Correction
 			bwOtherCorrectionLabel.text = "Extra Correction";
 			bwOtherCorrectionStepper.value = 0;
 			bwOtherCorrectionContainer.validate();
 			bwOtherCorrectionStepper.x = contentWidth - bwOtherCorrectionStepper.width + 12;
 			
+			//Current IOB
 			bwIOBCheck.isSelected = false;
 			bwIOBLabel.text = "IOB";
 			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
@@ -391,6 +426,7 @@ package treatments
 			bwIOBContainer.validate();
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
+			//Current COB
 			bwCOBCheck.isSelected = false;
 			bwCOBLabel.text = "COB";
 			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
