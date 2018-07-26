@@ -340,26 +340,8 @@ package treatments
 			
 			bwMainContainer.addChild(bolusWizardActionContainer);
 			
-			//Dinal Adjustments
+			//Final Adjustments
 			bwScrollContainer.addChild(bwMainContainer);
-		}
-		
-		private static function showHideSicknessAdjustment(e:Event):void
-		{
-			if (bwSicknessCheck.isSelected)
-			{
-				var childIndex:int = bwSicknessContainer.getChildIndex(bwSicknessLabelContainer);
-				if (childIndex != -1)
-				{
-					bwSicknessContainer.addChildAt(bwSicknessAmountContainer, childIndex + 1);
-					bwSicknessAmountContainer.validate();
-					bwSicknessStepper.x = contentWidth - bwSicknessStepper.width + 12;
-				}
-			}
-			else
-				bwSicknessAmountContainer.removeFromParent();
-			
-			performCalculations();
 		}
 		
 		private static function populateComponents():void
@@ -711,6 +693,24 @@ package treatments
 				bwMainContainer.addChildAt(bwCarbsOffsetContainer, 3);
 				bwMainContainer.addChildAt(bwCarbTypeContainer, 4);
 			}
+			
+			performCalculations();
+		}
+		
+		private static function showHideSicknessAdjustment(e:Event):void
+		{
+			if (bwSicknessCheck.isSelected)
+			{
+				var childIndex:int = bwSicknessContainer.getChildIndex(bwSicknessLabelContainer);
+				if (childIndex != -1)
+				{
+					bwSicknessContainer.addChildAt(bwSicknessAmountContainer, childIndex + 1);
+					bwSicknessAmountContainer.validate();
+					bwSicknessStepper.x = contentWidth - bwSicknessStepper.width + 12;
+				}
+			}
+			else
+				bwSicknessAmountContainer.removeFromParent();
 			
 			performCalculations();
 		}
