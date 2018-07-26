@@ -101,6 +101,11 @@ package treatments
 		private static var missedSettingsCancelButton:Button;
 		private static var missedSettingsConfigureButton:Button;
 		private static var bolusWizardConfigureCallout:Callout;
+		private static var bwSicknessContainer:LayoutGroup;
+		private static var bwSicknessLabelContainer:LayoutGroup;
+		private static var bwSicknessCheck:Check;
+		private static var bwSicknessLabel:Label;
+		private static var bwSicknessStepper:NumericStepper;
 		
 		public function BolusWizard()
 		{
@@ -222,6 +227,26 @@ package treatments
 			
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
 			bwCarbTypePicker.validate();
+			
+			//Sickness adjustment
+			bwSicknessContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwSicknessContainer.width = contentWidth;
+			bwMainContainer.addChild(bwSicknessContainer);
+			
+			bwSicknessLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwSicknessContainer.addChild(bwSicknessLabelContainer);
+			
+			bwSicknessCheck = LayoutFactory.createCheckMark(false);
+			bwSicknessCheck.addEventListener(Event.CHANGE, performCalculations);
+			bwSicknessLabelContainer.addChild(bwSicknessCheck);
+			
+			bwSicknessLabel = LayoutFactory.createLabel("");
+			bwSicknessLabelContainer.addChild(bwSicknessLabel);
+			
+			bwSicknessStepper = LayoutFactory.createNumericStepper(0, 100, 0, 1);
+			bwSicknessStepper.addEventListener(Event.CHANGE, delayCalculations);
+			bwSicknessStepper.validate();
+			bwSicknessContainer.addChild(bwSicknessStepper);
 			
 			//Other Correction
 			bwOtherCorrectionContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -346,6 +371,12 @@ package treatments
 			
 			bwCarbTypeContainer.validate();
 			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
+			
+			bwSicknessLabel.text = "Sickness Adjust. (>%)";
+			bwSicknessCheck.isSelected = false;
+			bwSicknessStepper.value = 0;
+			bwSicknessContainer.validate();
+			bwSicknessStepper.x = contentWidth - bwSicknessStepper.width + 12;
 			
 			bwOtherCorrectionLabel.text = "Extra Correction";
 			bwOtherCorrectionStepper.value = 0;
@@ -553,6 +584,14 @@ package treatments
 			if (insulin < 0) 
 			{
 				carbsneeded = Math.ceil(-total * ic);
+			}
+			
+			// Sickness adjustment
+			if (insulin > 0 && bwSicknessCheck.isSelected)
+			{
+				insulin += insulin * (bwSicknessStepper.value / 100);
+				insulin = roundTo(insulin, 0.05);
+				insulin = Math.round(insulin * 100) / 100;
 			}
 			
 			//Debug
