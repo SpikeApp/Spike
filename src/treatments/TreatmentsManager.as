@@ -726,13 +726,6 @@ package treatments
 			else if (type == Treatment.TYPE_MEAL_BOLUS)
 				actionFunction = onMealEntered;
 			
-			trace("canAddInsulin", canAddInsulin);
-			trace("logic1", ((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin));
-			trace("logic2", type == Treatment.TYPE_NOTE);
-			trace("logic3", type == Treatment.TYPE_GLUCOSE_CHECK);
-			trace("logic4", type == Treatment.TYPE_CARBS_CORRECTION);
-			trace("Total Logic", (((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION));
-			
 			var actionLayout:HorizontalLayout = new HorizontalLayout();
 			actionLayout.gap = 5;
 			
