@@ -726,10 +726,12 @@ package treatments
 			else if (type == Treatment.TYPE_MEAL_BOLUS)
 				actionFunction = onMealEntered;
 			
-			var actionButtons:Array = [];
-			actionButtons.push( { label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() } );
-			if (((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION)
-				actionButtons.push( { label: ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase(), triggered: actionFunction } );
+			trace("canAddInsulin", canAddInsulin);
+			trace("logic1", ((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin));
+			trace("logic2", type == Treatment.TYPE_NOTE);
+			trace("logic3", type == Treatment.TYPE_GLUCOSE_CHECK);
+			trace("logic4", type == Treatment.TYPE_CARBS_CORRECTION);
+			trace("Total Logic", (((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION));
 			
 			var actionLayout:HorizontalLayout = new HorizontalLayout();
 			actionLayout.gap = 5;
@@ -744,10 +746,13 @@ package treatments
 			cancelButton.addEventListener(Event.TRIGGERED, closeCallout);
 			actionContainer.addChild(cancelButton);
 			
-			if (addButton != null) addButton.removeFromParent(true);
-			addButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
-			addButton.addEventListener(Event.TRIGGERED, actionFunction);
-			actionContainer.addChild(addButton);
+			if (((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION)
+			{
+				if (addButton != null) addButton.removeFromParent(true);
+				addButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
+				addButton.addEventListener(Event.TRIGGERED, actionFunction);
+				actionContainer.addChild(addButton);
+			}
 			
 			actionContainer.validate();
 			

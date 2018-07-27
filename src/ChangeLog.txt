@@ -12,6 +12,7 @@ ENHANCEMENT: Added Spike's logo to main menu. (Miguel)
 ENHANCEMENT: Several small layout adjustments overall. (Miguel)
 REGRESSION: Removed raw values for Libre users in the +info pill until we can make this feature work correctly. Dexcom users will continue to have this feature available. (Miguel)
 FIX: Workaround for an iOS bug that sometimes prevented the Chart Today Widget from rendering correctly. (Miguel)
+FIX: Small cosmetic fix on the treatment inserter popup. (Miguel)
 FIX: As usual, other small bug fixes and improvements. (Miguel)
 
 2.2.1
