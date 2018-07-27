@@ -598,6 +598,7 @@ package treatments
 			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, closeCallout);
 			bolusWizardAddButton.addEventListener(Event.TRIGGERED, addBolusWizardTreatment);
+			
 		}
 		
 		private static function disableEventListeners():void
@@ -802,13 +803,25 @@ package treatments
 				carbsneeded = Math.ceil(-total * ic);
 			}
 			
-			// Sickness adjustment
+			var preAdjustmentInsulin:Number = insulin;
+			
+			//Exercise Adjustment
+			if (insulin > 0 && bwExerciseCheck.isSelected)
+			{
+				preAdjustmentInsulin -= insulin * (bwExerciseAmountStepper.value / 100);
+				preAdjustmentInsulin = roundTo(preAdjustmentInsulin, 0.05);
+				preAdjustmentInsulin = Math.round(preAdjustmentInsulin * 100) / 100;
+			}
+			
+			// Sickness Adjustment
 			if (insulin > 0 && bwSicknessCheck.isSelected)
 			{
-				insulin += insulin * (bwSicknessAmountStepper.value / 100);
-				insulin = roundTo(insulin, 0.05);
-				insulin = Math.round(insulin * 100) / 100;
+				preAdjustmentInsulin += insulin * (bwSicknessAmountStepper.value / 100);
+				preAdjustmentInsulin = roundTo(preAdjustmentInsulin, 0.05);
+				preAdjustmentInsulin = Math.round(preAdjustmentInsulin * 100) / 100;
 			}
+			
+			insulin = preAdjustmentInsulin;
 			
 			//Debug
 			var record:Object = {};
@@ -835,7 +848,7 @@ package treatments
 			
 			if (record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh) 
 			{
-				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Blood glucose in target (" + currentProfile.targetGlucoseRates + ")  or within 10mg/dL difference.";
+				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Blood glucose in target (" + currentProfile.targetGlucoseRates + ") or within 10mg/dL difference.";
 			}
 			else if (record.insulin < 0) 
 			{
@@ -916,12 +929,234 @@ package treatments
 			performCalculations();
 		}
 		
+		private static function calculateExerciseReduction():void
+		{
+			if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 0)
+			{
+				bwExerciseAmountStepper.value = 0;
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 1)
+			{
+				bwExerciseAmountStepper.value = 0;
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 2)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 10;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 0;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 3)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 15;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 0;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 4)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 20;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 7;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 5)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 30;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 10;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 6)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 45;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 15;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 0)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 5;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 0;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 1)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 15;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 10;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 2)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 20;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 15;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 3)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 30;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 20;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 4)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 40;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 25;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 5)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 55;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 25;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 6)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 75;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 30;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 0)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 10;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 0;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 1)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 20;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 20;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 2)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 30;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 30;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 3)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 45;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 40;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 4)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 60;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 45;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 5)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 75;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 50;
+				}
+			}
+			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 6)
+			{
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					bwExerciseAmountStepper.value = 85;
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					bwExerciseAmountStepper.value = 60;
+				}
+			}
+		}
+		
 		private static function onExerciseTimeChanged(e:Event):void
 		{
 			bwExerciseTimePicker.validate();
 			bwExerciseTimeContainer.validate();
 			bwExerciseTimePicker.x = contentWidth - bwExerciseTimePicker.width;
 			
+			calculateExerciseReduction();
 			performCalculations();
 		}
 		
@@ -931,6 +1166,7 @@ package treatments
 			bwExerciseIntensityContainer.validate();
 			bwExerciseIntensityPicker.x = contentWidth - bwExerciseIntensityPicker.width;
 			
+			calculateExerciseReduction();
 			performCalculations();
 		}
 		
@@ -940,6 +1176,7 @@ package treatments
 			bwExerciseDurationContainer.validate();
 			bwExerciseDurationPicker.x = contentWidth - bwExerciseDurationPicker.width;
 			
+			calculateExerciseReduction();
 			performCalculations();
 		}
 		
