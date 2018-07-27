@@ -88,6 +88,7 @@ package treatments
 							dbProfile.carbsabsorptionrate,
 							dbProfile.basalrates,
 							dbProfile.targetglucoserates,
+							dbProfile.trendcorrections,
 							Number(dbProfile.lastmodifiedtimestamp)
 						);
 						
@@ -123,6 +124,7 @@ package treatments
 					"",
 					"",
 					30,
+					"",
 					"",
 					"",
 					new Date().valueOf()

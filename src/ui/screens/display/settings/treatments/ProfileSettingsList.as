@@ -455,12 +455,6 @@ package ui.screens.display.settings.treatments
 				}
 				else
 				{
-					trace("DATE", profileStartTime.value);
-					trace("HOURS", profileStartTime.value.hours);
-					trace("MINUTES", profileStartTime.value.minutes);
-					
-					trace("SAVED", MathHelper.formatNumberToString(profileStartTime.value.hours) + ":" + MathHelper.formatNumberToString(profileStartTime.value.minutes));
-					
 					var newProfile:Profile = new Profile
 						(
 							UniqueId.createEventId(),
@@ -471,6 +465,7 @@ package ui.screens.display.settings.treatments
 							ProfileManager.getCarbAbsorptionRate(),
 							"",
 							unit == "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value))),
+							"",
 							new Date().valueOf()
 						);
 					

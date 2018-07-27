@@ -11,9 +11,10 @@ package treatments
 		public var carbsAbsorptionRate:Number;
 		public var basalRates:String;
 		public var targetGlucoseRates:String;
+		public var trendCorrections:String;
 		public var timestamp:Number;
 		
-		public function Profile(id:String, time:String, name:String, insulinToCarbRatios:String, insulinSensitivityFactors:String, carbsAbsorptionRate:Number, basalRates:String, targetGlucoseRates:String, timestamp:Number)
+		public function Profile(id:String, time:String, name:String, insulinToCarbRatios:String, insulinSensitivityFactors:String, carbsAbsorptionRate:Number, basalRates:String, targetGlucoseRates:String, trendCorrections:String, timestamp:Number)
 		{
 			this.ID = id;
 			this.time = time;
@@ -23,6 +24,7 @@ package treatments
 			this.carbsAbsorptionRate = carbsAbsorptionRate;
 			this.basalRates = basalRates;
 			this.targetGlucoseRates = targetGlucoseRates;
+			this.trendCorrections = trendCorrections;
 			this.timestamp = timestamp;
 		}
 	}

@@ -174,6 +174,7 @@ package database
 			"carbsabsorptionrate REAL, " +
 			"basalrates STRING, " +
 			"targetglucoserates STRING, " +
+			"trendcorrections STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_HEALTHKIT_TREATMENTS:String = "CREATE TABLE IF NOT EXISTS healthkittreatments(" +
@@ -690,7 +691,7 @@ package database
 				function checkPerformed(se:SQLEvent):void 
 				{
 					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
-					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkPerformed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkError);
 					sqlStatement.clearParameters();
 					
 					createProfilesTable();
@@ -723,7 +724,32 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				createHealthKitTreatmentsTable();
+				
+				sqlStatement.clearParameters();
+				
+				//Check if table needs to be updated for new Spike format #1
+				sqlStatement.text = "SELECT trendcorrections FROM profiles";
+				sqlStatement.addEventListener(SQLEvent.RESULT,checkProfilesPerformed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkProfilesError);
+				sqlStatement.execute();
+				
+				function checkProfilesPerformed(se:SQLEvent):void 
+				{
+					sqlStatement.removeEventListener(SQLEvent.RESULT,checkProfilesPerformed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkProfilesError);
+					sqlStatement.clearParameters();
+					
+					createHealthKitTreatmentsTable();
+				}
+				
+				function checkProfilesError(see:SQLErrorEvent):void 
+				{
+					if (debugMode) trace("Database.as : trendcorrections column not found in profiles table (old version of Spike). Updating table...");
+					sqlStatement.clearParameters();
+					sqlStatement.clearParameters();
+					sqlStatement.text = "ALTER TABLE profiles ADD COLUMN trendcorrections STRING;";
+					sqlStatement.execute();
+				}
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -2420,6 +2446,7 @@ package database
 				text += "carbsabsorptionrate, ";
 				text += "basalrates, ";
 				text += "targetglucoserates, ";
+				text += "trendcorrections, ";
 				text += "lastmodifiedtimestamp) ";
 				text += "VALUES (";
 				text += "'" + profile.ID + "', ";
@@ -2430,6 +2457,7 @@ package database
 				text += profile.carbsAbsorptionRate + ", ";
 				text += "'" + profile.basalRates + "', ";
 				text += "'" + profile.targetGlucoseRates + "', ";
+				text += "'" + profile.trendCorrections + "', ";
 				text += profile.timestamp + ")";
 				
 				insertRequest.text = text;
@@ -2468,6 +2496,7 @@ package database
 					"carbsabsorptionrate = " + profile.carbsAbsorptionRate + ", " +
 					"basalrates = '" + profile.basalRates + "', " +
 					"targetglucoserates = '" + profile.targetGlucoseRates + "', " +
+					"trendcorrections = '" + profile.trendCorrections + "', " +
 					"lastmodifiedtimestamp = " + profile.timestamp + " " +
 					"WHERE id = '" + profile.ID + "'";
 				updateRequest.execute();

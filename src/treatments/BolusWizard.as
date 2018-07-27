@@ -91,7 +91,7 @@ package treatments
 		private static var bwCarbTypePicker:PickerList;
 		private static var bwOtherCorrectionContainer:LayoutGroup;
 		private static var bwOtherCorrectionLabel:Label;
-		private static var bwOtherCorrectionStepper:NumericStepper;
+		private static var bwOtherCorrectionAmountStepper:NumericStepper;
 		private static var bwIOBLabelContainer:LayoutGroup;
 		private static var bwIOBCheck:Check;
 		private static var bwCOBLabelContainer:LayoutGroup;
@@ -127,12 +127,13 @@ package treatments
 		private static var bwExerciseDurationContainer:LayoutGroup;
 		private static var bwExerciseDurationLabel:Label;
 		private static var bwExerciseDurationPicker:PickerList;
-
 		private static var bwExerciseAmountLabel:Label;
-
 		private static var bwExerciseAmountContainer:LayoutGroup;
-
 		private static var bwExerciseAmountStepper:NumericStepper;
+		private static var bwOtherCorrectionLabelContainer:LayoutGroup;
+		private static var bwOtherCorrectionCheck:Check;
+		private static var bwOtherCorrectionAmountContainer:LayoutGroup;
+		private static var bwOtherCorrectionAmountLabel:Label;
 		
 		public function BolusWizard()
 		{
@@ -344,16 +345,29 @@ package treatments
 			bwSicknessAmountContainer.addChild(bwSicknessAmountStepper);
 			
 			//Other Correction
-			bwOtherCorrectionContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwOtherCorrectionContainer = LayoutFactory.createLayoutGroup("vertical");
 			bwOtherCorrectionContainer.width = contentWidth;
 			bwMainContainer.addChild(bwOtherCorrectionContainer);
 			
-			bwOtherCorrectionLabel = LayoutFactory.createLabel("");
-			bwOtherCorrectionContainer.addChild(bwOtherCorrectionLabel);
+			bwOtherCorrectionLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwOtherCorrectionContainer.addChild(bwOtherCorrectionLabelContainer);
 			
-			bwOtherCorrectionStepper = LayoutFactory.createNumericStepper(0, 100, 0, 0.1);
-			bwOtherCorrectionStepper.validate();
-			bwOtherCorrectionContainer.addChild(bwOtherCorrectionStepper);
+			bwOtherCorrectionCheck = LayoutFactory.createCheckMark(false);
+			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionCheck);
+			
+			bwOtherCorrectionLabel = LayoutFactory.createLabel("");
+			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionLabel);
+			
+			bwOtherCorrectionAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwOtherCorrectionAmountContainer.width = contentWidth;
+			
+			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("");
+			bwOtherCorrectionAmountLabel.paddingLeft = 25;
+			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountLabel);
+			
+			bwOtherCorrectionAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, 0.05);
+			bwOtherCorrectionAmountStepper.validate();
+			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountStepper);
 			
 			//Current IOB
 			bwIOBContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -547,9 +561,11 @@ package treatments
 			
 			//Other Correction
 			bwOtherCorrectionLabel.text = "Extra Correction";
-			bwOtherCorrectionStepper.value = 0;
+			bwOtherCorrectionAmountLabel.text = "Amount (U)";
+			bwOtherCorrectionCheck.isSelected = false;
+			bwOtherCorrectionAmountStepper.value = 0;
 			bwOtherCorrectionContainer.validate();
-			bwOtherCorrectionStepper.x = contentWidth - bwOtherCorrectionStepper.width + 12;
+			bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
 			
 			//Current IOB
 			bwIOBCheck.isSelected = false;
@@ -572,9 +588,10 @@ package treatments
 			bwSuggestionLabel.text = "";
 			
 			//Components Show/Hide
-			showHideCarbExtras(null);
-			showHideExerciseAdjustment(null);
-			showHideSicknessAdjustment(null);
+			showHideCarbExtras();
+			showHideExerciseAdjustment();
+			showHideSicknessAdjustment();
+			showHideOtherCorrection();
 			
 			//Reset Callout Vertical Scroll
 			bwScrollContainer.verticalScrollPosition = 0;
@@ -593,7 +610,8 @@ package treatments
 			bwExerciseAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwSicknessCheck.addEventListener(Event.CHANGE, showHideSicknessAdjustment);
 			bwSicknessAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwOtherCorrectionStepper.addEventListener(Event.CHANGE, delayCalculations);
+			bwOtherCorrectionCheck.addEventListener(Event.CHANGE, showHideOtherCorrection);
+			bwOtherCorrectionAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwIOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, closeCallout);
@@ -614,7 +632,8 @@ package treatments
 			bwExerciseAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
 			bwSicknessCheck.removeEventListener(Event.CHANGE, showHideSicknessAdjustment);
 			bwSicknessAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwOtherCorrectionStepper.removeEventListener(Event.CHANGE, delayCalculations);
+			bwOtherCorrectionCheck.removeEventListener(Event.CHANGE, showHideOtherCorrection);
+			bwOtherCorrectionAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
 			bwIOBCheck.removeEventListener(Event.CHANGE, performCalculations);
 			bwCOBCheck.removeEventListener(Event.CHANGE, performCalculations);
 			bolusWizardCancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
@@ -730,7 +749,7 @@ package treatments
 			var bgdiff:Number = 0;
 			var insulincarbs:Number = 0;
 			var carbs:Number = 0;
-			var extraCorrections:Number = bwOtherCorrectionStepper.value;
+			var extraCorrections:Number = bwOtherCorrectionAmountStepper.value;
 			var iob:Number = 0;
 			var cob:Number = 0;
 			var carbsneeded:Number = 0;
@@ -892,7 +911,7 @@ package treatments
 			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
 		}
 		
-		private static function showHideCarbExtras(e:Event):void
+		private static function showHideCarbExtras(e:Event = null):void
 		{
 			if (!bwCarbsCheck.isSelected)
 			{
@@ -908,7 +927,7 @@ package treatments
 			performCalculations();
 		}
 		
-		private static function showHideExerciseAdjustment(e:Event):void
+		private static function showHideExerciseAdjustment(e:Event = null):void
 		{
 			if (bwExerciseCheck.isSelected)
 			{
@@ -1180,7 +1199,7 @@ package treatments
 			performCalculations();
 		}
 		
-		private static function showHideSicknessAdjustment(e:Event):void
+		private static function showHideSicknessAdjustment(e:Event = null):void
 		{
 			if (bwSicknessCheck.isSelected)
 			{
@@ -1194,6 +1213,24 @@ package treatments
 			}
 			else
 				bwSicknessAmountContainer.removeFromParent();
+			
+			performCalculations();
+		}
+		
+		private static function showHideOtherCorrection(e:Event = null):void
+		{
+			if (bwOtherCorrectionCheck.isSelected)
+			{
+				var childIndex:int = bwOtherCorrectionContainer.getChildIndex(bwOtherCorrectionLabelContainer);
+				if (childIndex != -1)
+				{
+					bwOtherCorrectionContainer.addChildAt(bwOtherCorrectionAmountContainer, childIndex + 1);
+					bwOtherCorrectionAmountContainer.validate();
+					bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
+				}
+			}
+			else
+				bwOtherCorrectionAmountContainer.removeFromParent();
 			
 			performCalculations();
 		}
