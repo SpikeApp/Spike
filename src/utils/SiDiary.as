@@ -6,7 +6,7 @@ package utils
 	import flash.utils.ByteArray;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.Database;
 	import database.LocalSettings;
@@ -97,7 +97,7 @@ package utils
 			
 			const firstReading:BgReading = ModelLocator.bgReadings[0] as BgReading;
 			
-			if (lastExportTimeStamp > firstReading.timestamp || BlueToothDevice.isFollower())
+			if (lastExportTimeStamp > firstReading.timestamp || CGMBlueToothDevice.isFollower())
 			{
 				Trace.myTrace("SiDiary.as", "Using ModelLocator readings...");
 				

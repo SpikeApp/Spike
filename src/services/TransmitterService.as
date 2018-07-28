@@ -10,7 +10,7 @@ package services
 	import flash.utils.Endian;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
 	
@@ -26,12 +26,14 @@ package services
 	import model.TransmitterDataBluKonPacket;
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
-	import model.TransmitterDataG5Packet;
+	import model.TransmitterDataG5G6Packet;
 	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXBridgeRDataPacket;
 	import model.TransmitterDataXdripDataPacket;
+	
+	import services.bluetooth.CGMBluetoothService;
 	
 	import starling.events.Event;
 	
@@ -66,7 +68,7 @@ package services
 		 */
 		private static var lastxDripPacketTime:Number = 0;
 		
-		private static var timeStampSinceLastG5BadlyPlacedBatteriesInfo:Number = 0;
+		private static var timeStampSinceLastG5G6BadlyPlacedBatteriesInfo:Number = 0;
 
 		private static var transmitterIDTextInput:TextInput;
 		
@@ -83,20 +85,24 @@ package services
 			else
 				initialStart = false;
 			
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
 		}
 		
-		public static function dispatchBgReadingEvent():void {
-			_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT));
+		public static function dispatchBgReadingReceivedEvent():void {
+			_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED));
+		}
+		
+		public static function dispatchLastBgReadingReceivedEvent():void {
+			_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED));
 		}
 		
 		private static function transmitterDataReceived(be:BlueToothServiceEvent):void {
 			
 			var value:ByteArray;
 			var transmitterServiceEvent:TransmitterServiceEvent;
-			var notificationBuilderG5BatteryInfo:NotificationBuilder;
+			var notificationBuilderG5G6BatteryInfo:NotificationBuilder;
 			var lastBgReading:BgReading;
 			
 			if (be.data == null)
@@ -128,7 +134,7 @@ package services
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 						&&
 						transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
@@ -136,14 +142,14 @@ package services
 						value.endian = Endian.LITTLE_ENDIAN;
 						value.writeByte(0x06);
 						value.writeByte(0x01);
-						value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+						value.writeInt((CGMBluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
 						myTrace("calling BluetoothService.ackCharacteristicUpdate");
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					} else {
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					}
 				} else if ((be.data is TransmitterDataXBridgeDataPacket) || (be.data is TransmitterDataXBridgeRDataPacket)) {
 					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket;
@@ -160,7 +166,7 @@ package services
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 						&&
 						transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
@@ -168,14 +174,14 @@ package services
 						value.endian = Endian.LITTLE_ENDIAN;
 						value.writeByte(0x06);
 						value.writeByte(0x01);
-						value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+						value.writeInt((CGMBluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
 						myTrace("calling BluetoothService.ackCharacteristicUpdate");
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					} else {
 						value = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
-						BluetoothService.writeToCharacteristic(value);
+						CGMBluetoothService.writeToCharacteristic(value);
 					}						
 
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
@@ -187,10 +193,12 @@ package services
 						create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData, readingTimeStamp)
 						.saveToDatabaseSynchronous();
 					
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 					_instance.dispatchEvent(transmitterServiceEvent);
 
-					if (BlueToothDevice.isDexcomG4()) {
+					if (CGMBlueToothDevice.isDexcomG4()) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
 					}
 				} else if (be.data is TransmitterDataXdripDataPacket) {
@@ -211,14 +219,18 @@ package services
 							.saveToDatabaseSynchronous();
 						
 						//dispatch the event that there's new data
-						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+						_instance.dispatchEvent(transmitterServiceEvent);
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 						_instance.dispatchEvent(transmitterServiceEvent);
 					}
-				} else if (be.data is TransmitterDataG5Packet) {
-					var transmitterDataG5Packet:TransmitterDataG5Packet = be.data as TransmitterDataG5Packet;
+				} else if (be.data is TransmitterDataG5G6Packet) {
+					var transmitterDataG5G6Packet:TransmitterDataG5G6Packet = be.data as TransmitterDataG5G6Packet;
+					var badPlacedBatteriesTitle:String = "";
+					var badPlacedBatteriesBody:String = "";
 					
 					//check special values filtered and unfiltered to detect dead battery
-					if (transmitterDataG5Packet.filteredData == 2096896) {
+					if (transmitterDataG5G6Packet.filteredData == 2096896 && CGMBlueToothDevice.isDexcomG5()) {
 						myTrace("in transmitterDataReceived, filteredData = 2096896, this indicates a dead G5 battery, no further processing");
 						if (SpikeANE.appIsInForeground()) {
 							AlertManager.showSimpleAlert
@@ -228,24 +240,35 @@ package services
 							);
 							SpikeANE.vibrate();
 						} else {
-							notificationBuilderG5BatteryInfo = new NotificationBuilder()
+							notificationBuilderG5G6BatteryInfo = new NotificationBuilder()
 								.setCount(BadgeBuilder.getAppBadge())
 								.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
 								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
 								.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"))
 								.enableVibration(true)
-							Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
+							Notifications.service.notify(notificationBuilderG5G6BatteryInfo.build());
 						}
-					} else if ((transmitterDataG5Packet.rawData == 0 || transmitterDataG5Packet.filteredData == 0) && transmitterDataG5Packet.timeStamp != 0) {
-						myTrace("in transmitterDataReceived, rawdata = 0, this may be caused by refurbished G5 with badly placed batteries, or badly placed transmitter");
-						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000 && Sensor.getActiveSensor() != null) {
-							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
+					} else if ((transmitterDataG5G6Packet.rawData == 0 || transmitterDataG5G6Packet.filteredData == 0) && transmitterDataG5G6Packet.timeStamp != 0) {
+						myTrace("in transmitterDataReceived, rawdata = 0, this may be caused by refurbished G5/G6 with badly placed batteries, or badly placed transmitter");
+						if ((new Date()).valueOf() - timeStampSinceLastG5G6BadlyPlacedBatteriesInfo > 1 * 3600 * 1000 && Sensor.getActiveSensor() != null) {
+							timeStampSinceLastG5G6BadlyPlacedBatteriesInfo = (new Date()).valueOf();
 							if (SpikeANE.appIsInForeground()) {
+								if (CGMBlueToothDevice.isDexcomG5())
+								{
+									badPlacedBatteriesTitle = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter");
+									badPlacedBatteriesBody = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info");
+								}
+								else if (CGMBlueToothDevice.isDexcomG6())
+								{
+									badPlacedBatteriesTitle = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter").replace("G5", "G6");
+									badPlacedBatteriesBody = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info").replace("G5", "G6");
+								}
+								
 								AlertManager.showActionAlert
 								(
-									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
-									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"),
+									badPlacedBatteriesTitle,
+									badPlacedBatteriesBody,
 									Number.NaN,
 									[
 										{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','no_uppercase') },
@@ -255,7 +278,7 @@ package services
 								
 								function onResetTransmitter(e:Event):void
 								{
-									BluetoothService.G5_RequestReset();
+									CGMBluetoothService.G5G6_RequestReset();
 									
 									AlertManager.showSimpleAlert
 									(
@@ -266,24 +289,37 @@ package services
 								
 								SpikeANE.vibrate();
 							} else {
-								notificationBuilderG5BatteryInfo = new NotificationBuilder()
+								if (CGMBlueToothDevice.isDexcomG5())
+								{
+									badPlacedBatteriesTitle = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter");
+									badPlacedBatteriesBody = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info");
+								}
+								else if (CGMBlueToothDevice.isDexcomG6())
+								{
+									badPlacedBatteriesTitle = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter").replace("G5", "G6");
+									badPlacedBatteriesBody = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info").replace("G5", "G6");
+								}
+								
+								notificationBuilderG5G6BatteryInfo = new NotificationBuilder()
 									.setCount(BadgeBuilder.getAppBadge())
-									.setId(NotificationService.ID_FOR_BAD_PLACED_G5_INFO)
-									.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
-									.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
-									.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"))
+									.setId(NotificationService.ID_FOR_BAD_PLACED_G5_G6_INFO)
+									.setAlert(badPlacedBatteriesTitle)
+									.setTitle(badPlacedBatteriesTitle)
+									.setBody(badPlacedBatteriesBody)
 									.enableVibration(true)
-								Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
+								Notifications.service.notify(notificationBuilderG5G6BatteryInfo.build());
 							}
 						} 
 					} else {
 						//create and save bgreading
 						BgReading.
-							create(transmitterDataG5Packet.rawData, transmitterDataG5Packet.filteredData)
+							create(transmitterDataG5G6Packet.rawData, transmitterDataG5G6Packet.filteredData)
 							.saveToDatabaseSynchronous();
 						
 						//dispatch the event that there's new data
-						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+						_instance.dispatchEvent(transmitterServiceEvent);
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 						_instance.dispatchEvent(transmitterServiceEvent);
 					}
 				} else if (be.data is TransmitterDataTransmiter_PLPacket) {
@@ -299,7 +335,9 @@ package services
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderPacket");
@@ -321,14 +359,16 @@ package services
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderBatteryPacket) {
 					myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket");
 					lastBgReading = BgReading.lastNoSensor();
 					if (lastBgReading == null || lastBgReading.timestamp + 4 * 60 * 1000 < (new Date()).valueOf()) {
 						myTrace("in transmitterDataReceived, is TransmitterDataBlueReaderBatteryPacket, sending 6C");
-						BluetoothService.writeToCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
+						CGMBluetoothService.writeToCharacteristic(utils.UniqueId.hexStringToByteArray("6C"));
 					}
 				} else if (be.data is TransmitterDataBluKonPacket) {
 					lastBgReading = BgReading.lastNoSensor();
@@ -353,7 +393,10 @@ package services
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					//can we dispatch this event from CGMBluetoothService when last reading is dispatched in branch "if (!m_getOlderReading)"
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} 
 			}
@@ -388,11 +431,25 @@ package services
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info")
 					);
-				} else if (notificationEvent.id == NotificationService.ID_FOR_BAD_PLACED_G5_INFO) {
+				} else if (notificationEvent.id == NotificationService.ID_FOR_BAD_PLACED_G5_G6_INFO) {
+					var badPlacedBatteriesTitle:String = "";
+					var badPlacedBatteriesBody:String = "";
+					
+					if (CGMBlueToothDevice.isDexcomG5())
+					{
+						badPlacedBatteriesTitle = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter");
+						badPlacedBatteriesBody = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info");
+					}
+					else if (CGMBlueToothDevice.isDexcomG6())
+					{
+						badPlacedBatteriesTitle = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter").replace("G5", "G6");
+						badPlacedBatteriesBody = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info").replace("G5", "G6");
+					}
+					
 					AlertManager.showSimpleAlert
 					(
-						ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
-						ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info")
+						badPlacedBatteriesTitle,
+						badPlacedBatteriesBody
 					);
 				} 
 			}		
@@ -404,16 +461,16 @@ package services
 				AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"),
-					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars")
+					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars").replace("{max}", "5")
 				);
 			}  else {
 				var value:ByteArray = new ByteArray();
 				value.endian = Endian.LITTLE_ENDIAN;
 				value.writeByte(0x06);
 				value.writeByte(0x01);
-				value.writeInt(BluetoothService.encodeTxID(transmitterIDTextInput.text));
+				value.writeInt(CGMBluetoothService.encodeTxID(transmitterIDTextInput.text));
 				myTrace("calling BluetoothService.ackCharacteristicUpdate");
-				BluetoothService.writeToCharacteristic(value);
+				CGMBluetoothService.writeToCharacteristic(value);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterIDTextInput.text.toUpperCase());
 			}
 		}

@@ -212,7 +212,7 @@ package database
 		{
 			if (debugMode) trace("Database.init");
 			
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingEventReceived);
 
 			dbFile  = File.applicationStorageDirectory.resolvePath(dbFileName);
 			
@@ -494,7 +494,7 @@ package database
 		private static function insertBlueToothDevice():void {
 			sqlStatement.clearParameters();
 			sqlStatement.text = INSERT_DEFAULT_BLUETOOTH_DEVICE;
-			sqlStatement.parameters[":bluetoothdevice_id"] = BlueToothDevice.DEFAULT_BLUETOOTH_DEVICE_ID;
+			sqlStatement.parameters[":bluetoothdevice_id"] = CGMBlueToothDevice.DEFAULT_BLUETOOTH_DEVICE_ID;
 			sqlStatement.parameters[":name"] = ""; 
 			sqlStatement.parameters[":address"] = "";
 			sqlStatement.parameters[":lastmodifiedtimestamp"] = (new Date()).valueOf();
@@ -780,7 +780,7 @@ package database
 		 * synchronous, no returnvalue, will simply overwrite the bluetoothdevice attributes (which is a single instance)<br>
 		 */
 		public static function getBlueToothDevice():void {
-			var returnValue:BlueToothDevice;
+			var returnValue:CGMBlueToothDevice;
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.READ);
@@ -793,9 +793,9 @@ package database
 				conn.close();
 				var numResults:int = result.data.length;
 				if (numResults == 1) {
-					BlueToothDevice.name = result.data[0].name;
-					BlueToothDevice.address = result.data[0].address;
-					BlueToothDevice.setLastModifiedTimestamp(result.data[0].lastmodifiedtimestamp); 
+					CGMBlueToothDevice.name = result.data[0].name;
+					CGMBlueToothDevice.address = result.data[0].address;
+					CGMBlueToothDevice.setLastModifiedTimestamp(result.data[0].lastmodifiedtimestamp); 
 				} else {
 					dispatchInformation('error_while_getting_bluetooth_device_in_db', 'resulting amount of bluetoothdevices should be 1 but is ' + numResults);
 				}

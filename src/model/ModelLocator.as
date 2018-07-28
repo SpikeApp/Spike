@@ -19,13 +19,13 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.AlarmService;
-	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
 	import services.HTTPServerService;
 	import services.HealthKitService;
 	import services.IFTTTService;
+	import services.MultipleMiaoMiaoService;
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
@@ -34,6 +34,7 @@ package model
 	import services.UpdateService;
 	import services.WatchService;
 	import services.WidgetService;
+	import services.bluetooth.CGMBluetoothService;
 	
 	import starling.utils.SystemUtil;
 	
@@ -147,7 +148,7 @@ package model
 				Database.getBlueToothDevice();
 				TransmitterService.init();
 				SpikeANE.init();
-				BluetoothService.init();
+				CGMBluetoothService.init();
 				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 				NotificationService.init();
 				CalibrationService.init();
@@ -165,6 +166,7 @@ package model
 				RemoteAlertService.init();
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				updateApplicationVersion();
+				//MultipleMiaoMiaoService.init();
 			}
 		}
 		

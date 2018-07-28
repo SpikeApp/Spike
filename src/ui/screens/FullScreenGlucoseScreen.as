@@ -12,7 +12,7 @@ package ui.screens
 	import flash.utils.getTimer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.FollowerEvent;
@@ -210,7 +210,7 @@ package ui.screens
 		
 		private function setupEventListeners():void
 		{
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived, false, 0, true);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived, false, 0, true);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, 0, true);
 			this.addEventListener(TouchEvent.TOUCH, onTouch);
 		}
@@ -516,7 +516,7 @@ package ui.screens
 		{
 			//Get latest BGReading
 			var latestBgReading:BgReading;
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				latestBgReading = BgReading.lastNoSensor();
 			else
 				latestBgReading = BgReading.lastWithCalculatedValue();
@@ -700,7 +700,7 @@ package ui.screens
 		override public function dispose():void
 		{
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 			this.removeEventListener(TouchEvent.TOUCH, onTouch);
 			

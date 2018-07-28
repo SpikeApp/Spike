@@ -2,7 +2,7 @@ package ui.screens.display.settings.chart
 {
 	import com.adobe.utils.StringUtil;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
@@ -146,7 +146,7 @@ package ui.screens.display.settings.chart
 			{
 				if (DeviceInfo.isTablet())
 					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','display_in_landscape_label'), accessory: displayInLandscapeCheck } );
-				if (!BlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower())
 				{
 					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','thresholds_range_label'), accessory: percentageRangePicker } );
 					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','average_glucose_range_label'), accessory: avgRangePicker } );

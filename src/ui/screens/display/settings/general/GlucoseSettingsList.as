@@ -3,7 +3,7 @@ package ui.screens.display.settings.general
 	import flash.display.StageOrientation;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
@@ -129,7 +129,7 @@ package ui.screens.display.settings.general
 			//Define Glucose Settings Data
 			var data:Array = [];
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','unit'), accessory: glucoseUnitsPicker } );
-			if (selectedUnit == "mg/dL" && !BlueToothDevice.isFollower())
+			if (selectedUnit == "mg/dL" && !CGMBlueToothDevice.isFollower())
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','round_mgdl_chart_value'), accessory: roundMgDlCheck } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','urgent_high_threshold'), accessory: glucoseUrgentHighStepper } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','high_threshold'), accessory: glucoseHighStepper } );

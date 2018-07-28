@@ -2,7 +2,7 @@ package database
 {
 	import model.ModelLocator;
 	
-	import services.BluetoothService;
+	import services.bluetooth.CGMBluetoothService;
 	
 	import utils.Trace;
 	
@@ -16,7 +16,7 @@ package database
 	 * Once a device is found, the app will store the address of the bridge, in the future the app will only connect to a transmitter with that address. Scanning happens automatically once the address is known as soon as the app starts<br>
 	 * Transmitter id will either be read from xdrip (if no transmitter id  set in app), or will be written from device to bridge (if transmitter id is set in app, but it doesn't match the transmitter id in the xdrip<br>
 	 * <br>
-	 * - G5 : works only if transmitter is known. As soon as transmitter id is known, scanning will start for specific UUID. If a device is found, it must have name "DexcomAB" with AB last two characters of the transmitter id <br>
+	 * - G5/G6 : works only if transmitter is known. As soon as transmitter id is known, scanning will start for specific UUID. If a device is found, it must have name "DexcomAB" with AB last two characters of the transmitter id <br>
 	 * <br>
 	 * - Transmiter PL : similar to G4, except that it uses another scanning UUID.<br>
 	 * <br>
@@ -30,15 +30,15 @@ package database
 	
 	[ResourceBundle("transmitterscreen")]
 	
-	public class BlueToothDevice extends SuperDatabaseClass
+	public class CGMBlueToothDevice extends SuperDatabaseClass
 	{
 		public static const DEFAULT_BLUETOOTH_DEVICE_ID:String = "1465501584186cb0d5f60b3c";
-		private static var _instance:BlueToothDevice = new BlueToothDevice(DEFAULT_BLUETOOTH_DEVICE_ID, Number.NaN);//note that while calling Database.getbluetoothdevice, all attributes will be overwritten by the values stored in the database
+		private static var _instance:CGMBlueToothDevice = new CGMBlueToothDevice(DEFAULT_BLUETOOTH_DEVICE_ID, Number.NaN);//note that while calling Database.getbluetoothdevice, all attributes will be overwritten by the values stored in the database
 		
 		/**
 		 * in case we need attributes of the superclass (like uniqueid), then we need to get an instance of this class
 		 */
-		public static function get instance():BlueToothDevice
+		public static function get instance():CGMBlueToothDevice
 		{
 			return _instance;
 		}
@@ -100,7 +100,7 @@ package database
 			_lastModifiedTimestamp = lastmodifiedtimestamp;
 		}
 		
-		public function BlueToothDevice(bluetoothdeviceid:String, lastmodifiedtimestamp:Number)
+		public function CGMBlueToothDevice(bluetoothdeviceid:String, lastmodifiedtimestamp:Number)
 		{	
 			super(bluetoothdeviceid, lastmodifiedtimestamp);
 			if (_instance != null) {
@@ -118,7 +118,7 @@ package database
 			_address = "";
 			_name = "";
 			Database.updateBlueToothDeviceSynchronous("", "", (new Date()).valueOf());
-			BluetoothService.forgetActiveBluetoothPeripheral(tempAddress);
+			CGMBluetoothService.forgetActiveBluetoothPeripheral(tempAddress);
 		}
 		
 		/**
@@ -144,6 +144,10 @@ package database
 		
 		public static function isDexcomG5():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "G5");
+		}
+		
+		public static function isDexcomG6():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "G6");
 		}
 		
 		public static function isBlueReader():Boolean {
@@ -195,15 +199,15 @@ package database
 		}
 		
 		/**
-		 * If true, then scanning can start as soon as transmitter id is chosen. For the moment this is only the case for Dexcom G5 and Blukon<br>
+		 * If true, then scanning can start as soon as transmitter id is chosen. For the moment this is only the case for Dexcom G5, G6 and Blukon<br>
 		 * For others like xdrip, bluereader, etc... scanning can only start if user initiates it, once a device is known by it' address, then scanning will always happen for those devices<br>
 		 */
 		public static function alwaysScan():Boolean {
-			return (isDexcomG5() || isBluKon()); 
+			return (isDexcomG5() || isDexcomG6() || isBluKon()); 
 		}
 
 		public static function needsTransmitterId():Boolean {
-			return (isDexcomG5() || isDexcomG4() || isBluKon() || isxBridgeR());
+			return (isDexcomG5() || isDexcomG6() || isDexcomG4() || isBluKon() || isxBridgeR());
 		}
 		
 		public static function transmitterIdKnown():Boolean {
@@ -211,23 +215,15 @@ package database
 		}
 		
 		/**
-		 * Determines if the transmitter is capable of backfilling data. Ex: MiaoMiao & Blucon.<br>
-		 * Important when syncing data to online services so all readings are uploaded.
-		 *  
-		 */
-		public static function canDoBackfill():Boolean 
-		{
-			return (isBluKon() || isMiaoMiao());
-		}
-		
-		/**
-		 * possible values : G4, G5, BlueReader, BluKon, Limitter, xBridgeR, Follow 
+		 * possible values : G4, G5, G6, BlueReader, BluKon, Limitter, xBridgeR, Follow 
 		 */
 		public static function deviceType():String {
 			if (isDexcomG4()) 
 				return "G4";
 			if (isDexcomG5())
 				return "G5";
+			if (isDexcomG6())
+				return "G6";
 			if (isBlueReader())
 				return "BlueReader";
 			if (isBluKon())
@@ -242,6 +238,7 @@ package database
 				return "MiaoMiao";
 			if (isxBridgeR())
 				return "xBridgeR";
+			
 			return "unknown";
 		}
 		
@@ -249,13 +246,14 @@ package database
 		{
 			var transmitterName:String = "";
 			
-			if (BlueToothDevice.isDexcomG5()) transmitterName = "G5";
-			else if (BlueToothDevice.isDexcomG4()) transmitterName = "G4";
-			else if (BlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
-			else if (BlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
-			else if (BlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
-			else if (BlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
-			else if (BlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
+			if (CGMBlueToothDevice.isDexcomG6()) transmitterName = "G6";
+			else if (CGMBlueToothDevice.isDexcomG5()) transmitterName = "G5";
+			else if (CGMBlueToothDevice.isDexcomG4()) transmitterName = "G4";
+			else if (CGMBlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
+			else if (CGMBlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
+			else if (CGMBlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
+			else if (CGMBlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
+			else if (CGMBlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
 			
 			return transmitterName;
 		}

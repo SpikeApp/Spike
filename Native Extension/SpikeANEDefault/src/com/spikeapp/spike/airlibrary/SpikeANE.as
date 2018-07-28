@@ -59,10 +59,46 @@ package com.spikeapp.spike.airlibrary
 		public static function confirmSensorChangeMiaoMiao():void {
 		}
 		
-		public static function disconnectMiaoMiao():void {
-		}		
+		/******************
+		 * G5 FUNCTIONS
+		 ******************/
+		public static function startScanningForG5():void {
+		}
 		
-		public static function reconnectMiaoMiao():void {
+		public static function setG5Mac(newMac:String):void {
+		}
+		
+		public static function resetG5Mac():void {
+		}
+		
+		public static function cancelG5Connection(MAC:String):void {
+		}
+		
+		public static function stopScanningG5():void {
+		}
+		
+		public static function forgetG5Peripheral():void {
+		}
+		
+		public static function startScanDeviceG5():void {
+		}
+		
+		public static function stopScanDeviceG5():void {
+		}
+		
+		public static function setTransmitterIdG5(transmitterID:String, cryptKey:ByteArray):void {
+		}
+		
+		public static function setG5Reset(resetG5:Boolean):void {
+		}
+		
+		public static function setTestData(testdata:ByteArray):void {
+		}
+		
+		public static function doG5FirmwareVersionRequest():void {
+		}
+		
+		public static function doG5BatteryInfoRequest():void {
 		}
 		
 		/****************

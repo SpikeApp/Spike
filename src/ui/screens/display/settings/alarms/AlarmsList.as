@@ -2,7 +2,7 @@ package ui.screens.display.settings.alarms
 {
 	import flash.display.StageOrientation;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
@@ -137,7 +137,7 @@ package ui.screens.display.settings.alarms
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"calibration_label"), accessory: calibrationIconImage, alarmID: CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_CALIBRATION });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"missed_reading_label"), accessory: missedReadingIconImage, alarmID: CommonSettings.COMMON_SETTING_MISSED_READING_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_MISSED_READING });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"phone_muted_label"), accessory: phoneMutedIconImage, alarmID: CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED });
-			if (!BlueToothDevice.isLimitter() && !BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isLimitter() && !CGMBlueToothDevice.isFollower())
 				dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"transmitter_low_battery_label"), accessory: batteryLowIconImage, alarmID: CommonSettings.COMMON_SETTING_BATTERY_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY });
 			dataSectionsContainer.push({ screen: null, label: "", accessory: actionsContainer, selectable:false });
 			

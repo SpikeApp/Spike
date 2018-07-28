@@ -9,7 +9,7 @@ package ui.screens.display.extraoptions
 	import flash.media.StageWebView;
 	import flash.utils.Timer;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.SpikeEvent;
@@ -193,7 +193,7 @@ package ui.screens.display.extraoptions
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_lock_button_title'), icon: noLockIconImage, id: menuItems.length, action: "enableNoLock" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_rotation_button_title'), icon: noRotationIconImage, id: menuItems.length, action: "enableNoRotation" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','speech_button_title'), icon: speechIconImage, id: menuItems.length, action: "enableSpeech" });
-			if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected) menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','readings_on_demand_button_title'), icon: readingOnDemandIconImage, id: menuItems.length, action: "readingOnDemand" });
+			if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected) menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','readings_on_demand_button_title'), icon: readingOnDemandIconImage, id: menuItems.length, action: "readingOnDemand" });
 			
 			dataProvider = new ListCollection(menuItems);
 		}
@@ -426,7 +426,7 @@ package ui.screens.display.extraoptions
 				}
 				else if ( itemAction == "readingOnDemand" ) 
 				{	
-					if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
+					if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
 						SpikeANE.sendStartReadingCommmandToMiaoMia();
 					
 					dispatchEventWith(CLOSE); //Close Menu

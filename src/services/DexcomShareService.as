@@ -14,7 +14,7 @@ package services
 	import flash.utils.setTimeout;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.CalibrationServiceEvent;
@@ -510,7 +510,7 @@ package services
 		private static function onBgreadingReceived(e:flash.events.Event):void 
 		{
 			var latestGlucoseReading:BgReading;
-			if(!BlueToothDevice.isFollower())
+			if(!CGMBlueToothDevice.isFollower())
 				latestGlucoseReading= BgReading.lastNoSensor();
 			else
 				latestGlucoseReading= BgReading.lastWithCalculatedValue();
@@ -520,14 +520,11 @@ package services
 			
 			activeGlucoseReadings.push(createGlucoseReading(latestGlucoseReading));
 			
-			//Only start uploading bg reading if it's newer than 1 minute. Blucon sends historical data so we don't want to start upload for every reading. Just start upload on the last readings. The previous readings will still be uploaded because the reside in the queue array.
-			if (new Date().valueOf() - latestGlucoseReading.timestamp < TIME_1_MINUTE)
-			{
-				if (!BlueToothDevice.canDoBackfill()) //No backfill transmitter, sync immediately
-					syncGlucoseReadings();
-				else //Backfill transmitter. Wait 5 seconds to process all data
-					setTimeout(syncGlucoseReadings, TIME_5_SECONDS);
-			}
+		}
+		
+		private static function onLastBgreadingReceived(e:flash.events.Event):void 
+		{					
+			syncGlucoseReadings();
 		}
 		
 		/**
@@ -858,13 +855,14 @@ package services
 			accountPassword = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
 			
 			//Transmitter ID
-			if (BlueToothDevice.isDexcomG5()) transmitterID = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+			if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) transmitterID = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
 			else transmitterID = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER);
 		}
 		
 		private static function activateEventListeners():void
 		{
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBgreadingReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onLastBgreadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
 			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, onNetworkChange);
@@ -872,7 +870,8 @@ package services
 		}
 		private static function deactivateEventListeners():void
 		{
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBgreadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onLastBgreadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
 			NetworkInfo.networkInfo.removeEventListener(NetworkInfoEvent.CHANGE, onNetworkChange);

@@ -6,7 +6,7 @@ package services
 	import flash.text.engine.LineJustification;
 	import flash.text.engine.SpaceJustifier;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Callout;
@@ -219,14 +219,14 @@ package services
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
 				calloutLocationHelper.y += 15;
 			
-			if (BlueToothDevice.isBluKon() || BlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 			{
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
 				Constants.noLockEnabled = true;
 				seventhStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','seventh_step_message'), calloutLocationHelper, new <String>[RelativePosition.RIGHT], false);
 				Starling.juggler.delayCall( closeCallout, 50, seventhStepCallout );
 			}
-			else if (BlueToothDevice.isMiaoMiao())
+			else if (CGMBlueToothDevice.isMiaoMiao())
 			{
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
 				Constants.noLockEnabled = true;
@@ -284,14 +284,14 @@ package services
 			ninethStepActive = false;
 			tenthStepActive = true;
 			
-			if (BlueToothDevice.isBluKon() || BlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 				tenthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','tenth_step_message'), target, new <String>[RelativePosition.TOP], false);
 			else
 				tenthStepCallout = TextCallout.show(ModelLocator.resourceManagerInstance.getString('tutorialservice','tenth_step_message_non_g5'), target, new <String>[RelativePosition.TOP], false);
 			
 			tenthStepCallout.textRendererFactory = calloutTextRenderer;
 			
-			if (!BlueToothDevice.isDexcomG5())
+			if (!CGMBlueToothDevice.isDexcomG5() && !CGMBlueToothDevice.isDexcomG6())
 				tenthStepCallout.addEventListener(Event.CLOSE, onTutorialFinished);
 				
 			

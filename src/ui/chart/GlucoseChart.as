@@ -12,7 +12,7 @@ package ui.chart
 	import flash.utils.getTimer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
@@ -256,7 +256,7 @@ package ui.chart
 		private var actionsContainer:LayoutGroup;
 		private var moveBtn:Button;
 		private var deleteBtn:Button;
-
+		
 		//User Info
 		private var infoPill:ChartTreatmentPill;
 		private var infoContainer:ScrollContainer;
@@ -280,7 +280,7 @@ package ui.chart
 		private var userInfoErrorLabel:Label;
 		private var spikeMasterPhoneBatteryPill:ChartTreatmentPill;
 		private var spikeMasterTransmitterBatteryPill:ChartTreatmentPill;
-
+		
 		//Absorption curves
 		private var absorptionGraph:LayoutGroup;
 		private var curve:SpikeLine;
@@ -300,7 +300,7 @@ package ui.chart
 		
 		//Historial Data
 		private var isHistoricalData:Boolean;
-
+		
 		//Main Glucose Touch
 		private var mainGlucoseTimer:Number = Number.NaN;
 		
@@ -726,7 +726,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.width / 2));
@@ -777,7 +777,7 @@ package ui.chart
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
-				if (glucoseReading.sensor == null && !BlueToothDevice.isFollower())
+				if (glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower())
 					glucoseMarker.alpha = 0;
 				
 				//Set variables for next iteration
@@ -1229,7 +1229,7 @@ package ui.chart
 				
 				if (treatment.treatment.type == Treatment.TYPE_SENSOR_START || (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note")))
 					treatmentTimeSpinner.isEnabled = false;
-					
+				
 				if (treatmentNotes != "" && treatmentNotes != ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
 				{
 					if (treatmentNoteLabel != null) treatmentNoteLabel.removeFromParent(true);
@@ -1242,7 +1242,7 @@ package ui.chart
 				//Action Buttons
 				if (!isHistoricalData)
 				{
-					if (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+					if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 					{
 						if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 						{
@@ -1253,7 +1253,7 @@ package ui.chart
 							if (actionsContainer != null) actionsContainer.removeFromParent(true);
 							actionsContainer = new LayoutGroup();
 							actionsContainer.layout = actionsLayout;
-								
+							
 							if (treatment.treatment.type != Treatment.TYPE_SENSOR_START)
 							{
 								moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
@@ -1264,7 +1264,7 @@ package ui.chart
 							deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
 							deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
 							actionsContainer.addChild(deleteBtn);
-						
+							
 							treatmentContainer.addChild(actionsContainer);
 						}
 					}
@@ -1308,10 +1308,10 @@ package ui.chart
 					if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > new Date().valueOf())
 					{
 						AlertManager.showSimpleAlert
-						(
-							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-							ModelLocator.resourceManagerInstance.getString('treatments','out_of_bounds_treatment')
-						);
+							(
+								ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+								ModelLocator.resourceManagerInstance.getString('treatments','out_of_bounds_treatment')
+							);
 					}
 					else
 					{
@@ -1911,7 +1911,7 @@ package ui.chart
 					currentTimestamp = Number((mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp);
 				}
 				
-				if (_dataSource.length > 288 && !BlueToothDevice.isMiaoMiao()) // >24H
+				if (_dataSource.length > 288 && !CGMBlueToothDevice.isMiaoMiao()) // >24H
 				{
 					var difference:int = _dataSource.length - 288;
 					for (var i:int = 0; i < difference; i++) 
@@ -2219,7 +2219,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || BlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -2271,7 +2271,7 @@ package ui.chart
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
-				if (glucoseReading.sensor == null && !BlueToothDevice.isFollower())
+				if (glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower())
 					glucoseMarker.alpha = 0;
 				
 				
@@ -2357,7 +2357,7 @@ package ui.chart
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var glucoseMarker:GlucoseMarker = sourceList[i];
-				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !BlueToothDevice.isFollower()))
+				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !CGMBlueToothDevice.isFollower()))
 					continue;
 				
 				var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
@@ -2435,7 +2435,7 @@ package ui.chart
 			
 			if (!SystemUtil.isApplicationActive)
 				return;
-
+			
 			var timeAgoValue:String;
 			
 			if (!displayLatestBGValue && !dummyModeActive)
@@ -2824,7 +2824,7 @@ package ui.chart
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var currentMarker:GlucoseMarker = sourceList[i];
-				if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || BlueToothDevice.isFollower()))
+				if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()))
 					currentMarker.alpha = 1;
 				else
 					currentMarker.alpha = 0;
@@ -2996,9 +2996,9 @@ package ui.chart
 						var differenceInSec:Number = (nowTimestamp - lastTimestamp) / 1000;
 						/*var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSeconds(differenceInSec);
 						if (timeAgoValue != now)
-							glucoseTimeAgoPill.setValue(timeAgoValue, ago, chartFontColor);
+						glucoseTimeAgoPill.setValue(timeAgoValue, ago, chartFontColor);
 						else
-							glucoseTimeAgoPill.setValue("0m", now, chartFontColor);*/
+						glucoseTimeAgoPill.setValue("0m", now, chartFontColor);*/
 						
 						var timeAgoValue:String = TimeSpan.formatHoursMinutesFromSecondsChart(differenceInSec, false, false);
 						if (timeAgoValue != now)
@@ -3063,7 +3063,7 @@ package ui.chart
 					//Check if the current marker is the one selected by the main chart's delimiter line
 					if ((i == 0 && currentMarkerGlobalX >= glucoseDelimiter.x) || (currentMarkerGlobalX >= glucoseDelimiter.x && previousMarkerGlobalX < glucoseDelimiter.x))
 					{
-						if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || BlueToothDevice.isFollower()))
+						if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()))
 						{
 							nowTimestamp = new Date().valueOf();
 							var latestTimestamp:Number;
@@ -3663,14 +3663,14 @@ package ui.chart
 				infoContainer.layout = infoLayout;
 				
 				//Raw & Sage for master
-				if (!BlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower())
 				{
 					//Transmitter Battery
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_ON) == "true")
 					{
 						var batteryStatus:Object = GlucoseFactory.getTransmitterBattery();
 						if (tBatteryPill != null) tBatteryPill.dispose();
-						tBatteryPill = new ChartTreatmentPill(BlueToothDevice.getTransmitterName() + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
+						tBatteryPill = new ChartTreatmentPill(CGMBlueToothDevice.getTransmitterName() + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','battery'));
 						tBatteryPill.setValue(batteryStatus.level);
 						tBatteryPill.colorizeLabel(batteryStatus.color);
 						tBatteryPill.touchable = false;
@@ -3678,7 +3678,7 @@ package ui.chart
 					}
 					
 					//Raw Blood Glucose
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true" && !BlueToothDevice.isBlueReader() && !BlueToothDevice.isBluKon() && !BlueToothDevice.isLimitter() && !BlueToothDevice.isMiaoMiao() && !BlueToothDevice.isTransmiter_PL())
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true" && !CGMBlueToothDevice.isBlueReader() && !CGMBlueToothDevice.isBluKon() && !CGMBlueToothDevice.isLimitter() && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isTransmiter_PL())
 					{
 						if (rawPill != null) rawPill.dispose();
 						rawPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
@@ -3753,7 +3753,7 @@ package ui.chart
 				}
 			}
 			
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 			{
 				//Spike Master Phone Battery
 				if (spikeMasterPhoneBatteryPill != null) spikeMasterPhoneBatteryPill.dispose();
@@ -4761,7 +4761,7 @@ package ui.chart
 				dummyModeActive = true;
 			else
 			{
-				if (_dataSource.length > 288 && !isHistoricalData && !BlueToothDevice.isMiaoMiao()) // >24H
+				if (_dataSource.length > 288 && !isHistoricalData && !CGMBlueToothDevice.isMiaoMiao()) // >24H
 				{
 					var difference:int = _dataSource.length - 288;
 					for (var i:int = 0; i < difference; i++) 

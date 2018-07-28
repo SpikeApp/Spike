@@ -6,7 +6,7 @@ package ui.screens
 	import flash.utils.setTimeout;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
@@ -58,6 +58,7 @@ package ui.screens
 		private var chartData:Array;
 		private var newReadingsList:Array = [];
 		private var newReadingsListFollower:Array = [];
+		private var newReadingsListAddedWhileInForeground:Array = [];
 		private var timeRangeGroup:ToggleGroup;
 		
 		//Visual variables
@@ -119,7 +120,7 @@ package ui.screens
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onInitialCalibrationReceived);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
@@ -340,7 +341,7 @@ package ui.screens
 					
 					appInBackground = false;
 					
-					if (!BlueToothDevice.isFollower())
+					if (!CGMBlueToothDevice.isFollower())
 					{
 						if (newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
 						{
@@ -498,7 +499,7 @@ package ui.screens
 		{
 			Trace.myTrace("ChartScreen.as", "on onBgReadingReceivedFollower!");
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				Trace.myTrace("ChartScreen.as", "User is not a follower. Ignoring");
 			
 			try
@@ -526,9 +527,9 @@ package ui.screens
 		
 		private function onBgReadingReceived(event:TransmitterServiceEvent):void
 		{
-			Trace.myTrace("ChartScreen.as", "on onBgReadingReceived!");
+			Trace.myTrace("ChartScreen.as", "in onBgReadingReceived!");
 			
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 			{
 				Trace.myTrace("ChartScreen.as", "User is a follower. Ignoring");
 				return;
@@ -536,26 +537,48 @@ package ui.screens
 			
 			try
 			{
-				var reading:BgReading = BgReading.lastNoSensor();
-				
-				if(reading == null || reading.calculatedValue == 0 || Calibration.allForSensor().length < 2)
+				if(Calibration.allForSensor().length < 2)
 				{
-					Trace.myTrace("ChartScreen.as", "Bad Reading or not enough calibrations. Not adding it to the chart.");
+					Trace.myTrace("ChartScreen.as", "Not enough calibrations. Not adding it to the chart.");
 					return;
 				}
+
+				var latestAddedReading:BgReading = glucoseChart.getLatestReading();
+				var timeStampLatestReading:Number = latestAddedReading == null ? 0:latestAddedReading.timestamp;
+				if (newReadingsList.length > 0) {
+					timeStampLatestReading = Math.max(timeStampLatestReading, (newReadingsList[newReadingsList.length - 1] as BgReading).timestamp);
+				}
 				
-				if (glucoseChart != null && SystemUtil.isApplicationActive)
-				{
-					Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + reading.calculatedValue);
-					glucoseChart.addGlucose([reading]);
+				var cntr:int = ModelLocator.bgReadings.length - 1;
+				while (cntr > -1) {
+					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
+					if (bgReading.rawData != 0 && bgReading.calculatedValue != 0) {
+						if (bgReading.timestamp > timeStampLatestReading) 
+						{
+							if (glucoseChart != null && SystemUtil.isApplicationActive)
+							{
+								Trace.myTrace("ChartScreen.as", "Adding reading to the list: Value: " + bgReading.calculatedValue);
+								newReadingsListAddedWhileInForeground.insertAt(0, bgReading);
+							} 
+							else 
+							{
+								newReadingsList.push(bgReading);
+							}
+						} else 
+						{
+							break;
+						}
+					}
+					cntr--;
+				}
+
+				if (newReadingsListAddedWhileInForeground.length > 0) {
+					glucoseChart.addGlucose(newReadingsListAddedWhileInForeground);
+					newReadingsListAddedWhileInForeground.length = 0;
 					if (displayPieChart)
 						pieChart.drawChart();
 				}
-				else
-				{
-					Trace.myTrace("ChartScreen.as", "Adding reading to the queue. Will be rendered when the app is in the foreground. Reading: " + reading.calculatedValue);
-					newReadingsList.push(reading);
-				}
+				
 			} 
 			catch(error:Error) 
 			{
@@ -777,7 +800,7 @@ package ui.screens
 			/* Event Listeners */
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onInitialCalibrationReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);

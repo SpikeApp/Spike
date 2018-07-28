@@ -8,7 +8,7 @@ package services
 	import flash.utils.setInterval;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
@@ -33,7 +33,7 @@ package services
 	import utils.SpikeJSON;
 	import utils.TimeSpan;
 	import utils.Trace;
-
+	
 	[ResourceBundle("generalsettingsscreen")]
 	[ResourceBundle("widgetservice")]
 	[ResourceBundle("chartscreen")]
@@ -72,11 +72,11 @@ package services
 			
 			SpikeANE.initUserDefaults();
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				Starling.juggler.delayCall(setInitialGraphData, 3);
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived);
@@ -167,7 +167,7 @@ package services
 				if (now - timestamp <= widgetHistory)
 				{
 					var currentReading:BgReading = startupGlucoseReadingsList[i] as BgReading;
-					if (currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !BlueToothDevice.isFollower()))
+					if (currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !CGMBlueToothDevice.isFollower()))
 						continue;
 					
 					var glucose:String = BgGraphBuilder.unitizedString((startupGlucoseReadingsList[i] as BgReading).calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
@@ -235,7 +235,7 @@ package services
 				SpikeANE.setUserDefaultsData("highThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10));
 				SpikeANE.setUserDefaultsData("urgentHighThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK))))) * 10)) / 10));
 			}
-				
+			
 			//Colors
 			SpikeANE.setUserDefaultsData("urgenLowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_LOW_COLOR)).toString(16).toUpperCase());
 			SpikeANE.setUserDefaultsData("lowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LOW_COLOR)).toString(16).toUpperCase());
@@ -285,7 +285,7 @@ package services
 			activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
 			
 			var currentTimestamp:Number
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 				currentTimestamp = (activeGlucoseReadingsList[0] as Object).timestamp;
 			else
 				currentTimestamp = activeGlucoseReadingsList[0].timestamp;
@@ -374,12 +374,12 @@ package services
 			Trace.myTrace("WidgetService.as", "Sending new glucose reading to widget!");
 			
 			var currentReading:BgReading;
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				currentReading = BgReading.lastNoSensor();
 			else
 				currentReading = BgReading.lastWithCalculatedValue();
 			
-			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !BlueToothDevice.isFollower()))
+			if ((Calibration.allForSensor().length < 2 && !CGMBlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !CGMBlueToothDevice.isFollower()))
 				return;
 			
 			var latestGlucose:String = BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");

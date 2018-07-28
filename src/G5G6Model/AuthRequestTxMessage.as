@@ -1,4 +1,4 @@
-package G5Model
+package G5G6Model
 {
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;

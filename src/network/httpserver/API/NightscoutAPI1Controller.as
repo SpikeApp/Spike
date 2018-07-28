@@ -7,7 +7,7 @@ package network.httpserver.API
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
@@ -87,7 +87,7 @@ package network.httpserver.API
 				var readingsCollection:Array = [];
 				var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 				
-				if (currentSensorId != "0" || BlueToothDevice.isFollower()) 
+				if (currentSensorId != "0" || CGMBlueToothDevice.isFollower()) 
 				{
 					var cntr:int = ModelLocator.bgReadings.length - 1;
 					var itemParsed:int = 0;
@@ -98,18 +98,18 @@ package network.httpserver.API
 						if (bgReading.timestamp < startTime)
 							break;
 						
-						if (bgReading.sensor != null || BlueToothDevice.isFollower()) 
+						if (bgReading.sensor != null || CGMBlueToothDevice.isFollower()) 
 						{
-							if ((BlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
+							if ((CGMBlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
 							{
 								var glucoseValue:Number = Math.round(bgReading.calculatedValue);
 								var date:String = nsFormatter.format(bgReading.timestamp);
 								var readingObject:Object = {};
 								readingObject["_id"] = bgReading.uniqueId;
-								readingObject.unfiltered = !BlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : glucoseValue * 1000;
-								readingObject.device = !BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower";
+								readingObject.unfiltered = !CGMBlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : glucoseValue * 1000;
+								readingObject.device = !CGMBlueToothDevice.isFollower() ? CGMBlueToothDevice.name : "SpikeFollower";
 								readingObject.sysTime = date;
-								readingObject.filtered = !BlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : glucoseValue * 1000;
+								readingObject.filtered = !CGMBlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : glucoseValue * 1000;
 								readingObject.type = "sgv";
 								readingObject.date = bgReading.timestamp;
 								readingObject.sgv = glucoseValue;
@@ -154,7 +154,7 @@ package network.httpserver.API
 				var calibrationsList:Array;
 				var i:int;
 				
-				if (!BlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower())
 				{
 					calibrationsList = Calibration.latest(numCalibrations);
 					
@@ -166,7 +166,7 @@ package network.httpserver.API
 						
 						var calibrationObject:Object = {};
 						calibrationObject["_id"] = calibration.uniqueId;
-						calibrationObject.device = BlueToothDevice.name;
+						calibrationObject.device = CGMBlueToothDevice.name;
 						calibrationObject.type = "cal";
 						calibrationObject.scale = calibration.checkIn ? calibration.firstScale : 1;
 						calibrationObject.intercept = calibration.checkIn ? calibration.firstIntercept : calibration.intercept * -1000 / calibration.slope;
@@ -271,7 +271,7 @@ package network.httpserver.API
 				var outputArray:Array = [];
 				var outputIndex:int = 0;
 				
-				if (!BlueToothDevice.isFollower() && (numReadings > 289 && startTime < now - TIME_24_HOURS_6_MINUTES))
+				if (!CGMBlueToothDevice.isFollower() && (numReadings > 289 && startTime < now - TIME_24_HOURS_6_MINUTES))
 				{
 					//Get from database
 					var readingsList:Array = Database.getBgReadingsDataSynchronous(startTime, endTime, "timestamp, calculatedValue, calculatedValueSlope, hideSlope", numReadings);
@@ -284,7 +284,7 @@ package network.httpserver.API
 						if (bgReading == null || bgReading.calculatedValue == 0 || bgReading.timestamp < startTime || bgReading.timestamp > endTime )
 							continue;
 						
-						outputArray[outputIndex] = nsFormatter.format(bgReading.timestamp) + "\t" + bgReading.timestamp + "\t" + Math.round(bgReading.calculatedValue) + "\t" + calculateSlopeName(Number(bgReading.calculatedValueSlope), bgReading.hideSlope == 1 ? true : false) + "\t" + BlueToothDevice.name + (i < loopLength - 1 ? "\n" : "");
+						outputArray[outputIndex] = nsFormatter.format(bgReading.timestamp) + "\t" + bgReading.timestamp + "\t" + Math.round(bgReading.calculatedValue) + "\t" + calculateSlopeName(Number(bgReading.calculatedValueSlope), bgReading.hideSlope == 1 ? true : false) + "\t" + CGMBlueToothDevice.name + (i < loopLength - 1 ? "\n" : "");
 						outputIndex++;
 					}
 					
@@ -297,7 +297,7 @@ package network.httpserver.API
 				{
 					//Get from model locator
 					var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
-					if (currentSensorId != "0" || BlueToothDevice.isFollower()) 
+					if (currentSensorId != "0" || CGMBlueToothDevice.isFollower()) 
 					{
 						var cntr:int = ModelLocator.bgReadings.length - 1;
 						var itemParsed:int = 0;
@@ -308,9 +308,9 @@ package network.httpserver.API
 							if (followerOrInternalReading.timestamp < startTime)
 								break;
 							
-							if ((followerOrInternalReading.sensor != null || BlueToothDevice.isFollower()) && ((BlueToothDevice.isFollower() || followerOrInternalReading.sensor.uniqueId == currentSensorId) && followerOrInternalReading.calculatedValue != 0 && followerOrInternalReading.rawData != 0)) 
+							if ((followerOrInternalReading.sensor != null || CGMBlueToothDevice.isFollower()) && ((CGMBlueToothDevice.isFollower() || followerOrInternalReading.sensor.uniqueId == currentSensorId) && followerOrInternalReading.calculatedValue != 0 && followerOrInternalReading.rawData != 0)) 
 							{
-								outputArray[outputIndex] = (outputIndex > 0 ? "\n" : "") + nsFormatter.format(followerOrInternalReading.timestamp) + "\t" + followerOrInternalReading.timestamp + "\t" + Math.round(followerOrInternalReading.calculatedValue) + "\t" + followerOrInternalReading.slopeName() + "\t" + (!BlueToothDevice.isFollower() ? BlueToothDevice.name : "SpikeFollower");
+								outputArray[outputIndex] = (outputIndex > 0 ? "\n" : "") + nsFormatter.format(followerOrInternalReading.timestamp) + "\t" + followerOrInternalReading.timestamp + "\t" + Math.round(followerOrInternalReading.calculatedValue) + "\t" + followerOrInternalReading.slopeName() + "\t" + (!CGMBlueToothDevice.isFollower() ? CGMBlueToothDevice.name : "SpikeFollower");
 								outputIndex++;
 							}
 							cntr--;
@@ -460,7 +460,7 @@ package network.httpserver.API
 			upperProfileObject.startDate = nsFormatter.format(0);
 			upperProfileObject.mills = "0";
 			upperProfileObject.units = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mg/dl" : "mmol";
-			upperProfileObject.created_at = !BlueToothDevice.isFollower() && ProfileManager.profilesList.length > 0 ? nsFormatter.format((ProfileManager.profilesList[0] as Profile).timestamp).replace("000+0000", "000Z") : nsFormatter.format(new Date().valueOf()).replace("000+0000", "000Z"); 
+			upperProfileObject.created_at = !CGMBlueToothDevice.isFollower() && ProfileManager.profilesList.length > 0 ? nsFormatter.format((ProfileManager.profilesList[0] as Profile).timestamp).replace("000+0000", "000Z") : nsFormatter.format(new Date().valueOf()).replace("000+0000", "000Z"); 
 			
 			var upperSpikeProfile:Object = {};
 			var spikeProfile:Object = {};
@@ -499,7 +499,7 @@ package network.httpserver.API
 			if (params.method == "POST") //Insert treatment in Spike
 			{
 				//Validation
-				if (BlueToothDevice.isFollower() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
+				if (CGMBlueToothDevice.isFollower() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 					return responseSuccess("Follower doesn't have enough privileges to add treatments!");
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")

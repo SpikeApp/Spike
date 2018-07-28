@@ -1,6 +1,6 @@
 package ui.screens.display.settings.main
 {
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
@@ -83,7 +83,7 @@ package ui.screens.display.settings.main
 			/* Data */
 			var data:Array = [];
 			data.push( { screen: Screens.SETTINGS_GENERAL, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','general_settings_title'), accessory: generalIconImage } );
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				data.push( { screen: Screens.SETTINGS_TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','transmitter_settings_title'), accessory: transmitterIconImage } );
 			data.push( { screen: Screens.SETTINGS_CHART, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','chart_settings_title'), accessory: chartIconImage } );
 			data.push( { screen: Screens.SETTINGS_TREATMENTS, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','treatments_settings_title'), accessory: treatmentsIconImage } );

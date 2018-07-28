@@ -34,7 +34,6 @@
 @property (weak ,nonatomic) id<FQBleManagerDelegate> delegate;
 @property (strong ,nonatomic) CBCentralManager *manager;
 @property (strong ,nonatomic) CBPeripheral *peripheral;
-@property (strong, nonatomic) NSDate *dateLastCompletePacketReceived;
 
 @property (copy,nonatomic)NSString *selectMAC;
 
@@ -53,14 +52,8 @@
 //stop scaning
 - (void)startScanning;
 
-
-//reconnect device
-- (void)reconnectDevice;
 //cancel connect
 - (void)cancelConnectDevice;
-
-- (void)disconnectDevice;
-
 
 //get servicies
 - (void)disCoverServiceWith:(CBPeripheral *)peripheral;

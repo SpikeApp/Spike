@@ -7,7 +7,7 @@ package network.httpserver.API
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
@@ -69,7 +69,7 @@ package network.httpserver.API
 				
 				//Bgs Propery
 				var latestReading:BgReading;
-				if (!BlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower())
 					latestReading = BgReading.lastNoSensor();
 				else
 					latestReading = BgReading.lastWithCalculatedValue();
@@ -83,8 +83,8 @@ package network.httpserver.API
 						trend: latestReading.getSlopeOrdinal(), 
 						direction: latestReading.slopeName(), 
 						datetime: latestReading.timestamp,
-						filtered: !BlueToothDevice.isFollower() ? Math.round(latestReading.ageAdjustedFiltered() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
-						unfiltered: !BlueToothDevice.isFollower() ? Math.round(latestReading.usedRaw() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
+						filtered: !CGMBlueToothDevice.isFollower() ? Math.round(latestReading.ageAdjustedFiltered() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
+						unfiltered: !CGMBlueToothDevice.isFollower() ? Math.round(latestReading.usedRaw() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
 						noise: latestReading.noiseValue(),
 						bgdelta: Number(BgGraphBuilder.unitizedDeltaString(false, false)),
 						iob: String(TreatmentsManager.getTotalIOB(now)),
@@ -143,7 +143,7 @@ package network.httpserver.API
 				if (params.count != null)	
 					numReadings = int(params.count);
 				
-				var readingsList:Array = BgReading.latest(numReadings + 1, BlueToothDevice.isFollower());
+				var readingsList:Array = BgReading.latest(numReadings + 1, CGMBlueToothDevice.isFollower());
 				var readingsCollection:Array = [];
 				var loopLength: int;
 				if (readingsList.length > numReadings)
@@ -233,7 +233,7 @@ package network.httpserver.API
 				var readingsCollection:Array = [];
 				var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 				
-				if (currentSensorId != "0" || BlueToothDevice.isFollower()) 
+				if (currentSensorId != "0" || CGMBlueToothDevice.isFollower()) 
 				{
 					var cntr:int = ModelLocator.bgReadings.length - 1;
 					var itemParsed:int = 0;
@@ -244,9 +244,9 @@ package network.httpserver.API
 						if (bgReading.timestamp < startTime)
 							break;
 						
-						if (bgReading.sensor != null || BlueToothDevice.isFollower()) 
+						if (bgReading.sensor != null || CGMBlueToothDevice.isFollower()) 
 						{
-							if ((BlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
+							if ((CGMBlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
 							{
 								var readingObject:Object = {}
 								readingObject.date = bgReading.timestamp;

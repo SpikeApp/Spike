@@ -1,7 +1,7 @@
 package stats
 {
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	
@@ -24,7 +24,7 @@ package stats
 			var lowTreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
 			var highTreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 			{
 				var masterUserStats:BasicUserStats = Database.getBasicUserStats(fromTime, untilTime);
 				if (masterUserStats == null)

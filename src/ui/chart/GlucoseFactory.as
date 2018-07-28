@@ -5,10 +5,10 @@ package ui.chart
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import G5Model.TransmitterStatus;
+	import G5G6Model.TransmitterStatus;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Sensor;
@@ -141,7 +141,7 @@ package ui.chart
 				{
 					glucoseDifferenceOutput = String(glucoseDifference);
 						
-					if ( glucoseDifference % 1 == 0 && (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
+					if ( glucoseDifference % 1 == 0 && (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 						glucoseDifferenceOutput += ".0";
 						
 					slopeOutput = "+ " + glucoseDifferenceOutput;
@@ -150,7 +150,7 @@ package ui.chart
 				{
 					glucoseDifferenceOutput = String(Math.abs(glucoseDifference));
 						
-					if ( glucoseDifference % 1 == 0 && (!BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
+					if ( glucoseDifference % 1 == 0 && (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 						glucoseDifferenceOutput += ".0";
 						
 					if (!textToSpeechEnabled)
@@ -293,7 +293,7 @@ package ui.chart
 				var sensorDays:String;
 				var sensorHours:String;
 				
-				if (BlueToothDevice.knowsFSLAge()) 
+				if (CGMBlueToothDevice.knowsFSLAge()) 
 				{
 					var sensorAgeInMinutes:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
 					
@@ -329,30 +329,40 @@ package ui.chart
 			var transmitterBatteryColor:uint = 0xEEEEEE;
 			var transmitterBattery:String;
 			var transmitterValue:Number = Number.NaN;
-			var transmitterNameValue:String = BlueToothDevice.known() ? BlueToothDevice.name : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
+			var transmitterNameValue:String = CGMBlueToothDevice.known() ? CGMBlueToothDevice.name : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown');
 			
-			if (BlueToothDevice.isDexcomG5())
+			if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 			{
-				var voltageAValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
+				var voltageAValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA);
 				if (voltageAValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageAValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
-				var voltageBValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB);
+				var voltageBValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB);
 				if (voltageBValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) voltageBValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
-				var resistanceValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST);
+				var resistanceValue:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST);
 				if (resistanceValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) resistanceValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
 				transmitterBattery = "A: " + voltageAValue + ", B: " + voltageBValue + ", R: " + resistanceValue;
 				
 				if (!isNaN(Number(voltageAValue)))
 				{
-					if (Number(voltageAValue) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA)
-						transmitterBatteryColor = 0xff1c1c;
-					else
-						transmitterBatteryColor = 0x4bef0a;
+					if (CGMBlueToothDevice.isDexcomG5())
+					{
+						if (Number(voltageAValue) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA)
+							transmitterBatteryColor = 0xff1c1c;
+						else
+							transmitterBatteryColor = 0x4bef0a;
+					}
+					else if (CGMBlueToothDevice.isDexcomG6())
+					{
+						if (Number(voltageAValue) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6)
+							transmitterBatteryColor = 0xff1c1c;
+						else
+							transmitterBatteryColor = 0x4bef0a;
+					}
 				}
 			}
-			else if (BlueToothDevice.isDexcomG4()) 
+			else if (CGMBlueToothDevice.isDexcomG4()) 
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
 				
@@ -372,7 +382,7 @@ package ui.chart
 				}
 					
 			}
-			else if (BlueToothDevice.isBlueReader())
+			else if (CGMBlueToothDevice.isBlueReader())
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
 				
@@ -393,7 +403,7 @@ package ui.chart
 						transmitterBatteryColor = 0xff1c1c;
 				}
 			}
-			else if (BlueToothDevice.isTransmiter_PL())
+			else if (CGMBlueToothDevice.isTransmiter_PL())
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
 				
@@ -414,7 +424,7 @@ package ui.chart
 						transmitterBatteryColor = 0xff1c1c;
 				}
 			}
-			else if (BlueToothDevice.isMiaoMiao())
+			else if (CGMBlueToothDevice.isMiaoMiao())
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);
 				
@@ -435,7 +445,7 @@ package ui.chart
 						transmitterBatteryColor = 0xff1c1c;
 				}
 			}
-			else if (BlueToothDevice.isBluKon())
+			else if (CGMBlueToothDevice.isBluKon())
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL) + "%";
 				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown') || !InterfaceController.peripheralConnected)
@@ -453,7 +463,7 @@ package ui.chart
 						transmitterBatteryColor = 0xff1c1c;
 				}
 			}
-			else if (BlueToothDevice.isLimitter())
+			else if (CGMBlueToothDevice.isLimitter())
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
 				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 

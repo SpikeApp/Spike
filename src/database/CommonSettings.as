@@ -83,8 +83,8 @@ package database
 		 * updated automatically when the setting COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
 		  */
 		 public static const COMMON_SETTING_UNUSED:int = 13;
-		 public static const COMMON_SETTING_G5_BATTERY_MARKER:int = 14;
-		 public static const COMMON_SETTING_G5_BATTERY_FROM_MARKER:int = 15;
+		 public static const COMMON_SETTING_G5_G6_BATTERY_MARKER:int = 14;
+		 public static const COMMON_SETTING_G5_G6_BATTERY_FROM_MARKER:int = 15;
 		 /**
 		 * Possible values :<br>
 		 * G4 : any xdrip or xbridge that receives G4 transmitter signal<br> 
@@ -97,7 +97,7 @@ package database
 		 * Default value is an empty string, peripheral type unknown
 		  */
 		 public static const COMMON_SETTING_PERIPHERAL_TYPE:int = 16;
-		 public static const COMMON_SETTING_G5_INFO_SCREEN_SHOWN:int = 17;
+		 public static const COMMON_SETTING_G5_G6_INFO_SCREEN_SHOWN:int = 17;
 		 public static const COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE:int = 18;
 		 public static const COMMON_SETTING_LICENSE_INFO_CONFIRMED:int = 19;
 		 /**
@@ -127,23 +127,23 @@ package database
 		 /**
 		  * data read from g5 transmitter, default value 'unknown'
 		  */
-		 public static const COMMON_SETTING_G5_VOLTAGEA:int = 26;
+		 public static const COMMON_SETTING_G5_G6_VOLTAGEA:int = 26;
 		 /**
 		  * data read from g5 transmitter, default value 'unknown'
 		  */
-		 public static const COMMON_SETTING_G5_VOLTAGEB:int = 27;
+		 public static const COMMON_SETTING_G5_G6_VOLTAGEB:int = 27;
 		 /**
 		  * data read from g5 transmitter, default value 'unknown'
 		  */
-		 public static const COMMON_SETTING_G5_RESIST:int = 28;
+		 public static const COMMON_SETTING_G5_G6_RESIST:int = 28;
 		 /**
 		  * data read from g5 transmitter, default value 'unknown'
 		  */
-		 public static const COMMON_SETTING_G5_TEMPERATURE:int = 29;
+		 public static const COMMON_SETTING_G5_G6_TEMPERATURE:int = 29;
 		 /**
 		  * data read from g5 transmitter, default value 'unknown'
 		  */
-		 public static const COMMON_SETTING_G5_RUNTIME:int = 30;
+		 public static const COMMON_SETTING_G5_G6_RUNTIME:int = 30;
 		 
 		 /**
 		  * the string that has all the intervals with battery low alert types
@@ -245,7 +245,7 @@ package database
 		 /**
 		  * Extra G5 Setting for transmitter runtime
 		  */
-		 public static const COMMON_SETTING_G5_SENSOR_RX_TIMESTAMP:int = 78;
+		 public static const COMMON_SETTING_G5_G6_SENSOR_RX_TIMESTAMP:int = 78;
 		 
 		 /**
 		  * Widget #1
@@ -393,7 +393,7 @@ package database
 		 * The contents is the hex string as received from G5<br>
 		 * To read the contents, G5VersionInfo.getG5VersionInfo
 		  */
-		 public static const COMMON_SETTING_G5_VERSION_INFO:int = 142;
+		 public static const COMMON_SETTING_G5_G6_VERSION_INFO:int = 142;
 		 
 		 /**
 		  * Apply IFCC calculation to A1C values
@@ -816,8 +816,8 @@ package database
 				 if (commonSettingId == COMMON_SETTING_TRANSMITTER_ID) {
 					 newValue = newValue.toUpperCase();
 				 }
-				 if (commonSettingId == COMMON_SETTING_G5_BATTERY_MARKER) {
-					 commonSettings[COMMON_SETTING_G5_BATTERY_FROM_MARKER] = (new Date()).valueOf();
+				 if (commonSettingId == COMMON_SETTING_G5_G6_BATTERY_MARKER) {
+					 commonSettings[COMMON_SETTING_G5_G6_BATTERY_FROM_MARKER] = (new Date()).valueOf();
 				 }
 				 commonSettings[commonSettingId] = newValue;
 				 if (updateDatabase) {

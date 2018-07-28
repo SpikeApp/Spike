@@ -5,7 +5,7 @@ package ui.screens
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Sensor;
 	
 	import feathers.controls.Alert;
@@ -180,7 +180,7 @@ package ui.screens
 			
 			/* Calculate Time Till Next Calibration */
 			var actualTime:Number = (new Date()).valueOf();
-			var timeOfCalibration:Number = !BlueToothDevice.isTypeLimitter() ? 2 * 3600 * 1000 - (actualTime - sensorStartTime) : 3600 * 1000 - (actualTime - sensorStartTime);
+			var timeOfCalibration:Number = !CGMBlueToothDevice.isTypeLimitter() ? 2 * 3600 * 1000 - (actualTime - sensorStartTime) : 3600 * 1000 - (actualTime - sensorStartTime);
 			
 			/* Define Date Formater Helper */
 			var dateFormatterForSensorStartWarning:DateTimeFormatter = new DateTimeFormatter();
@@ -190,7 +190,7 @@ package ui.screens
 			
 			/* Define Alert Message */
 			var alertMessage:String;
-			if (timeOfCalibration > 0 && !BlueToothDevice.knowsFSLAge()) {
+			if (timeOfCalibration > 0 && !CGMBlueToothDevice.knowsFSLAge()) {
 				alertMessage = ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_wait_prefix");
 				alertMessage += " " + dateFormatterForSensorStartWarning.format(new Date(actualTime + timeOfCalibration)) + " ";
 				alertMessage += ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_wait_suffix");
@@ -217,7 +217,7 @@ package ui.screens
 			
 			function onClose(e:Event):void
 			{
-				if ((TutorialService.isActive || TutorialService.eleventhStepActive) && BlueToothDevice.isDexcomG5())
+				if ((TutorialService.isActive || TutorialService.eleventhStepActive) && (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()))
 					TutorialService.eleventhStep();
 			}
 		}	

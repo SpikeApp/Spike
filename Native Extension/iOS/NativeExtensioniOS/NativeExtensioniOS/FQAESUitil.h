@@ -4,4 +4,5 @@
 
 + (NSData *) AESEncryptWithKey:(NSString *)key withData:(NSData *) data;
 
++ (NSData *) calculateHash:(NSData *) data withCryptKey:(NSString*) cryptKey;
 @end

@@ -6,7 +6,7 @@ package services
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
@@ -65,7 +65,7 @@ package services
 			
 			//Set event listeners
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, bgReadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, bgReadingReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, processInitialBackfillData);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
@@ -148,7 +148,7 @@ package services
 		
 		private static function processInitialBackfillData(e:Event):void
 		{
-			if (!BlueToothDevice.isMiaoMiao() || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") //Only for backfil
+			if (!CGMBlueToothDevice.isMiaoMiao() || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") //Only for backfil
 				return
 			
 			var loopLength:int = ModelLocator.bgReadings.length

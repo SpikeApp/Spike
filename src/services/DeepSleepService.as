@@ -1,8 +1,10 @@
 package services
 {
 	import com.spikeapp.spike.airlibrary.SpikeANE;
+	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
 	import flash.errors.IllegalOperationError;
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.media.Sound;
 	import flash.media.SoundChannel;
@@ -11,8 +13,9 @@ package services
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
+	import database.LocalSettings;
 	
 	import events.SettingsServiceEvent;
 	
@@ -30,6 +33,7 @@ package services
 		private static const AUTOMATIC_NON_DEXCOM:int = 5 * 1000;
 		private static const AUTOMATIC_FOLLOWER:int = 10 * 1000;
 		private static const TIME_1_MINUTE:int = 1 * 60 * 1000;
+		private static const NO_SUSPENSION_PREVENTION_MODE:int = 1000000;
 		
 		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
@@ -65,6 +69,16 @@ package services
 			
 			//Event Listeners
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
+			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
+			addOrRemoveMiaoMiaoEventListeners();
+		}
+		
+		private static function addOrRemoveMiaoMiaoEventListeners():void {
+			if (CGMBlueToothDevice.isMiaoMiao()) {
+				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, onMiaoMiaoConnected);
+			} else {
+				SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, onMiaoMiaoConnected);
+			}
 		}
 		
 		private static function createSoundProperties():void
@@ -85,15 +99,18 @@ package services
 			{
 				//Spike manages suspension
 				Trace.myTrace("DeepSleepService.as", "Interval managed by Spike");
-				if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isDexcomG5()) 
+				if (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) 
 				{
 					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_DEXCOM");
 					deepSleepInterval = AUTOMATIC_DEXCOM;
 				}
-				else if (BlueToothDevice.isFollower())
+				else if (CGMBlueToothDevice.isFollower())
 				{
 					Trace.myTrace("DeepSleepService.as", "Setting interval to AUTOMATIC_FOLLOWER");
 					deepSleepInterval = AUTOMATIC_FOLLOWER;
+				}
+				else if (CGMBlueToothDevice.isMiaoMiao()) {
+					onMiaoMiaoConnected(null);
 				}
 				else
 				{
@@ -130,13 +147,16 @@ package services
 		
 		private static function startDeepSleepInterval():void 
 		{
-			Trace.myTrace("DeepSleepService.as", "Starting deep sleep interval!");
-			
 			//Clear any previous intervals
 			clearInterval( intervalID );
 			
-			//Start new interval
-			intervalID = setInterval( playSound, deepSleepInterval);
+			if (deepSleepInterval != NO_SUSPENSION_PREVENTION_MODE) {
+				//Start new interval
+				Trace.myTrace("DeepSleepService.as", "Starting deep sleep interval!");
+				intervalID = setInterval( playSound, deepSleepInterval);
+			} else {
+				Trace.myTrace("DeepSleepService.as", "deepSleepInterval disabled!");
+			}
 		}
 		
 		private static function playSound():void 
@@ -147,8 +167,7 @@ package services
 				var now:Number = nowDate.valueOf();
 				var hours:Number = nowDate.hours;
 				
-				if (now - lastLogPlaySoundTimeStamp > TIME_1_MINUTE) 
-				{
+				if (now - lastLogPlaySoundTimeStamp > TIME_1_MINUTE) {
 					Trace.myTrace("DeepSleepService.as", "Playing deep sleep sound...");
 					lastLogPlaySoundTimeStamp = now;
 				}
@@ -221,6 +240,14 @@ package services
 			}
 		}
 		
+		private static function onLocalSettingsChanged(event:SettingsServiceEvent):void {
+			if (event.data == LocalSettings.LOCAL_SETTING_MIAOMIAO_FOLLOWER_ENABLED)
+			{
+				setDeepSleepInterval();
+				startDeepSleepInterval();
+			}
+		}
+		
 		/**
 		 * Event Listeners
 		 */
@@ -228,13 +255,45 @@ package services
 		{
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE ||
 				event.data == CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON ||
-				event.data == CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE
+				event.data == CommonSettings.COMMON_SETTING_DEEP_SLEEP_MODE ||
+				event.data == CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON
 			) 
 			{
 				Trace.myTrace("DeepSleepService.as", "Settings changed. Defining new interval!");
+				addOrRemoveMiaoMiaoEventListeners();
 				setDeepSleepInterval();
 				startDeepSleepInterval();
 			}
+		}
+		
+		//MiaoMiao is connected and Spike receives the first characteristic update
+		private static function onMiaoMiaoConnected(event:Event = null):void 
+		{
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEEP_SLEEP_SELF_MANAGEMENT_ON) != "true" && !SpikeShouldNeverSuspend()) {
+				if (deepSleepInterval != NO_SUSPENSION_PREVENTION_MODE) {
+					Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoConnected, Setting interval to NO_SUSPENSION_PREVENTION_MODE");
+					deepSleepInterval = NO_SUSPENSION_PREVENTION_MODE;
+					startDeepSleepInterval();
+				} else {
+					Trace.myTrace("DeepSleepService.as", "in onMiaoMiaoConnected, interval already NO_SUSPENSION_PREVENTION_MODE");
+					return;
+				}
+			} else {
+			}
+		}
+		
+		private static function SpikeShouldNeverSuspend():Boolean {
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true")
+				return true;
+
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true")
+				return true;
+
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MIAOMIAO_FOLLOWER_ENABLED) == "true")
+				return true;
+				
+			//TODO : add check if missed reading alert is enabled
+			return false;
 		}
 		
 		/**

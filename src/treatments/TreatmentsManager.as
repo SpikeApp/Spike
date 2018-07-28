@@ -8,7 +8,7 @@ package treatments
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
@@ -125,7 +125,7 @@ package treatments
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 			
 			//Fetch Data From Database
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				Trace.myTrace("TreatmentsManager.as", "Fetching treatments from database...");
 				
@@ -397,7 +397,7 @@ package treatments
 							NightscoutService.deleteTreatment(spikeTreatment);
 						
 						//Delete from databse
-						if ((!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING) && deleteFromDatabase)
+						if ((!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING) && deleteFromDatabase)
 							Database.deleteTreatmentSynchronous(spikeTreatment);
 						
 						treatmentsMap[spikeTreatment.ID] = null;
@@ -417,7 +417,7 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			
 			//Update in Database
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				Database.updateTreatmentSynchronous(treatment);
 			
 			//Update Nightscout
@@ -430,7 +430,7 @@ package treatments
 			Trace.myTrace("TreatmentsManager.as", "addNightscoutTreatment called! Treatment type: " + treatment.type);
 			
 			//Insert in Database
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				if (treatmentsMap[treatment.ID] == null) //new treatment
 					Database.insertTreatmentSynchronous(treatment);
@@ -863,7 +863,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -934,7 +934,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -946,7 +946,7 @@ package treatments
 			
 			function onMealEntered (e:Event):void
 			{
-
+				
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onMealEntered);
 				
 				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null || carbOffSet == null || !SpikeANE.appIsInForeground())
@@ -960,12 +960,12 @@ package treatments
 				if (isNaN(insulinValue) || insulinTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_insulin'),
-						Number.NaN,
-						onAskNewBolus
-					);
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_insulin'),
+							Number.NaN,
+							onAskNewBolus
+						);
 					
 					function onAskNewBolus():void
 					{
@@ -975,12 +975,12 @@ package treatments
 				else if (isNaN(carbsValue) || carbsTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_carbs'),
-						Number.NaN,
-						onAskNewCarbs
-					);
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_carbs'),
+							Number.NaN,
+							onAskNewCarbs
+						);
 					
 					function onAskNewCarbs():void
 					{
@@ -1002,18 +1002,18 @@ package treatments
 					if (carbOffSet.value == 0)
 					{
 						var treatment:Treatment = new Treatment
-						(
-							Treatment.TYPE_MEAL_BOLUS,
-							treatmentTime.value.valueOf(),
-							insulinValue,
-							insulinList.selectedItem.id,
-							carbsValue,
-							0,
-							getEstimatedGlucose(treatmentTime.value.valueOf()),
-							notes.text,
-							null,
-							carbDelayMinutes
-						);
+							(
+								Treatment.TYPE_MEAL_BOLUS,
+								treatmentTime.value.valueOf(),
+								insulinValue,
+								insulinList.selectedItem.id,
+								carbsValue,
+								0,
+								getEstimatedGlucose(treatmentTime.value.valueOf()),
+								notes.text,
+								null,
+								carbDelayMinutes
+							);
 						
 						//Add to list
 						treatmentsList.push(treatment);
@@ -1025,7 +1025,7 @@ package treatments
 						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 						
 						//Insert in DB
-						if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 							Database.insertTreatmentSynchronous(treatment);
 						
 						//Upload to Nightscout
@@ -1035,16 +1035,16 @@ package treatments
 					{
 						//Insulin portion
 						var treatmentInsulin:Treatment = new Treatment
-						(
-							Treatment.TYPE_MEAL_BOLUS,
-							treatmentTime.value.valueOf(),
-							insulinValue,
-							insulinList.selectedItem.id,
-							0,
-							0,
-							getEstimatedGlucose(treatmentTime.value.valueOf()),
-							notes.text
-						);
+							(
+								Treatment.TYPE_MEAL_BOLUS,
+								treatmentTime.value.valueOf(),
+								insulinValue,
+								insulinList.selectedItem.id,
+								0,
+								0,
+								getEstimatedGlucose(treatmentTime.value.valueOf()),
+								notes.text
+							);
 						
 						//Add to list
 						treatmentsList.push(treatmentInsulin);
@@ -1056,18 +1056,18 @@ package treatments
 						var carbTime:Number = treatmentTime.value.valueOf() + (carbOffSet.value * 60 * 1000);
 						var nowTime:Number = new Date().valueOf();
 						var treatmentCarbs:Treatment = new Treatment
-						(
-							Treatment.TYPE_MEAL_BOLUS,
-							carbTime,
-							0,
-							insulinList.selectedItem.id,
-							carbsValue,
-							0,
-							getEstimatedGlucose(carbTime <= nowTime ? carbTime : treatmentTime.value.valueOf()),
-							notes.text,
-							null,
-							carbDelayMinutes
-						);
+							(
+								Treatment.TYPE_MEAL_BOLUS,
+								carbTime,
+								0,
+								insulinList.selectedItem.id,
+								carbsValue,
+								0,
+								getEstimatedGlucose(carbTime <= nowTime ? carbTime : treatmentTime.value.valueOf()),
+								notes.text,
+								null,
+								carbDelayMinutes
+							);
 						if (carbTime > nowTime) treatmentCarbs.needsAdjustment = true;
 						
 						//Add to list
@@ -1081,7 +1081,7 @@ package treatments
 						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentCarbs));
 						
 						//Insert in DB
-						if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						{
 							Database.insertTreatmentSynchronous(treatmentInsulin);
 							Database.insertTreatmentSynchronous(treatmentCarbs);
@@ -1164,7 +1164,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -1220,7 +1220,7 @@ package treatments
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
-					if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
@@ -1288,7 +1288,7 @@ package treatments
 			Trace.myTrace("TreatmentsManager.as", "addExternalTreatment called! Type: " + treatment.type);
 			
 			//Insert in DB
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				if (treatmentsMap[treatment.ID] == null) //new treatment
 					Database.insertTreatmentSynchronous(treatment);
@@ -1330,7 +1330,7 @@ package treatments
 			if (treatmentsMap[treatment.ID] == null) //New treatment
 			{
 				//Insert in DB
-				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 					Database.insertTreatmentSynchronous(treatment);
 				
 				//Add to list
@@ -1364,7 +1364,7 @@ package treatments
 			if (treatmentsMap[treatment.ID] == null) //New treatment
 			{
 				//Insert in DB
-				if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 					Database.insertTreatmentSynchronous(treatment);
 				
 				//Add to list

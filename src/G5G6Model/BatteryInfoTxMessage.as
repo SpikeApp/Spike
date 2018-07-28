@@ -1,7 +1,8 @@
-package G5Model
+package G5G6Model
 {
 	import flash.utils.ByteArray;
 	
+	import utils.Trace;
 	import utils.UniqueId;
 
 	public class BatteryInfoTxMessage extends TransmitterMessage
@@ -13,6 +14,7 @@ package G5Model
 			byteSequence = new ByteArray();
 			byteSequence.writeByte(opcode);
 			byteSequence.writeBytes(crc);
+			Trace.myTrace("BatteryInfoTxMessage.as", "BatteryInfoTx" + UniqueId.bytesToHex(byteSequence));
 			byteSequence.position = 0;
 		}
 	}

@@ -3,7 +3,7 @@ package ui.screens
 	import flash.display.StageOrientation;
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.Label;
 	import feathers.controls.ScrollPolicy;
@@ -114,7 +114,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 8 : 7;
 			else
 				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 5 : 4;

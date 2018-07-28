@@ -257,6 +257,12 @@ package database
 		public static const LOCAL_SETTING_IFTTT_FAST_DROP_TRIGGERED_ON:int = 122;
 		public static const LOCAL_SETTING_IFTTT_FAST_DROP_SNOOZED_ON:int = 123;
 		
+		/**
+		 * MiaoMiao Follower
+		 */
+		public static const LOCAL_SETTING_MIAOMIAO_MULTIPLE_DEVICE_ON:int = 124;
+		public static const LOCAL_SETTING_MIAOMIAO_FOLLOWER_ENABLED:int=125;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -381,7 +387,9 @@ package database
 			"false",//LOCAL_SETTING_IFTTT_FAST_RISE_TRIGGERED_ON
 			"false",//LOCAL_SETTING_IFTTT_FAST_RISE_SNOOZED_ON
 			"false",//LOCAL_SETTING_IFTTT_FAST_DROP_TRIGGERED_ON
-			"false"//LOCAL_SETTING_IFTTT_FAST_DROP_SNOOZED_ON
+			"false",//LOCAL_SETTING_IFTTT_FAST_DROP_SNOOZED_ON
+			"false",//LOCAL_SETTING_MIAOMIAO_MULTIPLE_DEVICE_ON
+			"false"//LOCAL_SETTING_MIAOMIAO_FOLLOWER_ENABLED
 		];
 		
 		public function LocalSettings() {

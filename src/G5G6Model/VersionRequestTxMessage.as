@@ -1,16 +1,17 @@
-package G5Model
+package G5G6Model
 {
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
+	import utils.Trace;
 	import utils.UniqueId;
 
-	public class ResetTxMessage extends TransmitterMessage
+	public class VersionRequestTxMessage extends TransmitterMessage
 	{
-		public var opcode:int = 0x42;
-		public var crc:ByteArray = UniqueId.calculate(opcode);
+		private var opcode:int = 0x4A;
+		private var crc:ByteArray = UniqueId.calculate(opcode);
 
-		public function ResetTxMessage()
+		public function VersionRequestTxMessage()
 		{
 			byteSequence = new ByteArray();
 			byteSequence.endian = Endian.LITTLE_ENDIAN;

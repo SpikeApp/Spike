@@ -1,7 +1,7 @@
 package ui.chart
 {
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import model.ModelLocator;
@@ -75,7 +75,7 @@ package ui.chart
 			//Output
 			if(index > 0)
 			{
-				if (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout") 
+				if (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout") 
 					slopeOutput = String(MathHelper.formatNightscoutFollowerSlope(Math.round((glucoseValueFormatted - data.previousGlucoseValueFormatted) * 10) / 10));
 				else
 				{

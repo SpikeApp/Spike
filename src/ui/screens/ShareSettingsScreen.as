@@ -3,7 +3,7 @@ package ui.screens
 	import flash.display.StageOrientation;
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
@@ -103,7 +103,7 @@ package ui.screens
 				screenRenderer.addChild(healthkitSettings);
 			}
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 			{
 				//Dexcom Section Label
 				dexcomLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_section_label'), true);

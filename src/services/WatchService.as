@@ -7,7 +7,7 @@ package services
 	import flash.events.Event;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -102,7 +102,7 @@ package services
 			Trace.myTrace("WatchService.as", "Service activated!");
 			
 			serviceActive = true;
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBloodGlucoseReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentsChanged);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentsChanged);
@@ -117,7 +117,7 @@ package services
 			Trace.myTrace("WatchService.as", "Service deactivated!");
 			
 			serviceActive = false;
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBloodGlucoseReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentsChanged);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentsChanged);
@@ -150,7 +150,7 @@ package services
 			Trace.myTrace("WatchService.as", "Syncing glucose and treatments to watch.");
 			
 			//Get glucose output
-			var currentReading:BgReading = !BlueToothDevice.isFollower() ? BgReading.lastNoSensor() : BgReading.lastWithCalculatedValue();
+			var currentReading:BgReading = !CGMBlueToothDevice.isFollower() ? BgReading.lastNoSensor() : BgReading.lastWithCalculatedValue();
 			var glucoseValue:String;
 			
 			//Initial Start Validation
@@ -227,7 +227,7 @@ package services
 		 */
 		private static function onBloodGlucoseReceived(e:Event):void
 		{
-			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
+			if ((Calibration.allForSensor().length < 2 && !CGMBlueToothDevice.isFollower()) || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
 				return;
 			
 			processLatestGlucose();

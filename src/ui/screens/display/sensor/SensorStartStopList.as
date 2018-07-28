@@ -7,7 +7,7 @@ package ui.screens.display.sensor
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
@@ -117,7 +117,7 @@ package ui.screens.display.sensor
 		private function setupInitialState():void
 		{
 			/* Warmup Time */
-			warmupTime = BlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_30_MINUTES : TimeSpan.TIME_1_HOUR;
+			warmupTime = CGMBlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_30_MINUTES : TimeSpan.TIME_1_HOUR;
 			
 			/* Sensor Start Date */
 			if (Sensor.getActiveSensor() != null)
@@ -130,7 +130,7 @@ package ui.screens.display.sensor
 				var sensorDays:String;
 				var sensorHours:String;
 				
-				if (BlueToothDevice.knowsFSLAge()) 
+				if (CGMBlueToothDevice.knowsFSLAge()) 
 				{
 					var sensorAgeInMinutes:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
 					
@@ -328,7 +328,7 @@ package ui.screens.display.sensor
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel });
 			if (inSensorCountdown)
 				sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','warmup_countdown'), accessory: sensorCountdownLabel });
-			if (!BlueToothDevice.knowsFSLAge() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
+			if (!CGMBlueToothDevice.knowsFSLAge() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
 				sensorChildrenContent.push({ label: "", accessory: actionButton });
 			
 			dataProvider = new HierarchicalCollection(

@@ -12,7 +12,12 @@ package com.spikeapp.spike.airlibrary
 	[Event(name="miaoMiaoChangeTimeIntervalChangedSuccess",type="events.SpikeANEEVent")]
 	[Event(name="miaoMiaoConnected",type="events.SpikeANEEVent")]
 	[Event(name="miaoMiaoDisconnected",type="events.SpikeANEEVent")]
-	[Event(name="stoppedScanningMiaoMiaoBecauseConnected",type="events.SpikeANEEVent")]
+	[Event(name="didRecieveInitialUpdateValueForCharacteristic",type="events.SpikeANEEVent")]
+	[Event(name="G5DataPacketReceived",type="events.SpikeANEEVent")]
+	[Event(name="G5DeviceAddress",type="events.SpikeANEEVent")]
+	[Event(name="G5Disconnected",type="events.SpikeANEEVent")]
+	[Event(name="G5Connected",type="events.SpikeANEEVent")]
+	[Event(name="G5DeviceNotPaired",type="events.SpikeANEEVent")]
 	
 	public class SpikeANEEvent extends Event
 	{
@@ -32,9 +37,15 @@ package com.spikeapp.spike.airlibrary
 		public static const MIAOMIAO_TIME_INTERVAL_CHANGED_SUCCESS:String = "miaoMiaoChangeTimeIntervalChangedSuccess";
 		public static const MIAOMIAO_CONNECTED:String = "miaoMiaoConnected";
 		public static const MIAOMIAO_DISCONNECTED:String = "miaoMiaoDisconnected";
-		public static const MIAOMIAO_STOPPED_SCANNING_BECAUSE_CONNECTED:String = "stoppedScanningMiaoMiaoBecauseConnected";
+		public static const MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED:String = "didRecieveInitialUpdateValueForCharacteristic";
 
-		
+		//G5
+		public static const G5_DATA_PACKET_RECEIVED:String = "G5DataPacketReceived";
+		public static const G5_NEW_MAC:String = "G5DeviceAddress";
+		public static const G5_DISCONNECTED:String = "G5Disconnected";
+		public static const G5_CONNECTED:String = "G5Connected";
+		public static const G5_DEVICE_NOT_PAIRED:String = "G5DeviceNotPaired";
+
 		public var data:Object;
 		public function SpikeANEEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
 		{

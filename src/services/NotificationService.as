@@ -18,7 +18,7 @@ package services
 	import flash.utils.Timer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -38,6 +38,7 @@ package services
 	import utils.BadgeBuilder;
 	import utils.BgGraphBuilder;
 	import utils.Trace;
+	import services.bluetooth.CGMBluetoothService;
 	
 	/**
 	 * This service<br>
@@ -94,7 +95,7 @@ package services
 		public static const ID_FOR_PATCH_READ_ERROR_BLUKON:int = 14;
 		public static const ID_FOR_APP_UPDATE:int = 15; //used ?
 		public static const ID_FOR_DEAD_G5_BATTERY_INFO:int = 16;
-		public static const ID_FOR_BAD_PLACED_G5_INFO:int = 17;
+		public static const ID_FOR_BAD_PLACED_G5_G6_INFO:int = 17;
 		public static const ID_FOR_OTHER_G5_APP:int = 18;
 		public static const ID_FOR_APPLICATION_INACTIVE_ALERT:int = 19;
 		public static const ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL:int = 20;
@@ -311,8 +312,8 @@ package services
 			
 			alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
 			
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
 			
 			//var object:Object = Notifications.service.authorisationStatus();
 			switch (Notifications.service.authorisationStatus())
@@ -355,7 +356,7 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationActionHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, updateBgNotification);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
 				Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
@@ -420,7 +421,7 @@ package services
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && SpikeANE.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
-				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
+				if (Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");
@@ -470,7 +471,7 @@ package services
 			{	
 				//App badge
 				myTrace("in updateBgNotification app badge on, local notifications off and not in foreground");
-				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
+				if (Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
 					
@@ -513,7 +514,7 @@ package services
 				returnValue = "ID_FOR_APP_UPDATE";
 			else if (id == ID_FOR_DEAD_G5_BATTERY_INFO)
 				returnValue = "ID_FOR_DEAD_G5_BATTERY_INFO";
-			else if (id == ID_FOR_BAD_PLACED_G5_INFO)
+			else if (id == ID_FOR_BAD_PLACED_G5_G6_INFO)
 				returnValue = "ID_FOR_BAD_PLACED_G5_INFO";
 			else if (id == ID_FOR_OTHER_G5_APP)
 				returnValue = "ID_FOR_OTHER_G5_APP";

@@ -1,6 +1,6 @@
 package ui.screens.display.treatments
 {
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Sensor;
@@ -90,12 +90,13 @@ package ui.screens.display.treatments
 			numBgReadings = ModelLocator.bgReadings.length;
 			
 			//Images & Textures
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
 				calibrationImage = new Image(calibrationTexture);
 			}
-			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
+
+			if (treatmentsEnabled && (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
 			{
 				bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
 				bolusImage = new Image(bolusTexture);
@@ -118,19 +119,20 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			/* Content */
-			if ((Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower()) || ModelLocator.INTERNAL_TESTING))
+			if ((Calibration.allForSensor().length > 1 && (!CGMBlueToothDevice.isFollower()) || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
-			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				canAddTreatments = true;
 			
-			if (numBgReadings > 2 || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+			if (numBgReadings > 2 || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				canSeeTreatments = true;
 			
 			var menuData:Array = [];
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
-			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
+			
+			if (treatmentsEnabled && (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
 			{
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: canAddTreatments, id: 2 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: canAddTreatments, id: 3 } );
@@ -198,7 +200,7 @@ package ui.screens.display.treatments
 			setItemRendererFactoryWithID( "treatment-list-item", treatmentListItemFactory );
 			
 			//Menu Factory
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				factoryIDFunction = function( item:Object, index:int ):String
 				{

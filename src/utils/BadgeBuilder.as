@@ -1,7 +1,7 @@
 package utils
 {
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -35,10 +35,10 @@ package utils
 		{
 			var badgeNumber:int = 0;
 			
-			if ((Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
+			if ((Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
 			{
 				var latestReading:BgReading;
-				if (!BlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower())
 					latestReading = BgReading.lastNoSensor();
 				else
 					latestReading = BgReading.lastWithCalculatedValue();

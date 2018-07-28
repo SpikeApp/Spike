@@ -2,7 +2,7 @@ package treatments
 {
 	import flash.utils.Dictionary;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	
@@ -26,7 +26,7 @@ package treatments
 		{
 			Trace.myTrace("ProfileManager.as", "init called!");
 			
-			if (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+			if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 			{
 				//Common variables
 				var i:int;
@@ -296,7 +296,7 @@ package treatments
 		{
 			var carbAbsorptionRate:Number = 0;
 			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 			{
 				if (profilesList != null && profilesList.length > 0 && profilesList[0] != null && !isNaN((profilesList[0] as Profile).carbsAbsorptionRate))
 					carbAbsorptionRate = (profilesList[0] as Profile).carbsAbsorptionRate;

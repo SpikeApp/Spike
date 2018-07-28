@@ -11,11 +11,11 @@ package utils
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import G5Model.G5VersionInfo;
-	import G5Model.VersionRequestRxMessage;
+	import G5G6Model.G5G6VersionInfo;
+	import G5G6Model.VersionRequestRxMessage;
 	
 	import database.AlertType;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
@@ -24,8 +24,6 @@ package utils
 	
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
-	
-	import starling.utils.SystemUtil;
 	
 	
 	public class Trace
@@ -105,15 +103,9 @@ package utils
 					getSaveStream();
 				
 				stringToWrite += traceText.replace(" spiketrace ", " ");
-				if (!SystemUtil.isApplicationActive && SpikeANE.appIsInBackground() && !Constants.appInForeground)
-					stringToWrite += "\n"; 
-				
 				//Write to log only if Spike is in the foreground, otherwise queue it for later. This is to avoid crashes on some specific devices and/or iOS versions
-				if (SystemUtil.isApplicationActive && !SpikeANE.appIsInBackground() && Constants.appInForeground)
-				{
-					SpikeANE.writeTraceToFile(filePath, stringToWrite);
+				SpikeANE.writeTraceToFile(filePath, stringToWrite);
 					stringToWrite = "";
-				}
 			}
 		}
 		
@@ -137,17 +129,17 @@ package utils
 				SpikeANE.writeTraceToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
 				SpikeANE.writeTraceToFile(filePath, "Device Info = " + Capabilities.os);
 				var additionalInfoToWrite:String = "";
-				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
-				additionalInfoToWrite += "Device MAC = " + BlueToothDevice.address + ".\n";
-				if (BlueToothDevice.isDexcomG5())
+				additionalInfoToWrite += "Device type = " + CGMBlueToothDevice.deviceType() + ".\n";
+				additionalInfoToWrite += "Device MAC = " + CGMBlueToothDevice.address + ".\n";
+				if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 				{
-					var dexcomG5TransmitterInfo:VersionRequestRxMessage = G5VersionInfo.getG5VersionInfo();
-					additionalInfoToWrite += "Firmware Version = " + dexcomG5TransmitterInfo.firmware_version_string + ".\n";
-					additionalInfoToWrite += "Other Firmware Version = " + dexcomG5TransmitterInfo.other_firmware_version + ".\n";
-					additionalInfoToWrite += "BT Firmware Version = " + dexcomG5TransmitterInfo.bluetooth_firmware_version_string + ".\n";
-					dexcomG5TransmitterInfo = null;
+					var dexcomG5G6TransmitterInfo:VersionRequestRxMessage = G5G6VersionInfo.getG5G6VersionInfo();
+					additionalInfoToWrite += "Firmware Version = " + dexcomG5G6TransmitterInfo.firmware_version_string + ".\n";
+					additionalInfoToWrite += "Other Firmware Version = " + dexcomG5G6TransmitterInfo.other_firmware_version + ".\n";
+					additionalInfoToWrite += "BT Firmware Version = " + dexcomG5G6TransmitterInfo.bluetooth_firmware_version_string + ".\n";
+					dexcomG5G6TransmitterInfo = null;
 				}
-				if (BlueToothDevice.isMiaoMiao())
+				if (CGMBlueToothDevice.isMiaoMiao())
 					additionalInfoToWrite += "Firmware Version = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ".\n";
 				additionalInfoToWrite += "Transmitterid = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) + ".\n";
 				additionalInfoToWrite += "Sensor " + (Sensor.getActiveSensor() == null ? "not":"") + " started ";
