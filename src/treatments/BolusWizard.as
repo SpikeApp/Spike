@@ -134,6 +134,16 @@ package treatments
 		private static var bwOtherCorrectionCheck:Check;
 		private static var bwOtherCorrectionAmountContainer:LayoutGroup;
 		private static var bwOtherCorrectionAmountLabel:Label;
+
+		private static var bwTrendContainer:LayoutGroup;
+
+		private static var bwTrendLabelContainer:LayoutGroup;
+
+		private static var bwTrendCheck:Check;
+
+		private static var bwTrendLabel:Label;
+
+		private static var bwCurrentTrendLabel:Label;
 		
 		public function BolusWizard()
 		{
@@ -247,6 +257,57 @@ package treatments
 			
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
 			bwCarbTypePicker.validate();
+			
+			//Trend
+			bwTrendContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwTrendContainer.width = contentWidth;
+			bwMainContainer.addChild(bwTrendContainer);
+			
+			bwTrendLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwTrendContainer.addChild(bwTrendLabelContainer);
+			
+			bwTrendCheck = LayoutFactory.createCheckMark(true);
+			bwTrendContainer.addChild(bwTrendCheck);
+			
+			bwTrendLabel = LayoutFactory.createLabel("");
+			bwTrendContainer.addChild(bwTrendLabel);
+			
+			bwCurrentTrendLabel = LayoutFactory.createLabel("");
+			bwTrendContainer.addChild(bwCurrentTrendLabel);
+			
+			//Current IOB
+			bwIOBContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwIOBContainer.width = contentWidth;
+			bwMainContainer.addChild(bwIOBContainer);
+			
+			bwIOBLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwIOBContainer.addChild(bwIOBLabelContainer);
+			
+			bwIOBCheck = LayoutFactory.createCheckMark(false);
+			bwIOBLabelContainer.addChild(bwIOBCheck);
+			
+			bwIOBLabel = LayoutFactory.createLabel("");
+			bwIOBLabelContainer.addChild(bwIOBLabel);
+			
+			bwCurrentIOBLabel = LayoutFactory.createLabel("");
+			bwIOBContainer.addChild(bwCurrentIOBLabel);
+			
+			//Current COB
+			bwCOBContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwCOBContainer.width = contentWidth;
+			bwMainContainer.addChild(bwCOBContainer);
+			
+			bwCOBLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwCOBContainer.addChild(bwCOBLabelContainer);
+			
+			bwCOBCheck = LayoutFactory.createCheckMark(false);
+			bwCOBLabelContainer.addChild(bwCOBCheck);
+			
+			bwCOBLabel = LayoutFactory.createLabel("");
+			bwCOBLabelContainer.addChild(bwCOBLabel);
+			
+			bwCurrentCOBLabel = LayoutFactory.createLabel("");
+			bwCOBContainer.addChild(bwCurrentCOBLabel);
 			
 			//Exercise Adjustment
 			bwExerciseContainer = LayoutFactory.createLayoutGroup("vertical");
@@ -369,40 +430,6 @@ package treatments
 			bwOtherCorrectionAmountStepper.validate();
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountStepper);
 			
-			//Current IOB
-			bwIOBContainer = LayoutFactory.createLayoutGroup("horizontal");
-			bwIOBContainer.width = contentWidth;
-			bwMainContainer.addChild(bwIOBContainer);
-			
-			bwIOBLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-			bwIOBContainer.addChild(bwIOBLabelContainer);
-			
-			bwIOBCheck = LayoutFactory.createCheckMark(false);
-			bwIOBLabelContainer.addChild(bwIOBCheck);
-			
-			bwIOBLabel = LayoutFactory.createLabel("");
-			bwIOBLabelContainer.addChild(bwIOBLabel);
-			
-			bwCurrentIOBLabel = LayoutFactory.createLabel("");
-			bwIOBContainer.addChild(bwCurrentIOBLabel);
-			
-			//Current COB
-			bwCOBContainer = LayoutFactory.createLayoutGroup("horizontal");
-			bwCOBContainer.width = contentWidth;
-			bwMainContainer.addChild(bwCOBContainer);
-			
-			bwCOBLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-			bwCOBContainer.addChild(bwCOBLabelContainer);
-			
-			bwCOBCheck = LayoutFactory.createCheckMark(false);
-			bwCOBLabelContainer.addChild(bwCOBCheck);
-			
-			bwCOBLabel = LayoutFactory.createLabel("");
-			bwCOBLabelContainer.addChild(bwCOBLabel);
-			
-			bwCurrentCOBLabel = LayoutFactory.createLabel("");
-			bwCOBContainer.addChild(bwCurrentCOBLabel);
-			
 			//Notes
 			bwNotes = LayoutFactory.createTextInput(false, false, contentWidth, HorizontalAlign.CENTER, false, false, false, true, true);
 			bwNotes.prompt = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
@@ -497,6 +524,71 @@ package treatments
 			bwCarbTypeContainer.validate();
 			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
 			
+			//Current Trend
+			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
+			bwTrendCheck.isSelected = latestBgReading != null ? true : false;
+			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
+			var currentTrendCorrection:Number = 0;
+			var currentTrendCorrectionUnit:String = "U";
+			if (currentTrendArrow != "")
+			{
+				if (currentTrendArrow == "\u2197")
+				{
+					currentTrendCorrection = currentProfile.trend45Up;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2191")
+				{
+					currentTrendCorrection = currentProfile.trend90Up;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2191\u2191")
+				{
+					currentTrendCorrection = currentProfile.trendDoubleUp;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2198")
+				{
+					currentTrendCorrection = currentProfile.trend45Down;
+					currentTrendCorrectionUnit = "g";
+				}
+				else if (currentTrendArrow == "\u2193")
+				{
+					currentTrendCorrection = currentProfile.trend90Down;
+					currentTrendCorrectionUnit = "g";
+				}
+				else if (currentTrendArrow == "\u2193\u2193")
+				{
+					currentTrendCorrection = currentProfile.trendDoubleDown;
+					currentTrendCorrectionUnit = "g";
+				}
+			}
+			
+			if (currentTrendCorrection == 0) bwTrendCheck.isSelected = false;
+			bwCurrentTrendLabel.text = currentTrendCorrection + currentTrendCorrectionUnit;
+			bwCurrentTrendLabel.validate();
+			bwTrendContainer.validate();
+			bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
+			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
+			
+			//Current IOB
+			bwIOBCheck.isSelected = false;
+			bwIOBLabel.text = "IOB";
+			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
+			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(currentIOB);
+			bwCurrentIOBLabel.validate();
+			bwIOBContainer.validate();
+			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
+			
+			//Current COB
+			bwCOBCheck.isSelected = false;
+			bwCOBLabel.text = "COB";
+			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
+			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(currentCOB);
+			bwCurrentCOBLabel.validate();
+			bwCOBContainer.validate();
+			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
+			
 			//Exercise Adjustment
 			bwExerciseCheck.isSelected = false;
 			bwExerciseLabel.text = "Exercise Adjustment";
@@ -566,24 +658,6 @@ package treatments
 			bwOtherCorrectionAmountStepper.value = 0;
 			bwOtherCorrectionContainer.validate();
 			bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
-			
-			//Current IOB
-			bwIOBCheck.isSelected = false;
-			bwIOBLabel.text = "IOB";
-			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
-			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(currentIOB);
-			bwCurrentIOBLabel.validate();
-			bwIOBContainer.validate();
-			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
-			
-			//Current COB
-			bwCOBCheck.isSelected = false;
-			bwCOBLabel.text = "COB";
-			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
-			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(currentCOB);
-			bwCurrentCOBLabel.validate();
-			bwCOBContainer.validate();
-			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
 			
 			bwSuggestionLabel.text = "";
 			
@@ -735,11 +809,11 @@ package treatments
 				return;
 			}
 			
-			var targetBGLow:Number = 70; //CHANGE ON FINAL
-			var targetBGHigh:Number = 140; //CHANGE ON FINAL
+			//var targetBGLow:Number = 70; //CHANGE ON FINAL
+			//var targetBGHigh:Number = 140; //CHANGE ON FINAL
 			
-			//var targetBGLow:Number = Number(currentProfile.targetGlucoseRates) - 10;
-			//var targetBGHigh:Number = Number(currentProfile.targetGlucoseRates) + 10;
+			var targetBGLow:Number = Number(currentProfile.targetGlucoseRates) - 10;
+			var targetBGHigh:Number = Number(currentProfile.targetGlucoseRates) + 10;
 			
 			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 			var ic:Number = Number(currentProfile.insulinToCarbRatios);

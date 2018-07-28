@@ -1,5 +1,6 @@
 package ui.screens.display.settings.treatments
 {
+	import flash.display.StageOrientation;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
@@ -12,6 +13,8 @@ package ui.screens.display.settings.treatments
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
@@ -30,6 +33,7 @@ package ui.screens.display.settings.treatments
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	import utils.MathHelper;
 	import utils.TimeSpan;
 	import utils.UniqueId;
@@ -53,6 +57,12 @@ package ui.screens.display.settings.treatments
 		private var ICGuideButton:Button;
 		private var guidesContainer:LayoutGroup;
 		private var glossaryLabel:Label;
+		private var trend45UpStepper:NumericStepper;
+		private var trend90UpStepper:NumericStepper;
+		private var trendDoubleUpStepper:NumericStepper;
+		private var trend45DownStepper:NumericStepper;
+		private var trend90DownStepper:NumericStepper;
+		private var trendDoubleDownStepper:NumericStepper;
 		
 		/* Properties */
 		private var userProfiles:Array;
@@ -122,10 +132,16 @@ package ui.screens.display.settings.treatments
 			saveProfileButton.addEventListener(Event.TRIGGERED, onSaveProfile);
 			actionsContainer.addChild(saveProfileButton);
 			
-			//ISF / IC / Target BG
+			//ISF / IC / Target BG / Trend Corrections
 			ISFStepper = LayoutFactory.createNumericStepper(unit == "mgdl" ? 1 : Math.round(BgReading.mgdlToMmol(1) * 10) / 10, unit == "mgdl" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, unit == "mgdl" ? 10 : Math.round(BgReading.mgdlToMmol(10) * 10) / 10, unit == "mgdl" ? 1 : 0.1);
 			ICStepper = LayoutFactory.createNumericStepper(0.5, 200, 10, 0.5);
 			targetBGStepper = LayoutFactory.createNumericStepper(unit == "mgdl" ? 40 : Math.round(BgReading.mgdlToMmol(40) * 10) / 10, unit == "mgdl" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, unit == "mgdl" ? 100 : Math.round(BgReading.mgdlToMmol(100) * 10) / 10,  unit == "mgdl" ? 1 : 0.1);
+			trend45UpStepper = LayoutFactory.createNumericStepper(0, 10, 1, 0.1);
+			trend90UpStepper = LayoutFactory.createNumericStepper(0, 10, 1.5, 0.1);
+			trendDoubleUpStepper = LayoutFactory.createNumericStepper(0, 10, 2, 0.1);
+			trend45DownStepper = LayoutFactory.createNumericStepper(0, 100, 10, 0.5);
+			trend90DownStepper = LayoutFactory.createNumericStepper(0, 100, 15, 0.5);
+			trendDoubleDownStepper = LayoutFactory.createNumericStepper(0, 100, 20, 0.5);
 			
 			//START Time
 			profileStartTime = new DateTimeSpinner();
@@ -188,7 +204,7 @@ package ui.screens.display.settings.treatments
 					var profileDate:Date = ProfileManager.getProfileDate(profile);
 					
 					//Data
-					data.push( { label: "Start Time: " + TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", ISF: " + (unit == "mgdl" ? profile.insulinSensitivityFactors : Math.round(BgReading.mgdlToMmol(Number(profile.insulinSensitivityFactors)) * 10) / 10) + "," + "\n" + "I:C: " + profile.insulinToCarbRatios + ", Target BG: " + (unit == "mgdl" ? profile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(profile.targetGlucoseRates)) * 10) / 10), accessory: profileAccessory, profile: profile  } );
+					data.push( { label: "Start Time: " + TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", ISF: " + (unit == "mgdl" ? profile.insulinSensitivityFactors : Math.round(BgReading.mgdlToMmol(Number(profile.insulinSensitivityFactors)) * 10) / 10) + "," + "\n" + "I:C: " + profile.insulinToCarbRatios + ", Target BG: " + (unit == "mgdl" ? profile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(profile.targetGlucoseRates)) * 10) / 10) + "\n" + "Trends: " + "\u2197 " + profile.trend45Up + "U" + " | " + "\u2191 " + profile.trend90Up + "U" + " | " + "\u2191\u2191 " + profile.trendDoubleUp + "U" + " | " + "\u2198 " + profile.trend45Down + "g" + " | " + "\u2193 " + profile.trend90Down + "g" + " | " + "\u2193\u2193 " + profile.trendDoubleDown + "g", accessory: profileAccessory, profile: profile  } );
 					validProfile = true;
 				}
 			}
@@ -209,6 +225,12 @@ package ui.screens.display.settings.treatments
 				data.push( { label: "ISF", accessory: ISFStepper } );
 				data.push( { label: "I:C", accessory: ICStepper } );
 				data.push( { label: "Target BG", accessory: targetBGStepper } );
+				data.push( { label: "Trend \u2197", accessory: trend45UpStepper } );
+				data.push( { label: "Trend \u2191", accessory: trend90UpStepper } );
+				data.push( { label: "Trend \u2191\u2191", accessory: trendDoubleUpStepper } );
+				data.push( { label: "Trend \u2198", accessory: trend45DownStepper } );
+				data.push( { label: "Trend \u2193", accessory: trend90DownStepper } );
+				data.push( { label: "Trend \u2193\u2193", accessory: trendDoubleDownStepper } );
 			}
 			
 			if (!addMode && !editMode)
@@ -317,6 +339,13 @@ package ui.screens.display.settings.treatments
 				ICStepper.maximum = 200;
 				ICStepper.value = 10;
 				ICStepper.step = 0.5;
+				
+				trend45UpStepper.value = 1;
+				trend90UpStepper.value = 1.5;
+				trendDoubleUpStepper.value = 2;
+				trend45DownStepper.value = 10;
+				trend90DownStepper.value = 15;
+				trendDoubleDownStepper.value = 20;
 			}
 			else if (editMode && selectedProfile != null)
 			{
@@ -349,6 +378,13 @@ package ui.screens.display.settings.treatments
 				ICStepper.maximum = 200;
 				ICStepper.value = Number(selectedProfile.insulinToCarbRatios);
 				ICStepper.step = 0.5;
+				
+				trend45UpStepper.value = selectedProfile.trend45Up;
+				trend90UpStepper.value = selectedProfile.trend90Up;
+				trendDoubleUpStepper.value = selectedProfile.trendDoubleUp;
+				trend45DownStepper.value = selectedProfile.trend45Down;
+				trend90DownStepper.value = selectedProfile.trend90Down;
+				trendDoubleDownStepper.value = selectedProfile.trendDoubleDown;
 			}
 			
 			if (saveProfileButton != null) saveProfileButton.isEnabled = true;
@@ -373,6 +409,37 @@ package ui.screens.display.settings.treatments
 			}
 			
 			return overlapFound;
+		}
+		
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer 
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.accessoryField = "accessory";
+				item.iconSourceField = "icon";
+				item.paddingTop = 5;
+				item.paddingBottom = 5;
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						item.paddingLeft = 30;
+						if (noRightPadding) item.paddingRight = 0;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						item.paddingRight = 30;
+				}
+				else
+					if (noRightPadding) item.paddingRight = 0;
+				
+				return item;
+			};
 		}
 		
 		/**
@@ -449,6 +516,8 @@ package ui.screens.display.settings.treatments
 					defaultProfile.insulinSensitivityFactors = unit == "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value)));
 					defaultProfile.insulinToCarbRatios = String(ICStepper.value);
 					defaultProfile.targetGlucoseRates = unit == "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value)));
+					defaultProfile.trendCorrections = "up45:" + trend45UpStepper.value + "|" + "up90:" + trend90UpStepper.value + "|" + "upDouble:" + trendDoubleUpStepper.value + "|" + "down45:" + trend45DownStepper.value + "|" + "down90:" + trend90DownStepper.value + "|" + "downDouble:" + trendDoubleDownStepper.value;
+					defaultProfile.parseTrends();
 					ProfileManager.updateProfile(defaultProfile);
 					
 					isDefaultEmpty = false;
@@ -465,7 +534,7 @@ package ui.screens.display.settings.treatments
 							ProfileManager.getCarbAbsorptionRate(),
 							"",
 							unit == "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value))),
-							"",
+							"up45:" + trend45UpStepper.value + "|" + "up90:" + trend90UpStepper.value + "|" + "upDouble:" + trendDoubleUpStepper.value + "|" + "down45:" + trend45DownStepper.value + "|" + "down90:" + trend90DownStepper.value + "|" + "downDouble:" + trendDoubleDownStepper.value,
 							new Date().valueOf()
 						);
 					
@@ -477,6 +546,8 @@ package ui.screens.display.settings.treatments
 				selectedProfile.insulinSensitivityFactors = unit == "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value)));
 				selectedProfile.insulinToCarbRatios = String(ICStepper.value);
 				selectedProfile.targetGlucoseRates = unit == "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value)));
+				selectedProfile.trendCorrections = "up45:" + trend45UpStepper.value + "|" + "up90:" + trend90UpStepper.value + "|" + "upDouble:" + trendDoubleUpStepper.value + "|" + "down45:" + trend45DownStepper.value + "|" + "down90:" + trend90DownStepper.value + "|" + "downDouble:" + trendDoubleDownStepper.value;
+				selectedProfile.parseTrends();
 				ProfileManager.updateProfile(selectedProfile);
 				
 				selectedProfile = null;
@@ -635,6 +706,42 @@ package ui.screens.display.settings.treatments
 			{
 				glossaryLabel.dispose();
 				glossaryLabel = null;
+			}
+			
+			if (trend45UpStepper != null)
+			{
+				trend45UpStepper.dispose();
+				trend45UpStepper = null;
+			}
+			
+			if (trend90UpStepper != null)
+			{
+				trend90UpStepper.dispose();
+				trend90UpStepper = null;
+			}
+			
+			if (trendDoubleUpStepper != null)
+			{
+				trendDoubleUpStepper.dispose();
+				trendDoubleUpStepper = null;
+			}
+			
+			if (trend45DownStepper != null)
+			{
+				trend45DownStepper.dispose();
+				trend45DownStepper = null;
+			}
+			
+			if (trend90DownStepper != null)
+			{
+				trend90DownStepper.dispose();
+				trend90DownStepper = null;
+			}
+			
+			if (trendDoubleDownStepper != null)
+			{
+				trendDoubleDownStepper.dispose();
+				trendDoubleDownStepper = null;
 			}
 			
 			super.dispose();
