@@ -1911,7 +1911,7 @@ package ui.chart
 					currentTimestamp = Number((mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp);
 				}
 				
-				if (_dataSource.length > 288) // >24H
+				if (_dataSource.length > 288 && !BlueToothDevice.isMiaoMiao()) // >24H
 				{
 					var difference:int = _dataSource.length - 288;
 					for (var i:int = 0; i < difference; i++) 
