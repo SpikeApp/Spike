@@ -202,7 +202,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_LOW_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -213,7 +213,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_HIGH_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -224,7 +224,7 @@ package services
 				.setIdentifier(ID_FOR_PHONE_MUTED_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -235,7 +235,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_BATTERY_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -246,7 +246,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -257,7 +257,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_VERY_LOW_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -268,7 +268,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_VERY_HIGH_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -279,7 +279,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_MISSED_READING_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -290,7 +290,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_FAST_RISE_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_FAST_RISE_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -301,7 +301,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_FAST_DROP_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_FAST_DROP_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
