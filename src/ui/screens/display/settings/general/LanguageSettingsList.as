@@ -76,7 +76,6 @@ package ui.screens.display.settings.general
 			disabledLanguages["hu_HU"] = true;
 			disabledLanguages["no_NO"] = true;
 			disabledLanguages["ru_RU"] = true;
-			disabledLanguages["es_ES"] = true;
 			disabledLanguages["sv_SE"] = true;
 			
 			/* Set DateFormatPicker Data */
