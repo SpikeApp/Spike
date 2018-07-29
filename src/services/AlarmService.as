@@ -392,7 +392,7 @@ package services
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
 					var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", nowDate);
 					var alertType:AlertType = Database.getAlertType(alertName);
-					if (alertType.enabled || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+					if (alertType != null && (alertType.enabled || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true")) {
 						//alert enabled or speak readings is on 
 						myTrace("in checkMuted, calling SpikeANE.checkMuted");
 						SpikeANE.checkMuted();
@@ -1235,7 +1235,7 @@ package services
 				//var alertValue:Number = listOfAlerts.getValue(Number.NaN, "", now);
 				var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", now);
 				var alertType:AlertType = Database.getAlertType(alertName);
-				if (alertType.enabled) {
+				if (alertType != null && alertType.enabled) {
 					//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
 					if (((now).valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
 						||
@@ -1476,7 +1476,7 @@ package services
 			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			alertType = Database.getAlertType(alertName);
-			if (alertType.enabled) {
+			if (alertType != null && alertType.enabled) {
 				myTrace("in checkMissedReadingAlert, alertType enabled");
 				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
 					||
@@ -1545,8 +1545,7 @@ package services
 			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			alertType = Database.getAlertType(alertName);
-			if (alertType == null) return;
-			if (alertType.enabled) {
+			if (alertType != null && alertType.enabled) {
 				if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
 					||
 					isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
@@ -1635,7 +1634,7 @@ package services
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
-			 if (alertType.enabled) {
+			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
 				 if (((now).valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
@@ -1701,7 +1700,7 @@ package services
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
-			 if (alertType.enabled) {
+			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
 				 if (((now).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
@@ -1759,7 +1758,7 @@ package services
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
-			 if (alertType.enabled) {
+			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
 				 if (((now).valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
@@ -1818,7 +1817,7 @@ package services
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
-			 if (alertType.enabled) {
+			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
 				 if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
@@ -2186,7 +2185,7 @@ package services
 					CommonSettings.getCommonSetting(event.data), false);
 				var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 				var alertType:AlertType = Database.getAlertType(alertName);
-				if (!alertType.enabled) {
+				if (alertType != null && !alertType.enabled) {
 					switch (event.data as int) {
 						case CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT:
 							disableRepeatAlert(0);
