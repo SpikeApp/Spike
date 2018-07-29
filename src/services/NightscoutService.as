@@ -973,7 +973,7 @@ package services
 		public static function uploadOptimalCalibrationNotification():void
 		{
 			//Validation
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON) != "true" || !serviceActive || !followerModeEnabled)
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON) != "true" || (!CGMBlueToothDevice.isFollower() && !serviceActive) || (CGMBlueToothDevice.isFollower() && !followerModeEnabled))
 			{
 				return;
 			}
