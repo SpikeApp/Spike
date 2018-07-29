@@ -13,6 +13,7 @@ package services
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	import database.LocalSettings;
 	import database.Sensor;
 	
 	import events.BlueToothServiceEvent;
@@ -202,7 +203,9 @@ package services
 			
 			initialCalibrationActive = false;
 			
-			var warmupTimeInMs:int = CGMBlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_30_MINUTES : TimeSpan.TIME_1_HOUR;
+			var warmupTimeInMs:int = 0;
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED) != "true")
+				warmupTimeInMs = CGMBlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_1_HOUR : TimeSpan.TIME_2_HOURS;
 			
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			if (Calibration.allForSensor().length < 2) 

@@ -1,7 +1,6 @@
 package ui.screens.display.sensor
 {
 	import flash.display.StageOrientation;
-	import flash.system.Capabilities;
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
 	
@@ -11,10 +10,12 @@ package ui.screens.display.sensor
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Database;
+	import database.LocalSettings;
 	import database.Sensor;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
+	import feathers.controls.Check;
 	import feathers.controls.GroupedList;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
@@ -66,6 +67,7 @@ package ui.screens.display.sensor
 		private var deleteLastCalibrationButton:Button;
 		private var calibrationActionsContainer:LayoutGroup;
 		private var sensorCountdownLabel:Label;
+		private var skipWarmUpsCheck:Check;
 		
 		/* Properties */
 		private var dateFormatter:DateTimeFormatter;
@@ -76,6 +78,7 @@ package ui.screens.display.sensor
 		private var inSensorCountdown:Boolean = false;
 		private var intervalID:int = -1;
 		private var warmupTime:Number;
+		private var shouldSkipWarmup:Boolean = false;
 		
 		public function SensorStartStopList()
 		{
@@ -111,13 +114,19 @@ package ui.screens.display.sensor
 			dateFormatter = new DateTimeFormatter();
 			dateFormatter.dateTimePattern = ModelLocator.resourceManagerInstance.getString('sensorscreen','datetimepatternforstatusinfo');
 			dateFormatter.useUTC = false;
-			dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
+			dateFormatter.setStyle("locale", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE).replace("_", "-"));
 		}
 		
 		private function setupInitialState():void
 		{
 			/* Warmup Time */
-			warmupTime = CGMBlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_30_MINUTES : TimeSpan.TIME_1_HOUR;
+			if (!shouldSkipWarmup)
+				shouldSkipWarmup = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED) == "true";
+			
+			if (!shouldSkipWarmup)
+				warmupTime = CGMBlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_1_HOUR : TimeSpan.TIME_2_HOURS;
+			else
+				warmupTime = 0;
 			
 			/* Sensor Start Date */
 			if (Sensor.getActiveSensor() != null)
@@ -154,11 +163,6 @@ package ui.screens.display.sensor
 					sensorDays = TimeSpan.fromDates(sensorStartDate, nowDate).days.toString();
 					sensorHours = TimeSpan.fromDates(sensorStartDate, nowDate).hours.toString();
 					
-					/*if (sensorDays.length == 1)
-						sensorDays = "0" + sensorDays;
-					if (sensorHours.length == 1)
-						sensorHours = "0" + sensorHours;*/
-					
 					sensorAgeValue = sensorDays + "d " + sensorHours + "h";
 				}
 				
@@ -176,7 +180,7 @@ package ui.screens.display.sensor
 					lastCalibrationDateValue = ModelLocator.resourceManagerInstance.getString('sensorscreen', "sensor_age_not_applicable");
 				
 				//Sensor countdown
-				if (new Date().valueOf() - Sensor.getActiveSensor().startedAt < warmupTime)
+				if (new Date().valueOf() - Sensor.getActiveSensor().startedAt < warmupTime && !shouldSkipWarmup)
 					inSensorCountdown = true;
 			}
 			else
@@ -245,6 +249,10 @@ package ui.screens.display.sensor
 			calibrationActionsContainer.pivotX = -11;
 			calibrationActionsContainer.addChild(deleteAllCalibrationsButton);
 			calibrationActionsContainer.addChild(deleteLastCalibrationButton);
+			
+			//Skip Warm-Ups Check
+			skipWarmUpsCheck = LayoutFactory.createCheckMark(shouldSkipWarmup);
+			skipWarmUpsCheck.addEventListener(Event.CHANGE, onSkipWarmUpsChanged);
 			
 			/* Create Screen Data */
 			setDataProvider()
@@ -326,7 +334,7 @@ package ui.screens.display.sensor
 			var sensorChildrenContent:Array = [];
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_label'), accessory: sensorStartDateLabel });
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel });
-			if (inSensorCountdown)
+			if (inSensorCountdown && !shouldSkipWarmup)
 				sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','warmup_countdown'), accessory: sensorCountdownLabel });
 			if (!CGMBlueToothDevice.knowsFSLAge() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
 				sensorChildrenContent.push({ label: "", accessory: actionButton });
@@ -344,6 +352,12 @@ package ui.screens.display.sensor
 							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','last'), accessory: lastCalibrationDateLabel },
 							{ label: "", accessory: calibrationActionsContainer },
 						]
+					},
+					{
+						header  : { label: ModelLocator.resourceManagerInstance.getString('sensorscreen','advanced_section_label') },
+						children: [
+							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','skip_sensor_warmups_label'), accessory: skipWarmUpsCheck }
+						]
 					}
 				]
 			);
@@ -351,6 +365,12 @@ package ui.screens.display.sensor
 		
 		private function refreshCountDown():void
 		{
+			if (shouldSkipWarmup)
+			{
+				finishCountdown();
+				return;
+			}
+			
 			var sensor:Sensor = Sensor.getActiveSensor();
 			if (sensor == null || !inSensorCountdown)
 			{
@@ -483,6 +503,41 @@ package ui.screens.display.sensor
 			}
 		}
 		
+		private function onSkipWarmUpsChanged(e:Event):void
+		{
+			shouldSkipWarmup = skipWarmUpsCheck.isSelected;
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED) != String(shouldSkipWarmup))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED, String(shouldSkipWarmup));
+			
+			if (shouldSkipWarmup && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_WARNING_DISPLAYED) != "true")
+			{
+				AlertManager.showActionAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('sensorscreen','skip_sensor_warmups_warning_message'),
+						Number.NaN,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','dont_show_again_alert_button_label'), triggered: onDontWarnAgain },
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','ok_alert_button_label') }
+						]
+					);
+				
+				function onDontWarnAgain():void
+				{
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_WARNING_DISPLAYED, "true");
+				}
+			}
+			
+			setupInitialState();
+			setDataProvider();
+			
+			if (!shouldSkipWarmup)
+				intervalID = setInterval(refreshCountDown, 1000);
+			else
+				clearInterval(intervalID);
+		}
+		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.navigator.replaceScreen, Screens.SENSOR_STATUS, noTransition );
@@ -572,6 +627,14 @@ package ui.screens.display.sensor
 				sensorCountdownLabel.removeFromParent();
 				sensorCountdownLabel.dispose();
 				sensorCountdownLabel = null;
+			}
+			
+			if (skipWarmUpsCheck != null)
+			{
+				skipWarmUpsCheck.removeEventListener(Event.CHANGE, onSkipWarmUpsChanged);
+				skipWarmUpsCheck.removeFromParent();
+				skipWarmUpsCheck.dispose();
+				skipWarmUpsCheck = null;
 			}
 			
 			super.dispose();

@@ -6,6 +6,7 @@ package ui.screens
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.CGMBlueToothDevice;
+	import database.LocalSettings;
 	import database.Sensor;
 	
 	import feathers.controls.Alert;
@@ -190,7 +191,7 @@ package ui.screens
 			
 			/* Define Alert Message */
 			var alertMessage:String;
-			if (timeOfCalibration > 0 && !CGMBlueToothDevice.knowsFSLAge()) {
+			if (timeOfCalibration > 0 && !CGMBlueToothDevice.knowsFSLAge() && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED) != "true") {
 				alertMessage = ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_wait_prefix");
 				alertMessage += " " + dateFormatterForSensorStartWarning.format(new Date(actualTime + timeOfCalibration)) + " ";
 				alertMessage += ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_wait_suffix");
