@@ -299,7 +299,7 @@ package network.httpserver.API
 		
 		public function spikeondemand(params:URLVariables):String
 		{
-			if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
+			if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
 				SpikeANE.sendStartReadingCommmandToMiaoMia();
 			
 			return responseSuccess("OK");

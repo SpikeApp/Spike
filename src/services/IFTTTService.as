@@ -591,7 +591,7 @@ package services
 		private static function onFastRiseGlucoseTriggered(e:AlarmServiceEvent):void
 		{
 			var lastReading:BgReading;
-			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			if (!CGMBlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
 			else lastReading = BgReading.lastWithCalculatedValue();
 			
 			var info:Object = {};
@@ -693,7 +693,7 @@ package services
 		private static function onFastDropGlucoseTriggered(e:AlarmServiceEvent):void
 		{
 			var lastReading:BgReading;
-			if (!BlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
+			if (!CGMBlueToothDevice.isFollower()) lastReading = BgReading.lastNoSensor();
 			else lastReading = BgReading.lastWithCalculatedValue();
 			
 			var info:Object = {};

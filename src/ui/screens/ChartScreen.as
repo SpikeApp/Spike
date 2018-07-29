@@ -544,7 +544,7 @@ package ui.screens
 				}
 
 				var latestAddedReading:BgReading = glucoseChart.getLatestReading();
-				var timeStampLatestReading:Number = latestAddedReading == null ? 0:latestAddedReading.timestamp;
+				var timeStampLatestReading:Number = latestAddedReading == null ? 0 : latestAddedReading.timestamp;
 				if (newReadingsList.length > 0) {
 					timeStampLatestReading = Math.max(timeStampLatestReading, (newReadingsList[newReadingsList.length - 1] as BgReading).timestamp);
 				}
@@ -564,7 +564,8 @@ package ui.screens
 							{
 								newReadingsList.push(bgReading);
 							}
-						} else 
+						} 
+						else 
 						{
 							break;
 						}

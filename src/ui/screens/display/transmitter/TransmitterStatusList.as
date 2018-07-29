@@ -545,8 +545,6 @@ package ui.screens.display.transmitter
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','mac_address_label'), accessory: transmitterMACAddressLabel });
 			if (CGMBlueToothDevice.isMiaoMiao())
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_version_label'), accessory: transmitterFirmwareLabel });
-			if (transmitterConnectionStatusValue != null)
-				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_connection_status_label'), accessory: transmitterConnectionStatusLabel });
 			if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','firmware_version_label'), accessory: transmitterFirmwareLabel });
@@ -554,6 +552,8 @@ package ui.screens.display.transmitter
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','bluetooth_firmware_version_label'), accessory: bluetoothFirmwareLabel });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','transmitter_runtime_label'), accessory: transmitterRuntimeLabel });
 			}
+			if (transmitterConnectionStatusValue != null)
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_connection_status_label'), accessory: transmitterConnectionStatusLabel });
 			
 			infoSection.children = infoSectionChildren;
 			

@@ -123,7 +123,7 @@ package services
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME) != "" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != "" &&
-				!BlueToothDevice.isFollower())
+				!CGMBlueToothDevice.isFollower())
 			{
 				setupDexcomShareProperties();
 				nextFunctionToCall = getInitialGlucoseReadings;
@@ -370,7 +370,7 @@ package services
 				return;
 			}
 			
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 			{
 				deactivateService();
 				return;
@@ -1068,7 +1068,7 @@ package services
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true" &&
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME) != "" &&
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != "" &&
-						!BlueToothDevice.isFollower())
+						!CGMBlueToothDevice.isFollower())
 					{
 						setupDexcomShareProperties();
 						nextFunctionToCall = getInitialGlucoseReadings;

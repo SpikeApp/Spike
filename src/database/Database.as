@@ -2160,8 +2160,6 @@ package database
 				conn.commit();
 				conn.close();
 				
-				trace("TREATMENT ADDED TO DABATASE!!!!");
-				
 			} catch (error:SQLError) {
 				if (conn.connected) {
 					conn.rollback();

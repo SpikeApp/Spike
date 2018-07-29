@@ -5,7 +5,7 @@ package ui.screens
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	
@@ -682,7 +682,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 5 : 4;
 			else
 				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 3 : 2;

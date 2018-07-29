@@ -1,5 +1,7 @@
 package ui.screens.display.settings.alarms
 {
+	import G5G6Model.TransmitterStatus;
+	
 	import database.AlertType;
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -167,7 +169,7 @@ package ui.screens.display.settings.alarms
 				valueLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"battery_value_label");
 				valueStepperStep = 1;
 				
-				if (CGMBlueToothDevice.isDexcomG5())
+				if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
 				{
 					minimumStepperValue = 260;
 					maximumStepperValue = 380;
@@ -230,7 +232,9 @@ package ui.screens.display.settings.alarms
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT && !CGMBlueToothDevice.isBluKon())
 				{
 					if (CGMBlueToothDevice.isDexcomG5())
-						alarmValue = 300;
+						alarmValue = G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA;
+					else if (CGMBlueToothDevice.isDexcomG6())
+						alarmValue = G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6;
 					else if (CGMBlueToothDevice.isDexcomG4())
 						alarmValue = 210;
 					else if (CGMBlueToothDevice.isMiaoMiao() || CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL())
