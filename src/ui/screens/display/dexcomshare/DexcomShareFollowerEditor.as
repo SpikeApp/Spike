@@ -150,7 +150,7 @@ package ui.screens.display.dexcomshare
 			dateFormatterForInvite = new DateTimeFormatter();
 			dateFormatterForInvite.dateTimePattern = "dd MMM";
 			dateFormatterForInvite.useUTC = false;
-			dateFormatterForInvite.setStyle("locale",Capabilities.language.substr(0,2));
+			dateFormatterForInvite.setStyle("locale", Constants.getUserLocale());
 			
 			/* Glucose Unit */
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")

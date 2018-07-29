@@ -6,6 +6,7 @@ package ui.screens
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.CGMBlueToothDevice;
+	import database.CommonSettings;
 	import database.LocalSettings;
 	import database.Sensor;
 	
@@ -185,9 +186,9 @@ package ui.screens
 			
 			/* Define Date Formater Helper */
 			var dateFormatterForSensorStartWarning:DateTimeFormatter = new DateTimeFormatter();
-			dateFormatterForSensorStartWarning.dateTimePattern = ModelLocator.resourceManagerInstance.getString('sensorscreen','timestamppattern_for_sensor_start_warning');
+			dateFormatterForSensorStartWarning.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "HH:mm" : "K:mm a";
 			dateFormatterForSensorStartWarning.useUTC = false;
-			dateFormatterForSensorStartWarning.setStyle("locale",Capabilities.language.substr(0,2));
+			dateFormatterForSensorStartWarning.setStyle("locale",Constants.getUserLocale());
 			
 			/* Define Alert Message */
 			var alertMessage:String;

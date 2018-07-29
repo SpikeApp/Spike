@@ -17,6 +17,7 @@ package ui.chart
 	
 	import ui.InterfaceController;
 	
+	import utils.Constants;
 	import utils.TimeSpan;
 	
 	[ResourceBundle("chartscreen")]
@@ -281,9 +282,9 @@ package ui.chart
 			if (Sensor.getActiveSensor() != null)
 			{
 				var dateFormatter:DateTimeFormatter = new DateTimeFormatter();
-				dateFormatter.dateTimePattern = "dd MMM HH:mm";
+				dateFormatter.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "dd MMM HH:mm" : "dd MMM K:mm a";
 				dateFormatter.useUTC = false;
-				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
+				dateFormatter.setStyle("locale", Constants.getUserLocale());
 				
 				//Set sensor start time
 				var sensorStartDate:Date = new Date(Sensor.getActiveSensor().startedAt)
