@@ -11,6 +11,7 @@ package
 	import flash.events.UncaughtErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
+	import flash.system.Capabilities;
 	import flash.system.System;
 	import flash.utils.setTimeout;
 	
@@ -159,6 +160,7 @@ package
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			Constants.isPortrait = starling.stage.stageWidth < starling.stage.stageHeight;
 			Constants.currentOrientation = stage.orientation;
+			Constants.systemLocale = String(Capabilities.languages[0]);
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);

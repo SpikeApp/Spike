@@ -114,7 +114,7 @@ package ui.screens.display.sensor
 			dateFormatter = new DateTimeFormatter();
 			dateFormatter.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "dd MMM. HH:mm" : "dd MMM. K:mm a";
 			dateFormatter.useUTC = false;
-			dateFormatter.setStyle("locale", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE).replace("_", "-"));
+			dateFormatter.setStyle("locale", Constants.getUserLocale());
 		}
 		
 		private function setupInitialState():void
