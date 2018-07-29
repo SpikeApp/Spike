@@ -43,12 +43,15 @@ package utils
 			_noLockEnabled = false;
 		}
 		
-		public static function getUserLocale():String
+		public static function getUserLocale(useUnderscore:Boolean = false):String
 		{
 			var userLocale:String = systemLocale;
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE) != "en_US")
 				userLocale = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE).replace("_", "-");
+			
+			if (useUnderscore)
+				userLocale.replace("-", "_");
 			
 			return userLocale;
 		}

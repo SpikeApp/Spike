@@ -271,6 +271,7 @@ package ui.screens.display.settings.alarms
 			
 			startTime = new DateTimeSpinner();
 			startTime.editingMode = DateTimeMode.TIME;
+			startTime.locale = Constants.getUserLocale(true);
 			startTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 0);
 			startTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 58);
 			startTime.value = startDate;
@@ -300,6 +301,7 @@ package ui.screens.display.settings.alarms
 			
 			endTime = new DateTimeSpinner();
 			endTime.editingMode = DateTimeMode.TIME;
+			endTime.locale = Constants.getUserLocale(true);
 			endTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 1);
 			endTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 59);
 			endTime.value = endDate;

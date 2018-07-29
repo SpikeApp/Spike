@@ -126,9 +126,9 @@ package ui.screens
 			
 			/* Create DateSpinner */
 			dateSpinner = new DateTimeSpinner();
+			dateSpinner.locale = Constants.getUserLocale(true);
 			dateSpinner.height = 155;
 			dateSpinner.maximum = new Date();
-			//dateSpinner.locale = "en_US";
 			
 			container.addChild( dateSpinner );
 			

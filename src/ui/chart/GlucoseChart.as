@@ -1215,6 +1215,7 @@ package ui.chart
 				if (treatmentTimeSpinner != null) treatmentTimeSpinner.removeFromParent(true);
 				treatmentTimeSpinner = new DateTimeSpinner();
 				treatmentTimeSpinner.editingMode = DateTimeMode.TIME;
+				treatmentTimeSpinner.locale = Constants.getUserLocale(true);
 				treatmentTimeSpinner.value = new Date(treatment.treatment.timestamp);
 				treatmentTimeSpinner.height = 30;
 				treatmentTimeSpinner.paddingTop = treatmentTimeSpinner.paddingBottom = 0;

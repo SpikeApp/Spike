@@ -199,6 +199,7 @@ package ui.screens
 			
 			datePicker = new DateTimeSpinner();
 			datePicker.editingMode = DateTimeMode.DATE;
+			datePicker.locale = Constants.getUserLocale(true);
 			datePicker.minimum = before;
 			datePicker.maximum = now;
 			datePicker.value = now;

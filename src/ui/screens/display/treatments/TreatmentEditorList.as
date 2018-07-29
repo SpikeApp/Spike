@@ -220,6 +220,7 @@ package ui.screens.display.treatments
 			
 			treatmentTime = new DateTimeSpinner();
 			treatmentTime.editingMode = DateTimeMode.TIME;
+			treatmentTime.locale = Constants.getUserLocale(true);
 			treatmentTime.value = new Date(treatment.timestamp);
 			treatmentTime.height = 40;
 			treatmentTime.addEventListener(Event.CHANGE, onSettingsChanged);

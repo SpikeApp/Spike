@@ -620,6 +620,7 @@ package treatments
 			//Treatment Time
 			if (treatmentTime != null) treatmentTime.removeFromParent(true);
 			treatmentTime = new DateTimeSpinner();
+			treatmentTime.locale = Constants.getUserLocale(true);
 			treatmentTime.minimum = new Date(now - TIME_24_HOURS);
 			treatmentTime.maximum = new Date(now);
 			treatmentTime.value = new Date();
