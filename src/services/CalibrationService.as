@@ -29,6 +29,8 @@ package services
 	
 	import model.ModelLocator;
 	
+	import services.bluetooth.CGMBluetoothService;
+	
 	import starling.core.Starling;
 	import starling.events.Event;
 	
@@ -36,10 +38,10 @@ package services
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.BadgeBuilder;
+	import utils.Constants;
 	import utils.GlucoseHelper;
 	import utils.TimeSpan;
 	import utils.Trace;
-	import services.bluetooth.CGMBluetoothService;
 	
 	/**
 	 * listens for bgreadings, at each bgreading user is asked to enter bg value<br>
@@ -539,7 +541,7 @@ package services
 				}
 				else if (!GlucoseHelper.isOptimalConditionToCalibrate()) //Check for optimal calibration conditions
 				{
-					AlertManager.showActionAlert
+					var suboptimalCalibrationAlert:Alert = AlertManager.showActionAlert
 					(
 						ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title_sub_optimal"),
 						ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_sub_optimal").replace("{max_bg_difference}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "3mg/dL" : "0.16mmol/L").replace("{high_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK) + "-" + (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) + Math.round(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25)) : Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10 + "-" + ((Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10) + (Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25))) * 10)) / 10))).replace("{low_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10)),
@@ -550,6 +552,8 @@ package services
 							{ label: ModelLocator.resourceManagerInstance.getString("calibrationservice","proceed_button_label"), triggered: onAcceptedCalibrateWithSuboptimal }
 						]
 					);
+					suboptimalCalibrationAlert.minWidth = Constants.stageWidth - 20;
+					suboptimalCalibrationAlert.width = Constants.stageWidth - 20;
 					
 					function onScheduleOptimalCalibration():void
 					{
