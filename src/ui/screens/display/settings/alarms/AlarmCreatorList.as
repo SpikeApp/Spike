@@ -42,6 +42,7 @@ package ui.screens.display.settings.alarms
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.MathHelper;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("alarmsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -49,8 +50,6 @@ package ui.screens.display.settings.alarms
 	public class AlarmCreatorList extends GroupedList 
 	{
 		/* Constants */
-		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
-		private static const TIME_1_MINUTE:int = 60 * 1000;
 		public static const CANCEL:String = "cancel";
 		public static const MODE_ADD:String = "add";
 		public static const MODE_EDIT:String = "edit";
@@ -619,8 +618,8 @@ package ui.screens.display.settings.alarms
 			var startTimestamp:Number = startTime.value.valueOf();
 			var endDateTimestamp:Number = endTime.value.valueOf();
 			
-			if (startTimestamp + TIME_1_MINUTE > endDateTimestamp)
-				endTime.value = new Date(startTimestamp + TIME_1_MINUTE);
+			if (startTimestamp + TimeSpan.TIME_1_MINUTE > endDateTimestamp)
+				endTime.value = new Date(startTimestamp + TimeSpan.TIME_1_MINUTE);
 		}
 		
 		private function onEndTimeChange(e:Event):void
@@ -629,7 +628,7 @@ package ui.screens.display.settings.alarms
 			var startTimestamp:Number = startTime.value.valueOf();
 			
 			if (endDateTimestamp <= startTimestamp)
-				startTime.value = new Date(endDateTimestamp - TIME_1_MINUTE);
+				startTime.value = new Date(endDateTimestamp - TimeSpan.TIME_1_MINUTE);
 		}
 		
 		/**

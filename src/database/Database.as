@@ -28,6 +28,7 @@ package database
 	import treatments.Profile;
 	import treatments.Treatment;
 	
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	[ResourceBundle("alertsettingsscreen")]
@@ -48,9 +49,6 @@ package database
 		private static var databaseWasCopiedFromSampleFile:Boolean = true;
 		private static const debugMode:Boolean = true;
 		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
-		
-		//Time constants
-		private static const TIME_24_HOURS:Number = 24 * 60 * 60 * 1000;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
@@ -2533,7 +2531,7 @@ package database
 				var sqlQuery:String = "";
 				sqlQuery += "SELECT AVG(calculatedValue) AS `averageGlucose`, "
 				sqlQuery +=	"(SELECT AVG(calculatedValue) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - a1cOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `averageGlucoseA1C`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - TIME_24_HOURS) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsDay`, ";
+				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - TimeSpan.TIME_24_HOURS) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsDay`, ";
 				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsTotal`, ";
 				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsLow`, ";
 				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsInRange`, ";

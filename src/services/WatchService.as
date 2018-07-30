@@ -27,6 +27,7 @@ package services
 	
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
+	import utils.TimeSpan;
 	import utils.Trace;
 	import utils.UniqueId;
 	
@@ -34,11 +35,6 @@ package services
 	
 	public class WatchService
 	{
-		/* Constants */
-		private static const TIME_5_MINUTES:int = (5 * 60 * 1000) + 7000;
-		private static const TIME_10_MINUTES:int = 10 * 60 * 1000;
-		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
-		
 		/* Properties */
 		private static var initialStart:Boolean = true;
 		private static var serviceActive:Boolean = false;
@@ -131,7 +127,7 @@ package services
 			Trace.myTrace("WatchService.as", "Deleting all previous calendar events");
 			
 			var now:Date = new Date();
-			var past:Date = new Date(now.valueOf() - TIME_1_DAY);
+			var past:Date = new Date(now.valueOf() - TimeSpan.TIME_24_HOURS);
 			deleteEvents(past, now, calendarID, "Created by Spike");
 		}
 		
@@ -155,7 +151,7 @@ package services
 			
 			//Initial Start Validation
 			if (initialStart)
-				if (currentReading == null || currentReading.calculatedValue == 0 || (new Date()).valueOf() - currentReading.timestamp > TIME_5_MINUTES)
+				if (currentReading == null || currentReading.calculatedValue == 0 || (new Date()).valueOf() - currentReading.timestamp > TimeSpan.TIME_5_MINUTES)
 					return;
 			
 			if (currentReading != null && currentReading.calculatedValue != 0) 
@@ -186,9 +182,9 @@ package services
 			
 			var future:Number;
 			if (currentReading != null && currentReading.calculatedValue != 0)
-				future = !applyGapFix ? currentReading.timestamp + TIME_5_MINUTES : currentReading.timestamp + TIME_10_MINUTES;
+				future = !applyGapFix ? currentReading.timestamp + TimeSpan.TIME_5_MINUTES : currentReading.timestamp + TimeSpan.TIME_10_MINUTES;
 			else
-				future = !applyGapFix ? new Date().valueOf() + TIME_5_MINUTES : new Date().valueOf() + TIME_10_MINUTES;
+				future = !applyGapFix ? new Date().valueOf() + TimeSpan.TIME_5_MINUTES : new Date().valueOf() + TimeSpan.TIME_10_MINUTES;
 			
 			//Title
 			var title:String = "";

@@ -8,12 +8,12 @@ package network.httpserver.API
 	import network.httpserver.ActionController;
 	
 	import utils.SpikeJSON;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	public class DexcomShareController extends ActionController
 	{
 		/* Constants */
-		private static const TIME_5_SECONDS:int = 5000;
 		private static const SESSION_ID:String = "\"d89443d2-327c-4a6f-89e5-496bbb0317db\"";
 		
 		/* Variables */
@@ -149,7 +149,7 @@ package network.httpserver.API
 			newReading.ST = newReading.DT;
 			newReading.Trend = glucoseReading.getSlopeOrdinal();
 			newReading.Value = Math.round(glucoseReading.calculatedValue);
-			newReading.WT = toDateString(glucoseReading.timestamp - TIME_5_SECONDS);
+			newReading.WT = toDateString(glucoseReading.timestamp - TimeSpan.TIME_5_SECONDS);
 			
 			return newReading;
 		}

@@ -6,13 +6,11 @@ package stats
 	import database.Database;
 	
 	import model.ModelLocator;
+	
+	import utils.TimeSpan;
 
 	public class StatsManager
 	{
-		/* Constants */
-		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
-		private static const TIME_30_SECONDS:int = 30 * 1000;
-		
 		public function StatsManager()
 		{
 			throw new Error("StatsManager is not meant to be instantiated!");
@@ -47,7 +45,7 @@ package stats
 				{
 					var bgReading:BgReading = ModelLocator.bgReadings[i];
 					
-					if (now - bgReading.timestamp > TIME_24_HOURS - TIME_30_SECONDS || bgReading.calculatedValue == 0)
+					if (now - bgReading.timestamp > TimeSpan.TIME_24_HOURS - TimeSpan.TIME_30_SECONDS || bgReading.calculatedValue == 0)
 						continue;
 					
 					var glucoseValue:Number = Number(bgReading.calculatedValue);

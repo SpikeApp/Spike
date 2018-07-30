@@ -18,6 +18,7 @@ package services
 	import ui.popups.AlertManager;
 	
 	import utils.SpikeJSON;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	[ResourceBundle('globaltranslations')]
@@ -25,7 +26,6 @@ package services
 	public class RemoteAlertService
 	{
 		// Constants
-		private static const TIME_24H:int = 24 * 60 * 60 * 1000;
 		private static var remoteAlertURL:String;
 		
 		//Variables 
@@ -99,7 +99,7 @@ package services
 			var currentTimeStamp:Number = (new Date()).valueOf();
 			
 			//If it has been more than 1 day since the last check for emote alerts or it's the first time the app checks for remote alerts
-			if(currentTimeStamp - lastRemoteAlertCheckStamp > TIME_24H)
+			if(currentTimeStamp - lastRemoteAlertCheckStamp > TimeSpan.TIME_24_HOURS)
 			{
 				myTrace("App can check for remote alerts");
 				return true;

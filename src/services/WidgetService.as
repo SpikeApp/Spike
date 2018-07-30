@@ -41,11 +41,6 @@ package services
 	
 	public class WidgetService
 	{
-		/* Constants */
-		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
-		private static const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
-		private static const TIME_1_MINUTE:int = 60 * 1000;
-		
 		/* Internal Variables */
 		private static var displayTrendEnabled:Boolean = true;
 		private static var displayDeltaEnabled:Boolean = true;
@@ -86,7 +81,7 @@ package services
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentRefresh);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onTreatmentRefresh);
 			
-			setInterval(updateTreatments, TIME_1_MINUTE);
+			setInterval(updateTreatments, TimeSpan.TIME_1_MINUTE);
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
@@ -151,7 +146,7 @@ package services
 			
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 			historyTimespan = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN));
-			widgetHistory = historyTimespan * TIME_1_HOUR;
+			widgetHistory = historyTimespan * TimeSpan.TIME_1_HOUR;
 			activeGlucoseReadingsList = [];
 			
 			startupGlucoseReadingsList = ModelLocator.bgReadings.concat();
@@ -435,14 +430,14 @@ package services
 			if (dateFormat == null || dateFormat.slice(0,2) == "24")
 			{
 				if (formatForChartLabel)
-					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H, widgetHistory == TIME_2_HOURS || DeviceInfo.isSmallScreenDevice());
+					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H, widgetHistory == TimeSpan.TIME_2_HOURS || DeviceInfo.isSmallScreenDevice());
 				else
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
 			}
 			else
 			{
 				if (formatForChartLabel)
-					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H, widgetHistory == TIME_2_HOURS  || DeviceInfo.isSmallScreenDevice(), widgetHistory == TIME_1_HOUR && !DeviceInfo.isSmallScreenDevice());
+					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H, widgetHistory == TimeSpan.TIME_2_HOURS  || DeviceInfo.isSmallScreenDevice(), widgetHistory == TimeSpan.TIME_1_HOUR && !DeviceInfo.isSmallScreenDevice());
 				else
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			}

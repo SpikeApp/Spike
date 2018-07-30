@@ -28,15 +28,11 @@ package network.httpserver.API
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
 	import utils.SpikeJSON;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	public class NightscoutAPIGeneralController extends ActionController
 	{
-		/* Constants */
-		private static const TIME_24_HOURS_6_MINUTES:int = (24 * 60 * 60 * 1000) + 6000;
-		private static const TIME_24H:int = 24 * 60 * 60 * 1000;
-		private static const TIME_30SEC:int = 30 * 1000;
-		
 		/* Objects */
 		private var nsFormatter:DateTimeFormatter;
 		
@@ -224,7 +220,7 @@ package network.httpserver.API
 				if (params["startoffset"] != null)
 					startTime = now - Number(params["startoffset"]);
 				else
-					startTime = now - TIME_24_HOURS_6_MINUTES;
+					startTime = now - TimeSpan.TIME_24_HOURS_6_MINUTES;
 				
 				var lightMode:Boolean = false;
 				if (params["lightMode"] != null && params["lightMode"] == "true")

@@ -43,6 +43,7 @@ package services
 	import utils.DateTimeUtilities;
 	import utils.FromtimeAndValueArrayCollection;
 	import utils.GlucoseHelper;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	public class AlarmService extends EventDispatcher
@@ -361,7 +362,7 @@ package services
 		protected static function onAlarmTimer(event:TimerEvent):void
 		{
 			myTrace("in onAlarmTimer");
-			if (((new Date()).valueOf() - lastMissedReadingAlertCheckTimeStamp)/1000 > 5 * 60 + 30) {
+			if ((new Date()).valueOf() - lastMissedReadingAlertCheckTimeStamp > TimeSpan.TIME_5_MINUTES_30_SECONDS) {
 				myTrace("in onAlarmTimer, calling checkMissedReadingAlert");
 				checkMissedReadingAlert();
 			}
@@ -370,23 +371,20 @@ package services
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") 
 			{
-				//if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp) > 10 * 60 * 1000) 
-				//{
-					myTrace("in onAlarmTimer, calling planApplicationStoppedAlert");
-					planApplicationStoppedAlert();
-					lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
-				//}
+				myTrace("in onAlarmTimer, calling planApplicationStoppedAlert");
+				planApplicationStoppedAlert();
+				lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
 			}
 		}
 		
 		private static function checkMuted(event:flash.events.Event):void {
 			var nowDate:Date = new Date();
 			var nowNumber:Number = nowDate.valueOf();
-			if ((nowNumber - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
+			if ((nowNumber - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 				||
 				isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
 				//alert not snoozed
-				if (nowNumber - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
+				if (nowNumber - lastCheckMuteTimeStamp > TimeSpan.TIME_4_MINUTES_45_SECONDS) {
 					//more than 4 min 45 seconds ago since last check
 					var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
@@ -427,7 +425,7 @@ package services
 						disableRepeatAlert(9);
 					}
 					
-					if ((now.valueOf() - _fastDropAlertLatestSnoozeTimeInMs) > _fastDropAlertSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _fastDropAlertLatestSnoozeTimeInMs) > _fastDropAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_fastDropAlertLatestSnoozeTimeInMs)) {
 						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT),
@@ -446,7 +444,7 @@ package services
 						disableRepeatAlert(8);
 					}
 					
-					if ((now.valueOf() - _fastRiseAlertLatestSnoozeTimeInMs) > _fastRiseAlertSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _fastRiseAlertLatestSnoozeTimeInMs) > _fastRiseAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_fastRiseAlertLatestSnoozeTimeInMs)) {
 						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT),
@@ -465,7 +463,7 @@ package services
 						disableRepeatAlert(1);
 					}
 					
-					if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_lowAlertLatestSnoozeTimeInMs)) {
 						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT),
@@ -483,7 +481,7 @@ package services
 						disableRepeatAlert(3);
 					}
 					
-					if ((now.valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_highAlertLatestSnoozeTimeInMs)) {
 						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT),
@@ -501,7 +499,7 @@ package services
 						disableRepeatAlert(2);
 					}
 					
-					if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_veryLowAlertLatestSnoozeTimeInMs)) {
 						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT),
@@ -519,7 +517,7 @@ package services
 						disableRepeatAlert(4);
 					}
 					
-					if ((now.valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_veryHighAlertLatestSnoozeTimeInMs)) {
 						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT),
@@ -548,7 +546,7 @@ package services
 						disableRepeatAlert(7);
 					}
 					
-					if ((now.valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
 						openSnoozePickerDialog(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT),
@@ -566,7 +564,7 @@ package services
 						disableRepeatAlert(6);
 					}
 					
-					if ((now.valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_batteryLevelAlertLatestSnoozeTimeInMs)) {
 						listOfAlerts = FromtimeAndValueArrayCollection.createList(
@@ -610,7 +608,7 @@ package services
 						disableRepeatAlert(0);
 					}
 					
-					if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
+					if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
 						listOfAlerts = FromtimeAndValueArrayCollection.createList(
@@ -1141,7 +1139,7 @@ package services
 			var lastbgreading:BgReading = BgReading.lastNoSensor();
 			if (lastbgreading != null) 
 			{
-				if (now.valueOf() - lastbgreading.timestamp < MAX_AGE_OF_READING_IN_MINUTES * 60 * 1000) 
+				if (now.valueOf() - lastbgreading.timestamp < MAX_AGE_OF_READING_IN_MINUTES * TimeSpan.TIME_1_MINUTE) 
 				{
 					alertActive = checkFastDropAlert(now);
 					if (!alertActive)
@@ -1227,7 +1225,7 @@ package services
 			myTrace("in phoneMuted");
 			ModelLocator.phoneMuted = true;
 			var now:Date = new Date(); 
-			if (now.valueOf() - lastPhoneMutedAlertCheckTimeStamp > (4 * 60 + 45) * 1000) {
+			if (now.valueOf() - lastPhoneMutedAlertCheckTimeStamp > TimeSpan.TIME_4_MINUTES_45_SECONDS) {
 				myTrace("in phoneMuted, checking phoneMute Alarm because it's been more than 4 minutes 45 seconds");
 				lastPhoneMutedAlertCheckTimeStamp = (new Date()).valueOf();
 				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
@@ -1237,7 +1235,7 @@ package services
 				var alertType:AlertType = Database.getAlertType(alertName);
 				if (alertType != null && alertType.enabled) {
 					//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-					if (((now).valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
+					if (((now).valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 						||
 						isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
 						myTrace("in phoneMuted, phoneMuted alert not snoozed ");
@@ -1280,7 +1278,7 @@ package services
 			myTrace("in phoneNotMuted");
 			ModelLocator.phoneMuted = false;
 			
-			if ((new Date()).valueOf() - lastQueuedAlertSoundTimeStamp < 2 * 1000) {//it should normally be max 1 second
+			if ((new Date()).valueOf() - lastQueuedAlertSoundTimeStamp < TimeSpan.TIME_2_SECONDS) {//it should normally be max 1 second
 				if (queuedAlertSound != "") {
 					myTrace("in phoneNotMuted, sound queued and fired alert time < 2 seconds ago");
 					SpikeANE.playSound(queuedAlertSound);
@@ -1478,12 +1476,12 @@ package services
 			alertType = Database.getAlertType(alertName);
 			if (alertType != null && alertType.enabled) {
 				myTrace("in checkMissedReadingAlert, alertType enabled");
-				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
+				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					||
 					isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
 					myTrace("in checkMissedReadingAlert, missed reading alert not snoozed");
 					//not snoozed
-					if (((now.valueOf() - lastBgReading.timestamp) > alertValue * 60 * 1000) && ((now.valueOf() - ModelLocator.appStartTimestamp) > 5 * 60 * 1000)) {
+					if (((now.valueOf() - lastBgReading.timestamp) > alertValue * TimeSpan.TIME_1_MINUTE) && ((now.valueOf() - ModelLocator.appStartTimestamp) > TimeSpan.TIME_5_MINUTES)) {
 						myTrace("in checkAlarms, missed reading");
 						
 						var alertBody:String = " ";
@@ -1546,7 +1544,7 @@ package services
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			alertType = Database.getAlertType(alertName);
 			if (alertType != null && alertType.enabled) {
-				if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
+				if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					||
 					isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
 					myTrace("in checkAlarms, calibration request alert not snoozed ");
@@ -1636,7 +1634,7 @@ package services
 			 alertType = Database.getAlertType(alertName);
 			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-				 if (((now).valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
+				 if (((now).valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					 ||
 					 isNaN(_batteryLevelAlertLatestSnoozeTimeInMs)) {
 					 myTrace("in checkAlarms, batteryLevel alert not snoozed ");
@@ -1702,7 +1700,7 @@ package services
 			 alertType = Database.getAlertType(alertName);
 			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-				 if (((now).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
+				 if (((now).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					 ||
 					 isNaN(_highAlertLatestSnoozeTimeInMs)) {
 					 myTrace("in checkAlarms, high alert not snoozed ");
@@ -1760,7 +1758,7 @@ package services
 			 alertType = Database.getAlertType(alertName);
 			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-				 if (((now).valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * 60 * 1000
+				 if (((now).valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					 ||
 					 isNaN(_veryHighAlertLatestSnoozeTimeInMs)) {
 					 myTrace("in checkAlarms, veryHigh alert not snoozed ");
@@ -1819,7 +1817,7 @@ package services
 			 alertType = Database.getAlertType(alertName);
 			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-				 if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
+				 if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					 ||
 					 isNaN(_lowAlertLatestSnoozeTimeInMs)) {
 					 myTrace("in checkAlarms, low alert not snoozed ");
@@ -1877,7 +1875,7 @@ package services
 			 alertType = Database.getAlertType(alertName);
 			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-				 if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * 60 * 1000
+				 if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					 ||
 					 isNaN(_veryLowAlertLatestSnoozeTimeInMs)) {
 					 myTrace("in checkAlarms, veryLow alert not snoozed ");
@@ -1937,7 +1935,7 @@ package services
 			 alertType = Database.getAlertType(alertName);
 			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-				 if ((now.valueOf() - _fastDropAlertLatestSnoozeTimeInMs) > _fastDropAlertSnoozePeriodInMinutes * 60 * 1000
+				 if ((now.valueOf() - _fastDropAlertLatestSnoozeTimeInMs) > _fastDropAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					 ||
 					 isNaN(_fastDropAlertLatestSnoozeTimeInMs)) {
 					 myTrace("in checkAlarms, fastDrop alert not snoozed ");
@@ -1996,7 +1994,7 @@ package services
 			 alertType = Database.getAlertType(alertName);
 			 if (alertType != null && alertType.enabled) {
 				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-				 if ((now.valueOf() - _fastRiseAlertLatestSnoozeTimeInMs) > _fastRiseAlertSnoozePeriodInMinutes * 60 * 1000
+				 if ((now.valueOf() - _fastRiseAlertLatestSnoozeTimeInMs) > _fastRiseAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					 ||
 					 isNaN(_fastRiseAlertLatestSnoozeTimeInMs)) {
 					 myTrace("in checkAlarms, fastRise alert not snoozed ");
@@ -2265,7 +2263,7 @@ package services
 			if (activeAlertsArray == null || repeatAlertsLastFireTimeStampArray == null) return;
 			for (var cntr:int = 0;cntr < activeAlertsArray.length;cntr++) {
 				if (activeAlertsArray[cntr] == true) {
-					if ((new Date()).valueOf() - repeatAlertsLastFireTimeStampArray[cntr] > 60 * 1000) {
+					if ((new Date()).valueOf() - repeatAlertsLastFireTimeStampArray[cntr] > TimeSpan.TIME_1_MINUTE) {
 						var alertType:AlertType = Database.getAlertType(repeatAlertsAlertTypeNameArray[cntr]);
 						if (alertType == null) continue;
 						if (alertType.repeatInMinutes > 0) {
@@ -2303,7 +2301,7 @@ package services
 			//check if there's active notification alert, 
 			for (var cntr:int = 0;cntr < activeAlertsArray.length;cntr++) {
 				if (activeAlertsArray[cntr] == true) {
-					if ((new Date()).valueOf() - repeatAlertsLastFireTimeStampArray[cntr] < 31 * 1000) {
+					if ((new Date()).valueOf() - repeatAlertsLastFireTimeStampArray[cntr] < TimeSpan.TIME_31_SECONDS) {
 						myTrace("in appInForeGround, found active alert with id " + repeatAlertsNotificationIds[cntr]);
 						//user brings the app from back to foreground within 30 seconds after firing the alert
 						//Stop playing sound, this will not be done by calling notificationReceived
@@ -2341,23 +2339,23 @@ package services
 			var remainingSnoozeHours:int;
 			var remainingSnoozeDays:int;
 			var now:Number = (new Date()).valueOf();
-			var snoozedUntil:Number = snoozeTimeInMs + snoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = snoozeTimeInMs + snoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			if (now >= snoozedUntil) {
 				return "not snoozed";
 			}
-			if (snoozedUntil - now < 1 * 60 * 60 * 1000) {//less than 1 hour
+			if (snoozedUntil - now < TimeSpan.TIME_1_HOUR) {//less than 1 hour
 				remainingSnoozeMinutes = (snoozedUntil - now)/1000/60;
 				return remainingSnoozeMinutes + " " + ModelLocator.resourceManagerInstance.getString("alarmservice","minutes");
 			}
-			if (snoozedUntil - now < 24 * 60 * 60 * 1000) {//less than 1 day
+			if (snoozedUntil - now < TimeSpan.TIME_24_HOURS) {//less than 1 day
 				remainingSnoozeHours =  (snoozedUntil - now)/1000/60/60;
-				remainingSnoozeMinutes =  (snoozedUntil - now - remainingSnoozeHours * 60 * 60 * 1000)/1000/60;
+				remainingSnoozeMinutes =  (snoozedUntil - now - remainingSnoozeHours * TimeSpan.TIME_1_HOUR)/1000/60;
 				return remainingSnoozeHours + " " + ModelLocator.resourceManagerInstance.getString("alarmservice","hours")
 					+ ", " + remainingSnoozeMinutes  + " " + ModelLocator.resourceManagerInstance.getString("alarmservice","minutes");
 			}
 			remainingSnoozeDays =  (snoozedUntil - now)/1000/60/60/24;
-			remainingSnoozeHours =  (snoozedUntil - remainingSnoozeDays * 24 * 60 * 60 * 1000 - now)/1000/60/60;
-			remainingSnoozeMinutes = (snoozedUntil - remainingSnoozeDays * 24 * 60 * 60 * 1000 - remainingSnoozeHours * 60 * 60 * 1000 - now)/1000/60;
+			remainingSnoozeHours =  (snoozedUntil - remainingSnoozeDays * TimeSpan.TIME_24_HOURS - now)/1000/60/60;
+			remainingSnoozeMinutes = (snoozedUntil - remainingSnoozeDays * TimeSpan.TIME_24_HOURS - remainingSnoozeHours * TimeSpan.TIME_1_HOUR - now)/1000/60;
 			return remainingSnoozeDays + " " + ModelLocator.resourceManagerInstance.getString("alarmservice","days") + ", " +
 				+ remainingSnoozeHours + " " + ModelLocator.resourceManagerInstance.getString("alarmservice","hours")
 				+ ", " + remainingSnoozeMinutes  + " " + ModelLocator.resourceManagerInstance.getString("alarmservice","minutes");
@@ -2399,7 +2397,7 @@ package services
 		{
 			var returnValue:Boolean = true;
 			var now:Number = new Date().valueOf();
-			var snoozedUntil:Number = _veryLowAlertLatestSnoozeTimeInMs + _veryLowAlertSnoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = _veryLowAlertLatestSnoozeTimeInMs + _veryLowAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			
 			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_veryLowAlertLatestSnoozeTimeInMs))
 				returnValue = false;
@@ -2410,7 +2408,7 @@ package services
 		{
 			var returnValue:Boolean = true;
 			var now:Number = new Date().valueOf();
-			var snoozedUntil:Number = _lowAlertLatestSnoozeTimeInMs + _lowAlertSnoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = _lowAlertLatestSnoozeTimeInMs + _lowAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			
 			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_lowAlertLatestSnoozeTimeInMs))
 				returnValue = false;
@@ -2421,7 +2419,7 @@ package services
 		{
 			var returnValue:Boolean = true;
 			var now:Number = new Date().valueOf();
-			var snoozedUntil:Number = _highAlertLatestSnoozeTimeInMs + _highAlertSnoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = _highAlertLatestSnoozeTimeInMs + _highAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			
 			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_highAlertLatestSnoozeTimeInMs))
 				returnValue = false;
@@ -2432,7 +2430,7 @@ package services
 		{
 			var returnValue:Boolean = true;
 			var now:Number = new Date().valueOf();
-			var snoozedUntil:Number = _veryHighAlertLatestSnoozeTimeInMs + _veryHighAlertSnoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = _veryHighAlertLatestSnoozeTimeInMs + _veryHighAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			
 			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_veryHighAlertLatestSnoozeTimeInMs))
 				returnValue = false;
@@ -2443,7 +2441,7 @@ package services
 		{
 			var returnValue:Boolean = true;
 			var now:Number = new Date().valueOf();
-			var snoozedUntil:Number = _missedReadingAlertLatestSnoozeTimeInMs + _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = _missedReadingAlertLatestSnoozeTimeInMs + _missedReadingAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			
 			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_missedReadingAlertLatestSnoozeTimeInMs))
 				returnValue = false;
@@ -2454,7 +2452,7 @@ package services
 		{
 			var returnValue:Boolean = true;
 			var now:Number = new Date().valueOf();
-			var snoozedUntil:Number = _phoneMutedAlertLatestSnoozeTimeInMs + _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = _phoneMutedAlertLatestSnoozeTimeInMs + _phoneMutedAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			
 			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_phoneMutedAlertLatestSnoozeTimeInMs))
 				returnValue = false;
@@ -2465,7 +2463,7 @@ package services
 		{
 			var returnValue:Boolean = true;
 			var now:Number = new Date().valueOf();
-			var snoozedUntil:Number = _fastRiseAlertLatestSnoozeTimeInMs + _fastRiseAlertSnoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = _fastRiseAlertLatestSnoozeTimeInMs + _fastRiseAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			
 			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_fastRiseAlertLatestSnoozeTimeInMs))
 				returnValue = false;
@@ -2476,7 +2474,7 @@ package services
 		{
 			var returnValue:Boolean = true;
 			var now:Number = new Date().valueOf();
-			var snoozedUntil:Number = _fastDropAlertLatestSnoozeTimeInMs + _fastDropAlertSnoozePeriodInMinutes * 60 * 1000;
+			var snoozedUntil:Number = _fastDropAlertLatestSnoozeTimeInMs + _fastDropAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
 			
 			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_fastDropAlertLatestSnoozeTimeInMs))
 				returnValue = false;

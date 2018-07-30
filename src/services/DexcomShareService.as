@@ -39,6 +39,7 @@ package services
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.SpikeJSON;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	[ResourceBundle("dexcomshareservice")]
@@ -68,12 +69,10 @@ package services
 		private static const MODE_DISABLE_FOLLOWER_SHARING:String = "disableFollowerSharing";
 		private static const MODE_ENABLE_FOLLOWER_SHARING:String = "enableFollowerSharing";
 		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
-		private static const RETRY_TIME_FOR_SERVER_ERRORS:Number = 4.5 * 60 * 1000; //4.5 minutes
-		private static const RETRY_TIME_FOR_MAX_AUTHENTICATION_RETRIES:Number = 10 * 60 * 1000;
+		private static const RETRY_TIME_FOR_SERVER_ERRORS:Number = TimeSpan.TIME_4_MINUTES_30_SECONDS;
+		private static const RETRY_TIME_FOR_MAX_AUTHENTICATION_RETRIES:Number = TimeSpan.TIME_10_MINUTES;
 		private static const MAX_RETRIES_FOR_MONITORING_SESSION_NOT_ACTIVE:int = 5;
 		private static const MAX_RETRIES_FOR_SESSION_NOT_VALID:int = 10;
-		private static const TIME_1_MINUTE:int = 60 * 1000;
-		private static const TIME_5_SECONDS:int = 5000;
 		
 		/* Data Objects */
 		private static var activeGlucoseReadings:Array = [];

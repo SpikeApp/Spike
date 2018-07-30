@@ -8,7 +8,6 @@ package utils
 
 	public class BadgeBuilder
 	{
-		private static const TIME_4_MINUTES_30_SECONDS:int = 4.5 * 60 * 1000;
 		private static const MMOL_MULTIPLIER:int = 10;
 		private static const HIGH_VALUE:int = 400;
 		private static const LOW_VALUE:int = 38;		
@@ -45,7 +44,7 @@ package utils
 				
 				var now:Number = new Date().valueOf();
 				
-				if (latestReading != null && latestReading.calculatedValue != 0 && now - latestReading.timestamp < TIME_4_MINUTES_30_SECONDS)
+				if (latestReading != null && latestReading.calculatedValue != 0 && now - latestReading.timestamp < TimeSpan.TIME_4_MINUTES_30_SECONDS)
 				{
 					var isMgDl:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true";					
 					var preBadgeNumber:String = BgGraphBuilder.unitizedString(latestReading.calculatedValue, isMgDl);

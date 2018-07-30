@@ -76,32 +76,21 @@ package services
 		private static const MODE_PEBBLE_GET:String = "pebbleGet";
 		private static const MODE_USER_INFO_GET:String = "userInfoGet";
 		private static const MODE_BATTERY_UPLOAD:String = "batteryUpload";
-		private static const MAX_SYNC_TIME:Number = 45 * 1000; //45 seconds
+		private static const MAX_SYNC_TIME:Number = TimeSpan.TIME_45_SECONDS; //45 seconds
 		private static const MAX_RETRIES_FOR_TREATMENTS:int = 1;
-		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
-		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
-		private static const TIME_24_MINUTES:int = 24 * 60 * 1000;
-		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
-		private static const TIME_5_MINUTES_30_SECONDS:int = (5 * 60 * 1000) + 30000;
-		private static const TIME_5_MINUTES_10_SECONDS:int = (5 * 60 * 1000) + 10000;
-		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
-		private static const TIME_4_MINUTES_30_SECONDS:int = (4 * 60 * 1000) + 30000;
-		private static const TIME_1_MINUTE:int = 60 * 1000;
-		private static const TIME_30_SECONDS:int = 30000;
-		private static const TIME_10_SECONDS:int = 10000;
-		private static const TIME_5_SECONDS:int = 6000;
 		
 		/* Logical Variables */
+		private static var nowTimestamp:Number = (new Date()).valueOf();
 		private static var serviceStarted:Boolean = false;
 		public static var serviceActive:Boolean = false;
 		private static var _syncGlucoseReadingsActive:Boolean = false;
-		private static var syncGlucoseReadingsActiveLastChange:Number = (new Date()).valueOf();
+		private static var syncGlucoseReadingsActiveLastChange:Number = nowTimestamp;
 		private static var _syncCalibrationsActive:Boolean = false;
-		private static var syncCalibrationsActiveLastChange:Number = (new Date()).valueOf();
+		private static var syncCalibrationsActiveLastChange:Number = nowTimestamp;
 		private static var _syncVisualCalibrationsActive:Boolean = false;
-		private static var syncVisualCalibrationsActiveLastChange:Number = (new Date()).valueOf();
+		private static var syncVisualCalibrationsActiveLastChange:Number = nowTimestamp;
 		private static var _syncSensorStartActive:Boolean = false;
-		private static var syncSensorStartActiveLastChange:Number = (new Date()).valueOf();
+		private static var syncSensorStartActiveLastChange:Number = nowTimestamp;
 		private static var externalAuthenticationCall:Boolean = false;
 		public static var ignoreSettingsChanged:Boolean = false;
 		public static var uploadSensorStart:Boolean = true;
@@ -389,7 +378,7 @@ package services
 				return;
 			
 			phoneBatteryLevel = BatteryInfo.getBatteryLevel();
-			if ((String(phoneBatteryLevel) == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED) || Math.abs(phoneBatteryLevel - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED))) < 3) && new Date().valueOf() - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP)) < TIME_24_MINUTES)
+			if ((String(phoneBatteryLevel) == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED) || Math.abs(phoneBatteryLevel - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED))) < 3) && new Date().valueOf() - Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_LAST_BATTERY_UPLOADED_TIMESTAMP)) < TimeSpan.TIME_24_MINUTES)
 			{
 				Trace.myTrace("NightscoutService.as", "Battery level has not changed and is current. Skipping...");
 				return;
@@ -445,7 +434,7 @@ package services
 			
 			var now:Number = new Date().valueOf();
 			
-			if (now - lastRemoteProfileSync < TIME_30_SECONDS)
+			if (now - lastRemoteProfileSync < TimeSpan.TIME_30_SECONDS)
 			{
 				Trace.myTrace("NightscoutService.as", "Fetched profile less than 30 seconds ago. Ignoring!");
 				return;
@@ -460,7 +449,7 @@ package services
 					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 					{
 						Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will retry in 30 seconds!");
-						setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+						setTimeout(getNightscoutProfile, TimeSpan.TIME_30_SECONDS);
 					}
 					
 					return;
@@ -630,23 +619,23 @@ package services
 			var latestBGReading:BgReading = BgReading.lastNoSensor();
 			if (latestBGReading != null) 
 			{
-				if (now - latestBGReading.timestamp >= TIME_5_MINUTES_30_SECONDS)
+				if (now - latestBGReading.timestamp >= TimeSpan.TIME_5_MINUTES_30_SECONDS)
 				{
 					//Some users are uploading values to nightscout with a bigger delay than it was supposed (>10 seconds)... 
 					//This will make Spike retry in 10sec so they don't see outdated values in the chart.
-					nextFollowDownloadTime = now + TIME_10_SECONDS; 
+					nextFollowDownloadTime = now + TimeSpan.TIME_10_SECONDS; 
 				}
 				else
 				{
-					nextFollowDownloadTime = latestBGReading.timestamp + TIME_5_MINUTES_10_SECONDS;
+					nextFollowDownloadTime = latestBGReading.timestamp + TimeSpan.TIME_5_MINUTES_10_SECONDS;
 					while (nextFollowDownloadTime < now) 
 					{
-						nextFollowDownloadTime += TIME_5_MINUTES;
+						nextFollowDownloadTime += TimeSpan.TIME_5_MINUTES;
 					}
 				}
 			}
 			else
-				nextFollowDownloadTime = now + TIME_5_MINUTES;		
+				nextFollowDownloadTime = now + TimeSpan.TIME_5_MINUTES;		
 		}
 		
 		private static function setNextFollowerFetch(delay:int = 0):void
@@ -690,24 +679,24 @@ package services
 			{
 				Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will try again later!");
 				
-				setNextFollowerFetch(TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
+				setNextFollowerFetch(TimeSpan.TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
 				
 				return;
 			}
 			
 			var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
 			
-			if (latestBGReading != null && !isNaN(latestBGReading.timestamp) && now - latestBGReading.timestamp < TIME_5_MINUTES)
+			if (latestBGReading != null && !isNaN(latestBGReading.timestamp) && now - latestBGReading.timestamp < TimeSpan.TIME_5_MINUTES)
 				return;
 			
 			if (nextFollowDownloadTime < now) 
 			{
 				if (latestBGReading == null) 
-					timeOfFirstBgReadingToDowload = now - TIME_1_DAY;
+					timeOfFirstBgReadingToDowload = now - TimeSpan.TIME_24_HOURS;
 				else
 					timeOfFirstBgReadingToDowload = latestBGReading.timestamp + 1; //We add 1ms to avoid overlaps
 				
-				var numberOfReadings:Number = ((now - timeOfFirstBgReadingToDowload) / TIME_1_HOUR * 12) + 1; //Add one more just to make sure we get all readings
+				var numberOfReadings:Number = ((now - timeOfFirstBgReadingToDowload) / TimeSpan.TIME_1_HOUR * 12) + 1; //Add one more just to make sure we get all readings
 				var parameters:URLVariables = new URLVariables();
 				parameters["find[dateString][$gte]"] = timeOfFirstBgReadingToDowload;
 				parameters["count"] = Math.round(numberOfReadings);
@@ -720,7 +709,7 @@ package services
 			else
 			{
 				Trace.myTrace("NightscoutService.as", "Tried to make a fetch while in the past. Setting new fetch again.");
-				setNextFollowerFetch(TIME_10_SECONDS); 
+				setNextFollowerFetch(TimeSpan.TIME_10_SECONDS); 
 			}
 		}
 		
@@ -731,7 +720,7 @@ package services
 			var now:Number = (new Date()).valueOf();
 			
 			//Validate call
-			if (!waitingForNSData || (now - lastFollowDownloadAttempt > TIME_4_MINUTES_30_SECONDS)) 
+			if (!waitingForNSData || (now - lastFollowDownloadAttempt > TimeSpan.TIME_4_MINUTES_30_SECONDS)) 
 			{
 				Trace.myTrace("NightscoutService.as", "Not waiting for data or last download attempt was more than 4 minutes, 30 seconds ago. Ignoring!");
 				waitingForNSData = false;
@@ -1128,13 +1117,13 @@ package services
 		{
 			if (syncTreatmentsDeleteActive || !NetworkInfo.networkInfo.isReachable())
 			{
-				setTimeout(deleteTreatmentByID, 3 * TIME_5_MINUTES, id);
+				setTimeout(deleteTreatmentByID, TimeSpan.TIME_15_MINUTES, id);
 				return;
 			}
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !CGMBlueToothDevice.isFollower())
 			{
-				setTimeout(deleteTreatmentByID, 3 * TIME_5_MINUTES, id);
+				setTimeout(deleteTreatmentByID, TimeSpan.TIME_15_MINUTES, id);
 				return;
 			}
 			
@@ -1377,7 +1366,7 @@ package services
 			
 			var now:Number = new Date().valueOf();
 			
-			if (now - lastRemotePebbleSync < TIME_30_SECONDS)
+			if (now - lastRemotePebbleSync < TimeSpan.TIME_30_SECONDS)
 				return;
 			
 			lastRemotePebbleSync = now;
@@ -1450,7 +1439,7 @@ package services
 						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
 						{
 							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new pebble fetch in 30 seconds. Responder: " + response);
-							setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
+							setTimeout(getPebbleEndpoint, TimeSpan.TIME_30_SECONDS);
 							retriesForPebbleDownload++;
 						}
 					}
@@ -1460,7 +1449,7 @@ package services
 					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
 					{
 						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new pebble fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
-						setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
+						setTimeout(getPebbleEndpoint, TimeSpan.TIME_30_SECONDS);
 						retriesForPebbleDownload++;
 					}
 				}
@@ -1470,7 +1459,7 @@ package services
 				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new pebble's fetch in 30 seconds. Responder: " + response);
-					setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
+					setTimeout(getPebbleEndpoint, TimeSpan.TIME_30_SECONDS);
 					retriesForPebbleDownload++;
 				}
 			}
@@ -1518,7 +1507,7 @@ package services
 				else if (activeVisualCalibrations.length > 0 && !syncVisualCalibrationsActive)
 					syncVisualCalibrations();
 				
-				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				setTimeout(getRemoteTreatments, TimeSpan.TIME_30_SECONDS);
 				
 				retriesForTreatmentsDownload++;
 				
@@ -1527,7 +1516,7 @@ package services
 			
 			var now:Number = new Date().valueOf();
 			
-			if (now - lastRemoteTreatmentsSync < TIME_30_SECONDS)
+			if (now - lastRemoteTreatmentsSync < TimeSpan.TIME_30_SECONDS)
 				return;
 			
 			lastRemoteTreatmentsSync = now;
@@ -1536,7 +1525,7 @@ package services
 			
 			//Define request parameters
 			var parameters:URLVariables = new URLVariables();
-			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TIME_1_DAY);
+			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TimeSpan..TIME_24_HOURS);
 			parameters["find[eventType][$nin][0]"] = "Temp Basal";
 			//parameters["find[eventType][$nin][1]"] = "Combo Bolus";
 			
@@ -1604,7 +1593,7 @@ package services
 				else if (activeVisualCalibrations.length > 0 && !syncVisualCalibrationsActive)
 					syncVisualCalibrations();
 				
-				setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+				setTimeout(getRemoteTreatments, TimeSpan.TIME_30_SECONDS);
 				
 				retriesForTreatmentsDownload++;
 				
@@ -1635,7 +1624,7 @@ package services
 							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 							{
 								Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-								setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+								setTimeout(getRemoteTreatments, TimeSpan.TIME_30_SECONDS);
 								retriesForTreatmentsDownload++;
 							}
 						}
@@ -1645,7 +1634,7 @@ package services
 						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 						{
 							Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new treatment's fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
-							setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+							setTimeout(getRemoteTreatments, TimeSpan.TIME_30_SECONDS);
 							retriesForTreatmentsDownload++;
 						}
 					}
@@ -1656,7 +1645,7 @@ package services
 				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
-					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					setTimeout(getRemoteTreatments, TimeSpan.TIME_30_SECONDS);
 					retriesForTreatmentsDownload++;
 				}
 			}
@@ -2358,7 +2347,7 @@ package services
 			{
 				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Can't make connection to the server while trying to download glucose readings. Error: " +  error.message);
 				
-				setNextFollowerFetch(TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
+				setNextFollowerFetch(TimeSpan.TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
 			}
 			else if (mode == MODE_TREATMENT_UPLOAD)
 			{
@@ -2375,7 +2364,7 @@ package services
 				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting treatments. Retrying in 30 seconds. Error: " + error.message);
-					setTimeout(getRemoteTreatments, TIME_30_SECONDS);
+					setTimeout(getRemoteTreatments, TimeSpan.TIME_30_SECONDS);
 					retriesForTreatmentsDownload++;
 				}
 			}
@@ -2384,7 +2373,7 @@ package services
 				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 				{
 					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting profile. Retrying in 30 seconds. Error: " + error.message);
-					setTimeout(getNightscoutProfile, TIME_30_SECONDS);
+					setTimeout(getNightscoutProfile, TimeSpan.TIME_30_SECONDS);
 				}
 			}
 			else if (mode == MODE_PEBBLE_GET)
@@ -2392,7 +2381,7 @@ package services
 				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting pebble endpoint. Retrying in 30 seconds. Error: " + error.message);
-					setTimeout(getPebbleEndpoint, TIME_30_SECONDS);
+					setTimeout(getPebbleEndpoint, TimeSpan.TIME_30_SECONDS);
 					retriesForPebbleDownload++;
 				}
 			}

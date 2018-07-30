@@ -22,14 +22,12 @@ package network.httpserver.API
 	import treatments.TreatmentsManager;
 	
 	import utils.SpikeJSON;
+	import utils.TimeSpan;
 	import utils.Trace;
 	import utils.UniqueId;
 	
 	public class NightscoutAPI1Controller extends ActionController
-	{
-		/* Constants */
-		private static const TIME_24_HOURS_6_MINUTES:int = (24 * 60 * 60 * 1000) + 6000;
-		
+	{	
 		/* Objects */
 		private var nsFormatter:DateTimeFormatter;
 		
@@ -65,7 +63,7 @@ package network.httpserver.API
 				
 				var now:Number = new Date().valueOf();
 				
-				var startTime:Number = now - TIME_24_HOURS_6_MINUTES;
+				var startTime:Number = now - TimeSpan.TIME_24_HOURS_6_MINUTES;
 				var startDate:String;
 				if (params["find[date][$gte]"] != null)
 				{
@@ -240,7 +238,7 @@ package network.httpserver.API
 				
 				var now:Number = new Date().valueOf();
 				
-				var startTime:Number = now - TIME_24_HOURS_6_MINUTES;
+				var startTime:Number = now - TimeSpan.TIME_24_HOURS_6_MINUTES;
 				var startDate:String;
 				if (params["find[date][$gte]"] != null)
 				{
@@ -271,7 +269,7 @@ package network.httpserver.API
 				var outputArray:Array = [];
 				var outputIndex:int = 0;
 				
-				if (!CGMBlueToothDevice.isFollower() && (numReadings > 289 && startTime < now - TIME_24_HOURS_6_MINUTES))
+				if (!CGMBlueToothDevice.isFollower() && (numReadings > 289 && startTime < now - TimeSpan.TIME_24_HOURS_6_MINUTES))
 				{
 					//Get from database
 					var readingsList:Array = Database.getBgReadingsDataSynchronous(startTime, endTime, "timestamp, calculatedValue, calculatedValueSlope, hideSlope", numReadings);

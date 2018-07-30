@@ -56,6 +56,7 @@ package treatments
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.TimeSpan;
 	import utils.Trace;
 	import utils.UniqueId;
 	
@@ -64,9 +65,6 @@ package treatments
 
 	public class TreatmentsManager extends EventDispatcher
 	{
-		/* Constants */
-		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
-		
 		/* Instance */
 		private static var _instance:TreatmentsManager = new TreatmentsManager();
 		
@@ -130,7 +128,7 @@ package treatments
 				Trace.myTrace("TreatmentsManager.as", "Fetching treatments from database...");
 				
 				var now:Number = new Date().valueOf();
-				var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TIME_24_HOURS, now);
+				var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TimeSpan.TIME_24_HOURS, now);
 				
 				if (dbTreatments != null && dbTreatments.length > 0)
 				{
@@ -621,7 +619,7 @@ package treatments
 			if (treatmentTime != null) treatmentTime.removeFromParent(true);
 			treatmentTime = new DateTimeSpinner();
 			treatmentTime.locale = Constants.getUserLocale(true);
-			treatmentTime.minimum = new Date(now - TIME_24_HOURS);
+			treatmentTime.minimum = new Date(now - TimeSpan.TIME_24_HOURS);
 			treatmentTime.maximum = new Date(now);
 			treatmentTime.value = new Date();
 			treatmentTime.height = 30;
@@ -1678,7 +1676,7 @@ package treatments
 					Trace.myTrace("TreatmentsManager.as", "User deleted treatment in Nightscout. Deleting in Spike as well. Type: " + internalTreatment.type);
 					
 					//Treatment is not present in Nightscout. User has deleted it
-					deleteTreatment(internalTreatment, false, false, now - internalTreatment.timestamp < TIME_24_HOURS);
+					deleteTreatment(internalTreatment, false, false, now - internalTreatment.timestamp < TimeSpan.TIME_24_HOURS);
 					
 					//Notify Listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalTreatment));

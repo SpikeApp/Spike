@@ -82,20 +82,7 @@ package ui.chart
 		//Constants
 		private static const MAIN_CHART:String = "mainChart";
 		private static const SCROLLER_CHART:String = "scrollerChart";
-		private static const ONE_DAY_IN_MINUTES:Number = 24 * 60;
-		private static const NUM_MINUTES_MISSED_READING_GAP:int = 6;
-		private static const TIME_30_SECONDS:int = 30 * 1000;
-		private static const TIME_75_SECONDS:int = 75 * 1000;
-		private static const TIME_2_MINUTES_30_SECONDS:int = (2* 60 * 1000) + (30 * 1000);
-		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
-		private static const TIME_6_MINUTES:int = 6 * 60 * 1000;
-		private static const TIME_16_MINUTES:int = 16 * 60 * 1000;
-		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
-		private static const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
-		private static const TIME_3_HOURS:int = 3 * 60 * 60 * 1000;
-		private static const TIME_4_HOURS:int = 4 * 60 * 60 * 1000;
-		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
-		private static const TIME_23_HOURS_57_MINUTES:int = TIME_24_HOURS - (3 * 60 * 1000);
+		private static var NUM_MINUTES_MISSED_READING_GAP:int = 6;
 		public static const TIMELINE_1H:Number = 14;
 		public static const TIMELINE_3H:Number = 8;
 		public static const TIMELINE_6H:Number = 4;
@@ -310,6 +297,7 @@ package ui.chart
 		{
 			//Data
 			this.isHistoricalData = isHistoricalData;
+			if (CGMBlueToothDevice.isFollower()) NUM_MINUTES_MISSED_READING_GAP = 7;
 			
 			//Unit
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
@@ -594,10 +582,10 @@ package ui.chart
 			if(chartType == MAIN_CHART)
 			{
 				differenceInMinutesForAllTimestamps = TimeSpan.fromDates(new Date(firstBGReadingTimeStamp), new Date(lastBGreadingTimeStamp)).totalMinutes;
-				if (differenceInMinutesForAllTimestamps > ONE_DAY_IN_MINUTES)
-					differenceInMinutesForAllTimestamps = ONE_DAY_IN_MINUTES;
+				if (differenceInMinutesForAllTimestamps > TimeSpan.TIME_ONE_DAY_IN_MINUTES)
+					differenceInMinutesForAllTimestamps = TimeSpan.TIME_ONE_DAY_IN_MINUTES;
 				
-				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
+				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (TimeSpan.TIME_ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
 				mainChartXFactor = scaleXFactor;
 			}
 			else if (chartType == SCROLLER_CHART)
@@ -1528,7 +1516,7 @@ package ui.chart
 			var initialTimestamp:Number = new Date(firstDate.fullYear, firstDate.month, firstDate.date, firstDate.hours, 0, 0, 0).valueOf();
 			var lastTimestamp:Number = lastDate.valueOf();
 			
-			while (initialTimestamp <= lastTimestamp + TIME_1_HOUR) 
+			while (initialTimestamp <= lastTimestamp + TimeSpan.TIME_1_HOUR) 
 			{	
 				//Get marker time
 				var markerDate:Date = new Date(initialTimestamp);
@@ -1570,13 +1558,13 @@ package ui.chart
 				
 				//Update loop condition
 				if (timelineRange == TIMELINE_1H || timelineRange == TIMELINE_3H || timelineRange == TIMELINE_6H)
-					initialTimestamp += TIME_1_HOUR;
+					initialTimestamp += TimeSpan.TIME_1_HOUR;
 				else if (timelineRange == TIMELINE_12H)
-					initialTimestamp += TIME_2_HOURS;
+					initialTimestamp += TimeSpan.TIME_2_HOURS;
 				else if (timelineRange == TIMELINE_24H && dateFormat.slice(0,2) == "24")
-					initialTimestamp += TIME_3_HOURS;
+					initialTimestamp += TimeSpan.TIME_3_HOURS;
 				else if (timelineRange == TIMELINE_24H && dateFormat.slice(0,2) == "12")
-					initialTimestamp += TIME_4_HOURS;
+					initialTimestamp += TimeSpan.TIME_4_HOURS;
 			}
 			
 			if (scrollerChart != null)
@@ -1886,14 +1874,14 @@ package ui.chart
 			else
 				firstTimestamp = Number.NaN;
 			
-			if(_dataSource.length >= 1 && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp > TIME_24_HOURS + Constants.READING_OFFSET)
+			if(_dataSource.length >= 1 && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp > TimeSpan.TIME_24_HOURS + Constants.READING_OFFSET)
 			{
 				//Array has more than 24h of data. Remove timestamps older than 24H
 				var removedMainGlucoseMarker:GlucoseMarker;
 				var removedScrollerGlucoseMarker:GlucoseMarker
 				var currentTimestamp:Number = Number((mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp);
 				
-				while (latestTimestamp - currentTimestamp > TIME_24_HOURS + Constants.READING_OFFSET) 
+				while (latestTimestamp - currentTimestamp > TimeSpan.TIME_24_HOURS + Constants.READING_OFFSET) 
 				{
 					//Main Chart
 					removedMainGlucoseMarker = mainChartGlucoseMarkersList.shift() as GlucoseMarker;
@@ -2000,14 +1988,14 @@ package ui.chart
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
 				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 			}
-			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_23_HOURS_57_MINUTES)
+			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TimeSpan.TIME_23_HOURS_57_MINUTES)
 			{
 				mainChart.x -= mainChart.width - previousChartWidth;
 				selectedGlucoseMarkerIndex += 1;
 			}
 			
 			//Adjust Pcker Position
-			if (!displayLatestBGValue && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TIME_23_HOURS_57_MINUTES && mainChart.x <= 0)
+			if (!displayLatestBGValue && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TimeSpan.TIME_23_HOURS_57_MINUTES && mainChart.x <= 0)
 			{
 				handPicker.x += (mainChart.width - previousChartWidth) * scrollMultiplier;
 				if (handPicker.x > _graphWidth - handPicker.width)
@@ -2066,11 +2054,11 @@ package ui.chart
 			{
 				//The following 3 lines of code are meant to scale the main chart correctly in case there's less than 24h of data
 				differenceInMinutesForAllTimestamps = TimeSpan.fromDates(new Date(firstTimeStamp), new Date(lastTimeStamp)).totalMinutes;
-				if (differenceInMinutesForAllTimestamps > ONE_DAY_IN_MINUTES)
-					differenceInMinutesForAllTimestamps = ONE_DAY_IN_MINUTES;
+				if (differenceInMinutesForAllTimestamps > TimeSpan.TIME_ONE_DAY_IN_MINUTES)
+					differenceInMinutesForAllTimestamps = TimeSpan.TIME_ONE_DAY_IN_MINUTES;
 				
 				//scaleXFactor = 1/(totalTimestampDifference / (chartWidth * timelineRange));
-				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
+				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (TimeSpan.TIME_ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
 				mainChartXFactor = scaleXFactor;
 			}
 			else if (chartType == SCROLLER_CHART)
@@ -2488,19 +2476,19 @@ package ui.chart
 					}
 					else if (mainChartGlucoseMarkersList.length > 1) /* Extra Actions */
 					{
-						if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
+						if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TimeSpan.TIME_16_MINUTES && !hitTestCurrent)
 						{
 							glucoseValueDisplay.text = "---";
 							glucoseValueDisplay.fontStyles.color = oldColor;
 							glucoseSlopePill.setValue("", "", oldColor);
 						}
-						else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
+						else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TimeSpan.TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TimeSpan.TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TimeSpan.TIME_16_MINUTES && !hitTestCurrent)
 						{
 							glucoseValueDisplay.fontStyles.color = oldColor;
 							glucoseSlopePill.setValue(glucoseSlopePill.value, glucoseSlopePill.unit, oldColor);
 						}
 						
-						if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && !hitTestCurrent)
+						if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TimeSpan.TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TimeSpan.TIME_5_MINUTES && !hitTestCurrent)
 						{
 							var currentTimelineDate:Date = new Date(currentTimelineTimestamp);
 							var currentTimelineHours:Number = currentTimelineDate.hours;
@@ -2592,11 +2580,11 @@ package ui.chart
 						//Marker Slope
 						glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, chartFontColor);
 					}
-					else if (timestampDifference <= TIME_16_MINUTES)
+					else if (timestampDifference <= TimeSpan.TIME_16_MINUTES)
 					{
 						//Glucose Value Display
 						glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
-						if (timestampDifference <= TIME_6_MINUTES)
+						if (timestampDifference <= TimeSpan.TIME_6_MINUTES)
 							glucoseValueDisplay.fontStyles.color = latestMarker.color;
 						else
 							glucoseValueDisplay.fontStyles.color = oldColor;
@@ -2604,12 +2592,12 @@ package ui.chart
 						//Marker Date Time
 						timeAgoValue = TimeSpan.formatHoursMinutesFromSecondsChart(timestampDifferenceInSeconds, false, false);
 						if (timeAgoValue != now)
-							glucoseTimeAgoPill.setValue(timeAgoValue, ago, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
+							glucoseTimeAgoPill.setValue(timeAgoValue, ago, timestampDifference <= TimeSpan.TIME_6_MINUTES ? chartFontColor : oldColor);
 						else
-							glucoseTimeAgoPill.setValue("0 min", now, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
+							glucoseTimeAgoPill.setValue("0 min", now, timestampDifference <= TimeSpan.TIME_6_MINUTES ? chartFontColor : oldColor);
 						
 						//Marker Slope
-						glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, timestampDifference <= TIME_6_MINUTES ? chartFontColor : oldColor);
+						glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, timestampDifference <= TimeSpan.TIME_6_MINUTES ? chartFontColor : oldColor);
 					}
 					else
 					{
@@ -2987,7 +2975,7 @@ package ui.chart
 				var isFuture:Boolean = false;
 				var timelineTimestamp:Number;
 				
-				if (latestMarkerGlobalX < 0 - (TIME_6_MINUTES * mainChartXFactor)) //We are in the future and there are missing readings
+				if (latestMarkerGlobalX < 0 - (TimeSpan.TIME_6_MINUTES * mainChartXFactor)) //We are in the future and there are missing readings
 				{
 					isFuture = true;
 					
@@ -3099,12 +3087,12 @@ package ui.chart
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
-									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
+									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TimeSpan.TIME_16_MINUTES && !hitTestCurrent)
 									{
 										glucoseValueDisplay.text = "---";
 										glucoseValueDisplay.fontStyles.color = oldColor;	
 									}
-									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
+									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TimeSpan.TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TimeSpan.TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TimeSpan.TIME_16_MINUTES && !hitTestCurrent)
 									{
 										glucoseValueDisplay.fontStyles.color = oldColor;
 									}
@@ -3119,12 +3107,12 @@ package ui.chart
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
-									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_16_MINUTES && !hitTestCurrent)
+									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TimeSpan.TIME_16_MINUTES && !hitTestCurrent)
 									{
 										if (glucoseSlopePill != null)
 											glucoseSlopePill.setValue("", "", oldColor)
 									}
-									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TIME_16_MINUTES && !hitTestCurrent)
+									else if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TimeSpan.TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TimeSpan.TIME_5_MINUTES && currentTimelineTimestamp - previousMaker.timestamp <= TimeSpan.TIME_16_MINUTES && !hitTestCurrent)
 									{
 										if (glucoseSlopePill != null)
 											glucoseSlopePill.setValue(glucoseSlopePill.value, glucoseSlopePill.unit, oldColor)
@@ -3141,7 +3129,7 @@ package ui.chart
 								
 								if (mainChartGlucoseMarkersList.length > 1)
 								{	
-									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TIME_5_MINUTES && !hitTestCurrent)
+									if (previousMaker != null && currentTimelineTimestamp - previousMaker.timestamp > TimeSpan.TIME_75_SECONDS && Math.abs(currentMarker.timestamp - currentTimelineTimestamp) > TimeSpan.TIME_5_MINUTES && !hitTestCurrent)
 									{
 										var currentTimelineDate:Date = new Date(currentTimelineTimestamp);
 										var currentTimelineHours:Number = currentTimelineDate.hours;
@@ -3476,7 +3464,7 @@ package ui.chart
 			
 			while (dataPoint >= 0)
 			{
-				pointInTime += TIME_2_MINUTES_30_SECONDS;
+				pointInTime += TimeSpan.TIME_2_MINUTES_30_SECONDS;
 				dataPoint = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime) : TreatmentsManager.getTotalCOB(pointInTime);
 				dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
 				

@@ -65,8 +65,6 @@ package services
 		private static var calibrationValue:TextInput;
 
 		private static var initialCalibrationActive:Boolean = false;
-		
-		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 
 		public static var optimalCalibrationScheduled:Boolean = false;
 		
@@ -380,7 +378,7 @@ package services
 				myTrace("in intialCalibrationValueEntered, starting Calibration.initialCalibration");
 				var now:Number = new Date().valueOf();
 				//Calibration.initialCalibration(asNumber, now - TIME_5_MINUTES, now, CGMBlueToothDevice.isMiaoMiao() ? 36 : 5);
-				Calibration.initialCalibration(asNumber, now - TIME_5_MINUTES, now, CGMBlueToothDevice.isMiaoMiao() ? 36 : 5);
+				Calibration.initialCalibration(asNumber, now - TimeSpan.TIME_5_MINUTES, now, CGMBlueToothDevice.isMiaoMiao() ? 36 : 5);
 				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 				_instance.dispatchEvent(calibrationServiceEvent);
 			}

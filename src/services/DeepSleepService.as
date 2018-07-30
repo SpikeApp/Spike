@@ -17,19 +17,19 @@ package services
 	import events.SettingsServiceEvent;
 	
 	import utils.Constants;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	public class DeepSleepService extends EventDispatcher
 	{
 		/* Constants */
-		private static const STANDARD_MODE:int = 60 * 1000;
-		private static const MODERATE_MODE:int = 30 * 1000;
-		private static const AGGRESSIVE_MODE:int = 10 * 1000;
-		private static const VERY_AGGRESSIVE_MODE:int = 5 * 1000;
-		private static const AUTOMATIC_DEXCOM:int = 10 * 1000;
-		private static const AUTOMATIC_NON_DEXCOM:int = 5 * 1000;
-		private static const AUTOMATIC_FOLLOWER:int = 10 * 1000;
-		private static const TIME_1_MINUTE:int = 1 * 60 * 1000;
+		private static const STANDARD_MODE:int = TimeSpan.TIME_1_MINUTE;
+		private static const MODERATE_MODE:int = TimeSpan.TIME_30_SECONDS;
+		private static const AGGRESSIVE_MODE:int = TimeSpan.TIME_10_SECONDS;
+		private static const VERY_AGGRESSIVE_MODE:int = TimeSpan.TIME_5_SECONDS;
+		private static const AUTOMATIC_DEXCOM:int = TimeSpan.TIME_10_SECONDS;
+		private static const AUTOMATIC_NON_DEXCOM:int = TimeSpan.TIME_5_SECONDS;
+		private static const AUTOMATIC_FOLLOWER:int = TimeSpan.TIME_10_SECONDS;
 		
 		/* Objects */
 		private static var _instance:DeepSleepService = new DeepSleepService();
@@ -147,7 +147,7 @@ package services
 				var now:Number = nowDate.valueOf();
 				var hours:Number = nowDate.hours;
 				
-				if (now - lastLogPlaySoundTimeStamp > TIME_1_MINUTE) 
+				if (now - lastLogPlaySoundTimeStamp > TimeSpan.TIME_1_MINUTE) 
 				{
 					Trace.myTrace("DeepSleepService.as", "Playing deep sleep sound...");
 					lastLogPlaySoundTimeStamp = now;

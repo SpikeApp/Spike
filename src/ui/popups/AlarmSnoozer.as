@@ -32,6 +32,7 @@ package ui.popups
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.TimeSpan;
 
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("alarmservice")]
@@ -41,7 +42,6 @@ package ui.popups
 		/* Constants */
 		public static const CANCELLED:String = "onCancelled";
 		public static const CLOSED:String = "onClosed";
-		private static const TIME_4_MINUTES:int = 4 * 60 * 1000;
 		
 		/* Display Objects */
 		private static var snoozePickerList:PickerList;
@@ -115,7 +115,7 @@ package ui.popups
 			SystemUtil.executeWhenApplicationIsActive( PopUpManager.addPopUp, snoozeCallout, true, false );
 			
 			//Create close timer
-			closeTimeout = setTimeout(closeCallout, TIME_4_MINUTES);
+			closeTimeout = setTimeout(closeCallout, TimeSpan.TIME_4_MINUTES);
 		}
 		
 		private static function createDisplayObjects():void

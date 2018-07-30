@@ -46,6 +46,7 @@ package model
 	import ui.popups.AlertManager;
 	
 	import utils.Constants;
+	import utils.TimeSpan;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 
@@ -55,7 +56,7 @@ package model
 		private static var _instance:ModelLocator = new ModelLocator();
 
 		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
-		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 60 * 60 * 1000 + Constants.READING_OFFSET;
+		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * TimeSpan.TIME_24_HOURS + Constants.READING_OFFSET;
 
 		public static const TEST_FLIGHT_MODE:Boolean = true;
 		public static const IS_IPAD:Boolean = false;

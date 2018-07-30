@@ -66,11 +66,7 @@ package ui.screens
 	[ResourceBundle("chartscreen")]
 
 	public class FullScreenGlucoseScreen extends BaseSubScreen
-	{
-		/* Constants */
-		private const TIME_6_MINUTES:int = 6 * 60 * 1000;
-		private const TIME_16_MINUTES:int = 16 * 60 * 1000;
-		
+	{	
 		/* Display Objects */
 		private var glucoseDisplay:Label;
 		private var timeAgoDisplay:Label;
@@ -80,6 +76,7 @@ package ui.screens
 		private var miaoMiaoHitArea:Quad;
 
 		/* Properties */
+		private var outdateDataMaxTime:int = 0;
 		private var oldColor:uint = 0xababab;
 		private var newColor:uint = 0xEEEEEE;
 		private var glucoseFontSize:Number;
@@ -152,6 +149,9 @@ package ui.screens
 		
 		private function setupInitialContent():void
 		{			
+			//Time
+			outdateDataMaxTime = CGMBlueToothDevice.isFollower() ? TimeSpan.TIME_7_MINUTES : TimeSpan.TIME_6_MINUTES;
+			
 			//Glucose Unit
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
 				glucoseUnit = "mg/dl";
@@ -305,12 +305,12 @@ package ui.screens
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
 				else if (latestGlucoseValue > 400) latestGlucoseValue = 400;
 				
-				if (nowTimestamp - latestGlucoseTimestamp <= TIME_16_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp <= TimeSpan.TIME_16_MINUTES)
 				{
 					latestGlucoseProperties = GlucoseFactory.getGlucoseOutput(latestGlucoseValue);
 					latestGlucoseOutput = latestGlucoseProperties.glucoseOutput;
 					latestGlucoseValueFormatted = latestGlucoseProperties.glucoseValueFormatted;
-					if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+					if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 						latestGlucoseColor = GlucoseFactory.getGlucoseColor(latestGlucoseValue);
 					else
 						latestGlucoseColor = oldColor;
@@ -329,7 +329,7 @@ package ui.screens
 				//Time Ago
 				timeAgoOutput = TimeSpan.formatHoursMinutesFromSecondsChart((nowTimestamp - latestGlucoseTimestamp)/1000, false, false);
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
-				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 					timeAgoColor = newColor;
 				else
 					timeAgoColor = oldColor;
@@ -355,12 +355,12 @@ package ui.screens
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
 				else if (latestGlucoseValue > 400) latestGlucoseValue = 400;
 				
-				if (nowTimestamp - latestGlucoseTimestamp <= TIME_16_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp <= TimeSpan.TIME_16_MINUTES)
 				{
 					latestGlucoseProperties = GlucoseFactory.getGlucoseOutput(latestGlucoseValue);
 					latestGlucoseOutput = latestGlucoseProperties.glucoseOutput;
 					latestGlucoseValueFormatted = latestGlucoseProperties.glucoseValueFormatted;
-					if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+					if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 						latestGlucoseColor = GlucoseFactory.getGlucoseColor(latestGlucoseValue);
 					else 
 						latestGlucoseColor = oldColor;
@@ -372,9 +372,9 @@ package ui.screens
 				}
 				
 				/* SLOPE */
-				if (nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TIME_16_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp > TimeSpan.TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TimeSpan.TIME_16_MINUTES)
 					latestGlucoseSlopeOutput = "";
-				else if (latestGlucoseTimestamp - previousGlucoseTimestamp < TIME_16_MINUTES)
+				else if (latestGlucoseTimestamp - previousGlucoseTimestamp < TimeSpan.TIME_16_MINUTES)
 				{
 					latestGlucoseSlopeOutput = GlucoseFactory.getGlucoseSlope
 						(
@@ -384,16 +384,16 @@ package ui.screens
 							latestGlucoseValueFormatted
 						);
 					
-					if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+					if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 						latestSlopeInfoColor = newColor;
 					else
 						latestSlopeInfoColor = oldColor;
 				}
 				
 				//Arrow
-				if (nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TIME_16_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp > TimeSpan.TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TimeSpan.TIME_16_MINUTES)
 					latestGlucoseSlopeArrow = "";
-				else if (latestGlucoseTimestamp - previousGlucoseTimestamp <= TIME_16_MINUTES)
+				else if (latestGlucoseTimestamp - previousGlucoseTimestamp <= TimeSpan.TIME_16_MINUTES)
 				{
 					if ((glucoseList[glucoseList.length - 1] as BgReading).hideSlope)
 						latestGlucoseSlopeArrow = "\u21C4";
@@ -407,7 +407,7 @@ package ui.screens
 				timeAgoOutput = TimeSpan.formatHoursMinutesFromSecondsChart(differenceInSec, false, false);
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				
-				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 					timeAgoColor = newColor;
 				else
 					timeAgoColor = oldColor;
@@ -575,7 +575,7 @@ package ui.screens
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				timeAgoDisplay.text = timeAgoOutput;
 				
-				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 					timeAgoColor = newColor;
 				else
 					timeAgoColor = oldColor;
@@ -588,7 +588,7 @@ package ui.screens
 					miaoMiaoHitArea.x = timeAgoDisplay.x;
 				}
 				
-				if ( nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES )
+				if ( nowTimestamp - latestGlucoseTimestamp > TimeSpan.TIME_16_MINUTES )
 				{
 					//Glucose Value
 					latestGlucoseOutput = "---";
@@ -604,7 +604,7 @@ package ui.screens
 					
 					glucoseDisplay.fontStyles.leading = getLeading(latestGlucoseSlopeArrow);
 				}
-				else if ( nowTimestamp - latestGlucoseTimestamp > TIME_6_MINUTES )
+				else if ( nowTimestamp - latestGlucoseTimestamp > outdateDataMaxTime )
 				{
 					glucoseDisplay.fontStyles.color = oldColor;
 					slopeDisplay.fontStyles.color = oldColor;

@@ -10,12 +10,44 @@ package utils
 	public class TimeSpan
 	{
 		/**
+		 * Constants that hold time in minutes
+		 */
+		public static const TIME_ONE_DAY_IN_MINUTES:int = 1440;
+		
+		/**
 		 * Constants that hold time in milliseconds
 		 */
+		public static const TIME_24_HOURS_6_MINUTES:int = 86760000;
+		public static const TIME_24_HOURS:int = 86400000
+		public static const TIME_23_HOURS_59_MINUTES:int = 86340000;
+		public static const TIME_23_HOURS_57_MINUTES:int = 82620000;
+		public static const TIME_4_HOURS:int = 14400000;
+		public static const TIME_3_HOURS:int = 10800000;
 		public static const TIME_2_HOURS:int = 7200000;
 		public static const TIME_1_HOUR:int = 3600000;
 		public static const TIME_30_MINUTES:int = 1800000;
-		
+		public static const TIME_24_MINUTES:int = 1440000;
+		public static const TIME_16_MINUTES:int = 960000;
+		public static const TIME_15_MINUTES:int = 900000;
+		public static const TIME_10_MINUTES:int = 600000;
+		public static const TIME_9_MINUTES:int = 540000;
+		public static const TIME_7_MINUTES:int = 420000;
+		public static const TIME_6_MINUTES:int = 360000;
+		public static const TIME_5_MINUTES_30_SECONDS:int = 330000;
+		public static const TIME_5_MINUTES_10_SECONDS:int = 310000;
+		public static const TIME_5_MINUTES:int = 300000;
+		public static const TIME_4_MINUTES_45_SECONDS:int = 315000;
+		public static const TIME_4_MINUTES_30_SECONDS:int = 270000;
+		public static const TIME_4_MINUTES:int = 240000;
+		public static const TIME_2_MINUTES_30_SECONDS:int = 150000;
+		public static const TIME_1_MINUTE:int = 60000;
+		public static const TIME_75_SECONDS:int = 75000;
+		public static const TIME_45_SECONDS:int = 45000;
+		public static const TIME_31_SECONDS:int = 31000;
+		public static const TIME_30_SECONDS:int = 30000;
+		public static const TIME_10_SECONDS:int = 10000;
+		public static const TIME_5_SECONDS:int = 5000;
+		public static const TIME_2_SECONDS:int = 2000;
 		
 		/**
 		 * The number of milliseconds in one day

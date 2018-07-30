@@ -40,7 +40,6 @@ package services
 	{
 		/* Constants */
 		private static const IFTTT_URL:String = "https://maker.ifttt.com/trigger/{trigger}/with/key/{key}";
-		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
 		
 		/* Internal Variables */
 		private static var isIFTTTEnabled:Boolean;
@@ -834,7 +833,7 @@ package services
 			
 			var info:Object = {};
 			info.value1 = ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert");
-			info.value2 = lastReading != null ? String(Math.round(timeSpan.minutes / TIME_5_MINUTES)) : ""; //Number of missed readings
+			info.value2 = lastReading != null ? String(Math.round(timeSpan.minutes / TimeSpan.TIME_5_MINUTES)) : ""; //Number of missed readings
 			info.value3 = lastReading != null ? String((timeSpan.hours > 0 ? MathHelper.formatNumberToString(timeSpan.hours) + "h" : "") + (timeSpan.hours > 0  ? MathHelper.formatNumberToString(timeSpan.minutes) + "m" : timeSpan.minutes + "m")) : ""; //Time since last reading
 			
 			for (var i:int = 0; i < makerKeyList.length; i++) 

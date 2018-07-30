@@ -42,8 +42,6 @@ package ui.screens.display.settings.alarms
 	public class AlarmCustomizerList extends SpikeList 
 	{
 		/* Constants */
-		private const TIME_1_MINUTE:int = 1000 * 60;
-		private const TIME_1_DAY:int = (1000 * 60 * 60 * 23) + (1000 * 60 * 59); //23h, 59m
 		private const UNIT_MGDL:String = "mg/dL";
 		private const UNIT_MMOL:String = "mmol/L";
 		
@@ -361,10 +359,10 @@ package ui.screens.display.settings.alarms
 						//Check if there's only one alarm. If so, we might need to push a NO ALERT filler at the end.
 						if (alarmData.length == 1)
 						{
-							if (currentAlarmEndTimeStamp < TIME_1_DAY)
+							if (currentAlarmEndTimeStamp < TimeSpan.TIME_23_HOURS_59_MINUTES)
 							{
 								//We need to add a NO ALERT filler at the end
-								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TIME_1_MINUTE);
+								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TimeSpan.TIME_1_MINUTE);
 								finalAlarmData.push
 								(
 									{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
@@ -379,10 +377,10 @@ package ui.screens.display.settings.alarms
 						var previousAlarmEndTimeStamp:Number = Number(previousAlarmSettings.endTimeStamp);
 						var timeSpan:TimeSpan;
 						
-						if (previousAlarmEndTimeStamp + TIME_1_MINUTE < currentAlarmStartTimeStamp)
+						if (previousAlarmEndTimeStamp + TimeSpan.TIME_1_MINUTE < currentAlarmStartTimeStamp)
 						{
 							//There's a gap between the previous alarm and this one. Let's add a filler NO ALERT alarm that starts 1 minute later
-							timeSpan = TimeSpan.fromMilliseconds(previousAlarmEndTimeStamp + TIME_1_MINUTE);
+							timeSpan = TimeSpan.fromMilliseconds(previousAlarmEndTimeStamp + TimeSpan.TIME_1_MINUTE);
 							finalAlarmData.push
 							(
 								{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
@@ -398,10 +396,10 @@ package ui.screens.display.settings.alarms
 						if (i == dataLength - 1)
 						{
 							//We're in the final alarm. Check if we need to add a NO ALERT filler to the end to complete the entire 24h span
-							if (currentAlarmEndTimeStamp < TIME_1_DAY)
+							if (currentAlarmEndTimeStamp < TimeSpan.TIME_23_HOURS_59_MINUTES)
 							{
 								//Complete the 24h timespan with a NO ALERT filler that starts 1 minute later
-								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TIME_1_MINUTE);
+								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TimeSpan.TIME_1_MINUTE);
 								finalAlarmData.push
 								(
 									{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
@@ -509,7 +507,7 @@ package ui.screens.display.settings.alarms
 				//Conditions that make timeranges conflict with each other
 				if ((alarmStartTimeStamp >= existingStartTimeStamp && alarmStartTimeStamp <= existingEndTimeStamp) ||
 					(alarmStartTimeStamp < existingStartTimeStamp && alarmEndTimeStamp >= existingEndTimeStamp) ||
-					(alarmStartTimeStamp == existingStartTimeStamp - TIME_1_MINUTE) ||
+					(alarmStartTimeStamp == existingStartTimeStamp - TimeSpan.TIME_1_MINUTE) ||
 					(alarmStartTimeStamp == existingStartTimeStamp) ||
 					(alarmEndTimeStamp == existingEndTimeStamp) ||
 					(alarmEndTimeStamp >= existingStartTimeStamp && alarmEndTimeStamp <= existingEndTimeStamp))

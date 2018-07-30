@@ -22,13 +22,11 @@ package services
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	public class HealthKitService
 	{
-		//Constants
-		private static const TIME_24_HOURS:Number = 24 * 60 * 60 * 1000;
-		
 		//Properties
 		private static var _instance:HealthKitService = new HealthKitService();
 		private static var hkTreatmentsList:Dictionary = new Dictionary();
@@ -52,7 +50,7 @@ package services
 			
 			//Get existing HK treatments from DB
 			var now:Number = new Date().valueOf();
-			var hkTreatments:Array = Database.getHealthkitTreatmentsSynchronous(now - TIME_24_HOURS, now);
+			var hkTreatments:Array = Database.getHealthkitTreatmentsSynchronous(now - TimeSpan.TIME_24_HOURS, now);
 			var numTreatments:uint = hkTreatments.length;
 			for (var i:int = 0; i < numTreatments; i++) 
 			{

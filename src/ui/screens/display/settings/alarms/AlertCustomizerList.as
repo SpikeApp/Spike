@@ -38,18 +38,13 @@ package ui.screens.display.settings.alarms
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("alertsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
 	public class AlertCustomizerList extends List 
 	{
-		/**
-		 * this is the default value for 5 minutes, to be used as repeat interval<br>
-		 * the real value is a bit less than 5 minutes because if we would take 5 minutes then there's a risk that the check is done just a bit too soon 
-		 */
-		private const TIME_5_MINUTES:int = 5 * 60 * 1000 - 10000;
-
 		/* Display Objects */
 		private var alertName:TextInput;
 		private var enableSnoozeInNotification:Check;
@@ -135,7 +130,7 @@ package ui.screens.display.settings.alarms
 				alertNameValue = selectedAlertType.alarmName;
 				enableSnoozeInNotificationValue = selectedAlertType.snoozeFromNotification;
 				snoozeMinutesValue = selectedAlertType.defaultSnoozePeriodInMinutes;
-				enableRepeatValue = selectedAlertType.repeatInMinutes == TIME_5_MINUTES;
+				enableRepeatValue = selectedAlertType.repeatInMinutes == TimeSpan.TIME_5_MINUTES;
 				enableVibrationValue = selectedAlertType.enableVibration;
 				previousAlertName = selectedAlertType.alarmName;
 				selectedSoundNameValue = selectedAlertType.sound;
@@ -413,7 +408,7 @@ package ui.screens.display.settings.alarms
 			enableSnoozeInNotificationValue = enableSnoozeInNotification.isSelected;
 			snoozeMinutesValue = snoozeMinutes.value;
 			enableRepeatValue = enableRepeat.isSelected;
-			enableRepeatValue == true ? repeatInMinutes = TIME_5_MINUTES : repeatInMinutes = 0;
+			enableRepeatValue == true ? repeatInMinutes = TimeSpan.TIME_5_MINUTES : repeatInMinutes = 0;
 			enableVibrationValue = enableVibration.isSelected;
 			
 			saveAlert.isEnabled = true;
