@@ -6,13 +6,13 @@ package G5G6Model
 		public static const LOW:String = "LOW";
 		public static const OK:String = "OK";
 		public static const UNKNOWN:String = "UNKNOWN";
-		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEA:int = 300;
-		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB:int = 290;
+		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G5:int = 300;
+		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB_G5:int = 290;
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6:int = 290;
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB_G6:int = 270;
-		public static const RESIST_BAD:int = 1400;
-		public static const RESIST_NOTICE:int = 1000;
-		public static const RESIST_NORMAL:int = 750
+		public static const RESIST_BAD_G5_G6:int = 1400;
+		public static const RESIST_NOTICE_G5_G6:int = 1000;
+		public static const RESIST_NORMAL_G5_G6:int = 750
 		
 		private var _batteryLevel:String;
 

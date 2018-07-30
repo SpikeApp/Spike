@@ -11,7 +11,6 @@ package ui.screens.display.transmitter
 	import flash.desktop.SystemIdleMode;
 	import flash.display.StageOrientation;
 	import flash.events.TimerEvent;
-	import flash.system.Capabilities;
 	import flash.utils.Timer;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
@@ -229,7 +228,7 @@ package ui.screens.display.transmitter
 				if (voltageAValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown'))
 				{
 					if (CGMBlueToothDevice.isDexcomG5())
-						voltageAStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok');
+						voltageAStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G5 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok');
 					else if (CGMBlueToothDevice.isDexcomG6())
 						voltageAStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok');
 				}
@@ -241,7 +240,7 @@ package ui.screens.display.transmitter
 				if (voltageBValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown'))
 				{
 					if (CGMBlueToothDevice.isDexcomG5())
-						voltageBStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok'); 
+						voltageBStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB_G5 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok'); 
 					else if (CGMBlueToothDevice.isDexcomG6())
 						voltageBStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB)) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB_G6 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_low'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','voltage_status_ok'); 
 				}
@@ -251,7 +250,7 @@ package ui.screens.display.transmitter
 				if (resistanceValue == "unknown" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) resistanceValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
 				
 				if (resistanceValue != ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown'))
-					resistanceStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_BAD ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_bad'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_NOTICE ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_notice'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_NORMAL ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_normal'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_good')));
+					resistanceStatus = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_BAD_G5_G6 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_bad'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_NOTICE_G5_G6 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_notice'):(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST)) > G5G6Model.TransmitterStatus.RESIST_NORMAL_G5_G6 ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_normal'):ModelLocator.resourceManagerInstance.getString('transmitterscreen','resistance_status_good')));
 				
 				/* Temperature */
 				var temperatureValueNumber:Number = Math.abs(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_TEMPERATURE)));
@@ -472,9 +471,9 @@ package ui.screens.display.transmitter
 					}
 					else
 					{
-						if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 50) //OK Battery
+						if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 40) //OK Battery
 							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryOkTexture;
-						else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 30) //Alert Battery
+						else if(Number(batteryLevelValue.replace("%", "").replace(" ", "")) > 20) //Alert Battery
 							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryAlertTexture;
 						else //Low Battery
 							batteryLevelIconTexture = MaterialDeepGreyAmberMobileThemeIcons.batteryBadTexture;

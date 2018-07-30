@@ -231,12 +231,14 @@ package ui.screens.display.settings.alarms
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT && !CGMBlueToothDevice.isBluKon())
 				{
 					if (CGMBlueToothDevice.isDexcomG5())
-						alarmValue = G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA;
+						alarmValue = G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G5;
 					else if (CGMBlueToothDevice.isDexcomG6())
 						alarmValue = G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6;
 					else if (CGMBlueToothDevice.isDexcomG4())
 						alarmValue = 210;
-					else if (CGMBlueToothDevice.isMiaoMiao() || CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL())
+					else if (CGMBlueToothDevice.isMiaoMiao())
+						alarmValue = 30;
+					else if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL())
 						alarmValue = 20;
 				}
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT)

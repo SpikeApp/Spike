@@ -1,7 +1,6 @@
 package ui.chart
 {
 	import flash.errors.IllegalOperationError;
-	import flash.system.Capabilities;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -349,7 +348,7 @@ package ui.chart
 				{
 					if (CGMBlueToothDevice.isDexcomG5())
 					{
-						if (Number(voltageAValue) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA)
+						if (Number(voltageAValue) < G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G5)
 							transmitterBatteryColor = 0xff1c1c;
 						else
 							transmitterBatteryColor = 0x4bef0a;
@@ -396,9 +395,9 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue > 50)
+					if (transmitterValue > 40)
 						transmitterBatteryColor = 0x4bef0a;
-					else if (transmitterValue > 30)
+					else if (transmitterValue > 20)
 						transmitterBatteryColor = 0xff671c;
 					else
 						transmitterBatteryColor = 0xff1c1c;
@@ -417,9 +416,9 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue > 50)
+					if (transmitterValue > 40)
 						transmitterBatteryColor = 0x4bef0a;
-					else if (transmitterValue > 30)
+					else if (transmitterValue > 20)
 						transmitterBatteryColor = 0xff671c;
 					else
 						transmitterBatteryColor = 0xff1c1c;
@@ -438,9 +437,9 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue > 50)
+					if (transmitterValue > 40)
 						transmitterBatteryColor = 0x4bef0a;
-					else if (transmitterValue > 30)
+					else if (transmitterValue > 20)
 						transmitterBatteryColor = 0xff671c;
 					else
 						transmitterBatteryColor = 0xff1c1c;
@@ -456,9 +455,9 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue > 50)
+					if (transmitterValue > 40)
 						transmitterBatteryColor = 0x4bef0a;
-					else if (transmitterValue > 30)
+					else if (transmitterValue > 20)
 						transmitterBatteryColor = 0xff671c;
 					else
 						transmitterBatteryColor = 0xff1c1c;
@@ -476,9 +475,9 @@ package ui.chart
 				
 				if (!isNaN(transmitterValue))
 				{
-					if (transmitterValue > 50)
+					if (transmitterValue > 40)
 						transmitterBatteryColor = 0x4bef0a;
-					else if (transmitterValue > 30)
+					else if (transmitterValue > 20)
 						transmitterBatteryColor = 0xff671c;
 					else
 						transmitterBatteryColor = 0xff1c1c;

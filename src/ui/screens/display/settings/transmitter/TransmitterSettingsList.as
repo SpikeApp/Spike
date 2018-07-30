@@ -300,7 +300,7 @@ package ui.screens.display.settings.transmitter
 			//Define Battery value
 			var batteryValue:String;
 			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
-				batteryValue = String(TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA);
+				batteryValue = String(TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G5);
 			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6'))
 				batteryValue = String(TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6);
 			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4'))
