@@ -667,7 +667,10 @@ package ui.screens
 				
 				//Request MiaoMiao Reading On-Demand
 				if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
+				{
 					SpikeANE.sendStartReadingCommmandToMiaoMia();
+					SpikeANE.vibrate();
+				}
 			}
 			else if (touch != null && touch.phase == TouchPhase.ENDED)
 			{

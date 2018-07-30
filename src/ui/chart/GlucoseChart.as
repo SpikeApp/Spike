@@ -2743,7 +2743,10 @@ package ui.chart
 			{
 				//Request MiaoMiao Reading On-Demand
 				if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
+				{
 					SpikeANE.sendStartReadingCommmandToMiaoMia();
+					SpikeANE.vibrate();
+				}
 			}
 		}
 		
