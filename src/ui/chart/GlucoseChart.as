@@ -1,6 +1,7 @@
 package ui.chart
 { 
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.events.TimerEvent;
@@ -61,6 +62,7 @@ package ui.chart
 	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
+	import ui.InterfaceController;
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
@@ -2664,7 +2666,12 @@ package ui.chart
 			
 			//Glucose Retro Display
 			glucoseTimeAgoPill = new ChartInfoPill(retroDisplayFont);
-			glucoseTimeAgoPill.touchable = false;
+			
+			if (!CGMBlueToothDevice.isMiaoMiao())
+				glucoseTimeAgoPill.touchable = false;
+			else
+				glucoseTimeAgoPill.addEventListener(TouchEvent.TOUCH, onRequestMiaoMiaoReading)
+			
 			glucoseTimeAgoPill.setValue("0", "mg/dL", chartFontColor);
 			glucoseTimeAgoPill.x = glucoseStatusLabelsMargin + 4;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
@@ -2739,6 +2746,17 @@ package ui.chart
 			}
 			
 			glucoseTimeAgoPill.setValue("", "", chartFontColor);
+		}
+		
+		private function onRequestMiaoMiaoReading(e:TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				//Request MiaoMiao Reading On-Demand
+				if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
+					SpikeANE.sendStartReadingCommmandToMiaoMia();
+			}
 		}
 		
 		private function onMainGlucoseTouch(e:TouchEvent):void

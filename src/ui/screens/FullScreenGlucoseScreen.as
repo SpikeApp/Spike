@@ -1,5 +1,7 @@
 package ui.screens
 {
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
 	import flash.display.StageOrientation;
@@ -38,6 +40,7 @@ package ui.screens
 	
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
+	import starling.display.Quad;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.events.Touch;
@@ -49,6 +52,7 @@ package ui.screens
 	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
+	import ui.InterfaceController;
 	import ui.chart.GlucoseFactory;
 	import ui.chart.GraphLayoutFactory;
 	import ui.screens.display.LayoutFactory;
@@ -73,6 +77,7 @@ package ui.screens
 		private var slopeDisplay:Label;
 		private var container:LayoutGroup;
 		private var IOBCOBDisplay:Label;
+		private var miaoMiaoHitArea:Quad;
 
 		/* Properties */
 		private var oldColor:uint = 0xababab;
@@ -183,6 +188,16 @@ package ui.screens
 			timeAgoDisplay.validate();
 			addChild(timeAgoDisplay);
 			
+			/* MiaoMiao HitArea */
+			if (CGMBlueToothDevice.isMiaoMiao())
+			{
+				miaoMiaoHitArea = new Quad(150, timeAgoDisplay.height + 25, 0xFF0000);
+				miaoMiaoHitArea.alpha = 0;
+				miaoMiaoHitArea.addEventListener(TouchEvent.TOUCH, onRequestMiaoMiaoReading);
+				miaoMiaoHitArea.x = timeAgoDisplay.x;
+				addChild(miaoMiaoHitArea);
+			}
+			
 			/* Slope Display Label */
 			slopeDisplay = LayoutFactory.createLabel(latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit() : "", HorizontalAlign.RIGHT, VerticalAlign.MIDDLE, infoFontSize, false, latestSlopeInfoColor);
 			slopeDisplay.width = 300;
@@ -229,6 +244,12 @@ package ui.screens
 			/* TimeAgo Display Label */
 			timeAgoDisplay.text = timeAgoOutput;
 			timeAgoDisplay.fontStyles.color = timeAgoColor;
+			
+			if (CGMBlueToothDevice.isMiaoMiao() && miaoMiaoHitArea != null)
+			{
+				timeAgoDisplay.validate();
+				miaoMiaoHitArea.x = timeAgoDisplay.x;
+			}
 			
 			/* Slope Display Label */
 			slopeDisplay.text = latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit() : "";
@@ -561,6 +582,12 @@ package ui.screens
 				
 				timeAgoDisplay.fontStyles.color = timeAgoColor;
 				
+				if (CGMBlueToothDevice.isMiaoMiao() && miaoMiaoHitArea != null)
+				{
+					timeAgoDisplay.validate();
+					miaoMiaoHitArea.x = timeAgoDisplay.x;
+				}
+				
 				if ( nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES )
 				{
 					//Glucose Value
@@ -630,6 +657,24 @@ package ui.screens
 			}
 		}
 		
+		private function onRequestMiaoMiaoReading(e:TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				this.removeEventListener(TouchEvent.TOUCH, onTouch);
+				this.removeEventListener(starling.events.Event.ENTER_FRAME, onHold);
+				
+				//Request MiaoMiao Reading On-Demand
+				if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
+					SpikeANE.sendStartReadingCommmandToMiaoMia();
+			}
+			else if (touch != null && touch.phase == TouchPhase.ENDED)
+			{
+				this.addEventListener(TouchEvent.TOUCH, onTouch);
+			}
+		}
+		
 		override protected function onBackButtonTriggered(event:starling.events.Event):void
 		{
 			//Pop this screen off
@@ -657,6 +702,13 @@ package ui.screens
 			if (timeAgoDisplay != null && slopeDisplay != null)
 			{
 				timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
+				
+				if (CGMBlueToothDevice.isMiaoMiao() && miaoMiaoHitArea != null)
+				{
+					timeAgoDisplay.validate();
+					miaoMiaoHitArea.x = timeAgoDisplay.x;
+				}
+				
 				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
 			}
 			
@@ -730,6 +782,14 @@ package ui.screens
 				timeAgoDisplay.removeFromParent();
 				timeAgoDisplay.dispose();
 				timeAgoDisplay = null;
+			}
+			
+			if (miaoMiaoHitArea != null)
+			{
+				miaoMiaoHitArea.removeEventListener(TouchEvent.TOUCH, onRequestMiaoMiaoReading);
+				miaoMiaoHitArea.removeFromParent();
+				miaoMiaoHitArea.dispose();
+				miaoMiaoHitArea = null;
 			}
 			
 			if (IOBCOBDisplay != null)
