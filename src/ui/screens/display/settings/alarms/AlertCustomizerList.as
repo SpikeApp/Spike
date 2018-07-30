@@ -226,7 +226,7 @@ package ui.screens.display.settings.alarms
 				
 				soundListProvider.push( { label: labelValue, accessory: accessoryValue, soundFile: soundFileValue } );
 				
-				if (mode == "edit" && (labelValue == selectedSoundNameValue || (labelValue == "No Sound" || (labelValue == "Default iOS" && selectedSoundNameValue == "default")))
+				if (mode == "edit" && (labelValue == selectedSoundNameValue || (labelValue == "No Sound" && selectedSoundNameValue == "no_sound") || (labelValue == "Default iOS" && selectedSoundNameValue == "default")))
 					previousSoundFileIndex = i;
 			}
 			

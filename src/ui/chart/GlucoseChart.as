@@ -2534,7 +2534,7 @@ package ui.chart
 							glucoseTimeAgoPill.setValue("0 min", now, oldColor);
 						
 						//Marker Slope
-						glucoseSlopePill.setValue(ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown'), "", oldColor);
+						glucoseSlopePill.setValue("???", "", oldColor);
 						
 						if (selectedGlucoseMarkerIndex > 0)
 							selectedGlucoseMarkerIndex -= 1;

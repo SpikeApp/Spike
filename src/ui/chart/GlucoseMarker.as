@@ -89,7 +89,7 @@ package ui.chart
 				}
 			}
 			else
-				slopeOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','slope_unknown');
+				slopeOutput = "???";
 			
 			//Arrow
 			if (bgReading.hideSlope)

@@ -87,7 +87,7 @@ package
 		private function sendError(error:String):void
 		{
 			//Things we don't want to report
-			if ( 
+			if (
 				error.indexOf("ioError") != -1 ||
 				error.indexOf("Unexpected < encountered") != -1 ||
 				error.indexOf("Unexpected T encountered") != -1 ||
@@ -102,9 +102,9 @@ package
 				error.indexOf("#2004 at flash.text.engine::ElementFormat()") != -1 ||
 				error.indexOf("#1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
 				error.indexOf("Error #1125 at BatchProcessor/getBatchAt()") != -1 ||
-				error.indexOf("Error #1009 at feathers.controls.text::StageTextTextEditor/render() != -1 ||
-				error.indexOf("Error #1009 at feathers.controls::StackScreenNavigator/handleDragEnd() != -1 ||
-				error.indexOf("Error #2004 at flash.text.engine::ElementFormat() != -1 ||
+				error.indexOf("Error #1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
+				error.indexOf("Error #1009 at feathers.controls::StackScreenNavigator/handleDragEnd()") != -1 ||
+				error.indexOf("Error #2004 at flash.text.engine::ElementFormat()") != -1 ||
 				error.indexOf("Graphic/getBounds()") != -1
 				)
 			{
