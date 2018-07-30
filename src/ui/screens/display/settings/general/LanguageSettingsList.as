@@ -80,7 +80,7 @@ package ui.screens.display.settings.general
 			
 			/* Set DateFormatPicker Data */
 			var appLanguageLabelsList:Array = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','app_language_labels_list').split(",");
-			var appLanguageCodesList:Array = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','app_language_codes_list').split(",");
+			var appLanguageCodesList:Array = "ar_SA,bg_BG,zh_CN,cs_CZ,da_DK,en_US,fi_FI,fr_FR,de_DE,hu_HU,it_IT,no_NO,pl_PL,pt_PT,ru_RU,es_ES,sv_SE".split(",");
 			var appLanguageList:Array = new Array();
 			var selectedIndex:int = 0;
 			for (var i:int = 0; i < appLanguageLabelsList.length; i++) 

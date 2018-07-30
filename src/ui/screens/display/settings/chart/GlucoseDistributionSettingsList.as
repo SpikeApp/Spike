@@ -86,7 +86,7 @@ package ui.screens.display.settings.chart
 			enableGlucoseDistribution.addEventListener(Event.CHANGE, onEnableGlucoseDistributionChanged);
 			
 			var rangesLabels:Array = ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_range_labels').split(",");
-			var rangesValues:Array = ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_range_values').split(",");
+			var rangesValues:Array = "86400000,172800000,259200000,604800000,1209600000,2419200000,7257600000".split(",");
 			var i:int;
 			var value:Number;
 			

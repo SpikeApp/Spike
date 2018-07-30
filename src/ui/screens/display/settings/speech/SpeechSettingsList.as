@@ -134,7 +134,7 @@ package ui.screens.display.settings.speech
 			
 			//Temp Data Objects
 			var languagesLabelsList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistdescription').split(",");
-			var languagesCodesList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistcodes').split(",");
+			var languagesCodesList:Array = "zh-CN,zh-HK,zh-TW,nl-BE,nl-NL,en-AU,en-IE,en-ZA,en-GB,en-US,fr-CA,fr-FR,de-DE,it-IT,pl-PL,pt-BR,pt-PT,ru-RU,sl-SL,es-MX,es-ES".split(",");
 			var languagePickerList:Array = new Array();
 			var dataLength:int = languagesLabelsList.length;
 			for (var i:int = 0; i < dataLength; i++) 
