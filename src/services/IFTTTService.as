@@ -315,12 +315,12 @@ package services
 			
 			if ((isIFTTTGlucoseReadingsEnabled || isIFTTTGlucoseThresholdsEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
 			{
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBgReading);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReading);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReading);
 			}
 			else
 			{
-				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBgReading);
+				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReading);
 				NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReading);
 			}
 			

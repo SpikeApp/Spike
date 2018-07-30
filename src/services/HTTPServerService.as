@@ -93,7 +93,7 @@ package services
 				httpServer.registerController(spikeTreatmentsController);
 				httpServer.listen(1979);
 				
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBgreadingReceived);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgreadingReceived);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 				
 				Trace.myTrace("HTTPServerService.as", "Service activated!");
@@ -134,7 +134,7 @@ package services
 				httpServer = null;
 			}
 			
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBgreadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgreadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			
 			serviceActive = false;
