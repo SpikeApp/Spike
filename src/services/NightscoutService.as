@@ -1467,7 +1467,7 @@ package services
 		
 		private static function getRemoteTreatments():void
 		{
-			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || activeTreatmentsDelete == null || activeTreatmentsUpload == null || activeSensorStarts == null || activeVisualCalibrations == null)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "getRemoteTreatments called!");
@@ -1552,9 +1552,15 @@ package services
 			//API Secret
 			var treatmentAPISecret:String = "";
 			if (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+			{
+				if (nightscoutFollowAPISecret == null) return;
 				treatmentAPISecret = nightscoutFollowAPISecret;
+			}
 			else if (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+			{
+				if (apiSecret == null) return;
 				treatmentAPISecret = apiSecret;
+			}
 			
 			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + ".json?" + parameters, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_TREATMENTS_GET, onGetTreatmentsComplete, onConnectionFailed);
 		}
