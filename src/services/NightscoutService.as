@@ -1525,7 +1525,7 @@ package services
 			
 			//Define request parameters
 			var parameters:URLVariables = new URLVariables();
-			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TimeSpan..TIME_24_HOURS);
+			parameters["find[created_at][$gte]"] = formatter.format(new Date().valueOf() - TimeSpan.TIME_24_HOURS);
 			parameters["find[eventType][$nin][0]"] = "Temp Basal";
 			//parameters["find[eventType][$nin][1]"] = "Combo Bolus";
 			

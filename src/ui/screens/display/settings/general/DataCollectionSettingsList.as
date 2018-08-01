@@ -121,12 +121,12 @@ package ui.screens.display.settings.general
 			
 			//API Secret
 			nightscoutAPISecretTextInput = LayoutFactory.createTextInput(true, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT);
-			if (DeviceInfo.isTablet()) nightscoutAPISecretTextInput.width += 100;
 			nightscoutAPISecretTextInput.text = nightscoutAPISecretValue;
+			if (DeviceInfo.isTablet()) nightscoutAPISecretTextInput.width += 100;
 			nightscoutAPISecretTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//NS Login
-			nsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
+			nsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'))
 			nsLogin.addEventListener(Event.TRIGGERED, onNightscoutLogin);
 			
 			//API Secret Description
@@ -209,6 +209,7 @@ package ui.screens.display.settings.general
 			followNSURL = nightscoutURLInput.text.replace(" ", "");
 			nightscoutOffset = nightscoutOffsetStepper.value;
 			nightscoutAPISecretValue = nightscoutAPISecretTextInput.text.replace(" ", "");
+			nsLogin.isEnabled = nightscoutAPISecretValue.length == 0 ? false : true;
 			
 			needsSave = true;
 		}
@@ -231,10 +232,13 @@ package ui.screens.display.settings.general
 		 */
 		override protected function draw():void
 		{
+			super.draw();
+			
 			if ((layout as VerticalLayout) != null)
 				(layout as VerticalLayout).hasVariableItemDimensions = true;
 			
-			super.draw();
+			if (nsLogin != null && nightscoutAPISecretTextInput != null)
+				nsLogin.isEnabled = nightscoutAPISecretTextInput.text.length == 0 ? false : true;
 		}
 		
 		/**
