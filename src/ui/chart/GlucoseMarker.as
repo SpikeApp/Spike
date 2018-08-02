@@ -4,8 +4,6 @@ package ui.chart
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
-	import model.ModelLocator;
-	
 	import starling.display.Sprite;
 	
 	import ui.shapes.SpikeNGon;
@@ -33,13 +31,15 @@ package ui.chart
 		// Internal Variables
 		private var data:Object;
 		private var dateFormat:String;
+		private var isRaw:Boolean;
 
 		// Display Objects
 		private var glucoseMarker:SpikeNGon;
 
-        public function GlucoseMarker(data:Object)
+        public function GlucoseMarker(data:Object, isRaw:Boolean = false)
         {
             this.data = data;
+			this.isRaw = isRaw;
 			
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 			
@@ -64,48 +64,56 @@ package ui.chart
 			//Timestamp
 			timestamp = bgReading.timestamp;
 			
-			//Glucose Value (Both internal and external)
-			glucoseValue = bgReading.calculatedValue;
-			
-			var glucoseValueProperties:Object = GlucoseFactory.getGlucoseOutput(glucoseValue);
-			glucoseOutput = glucoseValueProperties.glucoseOutput;
-			glucoseValueFormatted = glucoseValueProperties.glucoseValueFormatted;
-			
-			//Slope (Both Arrow And Output)
-			//Output
-			if(index > 0)
+			if (!isRaw)
 			{
-				if (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout") 
-					slopeOutput = String(MathHelper.formatNightscoutFollowerSlope(Math.round((glucoseValueFormatted - data.previousGlucoseValueFormatted) * 10) / 10));
-				else
+				//Glucose Value (Both internal and external)
+				glucoseValue = bgReading.calculatedValue;
+				
+				var glucoseValueProperties:Object = GlucoseFactory.getGlucoseOutput(glucoseValue);
+				glucoseOutput = glucoseValueProperties.glucoseOutput;
+				glucoseValueFormatted = glucoseValueProperties.glucoseValueFormatted;
+				
+				//Slope (Both Arrow And Output)
+				//Output
+				if(index > 0)
 				{
-					slopeOutput = GlucoseFactory.getGlucoseSlope
-					(
-						data.previousGlucoseValue,
-						data.previousGlucoseValueFormatted,
-						glucoseValue,
-						glucoseValueFormatted
-					);
+					if (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout") 
+						slopeOutput = String(MathHelper.formatNightscoutFollowerSlope(Math.round((glucoseValueFormatted - data.previousGlucoseValueFormatted) * 10) / 10));
+					else
+					{
+						slopeOutput = GlucoseFactory.getGlucoseSlope
+							(
+								data.previousGlucoseValue,
+								data.previousGlucoseValueFormatted,
+								glucoseValue,
+								glucoseValueFormatted
+							);
+					}
 				}
+				else
+					slopeOutput = "???";
+				
+				//Arrow
+				if (bgReading.hideSlope)
+					slopeArrow = "\u21C4";
+				else
+					slopeArrow = bgReading.slopeArrow();
+				
+				//Time
+				var markerDate:Date = new Date(timestamp);
+				if (dateFormat.slice(0,2) == "24")
+					timeFormatted = TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
+				else
+					timeFormatted = TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
+				
+				//Define glucose marker color
+				color = GlucoseFactory.getGlucoseColor(glucoseValue);
 			}
 			else
-				slopeOutput = "???";
-			
-			//Arrow
-			if (bgReading.hideSlope)
-				slopeArrow = "\u21C4";
-			else
-				slopeArrow = bgReading.slopeArrow();
-			
-			//Time
-			var markerDate:Date = new Date(timestamp);
-			if (dateFormat.slice(0,2) == "24")
-				timeFormatted = TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
-			else
-				timeFormatted = TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
-			
-			//Define glucose marker color
-			color = GlucoseFactory.getGlucoseColor(glucoseValue);
+			{
+				glucoseValue = Number(data.raw);
+				color = 0xEEEEEE;
+			}
 			
 			//Create graphics
 			draw();

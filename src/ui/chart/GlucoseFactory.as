@@ -234,18 +234,18 @@ package ui.chart
 			return value;
 		}
 		
-		public static function getRawGlucose():Number 
+		public static function getRawGlucose(targetBGReading:BgReading = null, lastestCalibration:Calibration = null):Number 
 		{
 			var raw:Number = Number.NaN;
-			var lastBgReading:BgReading = BgReading.lastNoSensor();
-			var lastCalibration:Calibration = Calibration.last();
+			var lastBgReading:BgReading = targetBGReading != null ? targetBGReading : BgReading.lastNoSensor();
+			var lastCalibration:Calibration = lastestCalibration != null ? lastestCalibration : Calibration.last();
 			if (lastBgReading != null && lastCalibration != null)
 			{
-				var slope:Number = lastCalibration.checkIn ? lastCalibration.slope : 1000/lastCalibration.slope;
+				var slope:Number = lastCalibration.checkIn ? lastCalibration.slope : 1000 / lastCalibration.slope;
 				var scale:Number = lastCalibration.checkIn ? lastCalibration.firstScale : 1;
 				var intercept:Number = lastCalibration.checkIn ? lastCalibration.firstIntercept : lastCalibration.intercept * -1000 / lastCalibration.slope;
-				var unfiltered:Number = lastBgReading.usedRaw() * 1000;
-				var filtered:Number = lastBgReading.ageAdjustedFiltered() * 1000;
+				var unfiltered:Number = lastCalibration.checkIn ? lastBgReading.rawData * 1000 : lastBgReading.ageAdjustedRawValue * 1000;
+				var filtered:Number = lastCalibration.checkIn || lastBgReading.rawData == 0 ? lastBgReading.filteredData * 1000 : (lastBgReading.filteredData * (lastBgReading.ageAdjustedRawValue / lastBgReading.rawData)) * 1000;
 				
 				if (slope === 0 || unfiltered === 0 || scale === 0) 
 					raw = 0;
@@ -257,7 +257,7 @@ package ui.chart
 					raw = scale * (unfiltered - intercept) / slope / ratio;
 				}
 				
-				if (!isNaN(raw) && raw != 0)
+				if (!isNaN(raw) && raw != 0 && targetBGReading == null)
 				{
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
 					{

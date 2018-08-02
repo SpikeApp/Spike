@@ -93,7 +93,9 @@ package ui.chart
 		private var _dataSource:Array;
 		private var mainChartGlucoseMarkersList:Array;
 		private var scrollChartGlucoseMarkersList:Array;
+		private var rawGlucoseMarkersList:Array;
 		private var mainChartLineList:Array;
+		private var rawLineList:Array;
 		private var scrollerChartLineList:Array;
 		private var lastBGreadingTimeStamp:Number;
 		private var firstBGReadingTimeStamp:Number;
@@ -104,8 +106,8 @@ package ui.chart
 		private var timelineRange:int;
 		private var _scrollerWidth:Number;
 		private var _scrollerHeight:Number;
-		private var lowestGlucoseValue:Number;
-		private var highestGlucoseValue:Number;
+		private var lowestGlucoseValue:Number = 1000;
+		private var highestGlucoseValue:Number = 0;
 		private var scaleYFactor:Number;
 		private var lineColor:uint = 0xEEEEEE;
 		private var chartFontColor:uint = 0xEEEEEE;
@@ -293,6 +295,10 @@ package ui.chart
 		//Main Glucose Touch
 		private var mainGlucoseTimer:Number = Number.NaN;
 		
+		//RAW
+		private var displayRaw:Boolean = false;
+		private var rawDataContainer:Sprite;
+		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
 			//Data
@@ -304,6 +310,9 @@ package ui.chart
 				glucoseUnit = "mg/dL";
 			else
 				glucoseUnit = "mmol/L";
+			
+			//Raw
+			displayRaw = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_RAW_ON) == "true" && (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6());
 			
 			//Threshold
 			glucoseUrgentLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
@@ -396,8 +405,10 @@ package ui.chart
 				this._scrollerHeight = 35;
 			this._graphHeight = chartHeight - chartTopPadding - _scrollerHeight - scrollerTopPadding - (timelineActive ? 10 : 0);
 			this.mainChartGlucoseMarkersList = [];
+			this.rawGlucoseMarkersList = [];
 			this.scrollChartGlucoseMarkersList = [];
 			this.mainChartLineList = [];
+			this.rawLineList = [];
 			this.scrollerChartLineList = [];
 			
 			//Event Listeners
@@ -412,13 +423,28 @@ package ui.chart
 		public function drawGraph():void
 		{	
 			/**
+			 * Main Chart Container
+			 */
+			mainChartContainer = new Sprite();
+			
+			/**
 			 * Main Chart
 			 */
 			mainChart = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
 			mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
 			mainChart.touchable = false;
-			mainChartContainer = new Sprite();
 			mainChartContainer.addChild(mainChart);
+			
+			/**
+			 * Raw Data Container
+			 */
+			if (displayRaw)
+			{
+				rawDataContainer = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius/2, true);
+				rawDataContainer.touchable = false;
+				rawDataContainer.x = mainChart.x;
+				mainChartContainer.addChild(rawDataContainer);
+			}
 			
 			//Add main chart to the display list
 			glucoseTimelineContainer.addChild(mainChartContainer);
@@ -556,7 +582,7 @@ package ui.chart
 			}
 		}
 		
-		private function drawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):Sprite
+		private function drawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, isRaw:Boolean = false):Sprite
 		{
 			var chartContainer:Sprite = new Sprite();
 			chartContainer.touchable = false;
@@ -586,7 +612,7 @@ package ui.chart
 					differenceInMinutesForAllTimestamps = TimeSpan.TIME_ONE_DAY_IN_MINUTES;
 				
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (TimeSpan.TIME_ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
-				mainChartXFactor = scaleXFactor;
+				if(!isRaw) mainChartXFactor = scaleXFactor;
 			}
 			else if (chartType == SCROLLER_CHART)
 			{
@@ -649,7 +675,7 @@ package ui.chart
 			 * Creation of the line component
 			 */
 			//Line Chart
-			if(_displayLine)
+			if(_displayLine && !isRaw)
 			{
 				var line:SpikeLine = new SpikeLine();
 				line.touchable = false;
@@ -668,6 +694,11 @@ package ui.chart
 			}
 			
 			/**
+			 * RAW Properties
+			 */
+			if (isRaw) var lastCalibration:Calibration = Calibration.last();
+			
+			/**
 			 * Creation and placement of the glucose values
 			 */
 			//Loop through all available data points
@@ -675,7 +706,7 @@ package ui.chart
 			for(i = 0; i < dataLength; i++)
 			{
 				//Get current glucose value
-				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
+				var currentGlucoseValue:Number = !isRaw ? Number(_dataSource[i].calculatedValue) : GlucoseFactory.getRawGlucose(_dataSource[i], lastCalibration);
 				if(currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
 				else if (currentGlucoseValue > 400)
@@ -684,18 +715,22 @@ package ui.chart
 				//Define glucose marker x position
 				var glucoseX:Number;
 				if(i==0)
-					glucoseX = 0;
+					glucoseX = !isRaw ? 0 : glucoseMarkerRadius;
 				else
 					glucoseX = (Number(_dataSource[i].timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
 				
 				//Define glucose marker y position
 				var glucoseY:Number = chartHeight - (glucoseMarkerRadius * 2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
+				if (isRaw) glucoseY -= glucoseMarkerRadius;
 				//If glucose is a perfect flat line then display it in the middle
-				if(totalGlucoseDifference == 0) 
+				if(totalGlucoseDifference == 0 && !isRaw) 
 					glucoseY = (chartHeight - (glucoseMarkerRadius*2)) / 2;
 				
 				// Create Glucose Marker
-				var glucoseMarker:GlucoseMarker = new GlucoseMarker
+				var glucoseMarker:GlucoseMarker;
+				if (!isRaw)
+				{
+					glucoseMarker = new GlucoseMarker
 					(
 						{
 							x: previousXCoordinate + glucoseX,
@@ -707,6 +742,22 @@ package ui.chart
 							previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 						}
 					);
+				}
+				else
+				{
+					glucoseMarker = new GlucoseMarker
+					(
+						{
+							x: previousXCoordinate + glucoseX,
+							y: glucoseY,
+							index: i,
+							radius: glucoseMarkerRadius,
+							bgReading: _dataSource[i],
+							raw: currentGlucoseValue
+						},
+						true
+					);
+				}
 				glucoseMarker.touchable = false;
 				
 				//Hide glucose marker if it is out of bounds (fixed size chart);
@@ -716,7 +767,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.width / 2));
@@ -740,7 +791,7 @@ package ui.chart
 						line.lineStyle(1, glucoseMarker.color, 1);
 						var currentColor:uint = glucoseMarker.color
 						var previousColor:uint;
-						
+							
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
 						if(previousGlucoseMarker != null && glucoseMarker != null)
 						{
@@ -758,7 +809,7 @@ package ui.chart
 							line.lineTo(currentLineX, currentLineY);
 						else
 							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
-						
+												
 						line.moveTo(currentLineX, currentLineY);
 					}
 					//Hide glucose marker
@@ -780,13 +831,18 @@ package ui.chart
 				
 				//Add glucose marker to the displayObjects array for later reference 
 				if(chartType == MAIN_CHART)
-					mainChartGlucoseMarkersList.push(glucoseMarker);
+				{
+					if (!isRaw)
+						mainChartGlucoseMarkersList.push(glucoseMarker);
+					else
+						rawGlucoseMarkersList.push(glucoseMarker);
+				}
 				else if (chartType == SCROLLER_CHART)
 					scrollChartGlucoseMarkersList.push(glucoseMarker);
 			}
 			
 			//Creat dummy marker in case the current timestamp is bigger than the latest bgreading timestamp
-			if (!dummyModeActive && !isHistoricalData)
+			if (!dummyModeActive && !isHistoricalData && !isRaw)
 			{
 				if (lastBGreadingTimeStamp > Number(_dataSource[_dataSource.length - 1].timestamp) && lastBGreadingTimeStamp - Number(_dataSource[_dataSource.length - 1].timestamp) > (4.5 * 60 * 1000) && chartType == MAIN_CHART)
 				{
@@ -798,7 +854,7 @@ package ui.chart
 			}
 			
 			//Define scroll multiplier for scroller vs main graph
-			if (handPicker != null && chartType == MAIN_CHART)
+			if (handPicker != null && chartType == MAIN_CHART && !isRaw)
 			{
 				if (mainChart.x > 0)
 					scrollMultiplier = Math.abs(mainChart.width - (glucoseMarkerRadius * 2))/handPicker.x;
@@ -807,19 +863,24 @@ package ui.chart
 			}
 			
 			//Chart Line
-			if(_displayLine)
+			if(_displayLine && !isRaw)
 			{
 				//Add line to the display list
 				chartContainer.addChild(line);
 				
 				//Save line references for later use
 				if(chartType == MAIN_CHART)
-					mainChartLineList.push(line);
+				{
+					if (!isRaw)
+						mainChartLineList.push(line);
+					else
+						rawLineList.push(line);
+				}
 				else if (chartType == SCROLLER_CHART)
 					scrollerChartLineList.push(line);
 			}
 			
-			if(chartType == MAIN_CHART)
+			if(chartType == MAIN_CHART && !isRaw)
 				mainChartYFactor = scaleYFactor;
 			
 			return chartContainer;
@@ -1002,6 +1063,7 @@ package ui.chart
 				treatmentsContainer.y = mainChart.y;
 				mainChartContainer.addChild(treatmentsContainer);
 				mainChartContainer.addChild(mainChart);
+				if (displayRaw) mainChartContainer.addChild(rawDataContainer);
 			}
 			
 			//Validations
@@ -1878,6 +1940,7 @@ package ui.chart
 			{
 				//Array has more than 24h of data. Remove timestamps older than 24H
 				var removedMainGlucoseMarker:GlucoseMarker;
+				var removedRawGlucoseMarker:GlucoseMarker;
 				var removedScrollerGlucoseMarker:GlucoseMarker
 				var currentTimestamp:Number = Number((mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp);
 				
@@ -1888,6 +1951,15 @@ package ui.chart
 					mainChart.removeChild(removedMainGlucoseMarker);
 					removedMainGlucoseMarker.dispose();
 					removedMainGlucoseMarker = null;
+					
+					//Raw container
+					if (displayRaw)
+					{
+						removedRawGlucoseMarker = rawGlucoseMarkersList.shift() as GlucoseMarker;
+						rawDataContainer.removeChild(removedRawGlucoseMarker);
+						removedRawGlucoseMarker.dispose();
+						removedRawGlucoseMarker = null;
+					}
 					
 					//Scroller Chart
 					removedScrollerGlucoseMarker = scrollChartGlucoseMarkersList.shift() as GlucoseMarker;
@@ -1915,6 +1987,15 @@ package ui.chart
 						mainChart.removeChild(removedMainGlucoseMarker);
 						removedMainGlucoseMarker.dispose();
 						removedMainGlucoseMarker = null;
+						
+						//Raw container
+						if (displayRaw)
+						{
+							removedRawGlucoseMarker = rawGlucoseMarkersList.shift() as GlucoseMarker;
+							rawDataContainer.removeChild(removedRawGlucoseMarker);
+							removedRawGlucoseMarker.dispose();
+							removedRawGlucoseMarker = null;
+						}
 						
 						//Scroller Chart
 						removedScrollerGlucoseMarker = scrollChartGlucoseMarkersList.shift() as GlucoseMarker;
@@ -1972,6 +2053,7 @@ package ui.chart
 				destroyAllLines(true);
 			
 			//Redraw main chart and scroller chart
+			if (displayRaw) redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius/2, numAddedReadings, true);
 			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, numAddedReadings);
 			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, numAddedReadings);
 			
@@ -1993,6 +2075,8 @@ package ui.chart
 				mainChart.x -= mainChart.width - previousChartWidth;
 				selectedGlucoseMarkerIndex += 1;
 			}
+			
+			if (displayRaw) rawDataContainer.x = mainChart.x;
 			
 			//Adjust Pcker Position
 			if (!displayLatestBGValue && !isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TimeSpan.TIME_23_HOURS_57_MINUTES && mainChart.x <= 0)
@@ -2037,7 +2121,7 @@ package ui.chart
 			return true;
 		}
 		
-		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int):void
+		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int, isRaw:Boolean = false):void
 		{
 			if (!SystemUtil.isApplicationActive)
 				return;
@@ -2118,7 +2202,7 @@ package ui.chart
 			 * Creation and placement of the glucose values
 			 */
 			//Line Chart
-			if(_displayLine)
+			if(_displayLine && !isRaw)
 			{
 				var line:SpikeLine = new SpikeLine();
 				line.touchable = false;
@@ -2136,11 +2220,14 @@ package ui.chart
 				}
 			}
 			
+			//Raw
+			if (isRaw) var lastCalibration:Calibration = Calibration.last();
+			
 			//Loop through all available data points
 			var dataLength:int = _dataSource.length;
 			for(i = 0; i < dataLength; i++)
 			{
-				var currentGlucoseValue:Number = Number(_dataSource[i].calculatedValue);
+				var currentGlucoseValue:Number = !isRaw ? Number(_dataSource[i].calculatedValue) : GlucoseFactory.getRawGlucose(_dataSource[i], lastCalibration);
 				if (currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
 				else if (currentGlucoseValue > 400)
@@ -2148,21 +2235,22 @@ package ui.chart
 				
 				var glucoseMarker:GlucoseMarker;
 				if(i < dataLength - 1 && chartType == MAIN_CHART)
-					glucoseMarker = mainChartGlucoseMarkersList[i]
+					glucoseMarker = !isRaw ? mainChartGlucoseMarkersList[i] : rawGlucoseMarkersList[i];
 				else if(i < dataLength - 1 && chartType == SCROLLER_CHART)
 					glucoseMarker = scrollChartGlucoseMarkersList[i];
 				
 				//Define glucose marker x position
 				var glucoseX:Number;
 				if(i==0)
-					glucoseX = 0;
+					glucoseX = !isRaw ? 0 : glucoseMarkerRadius;
 				else
 					glucoseX = (Number(_dataSource[i].timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
 				
 				//Define glucose marker y position
 				var glucoseY:Number = chartHeight - (glucoseMarkerRadius*2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
+				if (isRaw) glucoseY -= glucoseMarkerRadius;
 				//If glucose is a perfect flat line then display it in the middle
-				if(totalGlucoseDifference == 0) 
+				if(totalGlucoseDifference == 0 && !isRaw) 
 					glucoseY = (chartHeight - (glucoseMarkerRadius*2)) / 2;
 				
 				if(i < dataLength - numNewReadings)
@@ -2173,7 +2261,9 @@ package ui.chart
 				}
 				else
 				{
-					glucoseMarker = new GlucoseMarker
+					if (!isRaw)
+					{
+						glucoseMarker = new GlucoseMarker
 						(
 							{
 								x: previousXCoordinate + glucoseX,
@@ -2185,14 +2275,40 @@ package ui.chart
 								previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 							}
 						);
+					}
+					else
+					{
+						glucoseMarker = new GlucoseMarker
+						(
+							{
+								x: previousXCoordinate + glucoseX,
+								y: glucoseY,
+								index: i,
+								radius: glucoseMarkerRadius,
+								bgReading: _dataSource[i],
+								raw: currentGlucoseValue
+							},
+							true
+						);
+					}
 					glucoseMarker.touchable = false;
 					
 					if(chartType == MAIN_CHART)
 					{
-						//Add it to the display list
-						mainChart.addChild(glucoseMarker);
-						//Save it in the array for later
-						mainChartGlucoseMarkersList.push(glucoseMarker);
+						if (!isRaw)
+						{
+							//Add it to the display list
+							mainChart.addChild(glucoseMarker);
+							//Save it in the array for later
+							mainChartGlucoseMarkersList.push(glucoseMarker);
+						}
+						else
+						{
+							//Add it to the display list
+							rawDataContainer.addChild(glucoseMarker);
+							//Save it in the array for later
+							rawGlucoseMarkersList.push(glucoseMarker);
+						}
 					}
 					else if (chartType == SCROLLER_CHART)
 					{
@@ -2210,7 +2326,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -2271,7 +2387,7 @@ package ui.chart
 				previousGlucoseMarker = glucoseMarker;
 			}
 			
-			if(chartType == MAIN_CHART)
+			if(chartType == MAIN_CHART && !isRaw)
 			{
 				//YAxis
 				if(highestGlucoseValue != previousHighestGlucoseValue || lowestGlucoseValue != previousLowestGlucoseValue)
@@ -2291,7 +2407,7 @@ package ui.chart
 				}
 			}
 			//Chart Line
-			if(_displayLine)
+			if(_displayLine && !isRaw)
 			{	
 				//Remove touch events from line
 				line.touchable = false;
@@ -2309,7 +2425,7 @@ package ui.chart
 					scrollerChartLineList.push(line);
 			}
 			
-			if(chartType == MAIN_CHART)
+			if(chartType == MAIN_CHART && !isRaw)
 				mainChartYFactor = scaleYFactor;
 		}
 		
@@ -2783,6 +2899,29 @@ package ui.chart
 			}
 		}
 		
+		public function showRaw():void
+		{
+			var chartIndex:int = mainChartContainer.getChildIndex(mainChart);
+			if (chartIndex != -1)
+			{
+				displayRaw = true;
+				rawDataContainer = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius/2, true);
+				rawDataContainer.touchable = false;
+				rawDataContainer.x = mainChart.x;
+				mainChartContainer.addChildAt(rawDataContainer, chartIndex + 1);
+			}
+		}
+		
+		public function hideRaw():void
+		{
+			displayRaw = false;
+			if(rawDataContainer != null)
+			{
+				rawDataContainer.dispose();
+				rawDataContainer = null;
+			}
+		}
+		
 		public function showLine():void
 		{
 			if (!SystemUtil.isApplicationActive)
@@ -2958,6 +3097,10 @@ package ui.chart
 				//Treatments
 				if (treatmentsActive && treatmentsContainer != null)
 					treatmentsContainer.x = mainChart.x;
+				
+				//Raw
+				if (displayRaw && rawDataContainer != null)
+					rawDataContainer.x = mainChart.x;
 				
 				/**
 				 * Dummy Mode
@@ -4332,6 +4475,26 @@ package ui.chart
 				}
 				mainChartGlucoseMarkersList.length = 0;
 				mainChartGlucoseMarkersList = null;
+			}
+			
+			if (displayRaw)
+			{
+				if (rawGlucoseMarkersList != null)
+				{
+					var rawDataLength:int = rawGlucoseMarkersList.length;
+					for (i = 0; i < rawDataLength; i++) 
+					{
+						var rawGlucoseMarker:GlucoseMarker = rawGlucoseMarkersList[i] as GlucoseMarker;
+						if (rawGlucoseMarker != null)
+						{
+							rawGlucoseMarker.removeFromParent();
+							rawGlucoseMarker.dispose();
+							rawGlucoseMarker = null;
+						}
+					}
+					rawGlucoseMarkersList.length = 0;
+					rawGlucoseMarkersList = null;
+				}
 			}
 			
 			if (scrollChartGlucoseMarkersList != null)

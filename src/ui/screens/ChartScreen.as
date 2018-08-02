@@ -75,6 +75,8 @@ package ui.screens
 		private var displayPieChart:Boolean;
 		private var redrawChartTimeoutID:int;
 		private var isPortrait:Boolean;
+		private var displayRawData:Boolean;
+		private var displayRawComponent:Boolean;
 		
 		//Logical Variables
 		private var chartRequiresReload:Boolean = true;
@@ -95,6 +97,7 @@ package ui.screens
 		private var h1:Radio;
 		private var displayLines:Check;
 		private var delimitter:SpikeLine;
+		private var displayRawCheck:Check;
 		
 		public function ChartScreen() 
 		{
@@ -115,6 +118,8 @@ package ui.screens
 			chartTreatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
 			displayIOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
 			displayCOBEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
+			displayRawComponent = CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6();
+			displayRawData = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_RAW_ON) == "true";
 			
 			//Event listeners
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
@@ -288,6 +293,13 @@ package ui.screens
 			displayLines.y = h24.y;
 			addChild(displayLines);
 			
+			if (displayRawComponent)
+			{
+				displayRawCheck.x = displayLines.x + displayLines.width + (chartSettingsLeftRightPadding * paddingMultiplier);
+				displayRawCheck.y = displayLines.y;
+				addChild(displayRawCheck);
+			}
+			
 			//Radio Buttons Group
 			if (selectedTimelineRange == GlucoseChart.TIMELINE_1H)
 				timeRangeGroup.selectedItem = h1;
@@ -412,6 +424,20 @@ package ui.screens
 			displayLines.validate();
 			
 			chartSettingsHeight = displayLines.height;
+			
+			/* Raw Settings */
+			if (displayRawComponent)
+			{
+				displayRawCheck = LayoutFactory.createCheckMark(displayRawData, ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'));
+				if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+					displayRawCheck.scale = 0.8;
+				else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
+					displayRawCheck.scale = 1.4;
+				
+				displayRawCheck.validate();
+				
+				displayRawCheck.addEventListener( Event.CHANGE, onDisplayRaw );
+			}
 			
 			/* Timeline Settings */
 			timeRangeGroup = new ToggleGroup();
@@ -698,10 +724,25 @@ package ui.screens
 			}
 			
 			//Save setting to database
-			if (drawLineChart)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "true");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, String(drawLineChart));
+		}
+		
+		private function onDisplayRaw(event:Event):void
+		{
+			var check:Check = Check( event.currentTarget );
+			if(check.isSelected)
+			{
+				glucoseChart.showRaw();
+				displayRawData = true;
+			}
 			else
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LINE, "false");
+			{
+				glucoseChart.hideRaw()
+				displayRawData = false;
+			}
+			
+			//Save setting to database
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_RAW_ON, String(displayRawData));
 		}
 		
 		private function onStarlingResize(event:ResizeEvent):void 
@@ -783,6 +824,14 @@ package ui.screens
 				displayLines.removeFromParent();
 				displayLines.dispose();
 				displayLines = null;
+			}
+			
+			if (displayRawCheck != null)
+			{
+				displayRawCheck.removeEventListener( Event.CHANGE, onDisplayRaw );
+				displayRawCheck.removeFromParent();
+				displayRawCheck.dispose();
+				displayRawCheck = null;
 			}
 			
 			if (delimitter != null)

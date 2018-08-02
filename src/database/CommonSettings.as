@@ -354,7 +354,7 @@ package database
 		 public static const COMMON_SETTING_TREATMENTS_NEW_SENSOR_MARKER_COLOR:int = 132;
 		 
 		 /**
-		 * Chart
+		 * Chart Settings #4
 		 */
 		 public static const COMMON_SETTING_CHART_ROUND_MGDL_ON:int = 133;
 		 /** 
@@ -488,6 +488,11 @@ package database
 		 * Nightscout optimal calibration notifier
 		 */
 		 public static const COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON:int = 183;
+		 
+		 /**
+		  * Chart Settings #5
+		  */
+		 public static const COMMON_SETTING_CHART_DISPLAY_RAW_ON:int = 184;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -673,7 +678,8 @@ package database
 			 "false",//COMMON_SETTING_FAST_DROP_ALERT_GLUCOSE_THRESHOLDS_ON
 			 "",//COMMON_SETTING_FAST_DROP_ALERT_LOW_GLUCOSE_THRESHOLD
 			 "",//COMMON_SETTING_FAST_DROP_ALERT_HIGH_GLUCOSE_THRESHOLD
-			 "false"//COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON
+			 "false",//COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON
+			 "false"//COMMON_SETTING_CHART_DISPLAY_RAW_ON
 		 ];
 
 		 public function CommonSettings()
