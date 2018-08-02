@@ -269,23 +269,42 @@ package ui.screens
 			//Position Radio/Check Buttons
 			var paddingMultiplier:Number = DeviceInfo.getHorizontalPaddingMultipier();
 			
+			var spacer:Number = 0;
+			if (!displayRawComponent)
+			{
+				spacer = chartSettingsLeftRightPadding * paddingMultiplier;
+			}
+			else
+			{
+				//Vaidate all components
+				h24.validate();
+				h12.validate();
+				h6.validate();
+				h3.validate();
+				h1.validate();
+				displayLines.validate();
+				displayRawCheck.validate();
+				
+				spacer = (stage.stageWidth - h24.width - h12.width - h6.width - h3.width - h1.width - displayLines.width - displayRawCheck.width - (2 * chartSettingsLeftRightPadding)) / 6;
+			}
+			
 			h24.x = stage.stageWidth - h24.width - chartSettingsLeftRightPadding;
 			h24.y = glucoseChart.y + mainChartHeight + chartSettingsTopPadding;
 			addChild(h24);
 			
-			h12.x = h24.x - h12.width - (chartSettingsLeftRightPadding * paddingMultiplier);
+			h12.x = h24.x - h12.width - spacer;
 			h12.y = h24.y;
 			addChild(h12);
 			
-			h6.x = h12.x - h6.width - (chartSettingsLeftRightPadding * paddingMultiplier);
+			h6.x = h12.x - h6.width - spacer;
 			h6.y = h24.y;
 			addChild(h6);
 			
-			h3.x = h6.x - h3.width - (chartSettingsLeftRightPadding * paddingMultiplier);
+			h3.x = h6.x - h3.width - spacer;
 			h3.y = h24.y;
 			addChild(h3);
 			
-			h1.x = h3.x - h1.width - (chartSettingsLeftRightPadding * paddingMultiplier);
+			h1.x = h3.x - h1.width - spacer;
 			h1.y = h24.y;
 			addChild(h1);
 			
@@ -295,7 +314,7 @@ package ui.screens
 			
 			if (displayRawComponent)
 			{
-				displayRawCheck.x = displayLines.x + displayLines.width + 5;
+				displayRawCheck.x = displayLines.x + displayLines.width + spacer;
 				displayRawCheck.y = displayLines.y;
 				addChild(displayRawCheck);
 			}
