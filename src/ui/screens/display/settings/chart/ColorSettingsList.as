@@ -1,5 +1,6 @@
 package ui.screens.display.settings.chart
 {
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
@@ -21,6 +22,7 @@ package ui.screens.display.settings.chart
 	import utils.Constants;
 	
 	[ResourceBundle("chartsettingsscreen")]
+	[ResourceBundle("chartscreen")]
 
 	public class ColorSettingsList extends SpikeList 
 	{
@@ -40,9 +42,11 @@ package ui.screens.display.settings.chart
 		private var pieHighColorPicker:ColorPicker;
 		private var pieInRangeColorPicker:ColorPicker;
 		private var pieLowColorPicker:ColorPicker;
+		private var rawColorPicker:ColorPicker;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
+		private var displayRawComponent:Boolean;
 		private var colorPickers:Array;
 		private var urgentHighColorValue:uint;
 		private var highColorValue:uint;
@@ -57,6 +61,7 @@ package ui.screens.display.settings.chart
 		private var pieHighColorValue:uint;
 		private var pieInRangeColorValue:uint;
 		private var pieLowColorValue:uint;
+		private var rawColorValue:uint;
 		
 		public function ColorSettingsList(parentDisplayObject:PanelScreen)
 		{
@@ -102,6 +107,8 @@ package ui.screens.display.settings.chart
 			pieHighColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_HIGH_COLOR));
 			pieInRangeColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_IN_RANGE_COLOR));
 			pieLowColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_LOW_COLOR));
+			rawColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR));
+			displayRawComponent = CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6();
 		}
 		
 		private function setupContent():void
@@ -150,6 +157,18 @@ package ui.screens.display.settings.chart
 			urgentLowColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			urgentLowColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 			colorPickers.push(urgentLowColorPicker);
+			
+			//Raw Color Picker
+			if (displayRawComponent)
+			{
+				rawColorPicker = new ColorPicker(20, rawColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+				rawColorPicker.name = "rawColor";
+				rawColorPicker.pivotX = 3;
+				rawColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+				rawColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				rawColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				colorPickers.push(rawColorPicker);
+			}
 			
 			//Pie Chart Hight Color Picker
 			pieHighColorPicker = new ColorPicker(20, pieHighColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
@@ -228,23 +247,24 @@ package ui.screens.display.settings.chart
 			resetColors.addEventListener(Event.TRIGGERED, onResetColor);
 			
 			//Set Colors Data
-			dataProvider = new ArrayCollection(
-			[
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_high_title'), accessory: urgentHighColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','high_title'), accessory: highColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','in_range_title'), accessory: inRangeColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','low_title'), accessory: lowColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_high_color_title'), accessory: pieHighColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_in_range_color_title'), accessory: pieInRangeColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_low_color_title'), accessory: pieLowColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','old_data_title'), accessory: oldDataColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_title'), accessory: axisColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_font_title'), accessory: chartFontColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_title'), accessory: axisFontColorPicker },
-				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_chart_font_title'), accessory: pieChartFontColorPicker },
-				{ label: "", accessory: resetColors },
-			]);
+			var data:Array = [];
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_high_title'), accessory: urgentHighColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','high_title'), accessory: highColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','in_range_title'), accessory: inRangeColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','low_title'), accessory: lowColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker } );
+			if (displayRawComponent) data.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'), accessory: rawColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_high_color_title'), accessory: pieHighColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_in_range_color_title'), accessory: pieInRangeColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_low_color_title'), accessory: pieLowColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','old_data_title'), accessory: oldDataColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_title'), accessory: axisColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_font_title'), accessory: chartFontColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_title'), accessory: axisFontColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_chart_font_title'), accessory: pieChartFontColorPicker } );
+			data.push( { label: "", accessory: resetColors } );
+			
+			dataProvider = new ArrayCollection(data);
 		}
 		
 		public function save():void
@@ -288,6 +308,9 @@ package ui.screens.display.settings.chart
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_LOW_COLOR) != String(pieLowColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_LOW_COLOR, String(pieLowColorValue));
 			
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR) != String(rawColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR, String(rawColorValue));
+			
 			needsSave = false;
 		}
 		
@@ -315,6 +338,13 @@ package ui.screens.display.settings.chart
 			//Urgent Low Color Picker
 			urgentLowColorPicker.setColor(0xFF0000);
 			urgentLowColorValue = 0xFF0000;
+			
+			//Raw Color Picker
+			if (displayRawComponent)
+			{
+				rawColorPicker.setColor(0xEEEEEE);
+				rawColorValue = 0xEEEEEE;
+			}
 			
 			//Pie High Color Picker
 			pieHighColorPicker.setColor(0xFFFF00);
@@ -409,6 +439,14 @@ package ui.screens.display.settings.chart
 				if(urgentLowColorPicker.value != urgentLowColorValue)
 				{
 					urgentLowColorValue = urgentLowColorPicker.value;
+					needsSave = true;
+				}
+			}
+			else if(currentTargetName == "rawColor")
+			{
+				if(rawColorPicker.value != rawColorValue)
+				{
+					rawColorValue = rawColorPicker.value;
 					needsSave = true;
 				}
 			}
@@ -532,6 +570,15 @@ package ui.screens.display.settings.chart
 				urgentLowColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				urgentLowColorPicker.dispose();
 				urgentLowColorPicker = null;
+			}
+			
+			if(rawColorPicker != null)
+			{
+				rawColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				rawColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				rawColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				rawColorPicker.dispose();
+				rawColorPicker = null;
 			}
 			
 			if(pieHighColorPicker != null)

@@ -112,7 +112,7 @@ package ui.chart
 			else
 			{
 				glucoseValue = Number(data.raw);
-				color = 0xEEEEEE;
+				color = data.rawColor;
 			}
 			
 			//Create graphics

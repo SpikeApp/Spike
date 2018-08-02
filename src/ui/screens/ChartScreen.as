@@ -295,7 +295,7 @@ package ui.screens
 			
 			if (displayRawComponent)
 			{
-				displayRawCheck.x = displayLines.x + displayLines.width + (chartSettingsLeftRightPadding * paddingMultiplier);
+				displayRawCheck.x = displayLines.x + displayLines.width + 5;
 				displayRawCheck.y = displayLines.y;
 				addChild(displayRawCheck);
 			}

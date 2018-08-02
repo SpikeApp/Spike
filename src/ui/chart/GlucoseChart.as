@@ -296,8 +296,9 @@ package ui.chart
 		private var mainGlucoseTimer:Number = Number.NaN;
 		
 		//RAW
-		private var displayRaw:Boolean = false;
 		private var rawDataContainer:Sprite;
+		private var displayRaw:Boolean = false;
+		private var rawColor:uint;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
@@ -330,6 +331,7 @@ package ui.chart
 			lowGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR));
 			lowUrgentGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)); 
 			oldColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR)); 
+			rawColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR)); 
 			
 			//Size
 			mainChartGlucoseMarkerRadius = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_MARKER_RADIUS));
@@ -753,7 +755,8 @@ package ui.chart
 							index: i,
 							radius: glucoseMarkerRadius,
 							bgReading: _dataSource[i],
-							raw: currentGlucoseValue
+							raw: currentGlucoseValue,
+							rawColor: rawColor
 						},
 						true
 					);
@@ -1956,7 +1959,7 @@ package ui.chart
 					if (displayRaw)
 					{
 						removedRawGlucoseMarker = rawGlucoseMarkersList.shift() as GlucoseMarker;
-						rawDataContainer.removeChild(removedRawGlucoseMarker);
+						removedRawGlucoseMarker.removeFromParent();
 						removedRawGlucoseMarker.dispose();
 						removedRawGlucoseMarker = null;
 					}
@@ -1992,7 +1995,7 @@ package ui.chart
 						if (displayRaw)
 						{
 							removedRawGlucoseMarker = rawGlucoseMarkersList.shift() as GlucoseMarker;
-							rawDataContainer.removeChild(removedRawGlucoseMarker);
+							removedRawGlucoseMarker.removeFromParent();
 							removedRawGlucoseMarker.dispose();
 							removedRawGlucoseMarker = null;
 						}
@@ -2064,7 +2067,7 @@ package ui.chart
 				latestTimestamp = Number(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp);
 			}
 			
-			//Adjust Main Chart amd Picker Position
+			//Adjust Main Chart and Picker Position
 			if (displayLatestBGValue)
 			{
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
@@ -2286,7 +2289,8 @@ package ui.chart
 								index: i,
 								radius: glucoseMarkerRadius,
 								bgReading: _dataSource[i],
-								raw: currentGlucoseValue
+								raw: currentGlucoseValue,
+								rawColor: rawColor
 							},
 							true
 						);
