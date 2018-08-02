@@ -270,7 +270,7 @@ package ui.screens
 			var paddingMultiplier:Number = DeviceInfo.getHorizontalPaddingMultipier();
 			
 			var spacer:Number = 0;
-			if (!displayRawComponent)
+			if (!displayRawComponent || DeviceInfo.isTablet())
 			{
 				spacer = chartSettingsLeftRightPadding * paddingMultiplier;
 			}
