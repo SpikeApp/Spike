@@ -242,6 +242,7 @@ package ui.screens.display.settings.integration
 			
 			//Maker Key Description
 			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, Constants.deviceModel != DeviceInfo.IPHONE_X ? 10 : 9);
+			makerKeyDescriptionLabel.wordWrap = true;
 			makerKeyDescriptionLabel.width = width - 10;
 			
 			//Glucose tresholds on/off switch
