@@ -2907,7 +2907,8 @@ package ui.chart
 		{
 			displayRaw = true;
 			
-			if (!SystemUtil.isApplicationActive || dummyModeActive)
+			if (!SystemUtil.isApplicationActive || dummyModeActive) 
+				return;
 			
 			var chartIndex:int = mainChartContainer.getChildIndex(mainChart);
 			if (chartIndex != -1)
@@ -2923,7 +2924,8 @@ package ui.chart
 		{
 			displayRaw = false;
 			
-			if (!SystemUtil.isApplicationActive || dummyModeActive)
+			if (!SystemUtil.isApplicationActive || dummyModeActive) 
+				return;
 			
 			if(rawDataContainer != null)
 			{
