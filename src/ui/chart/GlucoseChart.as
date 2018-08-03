@@ -313,7 +313,7 @@ package ui.chart
 				glucoseUnit = "mmol/L";
 			
 			//Raw
-			displayRaw = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_RAW_ON) == "true" && (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6());
+			displayRaw = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_RAW_ON) == "true" && (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) && !isHistoricalData;
 			
 			//Threshold
 			glucoseUrgentLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
@@ -2056,8 +2056,8 @@ package ui.chart
 				destroyAllLines(true);
 			
 			//Redraw main chart and scroller chart
-			if (displayRaw) redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius/2, numAddedReadings, true);
 			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, numAddedReadings);
+			if (displayRaw) redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius/2, numAddedReadings, true);
 			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, numAddedReadings);
 			
 			//Recalculate first and last timestamp
@@ -2146,7 +2146,7 @@ package ui.chart
 				
 				//scaleXFactor = 1/(totalTimestampDifference / (chartWidth * timelineRange));
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (TimeSpan.TIME_ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
-				mainChartXFactor = scaleXFactor;
+				if (!isRaw) mainChartXFactor = scaleXFactor;
 			}
 			else if (chartType == SCROLLER_CHART)
 				scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
@@ -2905,10 +2905,13 @@ package ui.chart
 		
 		public function showRaw():void
 		{
+			displayRaw = true;
+			
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+			
 			var chartIndex:int = mainChartContainer.getChildIndex(mainChart);
 			if (chartIndex != -1)
 			{
-				displayRaw = true;
 				rawDataContainer = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius/2, true);
 				rawDataContainer.touchable = false;
 				rawDataContainer.x = mainChart.x;
@@ -2919,6 +2922,9 @@ package ui.chart
 		public function hideRaw():void
 		{
 			displayRaw = false;
+			
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+			
 			if(rawDataContainer != null)
 			{
 				rawDataContainer.dispose();
@@ -2928,7 +2934,7 @@ package ui.chart
 		
 		public function showLine():void
 		{
-			if (!SystemUtil.isApplicationActive)
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
 				return;
 			
 			if(_displayLine == false)
@@ -2946,7 +2952,7 @@ package ui.chart
 		
 		public function hideLine():void
 		{
-			if (!SystemUtil.isApplicationActive)
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
 				return;
 			
 			if(_displayLine == true)
@@ -3523,6 +3529,29 @@ package ui.chart
 				
 				//Reposition treatments
 				manageTreatments();
+			}
+			
+			//Adjust latest raw marker 
+			if (displayRaw && rawGlucoseMarkersList != null && rawGlucoseMarkersList.length > 0)
+			{
+				//Get and adjust latest raw value
+				var latestRawGlucose:Number = GlucoseFactory.getRawGlucose(BgReading.lastNoSensor(), Calibration.last());
+				
+				//Calculate positions
+				var rawGlucoseY:Number = _graphHeight - (mainChartGlucoseMarkerRadius*2) - ((latestRawGlucose - lowestGlucoseValue) * scaleYFactor);
+				rawGlucoseY -= mainChartGlucoseMarkerRadius / 2;
+				
+				//Set and adjust latest raw marker's properties
+				var latestRawMarker:GlucoseMarker = rawGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker;
+				latestRawMarker.newBgReading = BgReading.lastNoSensor();
+				latestRawMarker.newRaw = latestRawGlucose;
+				latestRawMarker.y = glucoseY;
+				
+				//Hide raw glucose marker if it is out of bounds (fixed size chart);
+				if (latestRawGlucose < lowestGlucoseValue || latestRawGlucose > highestGlucoseValue)
+					latestRawMarker.alpha = 0;
+				else
+					latestRawMarker.alpha = 1;
 			}
 		}
 		

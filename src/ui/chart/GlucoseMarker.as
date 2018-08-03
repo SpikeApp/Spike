@@ -142,6 +142,11 @@ package ui.chart
 			data.bgReading = bgReading;
 		}
 		
+		public function set newRaw(raw:Number):void
+		{
+			data.raw = raw;
+		}
+		
 		public function setLocationY (newY:Number):void
 		{
 			data.y = newY;
