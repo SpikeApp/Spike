@@ -100,7 +100,7 @@ package ui.screens
 			nsWebView.height = availableScreenHeight;
 			nsWebView.addEventListener(FeathersEventType.ERROR, onLoadURLErrorTriggered);
 			nsWebView.loadURL( nightscoutURL );
-			addChild( nsWebView );
+			if (nsWebView != null) addChild( nsWebView );
 		}
 		
 		private function adjustMainMenu():void

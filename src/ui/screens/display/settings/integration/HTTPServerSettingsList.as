@@ -401,9 +401,9 @@ package ui.screens.display.settings.integration
 		{
 			//Close the callout
 			if (PopUpManager.isPopUp(instructionsSenderCallout))
-				PopUpManager.removePopUp(instructionsSenderCallout, true);
+				SystemUtil.executeWhenApplicationIsActive(PopUpManager.removePopUp, instructionsSenderCallout, true);
 			else if (instructionsSenderCallout != null)
-				instructionsSenderCallout.close(true);
+				SystemUtil.executeWhenApplicationIsActive(instructionsSenderCallout.close, true);
 		}
 
 		private function onSettingsChanged(e:starling.events.Event):void

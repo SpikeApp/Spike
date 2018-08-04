@@ -287,9 +287,9 @@ package utils
 			
 			//Close the callout
 			if (PopUpManager.isPopUp(siDiarySenderCallout))
-				PopUpManager.removePopUp(siDiarySenderCallout, true);
+				SystemUtil.executeWhenApplicationIsActive(PopUpManager.removePopUp, siDiarySenderCallout, true);
 			else
-				siDiarySenderCallout.close(true);
+				SystemUtil.executeWhenApplicationIsActive(siDiarySenderCallout.close, true);
 		}
 		
 		private static function dispose():void

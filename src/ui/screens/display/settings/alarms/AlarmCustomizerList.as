@@ -481,6 +481,12 @@ package ui.screens.display.settings.alarms
 				alarmCustomizerCallout.origin = positionHelper;
 			}
 			
+			if (positionHelper == null || positionHelper.parent == null)
+			{
+				setupCalloutPosition();
+				alarmCustomizerCallout.origin = positionHelper;
+			}
+			
 			PopUpManager.addPopUp(alarmCustomizerCallout, false, false);
 		}
 		

@@ -34,6 +34,7 @@ package services
 	
 	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -242,18 +243,20 @@ package services
 					{
 						myTrace("opening dialog to request calibration");
 						
-						try
+						SystemUtil.executeWhenApplicationIsActive( function():void 
 						{
-							PopUpManager.removeAllPopUps(true);
-						} 
-						catch(error:Error) {}
-						
-						/* Create and Style Calibration Text Input */
-						calibrationValue = LayoutFactory.createTextInput(false, false, 170, HorizontalAlign.CENTER, true);
-						calibrationValue.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
-						
-						/* Create and Style Popup Window */
-						var calibrationPopup:Alert = AlertManager.showActionAlert
+							try
+							{
+								PopUpManager.removeAllPopUps(true);
+							} 
+							catch(error:Error) {}
+							
+							/* Create and Style Calibration Text Input */
+							calibrationValue = LayoutFactory.createTextInput(false, false, 170, HorizontalAlign.CENTER, true);
+							calibrationValue.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
+							
+							/* Create and Style Popup Window */
+							var calibrationPopup:Alert = AlertManager.showActionAlert
 							(
 								ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_initial_calibration_title"),
 								"",
@@ -265,15 +268,16 @@ package services
 								HorizontalAlign.JUSTIFY,
 								calibrationValue
 							);
-						calibrationPopup.validate();
-						calibrationValue.width = calibrationPopup.width - 20;
-						calibrationPopup.gap = 0;
-						calibrationPopup.headerProperties.maxHeight = 30;
-						calibrationPopup.buttonGroupProperties.paddingTop = -10;
-						calibrationPopup.buttonGroupProperties.gap = 10;
-						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
-						calibrationValue.setFocus();
-						calibrationPopup.addEventListener(starling.events.Event.CLOSE, onInitialCalibrationClosed);
+							calibrationPopup.validate();
+							calibrationValue.width = calibrationPopup.width - 20;
+							calibrationPopup.gap = 0;
+							calibrationPopup.headerProperties.maxHeight = 30;
+							calibrationPopup.buttonGroupProperties.paddingTop = -10;
+							calibrationPopup.buttonGroupProperties.gap = 10;
+							calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+							calibrationValue.setFocus();
+							calibrationPopup.addEventListener(starling.events.Event.CLOSE, onInitialCalibrationClosed);
+						});
 						initialCalibrationActive = true;
 					}
 				}
@@ -298,17 +302,20 @@ package services
 				}
 				else
 				{
-					var optimalAlert:Alert = AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'),
-						ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body')
-					);
-					optimalAlert.addEventListener(starling.events.Event.CLOSE, onOptimalCalibrationAcknowledged);
-					
-					function onOptimalCalibrationAcknowledged(e:starling.events.Event = null):void
+					SystemUtil.executeWhenApplicationIsActive( function():void 
 					{
-						calibrationOnRequest();
-					}
+						var optimalAlert:Alert = AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'),
+							ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body')
+						);
+						optimalAlert.addEventListener(starling.events.Event.CLOSE, onOptimalCalibrationAcknowledged);
+						
+						function onOptimalCalibrationAcknowledged(e:starling.events.Event = null):void
+						{
+							calibrationOnRequest();
+						}
+					});
 				}
 				
 				//Notify Nightscout

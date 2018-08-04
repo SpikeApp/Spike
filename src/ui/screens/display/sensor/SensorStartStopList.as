@@ -389,7 +389,10 @@ package ui.screens.display.sensor
 			
 			var timeSpan:TimeSpan = TimeSpan.fromMilliseconds(sensorReady - new Date().valueOf());
 			
-			sensorCountdownLabel.text = MathHelper.formatNumberToString(timeSpan.hours) + "h" + MathHelper.formatNumberToString(timeSpan.minutes) + "m" + MathHelper.formatNumberToString(timeSpan.seconds) + "s";
+			if (sensorCountdownLabel != null)
+				sensorCountdownLabel.text = MathHelper.formatNumberToString(timeSpan.hours) + "h" + MathHelper.formatNumberToString(timeSpan.minutes) + "m" + MathHelper.formatNumberToString(timeSpan.seconds) + "s";
+			else
+				finishCountdown();
 		}
 		
 		private function finishCountdown():void
