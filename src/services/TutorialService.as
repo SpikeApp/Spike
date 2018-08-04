@@ -98,11 +98,16 @@ package services
 			isActive = true;
 			
 			/* Init Objects */
-			calloutLocationHelper = new Sprite();
-			Starling.current.stage.addChild(calloutLocationHelper);
+			createCalloutLocationHelper();
 			
 			/* Start Tutorial */
 			Starling.juggler.delayCall( firstStep, .2);
+		}
+		
+		private static function createCalloutLocationHelper():void
+		{
+			calloutLocationHelper = new Sprite();
+			Starling.current.stage.addChild(calloutLocationHelper);
 		}
 		
 		private static function firstStep():void
@@ -136,6 +141,9 @@ package services
 			firstStepActive = false;
 			secondStepActive = true;
 			
+			if (calloutLocationHelper == null)
+				createCalloutLocationHelper();
+			
 			calloutLocationHelper.x = 85;
 			calloutLocationHelper.y = 255;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
@@ -152,6 +160,9 @@ package services
 			secondStepActive = false;
 			thirdStepActive = true;
 			
+			if (calloutLocationHelper == null)
+				createCalloutLocationHelper();
+			
 			calloutLocationHelper.x = 25;
 			calloutLocationHelper.y = 105;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
@@ -166,6 +177,9 @@ package services
 		{
 			thirdStepActive = false;
 			fourthStepActive = true;
+			
+			if (calloutLocationHelper == null)
+				createCalloutLocationHelper();
 			
 			calloutLocationHelper.x = Constants.stageWidth / 2;
 			calloutLocationHelper.y = 370;
@@ -183,6 +197,9 @@ package services
 			fourthStepActive = false;
 			fifthStepActive = true;
 			
+			if (calloutLocationHelper == null)
+				createCalloutLocationHelper();
+			
 			calloutLocationHelper.x = 25;
 			calloutLocationHelper.y = 155;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
@@ -197,6 +214,9 @@ package services
 		{
 			fifthStepActive = false;
 			sixthStepActive = true;
+			
+			if (calloutLocationHelper == null)
+				createCalloutLocationHelper();
 			
 			calloutLocationHelper.x = Constants.stageWidth / 2;
 			calloutLocationHelper.y = 205;
@@ -213,6 +233,9 @@ package services
 		{
 			sixthStepActive = false;
 			seventhStepActive = true;
+			
+			if (calloutLocationHelper == null)
+				createCalloutLocationHelper();
 			
 			calloutLocationHelper.x = 0;
 			calloutLocationHelper.y = Constants.stageHeight / 2;
@@ -253,6 +276,9 @@ package services
 			seventhStepActive = false;
 			eighthStepActive = true;
 			
+			if (calloutLocationHelper == null)
+				createCalloutLocationHelper();
+			
 			calloutLocationHelper.x = 85;
 			calloutLocationHelper.y = 155;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
@@ -268,6 +294,9 @@ package services
 		{
 			eighthStepActive = false;
 			ninethStepActive = true;
+			
+			if (calloutLocationHelper == null)
+				createCalloutLocationHelper();
 			
 			calloutLocationHelper.x = Constants.stageWidth - 55;
 			calloutLocationHelper.y = 265;
