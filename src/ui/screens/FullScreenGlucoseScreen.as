@@ -693,6 +693,12 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
+			if (!SystemUtil.isApplicationActive)
+			{
+				SystemUtil.executeWhenApplicationIsActive(onStarlingResize, null);
+				return;
+			}
+			
 			width = Constants.stageWidth;
 			
 			if (IOBCOBDisplay != null)

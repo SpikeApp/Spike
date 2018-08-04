@@ -450,7 +450,7 @@ package ui.screens.display.settings.integration
 			{
 				passwordTextInput.width = Constants.isPortrait ? 140 : 240;
 				if (DeviceInfo.isTablet()) passwordTextInput.width += 100;
-				passwordTextInput.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( passwordTextInput.clearFocus );
 			}
 			
 			if (instructionsTitleLabel != null)
@@ -482,7 +482,7 @@ package ui.screens.display.settings.integration
 				positionHelper.x = Constants.stageWidth / 2;
 			
 			if (emailField != null)
-				emailField.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( emailField.clearFocus );
 			
 			setupRenderFactory();
 		}

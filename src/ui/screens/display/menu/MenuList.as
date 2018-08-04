@@ -23,6 +23,7 @@ package ui.screens.display.menu
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.textures.Texture;
+	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
 	import ui.screens.Screens;
@@ -230,7 +231,7 @@ package ui.screens.display.menu
 			else
 				initialStart = false;
 			
-			refreshContent();
+			SystemUtil.executeWhenApplicationIsActive(refreshContent);
 		}
 		
 		/**
