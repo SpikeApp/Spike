@@ -89,9 +89,20 @@ package ui.popups
 			}
 			else
 			{
+				//Update labels
+				dataProvider = new ArrayCollection();
+				
+				var numLabels:uint = snoozeLabels.length;
+				for (var i:int = 0; i < numLabels; i++) 
+				{
+					dataProvider.push( { label: (snoozeLabels[i] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString('alarmservice',"minutes")).replace("hours", ModelLocator.resourceManagerInstance.getString('alarmservice',"hours")).replace("hour", ModelLocator.resourceManagerInstance.getString('alarmservice',"hour")).replace("day", ModelLocator.resourceManagerInstance.getString('alarmservice',"day")).replace("week", ModelLocator.resourceManagerInstance.getString('alarmservice',"week")) } );
+				}
+				
+				snoozePickerList.dataProvider = dataProvider;
+				snoozePickerList.selectedIndex = selectedSnoozeIndex;
+				
 				//Update title
 				titleLabel.text = title;
-				snoozePickerList.selectedIndex = selectedSnoozeIndex;
 			}
 			
 			/* Stop the close timer in case it's running */
@@ -143,7 +154,7 @@ package ui.popups
 			var numLabels:uint = snoozeLabels.length;
 			for (var i:int = 0; i < numLabels; i++) 
 			{
-				dataProvider.push( { label: snoozeLabels[i] } );
+				dataProvider.push( { label: (snoozeLabels[i] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString('alarmservice',"minutes")).replace("hours", ModelLocator.resourceManagerInstance.getString('alarmservice',"hours")).replace("hour", ModelLocator.resourceManagerInstance.getString('alarmservice',"hour")).replace("day", ModelLocator.resourceManagerInstance.getString('alarmservice',"day")).replace("week", ModelLocator.resourceManagerInstance.getString('alarmservice',"week")) } );
 			}
 			
 			snoozePickerList.dataProvider = dataProvider;

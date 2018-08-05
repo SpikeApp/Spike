@@ -35,6 +35,7 @@ package ui.popups
 
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("alarmpresnoozer")]
+	[ResourceBundle("alarmservice")]
 	
 	public class AlarmPreSnoozer extends EventDispatcher
 	{
@@ -273,7 +274,7 @@ package ui.popups
 			var numLabels:uint = snoozeLabels.length;
 			for (var i:int = 0; i < numLabels; i++) 
 			{
-				dataProvider.push( { label: snoozeLabels[i] } );
+				dataProvider.push( { label: (snoozeLabels[i] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString('alarmservice',"minutes")).replace("hours", ModelLocator.resourceManagerInstance.getString('alarmservice',"hours")).replace("hour", ModelLocator.resourceManagerInstance.getString('alarmservice',"hour")).replace("day", ModelLocator.resourceManagerInstance.getString('alarmservice',"day")).replace("week", ModelLocator.resourceManagerInstance.getString('alarmservice',"week")) } );
 			}
 			
 			snoozePickerList.dataProvider = dataProvider;
