@@ -287,22 +287,26 @@ package services
 			}
 			else if (optimalCalibrationScheduled && GlucoseHelper.isOptimalConditionToCalibrate())
 			{
-				//Send a notification to the user notifying that optimal calibration conditions have been met
-				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
-					.setCount(BadgeBuilder.getAppBadge())
-					.setId(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
-					.setAlert(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
-					.setTitle(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
-					.setBody(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body'))
-					.enableLights(true)
-					.setSound("../assets/sounds/Insistently.caf")
-					.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
-				Notifications.service.notify(notificationBuilder.build());
+				if (!SystemUtil.isApplicationActive)
+				{
+					//Send a notification to the user notifying that optimal calibration conditions have been met
+					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+						.setCount(BadgeBuilder.getAppBadge())
+						.setId(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
+						.setAlert(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
+						.setBody(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body'))
+						.enableLights(true)
+						.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
+					Notifications.service.notify(notificationBuilder.build());
+				}
 				
+				SpikeANE.playSound("../assets/sounds/Insistently.caf");
 				SpikeANE.vibrate();
 				
 				if (SystemUtil.isApplicationActive)
 				{
+					//Show popup notifying that optimal calibration conditions have been met
 					SystemUtil.executeWhenApplicationIsActive( function():void 
 					{
 						var optimalAlert:Alert = AlertManager.showSimpleAlert

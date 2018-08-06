@@ -1566,10 +1566,10 @@ package services
 								.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice','suboptimal_calibration_request_alert_notification_alert_title'))
 								.setBody(ModelLocator.resourceManagerInstance.getString('alarmservice','suboptimal_calibration_request_notification_body'))
 								.enableLights(true)
-								.setSound("default")
 								.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
 							Notifications.service.notify(notificationBuilder.build());
 							
+							SpikeANE.playSound("../assets/sounds/Insistently.caf");
 							SpikeANE.vibrate();
 							userWarnedOfSuboptimalCalibration = true;
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON, String(userWarnedOfSuboptimalCalibration), true, false);
