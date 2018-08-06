@@ -9,6 +9,7 @@ package model
 	import mx.resources.ResourceManager;
 	
 	import database.BgReading;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
@@ -123,15 +124,24 @@ package model
 						
 			function getBgReadingsFromDatabase():void 
 			{
-				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
-				
-				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
-				Database.getBgReadings(_appStartTimestamp - MAX_TIME_FOR_BGREADINGS, _appStartTimestamp); //24H
+				if (!CGMBlueToothDevice.isFollower())
+				{
+					//Load readings from database
+					Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+					
+					//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
+					Database.getBgReadings(_appStartTimestamp - MAX_TIME_FOR_BGREADINGS, _appStartTimestamp); //24H
+				}
+				else
+				{
+					//Init app
+					bgReadingsReceivedFromDatabase(null);
+				}
 			}
 
 			function bgReadingsReceivedFromDatabase(de:DatabaseEvent):void 
 			{
-				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+				if (de != null) Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
 				
 				//Set Language
 				ModelLocator.resourceManagerInstance.localeChain = [CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE),"en_US"];
@@ -140,7 +150,7 @@ package model
 				var preventRotation:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
 				Constants.appStage.autoOrients = !preventRotation;
 				
-				_bgReadings = de.data as Array;
+				if (de != null) _bgReadings = de.data as Array;
 				ProfileManager.init();
 				TreatmentsManager.init();
 				SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.init ); //Start rendering interface now that all data is available but only when app is active
