@@ -346,6 +346,9 @@ package services
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("week", ModelLocator.resourceManagerInstance.getString("alarmservice","week"));
 			}
 			
+			//Optimal Calibrations
+			userWarnedOfSuboptimalCalibration = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON) == "true";
+			
 			setTimer();
 			
 			checkMuted(null);
@@ -1569,6 +1572,7 @@ package services
 							
 							SpikeANE.vibrate();
 							userWarnedOfSuboptimalCalibration = true;
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON, String(userWarnedOfSuboptimalCalibration), true, false);
 						} 
 						else if (alertValue < ((now.valueOf() - lastCalibrationTimestamp) / 1000 / 60 / 60) && GlucoseHelper.isOptimalConditionToCalibrate()) 
 						{
@@ -1585,6 +1589,7 @@ package services
 							_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
 							_calibrationRequestSnoozePeriodInMinutes = 0;
 							userWarnedOfSuboptimalCalibration = false;
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON, String(userWarnedOfSuboptimalCalibration), true, false);
 							
 							NightscoutService.uploadOptimalCalibrationNotification();
 						} 

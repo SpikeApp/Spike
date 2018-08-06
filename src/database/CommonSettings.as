@@ -494,6 +494,12 @@ package database
 		  */
 		 public static const COMMON_SETTING_CHART_DISPLAY_RAW_ON:int = 184;
 		 public static const COMMON_SETTING_CHART_RAW_COLOR:int = 185;
+		 
+		 /**
+		  * Optimal calibration notifiers
+		  */
+		 public static const COMMON_SETTING_OPTIMAL_CALIBRATION_ON_DEMAND_NOTIFIER_ON:int = 186;
+		 public static const COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON:int = 187;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -681,7 +687,9 @@ package database
 			 "",//COMMON_SETTING_FAST_DROP_ALERT_HIGH_GLUCOSE_THRESHOLD
 			 "false",//COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON
 			 "false",//COMMON_SETTING_CHART_DISPLAY_RAW_ON
-			 "0xEEEEEE"//COMMON_SETTING_CHART_RAW_COLOR
+			 "0xEEEEEE",//COMMON_SETTING_CHART_RAW_COLOR
+			 "false",//COMMON_SETTING_OPTIMAL_CALIBRATION_ON_DEMAND_NOTIFIER_ON
+			 "false"//COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON
 		 ];
 
 		 public function CommonSettings()

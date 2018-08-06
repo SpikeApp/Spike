@@ -88,6 +88,9 @@ package services
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED, receivedSensorChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
+			
+			optimalCalibrationScheduled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_ON_DEMAND_NOTIFIER_ON) == "true";
+			
 			myTrace("finished init");
 		}
 		
@@ -284,23 +287,21 @@ package services
 			}
 			else if (optimalCalibrationScheduled && GlucoseHelper.isOptimalConditionToCalibrate())
 			{
-				if (SpikeANE.appIsInBackground())
-				{
-					//Warn the user that optimal calibration conditions have been met
-					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
-						.setCount(BadgeBuilder.getAppBadge())
-						.setId(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
-						.setAlert(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
-						.setTitle(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
-						.setBody(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body'))
-						.enableLights(true)
-						.setSound("default")
-						.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
-					Notifications.service.notify(notificationBuilder.build());
-					
-					SpikeANE.vibrate();
-				}
-				else
+				//Send a notification to the user notifying that optimal calibration conditions have been met
+				var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+					.setCount(BadgeBuilder.getAppBadge())
+					.setId(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
+					.setAlert(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
+					.setTitle(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
+					.setBody(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body'))
+					.enableLights(true)
+					.setSound("../assets/sounds/Insistently.caf")
+					.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
+				Notifications.service.notify(notificationBuilder.build());
+				
+				SpikeANE.vibrate();
+				
+				if (SystemUtil.isApplicationActive)
 				{
 					SystemUtil.executeWhenApplicationIsActive( function():void 
 					{
@@ -323,6 +324,7 @@ package services
 				
 				setTimeout( function():void {
 					optimalCalibrationScheduled = false;
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_ON_DEMAND_NOTIFIER_ON, String(optimalCalibrationScheduled), true, false);
 				}, 5000 );
 			}
 		}
@@ -566,6 +568,7 @@ package services
 					function onScheduleOptimalCalibration():void
 					{
 						optimalCalibrationScheduled = true;
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_ON_DEMAND_NOTIFIER_ON, String(optimalCalibrationScheduled), true, false);
 					}
 					
 					function onAcceptedCalibrateWithSuboptimal():void
