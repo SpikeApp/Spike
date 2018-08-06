@@ -123,11 +123,17 @@ package treatments
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 			
 			//Fetch Data From Database
+			fetchAllTreatmentsFromDatabase();
+		}
+		
+		public static function fetchAllTreatmentsFromDatabase():void
+		{
 			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				Trace.myTrace("TreatmentsManager.as", "Fetching treatments from database...");
 				
 				var now:Number = new Date().valueOf();
+				treatmentsList.length = 0;
 				var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TimeSpan.TIME_24_HOURS, now);
 				
 				if (dbTreatments != null && dbTreatments.length > 0)
@@ -139,19 +145,19 @@ package treatments
 							continue;
 						
 						var treatment:Treatment = new Treatment
-						(
-							dbTreatment.type,
-							dbTreatment.lastmodifiedtimestamp,
-							dbTreatment.insulinamount,
-							dbTreatment.insulinid,
-							dbTreatment.carbs,
-							dbTreatment.glucose,
-							dbTreatment.glucoseestimated,
-							dbTreatment.note,
-							null,
-							dbTreatment.carbdelay,
-							dbTreatment.basalduration
-						);
+							(
+								dbTreatment.type,
+								dbTreatment.lastmodifiedtimestamp,
+								dbTreatment.insulinamount,
+								dbTreatment.insulinid,
+								dbTreatment.carbs,
+								dbTreatment.glucose,
+								dbTreatment.glucoseestimated,
+								dbTreatment.note,
+								null,
+								dbTreatment.carbdelay,
+								dbTreatment.basalduration
+							);
 						treatment.ID = dbTreatment.id;
 						
 						treatmentsList.push(treatment);

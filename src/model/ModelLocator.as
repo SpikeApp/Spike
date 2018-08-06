@@ -78,7 +78,7 @@ package model
 			return _resourceManagerInstance;
 		}
 		
-		private static var _bgReadings:Array;
+		private static var _bgReadings:Array = [];
 
 		/**
 		 * Sorted ascending, from small to large, ie latest element is also the last element
@@ -150,7 +150,7 @@ package model
 				var preventRotation:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
 				Constants.appStage.autoOrients = !preventRotation;
 				
-				_bgReadings = de != null && de.data != null ? de.data as Array : [];
+				if (de != null && de.data != null) _bgReadings = de.data as Array;
 				
 				ProfileManager.init();
 				TreatmentsManager.init();
@@ -179,6 +179,24 @@ package model
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				updateApplicationVersion();
 				//MultipleMiaoMiaoService.init();
+			}
+		}
+		
+		public static function getMasterReadings():void
+		{
+			//Clear previous readings
+			_bgReadings.length = 0;
+			
+			//Load readings from database
+			var now:Number = new Date().valueOf();
+			Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+			Database.getBgReadings(now - MAX_TIME_FOR_BGREADINGS, now); //24H
+			
+			function bgReadingsReceivedFromDatabase(de:DatabaseEvent):void 
+			{
+				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+				
+				if (de != null && de.data != null) _bgReadings = de.data as Array;
 			}
 		}
 		

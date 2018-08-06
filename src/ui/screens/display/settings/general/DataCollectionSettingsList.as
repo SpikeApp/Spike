@@ -19,10 +19,14 @@ package ui.screens.display.settings.general
 	
 	import model.ModelLocator;
 	
+	import network.NetworkConnector;
+	
 	import services.NightscoutService;
 	
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	
+	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
@@ -159,11 +163,22 @@ package ui.screens.display.settings.general
 			//Update Database
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE) != collectionMode)
 			{
+				//Reset Nightscout eTag to force refresh
+				NetworkConnector.nightscoutTreatmentsLastModifiedHeader = "";
+				TreatmentsManager.nightscoutTreatmentsLastModifiedHeader = "";
+					
+				//Update Database
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE, collectionMode);
 				if (collectionMode == "Follower")
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "Follow");
 				else if (collectionMode == "Host")
+				{
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "");
+					
+					//Force fetching readings and treatments from database for master.
+					ModelLocator.getMasterReadings();
+					TreatmentsManager.fetchAllTreatmentsFromDatabase();
+				}
 			}
 			
 			//URL Validation
