@@ -150,7 +150,8 @@ package model
 				var preventRotation:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
 				Constants.appStage.autoOrients = !preventRotation;
 				
-				if (de != null) _bgReadings = de.data as Array;
+				_bgReadings = de != null && de.data != null ? de.data as Array : [];
+				
 				ProfileManager.init();
 				TreatmentsManager.init();
 				SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.init ); //Start rendering interface now that all data is available but only when app is active
