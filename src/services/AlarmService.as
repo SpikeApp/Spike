@@ -37,6 +37,7 @@ package services
 	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlarmSnoozer;
+	import ui.screens.display.settings.alarms.AlertCustomizerList;
 	
 	import utils.BadgeBuilder;
 	import utils.BgGraphBuilder;
@@ -1330,7 +1331,28 @@ package services
 				//keep soundToSet = "";
 			} else {	
 				soundToSet = StringUtil.trim(alertType.sound);
-				if (soundToSet.indexOf(".caf") == -1) soundToSet += ".caf";
+				
+				if (soundToSet.indexOf(".caf") == -1)
+				{
+					//Old version of Spike
+					var soundNames:Array = AlertCustomizerList.ALERT_NAMES_LIST.split(",");
+					var soundFiles:Array = AlertCustomizerList.ALERT_SOUNDS_LIST.split(",");
+					
+					for (var i:int = 0; i < soundNames.length; i++) 
+					{
+						var soundName:String = StringUtil.trim(soundNames[i] as String);
+						if (soundName == soundToSet)
+						{
+							soundToSet = StringUtil.trim(soundFiles[i] as String);
+							
+							//Update to the new format because it's more efficient
+							alertType.sound = soundToSet;
+							Database.updateAlertTypeSynchronous(alertType);
+							
+							break;
+						}
+					}
+				}
 			}
 			
 			if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default") && !(StringUtil.trim(alertType.sound) == "")) {//check against default for backward compability. Default sound can't be played with playSound
