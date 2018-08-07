@@ -3,6 +3,8 @@ package ui.screens.display.settings.alarms
 	import com.adobe.utils.StringUtil;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.AlertType;
 	import database.Database;
 	
@@ -226,7 +228,7 @@ package ui.screens.display.settings.alarms
 				
 				soundListProvider.push( { label: labelValue, accessory: accessoryValue, soundFile: soundFileValue } );
 				
-				if (mode == "edit" && (labelValue == selectedSoundNameValue || (labelValue == "No Sound" && selectedSoundNameValue == "no_sound") || (labelValue == "Default iOS" && selectedSoundNameValue == "default")))
+				if (mode == "edit" && (soundFileValue == "../assets/sounds/" + selectedSoundNameValue || (labelValue == "No Sound" && selectedSoundNameValue == "../assets/sounds/" + "no_sound") || (labelValue == "Default iOS" && selectedSoundNameValue == "../assets/sounds/" + "default")))
 					previousSoundFileIndex = i;
 			}
 			
@@ -332,11 +334,7 @@ package ui.screens.display.settings.alarms
 					else
 					{
 						//Create and save alert to the database
-						var sound:String;
-						if (soundList.selectedItem.soundFile == "no_sound" || soundList.selectedItem.soundFile == "default")
-							sound = soundList.selectedItem.soundFile;
-						else
-							sound = soundList.selectedItem.label;
+						var sound:String = soundList != null && soundList.selectedItem != null && soundList.selectedItem.soundFile != null ? (soundList.selectedItem.soundFile as String).replace("../assets/sounds/", "") : "";
 						
 						var newAlertType:AlertType = new AlertType
 						(
