@@ -697,6 +697,8 @@ package services
 					timeOfFirstBgReadingToDowload = latestBGReading.timestamp + 1; //We add 1ms to avoid overlaps
 				
 				var numberOfReadings:Number = ((now - timeOfFirstBgReadingToDowload) / TimeSpan.TIME_1_HOUR * 12) + 1; //Add one more just to make sure we get all readings
+				if (latestBGReading == null) numberOfReadings *= 2;
+				
 				var parameters:URLVariables = new URLVariables();
 				parameters["find[dateString][$gte]"] = timeOfFirstBgReadingToDowload;
 				parameters["count"] = Math.round(numberOfReadings);
@@ -775,7 +777,13 @@ package services
 						{
 							var NSFollowReadingDate:Date = new Date(NSFollowReading.date);
 							NSFollowReadingDate.setMinutes(NSFollowReadingDate.minutes + nightscoutFollowOffset);
+							
 							var NSFollowReadingTime:Number = NSFollowReadingDate.valueOf();
+							if (now - NSFollowReadingTime > TimeSpan.TIME_24_HOURS_6_MINUTES)
+							{
+								continue;
+							}
+							
 							if (NSFollowReadingTime >= timeOfFirstBgReadingToDowload) 
 							{
 								var bgReading:FollowerBgReading = new FollowerBgReading

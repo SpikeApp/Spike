@@ -4969,7 +4969,7 @@ package ui.chart
 				dummyModeActive = true;
 			else
 			{
-				if (_dataSource.length > 288 && !isHistoricalData && !CGMBlueToothDevice.isMiaoMiao()) // >24H
+				if (_dataSource.length > 288 && !isHistoricalData && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isFollower()) // >24H
 				{
 					var difference:int = _dataSource.length - 288;
 					for (var i:int = 0; i < difference; i++) 
