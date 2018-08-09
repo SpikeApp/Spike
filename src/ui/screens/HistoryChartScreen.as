@@ -10,6 +10,7 @@ package ui.screens
 	import database.Database;
 	
 	import events.DatabaseEvent;
+	import events.ScreenEvent;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Check;
@@ -28,13 +29,16 @@ package ui.screens
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
+	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
+	import starling.display.Image;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.textures.Texture;
 	import starling.utils.SystemUtil;
 	
 	import treatments.Treatment;
@@ -107,6 +111,9 @@ package ui.screens
 		private var nextButton:Button;
 		private var prevNextContainer:LayoutGroup;
 		private var separator:SpikeLine;
+		private var menuButton:Button;
+		private var menuButtonTexture:Texture;
+		private var menuButtonImage:Image;
 		
 		public function HistoryChartScreen() 
 		{
@@ -130,12 +137,20 @@ package ui.screens
 		{
 			super.initialize();
 			
-			/* Add default back button to the header */
-			/*backButton = new Button();
-			backButton.label = ModelLocator.resourceManagerInstance.getString('globaltranslations','back');
-			backButton.styleNameList.add( Button.ALTERNATE_STYLE_NAME_BACK_BUTTON );
-			headerProperties.leftItems = new <DisplayObject>[backButton];
-			backButton.addEventListener(Event.TRIGGERED, onBackButtonTriggered);*/
+			/* Add default menu button to the header */
+			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			{
+				menuButtonTexture = MaterialDeepGreyAmberMobileThemeIcons.menuTexture;
+				menuButtonImage = new Image(menuButtonTexture);
+				menuButton = new Button();
+				menuButton.defaultIcon = menuButtonImage;
+				menuButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+				menuButton.addEventListener( Event.TRIGGERED, onMenuButtonTriggered );
+				headerProperties.leftItems = new <DisplayObject>[
+					menuButton
+				];
+				backButtonHandler = onBackButton;
+			}
 			
 			//Set Properties From Database
 			selectedTimelineRange = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE));
@@ -188,7 +203,7 @@ package ui.screens
 			/* Date Selector */
 			var dateSelectorLayout:HorizontalLayout = new HorizontalLayout();
 			dateSelectorLayout.verticalAlign = VerticalAlign.MIDDLE;
-			dateSelectorLayout.gap = 10;
+			dateSelectorLayout.gap = Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 ? 7 : 10;
 			dateSelectorContainer = new LayoutGroup();
 			dateSelectorContainer.layout = dateSelectorLayout;
 			
@@ -214,7 +229,7 @@ package ui.screens
 			dateSelectorContainer.addChild(goButton);
 			
 			//Separator
-			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (DeviceInfo.isTablet())
 			{
 				separator = GraphLayoutFactory.createVerticalLine(goButton.height - 4, 1, 0x34353d);
 				dateSelectorContainer.addChild(separator);
@@ -224,7 +239,7 @@ package ui.screens
 			
 			//Layout adjustments
 			goButton.y += 2;
-			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if (DeviceInfo.isTablet())
 			{
 				separator.y += 1;
 				separator.x += 0.5;
@@ -234,14 +249,26 @@ package ui.screens
 			var controlsContainerLayout:VerticalLayout = new VerticalLayout();
 			controlsContainerLayout.horizontalAlign = HorizontalAlign.RIGHT;
 			controlsContainerLayout.gap = 5;
+			controlsContainerLayout.paddingRight = Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 ? 5 : 10;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+				controlsContainerLayout.paddingRight = 0;
 			controlsContainer = new LayoutGroup();
 			controlsContainer.layout = controlsContainerLayout;
 			controlsContainer.addChild(dateSelectorContainer);
 			controlsContainer.validate();
 			
-			headerProperties.centerItems = new <DisplayObject>[
-				controlsContainer
-			];
+			if (Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			{
+				headerProperties.rightItems = new <DisplayObject>[
+					controlsContainer
+				];
+			}
+			else
+			{
+				headerProperties.centerItems = new <DisplayObject>[
+					controlsContainer
+				];
+			}
 		}
 		
 		private function calculateTimerangeDates(baseTimestamp:Number):void
@@ -773,6 +800,22 @@ package ui.screens
 			
 		}
 		
+		private function onMenuButtonTriggered():void 
+		{
+			toggleMenu();
+		}
+		
+		private function onBackButton():void 
+		{
+			toggleMenu();
+		}
+		
+		private function toggleMenu():void 
+		{
+			if(!AppInterface.instance.drawers.isLeftDrawerOpen)
+				dispatchEventWith( ScreenEvent.TOGGLE_MENU );
+		}
+		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			if (renderingLabelContainer != null)
@@ -896,6 +939,25 @@ package ui.screens
 				dateSelectorContainer.removeFromParent();
 				dateSelectorContainer.dispose();
 				dateSelectorContainer = null;
+			}
+			
+			if (menuButtonTexture != null)
+			{
+				menuButtonTexture.dispose();
+				menuButtonTexture = null;
+			}
+			
+			if (menuButtonImage != null)
+			{
+				menuButtonImage.dispose();
+				menuButtonImage = null;
+			}
+			
+			if (menuButton != null)
+			{
+				menuButton.removeEventListener(Event.TRIGGERED, onMenuButtonTriggered);
+				menuButton.dispose();
+				menuButton = null;
 			}
 			
 			if (backButton != null)

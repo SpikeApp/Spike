@@ -1,5 +1,9 @@
 2.2.5
-ENHANCEMENT: Better initial Nightscout glucose readings fetch strategy for followers that might be following a master with MiaoMiao and a lot of readings on-demand on their Nightscout site, hence more than 288 readings in a timespan of 24h. (Miguel)
+ENHANCEMENT: Better initial Nightscout readings fetch strategy for followers that might have a master with MiaoMiao and a lot of readings on-demand on their Nightscout site, hence more than 288 readings in a time span of 24h. This will make Spike follower display 24h of data, independently of the amount of readings present in Nightscout. (Miguel)
+ENHANCEMENT: Made some changes to be able to fit a menu button on the History screen as it seemed to be causing confusion to some users. The button is not available for iPhone 4S/5/SE devices due to lack of space, users can still swipe from the left edge of the screen to the right to access the main menu. (Miguel)
+ENHANCEMENT: Some enhancements in the code logic that renders raw values on the main chart for Dexcom users. (Miguel)
+FIX: Fixes an issue with MiaoMiao that would incorrectly display the line on the main chart. (Miguel)
+FIX: Tiny correction in Spanish translation. (Miguel)
 
 2.2.4
 FEATURE: Dexcom G6 support! No 10 day sensor expiration, no transmitter expiration, ability to skip warm-ups, ability to reset transmitter, ability to use refurbished transmitters, etc. G6 is set up in Spike exactly the same way as the G5. G6 still requires calibrations although after the first 2-3 days there's no need to calibrate every day. If the sensor is healthy you can calibrate 1-2 times a week, or even less. Ability to have G6 without calibrations will come in a future update. (Miguel)
