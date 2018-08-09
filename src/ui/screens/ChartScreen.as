@@ -609,7 +609,6 @@ package ui.screens
 							else
 							{
 								Trace.myTrace("ChartScreen.as", "Queuing reading to be rendered when Spike is in the foreground: Value: " + bgReading.calculatedValue);
-								trace(new Date(bgReading.timestamp));
 							}
 						} 
 						else 
