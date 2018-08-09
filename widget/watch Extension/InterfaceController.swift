@@ -321,6 +321,7 @@ class InterfaceController: WKInterfaceController
                         self.displayError(error: "Data Missing!")
                         return
                     }
+                    self.vlabel.setText("")
                     let bgtime=entries[0]["date"] as! TimeInterval
                     let red=UIColor.red as UIColor
                     self.bghist=entries
