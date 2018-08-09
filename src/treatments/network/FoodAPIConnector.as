@@ -120,6 +120,8 @@ package treatments.network
 		
 		private static function usdaGetFoodInfo(ndbNumber:Number):void
 		{
+			currentMode = USDA_REPORT_MODE;
+			
 			var queryParameters:Object = new Object();
 			queryParameters.format = "json";
 			queryParameters.ndbno = ndbNumber;
