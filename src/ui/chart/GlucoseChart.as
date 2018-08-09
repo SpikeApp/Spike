@@ -2055,9 +2055,14 @@ package ui.chart
 			if (_displayLine)
 				destroyAllLines(true);
 			
-			//Redraw main chart and scroller chart
+			//Redraw main chart, raw data points and scroller chart
 			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, numAddedReadings);
-			if (displayRaw) redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius/2, numAddedReadings, true);
+			//if (displayRaw) redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius/2, numAddedReadings, true);
+			if (displayRaw)
+			{
+				hideRaw();
+				showRaw();
+			}
 			redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, numAddedReadings);
 			
 			//Recalculate first and last timestamp
@@ -4893,6 +4898,13 @@ package ui.chart
 				mainChart.removeFromParent();
 				mainChart.dispose();
 				mainChart = null;
+			}
+			
+			if (rawDataContainer != null)
+			{
+				rawDataContainer.removeFromParent();
+				rawDataContainer.dispose();
+				rawDataContainer = null;
 			}
 			
 			if (scrollerChart != null)

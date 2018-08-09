@@ -58,7 +58,6 @@ package ui.screens
 		private var chartData:Array;
 		private var newReadingsList:Array = [];
 		private var newReadingsListFollower:Array = [];
-		private var newReadingsListAddedWhileInForeground:Array = [];
 		private var timeRangeGroup:ToggleGroup;
 		
 		//Visual variables
@@ -590,41 +589,52 @@ package ui.screens
 
 				var latestAddedReading:BgReading = glucoseChart.getLatestReading();
 				var timeStampLatestReading:Number = latestAddedReading == null ? 0 : latestAddedReading.timestamp;
-				if (newReadingsList.length > 0) {
+				if (newReadingsList != null && newReadingsList.length > 0) 
 					timeStampLatestReading = Math.max(timeStampLatestReading, (newReadingsList[newReadingsList.length - 1] as BgReading).timestamp);
-				}
 				
 				var cntr:int = ModelLocator.bgReadings.length - 1;
-				while (cntr > -1) {
+				while (cntr > -1) 
+				{
 					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
-					if (bgReading.rawData != 0 && bgReading.calculatedValue != 0) {
+					
+					if (bgReading != null && bgReading.rawData != 0 && bgReading.calculatedValue != 0) 
+					{
 						if (bgReading.timestamp > timeStampLatestReading) 
 						{
-							if (glucoseChart != null && SystemUtil.isApplicationActive)
+							//Add the reading to the beginning of the Array because we're looping ModelLocator in reverse order
+							newReadingsList.push(bgReading); 
+							
+							if (glucoseChart != null && SystemUtil.isApplicationActive) 
+								Trace.myTrace("ChartScreen.as", "Adding reading to the chart: Value: " + bgReading.calculatedValue);
+							else
 							{
-								Trace.myTrace("ChartScreen.as", "Adding reading to the list: Value: " + bgReading.calculatedValue);
-								newReadingsListAddedWhileInForeground.insertAt(0, bgReading);
-							} 
-							else 
-							{
-								newReadingsList.push(bgReading);
+								Trace.myTrace("ChartScreen.as", "Queuing reading to be rendered when Spike is in the foreground: Value: " + bgReading.calculatedValue);
+								trace(new Date(bgReading.timestamp));
 							}
 						} 
 						else 
-						{
 							break;
-						}
 					}
+					
 					cntr--;
 				}
-
-				if (newReadingsListAddedWhileInForeground.length > 0) {
-					glucoseChart.addGlucose(newReadingsListAddedWhileInForeground);
-					newReadingsListAddedWhileInForeground.length = 0;
-					if (displayPieChart)
+				
+				//Sort BgReadings by timestamp to ensure they are processed in the correct order.
+				newReadingsList.sortOn(["timestamp"], Array.NUMERIC);
+				
+				if (SystemUtil.isApplicationActive && newReadingsList != null && newReadingsList.length > 0 && glucoseChart != null)
+				{
+					//Add readings to the chart and calculate display labels
+					glucoseChart.addGlucose(newReadingsList);
+					glucoseChart.calculateDisplayLabels();
+					
+					//Clear queue
+					newReadingsList.length = 0;
+					
+					//Redraw Pie Chart
+					if (displayPieChart && pieChart != null)
 						pieChart.drawChart();
 				}
-				
 			} 
 			catch(error:Error) 
 			{
