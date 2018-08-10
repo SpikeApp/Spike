@@ -14,14 +14,22 @@ package treatments
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
+	import feathers.controls.ScrollBar;
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollContainer;
+	import feathers.controls.ScrollPolicy;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.data.ArrayCollection;
+	import feathers.layout.BaseLinearLayout;
+	import feathers.layout.BaseTiledLayout;
+	import feathers.layout.Direction;
+	import feathers.layout.FlowLayout;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.RelativePosition;
+	import feathers.layout.TiledColumnsLayout;
+	import feathers.layout.TiledRowsLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
@@ -30,6 +38,7 @@ package treatments
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
 	import starling.core.Starling;
+	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
@@ -97,7 +106,7 @@ package treatments
 		private static var bwCOBLabelContainer:LayoutGroup;
 		private static var bwCOBCheck:Check;
 		private static var bwNotes:TextInput;
-		private static var bwScrollContainer:ScrollContainer;
+		private static var bwWizardScrollContainer:ScrollContainer;
 		private static var bwSuggestionLabel:Label;
 		private static var missedSettingsContainer:LayoutGroup;
 		private static var missedSettingsTitle:Label;
@@ -134,16 +143,18 @@ package treatments
 		private static var bwOtherCorrectionCheck:Check;
 		private static var bwOtherCorrectionAmountContainer:LayoutGroup;
 		private static var bwOtherCorrectionAmountLabel:Label;
-
 		private static var bwTrendContainer:LayoutGroup;
-
 		private static var bwTrendLabelContainer:LayoutGroup;
-
 		private static var bwTrendCheck:Check;
-
 		private static var bwTrendLabel:Label;
-
 		private static var bwCurrentTrendLabel:Label;
+		private static var bwFoodsContainer:LayoutGroup;
+
+		private static var bwFoodsLabel:Label;
+
+		private static var bwFoodLoaderButton:Button;
+
+		private static var bwTotalScrollContainer:ScrollContainer;
 		
 		public function BolusWizard()
 		{
@@ -176,11 +187,29 @@ package treatments
 		
 		private static function createDisplayObjects():void
 		{
-			//Scroll Container
-			bwScrollContainer = new ScrollContainer();
-			bwScrollContainer.layout = new VerticalLayout();
-			bwScrollContainer.scrollBarDisplayMode = ScrollBarDisplayMode.FIXED_FLOAT;
-			bwScrollContainer.verticalScrollBarProperties.paddingRight = -10;
+			//Total Content Layout
+			var bwTotalScrollLayout:TiledRowsLayout = new TiledRowsLayout();
+			bwTotalScrollLayout.paging = Direction.HORIZONTAL;
+			bwTotalScrollLayout.tileHorizontalAlign = HorizontalAlign.LEFT;
+			bwTotalScrollLayout.tileVerticalAlign = VerticalAlign.TOP;
+			bwTotalScrollLayout.horizontalAlign = HorizontalAlign.LEFT;
+			bwTotalScrollLayout.verticalAlign = VerticalAlign.TOP;
+			bwTotalScrollLayout.useSquareTiles = false;
+			
+			//Total Container
+			bwTotalScrollContainer = new ScrollContainer();
+			bwTotalScrollContainer.layout = bwTotalScrollLayout;
+			bwTotalScrollContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
+			
+			//Wizard Scroll Container
+			var bwWizardScrollContainerLayout:VerticalLayout = new VerticalLayout();
+			bwWizardScrollContainerLayout.paddingRight = 10;
+			
+			bwWizardScrollContainer = new ScrollContainer();
+			bwWizardScrollContainer.layout = bwWizardScrollContainerLayout;
+			bwWizardScrollContainer.scrollBarDisplayMode = ScrollBarDisplayMode.FIXED_FLOAT;
+			bwWizardScrollContainer.verticalScrollBarProperties.paddingLeft = 10;
+			bwTotalScrollContainer.addChild(bwWizardScrollContainer);
 			
 			//Display Container
 			bwMainContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, null, 10);
@@ -228,6 +257,19 @@ package treatments
 			bwCarbsContainer.addChild(bwCarbsStepper);
 			
 			bwMainContainer.addChild(bwCarbsContainer);
+			
+			//Foods
+			bwFoodsContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwFoodsContainer.width = contentWidth;
+			bwMainContainer.addChild(bwFoodsContainer);
+			
+			bwFoodsLabel = LayoutFactory.createLabel("");
+			bwFoodsLabel.paddingLeft = 25;
+			bwFoodsContainer.addChild(bwFoodsLabel);
+			
+			bwFoodLoaderButton = LayoutFactory.createButton("");
+			bwFoodLoaderButton.addEventListener(Event.TRIGGERED, onShowFoodSearcher);
+			bwFoodsContainer.addChild(bwFoodLoaderButton);
 			
 			//Carbs Offset
 			bwCarbsOffsetContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -462,7 +504,11 @@ package treatments
 			bwMainContainer.addChild(bolusWizardActionContainer);
 			
 			//Final Adjustments
-			bwScrollContainer.addChild(bwMainContainer);
+			bwWizardScrollContainer.addChild(bwMainContainer);
+			
+			//Food Searcher
+			var quad:Quad = new Quad(200, 100, 0xFF0000);
+			bwTotalScrollContainer.addChild(quad);
 		}
 		
 		private static function populateComponents():void
@@ -497,6 +543,11 @@ package treatments
 			bwCarbsStepper.value = 0;
 			bwCarbsContainer.validate();
 			bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
+			bwFoodsLabel.text = "Foods";
+			bwFoodLoaderButton.label = "Load Foods";
+			bwFoodLoaderButton.validate();
+			bwFoodsContainer.validate();
+			bwFoodLoaderButton.x = contentWidth - bwFoodLoaderButton.width;
 			bwCarbsOffsetLabel.text = "Carbs Offset (Min)";
 			bwCarbsOffsetStepper.value = 0;
 			bwCarbsOffsetContainer.validate();
@@ -668,7 +719,7 @@ package treatments
 			showHideOtherCorrection();
 			
 			//Reset Callout Vertical Scroll
-			bwScrollContainer.verticalScrollPosition = 0;
+			bwWizardScrollContainer.verticalScrollPosition = 0;
 		}
 		
 		private static function enableEventListeners():void
@@ -717,16 +768,19 @@ package treatments
 		private static function displayCallout():void
 		{
 			if (bolusWizardCallout != null) bolusWizardCallout.dispose();
-			bolusWizardCallout = Callout.show(bwScrollContainer, calloutPositionHelper);
+			bolusWizardCallout = Callout.show(bwTotalScrollContainer, calloutPositionHelper);
 			bolusWizardCallout.disposeContent = false;
 			bolusWizardCallout.paddingBottom = 15;
 			bolusWizardCallout.closeOnTouchBeganOutside = false;
 			bolusWizardCallout.closeOnTouchEndedOutside = false;
 			bolusWizardCallout.height = Constants.stageHeight - yPos - 10;
 			bolusWizardCallout.validate();
-			bwScrollContainer.height = bolusWizardCallout.height - yPos - 35;
-			bwScrollContainer.maxHeight = bolusWizardCallout.height - yPos - 35;
-			bwScrollContainer.validate();
+			bwWizardScrollContainer.height = bolusWizardCallout.height - yPos + 10;
+			bwWizardScrollContainer.maxHeight = bolusWizardCallout.height - yPos + 10;
+			bwWizardScrollContainer.validate();
+			bwTotalScrollContainer.height = bwWizardScrollContainer.height;
+			bwTotalScrollContainer.maxHeight = bwWizardScrollContainer.maxHeight;
+			bwTotalScrollContainer.validate();
 		}
 		
 		private static function displayMissedSettingsCallout():void
@@ -953,6 +1007,14 @@ package treatments
 			}
 		}
 		
+		private static function onShowFoodSearcher(e:Event):void
+		{
+			if (bwWizardScrollContainer != null)
+			{
+				bwTotalScrollContainer.scrollToPageIndex( 1, bwTotalScrollContainer.verticalPageIndex );
+			}
+		}
+		
 		private static function onCloseConfigureCallout(e:Event):void
 		{
 			if (bolusWizardConfigureCallout != null)
@@ -989,13 +1051,15 @@ package treatments
 		{
 			if (!bwCarbsCheck.isSelected)
 			{
+				bwFoodsContainer.removeFromParent();
 				bwCarbsOffsetContainer.removeFromParent();
 				bwCarbTypeContainer.removeFromParent()
 			}
 			else
 			{
-				bwMainContainer.addChildAt(bwCarbsOffsetContainer, 3);
-				bwMainContainer.addChildAt(bwCarbTypeContainer, 4);
+				bwMainContainer.addChildAt(bwFoodsContainer, 3);
+				bwMainContainer.addChildAt(bwCarbsOffsetContainer, 4);
+				bwMainContainer.addChildAt(bwCarbTypeContainer, 5);
 			}
 			
 			performCalculations();
