@@ -71,16 +71,16 @@ package ui.screens.display.settings.general
 			disabledLanguages["ar_SA"] = true;
 			disabledLanguages["bg_BG"] = true;
 			disabledLanguages["cs_CZ"] = true;
-			disabledLanguages["da_DK"] = true;
+			//disabledLanguages["da_DK"] = true;
 			disabledLanguages["fi_FI"] = true;
 			disabledLanguages["hu_HU"] = true;
 			disabledLanguages["no_NO"] = true;
-			disabledLanguages["ru_RU"] = true;
-			disabledLanguages["sv_SE"] = true;
+			//disabledLanguages["ru_RU"] = true;
+			//disabledLanguages["sv_SE"] = true;
 			
 			/* Set DateFormatPicker Data */
 			//var appLanguageLabelsList:Array = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','app_language_labels_list').split(",");
-			var appLanguageLabelsList:Array = "Arabic,Bulgarian,简体中文,Czech,Danish,English,Español,Finnish,Français,Deutsch,Hungarian,Italiano,Norwegian,Polski,Português,Русский,Svenska".split(",");
+			var appLanguageLabelsList:Array = "Arabic,Bulgarian,简体中文,Czech,Dansk,English,Español,Finnish,Français,Deutsch,Hungarian,Italiano,Norwegian,Polski,Português,Русский,Svenska".split(",");
 			var appLanguageCodesList:Array = "ar_SA,bg_BG,zh_CN,cs_CZ,da_DK,en_US,es_ES,fi_FI,fr_FR,de_DE,hu_HU,it_IT,no_NO,pl_PL,pt_PT,ru_RU,sv_SE".split(",");
 			var appLanguageList:Array = new Array();
 			var selectedIndex:int = 0;
