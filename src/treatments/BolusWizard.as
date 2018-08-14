@@ -14,21 +14,16 @@ package treatments
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
-	import feathers.controls.ScrollBar;
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollContainer;
 	import feathers.controls.ScrollPolicy;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.data.ArrayCollection;
-	import feathers.layout.BaseLinearLayout;
-	import feathers.layout.BaseTiledLayout;
 	import feathers.layout.Direction;
-	import feathers.layout.FlowLayout;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.RelativePosition;
-	import feathers.layout.TiledColumnsLayout;
 	import feathers.layout.TiledRowsLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
@@ -38,9 +33,10 @@ package treatments
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
 	import starling.core.Starling;
-	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	
+	import treatments.ui.SpikeFoodSearcher;
 	
 	import ui.AppInterface;
 	import ui.chart.GlucoseFactory;
@@ -149,12 +145,11 @@ package treatments
 		private static var bwTrendLabel:Label;
 		private static var bwCurrentTrendLabel:Label;
 		private static var bwFoodsContainer:LayoutGroup;
-
 		private static var bwFoodsLabel:Label;
-
 		private static var bwFoodLoaderButton:Button;
-
 		private static var bwTotalScrollContainer:ScrollContainer;
+
+		private static var bwFoodSearcher:SpikeFoodSearcher;
 		
 		public function BolusWizard()
 		{
@@ -199,6 +194,7 @@ package treatments
 			//Total Container
 			bwTotalScrollContainer = new ScrollContainer();
 			bwTotalScrollContainer.layout = bwTotalScrollLayout;
+			bwTotalScrollContainer.snapToPages = true;
 			bwTotalScrollContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
 			
 			//Wizard Scroll Container
@@ -505,10 +501,6 @@ package treatments
 			
 			//Final Adjustments
 			bwWizardScrollContainer.addChild(bwMainContainer);
-			
-			//Food Searcher
-			var quad:Quad = new Quad(200, 100, 0xFF0000);
-			bwTotalScrollContainer.addChild(quad);
 		}
 		
 		private static function populateComponents():void
@@ -1011,8 +1003,28 @@ package treatments
 		{
 			if (bwWizardScrollContainer != null)
 			{
+				if (bwFoodSearcher == null)
+				{
+					bwFoodSearcher = new SpikeFoodSearcher(contentWidth, bolusWizardCallout.height - bolusWizardCallout.paddingTop - bolusWizardCallout.paddingBottom - 15);
+					bwFoodSearcher.addEventListener(Event.CANCEL, onFoodSearcherCanceled);
+					bwFoodSearcher.addEventListener(Event.COMPLETE, onFoodSearcherCompleted);
+					bwTotalScrollContainer.addChild(bwFoodSearcher);
+				}
+				
 				bwTotalScrollContainer.scrollToPageIndex( 1, bwTotalScrollContainer.verticalPageIndex );
 			}
+		}
+		
+		private static function onFoodSearcherCanceled(e:Event):void
+		{
+			if (bwWizardScrollContainer != null)
+				bwTotalScrollContainer.scrollToPageIndex( 0, bwTotalScrollContainer.verticalPageIndex );
+		}
+		
+		private static function onFoodSearcherCompleted(e:Event):void
+		{
+			if (bwWizardScrollContainer != null)
+				bwTotalScrollContainer.scrollToPageIndex( 0, bwTotalScrollContainer.verticalPageIndex );
 		}
 		
 		private static function onCloseConfigureCallout(e:Event):void

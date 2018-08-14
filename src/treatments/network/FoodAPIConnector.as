@@ -6,6 +6,7 @@ package treatments.network
 	import com.hurlant.util.Hex;
 	
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.net.URLLoader;
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
@@ -14,9 +15,16 @@ package treatments.network
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import mx.utils.ObjectUtil;
+	import mx.utils.StringUtil;
+	
+	import events.FoodEvent;
+	
+	import treatments.Food;
+	
+	import utils.SpikeJSON;
+	import utils.UniqueId;
 
-	public class FoodAPIConnector
+	public class FoodAPIConnector extends EventDispatcher
 	{
 		//MODES
 		private static const FATSECRET_MODE:String = "fatSecret";
@@ -30,7 +38,8 @@ package treatments.network
 		private static const FATSECRET_API_URL:String = "http://platform.fatsecret.com/rest/server.api";
 		
 		//OPENFOODFACTS
-		private static const OPENFOODFACTS_API_URL:String = "https://world.openfoodfacts.org/cgi/search.pl?";
+		private static const OPENFOODFACTS_SEARCH_API_URL:String = "https://world.openfoodfacts.org/cgi/search.pl?";
+		private static const OPENFOODFACTS_CODE_API_URL:String = "https://world.openfoodfacts.org/code/{barcode}.json";
 		
 		//USDA
 		private static const USDA_SEARCH_API_URL:String = "https://api.nal.usda.gov/ndb/search/?";
@@ -38,16 +47,20 @@ package treatments.network
 		private static const USDA_API_KEY:String = "llUnuttV7sRdAGI8oXLR6r2ijTsKHBuUeMdpAFw2";
 		
 		//Properties
+		private static var _instance:FoodAPIConnector = new FoodAPIConnector();
 		private static var currentMode:String = "";
+		private static var foodDetailMode:Boolean = false;
 		
 		public function FoodAPIConnector()
 		{
-			throw new Error("FoodAPIConnector is not meant to be instantiated!");
+			if (_instance != null)
+				throw new Error("FoodAPIConnector is not meant to be instantiated!");
 		}
 		
-		public static function fatSecretSearchFood(food:String)
+		public static function fatSecretSearchFood(food:String):void
 		{
 			currentMode = FATSECRET_MODE;
+			foodDetailMode = false;
 			
 			var nonce:Number = Math.round(Math.random() * 1000000);
 			var timestamp:Number = new Date().valueOf();
@@ -74,13 +87,82 @@ package treatments.network
 			
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
-			urlLoader.addEventListener(Event.COMPLETE, localCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
 			urlLoader.load(request);
 		}
 		
-		private static function openFoodFactsSearchFood(food:String):void
+		public static function fatSecretSearchCode(barCode:String):void
+		{
+			currentMode = FATSECRET_MODE;
+			foodDetailMode = false;
+			
+			var nonce:Number = Math.round(Math.random() * 1000000);
+			var timestamp:Number = new Date().valueOf();
+			
+			var queryParameters:Object = new Object();
+			queryParameters.method = "food.find_id_for_barcode";
+			queryParameters.oauth_consumer_key = FATSECRET_CONSUMER_KEY;
+			queryParameters.oauth_nonce = nonce;
+			queryParameters.oauth_signature_method = "HMAC-SHA1";
+			queryParameters.oauth_timestamp = timestamp;
+			queryParameters.oauth_version = "1.0";
+			queryParameters.format = "json";
+			queryParameters.max_results = 50;
+			queryParameters.barcode = barCode;
+			
+			var params:String = sortRequestParamsFatSecret(queryParameters);
+			var signatureBase:String = "POST" + "&" + encodeURIComponent(FATSECRET_API_URL) + "&" + encodeURIComponent(params);
+			var encryptedString:String = hashHMAC(FATSECRET_SHARED_SECRET + "&", signatureBase);
+			
+			var noChacheHeader:URLRequestHeader = new URLRequestHeader("pragma", "no-cache");
+			var request:URLRequest = new URLRequest(FATSECRET_API_URL + "?" + params + "&" + "oauth_signature=" + encryptedString);
+			request.method = URLRequestMethod.POST;
+			request.requestHeaders.push(noChacheHeader);
+			
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
+			urlLoader.addEventListener(Event.COMPLETE, onFatSecretCodeResult, false, 0, true);
+			urlLoader.load(request);
+		}
+		
+		public static function fatSecretGetFoodDetails(foodID:String, detailMode:Boolean = true):void
+		{
+			currentMode = FATSECRET_MODE;
+			foodDetailMode = detailMode;
+			
+			var nonce:Number = Math.round(Math.random() * 1000000);
+			var timestamp:Number = new Date().valueOf();
+			
+			var queryParameters:Object = new Object();
+			queryParameters.method = "food.get";
+			queryParameters.oauth_consumer_key = FATSECRET_CONSUMER_KEY;
+			queryParameters.oauth_nonce = nonce;
+			queryParameters.oauth_signature_method = "HMAC-SHA1";
+			queryParameters.oauth_timestamp = timestamp;
+			queryParameters.oauth_version = "1.0";
+			queryParameters.format = "json";
+			queryParameters.max_results = 50;
+			queryParameters.food_id = foodID;
+			
+			var params:String = sortRequestParamsFatSecret(queryParameters);
+			var signatureBase:String = "POST" + "&" + encodeURIComponent(FATSECRET_API_URL) + "&" + encodeURIComponent(params);
+			var encryptedString:String = hashHMAC(FATSECRET_SHARED_SECRET + "&", signatureBase);
+			
+			var noChacheHeader:URLRequestHeader = new URLRequestHeader("pragma", "no-cache");
+			var request:URLRequest = new URLRequest(FATSECRET_API_URL + "?" + params + "&" + "oauth_signature=" + encryptedString);
+			request.method = URLRequestMethod.POST;
+			request.requestHeaders.push(noChacheHeader);
+			
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
+			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
+			urlLoader.load(request);
+		}
+		
+		public static function openFoodFactsSearchFood(food:String):void
 		{
 			currentMode = OPENFOODFACTS_MODE;
+			foodDetailMode = false;
 			
 			var parameters:URLVariables = new URLVariables();
 			parameters.search_terms = food;
@@ -88,19 +170,33 @@ package treatments.network
 			parameters.action = "process";
 			parameters.json = 1;
 			
-			var callURL:String = OPENFOODFACTS_API_URL + parameters.toString();
+			var callURL:String = OPENFOODFACTS_SEARCH_API_URL + parameters.toString();
 			
 			var request:URLRequest = new URLRequest(callURL);
 			request.method = URLRequestMethod.GET;
 			
 			var urlLoader:URLLoader = new URLLoader();
-			urlLoader.addEventListener(Event.COMPLETE, localCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
 			urlLoader.load(request);
 		}
 		
-		private static function usdaSearchFood(food:String):void
+		public static function openFoodFactsSearchCode(barCode:String):void
+		{
+			currentMode = OPENFOODFACTS_MODE;
+			foodDetailMode = false;
+			
+			var request:URLRequest = new URLRequest(OPENFOODFACTS_CODE_API_URL.replace("{barcode}", barCode));
+			request.method = URLRequestMethod.GET;
+			
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
+			urlLoader.load(request);
+		}
+		
+		public static function usdaSearchFood(food:String):void
 		{
 			currentMode = USDA_SEARCH_MODE;
+			foodDetailMode = false;
 			
 			var queryParameters:Object = new Object();
 			queryParameters.format = "json";
@@ -114,13 +210,14 @@ package treatments.network
 			request.method = URLRequestMethod.POST;
 			
 			var urlLoader:URLLoader = new URLLoader();
-			urlLoader.addEventListener(Event.COMPLETE, localCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
 			urlLoader.load(request);
 		}
 		
-		private static function usdaGetFoodInfo(ndbNumber:Number):void
+		public static function usdaGetFoodInfo(ndbNumber:String):void
 		{
 			currentMode = USDA_REPORT_MODE;
+			foodDetailMode = true;
 			
 			var queryParameters:Object = new Object();
 			queryParameters.format = "json";
@@ -132,7 +229,7 @@ package treatments.network
 			request.method = URLRequestMethod.POST;
 			
 			var urlLoader:URLLoader = new URLLoader();
-			urlLoader.addEventListener(Event.COMPLETE, localCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
 			urlLoader.load(request);
 		}
 		
@@ -203,82 +300,501 @@ package treatments.network
 		}
 		
 		/**
+		 * Parses FatSecret foods
+		 */
+		public static function parseFatSecretFood(unprocessedFood:Object):Object
+		{
+			var food:Object = null;
+			var description:String = unprocessedFood.food_description as String;
+			
+			if (description != null)
+			{
+				//Serving Size and Unit
+				var servingSizeMarker:String = "Per ";
+				var servingSizeFirstIndex:int = description.indexOf(servingSizeMarker) + servingSizeMarker.length;
+				var servingSizeSecondIndex:int = description.indexOf(" - Calories");
+				var servingSizeFinalSecondIndex:int = servingSizeSecondIndex;
+				while (isNaN(Number(description.slice(servingSizeFirstIndex, servingSizeFinalSecondIndex))))
+				{
+					servingSizeFinalSecondIndex -= 1;
+				}
+				var servingSize:Number = Number(description.slice(servingSizeFirstIndex, servingSizeFinalSecondIndex));
+				var servingUnit:String = StringUtil.trim(description.slice(servingSizeFinalSecondIndex, servingSizeSecondIndex));
+				
+				//Calories
+				var caloriesMarker:String = "Calories: ";
+				var caloriesFirstIndex:int = description.indexOf(caloriesMarker) + caloriesMarker.length;
+				var caloriesSecondIndex:int = description.indexOf(" | Fat");
+				var caloriesFinalSecondIndex:int = caloriesSecondIndex;
+				while (isNaN(Number(description.slice(caloriesFirstIndex, caloriesFinalSecondIndex))))
+				{
+					caloriesFinalSecondIndex -= 1;
+				}
+				var caloriesAmount:Number = Number(description.slice(caloriesFirstIndex, caloriesFinalSecondIndex));
+				var caloriesUnit:String = StringUtil.trim(description.slice(caloriesFinalSecondIndex, caloriesSecondIndex));
+				if (caloriesUnit.toLowerCase() != "kcal") caloriesAmount = convertKjToKcal(caloriesAmount);
+				
+				//Fats
+				var fatsMarker:String = "Fat: ";
+				var fatsFirstIndex:int = description.indexOf(fatsMarker) + fatsMarker.length;
+				var fatsSecondIndex:int = description.indexOf(" | Carbs");
+				var fatsFinalSecondIndex:int = fatsSecondIndex;
+				while (isNaN(Number(description.slice(fatsFirstIndex, fatsFinalSecondIndex))))
+				{
+					fatsFinalSecondIndex -= 1;
+				}
+				var fatsAmount:Number = Number(description.slice(fatsFirstIndex, fatsFinalSecondIndex));
+				
+				//Carbs
+				var carbsMarker:String = "Carbs: ";
+				var carbsFirstIndex:int = description.indexOf(carbsMarker) + carbsMarker.length;
+				var carbsSecondIndex:int = description.indexOf(" | Protein");
+				var carbsFinalSecondIndex:int = carbsSecondIndex;
+				while (isNaN(Number(description.slice(carbsFirstIndex, carbsFinalSecondIndex))))
+				{
+					carbsFinalSecondIndex -= 1;
+				}
+				var carbsAmount:Number = Number(description.slice(carbsFirstIndex, carbsFinalSecondIndex));
+				
+				//Proteins
+				var proteinsMarker:String = "Protein: ";
+				var proteinsFirstIndex:int = description.indexOf(proteinsMarker) + proteinsMarker.length;
+				var proteinsSecondIndex:int = description.length - 1;
+				var proteinsFinalSecondIndex:int = proteinsSecondIndex;
+				while (isNaN(Number(description.slice(proteinsFirstIndex, proteinsFinalSecondIndex))))
+				{
+					proteinsFinalSecondIndex -= 1;
+				}
+				var proteinsAmount:Number = Number(description.slice(proteinsFirstIndex, proteinsFinalSecondIndex));
+				
+				food = 
+				{
+					proteins: proteinsAmount,
+					carbs: carbsAmount,
+					fats: fatsAmount,
+					calories: caloriesAmount,
+					servingSize: servingSize,
+					servingUnit: servingUnit
+				}
+			}
+			
+			return food;
+		}
+		
+		/**
 		 * EVENT HANDLERS
 		 */
-		private static function localCompleteHandler(e:Event):void
+		private static function onAPIResult(e:flash.events.Event):void
 		{
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			var response:String = String(loader.data);
 			
 			//Discard loader
-			loader.removeEventListener(Event.COMPLETE, localCompleteHandler);
+			loader.removeEventListener(flash.events.Event.COMPLETE, onAPIResult);
 			loader = null;
+			
+			var data:Array = [];
+			var foodsJSON:Object;
+			var foodList:Array;
+			var i:int = 0;
 			
 			//Process responde
 			if (currentMode == FATSECRET_MODE)
 			{
 				try
 				{
-					var foodsJSON:Object = JSON.parse(response);
-					trace(ObjectUtil.toString(foodsJSON));
+					foodsJSON = JSON.parse(response);
+					
+					if (foodsJSON.food != null) //Single food
+					{
+						var selectedFSServing:Object;
+						
+						if (foodsJSON.food.servings.serving is Array)
+						{
+							var servingsList:Array = foodsJSON.food.servings.serving as Array;
+							var selectedServingIndex:int = 0;
+							
+							for (i = 0; i < servingsList.length; i++) 
+							{
+								var servingDetails:Object = servingsList[i];
+								if (servingDetails.measurement_description == "g" && Number(servingDetails.metric_serving_amount) == 100)
+								{
+									selectedServingIndex = i;
+									break;
+								}
+							}
+							
+							selectedFSServing = servingsList[selectedServingIndex];
+						}
+						else if (foodsJSON.food.servings.serving is Object)
+						{
+							selectedFSServing = foodsJSON.food.servings.serving;
+						}
+						
+						var servingUnitFS:String = String(selectedFSServing.measurement_description);
+						if (servingUnitFS != "g")
+						{
+							servingUnitFS = servingUnitFS.toLowerCase();
+							servingUnitFS = servingUnitFS.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
+						}
+						
+						var singleFSFood:Food = new Food
+						(
+							String(foodsJSON.food.food_id),
+							String(foodsJSON.food.food_name),
+							Number(selectedFSServing.protein),
+							Number(selectedFSServing.carbohydrate),
+							Number(selectedFSServing.fat),
+							Number(selectedFSServing.calories),
+							Number(selectedFSServing.number_of_units),
+							servingUnitFS,
+							Number(selectedFSServing.fiber),
+							foodsJSON.food.brand_name != null ? String(foodsJSON.food.brand_name).toUpperCase() : "",
+							String(foodsJSON.food.food_url)
+						);
+					
+						if (!foodDetailMode)
+						{
+							data.push
+							(
+								{
+									label: String(foodsJSON.food.food_name) + (foodsJSON.food.brand_name != null ? "\n" + String(foodsJSON.food.brand_name).toUpperCase() : ""),
+									food: singleFSFood
+								}
+							);
+							
+							//Notify Listeners
+							_instance.dispatchEvent
+							(
+								new FoodEvent
+								(
+									FoodEvent.FOODS_SEARCH_RESULT,
+									false,
+									false,
+									null,
+									data
+								)
+							);
+						}
+						else
+							_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_DETAILS_RESULT, false, false, singleFSFood) );
+					}
+					else if (foodsJSON.foods != null && foodsJSON.foods.food != null && foodsJSON.foods.food is Array)
+					{
+						foodList = foodsJSON.foods.food as Array;
+						for (i = 0; i < foodList.length; i++) 
+						{
+							var unprocessedFSFood:Object = foodList[i];
+							if (unprocessedFSFood != null)
+							{
+								var food:Food = new Food
+								(
+									unprocessedFSFood.food_id,
+									unprocessedFSFood.food_name,
+									Number.NaN,
+									Number.NaN,
+									Number.NaN,
+									Number.NaN,
+									Number.NaN,
+									"",
+									Number.NaN,
+									unprocessedFSFood.brand_name != null ? String(unprocessedFSFood.brand_name).toUpperCase() : "",
+									""
+								);
+								
+								data.push
+								(
+									{
+										label: unprocessedFSFood.food_name + (unprocessedFSFood.brand_name != null ? "\n" + String(unprocessedFSFood.brand_name).toUpperCase() : ""),
+										food: food
+									}
+								);
+							}
+						}
+						
+						//Notify Listeners
+						_instance.dispatchEvent
+						(
+							new FoodEvent
+							(
+								FoodEvent.FOODS_SEARCH_RESULT,
+								false,
+								false,
+								null,
+								data
+							)
+						);
+					}
+					else
+					{
+						//Nothing found. Notify listeners
+						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
+					}
 				} 
 				catch(error:Error) 
 				{
-					trace("Error parsing FatSecret's response!");
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
 				}
 			}
 			else if (currentMode == OPENFOODFACTS_MODE)
 			{
 				try
 				{
-					var processedResponse:Object = JSON.parse(response);
-					var products:Array = processedResponse.products != null && processedResponse.products is Array ? processedResponse.products : [];
+					foodsJSON = JSON.parse(response);
 					
-					for (var i:int = 0; i < products.length; i++) 
+					if (foodsJSON != null && foodsJSON.count != null && Number(foodsJSON.count) == 0)
 					{
-						var productName:String = String(products[i].product_name != null ? products[i].product_name : "");
-						trace("productName", productName);
-						var productGenericName:String = String(products[i].generic_name != null ? products[i].generic_name : "");
-						trace("productGenericName", productGenericName);
-						var productBrand:String = String(products[i].brands != null ? products[i].brands : "");
-						trace("productBrand", productBrand);
-						var productCategories:String = String(products[i].categories != null ? products[i].categories : "");
-						trace("productCategories", productCategories);
-						var productCountries:String = String(products[i].countries != null ? products[i].countries : "");
-						trace("productCountries", productCountries);
-						var productIngredients:String = String(products[i].ingredients_text != null ? products[i].ingredients_text : "");
-						trace("productIngredients", productIngredients);
-						var productLink:String = String(products[i].link != null ? products[i].link : "");
-						trace("productLink", productLink);
-						var productCalories:String = String(products[i].nutriments.energy_value != null ? products[i].nutriments.energy_value : "");
-						if (productCalories != "" && products[i].nutriments.energy_unit != null && String(products[i].nutriments.energy_unit).toUpperCase() == "KJ")
-							productCalories = String(convertKjToKcal(Number(productCalories)));
-						trace("productCalories", productCalories);
-						var productProteins:String = String(products[i].nutriments.proteins_100g != null ? products[i].nutriments.proteins_100g : "");
-						trace("productProteins", productProteins);
-						var productCarbs:String = String(products[i].nutriments.carbohydrates_100g != null ? products[i].nutriments.carbohydrates_100g : "");
-						trace("productCarbs", productCarbs);
-						var productFats:String = String(products[i].nutriments.fat_100g != null ? products[i].nutriments.fat_100g : "");
-						trace("productFats", productFats);
-						
-						trace("------------------------------------------------------------------------------------");
+						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
 					}
-					
-					
-					//trace(ObjectUtil.toString(processedResponse));
+					else if (foodsJSON != null && foodsJSON.products != null && foodsJSON.products is Array)
+					{
+						foodList = foodsJSON.products;
+						for (i = 0; i < foodList.length; i++) 
+						{
+							var unprocessedOFFFood:Object = foodList[i];
+							if (unprocessedOFFFood != null)
+							{
+								var offID:String = unprocessedOFFFood["_id"] != null ? String(unprocessedOFFFood["_id"]) : UniqueId.createEventId();
+								var quotePattern:RegExp = /&quot;/g;
+								var offName:String = unprocessedOFFFood.product_name != null ? String(unprocessedOFFFood.product_name).replace(/&quot;/g, "\"") : "";
+								offName.toLowerCase();
+								offName = offName.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
+								if (offName == "") continue;
+								var offBrand:String = unprocessedOFFFood.brands != null ? String(unprocessedOFFFood.brands) : "";
+								var offProteins:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.proteins_100g != null ? Number(unprocessedOFFFood.nutriments.proteins_100g) : Number.NaN;
+								var offCarbs:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.carbohydrates_100g != null ? Number(unprocessedOFFFood.nutriments.carbohydrates_100g) : Number.NaN;
+								var offFats:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.fat_100g != null ? Number(unprocessedOFFFood.nutriments.fat_100g) : Number.NaN;
+								var offFiber:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.fiber_100g != null ? Number(unprocessedOFFFood.nutriments.fiber_100g) : Number.NaN;
+								var offCalories:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.energy_value != null ? Number(unprocessedOFFFood.nutriments.energy_value) : Number.NaN;
+								if (!isNaN(offCalories) && unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.energy_unit != null && String(unprocessedOFFFood.nutriments.energy_unit).toUpperCase() == "KJ")
+									offCalories = convertKjToKcal(offCalories);
+								var offLink:String = unprocessedOFFFood.url != null ? String(unprocessedOFFFood.url) : "";
+								
+								var offFood:Food = new Food
+								(
+									offID,
+									offName,
+									offProteins,
+									offCarbs,
+									offFats,
+									offCalories,
+									100,
+									"g",
+									offFiber,
+									offBrand.toUpperCase(),
+									offLink
+								);
+								
+								data.push
+								(
+									{
+										label: offName + (offBrand != "" ? "\n" + offBrand.toUpperCase() : ""),
+										food: offFood
+									}
+								);
+							}
+						}
+						
+						//Notify Listeners
+						_instance.dispatchEvent
+						(
+							new FoodEvent
+							(
+								FoodEvent.FOODS_SEARCH_RESULT,
+								false,
+								false,
+								null,
+								data
+							)
+						);
+					}
 				} 
 				catch(error:Error) 
 				{
-					trace("Error parsing OpenFoodFacts's response!");
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
 				}
 			}
 			else if (currentMode == USDA_SEARCH_MODE)
 			{
-				trace(response);
+				try
+				{
+					foodsJSON = JSON.parse(response);
+					
+					if (foodsJSON != null && foodsJSON.list != null && foodsJSON.list.item != null && foodsJSON.list.item is Array)
+					{
+						foodList = foodsJSON.list.item as Array;
+						for (i = 0; i < foodList.length; i++) 
+						{
+							var unprocessedUSDAFood:Object = foodList[i];
+							if (unprocessedUSDAFood != null)
+							{
+								//Name
+								var foodName:String = unprocessedUSDAFood.name;
+								var upcMatchIndex:int = foodName.indexOf(", UPC");
+								if (upcMatchIndex != -1) foodName = foodName.slice(0, upcMatchIndex);
+								var gtinMatchIndex:int = foodName.indexOf(", GTIN");
+								if (gtinMatchIndex != -1) foodName = foodName.slice(0, gtinMatchIndex);
+								foodName = foodName.toLowerCase();
+								foodName = foodName.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
+								
+								//Brand
+								var brand:String = unprocessedUSDAFood.manu != null ? String(unprocessedUSDAFood.manu).toUpperCase() : "";
+								if (brand == "NONE") brand = null;
+								
+								var usdaFood:Food = new Food
+								(
+									unprocessedUSDAFood.ndbno,
+									foodName,
+									Number.NaN,
+									Number.NaN,
+									Number.NaN,
+									Number.NaN,
+									Number.NaN,
+									"",
+									Number.NaN,
+									brand != null  ? brand : "",
+									""
+								);
+								
+								data.push
+								(
+									{
+										label: foodName + (brand != null ? "\n" + brand : ""),
+										food: usdaFood
+									}
+								);
+							}
+						}
+						
+						//Notify Listeners
+						_instance.dispatchEvent
+						(
+							new FoodEvent
+							(
+								FoodEvent.FOODS_SEARCH_RESULT,
+								false,
+								false,
+								null,
+								data
+							)
+						);
+					}
+					else
+						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
+					
+				} 
+				catch(error:Error) 
+				{
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+				}
+			}
+			else if (currentMode == USDA_REPORT_MODE)
+			{
+				try
+				{
+					foodsJSON = JSON.parse(response);
+					if (foodsJSON != null && foodsJSON.report != null && foodsJSON.report.food != null && foodsJSON.report.food.nutrients != null && foodsJSON.report.food.nutrients is Array)
+					{
+						var foodIDUSDA:String = foodsJSON.report.food.ndbno != null ? String(foodsJSON.report.food.ndbno) : UniqueId.createEventId();
+						var foodNameUSDA:String = foodsJSON.report.food.name != null ? String(foodsJSON.report.food.name) : "";
+						foodNameUSDA = foodNameUSDA.toLowerCase();
+						foodNameUSDA = foodNameUSDA.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
+						var brandUSDA:String = foodsJSON.report.food.manu != null ? String(foodsJSON.report.food.manu).toUpperCase() : "";
+						var servingUnitUSDA:String = foodsJSON.report.food.ru != null ? String(foodsJSON.report.food.ru) : "";
+						var proteinsUSDA:Number = Number.NaN;
+						var fatsUSDA:Number = Number.NaN;
+						var carbsUSDA:Number = Number.NaN;
+						var fiberUSDA:Number = Number.NaN;
+						var caloriesUSDA:Number = Number.NaN;
+						var linkUSDA:String = "https://ndb.nal.usda.gov/ndb/foods/show/" + foodIDUSDA;
+						var nutrientsUSDA:Array = foodsJSON.report.food.nutrients;
+						
+						for (i = 0; i < nutrientsUSDA.length; i++) 
+						{
+							var nutrientDetails:Object = nutrientsUSDA[i];
+							
+							if (nutrientDetails.name == "Energy") 
+							{
+								if (nutrientDetails.value != null)
+									caloriesUSDA = Number(nutrientDetails.value);
+							}
+							else if (nutrientDetails.name == "Protein") 
+							{
+								if (nutrientDetails.value != null)
+									proteinsUSDA = Number(nutrientDetails.value);
+							}
+							else if (nutrientDetails.name.indexOf("fat") != -1) 
+							{
+								if (nutrientDetails.value != null)
+									fatsUSDA = Number(nutrientDetails.value);
+							}
+							else if (nutrientDetails.name.indexOf("Carbohydrate") != -1) 
+							{
+								if (nutrientDetails.value != null)
+									carbsUSDA = Number(nutrientDetails.value);
+							}
+							else if (nutrientDetails.name.indexOf("Fiber") != -1) 
+							{
+								if (nutrientDetails.value != null)
+									fiberUSDA = Number(nutrientDetails.value);
+							}
+						}
+						
+						var usdaFoodDetailed:Food = new Food
+						(
+							foodIDUSDA,
+							foodNameUSDA,
+							proteinsUSDA,
+							carbsUSDA,
+							fatsUSDA,
+							caloriesUSDA,
+							100,
+							servingUnitUSDA,
+							fiberUSDA,
+							brandUSDA,
+							linkUSDA
+						);
+						
+						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_DETAILS_RESULT, false, false, usdaFoodDetailed) );
+						
+					}
+				} 
+				catch(error:Error) 
+				{
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+				}
 			}
 			
-			//Reset mode
 			currentMode = "";
+			foodDetailMode = false;
+		}
+		
+		private static function onFatSecretCodeResult(e:flash.events.Event):void
+		{
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			var response:String = String(loader.data);
+			
+			try
+			{
+				var codeResponseJSON:Object = SpikeJSON.parse(response);
+				if (codeResponseJSON != null && codeResponseJSON.food_id != null && codeResponseJSON.food_id.value != null)
+				{
+					var foodID:String = codeResponseJSON.food_id.value;
+					if (foodID != "0")
+						fatSecretGetFoodDetails(foodID, false);
+					else
+						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
+				}
+			} 
+			catch(error:Error) 
+			{
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+			}
+		}
+		
+		public static function get instance():FoodAPIConnector
+		{
+			return _instance;
 		}
 	}
 }
