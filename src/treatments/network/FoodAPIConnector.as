@@ -464,17 +464,22 @@ package treatments.network
 							);
 							
 							//Notify Listeners
-							_instance.dispatchEvent
-							(
-								new FoodEvent
+							if (data.length > 0)
+							{
+								_instance.dispatchEvent
 								(
-									FoodEvent.FOODS_SEARCH_RESULT,
-									false,
-									false,
-									null,
-									data
-								)
-							);
+									new FoodEvent
+									(
+										FoodEvent.FOODS_SEARCH_RESULT,
+										false,
+										false,
+										null,
+										data
+									)
+								);
+							}
+							else
+								_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
 						}
 						else
 							_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_DETAILS_RESULT, false, false, singleFSFood) );
@@ -513,17 +518,22 @@ package treatments.network
 						}
 						
 						//Notify Listeners
-						_instance.dispatchEvent
-						(
-							new FoodEvent
+						if (data.length > 0)
+						{
+							_instance.dispatchEvent
 							(
-								FoodEvent.FOODS_SEARCH_RESULT,
-								false,
-								false,
-								null,
-								data
-							)
-						);
+								new FoodEvent
+								(
+									FoodEvent.FOODS_SEARCH_RESULT,
+									false,
+									false,
+									null,
+									data
+								)
+							);
+						}
+						else
+							_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
 					}
 					else
 					{
@@ -563,6 +573,7 @@ package treatments.network
 								var offBrand:String = unprocessedOFFFood.brands != null ? String(unprocessedOFFFood.brands) : "";
 								var offProteins:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.proteins_100g != null ? Number(unprocessedOFFFood.nutriments.proteins_100g) : Number.NaN;
 								var offCarbs:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.carbohydrates_100g != null ? Number(unprocessedOFFFood.nutriments.carbohydrates_100g) : Number.NaN;
+								if (isNaN(offCarbs)) continue;
 								var offFats:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.fat_100g != null ? Number(unprocessedOFFFood.nutriments.fat_100g) : Number.NaN;
 								var offFiber:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.fiber_100g != null ? Number(unprocessedOFFFood.nutriments.fiber_100g) : Number.NaN;
 								var offCalories:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.energy_value != null ? Number(unprocessedOFFFood.nutriments.energy_value) : Number.NaN;
@@ -596,17 +607,22 @@ package treatments.network
 						}
 						
 						//Notify Listeners
-						_instance.dispatchEvent
-						(
-							new FoodEvent
+						if (data.length > 0)
+						{
+							_instance.dispatchEvent
 							(
-								FoodEvent.FOODS_SEARCH_RESULT,
-								false,
-								false,
-								null,
-								data
-							)
-						);
+								new FoodEvent
+								(
+									FoodEvent.FOODS_SEARCH_RESULT,
+									false,
+									false,
+									null,
+									data
+								)
+							);
+						}
+						else
+							_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
 					}
 				} 
 				catch(error:Error) 
@@ -667,17 +683,22 @@ package treatments.network
 						}
 						
 						//Notify Listeners
-						_instance.dispatchEvent
-						(
-							new FoodEvent
+						if (data.length > 0)
+						{
+							_instance.dispatchEvent
 							(
-								FoodEvent.FOODS_SEARCH_RESULT,
-								false,
-								false,
-								null,
-								data
-							)
-						);
+								new FoodEvent
+								(
+									FoodEvent.FOODS_SEARCH_RESULT,
+									false,
+									false,
+									null,
+									data
+								)
+							);
+						}
+						else
+							_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
 					}
 					else
 						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );

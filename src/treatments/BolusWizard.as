@@ -471,7 +471,6 @@ package treatments
 			//Notes
 			bwNotes = LayoutFactory.createTextInput(false, false, contentWidth, HorizontalAlign.CENTER, false, false, false, true, true);
 			bwNotes.prompt = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
-			bwNotes.maxChars = 50;
 			bwMainContainer.addChild(bwNotes);
 			
 			//Wizard Suggestion
@@ -1006,8 +1005,7 @@ package treatments
 				if (bwFoodSearcher == null)
 				{
 					bwFoodSearcher = new SpikeFoodSearcher(contentWidth, bolusWizardCallout.height - bolusWizardCallout.paddingTop - bolusWizardCallout.paddingBottom - 15);
-					bwFoodSearcher.addEventListener(Event.CANCEL, onFoodSearcherCanceled);
-					bwFoodSearcher.addEventListener(Event.COMPLETE, onFoodSearcherCompleted);
+					bwFoodSearcher.addEventListener(Event.COMPLETE, onFoodManagerCompleted);
 					bwTotalScrollContainer.addChild(bwFoodSearcher);
 				}
 				
@@ -1015,16 +1013,62 @@ package treatments
 			}
 		}
 		
-		private static function onFoodSearcherCanceled(e:Event):void
+		private static function onFoodManagerCompleted(e:Event):void
 		{
 			if (bwWizardScrollContainer != null)
+			{
+				//Calculate all food carbs the user has added to the food manager
+				var totalCarbs:Number = 0;
+				var foodsList:Array = bwFoodSearcher.cartList;
+				var addedFoods:int = 0;
+				var addedFoodNames:Array = [];
+				
+				for (var i:int = 0; i < foodsList.length; i++) 
+				{
+					var food:Food = foodsList[i].food;
+					if (food == null) 
+						continue;
+					
+					var quantity:Number = foodsList[i].quantity;
+					if (isNaN(quantity)) 
+						continue;
+					
+					var carbs:Number = food.carbs;
+					if (isNaN(carbs)) 
+						continue;
+					
+					var fiber:Number = food.fiber;
+					var substractFiber:Boolean = foodsList[i].substractFiber;
+					if (substractFiber && !isNaN(fiber))
+						carbs -= fiber;
+					
+					var finalCarbs:Number = (quantity / food.servingSize) * carbs;
+					if (!isNaN(finalCarbs))
+					{
+						totalCarbs += finalCarbs;
+						addedFoods += 1;
+						addedFoodNames.push(quantity + food.servingUnit + " " + food.name);
+					}
+				}
+				
+				//Populate the carbs numeric stepper with all carbs from the food manager
+				bwCarbsStepper.value = totalCarbs;
+				
+				//Update foods label
+				if (addedFoods > 0)
+				{
+					bwCarbsLabel.text = "Carbs" + " " + "(" + addedFoods + ")";
+					bwCarbsLabel.validate();
+					bwCarbsStepper.validate();
+					bwCarbsLabelContainer.validate();
+					bwCarbsContainer.validate();
+					bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
+					bwNotes.text = addedFoodNames.join(", ");
+				}
+				
+				//Scroll to the Bolus Wizard screen
 				bwTotalScrollContainer.scrollToPageIndex( 0, bwTotalScrollContainer.verticalPageIndex );
-		}
-		
-		private static function onFoodSearcherCompleted(e:Event):void
-		{
-			if (bwWizardScrollContainer != null)
-				bwTotalScrollContainer.scrollToPageIndex( 0, bwTotalScrollContainer.verticalPageIndex );
+			}
 		}
 		
 		private static function onCloseConfigureCallout(e:Event):void

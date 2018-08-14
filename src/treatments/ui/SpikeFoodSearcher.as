@@ -7,12 +7,9 @@ package treatments.ui
 	import com.distriqt.extension.scanner.events.AuthorisationEvent;
 	import com.distriqt.extension.scanner.events.ScannerEvent;
 	
-	import flash.geom.Rectangle;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
-	
-	import mx.utils.ObjectUtil;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -20,6 +17,7 @@ package treatments.ui
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
+	import feathers.controls.Check;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
@@ -30,8 +28,6 @@ package treatments.ui
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
-	import feathers.controls.text.TextFieldTextRenderer;
-	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
@@ -46,7 +42,6 @@ package treatments.ui
 	
 	import starling.animation.Transitions;
 	import starling.core.Starling;
-	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.display.Quad;
 	import starling.display.Sprite;
@@ -58,12 +53,10 @@ package treatments.ui
 	import starling.utils.SystemUtil;
 	
 	import treatments.Food;
-	import treatments.Insulin;
 	import treatments.network.FoodAPIConnector;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.settings.treatments.TreatmentManagerAccessory;
 
 	public class SpikeFoodSearcher extends LayoutGroup
 	{
@@ -125,6 +118,12 @@ package treatments.ui
 		private var activeFood:Food;
 		private var basketList:List;
 		private var deleteButtonsList:Array = [];
+
+		private var substractFiberContainer:LayoutGroup;
+
+		private var substractFiberLabel:Label;
+
+		private var substractFiberCheck:Check;
 
 		public function SpikeFoodSearcher(width:Number, containerHeight:Number)
 		{
@@ -291,7 +290,6 @@ package treatments.ui
 			foodDetailsContainer.addChild(foodDetailsTitle);
 			
 			foodActionContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
-			(foodActionContainer.layout as HorizontalLayout).paddingBottom = 10;
 			(foodActionContainer.layout as HorizontalLayout).paddingTop = -3;
 			foodActionContainer.width = width;
 			foodActionContainer.maxWidth = width;
@@ -312,6 +310,18 @@ package treatments.ui
 			foodActionContainer.addChild(addFoodButton);
 			foodActionContainer.validate();
 			addFoodButton.y += 1;
+			
+			substractFiberContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
+			substractFiberContainer.width = width;
+			substractFiberContainer.maxWidth = width;
+			(substractFiberContainer.layout as HorizontalLayout).paddingBottom = 10;
+			foodDetailsContainer.addChild(substractFiberContainer);
+			
+			substractFiberLabel = LayoutFactory.createLabel("Substract Fiber:", HorizontalAlign.RIGHT);
+			substractFiberContainer.addChild(substractFiberLabel);
+			
+			substractFiberCheck = LayoutFactory.createCheckMark(false);
+			substractFiberContainer.addChild(substractFiberCheck);
 			
 			servingsContainer = LayoutFactory.createLayoutGroup("horizontal");
 			servingsContainer.width = width;
@@ -521,9 +531,9 @@ package treatments.ui
 			foodDetailsContainer.removeFromParent();
 		}
 		
-		private function clearCart():void
+		private function resetComponentsExtended():void
 		{
-			
+			searchInput.text = "";
 		}
 		
 		private function jump( cart:Sprite, force:Number ):void {
@@ -632,6 +642,7 @@ package treatments.ui
 			if (foodResultsList.selectedItem != null && foodResultsList.selectedItem.food != null)
 			{
 				foodAmountInput.text = "";
+				substractFiberCheck.isSelected = false;
 				
 				var selectedFood:Food = foodResultsList.selectedItem.food;
 				
@@ -660,11 +671,12 @@ package treatments.ui
 		
 		private function onFoodDetailsReceived(e:FoodEvent):void
 		{
+			var food:Food = e.food;
+			
 			removeFoodEventListeners();
 			preloader.visible = false;
 			foodAmountInput.text = "";
-			
-			var food:Food = e.food;
+			substractFiberCheck.isSelected = false;
 			
 			if (food != null)
 				displayFoodDetails(food);
@@ -695,6 +707,9 @@ package treatments.ui
 			}
 			else
 				foodLink.isEnabled = false;
+			
+			substractFiberCheck.isEnabled = isNaN(selectedFood.fiber) ? false : true;
+			addFoodButton.isEnabled = isNaN(selectedFood.carbs) ? true : false;
 		}
 		
 		private function onFoodsSearchResult(e:FoodEvent):void
@@ -713,23 +728,21 @@ package treatments.ui
 		private function onFinish(e:starling.events.Event):void
 		{
 			resetComponents();
-			dispatchEventWith(starling.events.Event.CANCEL);
+			resetComponentsExtended();
+			dispatchEventWith(starling.events.Event.COMPLETE);
 		}
 		
 		private function onAdd(e:starling.events.Event):void
 		{
 			addFoodButton.isEnabled = false;
 			
-			cartList.push( { food:activeFood, quantity: Number(foodAmountInput.text), servingUnit: activeFood.servingUnit } );
+			cartList.push( { food:activeFood, quantity: Number(foodAmountInput.text), servingUnit: activeFood.servingUnit, substractFiber: substractFiberCheck.isSelected } );
 			basketAmountLabel.text = String(cartList.length);
 			jump(basketSprite, 0.4);
 			
 			setTimeout( function():void {
 				addFoodButton.isEnabled = true;
 			}, 750 );
-			
-			//resetComponents();
-			//dispatchEventWith(starling.events.Event.COMPLETE);
 		}
 		
 		private function onScan(e:starling.events.Event):void
