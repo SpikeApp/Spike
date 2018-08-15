@@ -53,6 +53,8 @@ package treatments.network
 		private static var currentMode:String = "";
 		private static var foodDetailMode:Boolean = false;
 		private static var currentUSDAPage:int = 1;
+		private static var fatSecretBarCode:String = "";
+		private static var openFoodFactsBarCode:String = "";
 		
 		public function FoodAPIConnector()
 		{
@@ -100,6 +102,7 @@ package treatments.network
 		{
 			currentMode = FATSECRET_MODE;
 			foodDetailMode = false;
+			fatSecretBarCode = barCode;
 			
 			var nonce:Number = Math.round(Math.random() * 1000000);
 			var timestamp:Number = new Date().valueOf();
@@ -194,6 +197,7 @@ package treatments.network
 		{
 			currentMode = OPENFOODFACTS_MODE;
 			foodDetailMode = false;
+			openFoodFactsBarCode = barCode;
 			
 			var request:URLRequest = new URLRequest(OPENFOODFACTS_CODE_API_URL.replace("{barcode}", barCode));
 			request.method = URLRequestMethod.GET;
@@ -412,6 +416,7 @@ package treatments.network
 			var foodsJSON:Object;
 			var foodList:Array;
 			var i:int = 0;
+			var now:Number = new Date().valueOf();
 			
 			//Process responde
 			if (currentMode == FATSECRET_MODE)
@@ -419,7 +424,6 @@ package treatments.network
 				try
 				{
 					foodsJSON = JSON.parse(response);
-					
 					if (foodsJSON.food != null) //Single food
 					{
 						var selectedFSServing:Object;
@@ -463,9 +467,11 @@ package treatments.network
 								Number(selectedFSServing.calories),
 								Number(selectedFSServing.number_of_units),
 								servingUnitFS,
+								now,
 								Number(selectedFSServing.fiber),
 								foodsJSON.food.brand_name != null ? String(foodsJSON.food.brand_name).toUpperCase() : "",
-								String(foodsJSON.food.food_url)
+								String(foodsJSON.food.food_url),
+								"FatSecret"
 							);
 						
 						if (!foodDetailMode)
@@ -519,6 +525,7 @@ package treatments.network
 										Number.NaN,
 										Number.NaN,
 										"",
+										now,
 										Number.NaN,
 										unprocessedFSFood.brand_name != null ? String(unprocessedFSFood.brand_name).toUpperCase() : "",
 										""
@@ -613,6 +620,7 @@ package treatments.network
 										break;
 									}
 								}
+								var offBarCode:String = unprocessedOFFFood.code != null ? String(unprocessedOFFFood.code) : "";
 								
 								var offFood:Food = new Food
 								(
@@ -624,9 +632,12 @@ package treatments.network
 									offCalories,
 									offServingSize,
 									offServingUnit,
+									now,
 									offFiber,
 									offBrand.toUpperCase(),
-									offLink
+									offLink,
+									"OpenFoodFacts",
+									offBarCode
 								);
 								
 								data.push
@@ -670,7 +681,6 @@ package treatments.network
 				try
 				{
 					foodsJSON = JSON.parse(response);
-					
 					if (foodsJSON != null && foodsJSON.list != null && foodsJSON.list.item != null && foodsJSON.list.item is Array)
 					{
 						var USDASearchProperties:Object = { pageNumber: currentUSDAPage, totalPages: Math.ceil(Number(foodsJSON.list.total) / 50), totalRecords: Number(foodsJSON.list.total) }
@@ -704,6 +714,7 @@ package treatments.network
 										Number.NaN,
 										Number.NaN,
 										"",
+										now,
 										Number.NaN,
 										brand != null  ? brand : "",
 										""
@@ -759,6 +770,11 @@ package treatments.network
 					{
 						var foodIDUSDA:String = foodsJSON.report.food.ndbno != null ? String(foodsJSON.report.food.ndbno) : UniqueId.createEventId();
 						var foodNameUSDA:String = foodsJSON.report.food.name != null ? String(foodsJSON.report.food.name) : "";
+						var upcUSDAIndex:int = foodNameUSDA.indexOf("UPC: ");
+						var upcBarCode:String = "";
+						if (upcUSDAIndex != -1)
+							upcBarCode = StringUtil.trim(foodNameUSDA.slice(upcUSDAIndex + 4));
+						trace("upcBarCode", upcBarCode);
 						var upcMatchIndexUSDA:int = foodNameUSDA.indexOf(", UPC");
 						if (upcMatchIndexUSDA != -1) foodNameUSDA = foodNameUSDA.slice(0, upcMatchIndexUSDA);
 						var gtinMatchIndexUSDA:int = foodNameUSDA.indexOf(", GTIN");
@@ -774,6 +790,7 @@ package treatments.network
 						var caloriesUSDA:Number = Number.NaN;
 						var linkUSDA:String = "https://ndb.nal.usda.gov/ndb/foods/show/" + foodIDUSDA;
 						var nutrientsUSDA:Array = foodsJSON.report.food.nutrients;
+						
 						
 						for (i = 0; i < nutrientsUSDA.length; i++) 
 						{
@@ -816,9 +833,12 @@ package treatments.network
 								caloriesUSDA,
 								100,
 								servingUnitUSDA,
+								now,
 								fiberUSDA,
 								brandUSDA,
-								linkUSDA
+								linkUSDA,
+								"USDA",
+								upcBarCode
 							);
 						
 						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_DETAILS_RESULT, false, false, usdaFoodDetailed) );
@@ -833,6 +853,8 @@ package treatments.network
 			
 			currentMode = "";
 			foodDetailMode = false;
+			fatSecretBarCode = "";
+			openFoodFactsBarCode = "";
 		}
 		
 		private static function onFatSecretCodeResult(e:flash.events.Event):void

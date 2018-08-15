@@ -13,8 +13,11 @@ package treatments
 		public var link:String;
 		public var servingSize:Number;
 		public var servingUnit:String;
+		public var source:String;
+		public var barcode:String;
+		public var timestamp:Number;
 		
-		public function Food(id:String, name:String, proteins:Number, carbs:Number, fats:Number, kcal:Number, servingSize:Number, servingUnit:String, fiber:Number = Number.NaN, brand:String = "", link:String = "")
+		public function Food(id:String, name:String, proteins:Number, carbs:Number, fats:Number, kcal:Number, servingSize:Number, servingUnit:String, timestamp:Number, fiber:Number = Number.NaN, brand:String = "", link:String = "", source:String = "", barcode:String = "")
 		{
 			this.id = id;
 			this.name = name;
@@ -27,6 +30,9 @@ package treatments
 			this.fiber = fiber;
 			this.brand = brand;
 			this.link = link;
+			this.timestamp = timestamp;
+			this.source = source;
+			this.barcode = barcode;
 		}
 	}
 }
