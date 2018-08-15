@@ -1,5 +1,6 @@
 package treatments.network
 {
+	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.hurlant.crypto.Crypto;
 	import com.hurlant.crypto.hash.HMAC;
 	import com.hurlant.util.Base64;
@@ -64,6 +65,12 @@ package treatments.network
 		
 		public static function fatSecretSearchFood(food:String, page:int):void
 		{
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				return;
+			}
+			
 			currentMode = FATSECRET_MODE;
 			foodDetailMode = false;
 			
@@ -100,6 +107,12 @@ package treatments.network
 		
 		public static function fatSecretSearchCode(barCode:String):void
 		{
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				return;
+			}
+			
 			currentMode = FATSECRET_MODE;
 			foodDetailMode = false;
 			fatSecretBarCode = barCode;
@@ -136,6 +149,12 @@ package treatments.network
 		
 		public static function fatSecretGetFoodDetails(foodID:String, detailMode:Boolean = true):void
 		{
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				return;
+			}
+			
 			currentMode = FATSECRET_MODE;
 			foodDetailMode = detailMode;
 			
@@ -171,6 +190,12 @@ package treatments.network
 		
 		public static function openFoodFactsSearchFood(food:String, page:int):void
 		{
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				return;
+			}
+			
 			currentMode = OPENFOODFACTS_MODE;
 			foodDetailMode = false;
 			
@@ -195,6 +220,12 @@ package treatments.network
 		
 		public static function openFoodFactsSearchCode(barCode:String):void
 		{
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				return;
+			}
+			
 			currentMode = OPENFOODFACTS_MODE;
 			foodDetailMode = false;
 			openFoodFactsBarCode = barCode;
@@ -210,6 +241,12 @@ package treatments.network
 		
 		public static function usdaSearchFood(food:String, page:int):void
 		{
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				return;
+			}
+			
 			currentMode = USDA_SEARCH_MODE;
 			foodDetailMode = false;
 			currentUSDAPage = page;
@@ -233,6 +270,12 @@ package treatments.network
 		
 		public static function usdaGetFoodInfo(ndbNumber:String):void
 		{
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				return;
+			}
+			
 			currentMode = USDA_REPORT_MODE;
 			foodDetailMode = true;
 			
@@ -892,7 +935,9 @@ package treatments.network
 			loader.removeEventListener(IOErrorEvent.IO_ERROR, onAPIError);
 			loader = null;
 			
-			_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, e.text) );
+			var errorMessage:String = e.text.indexOf("2032") == -1 ? e.text : "Error connecting to service!\nTry again later.";
+			
+			_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, errorMessage) );
 		}
 		
 		/**
