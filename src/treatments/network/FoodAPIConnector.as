@@ -597,33 +597,45 @@ package treatments.network
 								if (isNaN(offCarbs)) continue;
 								var offFats:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.fat_100g != null ? Number(unprocessedOFFFood.nutriments.fat_100g) : Number.NaN;
 								var offFiber:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.fiber_100g != null ? Number(unprocessedOFFFood.nutriments.fiber_100g) : Number.NaN;
-								var offCalories:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.energy_value != null ? Number(unprocessedOFFFood.nutriments.energy_value) : Number.NaN;
-								if (!isNaN(offCalories) && unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.energy_unit != null && String(unprocessedOFFFood.nutriments.energy_unit).toUpperCase() == "KJ")
+								var offCalories:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.energy_100g != null ? Number(unprocessedOFFFood.nutriments.energy_100g) : Number.NaN;
+								if (!isNaN(offCalories))
 									offCalories = convertKjToKcal(offCalories);
 								var offLink:String = unprocessedOFFFood.url != null ? String(unprocessedOFFFood.url) : "";
+								var offServingSize:Number = 100;
+								var offServingUnit:String = "g";
+								var offCategories:Array = unprocessedOFFFood.categories_hierarchy != null && unprocessedOFFFood.categories_hierarchy is Array ? unprocessedOFFFood.categories_hierarchy : [];
+								for (var j:int = 0; j < offCategories.length; j++) 
+								{
+									var offCategory:String = String(offCategories[j]);
+									if (offCategory.indexOf("beverage") != -1)
+									{
+										offServingUnit = "ml";
+										break;
+									}
+								}
 								
 								var offFood:Food = new Food
-									(
-										offID,
-										offName,
-										offProteins,
-										offCarbs,
-										offFats,
-										offCalories,
-										100,
-										"g",
-										offFiber,
-										offBrand.toUpperCase(),
-										offLink
-									);
+								(
+									offID,
+									offName,
+									offProteins,
+									offCarbs,
+									offFats,
+									offCalories,
+									offServingSize,
+									offServingUnit,
+									offFiber,
+									offBrand.toUpperCase(),
+									offLink
+								);
 								
 								data.push
-									(
-										{
-											label: offName + (offBrand != "" ? "\n" + offBrand.toUpperCase() : ""),
-											food: offFood
-										}
-									);
+								(
+									{
+										label: offName + (offBrand != "" ? "\n" + offBrand.toUpperCase() : ""),
+										food: offFood
+									}
+								);
 							}
 						}
 						
