@@ -7,6 +7,7 @@ package treatments.network
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
@@ -15,6 +16,7 @@ package treatments.network
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
+	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import events.FoodEvent;
@@ -23,7 +25,7 @@ package treatments.network
 	
 	import utils.SpikeJSON;
 	import utils.UniqueId;
-
+	
 	public class FoodAPIConnector extends EventDispatcher
 	{
 		//MODES
@@ -50,6 +52,7 @@ package treatments.network
 		private static var _instance:FoodAPIConnector = new FoodAPIConnector();
 		private static var currentMode:String = "";
 		private static var foodDetailMode:Boolean = false;
+		private static var currentUSDAPage:int = 1;
 		
 		public function FoodAPIConnector()
 		{
@@ -57,7 +60,7 @@ package treatments.network
 				throw new Error("FoodAPIConnector is not meant to be instantiated!");
 		}
 		
-		public static function fatSecretSearchFood(food:String):void
+		public static function fatSecretSearchFood(food:String, page:int):void
 		{
 			currentMode = FATSECRET_MODE;
 			foodDetailMode = false;
@@ -74,6 +77,7 @@ package treatments.network
 			queryParameters.oauth_version = "1.0";
 			queryParameters.format = "json";
 			queryParameters.max_results = 50;
+			queryParameters.page_number = page - 1;
 			queryParameters.search_expression = food;
 			
 			var params:String = sortRequestParamsFatSecret(queryParameters);
@@ -88,6 +92,7 @@ package treatments.network
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
 			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onAPIError, false, 0, true);
 			urlLoader.load(request);
 		}
 		
@@ -122,6 +127,7 @@ package treatments.network
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
 			urlLoader.addEventListener(Event.COMPLETE, onFatSecretCodeResult, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onAPIError, false, 0, true);
 			urlLoader.load(request);
 		}
 		
@@ -156,10 +162,11 @@ package treatments.network
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
 			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onAPIError, false, 0, true);
 			urlLoader.load(request);
 		}
 		
-		public static function openFoodFactsSearchFood(food:String):void
+		public static function openFoodFactsSearchFood(food:String, page:int):void
 		{
 			currentMode = OPENFOODFACTS_MODE;
 			foodDetailMode = false;
@@ -168,6 +175,8 @@ package treatments.network
 			parameters.search_terms = food;
 			parameters.search_simple = 1;
 			parameters.action = "process";
+			parameters.page = page;
+			parameters.page_size = 50;
 			parameters.json = 1;
 			
 			var callURL:String = OPENFOODFACTS_SEARCH_API_URL + parameters.toString();
@@ -177,6 +186,7 @@ package treatments.network
 			
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onAPIError, false, 0, true);
 			urlLoader.load(request);
 		}
 		
@@ -190,18 +200,20 @@ package treatments.network
 			
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onAPIError, false, 0, true);
 			urlLoader.load(request);
 		}
 		
-		public static function usdaSearchFood(food:String):void
+		public static function usdaSearchFood(food:String, page:int):void
 		{
 			currentMode = USDA_SEARCH_MODE;
 			foodDetailMode = false;
+			currentUSDAPage = page;
 			
 			var queryParameters:Object = new Object();
 			queryParameters.format = "json";
 			queryParameters.max = 50;
-			queryParameters.offset = 0;
+			queryParameters.offset = (page - 1) * 50;
 			queryParameters.sort = "r";
 			queryParameters.api_key = USDA_API_KEY;
 			queryParameters.q = food;
@@ -211,6 +223,7 @@ package treatments.network
 			
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onAPIError, false, 0, true);
 			urlLoader.load(request);
 		}
 		
@@ -230,6 +243,7 @@ package treatments.network
 			
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.addEventListener(Event.COMPLETE, onAPIResult, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onAPIError, false, 0, true);
 			urlLoader.load(request);
 		}
 		
@@ -368,14 +382,14 @@ package treatments.network
 				var proteinsAmount:Number = Number(description.slice(proteinsFirstIndex, proteinsFinalSecondIndex));
 				
 				food = 
-				{
-					proteins: proteinsAmount,
-					carbs: carbsAmount,
-					fats: fatsAmount,
-					calories: caloriesAmount,
-					servingSize: servingSize,
-					servingUnit: servingUnit
-				}
+					{
+						proteins: proteinsAmount,
+						carbs: carbsAmount,
+						fats: fatsAmount,
+						calories: caloriesAmount,
+						servingSize: servingSize,
+						servingUnit: servingUnit
+					}
 			}
 			
 			return food;
@@ -391,6 +405,7 @@ package treatments.network
 			
 			//Discard loader
 			loader.removeEventListener(flash.events.Event.COMPLETE, onAPIResult);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onAPIError);
 			loader = null;
 			
 			var data:Array = [];
@@ -439,44 +454,44 @@ package treatments.network
 						}
 						
 						var singleFSFood:Food = new Food
-						(
-							String(foodsJSON.food.food_id),
-							String(foodsJSON.food.food_name),
-							Number(selectedFSServing.protein),
-							Number(selectedFSServing.carbohydrate),
-							Number(selectedFSServing.fat),
-							Number(selectedFSServing.calories),
-							Number(selectedFSServing.number_of_units),
-							servingUnitFS,
-							Number(selectedFSServing.fiber),
-							foodsJSON.food.brand_name != null ? String(foodsJSON.food.brand_name).toUpperCase() : "",
-							String(foodsJSON.food.food_url)
-						);
-					
+							(
+								String(foodsJSON.food.food_id),
+								String(foodsJSON.food.food_name),
+								Number(selectedFSServing.protein),
+								Number(selectedFSServing.carbohydrate),
+								Number(selectedFSServing.fat),
+								Number(selectedFSServing.calories),
+								Number(selectedFSServing.number_of_units),
+								servingUnitFS,
+								Number(selectedFSServing.fiber),
+								foodsJSON.food.brand_name != null ? String(foodsJSON.food.brand_name).toUpperCase() : "",
+								String(foodsJSON.food.food_url)
+							);
+						
 						if (!foodDetailMode)
 						{
 							data.push
-							(
-								{
-									label: String(foodsJSON.food.food_name) + (foodsJSON.food.brand_name != null ? "\n" + String(foodsJSON.food.brand_name).toUpperCase() : ""),
-									food: singleFSFood
-								}
-							);
+								(
+									{
+										label: String(foodsJSON.food.food_name) + (foodsJSON.food.brand_name != null ? "\n" + String(foodsJSON.food.brand_name).toUpperCase() : ""),
+										food: singleFSFood
+									}
+								);
 							
 							//Notify Listeners
 							if (data.length > 0)
 							{
 								_instance.dispatchEvent
-								(
-									new FoodEvent
 									(
-										FoodEvent.FOODS_SEARCH_RESULT,
-										false,
-										false,
-										null,
-										data
-									)
-								);
+										new FoodEvent
+										(
+											FoodEvent.FOODS_SEARCH_RESULT,
+											false,
+											false,
+											null,
+											data
+										)
+									);
 							}
 							else
 								_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
@@ -486,6 +501,8 @@ package treatments.network
 					}
 					else if (foodsJSON.foods != null && foodsJSON.foods.food != null && foodsJSON.foods.food is Array)
 					{
+						var FSSearchProperties:Object = { pageNumber: Number(foodsJSON.foods.page_number) + 1, totalPages: Math.ceil(Number(foodsJSON.foods.total_results) / 50), totalRecords: Number(foodsJSON.foods.total_results) }
+						
 						foodList = foodsJSON.foods.food as Array;
 						for (i = 0; i < foodList.length; i++) 
 						{
@@ -493,27 +510,27 @@ package treatments.network
 							if (unprocessedFSFood != null)
 							{
 								var food:Food = new Food
-								(
-									unprocessedFSFood.food_id,
-									unprocessedFSFood.food_name,
-									Number.NaN,
-									Number.NaN,
-									Number.NaN,
-									Number.NaN,
-									Number.NaN,
-									"",
-									Number.NaN,
-									unprocessedFSFood.brand_name != null ? String(unprocessedFSFood.brand_name).toUpperCase() : "",
-									""
-								);
+									(
+										unprocessedFSFood.food_id,
+										unprocessedFSFood.food_name,
+										Number.NaN,
+										Number.NaN,
+										Number.NaN,
+										Number.NaN,
+										Number.NaN,
+										"",
+										Number.NaN,
+										unprocessedFSFood.brand_name != null ? String(unprocessedFSFood.brand_name).toUpperCase() : "",
+										""
+									);
 								
 								data.push
-								(
-									{
-										label: unprocessedFSFood.food_name + (unprocessedFSFood.brand_name != null ? "\n" + String(unprocessedFSFood.brand_name).toUpperCase() : ""),
-										food: food
-									}
-								);
+									(
+										{
+											label: unprocessedFSFood.food_name + (unprocessedFSFood.brand_name != null ? "\n" + String(unprocessedFSFood.brand_name).toUpperCase() : ""),
+											food: food
+										}
+									);
 							}
 						}
 						
@@ -521,16 +538,18 @@ package treatments.network
 						if (data.length > 0)
 						{
 							_instance.dispatchEvent
-							(
-								new FoodEvent
 								(
-									FoodEvent.FOODS_SEARCH_RESULT,
-									false,
-									false,
-									null,
-									data
-								)
-							);
+									new FoodEvent
+									(
+										FoodEvent.FOODS_SEARCH_RESULT,
+										false,
+										false,
+										null,
+										data,
+										null,
+										FSSearchProperties
+									)
+								);
 						}
 						else
 							_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
@@ -558,6 +577,8 @@ package treatments.network
 					}
 					else if (foodsJSON != null && foodsJSON.products != null && foodsJSON.products is Array)
 					{
+						var OFFSearchProperties:Object = { pageNumber: Number(foodsJSON.page), totalPages: Math.ceil(Number(foodsJSON.count) / 50), totalRecords: Number(foodsJSON.count) }
+						
 						foodList = foodsJSON.products;
 						for (i = 0; i < foodList.length; i++) 
 						{
@@ -582,27 +603,27 @@ package treatments.network
 								var offLink:String = unprocessedOFFFood.url != null ? String(unprocessedOFFFood.url) : "";
 								
 								var offFood:Food = new Food
-								(
-									offID,
-									offName,
-									offProteins,
-									offCarbs,
-									offFats,
-									offCalories,
-									100,
-									"g",
-									offFiber,
-									offBrand.toUpperCase(),
-									offLink
-								);
+									(
+										offID,
+										offName,
+										offProteins,
+										offCarbs,
+										offFats,
+										offCalories,
+										100,
+										"g",
+										offFiber,
+										offBrand.toUpperCase(),
+										offLink
+									);
 								
 								data.push
-								(
-									{
-										label: offName + (offBrand != "" ? "\n" + offBrand.toUpperCase() : ""),
-										food: offFood
-									}
-								);
+									(
+										{
+											label: offName + (offBrand != "" ? "\n" + offBrand.toUpperCase() : ""),
+											food: offFood
+										}
+									);
 							}
 						}
 						
@@ -610,16 +631,18 @@ package treatments.network
 						if (data.length > 0)
 						{
 							_instance.dispatchEvent
-							(
-								new FoodEvent
 								(
-									FoodEvent.FOODS_SEARCH_RESULT,
-									false,
-									false,
-									null,
-									data
-								)
-							);
+									new FoodEvent
+									(
+										FoodEvent.FOODS_SEARCH_RESULT,
+										false,
+										false,
+										null,
+										data,
+										null,
+										OFFSearchProperties
+									)
+								);
 						}
 						else
 							_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
@@ -638,6 +661,8 @@ package treatments.network
 					
 					if (foodsJSON != null && foodsJSON.list != null && foodsJSON.list.item != null && foodsJSON.list.item is Array)
 					{
+						var USDASearchProperties:Object = { pageNumber: currentUSDAPage, totalPages: Math.ceil(Number(foodsJSON.list.total) / 50), totalRecords: Number(foodsJSON.list.total) }
+						
 						foodList = foodsJSON.list.item as Array;
 						for (i = 0; i < foodList.length; i++) 
 						{
@@ -658,27 +683,27 @@ package treatments.network
 								if (brand == "NONE") brand = null;
 								
 								var usdaFood:Food = new Food
-								(
-									unprocessedUSDAFood.ndbno,
-									foodName,
-									Number.NaN,
-									Number.NaN,
-									Number.NaN,
-									Number.NaN,
-									Number.NaN,
-									"",
-									Number.NaN,
-									brand != null  ? brand : "",
-									""
-								);
+									(
+										unprocessedUSDAFood.ndbno,
+										foodName,
+										Number.NaN,
+										Number.NaN,
+										Number.NaN,
+										Number.NaN,
+										Number.NaN,
+										"",
+										Number.NaN,
+										brand != null  ? brand : "",
+										""
+									);
 								
 								data.push
-								(
-									{
-										label: foodName + (brand != null ? "\n" + brand : ""),
-										food: usdaFood
-									}
-								);
+									(
+										{
+											label: foodName + (brand != null ? "\n" + brand : ""),
+											food: usdaFood
+										}
+									);
 							}
 						}
 						
@@ -686,19 +711,23 @@ package treatments.network
 						if (data.length > 0)
 						{
 							_instance.dispatchEvent
-							(
-								new FoodEvent
 								(
-									FoodEvent.FOODS_SEARCH_RESULT,
-									false,
-									false,
-									null,
-									data
-								)
-							);
+									new FoodEvent
+									(
+										FoodEvent.FOODS_SEARCH_RESULT,
+										false,
+										false,
+										null,
+										data,
+										null,
+										USDASearchProperties
+									)
+								);
 						}
 						else
 							_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
+						
+						currentUSDAPage = 1;
 					}
 					else
 						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
@@ -718,6 +747,10 @@ package treatments.network
 					{
 						var foodIDUSDA:String = foodsJSON.report.food.ndbno != null ? String(foodsJSON.report.food.ndbno) : UniqueId.createEventId();
 						var foodNameUSDA:String = foodsJSON.report.food.name != null ? String(foodsJSON.report.food.name) : "";
+						var upcMatchIndexUSDA:int = foodNameUSDA.indexOf(", UPC");
+						if (upcMatchIndexUSDA != -1) foodNameUSDA = foodNameUSDA.slice(0, upcMatchIndexUSDA);
+						var gtinMatchIndexUSDA:int = foodNameUSDA.indexOf(", GTIN");
+						if (gtinMatchIndexUSDA != -1) foodNameUSDA = foodNameUSDA.slice(0, gtinMatchIndexUSDA);
 						foodNameUSDA = foodNameUSDA.toLowerCase();
 						foodNameUSDA = foodNameUSDA.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
 						var brandUSDA:String = foodsJSON.report.food.manu != null ? String(foodsJSON.report.food.manu).toUpperCase() : "";
@@ -762,19 +795,19 @@ package treatments.network
 						}
 						
 						var usdaFoodDetailed:Food = new Food
-						(
-							foodIDUSDA,
-							foodNameUSDA,
-							proteinsUSDA,
-							carbsUSDA,
-							fatsUSDA,
-							caloriesUSDA,
-							100,
-							servingUnitUSDA,
-							fiberUSDA,
-							brandUSDA,
-							linkUSDA
-						);
+							(
+								foodIDUSDA,
+								foodNameUSDA,
+								proteinsUSDA,
+								carbsUSDA,
+								fatsUSDA,
+								caloriesUSDA,
+								100,
+								servingUnitUSDA,
+								fiberUSDA,
+								brandUSDA,
+								linkUSDA
+							);
 						
 						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_DETAILS_RESULT, false, false, usdaFoodDetailed) );
 						
@@ -795,6 +828,11 @@ package treatments.network
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			var response:String = String(loader.data);
 			
+			//Discard loader
+			loader.removeEventListener(flash.events.Event.COMPLETE, onAPIResult);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onAPIError);
+			loader = null;
+			
 			try
 			{
 				var codeResponseJSON:Object = SpikeJSON.parse(response);
@@ -813,6 +851,19 @@ package treatments.network
 			}
 		}
 		
+		private static function onAPIError(e:IOErrorEvent):void
+		{
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			loader.removeEventListener(Event.COMPLETE, onAPIResult);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onAPIError);
+			loader = null;
+			
+			_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, e.text) );
+		}
+		
+		/**
+		 * Getters & Setters
+		 */
 		public static function get instance():FoodAPIConnector
 		{
 			return _instance;

@@ -36,7 +36,7 @@ package treatments
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
-	import treatments.ui.SpikeFoodSearcher;
+	import treatments.ui.FoodManager;
 	
 	import ui.AppInterface;
 	import ui.chart.GlucoseFactory;
@@ -149,7 +149,7 @@ package treatments
 		private static var bwFoodLoaderButton:Button;
 		private static var bwTotalScrollContainer:ScrollContainer;
 
-		private static var bwFoodSearcher:SpikeFoodSearcher;
+		private static var bwFoodSearcher:FoodManager;
 		
 		public function BolusWizard()
 		{
@@ -1004,7 +1004,7 @@ package treatments
 			{
 				if (bwFoodSearcher == null)
 				{
-					bwFoodSearcher = new SpikeFoodSearcher(contentWidth, bolusWizardCallout.height - bolusWizardCallout.paddingTop - bolusWizardCallout.paddingBottom - 15);
+					bwFoodSearcher = new FoodManager(contentWidth, bolusWizardCallout.height - bolusWizardCallout.paddingTop - bolusWizardCallout.paddingBottom - 15);
 					bwFoodSearcher.addEventListener(Event.COMPLETE, onFoodManagerCompleted);
 					bwTotalScrollContainer.addChild(bwFoodSearcher);
 				}

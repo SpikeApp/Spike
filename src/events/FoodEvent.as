@@ -19,14 +19,16 @@ package events
 		public var food:Food;
 		public var foodsList:Array;
 		public var errorMessage:String;
+		public var searchProperties:Object;
 		
-		public function FoodEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false, food:Food = null, foodsList:Array = null, errorMessage:String = null) 
+		public function FoodEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false, food:Food = null, foodsList:Array = null, errorMessage:String = null, searchProperties:Object = null) 
 		{
 			super(type, bubbles, cancelable);
 			
 			this.food = food;
 			this.foodsList = foodsList;
 			this.errorMessage = errorMessage;
+			this.searchProperties = searchProperties;
 		}
 	}
 }

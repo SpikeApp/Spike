@@ -58,7 +58,7 @@ package treatments.ui
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 
-	public class SpikeFoodSearcher extends LayoutGroup
+	public class FoodManager extends LayoutGroup
 	{
 		//CONSTANTS
 		private static const ELASTICITY:Number = 0.6;
@@ -106,6 +106,15 @@ package treatments.ui
 		private var preloader:MaterialDesignSpinner;
 		private var basketCallout:Callout;
 		private var basketHitArea:Quad;
+		private var substractFiberContainer:LayoutGroup;
+		private var substractFiberLabel:Label;
+		private var substractFiberCheck:Check;
+		private var paginationContainer:LayoutGroup;
+		private var firstPageButton:Button;
+		private var previousPageButton:Button;
+		private var paginationLabel:Label;
+		private var nextPageButton:Button;
+		private var lastPageButton:Button;
 		
 		//PROPERTIES
 		private var currentMode:String = "";
@@ -118,14 +127,10 @@ package treatments.ui
 		private var activeFood:Food;
 		private var basketList:List;
 		private var deleteButtonsList:Array = [];
+		private var currentPage:int = 1;
+		private var totalPages:int = 1;
 
-		private var substractFiberContainer:LayoutGroup;
-
-		private var substractFiberLabel:Label;
-
-		private var substractFiberCheck:Check;
-
-		public function SpikeFoodSearcher(width:Number, containerHeight:Number)
+		public function FoodManager(width:Number, containerHeight:Number)
 		{
 			this.width = width + 10;
 			this.containerHeight = containerHeight;
@@ -184,12 +189,20 @@ package treatments.ui
 			searchContainer.addChild(searchInput);
 			
 			searchButton = LayoutFactory.createButton("Go");
+			searchButton.paddingLeft = searchButton.paddingRight = 15;
+			searchButton.validate();
 			searchButton.addEventListener(starling.events.Event.TRIGGERED, onPerformSearch);
 			searchContainer.addChild(searchButton);
 			
 			scanButton = LayoutFactory.createButton("Scan");
+			scanButton.paddingLeft = scanButton.paddingRight = 15;
+			scanButton.validate();
 			scanButton.addEventListener(starling.events.Event.TRIGGERED, onScan);
 			searchContainer.addChild(scanButton);
+			
+			var totalSearchWidh:Number = searchButton.width + scanButton.width + 5;
+			var difference:Number = width - totalSearchWidh - 5;
+			searchInput.width = difference;
 			
 			//Results List
 			foodResultsList = new List();
@@ -215,10 +228,48 @@ package treatments.ui
 				return item;
 			};
 			
+			//Footer Actions Container
+			var footerContainer:LayoutGroup = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.TOP);
+			footerContainer.width = width;
+			mainContentContainer.addChild(footerContainer);
+			
+			//Pagination Container
+			paginationContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE);
+			paginationContainer.width = width/2;
+			footerContainer.addChild(paginationContainer);
+			
+			firstPageButton = LayoutFactory.createButton("<<");
+			firstPageButton.paddingLeft = firstPageButton.paddingRight = firstPageButton.paddingTop = firstPageButton.paddingBottom = 0;
+			firstPageButton.isEnabled = false;
+			firstPageButton.addEventListener(Event.TRIGGERED, onFirstPage);
+			paginationContainer.addChild(firstPageButton);
+			
+			previousPageButton = LayoutFactory.createButton("<");
+			previousPageButton.paddingLeft = previousPageButton.paddingRight = previousPageButton.paddingTop = previousPageButton.paddingBottom = 0;
+			previousPageButton.isEnabled = false;
+			previousPageButton.addEventListener(Event.TRIGGERED, onPreviousPage);
+			paginationContainer.addChild(previousPageButton);
+			
+			paginationLabel = LayoutFactory.createLabel("1/1", HorizontalAlign.CENTER, VerticalAlign.MIDDLE);
+			paginationLabel.paddingLeft = paginationLabel.paddingRight = 5;
+			paginationContainer.addChild(paginationLabel);
+			
+			nextPageButton = LayoutFactory.createButton(">");
+			nextPageButton.paddingLeft = nextPageButton.paddingRight = nextPageButton.paddingTop = nextPageButton.paddingBottom = 0;
+			nextPageButton.isEnabled = false;
+			nextPageButton.addEventListener(Event.TRIGGERED, onNextPage);
+			paginationContainer.addChild(nextPageButton);
+			
+			lastPageButton = LayoutFactory.createButton(">>");
+			lastPageButton.paddingLeft = lastPageButton.paddingRight = lastPageButton.paddingTop = lastPageButton.paddingBottom = 0;
+			lastPageButton.isEnabled = false;
+			lastPageButton.addEventListener(Event.TRIGGERED, onLastPage);
+			paginationContainer.addChild(lastPageButton);
+			
 			//Basket & Preloader Container
 			basketPreloaderContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.RIGHT, VerticalAlign.TOP);
-			basketPreloaderContainer.width = width;
-			mainContentContainer.addChild(basketPreloaderContainer);
+			basketPreloaderContainer.width = width/2;
+			footerContainer.addChild(basketPreloaderContainer);
 			
 			//Preloader
 			preloader = new MaterialDesignSpinner();
@@ -255,10 +306,14 @@ package treatments.ui
 			basketPreloaderContainer.readjustLayout();
 			basketPreloaderContainer.validate();
 			preloader.x += 15;
-			preloader.y += 4;
+			preloader.y += 9;
+			basketSprite.y += 5;
+			
+			var basketListLayout:VerticalLayout = new VerticalLayout();
+			basketListLayout.hasVariableItemDimensions = true;
 			
 			basketList = new List();
-			basketList.layout = new VerticalLayout();
+			basketList.layout = basketListLayout;
 			basketList.width = 220;
 			basketList.maxHeight = 400;
 			basketList.itemRendererFactory = function():IListItemRenderer 
@@ -281,7 +336,7 @@ package treatments.ui
 			foodDetailsContainer.width = width;
 			foodDetailsContainer.maxWidth = width;
 			(foodDetailsContainer.layout as VerticalLayout).paddingBottom = 10;
-			(foodDetailsContainer.layout as VerticalLayout).paddingTop = -45;
+			(foodDetailsContainer.layout as VerticalLayout).paddingTop = -15;
 			
 			foodDetailsTitle = LayoutFactory.createLabel("Nutrition Facts", HorizontalAlign.CENTER, VerticalAlign.TOP, 16, true);
 			foodDetailsTitle.touchable = false;
@@ -401,6 +456,30 @@ package treatments.ui
 		/**
 		 * Event Handlers
 		 */
+		private function onFirstPage(e:Event):void
+		{
+			currentPage = 1;
+			onPerformSearch(null, false);
+		}
+		
+		private function onPreviousPage(e:Event):void
+		{
+			currentPage -= 1;
+			onPerformSearch(null, false);
+		}
+		
+		private function onNextPage(e:Event):void
+		{
+			currentPage += 1;
+			onPerformSearch(null, false);
+		}
+		
+		private function onLastPage(e:Event):void
+		{
+			currentPage = totalPages;
+			onPerformSearch(null, false);
+		}
+		
 		private function onFoodAmountChanged(e:Event):void
 		{
 			addFoodButton.isEnabled = foodAmountInput.text != null && foodAmountInput.text.length > 0 ? true : false;	
@@ -524,11 +603,23 @@ package treatments.ui
 			navigateToURL(new URLRequest(selectedFoodLink));
 		}
 		
-		private function resetComponents():void
+		private function resetComponents(resetPagination:Boolean = true):void
 		{
 			foodResultsList.dataProvider = new ArrayCollection([]);
 			foodResultsList.selectedItem = null;
 			foodDetailsContainer.removeFromParent();
+			preloader.visible = false;
+			
+			if (resetPagination)
+			{
+				paginationLabel.text = "1/1";
+				currentPage = 1;
+				totalPages = 1;
+				firstPageButton.isEnabled = false;
+				previousPageButton.isEnabled = false;
+				nextPageButton.isEnabled = false;
+				lastPageButton.isEnabled = false;
+			}
 		}
 		
 		private function resetComponentsExtended():void
@@ -582,12 +673,12 @@ package treatments.ui
 				currentMode = USDA_MODE;
 		}
 		
-		private function onPerformSearch(e:starling.events.Event):void
+		private function onPerformSearch(e:starling.events.Event, resetPagination:Boolean = true):void
 		{
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
-			resetComponents();
+			resetComponents(resetPagination == true || (e != null && e.currentTarget is Button));
 			
 			preloader.visible = true;
 			
@@ -597,15 +688,15 @@ package treatments.ui
 			}
 			else if (currentMode == FATSECRET_MODE)
 			{
-				FoodAPIConnector.fatSecretSearchFood(searchInput.text);
+				FoodAPIConnector.fatSecretSearchFood(searchInput.text, currentPage);
 			}
 			else if (currentMode == OPENFOODFACTS_MODE)
 			{
-				FoodAPIConnector.openFoodFactsSearchFood(searchInput.text);
+				FoodAPIConnector.openFoodFactsSearchFood(searchInput.text, currentPage);
 			}
 			else if (currentMode == USDA_MODE)
 			{
-				FoodAPIConnector.usdaSearchFood(searchInput.text);
+				FoodAPIConnector.usdaSearchFood(searchInput.text, currentPage);
 			}
 		}
 		
@@ -722,6 +813,42 @@ package treatments.ui
 			if (e.foodsList != null)
 			{
 				foodResultsList.dataProvider = new ArrayCollection(e.foodsList);
+			}
+			
+			if (e.searchProperties != null)
+			{
+				updatePagination(e.searchProperties);
+			}
+		}
+		
+		private function updatePagination(paginationProperties:Object):void
+		{
+			currentPage = paginationProperties.pageNumber;
+			totalPages = paginationProperties.totalPages;
+			
+			paginationLabel.text = currentPage + "/" + totalPages;
+			
+			if (currentPage == 1)
+			{
+				firstPageButton.isEnabled = false;
+				previousPageButton.isEnabled = false;
+			}
+			else
+			{
+				firstPageButton.isEnabled = true;
+				previousPageButton.isEnabled = true;
+			}
+			
+			
+			if (currentPage == totalPages)
+			{
+				lastPageButton.isEnabled = false;
+				nextPageButton.isEnabled = false;
+			}
+			else
+			{
+				lastPageButton.isEnabled = true;
+				nextPageButton.isEnabled = true;
 			}
 		}
 		
@@ -870,8 +997,6 @@ package treatments.ui
 			//Call corresponding API
 			if (barCode != null && barCode != "")
 			{
-				trace("barCode:", barCode);
-				
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
@@ -880,7 +1005,7 @@ package treatments.ui
 				if (currentMode == OPENFOODFACTS_MODE)
 					FoodAPIConnector.openFoodFactsSearchCode(barCode);
 				else if (currentMode == USDA_MODE)
-					FoodAPIConnector.usdaSearchFood(barCode);
+					FoodAPIConnector.usdaSearchFood(barCode, 1);
 				else if (currentMode == FATSECRET_MODE)
 					FoodAPIConnector.fatSecretSearchCode(barCode);
 			}
