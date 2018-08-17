@@ -27,7 +27,6 @@ package treatments.ui
 	import feathers.controls.ScrollContainer;
 	import feathers.controls.ScrollPolicy;
 	import feathers.controls.TextInput;
-	import feathers.controls.ToggleButton;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
@@ -68,7 +67,7 @@ package treatments.ui
 		private static const THRESHOLD:Number = 0.1;
 		
 		//MODES
-		private static const FAVOURITES_MODE:String = "favourites";
+		private static const FAVORITES_MODE:String = "favorites";
 		private static const FATSECRET_MODE:String = "fatSecret";
 		private static const OPENFOODFACTS_MODE:String = "openFoodFacts";
 		private static const USDA_MODE:String = "usdaSearch";
@@ -108,8 +107,8 @@ package treatments.ui
 		private var cartTotals:CartTotalsSection;
 		private var saveRecipe:Button;
 		private var foodDetailsTitleContainer:LayoutGroup;
-		private var favouriteButton:Button;
-		private var unfavouriteButton:Button;
+		private var favoriteButton:Button;
+		private var unfavoriteButton:Button;
 		
 		//PROPERTIES
 		private var currentMode:String = "";
@@ -170,7 +169,7 @@ package treatments.ui
 			databaseAPISelector.dataProvider = new ArrayCollection
 			(
 				[
-					{ label: "Favourites" },
+					{ label: "Favorites" },
 					{ label: "FatSecret" },
 					{ label: "Open Food Facts" },
 					{ label: "USDA" },
@@ -352,15 +351,15 @@ package treatments.ui
 			foodDetailsTitle.paddingTop = foodDetailsTitle.paddingBottom = 10;
 			foodDetailsTitleContainer.addChild(foodDetailsTitle);
 			
-			favouriteButton = new Button();
-			favouriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.favoriteOutlineTexture);
-			favouriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
-			favouriteButton.addEventListener(Event.TRIGGERED, onAddFoodAsFavourite);
+			favoriteButton = new Button();
+			favoriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.favoriteOutlineTexture);
+			favoriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
+			favoriteButton.addEventListener(Event.TRIGGERED, onAddFoodAsFavorite);
 			
-			unfavouriteButton = new Button();
-			unfavouriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.favoriteTexture);
-			unfavouriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
-			unfavouriteButton.addEventListener(Event.TRIGGERED, onRemoveFoodAsFavourite);
+			unfavoriteButton = new Button();
+			unfavoriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.favoriteTexture);
+			unfavoriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
+			unfavoriteButton.addEventListener(Event.TRIGGERED, onRemoveFoodAsFavorite);
 			
 			//Add Food Components
 			addFoodContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
@@ -414,35 +413,35 @@ package treatments.ui
 			actionsContainer.addChild(finishButton);
 			
 			//Get Favourit Foods
-			currentMode = FAVOURITES_MODE;
-			getInitialFavourites();
+			currentMode = FAVORITES_MODE;
+			getInitialFavorites();
 		}
 		
-		private function getInitialFavourites():void
+		private function getInitialFavorites():void
 		{
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 			
-			FoodAPIConnector.favouritesSearchFood("", currentPage);
+			FoodAPIConnector.favoritesSearchFood("", currentPage);
 		}
 		
-		private function onAddFoodAsFavourite(e:Event):void
+		private function onAddFoodAsFavorite(e:Event):void
 		{
 			if (activeFood != null)
 			{
 				Database.insertFoodSynchronous(activeFood);
-				favouriteButton.removeFromParent();
-				foodDetailsTitleContainer.addChild(unfavouriteButton);
+				favoriteButton.removeFromParent();
+				foodDetailsTitleContainer.addChild(unfavoriteButton);
 			}
 		}
 		
-		private function onRemoveFoodAsFavourite(e:Event):void
+		private function onRemoveFoodAsFavorite(e:Event):void
 		{
 			if (activeFood != null)
 			{
 				Database.deleteFoodSynchronous(activeFood);
-				unfavouriteButton.removeFromParent();
-				foodDetailsTitleContainer.addChild(favouriteButton);
+				unfavoriteButton.removeFromParent();
+				foodDetailsTitleContainer.addChild(favoriteButton);
 			}
 		}
 		
@@ -475,17 +474,17 @@ package treatments.ui
 			substractFiberCheck.isEnabled = isNaN(selectedFood.fiber) ? false : true;
 			addFoodButton.isEnabled = isNaN(selectedFood.carbs) ? true : false;
 			
-			if (Database.isFoodFavouriteSynchronous(selectedFood))
+			if (Database.isFoodFavoriteSynchronous(selectedFood))
 			{
-				//Food is a favourite
-				foodDetailsTitleContainer.addChild(unfavouriteButton);
-				favouriteButton.removeFromParent();
+				//Food is a favorite
+				foodDetailsTitleContainer.addChild(unfavoriteButton);
+				favoriteButton.removeFromParent();
 			}
 			else
 			{
-				//Food is not a favourite
-				foodDetailsTitleContainer.addChild(favouriteButton);
-				unfavouriteButton.removeFromParent();
+				//Food is not a favorite
+				foodDetailsTitleContainer.addChild(favoriteButton);
+				unfavoriteButton.removeFromParent();
 			}
 		}
 		
@@ -755,7 +754,7 @@ package treatments.ui
 			foodAmountInput.text = "";
 			
 			if (databaseAPISelector.selectedIndex == 0)
-				currentMode = FAVOURITES_MODE;
+				currentMode = FAVORITES_MODE;
 			else if (databaseAPISelector.selectedIndex == 1)
 				currentMode = FATSECRET_MODE;
 			else if (databaseAPISelector.selectedIndex == 2)
@@ -773,9 +772,9 @@ package treatments.ui
 			
 			preloader.visible = true;
 			
-			if (currentMode == FAVOURITES_MODE)
+			if (currentMode == FAVORITES_MODE)
 			{
-				FoodAPIConnector.favouritesSearchFood(searchInput.text, currentPage);
+				FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
 			}
 			else if (currentMode == FATSECRET_MODE)
 			{
@@ -828,7 +827,7 @@ package treatments.ui
 				
 				var selectedFood:Food = foodResultsList.selectedItem.food;
 				
-				if (currentMode == OPENFOODFACTS_MODE || currentMode == FAVOURITES_MODE)
+				if (currentMode == OPENFOODFACTS_MODE || currentMode == FAVORITES_MODE)
 				{
 					displayFoodDetails(selectedFood);
 				}

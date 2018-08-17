@@ -296,59 +296,59 @@ package treatments.network
 			urlLoader.load(request);
 		}
 		
-		public static function favouritesSearchFood(food:String, page:int):void
+		public static function favoritesSearchFood(food:String, page:int):void
 		{
 			var data:Array = [];
-			var favouritesDBResult:Object = Database.getFavouriteFoodSynchronous(food ,page);
+			var favoritesDBResult:Object = Database.getFavoriteFoodSynchronous(food ,page);
 			
-			if (favouritesDBResult != null && favouritesDBResult.foodsList != null && favouritesDBResult.foodsList is Array && favouritesDBResult.totalRecords != null)
+			if (favoritesDBResult != null && favoritesDBResult.foodsList != null && favoritesDBResult.foodsList is Array && favoritesDBResult.totalRecords != null)
 			{
-				var allFavouritesProperties:Object = { pageNumber: page, totalPages: Math.ceil(favouritesDBResult.totalRecords / 50), totalRecords: favouritesDBResult.totalRecords }
-				var foods:Array = favouritesDBResult.foodsList;
+				var allFavoritesProperties:Object = { pageNumber: page, totalPages: Math.ceil(favoritesDBResult.totalRecords / 50), totalRecords: favoritesDBResult.totalRecords }
+				var foods:Array = favoritesDBResult.foodsList;
 				
 				for (var i:int = 0; i < foods.length; i++) 
 				{
-					var unprocessedFavourite:Object = foods[i];
-					if (unprocessedFavourite != null)
+					var unprocessedFavorite:Object = foods[i];
+					if (unprocessedFavorite != null)
 					{
-						var favouriteID:String = unprocessedFavourite.id;
-						var favouriteName:String = unprocessedFavourite.name;
-						var favouriteBrand:String = unprocessedFavourite.brand;
-						var favouriteProteins:Number = Number(unprocessedFavourite.proteins);
-						var favouriteCarbs:Number = Number(unprocessedFavourite.carbs);
-						var favouriteFiber:Number = Number(unprocessedFavourite.fiber);
-						var favouriteFats:Number = Number(unprocessedFavourite.fats);
-						var favouriteCalories:Number = Number(unprocessedFavourite.calories);
-						var favouriteLink:String = unprocessedFavourite.link;
-						var favouriteServingSize:Number = Number(unprocessedFavourite.servingsize);
-						var favouriteServingUnit:String = unprocessedFavourite.servingunit;
-						var favouriteBarCode:String = unprocessedFavourite.barcode;
-						var favouriteSource:String = unprocessedFavourite.source;
-						var favouriteTimestamp:Number = Number(unprocessedFavourite.lastmodifiedtimestamp);
+						var favoriteID:String = unprocessedFavorite.id;
+						var favoriteName:String = unprocessedFavorite.name;
+						var favoriteBrand:String = unprocessedFavorite.brand;
+						var favoriteProteins:Number = Number(unprocessedFavorite.proteins);
+						var favoriteCarbs:Number = Number(unprocessedFavorite.carbs);
+						var favoriteFiber:Number = Number(unprocessedFavorite.fiber);
+						var favoriteFats:Number = Number(unprocessedFavorite.fats);
+						var favoriteCalories:Number = Number(unprocessedFavorite.calories);
+						var favoriteLink:String = unprocessedFavorite.link;
+						var favoriteServingSize:Number = Number(unprocessedFavorite.servingsize);
+						var favoriteServingUnit:String = unprocessedFavorite.servingunit;
+						var favoriteBarCode:String = unprocessedFavorite.barcode;
+						var favoriteSource:String = unprocessedFavorite.source;
+						var favoriteTimestamp:Number = Number(unprocessedFavorite.lastmodifiedtimestamp);
 						
-						var favouriteFood:Food = new Food
+						var favoriteFood:Food = new Food
 						(
-							favouriteID,
-							favouriteName,
-							favouriteProteins,
-							favouriteCarbs,
-							favouriteFats,
-							favouriteCalories,
-							favouriteServingSize,
-							favouriteServingUnit,
-							favouriteTimestamp,
-							favouriteFiber,
-							favouriteBrand,
-							favouriteLink,
-							favouriteSource,
-							favouriteBarCode
+							favoriteID,
+							favoriteName,
+							favoriteProteins,
+							favoriteCarbs,
+							favoriteFats,
+							favoriteCalories,
+							favoriteServingSize,
+							favoriteServingUnit,
+							favoriteTimestamp,
+							favoriteFiber,
+							favoriteBrand,
+							favoriteLink,
+							favoriteSource,
+							favoriteBarCode
 						);
 						
 						data.push
 						(
 							{
-								label: favouriteName + (favouriteBrand != "" ? "\n" + favouriteBrand : ""),
-								food: favouriteFood
+								label: favoriteName + (favoriteBrand != "" ? "\n" + favoriteBrand : ""),
+								food: favoriteFood
 							}
 						);
 					}
@@ -367,7 +367,7 @@ package treatments.network
 							null,
 							data,
 							null,
-							allFavouritesProperties
+							allFavoritesProperties
 						)
 					);
 				}
