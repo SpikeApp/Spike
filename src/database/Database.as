@@ -2749,7 +2749,7 @@ package database
 		}
 		
 		/**
-		 * Get foods synchronously
+		 * Get foods by name synchronously
 		 */
 		public static function getFavoriteFoodSynchronous(foodName:String, page:int):Object {
 			
@@ -2787,6 +2787,40 @@ package database
 			} finally {
 				if (conn.connected) conn.close();
 				return returnObject;
+			}
+		}
+		
+		/**
+		 * Get foods by barcode synchronously
+		 */
+		public static function getFavoriteFoodByBarcodeSynchronous(barCode:String):Array {
+			
+			var foodsList:Array = new Array();
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text = "SELECT * FROM foods WHERE barcode LIKE '%" + barCode + "%'";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+				{
+					foodsList = result.data;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return foodsList;
 			}
 		}
 		

@@ -378,6 +378,85 @@ package treatments.network
 				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
 		}
 		
+		public static function favoritesSearchBarCode(barcode:String):void
+		{
+			var data:Array = [];
+			var favoritesDBResult:Array = Database.getFavoriteFoodByBarcodeSynchronous(barcode);
+			
+			if (favoritesDBResult != null && favoritesDBResult.length > 0)
+			{
+				for (var i:int = 0; i < favoritesDBResult.length; i++) 
+				{
+					var unprocessedFavorite:Object = favoritesDBResult[i];
+					if (unprocessedFavorite != null)
+					{
+						var favoriteID:String = unprocessedFavorite.id;
+						var favoriteName:String = unprocessedFavorite.name;
+						var favoriteBrand:String = unprocessedFavorite.brand;
+						var favoriteProteins:Number = Number(unprocessedFavorite.proteins);
+						var favoriteCarbs:Number = Number(unprocessedFavorite.carbs);
+						var favoriteFiber:Number = Number(unprocessedFavorite.fiber);
+						var favoriteFats:Number = Number(unprocessedFavorite.fats);
+						var favoriteCalories:Number = Number(unprocessedFavorite.calories);
+						var favoriteLink:String = unprocessedFavorite.link;
+						var favoriteServingSize:Number = Number(unprocessedFavorite.servingsize);
+						var favoriteServingUnit:String = unprocessedFavorite.servingunit;
+						var favoriteBarCode:String = unprocessedFavorite.barcode;
+						var favoriteSource:String = unprocessedFavorite.source;
+						var favoriteTimestamp:Number = Number(unprocessedFavorite.lastmodifiedtimestamp);
+						
+						var favoriteFood:Food = new Food
+						(
+							favoriteID,
+							favoriteName,
+							favoriteProteins,
+							favoriteCarbs,
+							favoriteFats,
+							favoriteCalories,
+							favoriteServingSize,
+							favoriteServingUnit,
+							favoriteTimestamp,
+							favoriteFiber,
+							favoriteBrand,
+							favoriteLink,
+							favoriteSource,
+							favoriteBarCode
+						);
+						
+						data.push
+						(
+							{
+								label: favoriteName + (favoriteBrand != "" ? "\n" + favoriteBrand : ""),
+								food: favoriteFood
+							}
+						);
+					}
+				}
+				
+				//Notify Listeners
+				if (data.length > 0)
+				{
+					_instance.dispatchEvent
+					(
+						new FoodEvent
+						(
+							FoodEvent.FOODS_SEARCH_RESULT,
+							false,
+							false,
+							null,
+							data,
+							null,
+							{ pageNumber: 1, totalPages: 1, totalRecords: data.length }
+						)
+					);
+				}
+				else
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
+			}
+			else
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
+		}
+		
 		/**
 		 * HELPER FUNCTIONS FOR FATSECRET
 		 */

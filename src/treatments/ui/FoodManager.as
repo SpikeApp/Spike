@@ -1144,6 +1144,8 @@ package treatments.ui
 					FoodAPIConnector.usdaSearchFood(barCode, 1);
 				else if (currentMode == FATSECRET_MODE)
 					FoodAPIConnector.fatSecretSearchCode(barCode);
+				else if (currentMode == FAVORITES_MODE)
+					FoodAPIConnector.favoritesSearchBarCode(barCode);
 			}
 		}
 	}
