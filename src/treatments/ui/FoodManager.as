@@ -24,6 +24,7 @@ package treatments.ui
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.List;
 	import feathers.controls.PickerList;
+	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollContainer;
 	import feathers.controls.ScrollPolicy;
 	import feathers.controls.TextInput;
@@ -131,7 +132,7 @@ package treatments.ui
 
 		public function FoodManager(width:Number, containerHeight:Number)
 		{
-			this.width = width + 10;
+			this.width = width;
 			this.containerHeight = containerHeight;
 			
 			setupProperties();
@@ -154,7 +155,8 @@ package treatments.ui
 			mainContentContainer.height = containerHeight;
 			mainContentContainer.width = width;
 			mainContentContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
-			mainContentContainer.verticalScrollPolicy = ScrollPolicy.AUTO;
+			mainContentContainer.scrollBarDisplayMode = ScrollBarDisplayMode.FIXED_FLOAT;
+			mainContentContainer.verticalScrollBarProperties.paddingRight = -10;
 			mainContentContainer.layout = mainLayout;
 			addChild(mainContentContainer);
 			

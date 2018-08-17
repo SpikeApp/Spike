@@ -859,28 +859,15 @@ package treatments
 			bolusWizardCallout = Callout.show(bwTotalScrollContainer, calloutPositionHelper);
 			bolusWizardCallout.disposeContent = false;
 			bolusWizardCallout.paddingBottom = 15;
+			bolusWizardCallout.paddingRight = 10;
 			bolusWizardCallout.closeOnTouchBeganOutside = false;
 			bolusWizardCallout.closeOnTouchEndedOutside = false;
 			bolusWizardCallout.height = finalCalloutHeight;
+			bolusWizardCallout.validate();
 			bwWizardScrollContainer.height = finalCalloutHeight - 60;
 			bwWizardScrollContainer.maxHeight = finalCalloutHeight - 60;
 			bwTotalScrollContainer.height = finalCalloutHeight - 60;
 			bwTotalScrollContainer.maxHeight = finalCalloutHeight - 60;
-			
-			/*if (bolusWizardCallout != null) bolusWizardCallout.dispose();
-			bolusWizardCallout = Callout.show(bwTotalScrollContainer, calloutPositionHelper);
-			bolusWizardCallout.disposeContent = false;
-			bolusWizardCallout.paddingBottom = 15;
-			bolusWizardCallout.closeOnTouchBeganOutside = false;
-			bolusWizardCallout.closeOnTouchEndedOutside = false;
-			bolusWizardCallout.height = Constants.stageHeight - yPos - 10;
-			bolusWizardCallout.validate();
-			bwWizardScrollContainer.height = bolusWizardCallout.height - yPos + 10;
-			bwWizardScrollContainer.maxHeight = bolusWizardCallout.height - yPos + 10;
-			bwWizardScrollContainer.validate();
-			bwTotalScrollContainer.height = bwWizardScrollContainer.height;
-			bwTotalScrollContainer.maxHeight = bwWizardScrollContainer.maxHeight;
-			bwTotalScrollContainer.validate();*/
 		}
 		
 		private static function displayMissedSettingsCallout():void
