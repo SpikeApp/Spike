@@ -109,6 +109,10 @@ package treatments.ui
 		private var foodDetailsTitleContainer:LayoutGroup;
 		private var favoriteButton:Button;
 		private var unfavoriteButton:Button;
+		private var addFavorite:Sprite;
+		private var addFavoriteImage:Image;
+		private var addFavoriteHitArea:Quad;
+		private var addFavoriteBackground:Quad;
 		
 		//PROPERTIES
 		private var currentMode:String = "";
@@ -273,14 +277,32 @@ package treatments.ui
 			basketPreloaderContainer.width = width/2;
 			footerContainer.addChild(basketPreloaderContainer);
 			
+			//Add Favorite
+			addFavorite = new Sprite();
+			addFavorite.touchable = true;
+			addFavorite.addEventListener(TouchEvent.TOUCH, onAddFavorite);
+			
+			addFavoriteImage = new Image(MaterialDeepGreyAmberMobileThemeIcons.addTexture);
+			addFavoriteImage.scale = 1;
+			addFavoriteImage.touchable = false;
+			addFavorite.addChild(addFavoriteImage);
+			
+			addFavoriteBackground = new Quad(addFavoriteImage.bounds.width + 10, addFavoriteImage.bounds.height, 0xFF0000);
+			addFavoriteBackground.alpha = 0;
+			addFavoriteBackground.touchable = false;
+			addFavorite.addChildAt(addFavoriteBackground, 0);
+			
+			addFavoriteHitArea = new Quad(addFavoriteImage.bounds.width, addFavoriteImage.bounds.height, 0x00FF00);
+			addFavoriteHitArea.alpha = 0;
+			addFavoriteHitArea.touchable = true;
+			addFavorite.addChild(addFavoriteHitArea);
+			
 			//Preloader
 			preloader = new MaterialDesignSpinner();
 			preloader.color = 0x0086FF;
 			preloader.touchable = false;
 			preloader.scale = 0.4;
 			preloader.validate();
-			preloader.visible = false;
-			basketPreloaderContainer.addChild(preloader);
 			
 			//Basket
 			basketSprite = new Sprite();
@@ -406,7 +428,7 @@ package treatments.ui
 			//Actions
 			actionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 0);
 			actionsContainer.width = width;
-			(actionsContainer.layout as HorizontalLayout).paddingTop = -10;
+			//(actionsContainer.layout as HorizontalLayout).paddingTop = -0;
 			mainContentContainer.addChild(actionsContainer);
 			
 			finishButton = LayoutFactory.createButton("Finish");
@@ -416,6 +438,10 @@ package treatments.ui
 			//Get Favourit Foods
 			currentMode = FAVORITES_MODE;
 			getInitialFavorites();
+			
+			//Final layout adjustments
+			hidePreloader();
+			showAddFavorite();
 		}
 		
 		private function getInitialFavorites():void
@@ -596,6 +622,17 @@ package treatments.ui
 			}
 		}
 		
+		private function onAddFavorite(e:starling.events.TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				trace("on add favorite");
+				//Perform actions
+			}
+		}
+		
 		private function onBasketCalloutClosed(e:Event):void
 		{
 			for(var i:int = deleteButtonsList.length - 1 ; i >= 0; i--) 
@@ -739,7 +776,7 @@ package treatments.ui
 			foodResultsList.dataProvider = new ArrayCollection([]);
 			foodResultsList.selectedItem = null;
 			foodDetailsContainer.removeFromParent();
-			preloader.visible = false;
+			hidePreloader();
 			
 			if (resetPagination)
 			{
@@ -792,17 +829,29 @@ package treatments.ui
 		{
 			resetComponents();
 			removeFoodEventListeners();
-			preloader.visible = false;
+			hidePreloader();
 			foodAmountInput.text = "";
 			
 			if (databaseAPISelector.selectedIndex == 0)
+			{
 				currentMode = FAVORITES_MODE;
+				showAddFavorite();
+			}
 			else if (databaseAPISelector.selectedIndex == 1)
+			{
 				currentMode = FATSECRET_MODE;
+				hideAddFavorite();
+			}
 			else if (databaseAPISelector.selectedIndex == 2)
+			{
 				currentMode = OPENFOODFACTS_MODE;
+				hideAddFavorite();
+			}
 			else if (databaseAPISelector.selectedIndex == 3)
+			{
 				currentMode = USDA_MODE;
+				hideAddFavorite();
+			}
 		}
 		
 		private function onPerformSearch(e:starling.events.Event, resetPagination:Boolean = true):void
@@ -812,24 +861,71 @@ package treatments.ui
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
 			resetComponents(resetPagination == true || (e != null && e.currentTarget is Button));
 			
-			preloader.visible = true;
-			
 			if (currentMode == FAVORITES_MODE)
 			{
+				hidePreloader();
 				FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
 			}
 			else if (currentMode == FATSECRET_MODE)
 			{
+				showPreloader();
 				FoodAPIConnector.fatSecretSearchFood(searchInput.text, currentPage);
 			}
 			else if (currentMode == OPENFOODFACTS_MODE)
 			{
+				showPreloader();
 				FoodAPIConnector.openFoodFactsSearchFood(searchInput.text, currentPage);
 			}
 			else if (currentMode == USDA_MODE)
 			{
+				showPreloader();
 				FoodAPIConnector.usdaSearchFood(searchInput.text, currentPage);
 			}
+		}
+		
+		private function hidePreloader():void
+		{
+			preloader.visible = false;
+			preloader.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			basketSprite.y += 5;
+		}
+		
+		private function showAddFavorite():void
+		{
+			addFavorite.visible = true;
+			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
+			basketPreloaderContainer.addChildAt(addFavorite, suggestedIndex);
+			preloader.visible = false;
+			preloader.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			basketSprite.y += 5;
+			addFavorite.y += 5;
+		}
+		
+		private function hideAddFavorite():void
+		{
+			addFavorite.visible = false;
+			addFavorite.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			basketSprite.y += 5;
+		}
+		
+		private function showPreloader():void
+		{
+			preloader.visible = true;
+			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
+			basketPreloaderContainer.addChildAt(preloader, suggestedIndex);
+			addFavorite.visible = false;
+			addFavorite.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			preloader.x += 15;
+			preloader.y += 9;
+			basketSprite.y += 5;
 		}
 		
 		private function removeFoodEventListeners():void
@@ -843,7 +939,7 @@ package treatments.ui
 		private function onFoodNotFound (e:FoodEvent):void
 		{
 			removeFoodEventListeners();
-			preloader.visible = false;
+			hidePreloader();
 			
 			foodResultsList.dataProvider = new ArrayCollection( [ { label: "No results!" } ] );
 		}
@@ -851,7 +947,7 @@ package treatments.ui
 		private function onServerError (e:FoodEvent):void
 		{
 			removeFoodEventListeners();
-			preloader.visible = false;
+			hidePreloader();
 			
 			AlertManager.showSimpleAlert
 			(
@@ -875,7 +971,7 @@ package treatments.ui
 				}
 				else if (currentMode == FATSECRET_MODE)
 				{
-					preloader.visible = true;
+					showPreloader();
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
@@ -883,7 +979,7 @@ package treatments.ui
 				}
 				else if (currentMode == USDA_MODE)
 				{
-					preloader.visible = true;
+					showPreloader();
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
@@ -897,7 +993,7 @@ package treatments.ui
 			var food:Food = e.food;
 			
 			removeFoodEventListeners();
-			preloader.visible = false;
+			hidePreloader();
 			foodAmountInput.text = "";
 			substractFiberCheck.isSelected = false;
 			
@@ -909,7 +1005,7 @@ package treatments.ui
 		{
 			//Reset variables
 			removeFoodEventListeners();
-			preloader.visible = false;
+			hidePreloader();
 			
 			//Clear/reset components, unless a special contition has been met
 			if (!dontClearSearchResults)
@@ -1136,16 +1232,27 @@ package treatments.ui
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
-				preloader.visible = true;
 				
 				if (currentMode == OPENFOODFACTS_MODE)
+				{
+					showPreloader();
 					FoodAPIConnector.openFoodFactsSearchCode(barCode);
+				}
 				else if (currentMode == USDA_MODE)
+				{
+					showPreloader();
 					FoodAPIConnector.usdaSearchFood(barCode, 1);
+				}
 				else if (currentMode == FATSECRET_MODE)
+				{
+					showPreloader();
 					FoodAPIConnector.fatSecretSearchCode(barCode);
+				}
 				else if (currentMode == FAVORITES_MODE)
+				{
+					hidePreloader();
 					FoodAPIConnector.favoritesSearchBarCode(barCode);
+				}
 			}
 		}
 	}

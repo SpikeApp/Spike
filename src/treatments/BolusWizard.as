@@ -534,6 +534,9 @@ package treatments
 			bwCarbsCheck.isSelected = true;
 			bwCarbsLabel.text = "Carbs";
 			bwCarbsStepper.value = 0;
+			bwCarbsLabel.validate();
+			bwCarbsStepper.validate();
+			bwCarbsLabelContainer.validate();
 			bwCarbsContainer.validate();
 			bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
 			bwFoodsLabel.text = "Foods";
@@ -713,6 +716,92 @@ package treatments
 			
 			//Reset Callout Vertical Scroll
 			bwWizardScrollContainer.verticalScrollPosition = 0;
+		}
+		
+		private static function updateCriticalData():void
+		{
+			var now:Number = new Date().valueOf();
+			
+			//Current Glucose
+			latestBgReading = BgReading.lastWithCalculatedValue();
+			if (latestBgReading != null && now - latestBgReading.timestamp <= TIME_11_MINUTES) //Only use BG readings less than 11 minutes ago.
+			{
+				currentBG = Math.round(latestBgReading.calculatedValue);
+			}
+			else
+			{
+				bwGlucoseCheck.isSelected = false
+				currentBG = 0;
+			}
+			
+			bwGlucoseStepper.value = currentBG;
+			bwGlucoseStepper.step = 1;
+			bwCurrentGlucoseContainer.validate();
+			bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
+			
+			//Current Trend
+			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
+			bwTrendCheck.isSelected = latestBgReading != null ? true : false;
+			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
+			var currentTrendCorrection:Number = 0;
+			var currentTrendCorrectionUnit:String = "U";
+			if (currentTrendArrow != "")
+			{
+				if (currentTrendArrow == "\u2197")
+				{
+					currentTrendCorrection = currentProfile.trend45Up;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2191")
+				{
+					currentTrendCorrection = currentProfile.trend90Up;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2191\u2191")
+				{
+					currentTrendCorrection = currentProfile.trendDoubleUp;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2198")
+				{
+					currentTrendCorrection = currentProfile.trend45Down;
+					currentTrendCorrectionUnit = "g";
+				}
+				else if (currentTrendArrow == "\u2193")
+				{
+					currentTrendCorrection = currentProfile.trend90Down;
+					currentTrendCorrectionUnit = "g";
+				}
+				else if (currentTrendArrow == "\u2193\u2193")
+				{
+					currentTrendCorrection = currentProfile.trendDoubleDown;
+					currentTrendCorrectionUnit = "g";
+				}
+			}
+			
+			if (currentTrendCorrection == 0) bwTrendCheck.isSelected = false;
+			bwCurrentTrendLabel.text = currentTrendCorrection + currentTrendCorrectionUnit;
+			bwCurrentTrendLabel.validate();
+			bwTrendContainer.validate();
+			bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
+			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
+			
+			//Current IOB
+			currentIOB = TreatmentsManager.getTotalIOB(now);
+			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(currentIOB);
+			bwCurrentIOBLabel.validate();
+			bwIOBContainer.validate();
+			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
+			
+			//Current COB
+			currentCOB = TreatmentsManager.getTotalCOB(now);
+			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(currentCOB);
+			bwCurrentCOBLabel.validate();
+			bwCOBContainer.validate();
+			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
+			
+			//Calculations
+			performCalculations();
 		}
 		
 		private static function enableEventListeners():void
@@ -1085,6 +1174,9 @@ package treatments
 					bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
 					bwNotes.text = addedFoodNames.join(", ");
 				}
+				
+				//Update critical data
+				updateCriticalData();
 				
 				//Scroll to the Bolus Wizard screen
 				bwTotalScrollContainer.scrollToPageIndex( 0, bwTotalScrollContainer.verticalPageIndex );
