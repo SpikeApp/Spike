@@ -11,8 +11,6 @@ package treatments.ui
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.Database;
 	
 	import distriqtkey.DistriqtKey;
@@ -430,6 +428,27 @@ package treatments.ui
 		
 		private function onAddFoodAsFavorite(e:Event):void
 		{
+			if (currentMode == FATSECRET_MODE)
+			{
+				AlertManager.showActionAlert
+				(
+					"Warning",
+					"Due to violation of FatSecret's Terms of Use, Spike can't save their nutritional data locally.",
+					Number.NaN,
+					[
+						{ label: "Terms Of Use", triggered: onShowFSTermsOfUse },
+						{ label: "OK" }
+					]
+				);
+				
+				function onShowFSTermsOfUse(e:Event = null):void
+				{
+					navigateToURL(new URLRequest("http://www.platform.fatsecret.com/api/Default.aspx?screen=tou"));
+				}
+				
+				return;
+			}
+			
 			if (activeFood != null)
 			{
 				Database.insertFoodSynchronous(activeFood);
@@ -888,9 +907,11 @@ package treatments.ui
 		
 		private function onFoodsSearchResult(e:FoodEvent):void
 		{
+			//Reset variables
 			removeFoodEventListeners();
 			preloader.visible = false;
 			
+			//Clear/reset components, unless a special contition has been met
 			if (!dontClearSearchResults)
 			{
 				resetComponents();
@@ -899,8 +920,10 @@ package treatments.ui
 			
 			if (e.foodsList != null)
 			{
+				//Populate foods list with results
 				foodResultsList.dataProvider = new ArrayCollection(e.foodsList);
 				
+				//If we're in favorite mode and we favorite/unfavorite food, have the food list update and select accordingly
 				if (dontClearSearchResults && activeFood != null)
 				{
 					var visibleFoods:Array = e.foodsList as Array;
@@ -919,11 +942,13 @@ package treatments.ui
 				}
 			}
 			
+			//Update pagination
 			if (e.searchProperties != null)
 			{
 				updatePagination(e.searchProperties);
 			}
 			
+			//Reset variables
 			dontClearSearchResults = false;
 		}
 		
