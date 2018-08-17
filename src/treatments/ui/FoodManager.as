@@ -11,6 +11,8 @@ package treatments.ui
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.Database;
 	
 	import distriqtkey.DistriqtKey;
@@ -122,7 +124,8 @@ package treatments.ui
 		private var basketList:List;
 		private var deleteButtonsList:Array = [];
 		private var currentPage:int = 1;
-		private var totalPages:int = 1;		
+		private var totalPages:int = 1;	
+		private var dontClearSearchResults:Boolean = false;
 
 		public function FoodManager(width:Number, containerHeight:Number)
 		{
@@ -432,6 +435,16 @@ package treatments.ui
 				Database.insertFoodSynchronous(activeFood);
 				favoriteButton.removeFromParent();
 				foodDetailsTitleContainer.addChild(unfavoriteButton);
+				
+				if (currentMode == FAVORITES_MODE)
+				{
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+					
+					dontClearSearchResults = true;
+					
+					FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
+				}
 			}
 		}
 		
@@ -442,6 +455,16 @@ package treatments.ui
 				Database.deleteFoodSynchronous(activeFood);
 				unfavoriteButton.removeFromParent();
 				foodDetailsTitleContainer.addChild(favoriteButton);
+				
+				if (currentMode == FAVORITES_MODE)
+				{
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+					
+					dontClearSearchResults = true;
+					
+					FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
+				}
 			}
 		}
 		
@@ -866,19 +889,42 @@ package treatments.ui
 		private function onFoodsSearchResult(e:FoodEvent):void
 		{
 			removeFoodEventListeners();
-			resetComponents();
 			preloader.visible = false;
-			foodAmountInput.text = "";
+			
+			if (!dontClearSearchResults)
+			{
+				resetComponents();
+				foodAmountInput.text = "";
+			}
 			
 			if (e.foodsList != null)
 			{
 				foodResultsList.dataProvider = new ArrayCollection(e.foodsList);
+				
+				if (dontClearSearchResults && activeFood != null)
+				{
+					var visibleFoods:Array = e.foodsList as Array;
+					for (var i:int = 0; i < visibleFoods.length; i++) 
+					{
+						var food:Food = visibleFoods[i].food;
+						if (food != null && food.id == activeFood.id)
+						{
+							foodResultsList.removeEventListener(Event.CHANGE, onFoodSelected);
+							foodResultsList.selectedIndex = i;
+							foodResultsList.addEventListener(Event.CHANGE, onFoodSelected);
+							break;
+						}
+					}
+					
+				}
 			}
 			
 			if (e.searchProperties != null)
 			{
 				updatePagination(e.searchProperties);
 			}
+			
+			dontClearSearchResults = false;
 		}
 		
 		private function updatePagination(paginationProperties:Object):void
