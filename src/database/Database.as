@@ -11,6 +11,7 @@ package database
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
+	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -2745,6 +2746,108 @@ package database
 				}
 				dispatchInformation('error_while_deleting_old_healthkitt_treatments_in_db', error.message + " - " + error.details);
 			}
+		}
+		
+		/**
+		 * Get foods synchronously
+		 */
+		public static function getFavouriteFoodSynchronous(foodName:String, page:int):Object {
+			
+			var returnObject:Object = {};
+			var foodsList:Array = new Array();
+			var foodBatchAmount:int = 50;
+			var foodOffSet:int = (page - 1) * foodBatchAmount;
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery += "SELECT *, ";
+				sqlQuery += "(SELECT COUNT(id) FROM foods WHERE name LIKE '%" + foodName + "%') AS `totalRecords` ";
+				sqlQuery += "FROM foods WHERE name LIKE '%" + foodName + "%' LIMIT " + foodBatchAmount + " OFFSET " + foodOffSet;
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+				{
+					returnObject.foodsList = result.data;
+					returnObject.totalRecords = result.data[0]["totalRecords"] != null ? int(result.data[0]["totalRecords"]) : 0;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnObject;
+			}
+			
+			
+			/*
+			conn.open(dbFile, SQLMode.READ);
+			conn.begin();
+			var getRequest:SQLStatement = new SQLStatement();
+			getRequest.sqlConnection = conn;
+			var sqlQuery:String = "";
+			sqlQuery += "SELECT AVG(calculatedValue) AS `averageGlucose`, "
+			sqlQuery +=	"(SELECT AVG(calculatedValue) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - a1cOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `averageGlucoseA1C`, ";
+			sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - TIME_24_HOURS) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsDay`, ";
+			sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsTotal`, ";
+			sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsLow`, ";
+			sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsInRange`, ";
+			sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue >= " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsHigh` ";
+			sqlQuery +=	"FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - avgOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
+			getRequest.text = sqlQuery;
+			getRequest.execute();
+			var result:SQLResult = getRequest.getResult();
+			conn.close();
+			
+			if 
+			(
+			result.data != null && 
+			result.data is Array && 
+			result.data[0] != null && 
+			(result.data[0]["averageGlucose"] != null && !isNaN(result.data[0]["averageGlucose"])) &&    
+			(result.data[0]["numReadingsDay"] != null && !isNaN(result.data[0]["numReadingsDay"])) &&    
+			(result.data[0]["numReadingsTotal"] != null && !isNaN(result.data[0]["numReadingsTotal"])) &&    
+			(result.data[0]["numReadingsLow"] != null && !isNaN(result.data[0]["numReadingsLow"])) &&    
+			(result.data[0]["numReadingsInRange"] != null && !isNaN(result.data[0]["numReadingsInRange"])) &&    
+			(result.data[0]["numReadingsHigh"] != null && !isNaN(result.data[0]["numReadingsHigh"])) && 
+			(result.data[0]["averageGlucoseA1C"] != null && !isNaN(result.data[0]["averageGlucoseA1C"]))  
+			)
+			{
+			userStats.averageGlucose = ((Number(result.data[0]["averageGlucose"]) * 10 + 0.5)  >> 0) / 10;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") userStats.averageGlucose = Math.round(((BgReading.mgdlToMmol((userStats.averageGlucose))) * 10)) / 10;
+			userStats.numReadingsDay = Number(result.data[0]["numReadingsDay"]);
+			userStats.numReadingsTotal = Number(result.data[0]["numReadingsTotal"]);
+			userStats.numReadingsLow = Number(result.data[0]["numReadingsLow"]);
+			userStats.numReadingsInRange = Number(result.data[0]["numReadingsInRange"]);
+			userStats.numReadingsHigh = Number(result.data[0]["numReadingsHigh"]);
+			userStats.a1c = ((((46.7 + (((Number(result.data[0]["averageGlucoseA1C"]) * 10 + 0.5)  >> 0) / 10)) / 28.7) * 10 + 0.5)  >> 0) / 10;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) == "true")
+			userStats.a1c = ((((userStats.a1c - 2.15) * 10.929) * 10 + 0.5)  >> 0) / 10; //IFCC support
+			userStats.percentageHigh = (userStats.numReadingsHigh * 100) / userStats.numReadingsTotal;
+			userStats.percentageHighRounded = ((userStats.percentageHigh * 10 + 0.5)  >> 0) / 10;
+			userStats.percentageInRange = (userStats.numReadingsInRange * 100) / userStats.numReadingsTotal;
+			userStats.percentageInRangeRounded = ((userStats.percentageInRange * 10 + 0.5)  >> 0) / 10;
+			var preLow:Number = Math.round((userStats.numReadingsLow * 100) / userStats.numReadingsTotal) * 10 / 10;
+			var percentageLow:Number;
+			var percentageLowRounded:Number;
+			if (preLow != 0 && !isNaN(preLow))
+			{
+			userStats.percentageLow = 100 - userStats.percentageInRange - userStats.percentageHigh;
+			userStats.percentageLowRounded = Math.round ((100 - userStats.percentageInRangeRounded - userStats.percentageHighRounded) * 10) / 10;
+			}
+			userStats.captureRate = ((((userStats.numReadingsDay * 100) / 288) * 10 + 0.5)  >> 0) / 10;
+			if (userStats.captureRate > 100) userStats.captureRate = 100;
+			}*/
 		}
 		
 		/**

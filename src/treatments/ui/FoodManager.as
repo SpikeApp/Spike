@@ -412,6 +412,18 @@ package treatments.ui
 			finishButton = LayoutFactory.createButton("Finish");
 			finishButton.addEventListener(starling.events.Event.TRIGGERED, onFinish);
 			actionsContainer.addChild(finishButton);
+			
+			//Get Favourit Foods
+			currentMode = FAVOURITES_MODE;
+			getInitialFavourites();
+		}
+		
+		private function getInitialFavourites():void
+		{
+			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
+			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+			
+			FoodAPIConnector.favouritesSearchFood("", currentPage);
 		}
 		
 		private function onAddFoodAsFavourite(e:Event):void
@@ -763,7 +775,7 @@ package treatments.ui
 			
 			if (currentMode == FAVOURITES_MODE)
 			{
-				
+				FoodAPIConnector.favouritesSearchFood(searchInput.text, currentPage);
 			}
 			else if (currentMode == FATSECRET_MODE)
 			{
@@ -816,7 +828,7 @@ package treatments.ui
 				
 				var selectedFood:Food = foodResultsList.selectedItem.food;
 				
-				if (currentMode == OPENFOODFACTS_MODE)
+				if (currentMode == OPENFOODFACTS_MODE || currentMode == FAVOURITES_MODE)
 				{
 					displayFoodDetails(selectedFood);
 				}
@@ -851,8 +863,6 @@ package treatments.ui
 			if (food != null)
 				displayFoodDetails(food);
 		}
-		
-		
 		
 		private function onFoodsSearchResult(e:FoodEvent):void
 		{
