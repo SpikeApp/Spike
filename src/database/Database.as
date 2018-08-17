@@ -186,12 +186,12 @@ package database
 			"id STRING PRIMARY KEY," +
 			"name STRING, " +
 			"brand STRING, " +
-			"proteins REAL, " +
-			"carbs REAL, " +
-			"fiber REAL, " +
-			"fats REAL, " +
-			"calories REAL, " +
-			"servingsize REAL, " +
+			"proteins STRING, " +
+			"carbs STRING, " +
+			"fiber STRING, " +
+			"fats STRING, " +
+			"calories STRING, " +
+			"servingsize STRING, " +
 			"servingunit STRING, " +
 			"link STRING, " +
 			"barcode STRING, " +
@@ -2779,15 +2779,15 @@ package database
 				text += "lastmodifiedtimestamp) ";
 				text += "VALUES (";
 				text += "'" + food.id + "', ";
-				text += "'" + food.name + "', ";
-				text += "'" + food.brand + "', ";
-				text += food.proteins + ", ";
-				text += food.carbs + ", ";
-				text += food.fiber + ", ";
-				text += food.fats + ", ";
-				text += food.kcal + ", ";
-				text += food.servingSize + ", ";
-				text += "'" + food.servingUnit + "', ";
+				text += "'" + food.name.replace(/'/g, "''") + "', ";
+				text += "'" + food.brand.replace(/'/g, "''") + "', ";
+				text += "'" + food.proteins + "', ";
+				text += "'" + food.carbs + "', ";
+				text += "'" + food.fiber + "', ";
+				text += "'" + food.fats + "', ";
+				text += "'" + food.kcal + "', ";
+				text += "'" + food.servingSize + "', ";
+				text += "'" + food.servingUnit.replace(/'/g, "''") + "', ";
 				text += "'" + food.link + "', ";
 				text += "'" + food.barcode + "', ";
 				text += "'" + food.source + "', ";
@@ -2823,15 +2823,15 @@ package database
 				updateRequest.sqlConnection = conn;
 				updateRequest.text = "UPDATE foods SET " +
 					"id = '" + food.id + "', " +
-					"name = '" + food.name + "', " +
-					"brand = '" + food.brand + "', " +
-					"proteins = " + food.proteins + ", " +
-					"carbs = " + food.carbs + ", " +
-					"fiber = " + food.fiber + ", " +
-					"fats = " + food.fats + ", " +
-					"calories = " + food.kcal + ", " +
-					"servingsize = " + food.servingSize + ", " +
-					"servingunit = '" + food.servingUnit + "', " +
+					"name = '" + food.name.replace(/'/g, "''") + "', " +
+					"brand = '" + food.brand.replace(/'/g, "''") + "', " +
+					"proteins = '" + food.proteins + "', " +
+					"carbs = '" + food.carbs + "', " +
+					"fiber = '" + food.fiber + "', " +
+					"fats = '" + food.fats + "', " +
+					"calories = '" + food.kcal + "', " +
+					"servingsize = '" + food.servingSize + "', " +
+					"servingunit = '" + food.servingUnit.replace(/'/g, "''") + "', " +
 					"link = '" + food.link + "', " +
 					"barcode = '" + food.barcode + "', " +
 					"source = '" + food.source + "', " +
@@ -2871,6 +2871,47 @@ package database
 					conn.close();
 				}
 				dispatchInformation('error_while_deleting_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Checks if food is saved in Database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function isFoodFavouriteSynchronous(food:Food):Boolean 
+		{
+			var foodFound:Boolean = false;
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery +=	"SELECT id FROM foods WHERE id = '" + food.id + "'";
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				
+				if (result.data != null && result.data is Array && result.data.length > 0)
+				{
+					foodFound = true;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_food_is_favourite', error.message + " - " + error.details);
+				return foodFound;
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_food_is_favourite',other.getStackTrace().toString());
+				return foodFound;
+			} finally {
+				if (conn.connected) conn.close();
+				return foodFound;
 			}
 		}
 		

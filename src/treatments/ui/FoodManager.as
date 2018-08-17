@@ -11,6 +11,8 @@ package treatments.ui
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
 	
+	import database.Database;
+	
 	import distriqtkey.DistriqtKey;
 	
 	import events.FoodEvent;
@@ -25,6 +27,7 @@ package treatments.ui
 	import feathers.controls.ScrollContainer;
 	import feathers.controls.ScrollPolicy;
 	import feathers.controls.TextInput;
+	import feathers.controls.ToggleButton;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
@@ -82,22 +85,9 @@ package treatments.ui
 		private var databaseAPISelector:PickerList;
 		private var scanButton:Button;
 		private var foodDetailsContainer:LayoutGroup;
-		private var servingsContainer:LayoutGroup;
-		private var servingSizeLabel:Label;
-		private var servingUnitLabel:Label;
-		private var carbsContainer:LayoutGroup;
-		private var carbsLabel:Label;
-		private var fiberLabel:Label;
 		private var mainContentContainer:ScrollContainer;
 		private var foodDetailsTitle:Label;
-		private var proteinsFatsContainer:LayoutGroup;
-		private var proteinsLabel:Label;
-		private var fatsLabel:Label;
-		private var caloriesLinkContainer:LayoutGroup;
-		private var caloriesLabel:Label;
 		private var foodLink:Button;
-		private var foodActionContainer:LayoutGroup;
-		private var foodAmountLabel:Label;
 		private var foodAmountInput:TextInput;
 		private var basketPreloaderContainer:LayoutGroup;
 		private var basketAmountLabel:Label;
@@ -106,8 +96,6 @@ package treatments.ui
 		private var preloader:MaterialDesignSpinner;
 		private var basketCallout:Callout;
 		private var basketHitArea:Quad;
-		private var substractFiberContainer:LayoutGroup;
-		private var substractFiberLabel:Label;
 		private var substractFiberCheck:Check;
 		private var paginationContainer:LayoutGroup;
 		private var firstPageButton:Button;
@@ -115,6 +103,13 @@ package treatments.ui
 		private var paginationLabel:Label;
 		private var nextPageButton:Button;
 		private var lastPageButton:Button;
+		private var nutritionFacts:NutritionFacts;
+		private var addFoodContainer:LayoutGroup;
+		private var cartTotals:CartTotalsSection;
+		private var saveRecipe:Button;
+		private var foodDetailsTitleContainer:LayoutGroup;
+		private var favouriteButton:Button;
+		private var unfavouriteButton:Button;
 		
 		//PROPERTIES
 		private var currentMode:String = "";
@@ -128,7 +123,7 @@ package treatments.ui
 		private var basketList:List;
 		private var deleteButtonsList:Array = [];
 		private var currentPage:int = 1;
-		private var totalPages:int = 1;
+		private var totalPages:int = 1;		
 
 		public function FoodManager(width:Number, containerHeight:Number)
 		{
@@ -166,15 +161,21 @@ package treatments.ui
 			
 			//Search Controls
 			databaseAPISelector = LayoutFactory.createPickerList();
+			databaseAPISelector.itemRendererFactory = function():IListItemRenderer
+			{
+				var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				renderer.paddingRight = renderer.paddingLeft = 15;
+				return renderer;
+			};
 			databaseAPISelector.dataProvider = new ArrayCollection
-				(
-					[
-						{ label: "Favourites" },
-						{ label: "FatSecret" },
-						{ label: "Open Food Facts" },
-						{ label: "USDA" },
-					]
-				);
+			(
+				[
+					{ label: "Favourites" },
+					{ label: "FatSecret" },
+					{ label: "Open Food Facts" },
+					{ label: "USDA" },
+				]
+			);
 			databaseAPISelector.labelField = "label";
 			databaseAPISelector.popUpContentManager = new DropDownPopUpContentManager();
 			databaseAPISelector.addEventListener(starling.events.Event.CHANGE, onAPIChanged);
@@ -252,6 +253,7 @@ package treatments.ui
 			
 			paginationLabel = LayoutFactory.createLabel("1/1", HorizontalAlign.CENTER, VerticalAlign.MIDDLE);
 			paginationLabel.paddingLeft = paginationLabel.paddingRight = 5;
+			paginationLabel.isEnabled = false;
 			paginationContainer.addChild(paginationLabel);
 			
 			nextPageButton = LayoutFactory.createButton(">");
@@ -331,126 +333,162 @@ package treatments.ui
 				return item;
 			};
 			
+			saveRecipe = LayoutFactory.createButton("Save as Recipe");
+			saveRecipe.pivotX = 4;
+			
 			//Food Details
 			foodDetailsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.TOP, 5);
 			foodDetailsContainer.width = width;
 			foodDetailsContainer.maxWidth = width;
 			(foodDetailsContainer.layout as VerticalLayout).paddingBottom = 10;
-			(foodDetailsContainer.layout as VerticalLayout).paddingTop = -15;
+			(foodDetailsContainer.layout as VerticalLayout).paddingTop = -10;
 			
-			foodDetailsTitle = LayoutFactory.createLabel("Nutrition Facts", HorizontalAlign.CENTER, VerticalAlign.TOP, 16, true);
+			foodDetailsTitleContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 0);
+			foodDetailsTitleContainer.width = width;
+			foodDetailsContainer.addChild(foodDetailsTitleContainer);
+			
+			foodDetailsTitle = LayoutFactory.createLabel("Nutrition Facts", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			foodDetailsTitle.touchable = false;
 			foodDetailsTitle.paddingTop = foodDetailsTitle.paddingBottom = 10;
-			foodDetailsTitle.width = width;
-			foodDetailsContainer.addChild(foodDetailsTitle);
+			foodDetailsTitleContainer.addChild(foodDetailsTitle);
 			
-			foodActionContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
-			(foodActionContainer.layout as HorizontalLayout).paddingTop = -3;
-			foodActionContainer.width = width;
-			foodActionContainer.maxWidth = width;
-			foodDetailsContainer.addChild(foodActionContainer);
+			favouriteButton = new Button();
+			favouriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.favoriteOutlineTexture);
+			favouriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
+			favouriteButton.addEventListener(Event.TRIGGERED, onAddFoodAsFavourite);
 			
-			foodAmountLabel = LayoutFactory.createLabel("Amount:", HorizontalAlign.RIGHT);
-			foodActionContainer.addChild(foodAmountLabel);
+			unfavouriteButton = new Button();
+			unfavouriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.favoriteTexture);
+			unfavouriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
+			unfavouriteButton.addEventListener(Event.TRIGGERED, onRemoveFoodAsFavourite);
+			
+			//Add Food Components
+			addFoodContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
 			
 			foodAmountInput = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
-			foodAmountInput.addEventListener(Event.CHANGE, onFoodAmountChanged);
+			foodAmountInput.maxChars = 5;
 			foodAmountInput.height = 25;
-			foodActionContainer.addChild(foodAmountInput);
+			foodAmountInput.addEventListener(Event.CHANGE, onFoodAmountChanged);
+			addFoodContainer.addChild(foodAmountInput);
 			
 			addFoodButton = LayoutFactory.createButton("Add");
-			addFoodButton.height = 29;
-			addFoodButton.paddingLeft = addFoodButton.paddingRight = 8;
+			addFoodButton.paddingLeft = addFoodButton.paddingRight = 12;
+			addFoodButton.height = 32;
 			addFoodButton.addEventListener(starling.events.Event.TRIGGERED, onAdd);
-			foodActionContainer.addChild(addFoodButton);
-			foodActionContainer.validate();
-			addFoodButton.y += 1;
+			addFoodContainer.addChild(addFoodButton);
 			
-			substractFiberContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
-			substractFiberContainer.width = width;
-			substractFiberContainer.maxWidth = width;
-			(substractFiberContainer.layout as HorizontalLayout).paddingBottom = 10;
-			foodDetailsContainer.addChild(substractFiberContainer);
-			
-			substractFiberLabel = LayoutFactory.createLabel("Substract Fiber:", HorizontalAlign.RIGHT);
-			substractFiberContainer.addChild(substractFiberLabel);
-			
+			//Subtract Fiber Component
 			substractFiberCheck = LayoutFactory.createCheckMark(false);
-			substractFiberContainer.addChild(substractFiberCheck);
+			substractFiberCheck.paddingTop = 3;
 			
-			servingsContainer = LayoutFactory.createLayoutGroup("horizontal");
-			servingsContainer.width = width;
-			servingsContainer.maxWidth = width;
-			foodDetailsContainer.addChild(servingsContainer);
-			
-			servingSizeLabel = LayoutFactory.createLabel("");
-			servingSizeLabel.paddingLeft = 5;
-			servingSizeLabel.width = width/2;
-			servingsContainer.addChild(servingSizeLabel);
-			
-			servingUnitLabel = LayoutFactory.createLabel("");
-			servingUnitLabel.paddingLeft = 5;
-			servingUnitLabel.width = width/2;
-			servingsContainer.addChild(servingUnitLabel);
-			
-			carbsContainer = LayoutFactory.createLayoutGroup("horizontal");
-			carbsContainer.width = width;
-			carbsContainer.maxWidth = width;
-			foodDetailsContainer.addChild(carbsContainer);
-			
-			carbsLabel = LayoutFactory.createLabel("");
-			carbsLabel.paddingLeft = 5;
-			carbsLabel.width = width/2;
-			carbsContainer.addChild(carbsLabel);
-			
-			fiberLabel = LayoutFactory.createLabel("");
-			fiberLabel.paddingLeft = 5;
-			fiberLabel.width = width/2;
-			carbsContainer.addChild(fiberLabel);
-			
-			proteinsFatsContainer = LayoutFactory.createLayoutGroup("horizontal");
-			proteinsFatsContainer.width = width;
-			proteinsFatsContainer.maxWidth = width;
-			foodDetailsContainer.addChild(proteinsFatsContainer);
-			
-			proteinsLabel = LayoutFactory.createLabel("");
-			proteinsLabel.paddingLeft = 5;
-			proteinsLabel.width = width/2;
-			proteinsFatsContainer.addChild(proteinsLabel);
-			
-			fatsLabel = LayoutFactory.createLabel("");
-			fatsLabel.paddingLeft = 5;
-			fatsLabel.width = width/2;
-			proteinsFatsContainer.addChild(fatsLabel);
-			
-			caloriesLinkContainer = LayoutFactory.createLayoutGroup("horizontal");
-			caloriesLinkContainer.width = width;
-			caloriesLinkContainer.maxWidth = width;
-			foodDetailsContainer.addChild(caloriesLinkContainer);
-			
-			caloriesLabel = LayoutFactory.createLabel("Calories: N/A");
-			caloriesLabel.paddingLeft = 5;
-			caloriesLabel.width = width/2;
-			caloriesLabel.validate();
-			caloriesLinkContainer.addChild(caloriesLabel);
-			
-			foodLink = LayoutFactory.createButton("External Link", true);
+			//Link Component
+			foodLink = LayoutFactory.createButton("Go", true);
 			foodLink.paddingLeft = foodLink.paddingRight = 4;
-			foodLink.height = caloriesLabel.height + 4;
+			foodLink.height = 27;
 			foodLink.addEventListener(Event.TRIGGERED, onFoodLinkTriggered);
-			caloriesLinkContainer.addChild(foodLink);
-			caloriesLinkContainer.validate();
-			foodLink.x += 3;
-			caloriesLabel.text = "";
+			
+			//Nutrition Facts Component
+			nutritionFacts = new NutritionFacts(width);
+			nutritionFacts.setServingsTitle("Serving Size");
+			nutritionFacts.setCarbsTitle("Carbs");
+			nutritionFacts.setFiberTitle("Fiber");
+			nutritionFacts.setProteinsTitle("Proteins");
+			nutritionFacts.setFatsTitle("Fats");
+			nutritionFacts.setCaloriesTitle("Calories");
+			nutritionFacts.setSubtractFiberTitle("Remove Fiber");
+			nutritionFacts.setSubtractFiberComponent(substractFiberCheck);
+			nutritionFacts.setLinkTitle("Link");
+			nutritionFacts.setLinkComponent(foodLink);
+			nutritionFacts.setAmountTitle("Amount");
+			nutritionFacts.setAmountComponent(addFoodContainer);
+			foodDetailsContainer.addChild(nutritionFacts);
 			
 			//Actions
-			actionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 5);
+			actionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 0);
 			actionsContainer.width = width;
+			(actionsContainer.layout as HorizontalLayout).paddingTop = -10;
 			mainContentContainer.addChild(actionsContainer);
 			
 			finishButton = LayoutFactory.createButton("Finish");
 			finishButton.addEventListener(starling.events.Event.TRIGGERED, onFinish);
 			actionsContainer.addChild(finishButton);
+		}
+		
+		private function onAddFoodAsFavourite(e:Event):void
+		{
+			if (activeFood != null)
+			{
+				Database.insertFoodSynchronous(activeFood);
+				favouriteButton.removeFromParent();
+				foodDetailsTitleContainer.addChild(unfavouriteButton);
+			}
+		}
+		
+		private function onRemoveFoodAsFavourite(e:Event):void
+		{
+			if (activeFood != null)
+			{
+				Database.deleteFoodSynchronous(activeFood);
+				unfavouriteButton.removeFromParent();
+				foodDetailsTitleContainer.addChild(favouriteButton);
+			}
+		}
+		
+		private function displayFoodDetails(selectedFood:Food):void
+		{
+			onFoodAmountChanged(null);
+			activeFood = selectedFood;
+			
+			if (foodDetailsContainer.parent == null)
+			{
+				var detailsIndex:int = mainContentContainer.getChildIndex(actionsContainer);
+				mainContentContainer.addChildAt(foodDetailsContainer, detailsIndex);
+			}
+			
+			nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" );
+			nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(selectedFood.carbs) + "g" : "N/A" );
+			nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(selectedFood.fiber) + "g" : "N/A" );
+			nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(selectedFood.proteins) + "g" : "N/A" );
+			nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(selectedFood.fats) + "g" : "N/A" );
+			nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? selectedFood.kcal + "Kcal" : "N/A" );
+			
+			if (selectedFood.link != null && selectedFood.link != "")
+			{
+				foodLink.isEnabled = true;
+				selectedFoodLink = selectedFood.link;
+			}
+			else
+				foodLink.isEnabled = false;
+			
+			substractFiberCheck.isEnabled = isNaN(selectedFood.fiber) ? false : true;
+			addFoodButton.isEnabled = isNaN(selectedFood.carbs) ? true : false;
+			
+			if (Database.isFoodFavouriteSynchronous(selectedFood))
+			{
+				//Food is a favourite
+				foodDetailsTitleContainer.addChild(unfavouriteButton);
+				favouriteButton.removeFromParent();
+			}
+			else
+			{
+				//Food is not a favourite
+				foodDetailsTitleContainer.addChild(favouriteButton);
+				unfavouriteButton.removeFromParent();
+			}
+		}
+		
+		private function updateFoodDetails(amount:Number):void
+		{
+			var selectedFood:Food = activeFood;
+			
+			if (selectedFood != null && !isNaN(amount))
+			{
+				nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.carbs) * 100) / 100) + "g" : "N/A" );
+				nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fiber) * 100) / 100) + "g" : "N/A" );
+				nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.proteins) * 100) / 100) + "g" : "N/A" );
+				nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fats) * 100) / 100) + "g" : "N/A" );
+				nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.kcal) * 100) / 100) + "Kcal" : "N/A" );
+			}
 		}
 		
 		/**
@@ -482,7 +520,10 @@ package treatments.ui
 		
 		private function onFoodAmountChanged(e:Event):void
 		{
-			addFoodButton.isEnabled = foodAmountInput.text != null && foodAmountInput.text.length > 0 ? true : false;	
+			addFoodButton.isEnabled = foodAmountInput.text != null && foodAmountInput.text.length > 0 ? true : false;
+			
+			if(foodAmountInput != null && activeFood != null)
+				updateFoodDetails(foodAmountInput.text != null && foodAmountInput.text.length > 0 ? Number(foodAmountInput.text) : activeFood.servingSize);
 		}
 		
 		private function onDisplayBasket(e:starling.events.TouchEvent):void
@@ -541,11 +582,48 @@ package treatments.ui
 		private function populateBasketList():void
 		{
 			var cartData:Array = [];
+			var totalProteins:Number = 0;
+			var totalCarbs:Number = 0;
+			var totalFiber:Number = 0;
+			var totalFats:Number = 0;
+			var totalCalories:Number = 0;
 			
 			for (var i:int = 0; i < cartList.length; i++) 
 			{
 				var cartItem:Object = cartList[i];
 				cartData.push( { label: cartItem.quantity + cartItem.servingUnit + " " + (cartItem.food as Food).name, accessory: createDeleteButton(), food: cartItem.food, quantity: cartItem.quantity, servingUnit: cartItem.servingUnit } );
+				
+				totalProteins += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).proteins;
+				totalProteins = Math.round(totalProteins * 100) / 100;
+				
+				totalCarbs += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).carbs;
+				totalCarbs = Math.round(totalCarbs * 100) / 100;
+				
+				totalFiber += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fiber;
+				totalFiber = Math.round(totalFiber * 100) / 100;
+				
+				totalFats += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fats;
+				totalFats = Math.round(totalFats * 100) / 100;
+				
+				totalCalories += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).kcal;
+				totalCalories = Math.round(totalCalories * 100) / 100;
+			}
+			
+			if (cartData.length > 0)
+			{
+				if (cartTotals != null) cartTotals.removeFromParent(true);
+				cartTotals = new CartTotalsSection(210);
+				cartTotals.width = 210;
+				cartTotals.title.text = "Cart Totals";
+				cartTotals.title.width = 210;
+				cartTotals.title.validate();
+				cartTotals.value.wordWrap = true;
+				cartTotals.value.text = "Protein: " + totalProteins + "g" + "\n" + "Carbs: " + totalCarbs + "g" + "\n" + "Fiber: " + totalFiber + "g" + "\n" + "Fats: " + totalFats + "g" + "\n" + "Calories: " + totalCalories + "Kcal";
+				cartTotals.value.width = 210;
+				cartTotals.value.validate();
+					
+				cartData.push( { label: "", accessory: cartTotals } );
+				cartData.push( { label: "", accessory: saveRecipe } );
 			}
 			
 			basketList.dataProvider = new ArrayCollection( cartData );
@@ -612,9 +690,10 @@ package treatments.ui
 			
 			if (resetPagination)
 			{
-				paginationLabel.text = "1/1";
 				currentPage = 1;
 				totalPages = 1;
+				paginationLabel.text = currentPage + "/" + totalPages;
+				paginationLabel.isEnabled = false;
 				firstPageButton.isEnabled = false;
 				previousPageButton.isEnabled = false;
 				nextPageButton.isEnabled = false;
@@ -773,35 +852,7 @@ package treatments.ui
 				displayFoodDetails(food);
 		}
 		
-		private function displayFoodDetails(selectedFood:Food):void
-		{
-			onFoodAmountChanged(null);
-			activeFood = selectedFood;
-			
-			if (foodDetailsContainer.parent == null)
-			{
-				var detailsIndex:int = mainContentContainer.getChildIndex(actionsContainer);
-				mainContentContainer.addChildAt(foodDetailsContainer, detailsIndex);
-			}
-			
-			servingSizeLabel.text = "Serving Size: " + (!isNaN(selectedFood.servingSize) ? selectedFood.servingSize : "N/A" );
-			servingUnitLabel.text = "Serving Unit: " + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "N/A" );
-			carbsLabel.text = "Carbs: " + (!isNaN(selectedFood.carbs) ? selectedFood.carbs : "N/A" );
-			fiberLabel.text = "Fiber: " + (!isNaN(selectedFood.fiber) ? selectedFood.fiber : "N/A" );
-			proteinsLabel.text = "Proteins: " + (!isNaN(selectedFood.proteins) ? selectedFood.proteins : "N/A" );
-			fatsLabel.text = "Fats: " + (!isNaN(selectedFood.fats) ? selectedFood.fats : "N/A" );
-			caloriesLabel.text = "Calories: " + (!isNaN(selectedFood.kcal) ? selectedFood.kcal + " Kcal" : "N/A" );
-			if (selectedFood.link != null && selectedFood.link != "")
-			{
-				foodLink.isEnabled = true;
-				selectedFoodLink = selectedFood.link;
-			}
-			else
-				foodLink.isEnabled = false;
-			
-			substractFiberCheck.isEnabled = isNaN(selectedFood.fiber) ? false : true;
-			addFoodButton.isEnabled = isNaN(selectedFood.carbs) ? true : false;
-		}
+		
 		
 		private function onFoodsSearchResult(e:FoodEvent):void
 		{
@@ -850,6 +901,11 @@ package treatments.ui
 				lastPageButton.isEnabled = true;
 				nextPageButton.isEnabled = true;
 			}
+			
+			if (!firstPageButton.isEnabled && !previousPageButton.isEnabled && !lastPageButton.isEnabled && !nextPageButton.isEnabled)
+				paginationLabel.isEnabled = false;
+			else
+				paginationLabel.isEnabled = true;
 		}
 		
 		private function onFinish(e:starling.events.Event):void

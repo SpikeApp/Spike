@@ -408,5 +408,10 @@ package utils
 		{
 			return Constants.deviceModel == IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == IPHONE_5_5S_5C_SE_ITOUCH_5_6;
 		}
+		
+		public static function isPhone():Boolean
+		{
+			return Constants.deviceModel == IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == IPHONE_6_6S_7_8 || Constants.deviceModel == IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS || Constants.deviceModel == IPHONE_X;
+		}
 	}
 }

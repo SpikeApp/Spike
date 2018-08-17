@@ -17,7 +17,6 @@ package treatments.network
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import events.FoodEvent;

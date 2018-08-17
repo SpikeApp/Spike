@@ -158,6 +158,8 @@ package treatments
 		
 		public static function display():void
 		{
+			contentWidth = Constants.isPortrait ? Constants.stageWidth - 50 : Constants.stageHeight - 50;
+			
 			currentProfile = ProfileManager.getProfileByTime(new Date().valueOf());
 			
 			if (currentProfile == null || currentProfile.insulinSensitivityFactors == "" || currentProfile.insulinToCarbRatios == "" || currentProfile.targetGlucoseRates == "")
@@ -758,7 +760,25 @@ package treatments
 		
 		private static function displayCallout():void
 		{
+			bwSuggestionLabel.validate();
+			bwMainContainer.validate();
+			var contentOriginalHeight:Number = bwMainContainer.height + 60;
+			var suggestedCalloutHeight:Number = Constants.stageHeight - yPos - 10;
+			var finalCalloutHeight:Number = contentOriginalHeight > suggestedCalloutHeight ?  suggestedCalloutHeight : contentOriginalHeight;
+			
 			if (bolusWizardCallout != null) bolusWizardCallout.dispose();
+			bolusWizardCallout = Callout.show(bwTotalScrollContainer, calloutPositionHelper);
+			bolusWizardCallout.disposeContent = false;
+			bolusWizardCallout.paddingBottom = 15;
+			bolusWizardCallout.closeOnTouchBeganOutside = false;
+			bolusWizardCallout.closeOnTouchEndedOutside = false;
+			bolusWizardCallout.height = finalCalloutHeight;
+			bwWizardScrollContainer.height = finalCalloutHeight - 60;
+			bwWizardScrollContainer.maxHeight = finalCalloutHeight - 60;
+			bwTotalScrollContainer.height = finalCalloutHeight - 60;
+			bwTotalScrollContainer.maxHeight = finalCalloutHeight - 60;
+			
+			/*if (bolusWizardCallout != null) bolusWizardCallout.dispose();
 			bolusWizardCallout = Callout.show(bwTotalScrollContainer, calloutPositionHelper);
 			bolusWizardCallout.disposeContent = false;
 			bolusWizardCallout.paddingBottom = 15;
@@ -771,7 +791,7 @@ package treatments
 			bwWizardScrollContainer.validate();
 			bwTotalScrollContainer.height = bwWizardScrollContainer.height;
 			bwTotalScrollContainer.maxHeight = bwWizardScrollContainer.maxHeight;
-			bwTotalScrollContainer.validate();
+			bwTotalScrollContainer.validate();*/
 		}
 		
 		private static function displayMissedSettingsCallout():void
