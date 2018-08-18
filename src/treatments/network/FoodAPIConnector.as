@@ -17,7 +17,6 @@ package treatments.network
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import database.Database;
@@ -347,7 +346,7 @@ package treatments.network
 						data.push
 						(
 							{
-								label: favoriteName + (favoriteBrand != "" ? "\n" + favoriteBrand : ""),
+								label: favoriteName + (favoriteBrand != "" ? "\n" + favoriteBrand.toUpperCase() : ""),
 								food: favoriteFood
 							}
 						);
@@ -426,7 +425,7 @@ package treatments.network
 						data.push
 						(
 							{
-								label: favoriteName + (favoriteBrand != "" ? "\n" + favoriteBrand : ""),
+								label: favoriteName + (favoriteBrand != "" ? "\n" + favoriteBrand.toUpperCase() : ""),
 								food: favoriteFood
 							}
 						);

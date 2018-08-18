@@ -2767,7 +2767,7 @@ package database
 				var sqlQuery:String = "";
 				sqlQuery += "SELECT *, ";
 				sqlQuery += "(SELECT COUNT(id) FROM foods WHERE name LIKE '%" + foodName + "%') AS `totalRecords` ";
-				sqlQuery += "FROM foods WHERE name LIKE '%" + foodName + "%' ORDER BY name ASC LIMIT " + foodBatchAmount + " OFFSET " + foodOffSet;
+				sqlQuery += "FROM foods WHERE name LIKE '%" + foodName + "%' ORDER BY name COLLATE NOCASE ASC LIMIT " + foodBatchAmount + " OFFSET " + foodOffSet;
 				getRequest.text = sqlQuery;
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();

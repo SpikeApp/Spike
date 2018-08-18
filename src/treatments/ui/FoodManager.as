@@ -130,6 +130,8 @@ package treatments.ui
 		private var totalPages:int = 1;	
 		private var dontClearSearchResults:Boolean = false;
 
+		private var foodInserter:FoodInserter;
+
 		public function FoodManager(width:Number, containerHeight:Number)
 		{
 			this.width = width;
@@ -282,7 +284,7 @@ package treatments.ui
 			//Add Favorite
 			addFavorite = new Sprite();
 			addFavorite.touchable = true;
-			addFavorite.addEventListener(TouchEvent.TOUCH, onAddFavorite);
+			addFavorite.addEventListener(TouchEvent.TOUCH, onAddManualFavorite);
 			
 			addFavoriteImage = new Image(MaterialDeepGreyAmberMobileThemeIcons.addTexture);
 			addFavoriteImage.scale = 1;
@@ -398,7 +400,7 @@ package treatments.ui
 			addFoodButton = LayoutFactory.createButton("Add");
 			addFoodButton.paddingLeft = addFoodButton.paddingRight = 12;
 			addFoodButton.height = 32;
-			addFoodButton.addEventListener(starling.events.Event.TRIGGERED, onAdd);
+			addFoodButton.addEventListener(starling.events.Event.TRIGGERED, onAddFood);
 			addFoodContainer.addChild(addFoodButton);
 			
 			//Subtract Fiber Component
@@ -433,8 +435,8 @@ package treatments.ui
 			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
 			mainContentContainer.addChild(actionsContainer);
 			
-			finishButton = LayoutFactory.createButton("Finish");
-			finishButton.addEventListener(starling.events.Event.TRIGGERED, onFinish);
+			finishButton = LayoutFactory.createButton("FINISH");
+			finishButton.addEventListener(starling.events.Event.TRIGGERED, onCompleteFoodManager);
 			actionsContainer.addChild(finishButton);
 			
 			//Get Favourit Foods
@@ -454,67 +456,79 @@ package treatments.ui
 			FoodAPIConnector.favoritesSearchFood("", currentPage);
 		}
 		
-		private function onAddFoodAsFavorite(e:Event):void
+		private function populateBasketList():void
 		{
-			if (currentMode == FATSECRET_MODE)
+			var cartData:Array = [];
+			var totalProteins:Number = 0;
+			var totalCarbs:Number = 0;
+			var totalFiber:Number = 0;
+			var totalFats:Number = 0;
+			var totalCalories:Number = 0;
+			
+			for (var i:int = 0; i < cartList.length; i++) 
 			{
-				AlertManager.showActionAlert
-				(
-					"Warning",
-					"Due to violation of FatSecret's Terms of Use, Spike can't save their nutritional data locally.",
-					Number.NaN,
-					[
-						{ label: "Terms Of Use", triggered: onShowFSTermsOfUse },
-						{ label: "OK" }
-					]
-				);
+				var cartItem:Object = cartList[i];
+				cartData.push( { label: cartItem.quantity + cartItem.servingUnit + " " + (cartItem.food as Food).name, accessory: createDeleteButton(), food: cartItem.food, quantity: cartItem.quantity, servingUnit: cartItem.servingUnit } );
 				
-				function onShowFSTermsOfUse(e:Event = null):void
-				{
-					navigateToURL(new URLRequest("http://www.platform.fatsecret.com/api/Default.aspx?screen=tou"));
-				}
+				totalProteins += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).proteins;
+				totalProteins = Math.round(totalProteins * 100) / 100;
 				
-				return;
+				totalCarbs += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).carbs;
+				totalCarbs = Math.round(totalCarbs * 100) / 100;
+				
+				totalFiber += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fiber;
+				totalFiber = Math.round(totalFiber * 100) / 100;
+				
+				totalFats += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fats;
+				totalFats = Math.round(totalFats * 100) / 100;
+				
+				totalCalories += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).kcal;
+				totalCalories = Math.round(totalCalories * 100) / 100;
 			}
 			
-			if (activeFood != null)
+			if (cartData.length > 0)
 			{
-				Database.insertFoodSynchronous(activeFood);
-				favoriteButton.removeFromParent();
-				foodDetailsTitleContainer.addChild(unfavoriteButton);
-				
-				if (currentMode == FAVORITES_MODE)
-				{
-					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+				if (cartTotals != null) cartTotals.removeFromParent(true);
+				cartTotals = new CartTotalsSection(210);
+				cartTotals.width = 210;
+				cartTotals.title.text = "Cart Totals";
+				cartTotals.title.width = 210;
+				cartTotals.title.validate();
+				cartTotals.value.wordWrap = true;
+				cartTotals.value.text = "Protein: " + totalProteins + "g" + "\n" + "Carbs: " + totalCarbs + "g" + "\n" + "Fiber: " + totalFiber + "g" + "\n" + "Fats: " + totalFats + "g" + "\n" + "Calories: " + totalCalories + "Kcal";
+				cartTotals.value.width = 210;
+				cartTotals.value.validate();
 					
-					dontClearSearchResults = true;
-					
-					FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
-				}
+				cartData.push( { label: "", accessory: cartTotals } );
+				cartData.push( { label: "", accessory: saveRecipe } );
 			}
+			
+			basketList.dataProvider = new ArrayCollection( cartData );
 		}
 		
-		private function onRemoveFoodAsFavorite(e:Event):void
+		private function scanFood():void
 		{
-			if (activeFood != null)
-			{
-				Database.deleteFoodSynchronous(activeFood);
-				unfavoriteButton.removeFromParent();
-				foodDetailsTitleContainer.addChild(favoriteButton);
-				
-				if (currentMode == FAVORITES_MODE)
-				{
-					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
-					
-					dontClearSearchResults = true;
-					
-					FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
-				}
-			}
+			Scanner.service.addEventListener( ScannerEvent.CODE_FOUND, onBarcodeFound );
+			Scanner.service.addEventListener( ScannerEvent.CANCELLED, onScanCanceled );
+			
+			resetComponents();
+			removeFoodInserter();
+			
+			var options:ScannerOptions = new ScannerOptions();
+			options.camera = ScannerOptions.CAMERA_REAR;
+			options.torchMode = ScannerOptions.TORCH_AUTO;
+			options.cancelLabel = "CANCEL";
+			options.colour = 0x0086FF;
+			options.textColour = 0xEEEEEE;
+			options.singleResult = true;
+			options.symbologies = [Symbology.UPCA, Symbology.EAN13, Symbology.EAN8, Symbology.UPCE];
+			
+			Scanner.service.startScan( options );
 		}
 		
+		/**
+		 * Helper Functions
+		 */
 		private function displayFoodDetails(selectedFood:Food):void
 		{
 			onFoodAmountChanged(null);
@@ -572,153 +586,39 @@ package treatments.ui
 			}
 		}
 		
-		/**
-		 * Event Handlers
-		 */
-		private function onFirstPage(e:Event):void
+		private function updatePagination(paginationProperties:Object):void
 		{
-			currentPage = 1;
-			onPerformSearch(null, false);
-		}
-		
-		private function onPreviousPage(e:Event):void
-		{
-			currentPage -= 1;
-			onPerformSearch(null, false);
-		}
-		
-		private function onNextPage(e:Event):void
-		{
-			currentPage += 1;
-			onPerformSearch(null, false);
-		}
-		
-		private function onLastPage(e:Event):void
-		{
-			currentPage = totalPages;
-			onPerformSearch(null, false);
-		}
-		
-		private function onFoodAmountChanged(e:Event):void
-		{
-			addFoodButton.isEnabled = foodAmountInput.text != null && foodAmountInput.text.length > 0 ? true : false;
+			currentPage = paginationProperties.pageNumber;
+			totalPages = paginationProperties.totalPages;
 			
-			if(foodAmountInput != null && activeFood != null)
-				updateFoodDetails(foodAmountInput.text != null && foodAmountInput.text.length > 0 ? Number(foodAmountInput.text) : activeFood.servingSize);
-		}
-		
-		private function onDisplayBasket(e:starling.events.TouchEvent):void
-		{
-			var touch:Touch = e.getTouch(stage);
+			paginationLabel.text = currentPage + "/" + totalPages;
 			
-			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			if (currentPage == 1)
 			{
-				if (cartList.length > 0)
-				{
-					populateBasketList();
-					basketCallout = Callout.show(basketList, basketSprite, new <String>[RelativePosition.LEFT]);
-					basketCallout.disposeContent = false;
-					basketCallout.disposeOnSelfClose = true;
-					basketCallout.addEventListener(Event.CLOSE, onBasketCalloutClosed);
-				}
+				firstPageButton.isEnabled = false;
+				previousPageButton.isEnabled = false;
 			}
-		}
-		
-		private function onAddFavorite(e:starling.events.TouchEvent):void
-		{
-			var touch:Touch = e.getTouch(stage);
-			
-			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			else
 			{
-				trace("on add favorite");
-				//Perform actions
-			}
-		}
-		
-		private function onBasketCalloutClosed(e:Event):void
-		{
-			for(var i:int = deleteButtonsList.length - 1 ; i >= 0; i--) 
-			{
-				var button:Button = deleteButtonsList[i].button;
-				var icon:Image = deleteButtonsList[i].icon;
-				var texture:Texture = deleteButtonsList[i].texture;
-				var item:Object = deleteButtonsList[i];
-				
-				if (texture != null)
-				{
-					texture.dispose();
-					texture = null;
-				}
-				
-				if (icon != null)
-				{
-					icon.removeFromParent();
-					icon.dispose();
-					icon = null;
-				}
-				
-				if (button != null)
-				{
-					button.addEventListener(Event.TRIGGERED, onDeleteFoodFromCart);
-					button.removeFromParent();
-					button.dispose();
-					button = null;
-				}
-				
-				item = null;
+				firstPageButton.isEnabled = true;
+				previousPageButton.isEnabled = true;
 			}
 			
-			deleteButtonsList.length = 0;
-		}
-		
-		private function populateBasketList():void
-		{
-			var cartData:Array = [];
-			var totalProteins:Number = 0;
-			var totalCarbs:Number = 0;
-			var totalFiber:Number = 0;
-			var totalFats:Number = 0;
-			var totalCalories:Number = 0;
-			
-			for (var i:int = 0; i < cartList.length; i++) 
+			if (currentPage == totalPages)
 			{
-				var cartItem:Object = cartList[i];
-				cartData.push( { label: cartItem.quantity + cartItem.servingUnit + " " + (cartItem.food as Food).name, accessory: createDeleteButton(), food: cartItem.food, quantity: cartItem.quantity, servingUnit: cartItem.servingUnit } );
-				
-				totalProteins += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).proteins;
-				totalProteins = Math.round(totalProteins * 100) / 100;
-				
-				totalCarbs += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).carbs;
-				totalCarbs = Math.round(totalCarbs * 100) / 100;
-				
-				totalFiber += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fiber;
-				totalFiber = Math.round(totalFiber * 100) / 100;
-				
-				totalFats += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fats;
-				totalFats = Math.round(totalFats * 100) / 100;
-				
-				totalCalories += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).kcal;
-				totalCalories = Math.round(totalCalories * 100) / 100;
+				lastPageButton.isEnabled = false;
+				nextPageButton.isEnabled = false;
+			}
+			else
+			{
+				lastPageButton.isEnabled = true;
+				nextPageButton.isEnabled = true;
 			}
 			
-			if (cartData.length > 0)
-			{
-				if (cartTotals != null) cartTotals.removeFromParent(true);
-				cartTotals = new CartTotalsSection(210);
-				cartTotals.width = 210;
-				cartTotals.title.text = "Cart Totals";
-				cartTotals.title.width = 210;
-				cartTotals.title.validate();
-				cartTotals.value.wordWrap = true;
-				cartTotals.value.text = "Protein: " + totalProteins + "g" + "\n" + "Carbs: " + totalCarbs + "g" + "\n" + "Fiber: " + totalFiber + "g" + "\n" + "Fats: " + totalFats + "g" + "\n" + "Calories: " + totalCalories + "Kcal";
-				cartTotals.value.width = 210;
-				cartTotals.value.validate();
-					
-				cartData.push( { label: "", accessory: cartTotals } );
-				cartData.push( { label: "", accessory: saveRecipe } );
-			}
-			
-			basketList.dataProvider = new ArrayCollection( cartData );
+			if (!firstPageButton.isEnabled && !previousPageButton.isEnabled && !lastPageButton.isEnabled && !nextPageButton.isEnabled)
+				paginationLabel.isEnabled = false;
+			else
+				paginationLabel.isEnabled = true;
 		}
 		
 		private function createDeleteButton():Button
@@ -737,48 +637,13 @@ package treatments.ui
 			return deleteButton;
 		}
 		
-		private function onDeleteFoodFromCart(e:Event):void
-		{
-			var foodToDelete:Food = (((e.currentTarget as Button).parent as Object).data as Object).food as Food;
-			var quantityToDelete:Number = Number((((e.currentTarget as Button).parent as Object).data as Object).quantity);
-			var servingUnitToDelete:String = (((e.currentTarget as Button).parent as Object).data as Object).servingUnit as String;
-			
-			if (foodToDelete != null)
-			{
-				//Delete from cart
-				for (var i:int = 0; i < cartList.length; i++) 
-				{
-					var cartItem:Object = cartList[i] as Object;
-					if ((cartItem.food as Food).id == foodToDelete.id && cartItem.quantity == quantityToDelete && cartItem.servingUnit == servingUnitToDelete)
-					{
-						cartList.removeAt(i);
-						break;
-					}
-				}
-				
-				//Recreate the cart list
-				populateBasketList();
-				
-				//Refresh cart counter
-				basketAmountLabel.text = String(cartList.length);
-				
-				//Adjust callout if needed
-				if (cartList.length == 0)
-					basketCallout.close(true);
-			}
-		}
-		
-		private function onFoodLinkTriggered(e:Event):void
-		{
-			navigateToURL(new URLRequest(selectedFoodLink));
-		}
-		
 		private function resetComponents(resetPagination:Boolean = true):void
 		{
 			foodResultsList.dataProvider = new ArrayCollection([]);
 			foodResultsList.selectedItem = null;
 			foodDetailsContainer.removeFromParent();
 			hidePreloader();
+			removeFoodInserter();
 			
 			if (resetPagination)
 			{
@@ -796,6 +661,76 @@ package treatments.ui
 		private function resetComponentsExtended():void
 		{
 			searchInput.text = "";
+		}
+		
+		private function showPreloader():void
+		{
+			preloader.visible = true;
+			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
+			basketPreloaderContainer.addChildAt(preloader, suggestedIndex);
+			addFavorite.visible = false;
+			addFavorite.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			preloader.x += 15;
+			preloader.y += 9;
+			basketSprite.y += 5;
+			(actionsContainer.layout as HorizontalLayout).paddingTop = -5;
+		}
+		
+		private function hidePreloader():void
+		{
+			preloader.visible = false;
+			preloader.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			basketSprite.y += 5;
+			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
+		}
+		
+		private function showAddFavorite():void
+		{
+			addFavorite.visible = true;
+			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
+			basketPreloaderContainer.addChildAt(addFavorite, suggestedIndex);
+			preloader.visible = false;
+			preloader.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			basketSprite.y += 5;
+			addFavorite.y += 5;
+		}
+		
+		private function hideAddFavorite():void
+		{
+			addFavorite.visible = false;
+			addFavorite.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			basketSprite.y += 5;
+		}
+		
+		private function removeFoodInserter():void
+		{
+			if (foodInserter != null && foodInserter.parent != null)
+			{
+				foodInserter.removeEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
+				foodInserter.removeFromParent();
+				foodInserter.dispose();
+				foodInserter = null;
+			}
+			
+			actionsContainer.addChild(finishButton);
+			addFavorite.alpha = 1;
+			addFavorite.addEventListener(TouchEvent.TOUCH, onAddManualFavorite);
+		}
+		
+		private function removeFoodEventListeners():void
+		{
+			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
+			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
+			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
 		}
 		
 		private function jump( cart:Sprite, force:Number ):void {
@@ -827,6 +762,24 @@ package treatments.ui
 			);
 		}
 		
+		private function recoverFromContextLost():void
+		{
+			renderTimoutID1 = setTimeout( function():void {
+				SystemUtil.executeWhenApplicationIsActive(Starling.current.start);
+			}, 100 );
+			
+			renderTimoutID2 = setTimeout( function():void {
+				SystemUtil.executeWhenApplicationIsActive(Starling.current.start);
+			}, 500 );
+			
+			renderTimoutID3 = setTimeout( function():void {
+				SystemUtil.executeWhenApplicationIsActive(Starling.current.start);
+			}, 1000 );
+		}
+		
+		/**
+		 * Event Handlers
+		 */
 		private function onAPIChanged(e:starling.events.Event):void
 		{
 			resetComponents();
@@ -885,87 +838,13 @@ package treatments.ui
 			}
 		}
 		
-		private function showPreloader():void
-		{
-			preloader.visible = true;
-			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
-			basketPreloaderContainer.addChildAt(preloader, suggestedIndex);
-			addFavorite.visible = false;
-			addFavorite.removeFromParent();
-			basketPreloaderContainer.readjustLayout();
-			basketPreloaderContainer.validate();
-			preloader.x += 15;
-			preloader.y += 9;
-			basketSprite.y += 5;
-			(actionsContainer.layout as HorizontalLayout).paddingTop = -5;
-		}
-		
-		private function hidePreloader():void
-		{
-			preloader.visible = false;
-			preloader.removeFromParent();
-			basketPreloaderContainer.readjustLayout();
-			basketPreloaderContainer.validate();
-			basketSprite.y += 5;
-			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
-		}
-		
-		private function showAddFavorite():void
-		{
-			addFavorite.visible = true;
-			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
-			basketPreloaderContainer.addChildAt(addFavorite, suggestedIndex);
-			preloader.visible = false;
-			preloader.removeFromParent();
-			basketPreloaderContainer.readjustLayout();
-			basketPreloaderContainer.validate();
-			basketSprite.y += 5;
-			addFavorite.y += 5;
-		}
-		
-		private function hideAddFavorite():void
-		{
-			addFavorite.visible = false;
-			addFavorite.removeFromParent();
-			basketPreloaderContainer.readjustLayout();
-			basketPreloaderContainer.validate();
-			basketSprite.y += 5;
-		}
-		
-		private function removeFoodEventListeners():void
-		{
-			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
-			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
-			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
-		}
-		
-		private function onFoodNotFound (e:FoodEvent):void
-		{
-			removeFoodEventListeners();
-			hidePreloader();
-			
-			foodResultsList.dataProvider = new ArrayCollection( [ { label: "No results!" } ] );
-		}
-		
-		private function onServerError (e:FoodEvent):void
-		{
-			removeFoodEventListeners();
-			hidePreloader();
-			
-			AlertManager.showSimpleAlert
-			(
-				"Warning",
-				e.errorMessage
-			);
-		}
-		
 		private function onFoodSelected(e:Event):void
 		{
 			if (foodResultsList.selectedItem != null && foodResultsList.selectedItem.food != null)
 			{
 				foodAmountInput.text = "";
 				substractFiberCheck.isSelected = false;
+				removeFoodInserter();
 				
 				var selectedFood:Food = foodResultsList.selectedItem.food;
 				
@@ -992,17 +871,65 @@ package treatments.ui
 			}
 		}
 		
-		private function onFoodDetailsReceived(e:FoodEvent):void
+		private function onAddFoodAsFavorite(e:Event):void
 		{
-			var food:Food = e.food;
+			if (currentMode == FATSECRET_MODE)
+			{
+				AlertManager.showActionAlert
+					(
+						"Warning",
+						"Due to violation of FatSecret's Terms of Use, Spike can't save their nutritional data locally.",
+						Number.NaN,
+						[
+							{ label: "Terms Of Use", triggered: onShowFSTermsOfUse },
+							{ label: "OK" }
+						]
+					);
+				
+				function onShowFSTermsOfUse(e:Event = null):void
+				{
+					navigateToURL(new URLRequest("http://www.platform.fatsecret.com/api/Default.aspx?screen=tou"));
+				}
+				
+				return;
+			}
 			
-			removeFoodEventListeners();
-			hidePreloader();
-			foodAmountInput.text = "";
-			substractFiberCheck.isSelected = false;
-			
-			if (food != null)
-				displayFoodDetails(food);
+			if (activeFood != null)
+			{
+				Database.insertFoodSynchronous(activeFood);
+				favoriteButton.removeFromParent();
+				foodDetailsTitleContainer.addChild(unfavoriteButton);
+				
+				if (currentMode == FAVORITES_MODE)
+				{
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+					
+					dontClearSearchResults = true;
+					
+					FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
+				}
+			}
+		}
+		
+		private function onRemoveFoodAsFavorite(e:Event):void
+		{
+			if (activeFood != null)
+			{
+				Database.deleteFoodSynchronous(activeFood);
+				unfavoriteButton.removeFromParent();
+				foodDetailsTitleContainer.addChild(favoriteButton);
+				
+				if (currentMode == FAVORITES_MODE)
+				{
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+					
+					dontClearSearchResults = true;
+					
+					FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
+				}
+			}
 		}
 		
 		private function onFoodsSearchResult(e:FoodEvent):void
@@ -1052,50 +979,111 @@ package treatments.ui
 			dontClearSearchResults = false;
 		}
 		
-		private function updatePagination(paginationProperties:Object):void
+		private function onFoodDetailsReceived(e:FoodEvent):void
 		{
-			currentPage = paginationProperties.pageNumber;
-			totalPages = paginationProperties.totalPages;
+			var food:Food = e.food;
 			
-			paginationLabel.text = currentPage + "/" + totalPages;
+			removeFoodEventListeners();
+			hidePreloader();
+			foodAmountInput.text = "";
+			substractFiberCheck.isSelected = false;
 			
-			if (currentPage == 1)
-			{
-				firstPageButton.isEnabled = false;
-				previousPageButton.isEnabled = false;
-			}
-			else
-			{
-				firstPageButton.isEnabled = true;
-				previousPageButton.isEnabled = true;
-			}
-			
-			
-			if (currentPage == totalPages)
-			{
-				lastPageButton.isEnabled = false;
-				nextPageButton.isEnabled = false;
-			}
-			else
-			{
-				lastPageButton.isEnabled = true;
-				nextPageButton.isEnabled = true;
-			}
-			
-			if (!firstPageButton.isEnabled && !previousPageButton.isEnabled && !lastPageButton.isEnabled && !nextPageButton.isEnabled)
-				paginationLabel.isEnabled = false;
-			else
-				paginationLabel.isEnabled = true;
+			if (food != null)
+				displayFoodDetails(food);
 		}
 		
-		private function onFinish(e:starling.events.Event):void
+		private function onFoodNotFound (e:FoodEvent):void
 		{
-			resetComponents();
-			resetComponentsExtended();
-			dispatchEventWith(starling.events.Event.COMPLETE);
+			removeFoodEventListeners();
+			hidePreloader();
+			
+			foodResultsList.dataProvider = new ArrayCollection( [ { label: "No results!" } ] );
 		}
 		
-		private function onAdd(e:starling.events.Event):void
+		private function onServerError (e:FoodEvent):void
+		{
+			removeFoodEventListeners();
+			hidePreloader();
+			
+			AlertManager.showSimpleAlert
+				(
+					"Warning",
+					e.errorMessage
+				);
+		}
+		
+		private function onAddManualFavorite(e:starling.events.TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				foodDetailsContainer.removeFromParent();
+				
+				if (foodInserter != null) foodInserter.removeFromParent(true);
+				foodInserter = new FoodInserter(width);
+				foodInserter.addEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
+				var favoriteIndex:int = mainContentContainer.getChildIndex(actionsContainer);
+				mainContentContainer.addChildAt(foodInserter, favoriteIndex);
+				actionsContainer.removeChild(finishButton);
+				addFavorite.alpha = 0.2;
+				addFavorite.removeEventListener(TouchEvent.TOUCH, onAddManualFavorite);
+			}
+		}
+		
+		private function onAddManualFavoriteComplete(e:Event):void
+		{
+			foodInserter.removeEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
+			foodInserter.removeFromParent();
+			foodInserter.dispose();
+			foodInserter = null;
+			
+			actionsContainer.addChild(finishButton);
+			addFavorite.alpha = 1;
+			addFavorite.addEventListener(TouchEvent.TOUCH, onAddManualFavorite);
+			
+			if (currentMode == FAVORITES_MODE)
+			{
+				FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
+				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+				
+				FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
+			}
+		}
+		
+		private function onFoodAmountChanged(e:Event):void
+		{
+			addFoodButton.isEnabled = foodAmountInput.text != null && foodAmountInput.text.length > 0 ? true : false;
+			
+			if(foodAmountInput != null && activeFood != null)
+				updateFoodDetails(foodAmountInput.text != null && foodAmountInput.text.length > 0 ? Number(foodAmountInput.text) : activeFood.servingSize);
+		}
+		
+		private function onFirstPage(e:Event):void
+		{
+			currentPage = 1;
+			onPerformSearch(null, false);
+		}
+		
+		private function onPreviousPage(e:Event):void
+		{
+			currentPage -= 1;
+			onPerformSearch(null, false);
+		}
+		
+		private function onNextPage(e:Event):void
+		{
+			currentPage += 1;
+			onPerformSearch(null, false);
+		}
+		
+		private function onLastPage(e:Event):void
+		{
+			currentPage = totalPages;
+			onPerformSearch(null, false);
+		}
+		
+		private function onAddFood(e:starling.events.Event):void
 		{
 			addFoodButton.isEnabled = false;
 			
@@ -1108,6 +1096,95 @@ package treatments.ui
 			}, 750 );
 		}
 		
+		private function onFoodLinkTriggered(e:Event):void
+		{
+			navigateToURL(new URLRequest(selectedFoodLink));
+		}
+		
+		private function onDisplayBasket(e:starling.events.TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				if (cartList.length > 0)
+				{
+					populateBasketList();
+					basketCallout = Callout.show(basketList, basketSprite, new <String>[RelativePosition.LEFT]);
+					basketCallout.disposeContent = false;
+					basketCallout.disposeOnSelfClose = true;
+					basketCallout.addEventListener(Event.CLOSE, onBasketCalloutClosed);
+				}
+			}
+		}
+		
+		private function onBasketCalloutClosed(e:Event):void
+		{
+			for(var i:int = deleteButtonsList.length - 1 ; i >= 0; i--) 
+			{
+				var button:Button = deleteButtonsList[i].button;
+				var icon:Image = deleteButtonsList[i].icon;
+				var texture:Texture = deleteButtonsList[i].texture;
+				var item:Object = deleteButtonsList[i];
+				
+				if (texture != null)
+				{
+					texture.dispose();
+					texture = null;
+				}
+				
+				if (icon != null)
+				{
+					icon.removeFromParent();
+					icon.dispose();
+					icon = null;
+				}
+				
+				if (button != null)
+				{
+					button.addEventListener(Event.TRIGGERED, onDeleteFoodFromCart);
+					button.removeFromParent();
+					button.dispose();
+					button = null;
+				}
+				
+				item = null;
+			}
+			
+			deleteButtonsList.length = 0;
+		}
+		
+		private function onDeleteFoodFromCart(e:Event):void
+		{
+			var foodToDelete:Food = (((e.currentTarget as Button).parent as Object).data as Object).food as Food;
+			var quantityToDelete:Number = Number((((e.currentTarget as Button).parent as Object).data as Object).quantity);
+			var servingUnitToDelete:String = (((e.currentTarget as Button).parent as Object).data as Object).servingUnit as String;
+			
+			if (foodToDelete != null)
+			{
+				//Delete from cart
+				for (var i:int = 0; i < cartList.length; i++) 
+				{
+					var cartItem:Object = cartList[i] as Object;
+					if ((cartItem.food as Food).id == foodToDelete.id && cartItem.quantity == quantityToDelete && cartItem.servingUnit == servingUnitToDelete)
+					{
+						cartList.removeAt(i);
+						break;
+					}
+				}
+				
+				//Recreate the cart list
+				populateBasketList();
+				
+				//Refresh cart counter
+				basketAmountLabel.text = String(cartList.length);
+				
+				//Adjust callout if needed
+				if (cartList.length == 0)
+					basketCallout.close(true);
+			}
+		}
+		
 		private function onScan(e:starling.events.Event):void
 		{
 			try
@@ -1115,7 +1192,7 @@ package treatments.ui
 				Scanner.init( !ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad );
 				if (Scanner.isSupported)
 				{
-					Scanner.service.addEventListener( AuthorisationEvent.CHANGED, authorisationChangedHandler );
+					Scanner.service.addEventListener( AuthorisationEvent.CHANGED, onCameraAuthorization );
 					switch (Scanner.service.authorisationStatus())
 					{
 						case AuthorisationStatus.NOT_DETERMINED:
@@ -1142,78 +1219,11 @@ package treatments.ui
 			}
 		}
 		
-		private function authorisationChangedHandler( event:AuthorisationEvent ):void
-		{
-			switch (event.status)
-			{
-				case AuthorisationStatus.SHOULD_EXPLAIN:
-					// Should display a reason you need this feature
-					break;
-				
-				case AuthorisationStatus.AUTHORISED:
-					scanFood();
-					break;
-				
-				case AuthorisationStatus.RESTRICTED:
-				case AuthorisationStatus.DENIED:
-					// ACCESS DENIED: You should inform your user appropriately
-					break;
-			}
-		}
-		
-		private function scanFood():void
-		{
-			Scanner.service.addEventListener( ScannerEvent.CODE_FOUND, codeFoundHandler );
-			Scanner.service.addEventListener( ScannerEvent.CANCELLED, cancelledHandler );
-			
-			resetComponents();
-			
-			var options:ScannerOptions = new ScannerOptions();
-			options.camera = ScannerOptions.CAMERA_REAR;
-			options.torchMode = ScannerOptions.TORCH_AUTO;
-			options.cancelLabel = "CANCEL";
-			options.colour = 0x0086FF;
-			options.textColour = 0xEEEEEE;
-			options.singleResult = true;
-			options.symbologies = [Symbology.UPCA, Symbology.EAN13, Symbology.EAN8, Symbology.UPCE];
-			
-			Scanner.service.startScan( options );
-		}
-		
-		private function cancelledHandler( event:ScannerEvent ):void
+		private function onBarcodeFound( event:ScannerEvent ):void
 		{
 			//Remove scanner events
-			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, codeFoundHandler );
-			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, cancelledHandler );
-			
-			//Clear results list
-			foodResultsList.selectedItem = null;
-			foodResultsList.dataProvider = new ArrayCollection([]);
-			
-			//Force starling to render after context being lost by the camera overlay.
-			recoverFromContextLost();
-		}
-		
-		private function recoverFromContextLost():void
-		{
-			renderTimoutID1 = setTimeout( function():void {
-				SystemUtil.executeWhenApplicationIsActive(Starling.current.start);
-			}, 100 );
-			
-			renderTimoutID2 = setTimeout( function():void {
-				SystemUtil.executeWhenApplicationIsActive(Starling.current.start);
-			}, 500 );
-			
-			renderTimoutID3 = setTimeout( function():void {
-				SystemUtil.executeWhenApplicationIsActive(Starling.current.start);
-			}, 1000 );
-		}
-		
-		private function codeFoundHandler( event:ScannerEvent ):void
-		{
-			//Remove scanner events
-			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, codeFoundHandler );
-			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, cancelledHandler );
+			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, onBarcodeFound );
+			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, onScanCanceled );
 			
 			//Clear results list
 			foodResultsList.selectedItem = null;
@@ -1258,6 +1268,46 @@ package treatments.ui
 					FoodAPIConnector.favoritesSearchBarCode(barCode);
 				}
 			}
+		}
+		
+		private function onScanCanceled( event:ScannerEvent ):void
+		{
+			//Remove scanner events
+			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, onBarcodeFound );
+			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, onScanCanceled );
+			
+			//Clear results list
+			foodResultsList.selectedItem = null;
+			foodResultsList.dataProvider = new ArrayCollection([]);
+			
+			//Force starling to render after context being lost by the camera overlay.
+			recoverFromContextLost();
+		}
+		
+		private function onCameraAuthorization( event:AuthorisationEvent ):void
+		{
+			switch (event.status)
+			{
+				case AuthorisationStatus.SHOULD_EXPLAIN:
+					// Should display a reason you need this feature
+					break;
+				
+				case AuthorisationStatus.AUTHORISED:
+					scanFood();
+					break;
+				
+				case AuthorisationStatus.RESTRICTED:
+				case AuthorisationStatus.DENIED:
+					// ACCESS DENIED: You should inform your user appropriately
+					break;
+			}
+		}
+		
+		private function onCompleteFoodManager(e:starling.events.Event):void
+		{
+			resetComponents();
+			resetComponentsExtended();
+			dispatchEventWith(starling.events.Event.COMPLETE);
 		}
 	}
 }
