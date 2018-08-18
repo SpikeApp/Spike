@@ -364,7 +364,7 @@ package treatments.ui
 			foodDetailsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.TOP, 5);
 			foodDetailsContainer.width = width;
 			foodDetailsContainer.maxWidth = width;
-			(foodDetailsContainer.layout as VerticalLayout).paddingBottom = 10;
+			(foodDetailsContainer.layout as VerticalLayout).paddingBottom = -5;
 			(foodDetailsContainer.layout as VerticalLayout).paddingTop = -10;
 			
 			foodDetailsTitleContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 0);
@@ -430,7 +430,7 @@ package treatments.ui
 			//Actions
 			actionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 0);
 			actionsContainer.width = width;
-			//(actionsContainer.layout as HorizontalLayout).paddingTop = -0;
+			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
 			mainContentContainer.addChild(actionsContainer);
 			
 			finishButton = LayoutFactory.createButton("Finish");
@@ -885,6 +885,21 @@ package treatments.ui
 			}
 		}
 		
+		private function showPreloader():void
+		{
+			preloader.visible = true;
+			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
+			basketPreloaderContainer.addChildAt(preloader, suggestedIndex);
+			addFavorite.visible = false;
+			addFavorite.removeFromParent();
+			basketPreloaderContainer.readjustLayout();
+			basketPreloaderContainer.validate();
+			preloader.x += 15;
+			preloader.y += 9;
+			basketSprite.y += 5;
+			(actionsContainer.layout as HorizontalLayout).paddingTop = -5;
+		}
+		
 		private function hidePreloader():void
 		{
 			preloader.visible = false;
@@ -892,6 +907,7 @@ package treatments.ui
 			basketPreloaderContainer.readjustLayout();
 			basketPreloaderContainer.validate();
 			basketSprite.y += 5;
+			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
 		}
 		
 		private function showAddFavorite():void
@@ -913,20 +929,6 @@ package treatments.ui
 			addFavorite.removeFromParent();
 			basketPreloaderContainer.readjustLayout();
 			basketPreloaderContainer.validate();
-			basketSprite.y += 5;
-		}
-		
-		private function showPreloader():void
-		{
-			preloader.visible = true;
-			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
-			basketPreloaderContainer.addChildAt(preloader, suggestedIndex);
-			addFavorite.visible = false;
-			addFavorite.removeFromParent();
-			basketPreloaderContainer.readjustLayout();
-			basketPreloaderContainer.validate();
-			preloader.x += 15;
-			preloader.y += 9;
 			basketSprite.y += 5;
 		}
 		
