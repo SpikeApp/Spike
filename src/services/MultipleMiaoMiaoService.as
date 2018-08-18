@@ -101,7 +101,7 @@ package services
 		}
 
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MIAOMIAO_MULTIPLE_DEVICE_ON) == "true"
+			if (isMiaoMiaoMultiple()
 				&&
 				CGMBlueToothDevice.isMiaoMiao()) {
 				
@@ -655,6 +655,7 @@ package services
 		 * true if device is miaomiao && LOCAL_SETTING_MIAOMIAO_MULTIPLE_DEVICE_ON = true
 		 */
 		public static function isMiaoMiaoMultiple():Boolean {
+			return true;
 			return (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MIAOMIAO_MULTIPLE_DEVICE_ON) == "true"
 				&&
 				CGMBlueToothDevice.isMiaoMiao());
