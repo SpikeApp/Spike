@@ -850,5 +850,10 @@ package database
 		 public static function getNumberOfSettings():int {
 			 return commonSettings.length;
 		 }
+		 
+		 public static function getAllSettings():Array
+		 {
+			 return commonSettings;
+		 }
 	 }
  }

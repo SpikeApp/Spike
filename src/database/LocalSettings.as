@@ -430,5 +430,10 @@ package database
 		public static function getNumberOfSettings():int {
 			return localSettings.length;
 		}
+		
+		public static function getAllSettings():Array
+		{
+			return localSettings;
+		}
 	}
 }

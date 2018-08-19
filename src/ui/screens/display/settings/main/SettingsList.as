@@ -37,6 +37,7 @@ package ui.screens.display.settings.main
 		private var widgetIconImage:Image;
 		private var advancedIconImage:Image;
 		private var treatmentsIconImage:Image;
+		private var maintenanceIconImage:Image;
 		
 		public function SettingsList()
 		{
@@ -79,6 +80,7 @@ package ui.screens.display.settings.main
 			appInfoIconImage = new Image(chevronIconTexture);
 			advancedIconImage = new Image(chevronIconTexture);
 			treatmentsIconImage = new Image(chevronIconTexture);
+			maintenanceIconImage = new Image(chevronIconTexture);
 			
 			/* Data */
 			var data:Array = [];
@@ -94,6 +96,7 @@ package ui.screens.display.settings.main
 			data.push( { screen: Screens.SETTINGS_INTEGRATION, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','integration_settings_title'), accessory: integrationIconImage } );
 			data.push( { screen: Screens.SETTINGS_APPLE_WATCH, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','watch_settings_title'), accessory: watchIconImage } );
 			data.push( { screen: Screens.SETTINGS_ADVANCED, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','advanced_settings_title'), accessory: advancedIconImage } );
+			data.push( { screen: Screens.MAINTENANCE, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','maintenance_settings_title'), accessory: maintenanceIconImage } );
 			data.push( { screen: Screens.SETTINGS_ABOUT, label: ModelLocator.resourceManagerInstance.getString('mainsettingsscreen','about_settings_title'), accessory: appInfoIconImage } );
 			
 			dataProvider = new ListCollection(data);
@@ -182,6 +185,11 @@ package ui.screens.display.settings.main
 			{
 				treatmentsIconImage.dispose();
 				treatmentsIconImage = null;
+			}
+			if(maintenanceIconImage != null)
+			{
+				maintenanceIconImage.dispose();
+				maintenanceIconImage = null;
 			}
 			
 			super.dispose();

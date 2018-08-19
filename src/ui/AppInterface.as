@@ -36,6 +36,7 @@ package ui
 	import ui.screens.IFTTTSettingsScreen;
 	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
+	import ui.screens.MaintenanceScreen;
 	import ui.screens.NightscoutViewScreen;
 	import ui.screens.ProfileSettingsScreen;
 	import ui.screens.Screens;
@@ -225,6 +226,11 @@ package ui
 			var advancedSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AdvancedSettingsScreen );
 			advancedSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_ADVANCED, advancedSettingsScreenItem );
+			
+			/* Maintenance Settings Screen */
+			var maintenanceSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( MaintenanceScreen );
+			maintenanceSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.MAINTENANCE, maintenanceSettingsScreenItem );
 			
 			/* About Settings Screen */
 			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutScreen );
