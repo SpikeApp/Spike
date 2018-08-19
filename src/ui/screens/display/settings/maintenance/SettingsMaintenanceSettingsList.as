@@ -1,5 +1,11 @@
 package ui.screens.display.settings.maintenance
 {
+	import com.distriqt.extension.scanner.AuthorisationStatus;
+	import com.distriqt.extension.scanner.Scanner;
+	import com.distriqt.extension.scanner.ScannerOptions;
+	import com.distriqt.extension.scanner.Symbology;
+	import com.distriqt.extension.scanner.events.AuthorisationEvent;
+	import com.distriqt.extension.scanner.events.ScannerEvent;
 	import com.hurlant.crypto.symmetric.AESKey;
 	import com.hurlant.util.Base64;
 	import com.hurlant.util.Hex;
@@ -14,6 +20,8 @@ package ui.screens.display.settings.maintenance
 	
 	import database.CommonSettings;
 	import database.LocalSettings;
+	
+	import distriqtkey.DistriqtKey;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Label;
@@ -128,6 +136,42 @@ package ui.screens.display.settings.maintenance
 			dataProvider = new ArrayCollection( data );
 		}
 		
+		private function scanSettings():void
+		{
+			Scanner.service.addEventListener( ScannerEvent.CODE_FOUND, onQRCodeFound );
+			Scanner.service.addEventListener( ScannerEvent.CANCELLED, onScanCanceled );
+			
+			var options:ScannerOptions = new ScannerOptions();
+			options.camera = ScannerOptions.CAMERA_REAR;
+			options.torchMode = ScannerOptions.TORCH_AUTO;
+			options.cancelLabel = "CANCEL";
+			options.colour = 0x0086FF;
+			options.textColour = 0xEEEEEE;
+			options.singleResult = true;
+			options.symbologies = [Symbology.QRCODE];
+			
+			Scanner.service.startScan( options );
+		}
+		
+		private function onQRCodeFound( event:ScannerEvent ):void
+		{
+			//Remove scanner events
+			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, onQRCodeFound );
+			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, onScanCanceled );
+			
+			//Force starling to render after context being lost by the camera overlay.
+			recoverFromContextLost();
+			
+			//Get barcode
+			var qrCode:String = event.data != null ? String(event.data) : "";
+			
+			//Call corresponding API
+			if (qrCode != null && qrCode != "")
+			{
+				
+			}
+		}
+		
 		/**
 		 * Event Listeners
 		 */
@@ -219,7 +263,55 @@ package ui.screens.display.settings.maintenance
 		
 		private function onRestore(e:starling.events.Event):void
 		{
-			
+			try
+			{
+				Scanner.init( !ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad );
+				if (Scanner.isSupported)
+				{
+					Scanner.service.addEventListener( AuthorisationEvent.CHANGED, onCameraAuthorization );
+					switch (Scanner.service.authorisationStatus())
+					{
+						case AuthorisationStatus.NOT_DETERMINED:
+						case AuthorisationStatus.SHOULD_EXPLAIN:
+							// REQUEST ACCESS: This will display the permission dialog
+							Scanner.service.requestAccess();
+							return;
+							
+						case AuthorisationStatus.DENIED:
+						case AuthorisationStatus.UNKNOWN:
+						case AuthorisationStatus.RESTRICTED:
+							// ACCESS DENIED: You should inform your user appropriately
+							return;
+							
+						case AuthorisationStatus.AUTHORISED:
+							scanSettings();
+							break;						
+					}
+				}
+			}
+			catch (e:Error)
+			{
+				trace( e );
+			}
+		}
+		
+		private function onCameraAuthorization( event:AuthorisationEvent ):void
+		{
+			switch (event.status)
+			{
+				case AuthorisationStatus.SHOULD_EXPLAIN:
+					// Should display a reason you need this feature
+					break;
+				
+				case AuthorisationStatus.AUTHORISED:
+					scanSettings();
+					break;
+				
+				case AuthorisationStatus.RESTRICTED:
+				case AuthorisationStatus.DENIED:
+					// ACCESS DENIED: You should inform your user appropriately
+					break;
+			}
 		}
 		
 		/**
