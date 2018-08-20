@@ -112,7 +112,7 @@ package ui.screens.display.sensor
 			
 			/* Set Internal Variables/Objects */
 			dateFormatter = new DateTimeFormatter();
-			dateFormatter.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "dd MMM HH:mm" : "dd MMM K:mm a";
+			dateFormatter.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "dd MMM HH:mm" : "dd MMM h:mm a";
 			dateFormatter.useUTC = false;
 			dateFormatter.setStyle("locale", Constants.getUserLocale());
 		}

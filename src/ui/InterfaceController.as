@@ -87,7 +87,7 @@ package ui
 					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 					
 					dateFormatterForSensorStartTimeAndDate = new DateTimeFormatter();
-					dateFormatterForSensorStartTimeAndDate.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "dd MMM HH:mm" : "dd MMM K:mm a";
+					dateFormatterForSensorStartTimeAndDate.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "dd MMM HH:mm" : "dd MMM h:mm a";
 					dateFormatterForSensorStartTimeAndDate.useUTC = false;
 					dateFormatterForSensorStartTimeAndDate.setStyle("locale", Constants.getUserLocale());
 				}
