@@ -11,6 +11,7 @@ package ui.screens.display.settings.watch
 	
 	import mx.utils.ObjectUtil;
 	
+	import database.CGMBlueToothDevice;
 	import database.LocalSettings;
 	
 	import feathers.controls.Button;
@@ -258,7 +259,8 @@ package ui.screens.display.settings.watch
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_trend_label'), accessory: displayTrend });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_delta_label'), accessory: displayDelta });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_units_label'), accessory: displayUnits });
-					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','gap_fix_label'), accessory: gapFixCheck });
+					if (!CGMBlueToothDevice.isFollower() && !CGMBlueToothDevice.isMiaoMiao())
+						content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','gap_fix_label'), accessory: gapFixCheck });
 				}
 				else
 					content.push({ label: "", accessory: authorizeButton });
