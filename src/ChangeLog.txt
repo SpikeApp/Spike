@@ -2,6 +2,7 @@
 FEATURE: Ability to backup/restore settings or clone settings to another device! Just go to Settings -> Maintenance and press backup. Spike will generate and display a QR Code with all your settings and will also give you the option to email the QR Code to yourself or another user. To import settings go to the same screen, press restore and scan the QR Code with your device's camera. Everything else is done automatically. The QR Code and settings are encrypted using the AES 256-bit algorithm and only Spike has the key to decrypt it, making it virtually unbreakable. (Miguel) 
 FEATURE: Added Danish, Russian and Swedish translations. Enable them in Settings -> General -> Language. A big thanks to our translators! (Miguel & Translators)
 ENHANCEMENT: Gap Fix is enabled by default for followers and MiaoMiao users. This makes the calendar event on the Watch complication last 10 minutes instead of 5 and works better for followers and MiaoMiao users. (Miguel)
+ENHANCEMENT: Removed iPhone 7/SE transmitter battery drain warning. This issue has been fixed since version 2.2.4. (Miguel)
 FIX: Fixes and issue where followers, after pressing Login to test Nightscout credentials, would need to restart Spike in order to display Nightscout data. (Miguel)
 
 2.2.5
