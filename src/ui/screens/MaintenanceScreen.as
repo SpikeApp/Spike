@@ -53,7 +53,7 @@ package ui.screens
 			title = ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','screen_title');
 			
 			/* Set Header Icon */
-			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.timelineTexture);
+			icon = getScreenIcon(MaterialDeepGreyAmberMobileThemeIcons.maintenanceTexture);
 			iconContainer = new <DisplayObject>[icon];
 			headerProperties.rightItems = iconContainer;
 		}

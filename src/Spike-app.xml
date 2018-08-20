@@ -251,6 +251,8 @@
 						</array>
 					</dict>
 				</array>
+				<key>NSCameraUsageDescription</key>
+				<string>Access to the camera is required by Spike</string>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
@@ -308,7 +310,7 @@
 		<extensionID>com.distriqt.Core</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
+		<extensionID>com.distriqt.Scanner</extensionID>
     	<extensionID>com.spike-app.spike.AirNativeExtension</extensionID>
-    <extensionID>com.distriqt.Scanner</extensionID>
     </extensions>
 </application>

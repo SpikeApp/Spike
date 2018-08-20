@@ -6,6 +6,7 @@
 /libs/
 /src/assets/theme/
 /src/distriqtkey/
+/src/cryptography/
 *.xcuserstate
 .actionScriptProperties
 .project
