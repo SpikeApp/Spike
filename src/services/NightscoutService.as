@@ -1889,7 +1889,7 @@ package services
 			
 			//Upload Sensor Start treatment
 			//NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeSensorStarts), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
-			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, SpikeJSON.stringify(activeSensorStarts), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(activeSensorStarts[0]), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
 		}
 		
 		private static function getSensorStart():void
@@ -1931,7 +1931,14 @@ package services
 			if (response.indexOf("Sensor Start") != -1 && response.indexOf("Error") == -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Sensor start uploaded successfuly");
-				activeSensorStarts.length = 0;
+				if (activeSensorStarts.length > 0)
+				{
+					//Remove the sensor start treatment that was just uploaded
+					activeSensorStarts.shift();
+					
+					//If there's more sensor starts, let's upload them
+					syncSensorStart();
+				}
 			}
 			else
 			{
@@ -2448,6 +2455,7 @@ package services
 			else if (e.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" && Sensor.getActiveSensor() != null && uploadSensorStart)
 			{
 				Trace.myTrace("NightscoutService.as", "in onSettingChanged, uploading new sensor.");
+				
 				getSensorStart();
 			}
 			else if 
