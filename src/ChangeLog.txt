@@ -1,3 +1,6 @@
+2.2.6
+FEATURE: Ability to backup/restore settings or clone settings to another device! Just go to Settings -> Maintenance and press backup. Spike will generate and display a QR Code with all your settings and will also give you the option to email the QR Code to yourself or another user. To import settings go to the same screen, press restore and scan the QR Code with your device's camera. Everything else is done automatically. (Miguel) 
+
 2.2.5
 ENHANCEMENT: Better initial Nightscout readings fetch strategy for followers that might have a master with MiaoMiao and a lot of readings on-demand on their Nightscout site, hence more than 288 readings in a time span of 24h. This will make Spike follower display 24h of data, independently of the amount of readings present in Nightscout. (Miguel)
 ENHANCEMENT: Made some changes to be able to fit a menu button on the History screen as it seemed to be causing confusion to some users. The button is not available for iPhone 4S/5/SE devices due to lack of space, users can still swipe from the left edge of the screen to the right to access the main menu. (Miguel)
