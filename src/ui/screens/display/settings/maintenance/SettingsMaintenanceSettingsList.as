@@ -436,21 +436,33 @@ package ui.screens.display.settings.maintenance
 			//Call corresponding API
 			if (qrCode != null && qrCode != "")
 			{
-				var urlDecrypted:String = decodeString(Keys.AES256, qrCode);
-				
-				if (urlDecrypted.indexOf("https://snippets.glot.io") != -1)
+				try
 				{
-					//Get Settings
-					NetworkConnector.createGlotConnector(urlDecrypted, null, URLRequestMethod.GET, null, null, onEncyptedSettingsReceived, onSettingsReceivedError);
-				}
-				else
-				{
-					AlertManager.showSimpleAlert
+					var urlDecrypted:String = decodeString(Keys.AES256, qrCode);
+					
+					if (urlDecrypted.indexOf("https://snippets.glot.io") != -1)
+					{
+						//Get Settings
+						NetworkConnector.createGlotConnector(urlDecrypted, null, URLRequestMethod.GET, null, null, onEncyptedSettingsReceived, onSettingsReceivedError);
+					}
+					else
+					{
+						AlertManager.showSimpleAlert
 						(
 							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
 							ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','invalid_qr_code')
 						);
+					}
+				} 
+				catch(error:Error) 
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','invalid_qr_code')
+					);
 				}
+				
 			}
 		}
 		
