@@ -240,6 +240,10 @@ package ui.screens.display.settings.general
 			//Test Credentials
 			NightscoutService.testNightscoutCredentialsFollower();
 			NightscoutService.ignoreSettingsChanged = false;
+			
+			//Clear URL so it forces a save again and restart service
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL, "");
+			needsSave = true;
 		}
 		
 		/**
