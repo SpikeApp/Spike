@@ -297,11 +297,11 @@ package services
 						.setTitle(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'))
 						.setBody(ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body'))
 						.enableLights(true)
+						.setSound("default")
 						.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
 					Notifications.service.notify(notificationBuilder.build());
 				}
 				
-				SpikeANE.playSound("../assets/sounds/Insistently.caf");
 				SpikeANE.vibrate();
 				
 				if (SystemUtil.isApplicationActive)
