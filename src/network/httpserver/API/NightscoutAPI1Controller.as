@@ -16,6 +16,8 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
+	import services.AlarmService;
+	
 	import treatments.Profile;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
@@ -353,82 +355,93 @@ package network.httpserver.API
 				statusObject.settings = 
 					{
 						units: CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mg/dl" : "mmol",
-							timeFormat: CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? 24 : 12,
-							nightMode: false,
-							nightMode: false,
-							editMode: "on",
-							showRawbg: "always",
-							customTitle: "Spike",
-							theme: "colors",
-							alarmUrgentHigh: true,
-							alarmUrgentHighMins: [30, 45, 60, 90, 120],
-							alarmHigh: true,
-							alarmHighMins: [30, 45, 60, 90, 120],
-							alarmLow: true,
-							alarmLowMins: [15, 30, 45, 60, 90, 120],
-							alarmUrgentLow: true,
-							alarmUrgentLowMins: [5, 15, 30, 45, 60, 90, 120],
-							alarmUrgentMins: [30, 60, 90, 120],
-							alarmWarnMins: [30, 60, 90, 120],
-							alarmTimeagoWarn: true,
-							alarmTimeagoWarnMins: 15,
-							alarmTimeagoUrgent: true,
-							alarmTimeagoUrgentMins: "30",
-							language: "en",
-							scaleY: "log-dynamic",
-							showPlugins: "careportal iob cob bwp treatmentnotify basal pushover maker sage boluscalc rawbg upbat delta direction upbat rawbg",
-							showForecast: "ar2",
-							focusHours: 3,
-							heartbeat: "10",
-							baseURL: "http://127.0.0.1:1979",
-							authDefaultRoles: "readable",
-							thresholds: 
-							{
-								bgHigh: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)), 
-								bgTargetTop: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK)), 
-								bgTargetBottom: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK)), 
-								bgLow: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK)) 
-							},
-							DEFAULT_FEATURES: 
-							[
-								"bgnow",
-								"delta",
-								"direction",
-								"timeago",
-								"devicestatus",
-								"upbat",
-								"errorcodes",
-								"profile"
-							],
-							alarmTypes: 
-							[
-								"simple"
-							],
-							enable:
-							[
-								"careportal",
-								"iob",
-								"cob",
-								"bwp",
-								"treatmentnotify",
-								"basal",
-								"pushover",
-								"maker",
-								"sage",
-								"boluscalc",
-								"rawbg",
-								"upbat",
-								"pushover",
-								"treatmentnotify",
-								"bgnow",
-								"delta",
-								"direction",
-								"timeago",
-								"devicestatus",
-								"errorcodes",
-								"profile",
-								"simplealarms"
-							]
+						timeFormat: CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? 24 : 12,
+						nightMode: false,
+						nightMode: false,
+						editMode: "on",
+						showRawbg: "always",
+						customTitle: "Spike",
+						theme: "colors",
+						alarmUrgentHigh: true,
+						alarmUrgentHighMins: [30, 45, 60, 90, 120],
+						alarmHigh: true,
+						alarmHighMins: [30, 45, 60, 90, 120],
+						alarmLow: true,
+						alarmLowMins: [15, 30, 45, 60, 90, 120],
+						alarmUrgentLow: true,
+						alarmUrgentLowMins: [5, 15, 30, 45, 60, 90, 120],
+						alarmUrgentMins: [30, 60, 90, 120],
+						alarmWarnMins: [30, 60, 90, 120],
+						alarmTimeagoWarn: true,
+						alarmTimeagoWarnMins: 15,
+						alarmTimeagoUrgent: true,
+						alarmTimeagoUrgentMins: "30",
+						language: "en",
+						scaleY: "log-dynamic",
+						showPlugins: "careportal iob cob bwp treatmentnotify basal pushover maker sage boluscalc rawbg upbat delta direction upbat rawbg",
+						showForecast: "ar2",
+						focusHours: 3,
+						heartbeat: "10",
+						baseURL: "http://127.0.0.1:1979",
+						authDefaultRoles: "readable",
+						thresholds: 
+						{
+							bgHigh: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)), 
+							bgTargetTop: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK)), 
+							bgTargetBottom: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK)), 
+							bgLow: Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK)) 
+						},
+						alarmsSnoozedUntilTimestamps: 
+						{
+							bgHigh: AlarmService.highAlertSnoozedUntilTimestamp(), 
+							bgTargetTop: AlarmService.veryHighAlertSnoozedUntilTimestamp(), 
+							bgTargetBottom: AlarmService.lowAlertSnoozedUntilTimestamp(), 
+							bgLow: AlarmService.veryLowAlertSnoozedUntilTimestamp(),
+							missedReadings: AlarmService.missedReadingAlertSnoozedUntilTimestamp(),
+							phoneMuted: AlarmService.phoneMutedAlertSnoozedUntilTimestamp(),
+							bgFastRise: AlarmService.fastRiseAlertSnoozedUntilTimestamp(),
+							bgFastDrop: AlarmService.fastDropAlertSnoozedUntilTimestamp()
+						},
+						DEFAULT_FEATURES: 
+						[
+							"bgnow",
+							"delta",
+							"direction",
+							"timeago",
+							"devicestatus",
+							"upbat",
+							"errorcodes",
+							"profile"
+						],
+						alarmTypes: 
+						[
+							"simple"
+						],
+						enable:
+						[
+							"careportal",
+							"iob",
+							"cob",
+							"bwp",
+							"treatmentnotify",
+							"basal",
+							"pushover",
+							"maker",
+							"sage",
+							"boluscalc",
+							"rawbg",
+							"upbat",
+							"pushover",
+							"treatmentnotify",
+							"bgnow",
+							"delta",
+							"direction",
+							"timeago",
+							"devicestatus",
+							"errorcodes",
+							"profile",
+							"simplealarms"
+						]
 					};
 				statusObject.extendedSettings =
 					{

@@ -3,6 +3,7 @@ FEATURE: Ability to backup/restore settings or clone settings to another device!
 FEATURE: Added Danish, Russian and Swedish translations. Enable them in Settings -> General -> Language. A big thanks to our translators! (Miguel & Translators)
 ENHANCEMENT: Gap Fix is enabled by default for followers and MiaoMiao users. This makes the calendar event on the Watch complication last 10 minutes instead of 5 and works better for followers and MiaoMiao users. (Miguel)
 ENHANCEMENT: Removed iPhone 7/SE transmitter battery drain warning. This issue has been fixed since version 2.2.4. (Miguel)
+ENHANCEMENT: Added alarms snoozed times to the status.json endpoint in Spike's internal HTTP server so 3rd party developers can include them in their watch apps. The goal is for the user to snooze and alarm in Spike and the watch app respects that snooze. (Miguel)
 FIX: Sensor Start events are now correctly uploaded to Nightscout. (Miguel)
 FIX: Optimal calibration conditions notifications should now fire the default iOS sound and respect the mute switch. (Miguel)
 FIX: Several fixes for the main menu. Should not select the wrong buttons now. (Miguel)

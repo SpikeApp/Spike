@@ -2533,5 +2533,93 @@ package services
 		private static function resetFastRiseAlertPreSnooze():void {
 			_fastRiseAlertPreSnoozed = false;
 		}
+		
+		public static function veryLowAlertSnoozedUntilTimestamp():Number 
+		{
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _veryLowAlertLatestSnoozeTimeInMs + _veryLowAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_veryLowAlertLatestSnoozeTimeInMs))
+				snoozedUntil = 0;
+			
+			return snoozedUntil;
+		}
+		
+		public static function lowAlertSnoozedUntilTimestamp():Number 
+		{
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _lowAlertLatestSnoozeTimeInMs + _lowAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_lowAlertLatestSnoozeTimeInMs))
+				snoozedUntil = 0;
+			
+			return snoozedUntil;
+		}
+		
+		public static function highAlertSnoozedUntilTimestamp():Number 
+		{
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _highAlertLatestSnoozeTimeInMs + _highAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_highAlertLatestSnoozeTimeInMs))
+				snoozedUntil = 0;
+			
+			return snoozedUntil;
+		}
+		
+		public static function veryHighAlertSnoozedUntilTimestamp():Number 
+		{
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _veryHighAlertLatestSnoozeTimeInMs + _veryHighAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_veryHighAlertLatestSnoozeTimeInMs))
+				snoozedUntil = 0;
+			
+			return snoozedUntil;
+		}
+		
+		public static function missedReadingAlertSnoozedUntilTimestamp():Number 
+		{
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _missedReadingAlertLatestSnoozeTimeInMs + _missedReadingAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_missedReadingAlertLatestSnoozeTimeInMs))
+				snoozedUntil = 0;
+			
+			return snoozedUntil;
+		}
+		
+		public static function phoneMutedAlertSnoozedUntilTimestamp():Number 
+		{
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _phoneMutedAlertLatestSnoozeTimeInMs + _phoneMutedAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_phoneMutedAlertLatestSnoozeTimeInMs))
+				snoozedUntil = 0;
+			
+			return snoozedUntil;
+		}
+		
+		public static function fastRiseAlertSnoozedUntilTimestamp():Number 
+		{
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _fastRiseAlertLatestSnoozeTimeInMs + _fastRiseAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_fastRiseAlertLatestSnoozeTimeInMs))
+				snoozedUntil = 0;
+			
+			return snoozedUntil;
+		}
+		
+		public static function fastDropAlertSnoozedUntilTimestamp():Number 
+		{
+			var now:Number = new Date().valueOf();
+			var snoozedUntil:Number = _fastDropAlertLatestSnoozeTimeInMs + _fastDropAlertSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE;
+			
+			if (isNaN(snoozedUntil) || now >= snoozedUntil || isNaN(_fastDropAlertLatestSnoozeTimeInMs))
+				snoozedUntil = 0;
+			
+			return snoozedUntil;
+		}
 	}
 }
