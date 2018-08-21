@@ -76,7 +76,6 @@ package ui.screens.display.menu
 			width += 85;
 			hasElasticEdges = false;
 			clipContent = false;
-			isSelectable = true;
 			
 			selectedIndex = Constants.isPortrait ? 1 : 0;
 			previousSelectedIndex = selectedIndex;
@@ -111,7 +110,6 @@ package ui.screens.display.menu
 			
 			refreshContent();
 			
-			selectedIndex = previousSelectedIndex;
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			
 			addEventListener( Event.CHANGE, onMenuChanged );
@@ -168,16 +166,7 @@ package ui.screens.display.menu
 		 */
 		private function onMenuChanged():void 
 		{
-			if (selectedItem == null) return;
-			
-			if (selectedItem != null && selectedItem.screen == null) 
-			{
-				removeEventListener( Event.CHANGE, onMenuChanged );
-				selectedIndex = previousSelectedIndex;
-				addEventListener( Event.CHANGE, onMenuChanged );
-				
-				return;
-			}
+			if (selectedItem == null || (selectedItem != null && selectedItem.screen == null) ) return;
 			
 			if(AppInterface.instance.drawers.isLeftDrawerOpen)
 			{
@@ -203,6 +192,7 @@ package ui.screens.display.menu
 				item.labelField = "label";
 				item.iconSourceField = "icon";
 				item.selectableField = "selectable";
+				item.itemHasSelectable = true;
 				item.accessoryLabelProperties.wordWrap = true;
 				item.defaultLabelProperties.wordWrap = true;
 				item..labelFunction = function( item:Object ):String
@@ -227,7 +217,13 @@ package ui.screens.display.menu
 			setTopPadding();
 			
 			if (!initialStart)
-				previousSelectedIndex = !Constants.isPortrait ? previousSelectedIndex - 1 : previousSelectedIndex + 1;
+			{
+				removeEventListener( Event.CHANGE, onMenuChanged );
+				selectedIndex = !Constants.isPortrait ? previousSelectedIndex - 1 : previousSelectedIndex + 1;
+				addEventListener( Event.CHANGE, onMenuChanged );
+				
+				previousSelectedIndex = selectedIndex;
+			}
 			else
 				initialStart = false;
 			
