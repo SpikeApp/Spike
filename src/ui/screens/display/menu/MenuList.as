@@ -3,6 +3,7 @@ package ui.screens.display.menu
 	import flash.display.StageOrientation;
 	
 	import database.CGMBlueToothDevice;
+	import database.CommonSettings;
 	
 	import events.ScreenEvent;
 	
@@ -134,7 +135,8 @@ package ui.screens.display.menu
 			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture, selectable: true } );
 			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture, selectable: true } );
 			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture, selectable: true } );
-			menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture, selectable: true } );
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
+				menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture, selectable: true } );
 			
 			dataProvider = new ListCollection(menuItems);
 			
