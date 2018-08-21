@@ -123,7 +123,7 @@
 
         if (self.selectMAC ==  NULL) {
             _selectMAC = UUIDString;
-            FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_newG5Mac", (const uint8_t*) FPANE_ConvertNSString_TO_uint8(UUIDString));
+            FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_newG5Mac", (const uint8_t*) FPANE_ConvertNSString_TO_uint8([NSString stringWithFormat:@"%@%@", UUIDString, @"JJ§§((hhd"]));
         } else {
             if ([[self.selectMAC uppercaseString] rangeOfString:[UUIDString uppercaseString]].location == NSNotFound) {
                 FPANE_Log(@"spiketrace ANE G5BLEManager.m in didDiscoverPeripheral peripheral address does not matches stored address");

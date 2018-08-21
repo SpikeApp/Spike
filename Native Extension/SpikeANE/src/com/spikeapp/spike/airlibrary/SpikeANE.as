@@ -312,12 +312,12 @@ package com.spikeapp.spike.airlibrary
 			} else if (event.code == "StatusEvent_newMiaoMiaoMac") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAO_MIAO_NEW_MAC);
 				spikeANEEvent.data = new Object();
-				spikeANEEvent.data.MAC = event.level;
+				spikeANEEvent.data.MAC = event.level.split("JJ§§((hhd")[0];
 				_instance.dispatchEvent(spikeANEEvent);
 			}  else if (event.code == "StatusEvent_newG5Mac") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_NEW_MAC);
 				spikeANEEvent.data = new Object();
-				spikeANEEvent.data.MAC = event.level;
+				spikeANEEvent.data.MAC = event.level.split("JJ§§((hhd")[0];
 				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "StatusEvent_sensorChangeMessageReceived") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO);

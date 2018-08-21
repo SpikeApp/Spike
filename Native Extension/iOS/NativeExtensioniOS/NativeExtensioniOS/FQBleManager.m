@@ -119,7 +119,7 @@
 
             if (self.selectMAC ==  NULL) {
                 _selectMAC = MAC;
-                FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_newMiaoMiaoMac", (const uint8_t*) FPANE_ConvertNSString_TO_uint8(MAC));
+                FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_newMiaoMiaoMac", (const uint8_t*) FPANE_ConvertNSString_TO_uint8([NSString stringWithFormat:@"%@%@", MAC, @"JJ§§((hhd"]));
             } else {
                 if (![self.selectMAC hasSuffix:MAC]) {
                     FPANE_Log(@"spiketrace ANE FQBLEManager.m in didDiscoverPeripheral peripheral address does not matches stored address");
