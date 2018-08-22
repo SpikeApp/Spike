@@ -6,6 +6,7 @@ package services
 	
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import network.httpserver.HttpServer;
@@ -49,6 +50,7 @@ package services
 			if (httpServerServiceEnabled)
 				activateService();
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 		}
 		
@@ -173,6 +175,18 @@ package services
 				if (serviceActive)
 					deactivateService();
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("HTTPServerService.as", "Stopping service...");
+			
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			
+			deactivateService();
 		}
 	}
 }

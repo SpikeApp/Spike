@@ -31,6 +31,7 @@ package services
 		//Variables 
 		private static var initialStart:Boolean = true;
 		private static var awaitingLoadResponse:Boolean = false;
+		private static var serviceHalted:Boolean = false;
 		
 		public function RemoteAlertService()
 		{
@@ -53,12 +54,18 @@ package services
 		 */
 		private static function createEventListeners():void
 		{
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+			
 			//Register event listener for app in foreground
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
 		}
 		
 		private static function getRemoteAlert():void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			myTrace("in getRemoteAlert");
 			
 			if (!NetworkInfo.networkInfo.isReachable())
@@ -90,6 +97,10 @@ package services
 		
 		private static function canDoCheck():Boolean
 		{
+			//Validation
+			if (serviceHalted)
+				return false;
+			
 			/**
 			 * Uncomment next line and comment the other one for testing
 			 * We are hardcoding a timestamp of more than 1 day ago for testing purposes otherwise the update popup wont fire 
@@ -114,6 +125,10 @@ package services
 		 */
 		protected static function onResponseReceived(event:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			if (awaitingLoadResponse) 
 			{
 				myTrace("in onResponseReceived");
@@ -200,6 +215,20 @@ package services
 			
 			if(canDoCheck())
 				getRemoteAlert();
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			serviceHalted = true;
+			
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			
+			myTrace("Service stopped!");
 		}
 		
 		/**

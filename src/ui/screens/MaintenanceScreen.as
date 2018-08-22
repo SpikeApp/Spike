@@ -16,6 +16,7 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.settings.maintenance.DatabaseMaintenanceSettingsList;
 	import ui.screens.display.settings.maintenance.SettingsMaintenanceSettingsList;
 	
 	import utils.Constants;
@@ -28,6 +29,8 @@ package ui.screens
 		/* Display Objects */
 		private var settingsMaintenanceLabel:Label;
 		private var settingsMaintenanceSettings:SettingsMaintenanceSettingsList;
+		private var databaseMaintenanceLabel:Label;
+		private var databaseMaintenanceSettings:DatabaseMaintenanceSettingsList;
 		
 		public function MaintenanceScreen() 
 		{
@@ -63,13 +66,21 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
-			//Colors Section Label
+			//Settings Section Label
 			settingsMaintenanceLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','settings_section_label'));
 			screenRenderer.addChild(settingsMaintenanceLabel);
 			
-			//Colors Settings
+			//Settings Settings
 			settingsMaintenanceSettings = new SettingsMaintenanceSettingsList();
 			screenRenderer.addChild(settingsMaintenanceSettings);
+			
+			//Database Section Label
+			databaseMaintenanceLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_section_label'));
+			screenRenderer.addChild(databaseMaintenanceLabel);
+			
+			//Settings Settings
+			databaseMaintenanceSettings = new DatabaseMaintenanceSettingsList();
+			screenRenderer.addChild(databaseMaintenanceSettings);
 		}
 		
 		private function adjustMainMenu():void
@@ -99,10 +110,12 @@ package ui.screens
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
 				if (settingsMaintenanceLabel != null) settingsMaintenanceLabel.paddingLeft = 30;
+				if (databaseMaintenanceLabel != null) databaseMaintenanceLabel.paddingLeft = 30;
 			}
 			else
 			{
 				if (settingsMaintenanceLabel != null) settingsMaintenanceLabel.paddingLeft = 0;
+				if (databaseMaintenanceLabel != null) databaseMaintenanceLabel.paddingLeft = 0;
 			}
 			
 			setupHeaderSize();
@@ -125,6 +138,20 @@ package ui.screens
 				settingsMaintenanceLabel.removeFromParent();
 				settingsMaintenanceLabel.dispose();
 				settingsMaintenanceLabel = null;
+			}
+			
+			if (databaseMaintenanceSettings != null)
+			{
+				databaseMaintenanceSettings.removeFromParent();
+				databaseMaintenanceSettings.dispose();
+				databaseMaintenanceSettings = null;
+			}
+			
+			if (databaseMaintenanceLabel != null)
+			{
+				databaseMaintenanceLabel.removeFromParent();
+				databaseMaintenanceLabel.dispose();
+				databaseMaintenanceLabel = null;
 			}
 			
 			super.dispose();

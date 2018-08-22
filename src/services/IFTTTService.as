@@ -13,6 +13,7 @@ package services
 	import events.FollowerEvent;
 	import events.HTTPServerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
@@ -83,13 +84,9 @@ package services
 		private static var isIFTTTnoteTreatmentDeletedEnabled:Boolean;
 		private static var isIFTTTiobUpdatedEnabled:Boolean;
 		private static var isIFTTTcobUpdatedEnabled:Boolean;
-
 		private static var isIFTTTFastRiseTriggeredEnabled:Boolean;
-
 		private static var isIFTTTFastRiseSnoozedEnabled:Boolean;
-
 		private static var isIFTTTFastDropTriggeredEnabled:Boolean;
-
 		private static var isIFTTTFastDropSnoozedEnabled:Boolean;
 		
 		public function IFTTTService()
@@ -106,6 +103,7 @@ package services
 			if (isIFTTTEnabled)
 				configureService();
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 		}
 		
@@ -932,6 +930,50 @@ package services
 				//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-server-error").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
 				NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-server-error").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("IFTTTService.as", "Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.FAST_RISE_TRIGGERED, onFastRiseGlucoseTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.FAST_RISE_SNOOZED, onFastRiseGlucoseSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_TRIGGERED, onUrgentHighGlucoseTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_SNOOZED, onUrgentHighGlucoseSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_TRIGGERED, onHighGlucoseTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED, onHighGlucoseSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.FAST_DROP_TRIGGERED, onFastDropGlucoseTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.FAST_DROP_SNOOZED, onFastDropGlucoseSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_TRIGGERED, onLowGlucoseTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.LOW_GLUCOSE_SNOOZED, onLowGlucoseSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.HIGH_GLUCOSE_TRIGGERED, onUrgentLowGlucoseTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.URGENT_LOW_GLUCOSE_SNOOZED, onUrgentLowGlucoseSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.CALIBRATION_TRIGGERED, onCalibrationTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.CALIBRATION_SNOOZED, onCalibrationSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.MISSED_READINGS_TRIGGERED, onMissedReadingsTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.MISSED_READINGS_SNOOZED, onMissedReadingsSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.PHONE_MUTED_TRIGGERED, onPhoneMutedTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.PHONE_MUTED_SNOOZED, onPhoneMutedSnoozed);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_TRIGGERED, onTransmitterLowBatteryTriggered);
+			AlarmService.instance.removeEventListener(AlarmServiceEvent.TRANSMITTER_LOW_BATTERY_SNOOZED, onTransmitterLowBatterySnoozed);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReading);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReading);
+			HttpServer.instance.removeEventListener(HTTPServerEvent.SERVER_OFFLINE, onServerOffline);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentUpdated);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onIOBCOBUpdated);
+			
+			Trace.myTrace("IFTTTService.as", "Service stopped!");
 		}
 	}
 }

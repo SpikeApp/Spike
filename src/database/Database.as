@@ -16,6 +16,7 @@ package database
 	import spark.collections.SortField;
 	
 	import events.DatabaseEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -210,6 +211,7 @@ package database
 		{
 			if (debugMode) trace("Database.init");
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution, false, -1000);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingEventReceived);
 
 			dbFile  = File.applicationStorageDirectory.resolvePath(dbFileName);
@@ -2813,6 +2815,31 @@ package database
 					dispatcher.dispatchEvent(new DatabaseEvent(DatabaseEvent.ERROR_EVENT));
 				}
 			}
+		}
+		
+		/**
+		 * Closes connection to the database. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("Database.as", "Closing connection to database...");
+			
+			if (aConn != null && aConn.connected)
+			{
+				aConn.addEventListener(SQLEvent.CLOSE, onConnClosed);
+				aConn.close();
+			}
+			else
+			{
+				Trace.myTrace("Database.as", "Connection to database closed!");
+				_instance.dispatchEvent( new DatabaseEvent(DatabaseEvent.DATABASE_CLOSED_EVENT) );
+			}
+		}
+		
+		private static function onConnClosed(e:SQLEvent):void
+		{
+			Trace.myTrace("Database.as", "Connection to database closed!");
+			_instance.dispatchEvent( new DatabaseEvent(DatabaseEvent.DATABASE_CLOSED_EVENT) );
 		}
 		
 		private static function dispatchInformation(informationResourceName:String, additionalInfo:String = null):void {

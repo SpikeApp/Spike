@@ -23,6 +23,7 @@ package events
 	[Event(name="ErrorEvent",type="events.DatabaseEvent")]
 	[Event(name="DatabaseInitFinishedEvent",type="events.DatabaseEvent")]
 	[Event(name="BGReadingRetrievedEvent",type="events.DatabaseEvent")]
+	[Event(name="databaseClosed",type="events.DatabaseEvent")]
 	
 	public class DatabaseEvent extends Event
 	{
@@ -30,6 +31,7 @@ package events
 		public static const ERROR_EVENT:String = "ErrorEvent";
 		public static const DATABASE_INIT_FINISHED_EVENT:String = "DatabaseInitFinishedEvent";
 		public static const BGREADING_RETRIEVAL_EVENT:String = "BGReadingRetrievedEvent";
+		public static const DATABASE_CLOSED_EVENT:String = "databaseClosed";
 		
 		public var data:*;
 		

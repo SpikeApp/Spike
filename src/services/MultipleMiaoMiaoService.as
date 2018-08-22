@@ -29,6 +29,7 @@ package services
 	import database.Sensor;
 	
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import network.NetworkConnector;
@@ -55,6 +56,7 @@ package services
 		private static var checkReadingTimer:Timer;
 		
 		//NightScout download
+		private static var serviceHalted:Boolean = false;
 		private static var nightscoutDownloadURL:String = "";
 		private static var nightscoutTreatmentsURL:String = "";
 		private static var nightscoutDownloadOffset:Number = 0;
@@ -65,6 +67,8 @@ package services
 		private static var timeOfFirstCalibrationToDowload:Number;
 		private static var bgReadingAndCalibrationsList:Array;//arraylist of glucosedata and calibrations
 		private static var _intermediateCalibrationsList:Array = new Array();
+		
+		
 		public static function get intermediateCalibrationsList():Array
 		{
 			return _intermediateCalibrationsList;
@@ -82,10 +86,12 @@ package services
 		private static var logstring:String;
 	
 		public function MultipleMiaoMiaoService() {
-		}
+		}		
 		
 		public static function init():void {
 			myTrace("init");
+			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			
 			formatter = new DateTimeFormatter();
@@ -208,6 +214,10 @@ package services
 		
 		private static function onConnectionFailed(error:Error, mode:String):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			if (mode == MODE_GLUCOSE_READING_GET) {
 				myTrace("in onConnectionFailed. Can't make connection to the server while trying to download glucose readings. Error: " +  error.message);
 				resetCheckReadingTimer(calculateNextNSDownloadDelayInSeconds((new Date()).valueOf(), BgReading.lastNoSensor()));
@@ -225,6 +235,10 @@ package services
 		}
 		
 		private static function onCheckTimeStampLatestReadingAtNSComplete(e:Event):void {
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			myTrace("in onCheckTimeStampLatestReadingAtNSComplete");
 			
 			var response:String = getResponseAndDisposeLoader(e, onCheckTimeStampLatestReadingAtNSComplete, onConnectionFailed);
@@ -257,6 +271,10 @@ package services
 		}
 
 		private static function onDownloadGlucoseReadingsComplete(e:Event):void {
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			myTrace("in onDownloadGlucoseReadingsComplete");
 
 			var glucoseData:GlucoseData;
@@ -326,6 +344,10 @@ package services
 		}
 		
 		private static function processReadingsAndCalibrations():void {
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			//process readings and calibrations that have been downloaded from NS
 			var newBGReading:Boolean = false;
 			
@@ -383,6 +405,10 @@ package services
 		}
 		
 		private static function onDownloadCalibrationsComplete(e:Event):void {
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var calibrationData:CalibrationData;
 			var now:Number = (new Date()).valueOf();
 			
@@ -568,6 +594,10 @@ package services
 		}
 		
 		private static function onIntermediateCalibrationCheckComplete(e:Event):void {
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var calibrationData:CalibrationData;
 			var now:Number = (new Date()).valueOf();
 			
@@ -673,6 +703,36 @@ package services
 			loader = null;
 			
 			return response;
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			serviceHalted = true;
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, central_peripheralConnectHandler);
+			NetworkInfo.networkInfo.removeEventListener(NetworkInfoEvent.CHANGE, checkTimeStampLatestReadingAtNS);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED, onInitialCharacteristicUpdate);
+			
+			if (checkReadingTimer != null && checkReadingTimer.running)
+			{
+				checkReadingTimer.removeEventListener(TimerEvent.TIMER, checkLatestReading);
+				checkReadingTimer.stop();
+			}
+			
+			myTrace("Service stopped!");
 		}
 		
 		private static function myTrace(log:String):void {

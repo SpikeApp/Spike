@@ -43,6 +43,7 @@ package services.bluetooth
 	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	
 	import feathers.controls.Alert;
 	
@@ -298,6 +299,7 @@ package services.bluetooth
 			//Define G5/G6 ANE Method
 			useSpikeANEForG5G6 = Capabilities.os.indexOf("OS 8") == -1 ? true : false;
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
@@ -2247,6 +2249,14 @@ package services.bluetooth
 			BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
 		}
 		
+		private static function removeBluetoothLEEventListeners():void {
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, central_peripheralConnectHandler );
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT_FAIL, central_peripheralDisconnectHandler );
+			BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
+			BluetoothLE.service.removeEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+		}
+		
 		private static function addMiaoMiaoEventListeners():void {
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
@@ -2254,10 +2264,23 @@ package services.bluetooth
 			SpikeANE.instance.addEventListener(SpikeANEEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorChangedFromMiaoMiao);
 		}
 		
+		private static function removeMiaoMiaoEventListeners():void {
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorNotDetectedFromMiaoMiao);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorChangedFromMiaoMiao);
+		}
+		
 		private static function addG5G6EventListeners():void {
 			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_NEW_MAC, receivedG5G6DeviceAddress);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_DATA_PACKET_RECEIVED, receivedG5G6DataPacket);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_DEVICE_NOT_PAIRED, G5G6DeviceNotPaired);
+		}
+		
+		private static function removeG5G6EventListeners():void {
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.G5_NEW_MAC, receivedG5G6DeviceAddress);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.G5_DATA_PACKET_RECEIVED, receivedG5G6DataPacket);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.G5_DEVICE_NOT_PAIRED, G5G6DeviceNotPaired);
 		}
 		
 		private static function receivedSensorChangedFromMiaoMiao(event:flash.events.Event):void {
@@ -2472,6 +2495,58 @@ package services.bluetooth
 				TX_Characteristic_UUID = "";
 				
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
+			
+			if (CGMBlueToothDevice.isMiaoMiao()) {
+				removeMiaoMiaoEventListeners();
+			} else if ((CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) && useSpikeANEForG5G6) {
+				removeG5G6EventListeners();
+			} else {
+				removeBluetoothLEEventListeners();
+			}
+			
+			if (_activeBluetoothPeripheral != null) {
+				_activeBluetoothPeripheral.removeEventListener(PeripheralEvent.DISCOVER_SERVICES, peripheral_discoverServicesHandler );
+				_activeBluetoothPeripheral.removeEventListener(PeripheralEvent.DISCOVER_CHARACTERISTICS, peripheral_discoverCharacteristicsHandler );
+				_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UPDATE, peripheral_characteristic_updatedHandler);
+				_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UPDATE_ERROR, peripheral_characteristic_errorHandler);
+				_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.SUBSCRIBE, peripheral_characteristic_subscribeHandler);
+				_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.SUBSCRIBE_ERROR, peripheral_characteristic_subscribeErrorHandler);
+				_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UNSUBSCRIBE, peripheral_characteristic_unsubscribeHandler);
+				_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
+				_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
+			}
+			
+			if (scanTimer != null && scanTimer.running)
+			{
+				scanTimer.removeEventListener(TimerEvent.TIMER, stopScanning);
+				scanTimer.stop();
+			}
+			
+			if (discoverServiceOrCharacteristicTimer != null && discoverServiceOrCharacteristicTimer.running)
+			{
+				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
+				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
+				discoverServiceOrCharacteristicTimer.stop();
+			}
+			
+			myTrace("Service stopped!");
 		}
 	}
 }

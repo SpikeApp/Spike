@@ -39,8 +39,8 @@ package services
 		//Variables 
 		private static var updateURL:String = "";
 		private static var latestAppVersion:String = "";
-		
 		private static var awaitingLoadResponse:Boolean = false;
+		private static var serviceHalted:Boolean = false;
 		
 		public function UpdateService(target:IEventDispatcher=null)
 		{
@@ -66,6 +66,8 @@ package services
 		 */
 		private static function createEventListeners():void
 		{
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+			
 			//Register event listener for app in foreground
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
 			
@@ -76,6 +78,10 @@ package services
 		private static function getUpdate():void
 		{
 			myTrace("in getUpdate");
+			
+			//Validation
+			if (serviceHalted)
+				true;
 			
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
@@ -114,6 +120,10 @@ package services
 		
 		private static function canDoUpdate():Boolean
 		{
+			//Validation
+			if (serviceHalted)
+				true;
+			
 			/**
 			 * Uncomment next line and comment the other one for testing
 			 * We are hardcoding a timestamp of more than 1 day ago for testing purposes otherwise the update popup wont fire 
@@ -161,6 +171,10 @@ package services
 		 */
 		protected static function onResponseReceived(event:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				true;
+			
 			if (awaitingLoadResponse) {
 				myTrace("in onLoadSuccess");
 				awaitingLoadResponse = false;
@@ -287,6 +301,26 @@ package services
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
 				if(canDoUpdate())
 					getUpdate();
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			serviceHalted = true;
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			
+			myTrace("Service stopped!");
 		}
 		
 		/**

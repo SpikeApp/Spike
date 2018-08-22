@@ -188,6 +188,8 @@ package services
 			else
 				initialStart = false;
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+			
 			Core.init();
 			Notifications.init(!ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
 			if (!Notifications.isSupported) {
@@ -363,52 +365,52 @@ package services
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
 			}
-			
-			function onLocalSettingsChanged(event:SettingsServiceEvent):void
+		}
+		
+		private static function onLocalSettingsChanged(event:SettingsServiceEvent):void
+		{
+			if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE || (event.data == LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true"))
 			{
-				if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE || (event.data == LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true"))
-				{
-					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
-				}
-				else if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL)
-				{
-					alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
-				}
+				Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 			}
-			
-			function onCommonSettingsChanged(event:SettingsServiceEvent):void
+			else if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL)
 			{
-				if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL)
-				{
-					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
-				}
+				alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
 			}
-			
-			function appInForeGround(event:Event):void {
-				myTrace("in appInForeGround, setting systemIdleMode = SystemIdleMode.NORMAL");
-				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
+		}
+		
+		private static function onCommonSettingsChanged(event:SettingsServiceEvent):void
+		{
+			if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL)
+			{
+				Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 			}
-			
-			function notificationSelectedHandler(event:NotificationEvent):void {
-				myTrace("in notificationSelectedHandler at " + (new Date()).toLocaleTimeString());
-				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT);
-				notificationServiceEvent.data = event;
-				_instance.dispatchEvent(notificationServiceEvent);
-			}
-			
-			function notificationHandler(event:NotificationEvent):void {
-				myTrace("in notificationHandler at " + (new Date()).toLocaleTimeString());
-				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
-				notificationServiceEvent.data = event;
-				_instance.dispatchEvent(notificationServiceEvent);
-			}
-			
-			function notificationActionHandler(event:NotificationEvent):void {
-				myTrace("in notificationActionHandler at " + (new Date()).toLocaleTimeString());
-				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_ACTION_EVENT);
-				notificationServiceEvent.data = event;
-				_instance.dispatchEvent(notificationServiceEvent);
-			}
+		}
+		
+		private static function appInForeGround(event:Event):void {
+			myTrace("in appInForeGround, setting systemIdleMode = SystemIdleMode.NORMAL");
+			NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
+		}
+		
+		private static function notificationSelectedHandler(event:NotificationEvent):void {
+			myTrace("in notificationSelectedHandler at " + (new Date()).toLocaleTimeString());
+			var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT);
+			notificationServiceEvent.data = event;
+			_instance.dispatchEvent(notificationServiceEvent);
+		}
+		
+		private static function notificationHandler(event:NotificationEvent):void {
+			myTrace("in notificationHandler at " + (new Date()).toLocaleTimeString());
+			var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
+			notificationServiceEvent.data = event;
+			_instance.dispatchEvent(notificationServiceEvent);
+		}
+		
+		private static function notificationActionHandler(event:NotificationEvent):void {
+			myTrace("in notificationActionHandler at " + (new Date()).toLocaleTimeString());
+			var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_ACTION_EVENT);
+			notificationServiceEvent.data = event;
+			_instance.dispatchEvent(notificationServiceEvent);
 		}
 		
 		public static function updateBgNotification(be:Event = null):void {
@@ -533,6 +535,33 @@ package services
 			else if (id == ID_FOR_FAST_DROP_ALERT)
 				returnValue = "ID_FOR_FAST_DROP_ALERT";
 			return returnValue;
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
+			Notifications.service.removeEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationSelectedHandler);
+			Notifications.service.removeEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
+			Notifications.service.removeEventListener(NotificationEvent.ACTION, notificationActionHandler);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, updateBgNotification);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
+			
+			myTrace("Service stopped!");
 		}
 		
 		private static function myTrace(log:String):void {

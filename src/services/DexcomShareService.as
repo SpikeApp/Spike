@@ -86,6 +86,7 @@ package services
 		private static var _syncGlucoseReadingsActive:Boolean;
 		private static var syncGlucoseReadingsActiveLastChange:Number = (new Date()).valueOf();
 		private static var showAssignementPopup:Boolean = true;
+		private static var serviceHalted:Boolean = false;
 		
 		/* Data Variables */
 		private static var dexcomShareURL:String = "";
@@ -118,6 +119,8 @@ package services
 			
 			//Event listener for settings changes
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME) != "" &&
@@ -166,6 +169,9 @@ package services
 		private static function onTestCredentialsComplete(e:flash.events.Event):void
 		{
 			Trace.myTrace("DexcomShareService.as", "onTestCredentialsComplete called");
+			
+			if (serviceHalted)
+				return;
 			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			var response:String = loader.data;
@@ -401,6 +407,10 @@ package services
 			loader.removeEventListener(IOErrorEvent.IO_ERROR, onUploadGlucoseReadingsComplete);
 			loader = null;
 			
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			//Check response
 			if (response == "")
 			{
@@ -502,12 +512,20 @@ package services
 		
 		private static function glucoseUploadSuccessfull():void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			activeGlucoseReadings.length = 0;
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
 		}
 		
 		private static function onBgreadingReceived(e:flash.events.Event):void 
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var latestGlucoseReading:BgReading;
 			if(!CGMBlueToothDevice.isFollower())
 				latestGlucoseReading= BgReading.lastNoSensor();
@@ -522,7 +540,11 @@ package services
 		}
 		
 		private static function onLastBgreadingReceived(e:flash.events.Event):void 
-		{					
+		{		
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			syncGlucoseReadings();
 		}
 		
@@ -531,6 +553,10 @@ package services
 		 */
 		private static function onStartRemoteMonitoringResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			retriesForSessionNotActive ++;
 			
 			var loader:URLLoader = e.currentTarget as URLLoader;
@@ -565,6 +591,10 @@ package services
 			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			var response:String = String(loader.data);
+			
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			if (response.indexOf("Code") == -1)
 			{
@@ -657,6 +687,10 @@ package services
 		
 		private static function onListFollowersResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.LIST_FOLLOWERS, loader.data));
@@ -674,6 +708,10 @@ package services
 		
 		private static function onDeleteFollowerResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.DELETE_FOLLOWER, loader.data));
@@ -691,6 +729,10 @@ package services
 		
 		private static function onCreateContactResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.CREATE_CONTACT, loader.data));
@@ -708,6 +750,10 @@ package services
 		
 		private static function onInviteFollowerResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.INVITE_FOLLOWER, loader.data));
@@ -725,6 +771,10 @@ package services
 		
 		private static function onGetFollowerInfoResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.GET_FOLLOWER_INFO, loader.data));
@@ -742,6 +792,10 @@ package services
 		
 		private static function onGetFollowerAlarmsResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.GET_FOLLOWER_ALARMS, loader.data));
@@ -759,6 +813,10 @@ package services
 		
 		private static function onChangeFollowerNameResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.CHANGE_FOLLOWER_NAME, loader.data));
@@ -776,6 +834,10 @@ package services
 		
 		private static function onChangeFollowerPermissionsResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.CHANGE_FOLLOWER_PERMISSIONS, loader.data));
@@ -793,6 +855,10 @@ package services
 		
 		private static function onEnableFollowerSharingResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.ENABLE_FOLLOWER_SHARING, loader.data));
@@ -810,6 +876,10 @@ package services
 		
 		private static function onDisableFollowerSharingResponse(e:flash.events.Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
 			instance.dispatchEvent(new DexcomShareEvent(DexcomShareEvent.DISABLE_FOLLOWER_SHARING, loader.data));
@@ -935,6 +1005,10 @@ package services
 		 */
 		private static function onConnectionFailed(error:Error, mode:String):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			if (mode == MODE_GLUCOSE_READING)
 			{
 				Trace.myTrace("DexcomShareService.as", "in onConnectionFailed, Error uploading glucose readings. Error: " + error.message);
@@ -1007,6 +1081,10 @@ package services
 		
 		private static function onSettingChanged(e:SettingsServiceEvent):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			setupDexcomShareProperties();
 			
 			if (ignoreSettingsChanged)
@@ -1097,6 +1175,20 @@ package services
 			}
 			else
 				networkChangeOcurrances++;
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("DexcomShareService.as", "Stopping service...");
+			
+			serviceHalted = true;
+			
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			
+			deactivateService();
 		}
 		
 		/**

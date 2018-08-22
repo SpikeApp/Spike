@@ -16,6 +16,7 @@ package services
 	
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
@@ -57,6 +58,8 @@ package services
 		public static function init():void
 		{
 			Trace.myTrace("WatchService.as", "Service started!");
+			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			
 			try
 			{
@@ -283,6 +286,20 @@ package services
 				if (serviceActive)
 					deactivateService();
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("WatchService.as", "Stopping service...");
+			
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			
+			deactivateService();
+			
+			Trace.myTrace("WatchService.as", "Service stopped!");
 		}
 	}
 }

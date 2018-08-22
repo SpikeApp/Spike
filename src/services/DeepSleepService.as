@@ -15,6 +15,7 @@ package services
 	import database.CommonSettings;
 	
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	
 	import utils.Constants;
 	import utils.TimeSpan;
@@ -64,6 +65,7 @@ package services
 			startDeepSleepInterval();
 			
 			//Event Listeners
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
 		}
 		
@@ -219,6 +221,24 @@ package services
 					}
 				}
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("DeepSleepService.as", "Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
+			clearInterval( intervalID );
+			
+			Trace.myTrace("DeepSleepService.as", "Service stopped!");
 		}
 		
 		/**

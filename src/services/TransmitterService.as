@@ -16,6 +16,7 @@ package services
 	
 	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import feathers.controls.Alert;
@@ -85,6 +86,7 @@ package services
 			else
 				initialStart = false;
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
@@ -489,6 +491,25 @@ package services
 			}
 			myTrace("in getBlueReaderBatteryLevel, returnValue = "+ ((transmitterDataBatteryLevel - 3300) * 100 / (blueReaderFullBattery-3300)).toString());
 			return Math.round(((transmitterDataBatteryLevel - 3300) * 100 / (blueReaderFullBattery-3300)));
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
+			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
+			
+			myTrace("Service stopped!");
 		}
 		
 		private static function myTrace(log:String):void {

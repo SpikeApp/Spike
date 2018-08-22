@@ -294,6 +294,8 @@ package services
 			
 			lastCheckMuteTimeStamp = new Number(0);
 			lastPhoneMutedAlertCheckTimeStamp = new Number(0);
+			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, checkAlarms);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
 			
@@ -2620,6 +2622,37 @@ package services
 				snoozedUntil = 0;
 			
 			return snoozedUntil;
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, checkAlarms);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
+			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_ACTION_EVENT, notificationReceived);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.PHONE_MUTED, phoneMuted);
+			SpikeANE.instance.removeEventListener(SpikeANEEvent.PHONE_NOT_MUTED, phoneNotMuted);
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
+			
+			if (alarmTimer != null && alarmTimer.running)
+			{
+				alarmTimer.removeEventListener(TimerEvent.TIMER, onAlarmTimer);
+				alarmTimer.stop();
+			}
+			
+			myTrace("Service stopped!");
 		}
 	}
 }

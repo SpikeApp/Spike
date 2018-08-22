@@ -252,24 +252,41 @@
 					</dict>
 				</array>
 				<key>NSCameraUsageDescription</key>
-				<string>Access to the camera is required by Spike</string>
+				<string>Access to the camera is required</string>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
-		<Entitlements> <![CDATA[
-		<key>application-identifier</key>
-		<string>AGW6KV7M2W.com.spike-app.spike</string>
-		<key>com.apple.developer.healthkit</key>
-		<true/>
-		<key>com.apple.security.application-groups</key>
-		<array>
-			<string>group.com.spike-app.spike</string>
-		</array>
-		<key>keychain-access-groups</key>
-		<array>
-		<string>AGW6KV7M2W.*</string>
-		</array>
-			 ]]></Entitlements>
+		<Entitlements> 
+			<![CDATA[
+				<key>application-identifier</key>
+				<string>AGW6KV7M2W.com.spike-app.spike</string>
+				<key>com.apple.developer.healthkit</key>
+				<true/>
+				<key>com.apple.security.application-groups</key>
+				<array>
+					<string>group.com.spike-app.spike</string>
+				</array>
+				<key>keychain-access-groups</key>
+				<array>
+					<string>AGW6KV7M2W.*</string>
+				</array>
+				<key>com.apple.developer.icloud-container-identifiers</key>
+				<array>
+					<string>iCloud.com.spike-app.spike</string>
+				</array>
+				<key>com.apple.developer.icloud-services</key>
+				<array>
+					<string>CloudDocuments</string>
+					<string>CloudKit</string>
+				</array>
+				<key>com.apple.developer.ubiquity-container-identifiers</key>
+				<array>
+					<string>iCloud.com.spike-app.spike</string>
+				</array>
+				<key>com.apple.developer.ubiquity-kvstore-identifier</key>
+				<string>AGW6KV7M2W.com.spike-app.spike</string>
+			 ]]>
+		</Entitlements>
 		<!-- 
 		TEST FLIGHT
 		<key>get-task-allow</key>
@@ -307,6 +324,7 @@
 		<extensionID>adobe.nativeExtension.3DiOS</extensionID>
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Calendar</extensionID>
+		<extensionID>com.distriqt.CloudStorage</extensionID>
 		<extensionID>com.distriqt.Core</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>

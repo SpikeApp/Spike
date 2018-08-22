@@ -15,6 +15,7 @@ package services
 	import events.CalibrationServiceEvent;
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
@@ -42,6 +43,7 @@ package services
 	public class WidgetService
 	{
 		/* Internal Variables */
+		private static var serviceHalted:Boolean = false;
 		private static var displayTrendEnabled:Boolean = true;
 		private static var displayDeltaEnabled:Boolean = true;
 		private static var displayUnitsEnabled:Boolean = true;
@@ -70,6 +72,7 @@ package services
 			if (!CGMBlueToothDevice.isFollower())
 				Starling.juggler.delayCall(setInitialGraphData, 3);
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
@@ -325,6 +328,10 @@ package services
 		
 		private static function updateTreatments():void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			Trace.myTrace("WidgetService.as", "Sending updated IOB and COB values to widget!");
 			
 			var now:Number = new Date().valueOf();
@@ -335,6 +342,10 @@ package services
 		
 		private static function onTreatmentRefresh(e:Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			updateTreatments();
 		}
 		
@@ -410,6 +421,34 @@ package services
 			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
 			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("WidgetService.as", "Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			serviceHalted = true;
+			
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, setInitialGraphData);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentRefresh);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentRefresh);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentRefresh);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onTreatmentRefresh);
+			
+			Trace.myTrace("WidgetService.as", "Service stopped!");
 		}
 		
 		/**

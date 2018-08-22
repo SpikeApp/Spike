@@ -92,8 +92,6 @@ package services
 		
 		private static function startTutorial(e:Event):void
 		{
-			
-			
 			/* Notify that the tutorial has started */
 			isActive = true;
 			

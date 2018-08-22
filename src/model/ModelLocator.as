@@ -1,6 +1,8 @@
 package model
 {
+	import com.distriqt.extension.cloudstorage.CloudStorage;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.distriqt.extension.scanner.Scanner;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
@@ -25,6 +27,7 @@ package model
 	import services.DexcomShareService;
 	import services.HTTPServerService;
 	import services.HealthKitService;
+	import services.ICloudService;
 	import services.IFTTTService;
 	import services.MultipleMiaoMiaoService;
 	import services.NightscoutService;
@@ -152,20 +155,28 @@ package model
 				
 				if (de != null && de.data != null) _bgReadings = de.data as Array;
 				
+				//ANE Initialization
+				SpikeANE.init();
+				NetworkInfo.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
+				Scanner.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
+				
+				//Audio Initialization
+				SpikeANE.setAvAudioSessionCategory(true);
+				
+				//CGM Initialization
+				Database.getBlueToothDevice();
+				
+				//Services Initialization
 				ProfileManager.init();
 				TreatmentsManager.init();
 				SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.init ); //Start rendering interface now that all data is available but only when app is active
 				AlertManager.init();
 				DeepSleepService.init();
-				Database.getBlueToothDevice();
 				TransmitterService.init();
-				SpikeANE.init();
 				CGMBluetoothService.init();
 				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 				NotificationService.init();
 				CalibrationService.init();
-				NetworkInfo.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
-				SpikeANE.setAvAudioSessionCategory(true);
 				WidgetService.init();
 				WatchService.init();
 				AlarmService.init();
@@ -175,6 +186,7 @@ package model
 				DexcomShareService.init();
 				IFTTTService.init();
 				TextToSpeechService.init();
+				ICloudService.init();
 				RemoteAlertService.init();
 				if (!TEST_FLIGHT_MODE) UpdateService.init();
 				updateApplicationVersion();

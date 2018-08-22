@@ -94,6 +94,7 @@ package services
 		private static var externalAuthenticationCall:Boolean = false;
 		public static var ignoreSettingsChanged:Boolean = false;
 		public static var uploadSensorStart:Boolean = true;
+		private static var serviceHalted:Boolean = false;
 		
 		/* Data Variables */
 		private static var apiSecret:String;
@@ -177,6 +178,8 @@ package services
 			
 			//Event listener for settings changes
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			
 			setupNightscoutProperties();
 			
@@ -274,6 +277,10 @@ package services
 		
 		private static function onBgreadingReceived(e:Event):void 
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			var latestGlucoseReading:BgReading;
 			if(!CGMBlueToothDevice.isFollower())
 				latestGlucoseReading= BgReading.lastNoSensor();
@@ -296,12 +303,20 @@ package services
 		
 		private static function onLastBgreadingReceived(e:Event):void 
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			syncGlucoseReadings();
 		}
 		
 		private static function onUploadGlucoseReadingsComplete(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "in onUploadGlucoseReadingsComplete.");
+			
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
@@ -396,6 +411,10 @@ package services
 		
 		private static function onUploadBatteryStatusComplete(e:Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "onUploadBatteryStatusComplete called!");
 			
 			//Get loader
@@ -473,6 +492,10 @@ package services
 		private static function onGetProfileComplete(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "onGetProfileComplete called!");
+			
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
@@ -717,6 +740,10 @@ package services
 		
 		private static function onDownloadGlucoseReadingsComplete(e:Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "onDownloadGlucoseReadingsComplete called!");
 			
 			var now:Number = (new Date()).valueOf();
@@ -1047,6 +1074,10 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "in onUploadTreatmentComplete.");
 			
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
@@ -1149,6 +1180,10 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "in onTreatmentDelete.");
 			
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
@@ -1205,6 +1240,10 @@ package services
 		private static function onGetUserInfoComplete(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "onGetUserInfoComplete called!");
+			
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
@@ -1393,6 +1432,10 @@ package services
 		
 		private static function onGetPebbleComplete(e:Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
 				return;
 			
@@ -1475,7 +1518,7 @@ package services
 		
 		private static function getRemoteTreatments():void
 		{
-			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || activeTreatmentsDelete == null || activeTreatmentsUpload == null || activeSensorStarts == null || activeVisualCalibrations == null)
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || activeTreatmentsDelete == null || activeTreatmentsUpload == null || activeSensorStarts == null || activeVisualCalibrations == null || serviceHalted)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "getRemoteTreatments called!");
@@ -1575,6 +1618,10 @@ package services
 		
 		private static function onGetTreatmentsComplete(e:Event):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
 				return;
 			
@@ -1753,6 +1800,10 @@ package services
 		
 		private static function onCalibrationReceived(e:CalibrationServiceEvent):void 
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			if (Calibration.allForSensor().length == 1) //Ensures compatibility with the new method of only one initial calibration (ignores the first one)
 				return;
 			
@@ -1776,6 +1827,10 @@ package services
 		private static function onUploadCalibrationsComplete(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "in onUploadCalibrationsComplete.");
+			
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
@@ -1837,6 +1892,10 @@ package services
 		private static function onUploadVisualCalibrationsComplete(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "onUploadVisualCalibrationsComplete");
+			
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
@@ -1915,6 +1974,10 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "onUploadSensorStartComplete");
 			
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
@@ -1988,6 +2051,10 @@ package services
 		private static function onTestCredentialsComplete(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "onTestCredentialsComplete called");
+			
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			var response:String = loader.data;
@@ -2140,6 +2207,10 @@ package services
 		private static function onTestCredentialsFollowerComplete(e:Event):void
 		{
 			Trace.myTrace("NightscoutService.as", "onTestCredentialsFollowerComplete called");
+			
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			var response:String = loader.data;
@@ -2339,6 +2410,10 @@ package services
 		 */
 		private static function onConnectionFailed(error:Error, mode:String):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			if (mode == MODE_GLUCOSE_READING)
 			{
 				Trace.myTrace("NightscoutService.as", "In onConnectionFailed. Error uploading glucose readings. Error: " + error.message);
@@ -2418,6 +2493,10 @@ package services
 		
 		private static function onSettingChanged(e:SettingsServiceEvent):void
 		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
 			if (ignoreSettingsChanged)
 			{
 				setupNightscoutProperties();
@@ -2538,6 +2617,20 @@ package services
 				else
 					getPebbleEndpoint();
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("NightscoutService.as", "Stopping service...");
+			
+			serviceHalted = true;
+			
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			
+			deactivateService();
 		}
 
 		/**

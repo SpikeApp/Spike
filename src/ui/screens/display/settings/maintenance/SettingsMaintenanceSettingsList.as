@@ -27,8 +27,6 @@ package ui.screens.display.settings.maintenance
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
-	import distriqtkey.DistriqtKey;
-	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
 	import feathers.controls.Label;
@@ -372,7 +370,6 @@ package ui.screens.display.settings.maintenance
 			
 			try
 			{
-				Scanner.init( !ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad );
 				if (Scanner.isSupported)
 				{
 					Scanner.service.addEventListener( AuthorisationEvent.CHANGED, onCameraAuthorization );

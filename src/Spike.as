@@ -276,6 +276,11 @@ package
 			Trace.myTrace("Spike.as", "onContextCreated! Event Debug: " + ObjectUtil.toString(event));
 		}
 		
+		public static function haltApp():void
+		{
+			_instance.dispatchEvent( new SpikeEvent(SpikeEvent.APP_HALTED) );
+		}
+		
 		/**
 		 * Utility Functions
 		 */
