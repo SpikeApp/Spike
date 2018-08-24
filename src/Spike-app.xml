@@ -307,6 +307,7 @@
 		<extensionID>adobe.nativeExtension.3DiOS</extensionID>
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Calendar</extensionID>
+		<extensionID>com.distriqt.CloudStorage</extensionID>
 		<extensionID>com.distriqt.Core</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
