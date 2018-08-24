@@ -11,7 +11,7 @@
 	<!-- A universally unique application identifier. Must be unique across 
 		all AIR applications. Using a reverse DNS-style name as the id is recommended. 
 		(Eg. com.example.ExampleApplication.) Required. -->
-	<id>com.spike-app.spike</id>
+	<id>org.nightscoutfoundation.spike</id>
 
 	<!-- Used as the filename for the application. Required. -->
 	<filename>Spike</filename>
@@ -244,7 +244,7 @@
 				<array>
 					<dict>
 						<key>CFBundleURLName</key>
-						<string>com.spike-app.spike</string>
+						<string>org.nightscoutfoundation.spike</string>
 						<key>CFBundleURLSchemes</key>
 						<array>
 							<string>spikeapp</string>
@@ -252,27 +252,27 @@
 					</dict>
 				</array>
 				<key>NSCameraUsageDescription</key>
-				<string>Access to the camera is required</string>
+				<string>Access to the camera is required.</string>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
 		<Entitlements> 
 			<![CDATA[
 				<key>application-identifier</key>
-				<string>AGW6KV7M2W.com.spike-app.spike</string>
+				<string>8T5F87L29X.org.nightscoutfoundation.spike</string>
 				<key>com.apple.developer.healthkit</key>
 				<true/>
 				<key>com.apple.security.application-groups</key>
 				<array>
-					<string>group.com.spike-app.spike</string>
+					<string>group.org.nightscoutfoundation.spike</string>
 				</array>
 				<key>keychain-access-groups</key>
 				<array>
-					<string>AGW6KV7M2W.*</string>
+					<string>8T5F87L29X.*</string>
 				</array>
 				<key>com.apple.developer.icloud-container-identifiers</key>
 				<array>
-					<string>iCloud.com.spike-app.spike</string>
+					<string>iCloud.org.nightscoutfoundation.spike</string>
 				</array>
 				<key>com.apple.developer.icloud-services</key>
 				<array>
@@ -281,10 +281,10 @@
 				</array>
 				<key>com.apple.developer.ubiquity-container-identifiers</key>
 				<array>
-					<string>iCloud.com.spike-app.spike</string>
+					<string>iCloud.org.nightscoutfoundation.spike</string>
 				</array>
 				<key>com.apple.developer.ubiquity-kvstore-identifier</key>
-				<string>AGW6KV7M2W.com.spike-app.spike</string>
+				<string>8T5F87L29X.org.nightscoutfoundation.spike</string>
 			 ]]>
 		</Entitlements>
 		<!-- 

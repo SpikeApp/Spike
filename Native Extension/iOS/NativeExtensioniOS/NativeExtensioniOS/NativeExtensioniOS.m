@@ -243,7 +243,7 @@ FREObject applicationInBackGround (FREContext ctx, void* funcData, uint32_t argc
 
 FREObject initUserDefaults (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
 {
-    _userDefaults = [[NSUserDefaults alloc]initWithSuiteName:@"group.com.spike-app.spike"];
+    _userDefaults = [[NSUserDefaults alloc]initWithSuiteName:@"group.org.nightscoutfoundation.spike"];
     [_userDefaults synchronize];
     FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m UserDefaults Initiated!");
     return nil;

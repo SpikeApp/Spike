@@ -28,7 +28,7 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>com.spike-app.spike</string>
+	<string>org.nightscoutfoundation.spike</string>
 	<key>WKWatchKitApp</key>
 	<true/>
 </dict>
