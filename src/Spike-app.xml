@@ -259,7 +259,7 @@
 		<Entitlements> 
 			<![CDATA[
 				<key>application-identifier</key>
-				<string>8T5F87L29X.org.nightscoutfoundation.spike</string>
+				<string>M295NYD8ZT.org.nightscoutfoundation.spike</string>
 				<key>com.apple.developer.healthkit</key>
 				<true/>
 				<key>com.apple.security.application-groups</key>
@@ -268,7 +268,7 @@
 				</array>
 				<key>keychain-access-groups</key>
 				<array>
-					<string>8T5F87L29X.*</string>
+					<string>M295NYD8ZT.*</string>
 				</array>
 				<key>com.apple.developer.icloud-container-identifiers</key>
 				<array>
@@ -284,7 +284,7 @@
 					<string>iCloud.org.nightscoutfoundation.spike</string>
 				</array>
 				<key>com.apple.developer.ubiquity-kvstore-identifier</key>
-				<string>8T5F87L29X.org.nightscoutfoundation.spike</string>
+				<string>M295NYD8ZT.org.nightscoutfoundation.spike</string>
 			 ]]>
 		</Entitlements>
 		<!-- 
