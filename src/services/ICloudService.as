@@ -363,7 +363,7 @@ package services
 		private static function onBgReadingReceived(e:Event):void
 		{
 			//Validation
-			if (appHalted)
+			if (appHalted || (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY) == "true" && NetworkInfo.networkInfo.isWWAN()))
 				return;
 			
 			var now:Number = new Date().valueOf();

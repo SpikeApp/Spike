@@ -14,6 +14,7 @@ package ui.screens.display.settings.maintenance
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
+	import feathers.controls.Check;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
@@ -60,16 +61,19 @@ package ui.screens.display.settings.maintenance
 		private var backupScheduler:PickerList;
 		private var lastBackupLabel:Label;
 		private var instructionsLabel:Label;
+		private var wifiOnlyCheck:Check;
 		
 		/* Properties */
 		private var isLoading:Boolean = false;
 		private var dateFormatterForBackupDate:DateTimeFormatter;
+		private var wifiOnlyValue:Boolean;
 		
 		public function DatabaseMaintenanceSettingsList()
 		{
 			super(true);
 			
 			setupProperties();
+			setupInitialContent();
 			setupContent();
 		}
 		
@@ -85,12 +89,18 @@ package ui.screens.display.settings.maintenance
 			hasElasticEdges = false;
 			paddingBottom = 5;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			
+		}
+		
+		private function setupInitialContent():void
+		{
 			//Set date formatter
 			dateFormatterForBackupDate = new DateTimeFormatter();
 			dateFormatterForBackupDate.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "dd MMM HH:mm" : "dd MMM h:mm a";
 			dateFormatterForBackupDate.useUTC = false;
 			dateFormatterForBackupDate.setStyle("locale", Constants.getUserLocale());
+			
+			//Get settings
+			wifiOnlyValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY) == "true";
 		}
 		
 		private function setupContent():void
@@ -142,6 +152,10 @@ package ui.screens.display.settings.maintenance
 				}
 			}
 			backupScheduler.selectedIndex = selectedIndex;
+			
+			//Wi-Fi Only
+			wifiOnlyCheck = LayoutFactory.createCheckMark(wifiOnlyValue);
+			wifiOnlyCheck.addEventListener(Event.CHANGE, onWifiOnly);
 			
 			//Backup label
 			lastBackupLabel = LayoutFactory.createLabel("", HorizontalAlign.RIGHT, VerticalAlign.TOP, 10);
@@ -195,6 +209,7 @@ package ui.screens.display.settings.maintenance
 			//Set Data
 			var data:Array = [];
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','schedule_backups_label'), accessory: backupScheduler } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','automatic_backups_only_on_wifi_label'), accessory: wifiOnlyCheck } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','actions_label'), accessory: actionsContainer } );
 			if (isLoading)
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','status_label'), accessory: preloaderContainer } );
@@ -398,6 +413,11 @@ package ui.screens.display.settings.maintenance
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_TIMESPAN, String(backupScheduler.selectedItem.timespan));
 		}
 		
+		private function onWifiOnly(e:Event):void
+		{
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY, String(wifiOnlyCheck.isSelected));
+		}
+		
 		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
@@ -491,6 +511,14 @@ package ui.screens.display.settings.maintenance
 				backupScheduler.removeFromParent();
 				backupScheduler.dispose();
 				backupScheduler = null;
+			}
+			
+			if (wifiOnlyCheck != null)
+			{
+				wifiOnlyCheck.removeEventListener(Event.CHANGE, onWifiOnly);
+				wifiOnlyCheck.removeFromParent();
+				wifiOnlyCheck.dispose();
+				wifiOnlyCheck = null;
 			}
 			
 			if (instructionsLabel != null)
