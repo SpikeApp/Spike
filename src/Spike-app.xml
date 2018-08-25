@@ -253,6 +253,45 @@
 				</array>
 				<key>NSCameraUsageDescription</key>
 				<string>Access to the camera is required.</string>
+				<key>CFBundleDocumentTypes</key>
+				<array>
+					<dict>
+						<key>CFBundleTypeName</key>
+						<string>Spike SQLite Viewer</string>
+						<key>CFBundleTypeRole</key>
+						<string>Viewer</string>
+						<key>LSHandlerRank</key>
+						<string>Owner</string>
+						<key>LSItemContentTypes</key>
+						<array>
+							<string>public.db</string>
+						</array>
+					</dict>
+				</array>
+				<key>UTExportedTypeDeclarations</key>
+		        <array>
+		            <dict>
+		                <key>UTTypeIdentifier</key>
+		                <string>public.db</string>
+		                <key>UTTypeDescription</key>
+		                <string>Database File</string>
+		                <key>UTTypeConformsTo</key>
+		                <array>
+		                    <string>public.data</string>
+		                </array>
+		                <key>UTTypeTagSpecification</key>
+		                <dict>
+		                    <key>com.apple.ostype</key>
+		                    <string>sqlite3</string>
+		                    <key>public.filename-extension</key>
+		                    <array>
+		                        <string>db</string>
+		                    </array>
+		                    <key>public.mime-type</key>
+		                    <string>application/x-sqlite3</string>
+		                </dict>
+		            </dict>
+		        </array>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->

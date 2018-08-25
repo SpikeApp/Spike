@@ -24,7 +24,6 @@ package ui.popups
 	import starling.utils.SystemUtil;
 	
 	import utils.Constants;
-	import utils.DeviceInfo;
 	import utils.Trace;
 	
 	[ResourceBundle("globaltranslations")]

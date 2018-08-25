@@ -7,21 +7,37 @@ package
 	import flash.display3D.Context3DProfile;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
+	import flash.events.InvokeEvent;
 	import flash.events.StageOrientationEvent;
 	import flash.events.UncaughtErrorEvent;
+	import flash.filesystem.File;
+	import flash.filesystem.FileMode;
+	import flash.filesystem.FileStream;
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
 	import flash.system.Capabilities;
 	import flash.system.System;
+	import flash.text.engine.LineJustification;
+	import flash.text.engine.SpaceJustifier;
+	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
 	
+	import database.Database;
 	import database.LocalSettings;
 	
+	import events.DatabaseEvent;
 	import events.SpikeEvent;
 	
+	import feathers.controls.Alert;
+	import feathers.controls.text.TextBlockTextRenderer;
+	import feathers.core.ITextRenderer;
+	import feathers.data.ListCollection;
+	import feathers.layout.HorizontalAlign;
 	import feathers.utils.ScreenDensityScaleFactorManager;
+	
+	import model.ModelLocator;
 	
 	import network.EmailSender;
 	
@@ -35,6 +51,9 @@ package
 	import utils.Constants;
 	import utils.Trace;
 	
+	[ResourceBundle("maintenancesettingsscreen")]
+	[ResourceBundle("globaltranslations")]
+	
 	[SWF(frameRate="60", backgroundColor="#20222a")]
 	
 	public class Spike extends Sprite 
@@ -44,8 +63,11 @@ package
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
 		private var lastCrashReportTimestamp:Number = 0;
+		private var lastInvoke:Number = 0;
 		
 		private static var _instance:Spike;
+
+		private var backupDatabaseData:ByteArray;
 		
 		public static function get instance():Spike
 		{
@@ -64,87 +86,13 @@ package
 			/* Global Exceptions Handling */
 			loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
 			
+			/* File Association */
+			NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
+			
 			/* Start Starling */
 			timeoutID = setTimeout( function():void {
 				SystemUtil.executeWhenApplicationIsActive(initStarling);
 			}, 200 );
-		}
-		
-		private function onUncaughtError(e:UncaughtErrorEvent):void
-		{
-			if (e.error is Error)
-			{
-				var error:Error = e.error as Error;
-				sendError("<p>Error ID: " + error.errorID + "</p><p>Error Name: " + error.name + "</p><p> Error Message: " + error.message + "</p><p>Error Stack Trace: " + error.getStackTrace() + "</p>");
-			}
-			else
-			{
-				var errorEvent:ErrorEvent = e.error as ErrorEvent;
-				sendError("<p>Error Event ID: " + errorEvent.errorID + "</p><p>Text: " + errorEvent.text + "</p><p>Type: " + errorEvent.type + "</p><p>Target: " + ObjectUtil.toString(errorEvent.target) + "</p><p>Current Target: " + ObjectUtil.toString(errorEvent.currentTarget));
-			}
-		}
-		
-		private function sendError(error:String):void
-		{
-			//Things we don't want to report
-			if (
-				error.indexOf("ioError") != -1 ||
-				error.indexOf("Unexpected < encountered") != -1 ||
-				error.indexOf("Unexpected T encountered") != -1 ||
-				error.indexOf("details:'cannot rollback - no transaction is active") != -1 ||
-				error.indexOf("PickerList/closeList()") != -1 ||
-				error.indexOf("PickerList/button_touchHandler()") != -1 ||
-				error.indexOf("JSONParseError") != -1 ||
-				error.indexOf("starling.display.graphics::Graphic/render()") != -1 ||
-				error.indexOf("starling.rendering::VertexData/createVertexBuffer()") != -1 ||
-				error.indexOf("DropDownPopUpContentManager/stage_enterFrameHandler()") != -1 ||
-				error.indexOf("feathers.utils.touch::TapToEvent/target_touchHandler()") != -1 ||
-				error.indexOf("#2004 at flash.text.engine::ElementFormat()") != -1 ||
-				error.indexOf("#1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
-				error.indexOf("Error #1125 at BatchProcessor/getBatchAt()") != -1 ||
-				error.indexOf("Error #1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
-				error.indexOf("Error #1009 at feathers.controls::StackScreenNavigator/handleDragEnd()") != -1 ||
-				error.indexOf("Error #2004 at flash.text.engine::ElementFormat()") != -1 ||
-				error.indexOf("Error #1016 at services::NightscoutService$/getRemoteTreatments()") != -1 ||
-				error.indexOf("getBatchAt()") != -1 ||
-				error.indexOf("Graphic/getBounds()") != -1
-				)
-			{
-				return;
-			}
-			
-			var now:Number = new Date().valueOf();
-			
-			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life and not SPAM our email
-			if (now - lastCrashReportTimestamp < TIME_1_MINUTE)
-				return;
-			
-			lastCrashReportTimestamp = now;
-			
-			error = "Device Model: " + Constants.deviceModelName + "\n\n" + "Spike Version: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) + "\n\n" + error;
-			
-			//Create URL Request 
-			var vars:URLVariables = new URLVariables();
-			vars.mimeType = "text/html";
-			vars.emailSubject = "Spike Error";
-			vars.emailBody = error;
-			vars.userName = "";
-			vars.userEmail = "bug@spike-app.com";
-			
-			//Send Email
-			EmailSender.sendData
-			(
-				EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
-				onLoadCompleteHandler,
-				vars
-			);
-		}
-		
-		private function onLoadCompleteHandler(event:flash.events.Event):void 
-		{ 
-			var loader:URLLoader = URLLoader(event.target);
-			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
-			loader = null;
 		}
 		
 		/**
@@ -276,15 +224,189 @@ package
 			Trace.myTrace("Spike.as", "onContextCreated! Event Debug: " + ObjectUtil.toString(event));
 		}
 		
-		public static function haltApp():void
+		/**
+		 * Spike Database Import
+		 */
+		private function onInvoke(event:InvokeEvent):void 
 		{
-			_instance.dispatchEvent( new SpikeEvent(SpikeEvent.APP_HALTED) );
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastInvoke > 5000)
+			{
+				//Do nothing.
+			}
+			else
+				return;
+			
+			var items:Array = event.arguments;
+			
+			if ( items.length > 0 ) 
+			{
+				var file:File = new File( event.arguments[0] );
+				if (file.type == ".db" && file.extension == "db" && file.name.indexOf("spike") != -1 && file.size > 0)
+				{
+					lastInvoke = now;
+					
+					var alert:Alert = Alert.show
+						(
+							ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_restore_confirmation_label'),
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							new ListCollection
+							(
+								[
+									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase")  },	
+									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: restoreDatabase }	
+								]
+							)
+						)
+					alert.buttonGroupProperties.gap = 10;
+					alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+					alert.messageFactory = function():ITextRenderer
+					{
+						var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
+						messageRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
+						
+						return messageRenderer;
+					};
+					
+					function restoreDatabase(e:starling.events.Event):void
+					{
+						//Read file into memory
+						var databaseStream:FileStream = new FileStream();
+						databaseStream.open(file, FileMode.READ);
+						
+						//Read database raw bytes into memory
+						backupDatabaseData = new ByteArray();
+						databaseStream.readBytes(backupDatabaseData);
+						databaseStream.close();
+						
+						//Halt Spike
+						Trace.myTrace("Spike.as", "Halting Spike...");
+						Database.instance.addEventListener(DatabaseEvent.DATABASE_CLOSED_EVENT, onLocalDatabaseClosed);
+						Spike.haltApp();
+					}
+				}
+			}
+		}
+		
+		private function onLocalDatabaseClosed(e:DatabaseEvent):void
+		{
+			Trace.myTrace("Spike.as", "Spike halted and local database connection closed!");
+			
+			//Restore database
+			var databaseTargetFile:File = File.applicationStorageDirectory.resolvePath("spike.db");
+			var databaseFileStream:FileStream = new FileStream();
+			databaseFileStream.open(databaseTargetFile, FileMode.WRITE);
+			databaseFileStream.writeBytes(backupDatabaseData, 0, backupDatabaseData.length);
+			databaseFileStream.close();
+			
+			//Alert user
+			var alert:Alert = Alert.show
+				(
+					ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','restore_successfull_label'),
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title')
+				);
+			alert.messageFactory = function():ITextRenderer
+			{
+				var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
+				messageRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
+				
+				return messageRenderer;
+			};
+			
+			Trace.myTrace("Spike.as", "Database successfully restored!");
+		}
+		
+		/**
+		 * Error Handling
+		 */
+		private function onUncaughtError(e:UncaughtErrorEvent):void
+		{
+			if (e.error is Error)
+			{
+				var error:Error = e.error as Error;
+				sendError("<p>Error ID: " + error.errorID + "</p><p>Error Name: " + error.name + "</p><p> Error Message: " + error.message + "</p><p>Error Stack Trace: " + error.getStackTrace() + "</p>");
+			}
+			else
+			{
+				var errorEvent:ErrorEvent = e.error as ErrorEvent;
+				sendError("<p>Error Event ID: " + errorEvent.errorID + "</p><p>Text: " + errorEvent.text + "</p><p>Type: " + errorEvent.type + "</p><p>Target: " + ObjectUtil.toString(errorEvent.target) + "</p><p>Current Target: " + ObjectUtil.toString(errorEvent.currentTarget));
+			}
+		}
+		
+		private function sendError(error:String):void
+		{
+			//Things we don't want to report
+			if (
+				error.indexOf("ioError") != -1 ||
+				error.indexOf("Unexpected < encountered") != -1 ||
+				error.indexOf("Unexpected T encountered") != -1 ||
+				error.indexOf("details:'cannot rollback - no transaction is active") != -1 ||
+				error.indexOf("PickerList/closeList()") != -1 ||
+				error.indexOf("PickerList/button_touchHandler()") != -1 ||
+				error.indexOf("JSONParseError") != -1 ||
+				error.indexOf("starling.display.graphics::Graphic/render()") != -1 ||
+				error.indexOf("starling.rendering::VertexData/createVertexBuffer()") != -1 ||
+				error.indexOf("DropDownPopUpContentManager/stage_enterFrameHandler()") != -1 ||
+				error.indexOf("feathers.utils.touch::TapToEvent/target_touchHandler()") != -1 ||
+				error.indexOf("#2004 at flash.text.engine::ElementFormat()") != -1 ||
+				error.indexOf("#1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
+				error.indexOf("Error #1125 at BatchProcessor/getBatchAt()") != -1 ||
+				error.indexOf("Error #1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
+				error.indexOf("Error #1009 at feathers.controls::StackScreenNavigator/handleDragEnd()") != -1 ||
+				error.indexOf("Error #2004 at flash.text.engine::ElementFormat()") != -1 ||
+				error.indexOf("Error #1016 at services::NightscoutService$/getRemoteTreatments()") != -1 ||
+				error.indexOf("getBatchAt()") != -1 ||
+				error.indexOf("Graphic/getBounds()") != -1
+			)
+			{
+				return;
+			}
+			
+			var now:Number = new Date().valueOf();
+			
+			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life and not SPAM our email
+			if (now - lastCrashReportTimestamp < TIME_1_MINUTE)
+				return;
+			
+			lastCrashReportTimestamp = now;
+			
+			error = "Device Model: " + Constants.deviceModelName + "\n\n" + "Spike Version: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) + "\n\n" + error;
+			
+			//Create URL Request 
+			var vars:URLVariables = new URLVariables();
+			vars.mimeType = "text/html";
+			vars.emailSubject = "Spike Error";
+			vars.emailBody = error;
+			vars.userName = "";
+			vars.userEmail = "bug@spike-app.com";
+			
+			//Send Email
+			EmailSender.sendData
+				(
+					EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
+					onLoadCompleteHandler,
+					vars
+				);
+		}
+		
+		private function onLoadCompleteHandler(event:flash.events.Event):void 
+		{ 
+			var loader:URLLoader = URLLoader(event.target);
+			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
+			loader = null;
 		}
 		
 		/**
 		 * Utility Functions
 		 */
-		private static function myTrace(log:String):void {
+		public static function haltApp():void
+		{
+			_instance.dispatchEvent( new SpikeEvent(SpikeEvent.APP_HALTED) );
+		}
+		
+		private static function myTrace(log:String):void 
+		{
 			Trace.myTrace("Spike.as", log);
 		}	
 	}	
