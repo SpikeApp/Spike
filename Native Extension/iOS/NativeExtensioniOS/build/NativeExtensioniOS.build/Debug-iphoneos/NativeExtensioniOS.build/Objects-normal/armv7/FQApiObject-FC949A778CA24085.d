@@ -1,3 +1,3 @@
 dependencies: \
-  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQApiObject.m \
-  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQApiObject.h
+  /Users/johandegraeve/OneDrive/Adobe\ FB\ Projects/Feathers/spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQApiObject.m \
+  /Users/johandegraeve/OneDrive/Adobe\ FB\ Projects/Feathers/spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQApiObject.h

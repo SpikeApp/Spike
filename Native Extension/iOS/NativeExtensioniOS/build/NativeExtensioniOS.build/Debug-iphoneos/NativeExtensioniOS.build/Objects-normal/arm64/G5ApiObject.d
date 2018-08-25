@@ -1,3 +1,3 @@
 dependencies: \
-  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/G5ApiObject.m \
-  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/G5ApiObject.h
+  /Users/johandegraeve/OneDrive/Adobe\ FB\ Projects/Feathers/spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/G5ApiObject.m \
+  /Users/johandegraeve/OneDrive/Adobe\ FB\ Projects/Feathers/spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/G5ApiObject.h

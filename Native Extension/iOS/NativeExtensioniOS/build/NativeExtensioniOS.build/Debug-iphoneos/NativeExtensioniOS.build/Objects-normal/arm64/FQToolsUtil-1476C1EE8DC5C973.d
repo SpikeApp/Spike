@@ -1,3 +1,3 @@
 dependencies: \
-  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQToolsUtil.m \
-  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQToolsUtil.h
+  /Users/johandegraeve/OneDrive/Adobe\ FB\ Projects/Feathers/spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQToolsUtil.m \
+  /Users/johandegraeve/OneDrive/Adobe\ FB\ Projects/Feathers/spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQToolsUtil.h
