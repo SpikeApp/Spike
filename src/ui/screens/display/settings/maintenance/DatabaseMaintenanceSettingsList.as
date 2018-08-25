@@ -155,6 +155,7 @@ package ui.screens.display.settings.maintenance
 			
 			//Wi-Fi Only
 			wifiOnlyCheck = LayoutFactory.createCheckMark(wifiOnlyValue);
+			wifiOnlyCheck.pivotX = 3;
 			wifiOnlyCheck.addEventListener(Event.CHANGE, onWifiOnly);
 			
 			//Backup label
