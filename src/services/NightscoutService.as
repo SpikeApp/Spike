@@ -1745,6 +1745,7 @@ package services
 			newVisualCalibration["glucose"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? calibration.bg : Math.round(BgReading.mgdlToMmol(calibration.bg) * 10) / 10;
 			newVisualCalibration["glucoseType"] = "Finger";
 			newVisualCalibration["notes"] = ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note");
+			newVisualCalibration["iscalibration"] = "true";
 			
 			return newVisualCalibration;
 		}

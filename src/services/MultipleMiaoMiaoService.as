@@ -443,15 +443,23 @@ package services
 						var NSDownloadCalibration:Object = NSCalibrations[arrayCounter];
 						if (NSDownloadCalibration.created_at) {
 							if (NSDownloadCalibration.glucose) {
-								var NSDownloadReadingTime:Number = DateTimeUtilities.parseDateTimeString(NSDownloadCalibration.created_at).valueOf();
-								if (NSDownloadReadingTime >= timeOfFirstCalibrationToDowload) {
-									calibrationData = new CalibrationData();
-									calibrationData.glucoseLevelRaw = NSDownloadCalibration.glucose as int;
-									calibrationData.realDate = NSDownloadReadingTime;
-									bgReadingAndCalibrationsList.push(calibrationData);
-									myTrace("in onDownloadCalibrationsComplete, adding CalibrationData with realdate =  " + (new Date(calibrationData.realDate)).toString() + " and value = " + calibrationData.glucoseLevelRaw);
+								if (NSDownloadCalibration.iscalibration) {
+									if (NSDownloadCalibration.iscalibration == "true") {
+										var NSDownloadReadingTime:Number = DateTimeUtilities.parseDateTimeString(NSDownloadCalibration.created_at).valueOf();
+										if (NSDownloadReadingTime >= timeOfFirstCalibrationToDowload) {
+											calibrationData = new CalibrationData();
+											calibrationData.glucoseLevelRaw = NSDownloadCalibration.glucose as int;
+											calibrationData.realDate = NSDownloadReadingTime;
+											bgReadingAndCalibrationsList.push(calibrationData);
+											myTrace("in onDownloadCalibrationsComplete, adding CalibrationData with realdate =  " + (new Date(calibrationData.realDate)).toString() + " and value = " + calibrationData.glucoseLevelRaw);
+										} else {
+											myTrace("in onDownloadCalibrationsComplete, data ignored with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " because timestamp < " + (new Date(timeOfFirstCalibrationToDowload)).toString());
+										}
+									} else {
+										myTrace("in onDownloadCalibrationsComplete, Nightscout has returned a reading with iscalibration != true");
+									}
 								} else {
-									myTrace("in onDownloadCalibrationsComplete, data ignored with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " because timestamp < " + (new Date(timeOfFirstCalibrationToDowload)).toString());
+									myTrace("in onDownloadCalibrationsComplete, Nightscout has returned a reading without iscalibration. Ignoring!");
 								}
 							} else {
 								myTrace("in onDownloadCalibrationsComplete, Nightscout has returned a reading without glucose. Ignoring!");
@@ -629,15 +637,23 @@ package services
 						var NSDownloadCalibration:Object = NSCalibrations[arrayCounter];
 						if (NSDownloadCalibration.created_at) {
 							if (NSDownloadCalibration.glucose) {
-								var NSDownloadReadingTime:Number = DateTimeUtilities.parseDateTimeString(NSDownloadCalibration.created_at).valueOf();
-								if (NSDownloadReadingTime >= timeOfFirstCalibrationToDowload) {
-									calibrationData = new CalibrationData();
-									calibrationData.glucoseLevelRaw = NSDownloadCalibration.glucose as int;
-									calibrationData.realDate = NSDownloadReadingTime;
-									_intermediateCalibrationsList.push(calibrationData);
-									myTrace("in onIntermediateCalibrationCheckComplete, adding CalibrationData with realdate =  " + (new Date(calibrationData.realDate)).toString() + " and value = " + calibrationData.glucoseLevelRaw);
+								if (NSDownloadCalibration.iscalibration) {
+									if (NSDownloadCalibration.iscalibration == "true") {
+										var NSDownloadReadingTime:Number = DateTimeUtilities.parseDateTimeString(NSDownloadCalibration.created_at).valueOf();
+										if (NSDownloadReadingTime >= timeOfFirstCalibrationToDowload) {
+											calibrationData = new CalibrationData();
+											calibrationData.glucoseLevelRaw = NSDownloadCalibration.glucose as int;
+											calibrationData.realDate = NSDownloadReadingTime;
+											_intermediateCalibrationsList.push(calibrationData);
+											myTrace("in onIntermediateCalibrationCheckComplete, adding CalibrationData with realdate =  " + (new Date(calibrationData.realDate)).toString() + " and value = " + calibrationData.glucoseLevelRaw);
+										} else {
+											myTrace("in onIntermediateCalibrationCheckComplete, data ignored with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " because timestamp < " + (new Date(timeOfFirstCalibrationToDowload)).toString());
+										}
+									} else {
+										myTrace("in onIntermediateCalibrationCheckComplete, Nightscout has returned a reading with iscalibration != true");
+									}
 								} else {
-									myTrace("in onIntermediateCalibrationCheckComplete, data ignored with realdate =  " + (new Date(NSDownloadReadingTime)).toString() + " because timestamp < " + (new Date(timeOfFirstCalibrationToDowload)).toString());
+									myTrace("in onIntermediateCalibrationCheckComplete, Nightscout has returned a reading without iscalibration. Ignoring!");
 								}
 							} else {
 								myTrace("in onIntermediateCalibrationCheckComplete, Nightscout has returned a reading without glucose. Ignoring!");
