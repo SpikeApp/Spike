@@ -263,7 +263,7 @@ package ui.screens.display.settings.maintenance
 					{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase")  },	
 					{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: restoreDatabase }	
 				],
-				HorizontalAlign.CENTER
+				HorizontalAlign.JUSTIFY
 			);
 			alert.buttonGroupProperties.gap = 10;
 			alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;

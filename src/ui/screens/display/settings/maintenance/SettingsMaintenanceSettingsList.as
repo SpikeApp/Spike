@@ -27,6 +27,7 @@ package ui.screens.display.settings.maintenance
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
 	import feathers.controls.Label;
@@ -34,6 +35,7 @@ package ui.screens.display.settings.maintenance
 	import feathers.controls.TextInput;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
+	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
@@ -64,6 +66,7 @@ package ui.screens.display.settings.maintenance
 	import utils.Constants;
 	import utils.DataValidator;
 	import utils.DeviceInfo;
+	import utils.Trace;
 	
 	[ResourceBundle("maintenancesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -88,11 +91,14 @@ package ui.screens.display.settings.maintenance
 		private var positionHelper:Sprite;
 		private var qrCodeSenderCallout:Callout;
 		private var mainEmailContainer:LayoutGroup;
-
+		private var preloaderContainer:LayoutGroup;
+		private var preloader:MaterialDesignSpinner;
+		
 		//Properties
 		private var renderTimoutID1:uint;
 		private var renderTimoutID2:uint;
 		private var renderTimoutID3:uint;
+		private var isLoading:Boolean = false;
 		
 		public function SettingsMaintenanceSettingsList()
 		{
@@ -156,6 +162,19 @@ package ui.screens.display.settings.maintenance
 			sendQRCodeButton.addEventListener(starling.events.Event.TRIGGERED, onSendQRCode);
 			sendEmailContainer.addChild(sendQRCodeButton);
 			
+			//Preloader
+			preloaderContainer = new LayoutGroup();
+			preloaderContainer.pivotX = -15;
+			
+			preloader = new MaterialDesignSpinner();
+			preloader.color = 0x0086FF;
+			preloader.touchable = false;
+			preloader.scale = 0.6;
+			preloaderContainer.addChild(preloader);
+			preloader.validate();
+			preloaderContainer.validate();
+			preloader.y += 10;
+			
 			//Restore Instructions
 			restoreInstructions = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','restore_instructions_label'), HorizontalAlign.JUSTIFY, VerticalAlign.TOP);
 			restoreInstructions.width = width;
@@ -170,6 +189,8 @@ package ui.screens.display.settings.maintenance
 			//Set Data
 			var data:Array = [];
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','actions_label'), accessory: actionsContainer } );
+			if (isLoading)
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','status_label'), accessory: preloaderContainer } );
 			if (qrCodeImage != null)
 			{
 				data.push( { label: "", accessory: qrCodeContainer } );
@@ -224,6 +245,9 @@ package ui.screens.display.settings.maintenance
 				
 				return;
 			}
+			
+			isLoading = true;
+			refreshContent();
 			
 			//Parse all settings into a string
 			var allCommonSettings:Array = CommonSettings.getAllSettings();
@@ -313,9 +337,19 @@ package ui.screens.display.settings.maintenance
 						
 						if (qrCodeImage != null) qrCodeImage.removeFromParent(true);
 						qrCodeBitmapData = settingsQRCode.bitmapData;
-						qrCodeImage = new Image(Texture.fromBitmapData(qrCodeBitmapData));
-						qrCodeContainer.addChild(qrCodeImage);
-						refreshContent();
+						if (qrCodeBitmapData == null)
+						{
+							AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+									ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','error_creating_qr_code')
+								);
+						}
+						else
+						{
+							qrCodeImage = new Image(Texture.fromBitmapData(qrCodeBitmapData));
+							qrCodeContainer.addChild(qrCodeImage);
+						}
 					} 
 					catch(error:Error) 
 					{
@@ -343,10 +377,16 @@ package ui.screens.display.settings.maintenance
 						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','error_backing_up_settings')
 					);
 			}
+			
+			isLoading = false;
+			refreshContent();
 		}
 		
 		private function onSettingsUploadError(error:Error):void
 		{
+			isLoading = false;
+			refreshContent();
+			
 			AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
@@ -368,34 +408,78 @@ package ui.screens.display.settings.maintenance
 				return;
 			}
 			
-			try
+			var alert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','settings_restore_confirmation_label'),
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase")  },	
+						{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: restoreSettings }	
+					],
+					HorizontalAlign.JUSTIFY
+				);
+			alert.buttonGroupProperties.gap = 10;
+			alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+			
+			function restoreSettings(e:starling.events.Event):void
 			{
-				if (Scanner.isSupported)
+				try
 				{
-					Scanner.service.addEventListener( AuthorisationEvent.CHANGED, onCameraAuthorization );
-					switch (Scanner.service.authorisationStatus())
+					if (Scanner.isSupported)
 					{
-						case AuthorisationStatus.NOT_DETERMINED:
-						case AuthorisationStatus.SHOULD_EXPLAIN:
-							// REQUEST ACCESS: This will display the permission dialog
-							Scanner.service.requestAccess();
-							return;
-							
-						case AuthorisationStatus.DENIED:
-						case AuthorisationStatus.UNKNOWN:
-						case AuthorisationStatus.RESTRICTED:
-							// ACCESS DENIED: You should inform your user appropriately
-							return;
-							
-						case AuthorisationStatus.AUTHORISED:
-							scanSettingsQRCode();
-							break;						
+						Scanner.service.addEventListener( AuthorisationEvent.CHANGED, onCameraAuthorization );
+						switch (Scanner.service.authorisationStatus())
+						{
+							case AuthorisationStatus.NOT_DETERMINED:
+								
+							case AuthorisationStatus.SHOULD_EXPLAIN:
+								Scanner.service.requestAccess();
+								return;
+								
+							case AuthorisationStatus.DENIED:
+								AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','camera_access_denied')
+								);
+								
+								return;
+								
+							case AuthorisationStatus.UNKNOWN:
+								AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','camera_access_unknow_error')
+								);
+								
+								return;
+								
+							case AuthorisationStatus.RESTRICTED:
+								AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','camera_access_restricted')
+								);
+								
+								return;
+								
+							case AuthorisationStatus.AUTHORISED:
+								scanSettingsQRCode();
+								break;						
+						}
 					}
 				}
-			}
-			catch (e:Error)
-			{
-				trace( e );
+				catch (e:Error)
+				{
+					Trace.myTrace("SettingsMaintenanceSettings.as", "Scanner Error: " + e);
+					
+					AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','error_activating_scanner') + " " + e
+						);
+				}
 			}
 		}
 		
@@ -404,7 +488,6 @@ package ui.screens.display.settings.maintenance
 			switch (event.status)
 			{
 				case AuthorisationStatus.SHOULD_EXPLAIN:
-					// Should display a reason you need this feature
 					break;
 				
 				case AuthorisationStatus.AUTHORISED:
@@ -412,9 +495,22 @@ package ui.screens.display.settings.maintenance
 					break;
 				
 				case AuthorisationStatus.RESTRICTED:
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','camera_access_restricted')
+					);
+					
+					return;
+					
 				case AuthorisationStatus.DENIED:
-					// ACCESS DENIED: You should inform your user appropriately
-					break;
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','camera_access_denied')
+					);
+					
+					return;
 			}
 		}
 		
@@ -439,25 +535,29 @@ package ui.screens.display.settings.maintenance
 					
 					if (urlDecrypted.indexOf("https://snippets.glot.io") != -1)
 					{
+						//Activate preloader
+						isLoading = true;
+						refreshContent();
+						
 						//Get Settings
 						NetworkConnector.createGlotConnector(urlDecrypted, null, URLRequestMethod.GET, null, null, onEncyptedSettingsReceived, onSettingsReceivedError);
 					}
 					else
 					{
 						AlertManager.showSimpleAlert
-						(
-							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-							ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','invalid_qr_code')
-						);
+							(
+								ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+								ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','invalid_qr_code')
+							);
 					}
 				} 
 				catch(error:Error) 
 				{
 					AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','invalid_qr_code')
-					);
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','invalid_qr_code')
+						);
 				}
 				
 			}
@@ -532,16 +632,24 @@ package ui.screens.display.settings.maintenance
 					var i:int;
 					var commonSettingsLength:int = commonSettingsArray.length;
 					var localSettingsLength:int = localSettingsArray.length;
+					var peripheralType:String = "";
 					
 					for (i = 0; i < commonSettingsLength; i++) 
 					{
-						CommonSettings.setCommonSetting(i, String(commonSettingsArray[i]), true, i != CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE ? true : false);
+						if (i == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE)
+						{
+							peripheralType = String(commonSettingsArray[i]);
+						}
+						else
+							CommonSettings.setCommonSetting(i, String(commonSettingsArray[i]));
 					}
 					
 					for (i = 0; i < localSettingsLength; i++) 
 					{
 						LocalSettings.setLocalSetting(i, String(localSettingsArray[i]));
 					}
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, peripheralType);
 					
 					//Refresh main menu. Menu items are different for hosts and followers
 					AppInterface.instance.menu.refreshContent();
@@ -569,10 +677,17 @@ package ui.screens.display.settings.maintenance
 						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','error_restoring_settings')
 					);
 			}
+			
+			//Activate preloader
+			isLoading = false;
+			refreshContent();
 		}
 		
 		private function onSettingsReceivedError(error:Error):void
 		{
+			isLoading = false;
+			refreshContent();
+			
 			AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
@@ -596,10 +711,10 @@ package ui.screens.display.settings.maintenance
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
 				AlertManager.showSimpleAlert
-				(
-					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','no_network_connection')
-				);
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','no_network_connection')
+					);
 				
 				return;
 			}
@@ -691,10 +806,10 @@ package ui.screens.display.settings.maintenance
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
 				AlertManager.showSimpleAlert
-				(
-					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','no_network_connection')
-				);
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','no_network_connection')
+					);
 				
 				return;
 			}
@@ -738,12 +853,12 @@ package ui.screens.display.settings.maintenance
 			
 			//Send data
 			EmailSender.sendData
-			(
-				EmailSender.TRANSMISSION_URL_WITH_ATTACHMENT,
-				onEmailSent,
-				vars,
-				fileData
-			);
+				(
+					EmailSender.TRANSMISSION_URL_WITH_ATTACHMENT,
+					onEmailSent,
+					vars,
+					fileData
+				);
 		}
 		
 		private function onEmailSent(event:flash.events.Event):void 
@@ -763,10 +878,10 @@ package ui.screens.display.settings.maintenance
 			if (response.success == "true")
 			{
 				AlertManager.showSimpleAlert
-				(
-					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_success_message')
-				);
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_success_message')
+					);
 				
 				closeEmailCallout();
 			}
@@ -851,6 +966,8 @@ package ui.screens.display.settings.maintenance
 			
 			renderTimoutID2 = setTimeout( function():void {
 				SystemUtil.executeWhenApplicationIsActive(Starling.current.start);
+				//isLoading = false;
+				//refreshContent();
 			}, 500 );
 			
 			renderTimoutID3 = setTimeout( function():void {
@@ -979,7 +1096,7 @@ package ui.screens.display.settings.maintenance
 				emailActionsContainer.dispose();
 				emailActionsContainer = null;
 			}
-
+			
 			if (mainEmailContainer != null)
 			{
 				mainEmailContainer.removeFromParent();
@@ -992,6 +1109,20 @@ package ui.screens.display.settings.maintenance
 				qrCodeSenderCallout.removeFromParent();
 				qrCodeSenderCallout.dispose();
 				qrCodeSenderCallout = null;
+			}
+			
+			if (preloader != null)
+			{
+				preloader.removeFromParent();
+				preloader.dispose();
+				preloader = null;
+			}
+			
+			if (preloaderContainer != null)
+			{
+				preloaderContainer.removeFromParent();
+				preloaderContainer.dispose();
+				preloaderContainer = null;
 			}
 			
 			super.dispose();
