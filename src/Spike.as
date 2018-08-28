@@ -254,7 +254,7 @@ package
 							new ListCollection
 							(
 								[
-									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase")  },	
+									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase"), triggered: ignoreRestore  },	
 									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: restoreDatabase }	
 								]
 							)
@@ -280,10 +280,21 @@ package
 						databaseStream.readBytes(backupDatabaseData);
 						databaseStream.close();
 						
+						//Delete file
+						if (file != null)
+							file.deleteFile();
+						
 						//Halt Spike
 						Trace.myTrace("Spike.as", "Halting Spike...");
 						Database.instance.addEventListener(DatabaseEvent.DATABASE_CLOSED_EVENT, onLocalDatabaseClosed);
 						Spike.haltApp();
+					}
+					
+					function ignoreRestore(e:starling.events.Event):void
+					{
+						//Delete file
+						if (file != null)
+							file.deleteFile();
 					}
 				}
 			}
