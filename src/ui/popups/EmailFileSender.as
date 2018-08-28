@@ -29,6 +29,9 @@ package ui.popups
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.EventDispatcher;
+	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -38,7 +41,7 @@ package ui.popups
 	
 	[ResourceBundle("globaltranslations")]
 
-	public class EmailFileSender
+	public class EmailFileSender extends EventDispatcher
 	{
 		//Display Objects
 		private static var mainContainer:LayoutGroup;
@@ -60,10 +63,14 @@ package ui.popups
 		private static var emailFailedMessageProperty:String;
 		private static var fileNotFoundMessageProperty:String;
 		
+		//Instance
+		private static var _instance:EmailFileSender = new EmailFileSender();
+		
 		public function EmailFileSender()
 		{
 			//Don't allow class to be instantiated
-			throw new IllegalOperationError("EmailFileSender class is not meant to be instantiated!");
+			if (_instance != null)
+				throw new IllegalOperationError("EmailFileSender class is not meant to be instantiated!");
 		}
 		
 		public static function sendFile(emailSubject:String, emailBody:String, fileName:String, fileData:*, mimeType:String, emailSentMessage:String, emailFailedMessage:String, fileNotFoundMessage:String):void
@@ -87,6 +94,8 @@ package ui.popups
 			emailSentMessageProperty = emailSentMessage;
 			emailFailedMessageProperty = emailFailedMessage;
 			fileNotFoundMessageProperty = fileNotFoundMessage;
+			
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			createDisplayObjects();
 			displayCallout();
@@ -279,6 +288,8 @@ package ui.popups
 				);
 				
 				dispose();
+				
+				_instance.dispatchEventWith(starling.events.Event.COMPLETE);
 			}
 			else
 			{
@@ -295,6 +306,8 @@ package ui.popups
 				
 				dispose(true);
 				
+				_instance.dispatchEventWith(starling.events.Event.CANCEL);
+				
 				function onTryAgain(e:starling.events.Event):void
 				{
 					Starling.juggler.delayCall(sendFile, 0.5, emailSubjectProperty, emailBodyProperty, fileNameProperty, fileDataProperty, mimeTypeProperty, emailSentMessageProperty, emailFailedMessageProperty, fileNotFoundMessageProperty);
@@ -310,6 +323,17 @@ package ui.popups
 		private static function onCancel(e:starling.events.Event):void
 		{
 			dispose();
+			
+			_instance.dispatchEventWith(starling.events.Event.CANCEL);
+		}
+		
+		private static function onStarlingResize(event:ResizeEvent):void 
+		{
+			if (positionHelper != null)
+				positionHelper.x = Constants.stageWidth / 2;
+			
+			if (emailField != null)
+				SystemUtil.executeWhenApplicationIsActive( emailField.clearFocus );
 		}
 		
 		/**
@@ -317,6 +341,15 @@ package ui.popups
 		 */
 		private static function dispose(keepProperties:Boolean = false):void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
+			if (!SystemUtil.isApplicationActive)
+			{
+				SystemUtil.executeWhenApplicationIsActive(dispose, keepProperties);
+				
+				return;
+			}
+			
 			if (positionHelper != null)
 			{
 				positionHelper.removeFromParent();
@@ -385,6 +418,14 @@ package ui.popups
 				PopUpManager.removePopUp(emailCallout, true);
 			else if (emailCallout != null)
 				emailCallout.close(true);
+		}
+
+		/**
+		 * Getters & Setters
+		 */
+		public static function get instance():EmailFileSender
+		{
+			return _instance;
 		}
 	}
 }
