@@ -493,6 +493,8 @@ package ui.screens.display.extraoptions
 			
 			if (fullScreenIconImage != null)
 			{
+				if (fullScreenIconImage.texture != null)
+					fullScreenIconImage.texture.dispose();
 				fullScreenIconImage.dispose();
 				fullScreenIconImage = null;
 			}
@@ -505,6 +507,8 @@ package ui.screens.display.extraoptions
 			
 			if (speechIconImage != null)
 			{
+				if (speechIconImage.texture != null)
+					speechIconImage.texture.dispose();
 				speechIconImage.dispose();
 				speechIconImage = null;
 			}
@@ -517,6 +521,8 @@ package ui.screens.display.extraoptions
 			
 			if (noLockIconImage != null)
 			{
+				if (noLockIconImage.texture != null)
+					noLockIconImage.texture.dispose();
 				noLockIconImage.dispose();
 				noLockIconImage = null;
 			}
@@ -524,61 +530,71 @@ package ui.screens.display.extraoptions
 			if (nightscoutScreenIconTexture != null)
 			{
 				nightscoutScreenIconTexture.dispose();
-				nightscoutScreenIconTexture = null;;
+				nightscoutScreenIconTexture = null;
 			}
 			
 			if (nightscoutScreenIconImage != null)
 			{
+				if (nightscoutScreenIconImage.texture != null)
+					nightscoutScreenIconImage.texture.dispose();
 				nightscoutScreenIconImage.dispose();
-				nightscoutScreenIconImage = null;;
-			}
-			
-			if (glucoseScreenIconImage != null)
-			{
-				glucoseScreenIconImage.dispose();
-				glucoseScreenIconImage = null;;
+				nightscoutScreenIconImage = null;
 			}
 			
 			if (glucoseScreenIconTexture != null)
 			{
 				glucoseScreenIconTexture.dispose();
-				glucoseScreenIconTexture = null;;
+				glucoseScreenIconTexture = null;
 			}
 			
-			if (preSnoozeScreenIconImage != null)
+			if (glucoseScreenIconImage != null)
 			{
-				preSnoozeScreenIconImage.dispose();
-				preSnoozeScreenIconImage = null;;
+				if (glucoseScreenIconImage.texture != null)
+					glucoseScreenIconImage.texture.dispose();
+				glucoseScreenIconImage.dispose();
+				glucoseScreenIconImage = null;
 			}
 			
 			if (preSnoozeScreenIconTexture != null)
 			{
 				preSnoozeScreenIconTexture.dispose();
-				preSnoozeScreenIconTexture = null;;
+				preSnoozeScreenIconTexture = null;
+			}
+			
+			if (preSnoozeScreenIconImage != null)
+			{
+				if (preSnoozeScreenIconImage.texture != null)
+					preSnoozeScreenIconImage.texture.dispose();
+				preSnoozeScreenIconImage.dispose();
+				preSnoozeScreenIconImage = null;
 			}
 			
 			if (readingOnDemandIconTexture != null)
 			{
 				readingOnDemandIconTexture.dispose();
-				readingOnDemandIconTexture = null;;
+				readingOnDemandIconTexture = null;
 			}
 			
 			if (readingOnDemandIconImage != null)
 			{
+				if (readingOnDemandIconImage.texture != null)
+					readingOnDemandIconImage.texture.dispose();
 				readingOnDemandIconImage.dispose();
-				readingOnDemandIconImage = null;;
+				readingOnDemandIconImage = null;
+			}
+			
+			if (noRotationIconImage != null)
+			{
+				if (noRotationIconImage.texture != null)
+					noRotationIconImage.texture.dispose();
+				noRotationIconImage.dispose();
+				noRotationIconImage = null;
 			}
 			
 			if (noRotationIconTexture != null)
 			{
 				noRotationIconTexture.dispose();
-				noRotationIconTexture = null;;
-			}
-			
-			if (noRotationIconImage != null)
-			{
-				noRotationIconImage.dispose();
-				noRotationIconImage = null;;
+				noRotationIconTexture = null;
 			}
 			
 			super.dispose();

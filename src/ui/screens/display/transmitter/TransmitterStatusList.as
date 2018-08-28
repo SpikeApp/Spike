@@ -952,6 +952,8 @@ package ui.screens.display.transmitter
 			{
 				voltageAIconTexture.dispose();
 				voltageAIconTexture = null;
+				if (voltageAIcon.texture != null)
+					voltageAIcon.texture.dispose();
 				voltageAIcon.dispose();
 				voltageAIcon = null;
 				voltageALabel.dispose();
@@ -962,6 +964,8 @@ package ui.screens.display.transmitter
 			{
 				voltageBIconTexture.dispose();
 				voltageBIconTexture = null;
+				if (voltageBIcon.texture != null)
+					voltageBIcon.texture.dispose();
 				voltageBIcon.dispose();
 				voltageAIcon = null;
 				voltageBLabel.dispose();
@@ -972,16 +976,8 @@ package ui.screens.display.transmitter
 			{
 				resistanceIconTexture.dispose();
 				resistanceIconTexture = null;
-				resistanceIcon.dispose();
-				resistanceIcon = null;
-				resistanceLabel.dispose();
-				resistanceLabel = null;
-			}
-			
-			if(resistanceIconTexture != null)
-			{
-				resistanceIconTexture.dispose();
-				resistanceIconTexture = null;
+				if (resistanceIcon.texture != null)
+					resistanceIcon.texture.dispose();
 				resistanceIcon.dispose();
 				resistanceIcon = null;
 				resistanceLabel.dispose();
@@ -992,6 +988,8 @@ package ui.screens.display.transmitter
 			{
 				batteryLevelIconTexture.dispose();
 				batteryLevelIconTexture = null;
+				if (batteryLevelIcon.texture != null)
+					batteryLevelIcon.texture.dispose();
 				batteryLevelIcon.dispose();
 				batteryLevelIconTexture = null;
 				if (batteryLevelLabel != null)

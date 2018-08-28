@@ -516,6 +516,8 @@ package ui.screens.display.settings.maintenance
 		
 		private function onQRCodeFound( event:ScannerEvent ):void
 		{
+			
+			
 			//Remove scanner events
 			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, onQRCodeFound );
 			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, onScanCanceled );
@@ -798,11 +800,10 @@ package ui.screens.display.settings.maintenance
 		
 		private function onSendEmail(e:starling.events.Event):void
 		{
+			//Validation
 			if (emailLabel == null || sendEmailButton == null || qrCodeBitmapData == null)
 				return;
 			
-			//Validation
-			//Validation
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
 				AlertManager.showSimpleAlert
@@ -966,8 +967,6 @@ package ui.screens.display.settings.maintenance
 			
 			renderTimoutID2 = setTimeout( function():void {
 				SystemUtil.executeWhenApplicationIsActive(Starling.current.start);
-				//isLoading = false;
-				//refreshContent();
 			}, 500 );
 			
 			renderTimoutID3 = setTimeout( function():void {
@@ -1028,17 +1027,19 @@ package ui.screens.display.settings.maintenance
 				sendEmailButton = null;
 			}
 			
+			if (qrCodeImage != null)
+			{
+				qrCodeImage.removeFromParent();
+				if(qrCodeImage.texture != null)
+					qrCodeImage.texture.dispose();
+				qrCodeImage.dispose();
+				qrCodeImage = null;
+			}
+			
 			if (qrCodeBitmapData != null)
 			{
 				qrCodeBitmapData.dispose();
 				qrCodeBitmapData = null;
-			}
-			
-			if (qrCodeImage != null)
-			{
-				qrCodeImage.removeFromParent();
-				qrCodeImage.dispose();
-				qrCodeImage = null;
 			}
 			
 			if (emailLabel != null)

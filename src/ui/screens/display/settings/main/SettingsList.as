@@ -128,66 +128,92 @@ package ui.screens.display.settings.main
 			}
 			if(generalIconImage != null)
 			{
+				if (generalIconImage.texture != null)
+					generalIconImage.texture.dispose();
 				generalIconImage.dispose();
 				generalIconImage = null;
 			}
 			if(transmitterIconImage != null)
 			{
+				if (transmitterIconImage.texture != null)
+					transmitterIconImage.texture.dispose();
 				transmitterIconImage.dispose();
 				transmitterIconImage = null;
 			}
 			if(chartIconImage != null)
 			{
+				if (chartIconImage.texture != null)
+					chartIconImage.texture.dispose();
 				chartIconImage.dispose();
 				chartIconImage = null;
 			}
 			if(widgetIconImage != null)
 			{
+				if (widgetIconImage.texture != null)
+					widgetIconImage.texture.dispose();
 				widgetIconImage.dispose();
 				widgetIconImage = null;
 			}
 			if(alarmsIconImage != null)
 			{
+				if (alarmsIconImage.texture != null)
+					alarmsIconImage.texture.dispose();
 				alarmsIconImage.dispose();
 				alarmsIconImage = null;
 			}
 			if(speechIconImage != null)
 			{
+				if (speechIconImage.texture != null)
+					speechIconImage.texture.dispose();
 				speechIconImage.dispose();
 				speechIconImage = null;
 			}
 			if(shareIconImage != null)
 			{
+				if (shareIconImage.texture != null)
+					shareIconImage.texture.dispose();
 				shareIconImage.dispose();
 				shareIconImage = null;
 			}
 			if(integrationIconImage != null)
 			{
+				if (integrationIconImage.texture != null)
+					integrationIconImage.texture.dispose();
 				integrationIconImage.dispose();
 				integrationIconImage = null;
 			}
 			if(watchIconImage != null)
 			{
+				if (watchIconImage.texture != null)
+					watchIconImage.texture.dispose();
 				watchIconImage.dispose();
 				watchIconImage = null;
 			}
 			if(appInfoIconImage != null)
 			{
+				if (appInfoIconImage.texture != null)
+					appInfoIconImage.texture.dispose();
 				appInfoIconImage.dispose();
 				appInfoIconImage = null;
 			}
 			if(advancedIconImage != null)
 			{
+				if (advancedIconImage.texture != null)
+					advancedIconImage.texture.dispose();
 				advancedIconImage.dispose();
 				advancedIconImage = null;
 			}
 			if(treatmentsIconImage != null)
 			{
+				if (treatmentsIconImage.texture != null)
+					treatmentsIconImage.texture.dispose();
 				treatmentsIconImage.dispose();
 				treatmentsIconImage = null;
 			}
 			if(maintenanceIconImage != null)
 			{
+				if (maintenanceIconImage.texture != null)
+					maintenanceIconImage.texture.dispose();
 				maintenanceIconImage.dispose();
 				maintenanceIconImage = null;
 			}

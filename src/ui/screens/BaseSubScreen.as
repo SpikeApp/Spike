@@ -173,6 +173,8 @@ package ui.screens
 			if (iconImage != null)
 			{
 				iconImage.removeFromParent();
+				if (iconImage.texture != null)
+					iconImage.texture.dispose();
 				iconImage.dispose();
 				iconImage = null;
 			}

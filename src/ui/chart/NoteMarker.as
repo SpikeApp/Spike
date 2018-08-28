@@ -78,6 +78,8 @@ package ui.chart
 			if (noteMarker != null)
 			{
 				noteMarker.removeFromParent();
+				if (noteMarker.texture != null)
+					noteMarker.texture.dispose();
 				noteMarker.dispose();
 				noteMarker = null;
 			}

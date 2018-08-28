@@ -199,6 +199,8 @@ package ui.screens
 			if (menuButtonImage != null)
 			{
 				menuButtonImage.removeFromParent();
+				if (menuButtonImage.texture != null)
+					menuButtonImage.texture.dispose();
 				menuButtonImage.dispose();
 				menuButtonImage = null;
 			}
@@ -212,6 +214,8 @@ package ui.screens
 			if (moreButtonImage != null)
 			{
 				moreButtonImage.removeFromParent();
+				if (moreButtonImage.texture != null)
+					moreButtonImage.texture.dispose();
 				moreButtonImage.dispose();
 				moreButtonImage = null;
 			}
@@ -225,6 +229,8 @@ package ui.screens
 			if (treatmentsImage != null)
 			{
 				treatmentsImage.removeFromParent();
+				if (treatmentsImage.texture != null)
+					treatmentsImage.texture.dispose();
 				treatmentsImage.dispose();
 				treatmentsImage = null;
 			}

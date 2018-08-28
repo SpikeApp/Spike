@@ -339,6 +339,8 @@ package ui.screens.display.readings
 			{
 				if (buttonIconsImages[i] != null)
 				{
+					if (buttonIconsImages[i].texture != null)
+						buttonIconsImages[i].texture.dispose();
 					buttonIconsImages[i].dispose();
 					buttonIconsImages[i] = null;
 				}

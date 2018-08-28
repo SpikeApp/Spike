@@ -469,6 +469,8 @@ package ui.screens.display.settings.treatments
 			
 			if (profileIconImage != null)
 			{
+				if (profileIconImage.texture != null)
+					profileIconImage.texture.dispose();
 				profileIconImage.dispose();
 				profileIconImage = null;
 			}

@@ -295,6 +295,8 @@ package ui.screens.display.treatments
 			
 			if (calibrationImage != null)
 			{
+				if (calibrationImage.texture != null)
+					calibrationImage.texture.dispose();
 				calibrationImage.dispose();
 				calibrationImage = null;
 			}
@@ -307,6 +309,8 @@ package ui.screens.display.treatments
 			
 			if (bolusImage != null)
 			{
+				if (bolusImage.texture != null)
+					bolusImage.texture.dispose();
 				bolusImage.dispose();
 				bolusImage = null;
 			}
@@ -319,6 +323,8 @@ package ui.screens.display.treatments
 			
 			if (noteImage != null)
 			{
+				if (noteImage.texture != null)
+					noteImage.texture.dispose();
 				noteImage.dispose();
 				noteImage = null;
 			}
@@ -331,6 +337,8 @@ package ui.screens.display.treatments
 			
 			if (bgCheckImage != null)
 			{
+				if (bgCheckImage.texture != null)
+					bgCheckImage.texture.dispose();
 				bgCheckImage.dispose();
 				bgCheckImage = null;
 			}
@@ -343,6 +351,8 @@ package ui.screens.display.treatments
 			
 			if (carbsImage != null)
 			{
+				if (carbsImage.texture != null)
+					carbsImage.texture.dispose();
 				carbsImage.dispose();
 				carbsImage = null;
 			}
@@ -355,6 +365,8 @@ package ui.screens.display.treatments
 			
 			if (mealImage != null)
 			{
+				if (mealImage.texture != null)
+					mealImage.texture.dispose();
 				mealImage.dispose();
 				mealImage = null;
 			}
@@ -367,6 +379,8 @@ package ui.screens.display.treatments
 			
 			if (treatmentsImage != null)
 			{
+				if (treatmentsImage.texture != null)
+					treatmentsImage.texture.dispose();
 				treatmentsImage.dispose();
 				treatmentsImage = null;
 			}

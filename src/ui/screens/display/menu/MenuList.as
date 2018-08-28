@@ -328,6 +328,8 @@ package ui.screens.display.menu
 			if(logoImage != null)
 			{
 				logoImage.removeFromParent();
+				if (logoImage.texture != null)
+					logoImage.texture.dispose();
 				logoImage.dispose();
 				logoImage = null;
 			}

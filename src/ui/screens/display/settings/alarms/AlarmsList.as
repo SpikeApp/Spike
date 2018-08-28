@@ -261,56 +261,78 @@ package ui.screens.display.settings.alarms
 			}
 			if (alertTypesIconImage != null)
 			{
+				if (alertTypesIconImage.texture != null)
+					alertTypesIconImage.texture.dispose();
 				alertTypesIconImage.dispose();
 				alertTypesIconImage = null;
 			}
 			if(batteryLowIconImage != null)
 			{
+				if (batteryLowIconImage.texture != null)
+					batteryLowIconImage.texture.dispose();
 				batteryLowIconImage.dispose();
 				batteryLowIconImage = null;
 			}
 			if(calibrationIconImage != null)
 			{
+				if (calibrationIconImage.texture != null)
+					calibrationIconImage.texture.dispose();
 				calibrationIconImage.dispose();
 				calibrationIconImage = null;
 			}
 			if(missedReadingIconImage != null)
 			{
+				if (missedReadingIconImage.texture != null)
+					missedReadingIconImage.texture.dispose();
 				missedReadingIconImage.dispose();
 				missedReadingIconImage = null;
 			}
 			if(phoneMutedIconImage != null)
 			{
+				if (phoneMutedIconImage.texture != null)
+					phoneMutedIconImage.texture.dispose();
 				phoneMutedIconImage.dispose();
 				phoneMutedIconImage = null;
 			}
 			if(urgentLowIconImage != null)
 			{
+				if (urgentLowIconImage.texture != null)
+					urgentLowIconImage.texture.dispose();
 				urgentLowIconImage.dispose();
 				urgentLowIconImage = null;
 			}
 			if(lowIconImage != null)
 			{
+				if (lowIconImage.texture != null)
+					lowIconImage.texture.dispose();
 				lowIconImage.dispose();
 				lowIconImage = null;
 			}
 			if(highIconImage != null)
 			{
+				if (highIconImage.texture != null)
+					highIconImage.texture.dispose();
 				highIconImage.dispose();
 				highIconImage = null;
 			}
 			if(urgentHighIconImage != null)
 			{
+				if (urgentHighIconImage.texture != null)
+					urgentHighIconImage.texture.dispose();
 				urgentHighIconImage.dispose();
 				urgentHighIconImage = null;
 			}
 			if(fastRiseIconImage != null)
 			{
+				if (fastRiseIconImage.texture != null)
+					fastRiseIconImage.texture.dispose();
 				fastRiseIconImage.dispose();
 				fastRiseIconImage = null;
 			}
 			if(fastDropIconImage != null)
 			{
+				if (fastDropIconImage.texture != null)
+					fastDropIconImage.texture.dispose();
 				fastDropIconImage.dispose();
 				fastDropIconImage = null;
 			}

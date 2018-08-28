@@ -949,6 +949,8 @@ package ui.screens
 			
 			if (menuButtonImage != null)
 			{
+				if (menuButtonImage.texture != null)
+					menuButtonImage.texture.dispose();
 				menuButtonImage.dispose();
 				menuButtonImage = null;
 			}
