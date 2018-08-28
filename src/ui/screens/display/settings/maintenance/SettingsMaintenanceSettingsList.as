@@ -18,7 +18,6 @@ package ui.screens.display.settings.maintenance
 	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequestMethod;
-	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
@@ -29,11 +28,8 @@ package ui.screens.display.settings.maintenance
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
-	import feathers.controls.Callout;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
-	import feathers.controls.TextInput;
-	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
@@ -44,27 +40,24 @@ package ui.screens.display.settings.maintenance
 	
 	import model.ModelLocator;
 	
-	import network.EmailSender;
 	import network.NetworkConnector;
 	
 	import org.qrcode.QRCode;
 	
 	import starling.core.Starling;
 	import starling.display.Image;
-	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
-	import starling.text.TextFormat;
 	import starling.textures.Texture;
 	import starling.utils.SystemUtil;
 	
 	import ui.AppInterface;
 	import ui.popups.AlertManager;
+	import ui.popups.EmailFileSender;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
-	import utils.DataValidator;
 	import utils.DeviceInfo;
 	import utils.Trace;
 	
@@ -82,15 +75,7 @@ package ui.screens.display.settings.maintenance
 		private var qrCodeContainer:LayoutGroup;
 		private var restoreInstructions:Label;
 		private var sendEmailContainer:LayoutGroup;
-		private var emailLabel:Label;
-		private var emailField:TextInput;
-		private var emailActionsContainer:LayoutGroup;
-		private var cancelSendEmailButton:Button;
 		private var sendQRCodeButton:Button;
-		private var sendEmailButton:Button;
-		private var positionHelper:Sprite;
-		private var qrCodeSenderCallout:Callout;
-		private var mainEmailContainer:LayoutGroup;
 		private var preloaderContainer:LayoutGroup;
 		private var preloader:MaterialDesignSpinner;
 		
@@ -216,17 +201,6 @@ package ui.screens.display.settings.maintenance
 			options.symbologies = [Symbology.QRCODE];
 			
 			Scanner.service.startScan( options );
-		}
-		
-		private function closeEmailCallout():void
-		{
-			if (qrCodeSenderCallout != null)
-			{
-				if (PopUpManager.isPopUp(qrCodeSenderCallout))
-					SystemUtil.executeWhenApplicationIsActive(PopUpManager.removePopUp, qrCodeSenderCallout, true);
-				else
-					SystemUtil.executeWhenApplicationIsActive(qrCodeSenderCallout.close, true);
-			}
 		}
 		
 		/**
@@ -721,196 +695,20 @@ package ui.screens.display.settings.maintenance
 				return;
 			}
 			
-			/* Main Container */
-			var mainLayout:VerticalLayout = new VerticalLayout();
-			mainLayout.horizontalAlign = HorizontalAlign.CENTER;
-			mainLayout.gap = 10;
-			
-			if (mainEmailContainer != null) mainEmailContainer.removeFromParent(true);
-			mainEmailContainer = new LayoutGroup();
-			mainEmailContainer.layout = mainLayout;
-			
-			/* Title */
-			if (emailLabel != null) emailLabel.removeFromParent(true);
-			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label"), HorizontalAlign.CENTER);
-			mainEmailContainer.addChild(emailLabel);
-			
-			/* Email Input */
-			if (emailField != null) emailField.removeFromParent(true);
-			emailField = LayoutFactory.createTextInput(false, false, 200, HorizontalAlign.CENTER, false, true);
-			emailField.fontStyles.size = 12;
-			mainEmailContainer.addChild(emailField);
-			
-			/* Action Buttons */
-			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
-			actionButtonsLayout.gap = 5;
-			
-			if (emailActionsContainer != null) emailActionsContainer.removeFromParent(true);
-			emailActionsContainer = new LayoutGroup();
-			emailActionsContainer.layout = actionButtonsLayout;
-			mainEmailContainer.addChild(emailActionsContainer);
-			
-			//Cancel Button
-			if (cancelSendEmailButton != null) cancelSendEmailButton.removeFromParent(true);
-			cancelSendEmailButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label"));
-			cancelSendEmailButton.addEventListener(starling.events.Event.TRIGGERED, onCancelSendEmail);
-			emailActionsContainer.addChild(cancelSendEmailButton);
-			
-			//Send Button
-			if (sendEmailButton != null) sendEmailButton.removeFromParent(true);
-			sendEmailButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"send_button_label_capitalized"));
-			sendEmailButton.addEventListener(starling.events.Event.TRIGGERED, onSendEmail);
-			emailActionsContainer.addChild(sendEmailButton);
-			
-			/* Callout Position Helper Creation */
-			if (positionHelper != null) positionHelper.removeFromParent(true);
-			positionHelper = new Sprite();
-			positionHelper.x = Constants.stageWidth / 2;
-			
-			var yPos:Number = 0;
-			if (!isNaN(Constants.headerHeight))
-				yPos = Constants.headerHeight - 10;
-			else
-			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
-					yPos = 68;
-				else
-					yPos = Constants.isPortrait ? 98 : 68;
-			}
-			
-			positionHelper.y = yPos;
-			Starling.current.stage.addChild(positionHelper);
-			
-			/* Callout Creation */
-			if (qrCodeSenderCallout != null) qrCodeSenderCallout.removeFromParent(true);
-			qrCodeSenderCallout = new Callout();
-			qrCodeSenderCallout.content = mainEmailContainer;
-			qrCodeSenderCallout.origin = positionHelper;
-			qrCodeSenderCallout.minWidth = 240;
-			
-			//Close the callout
-			if (PopUpManager.isPopUp(qrCodeSenderCallout))
-				PopUpManager.removePopUp(qrCodeSenderCallout, false);
-			
-			//Display callout
-			PopUpManager.addPopUp(qrCodeSenderCallout, false, false);
-			
-			emailField.setFocus();
-		}
-		
-		private function onSendEmail(e:starling.events.Event):void
-		{
-			//Validation
-			if (emailLabel == null || sendEmailButton == null || qrCodeBitmapData == null)
+			if (qrCodeBitmapData == null)
 				return;
 			
-			if (!NetworkInfo.networkInfo.isReachable())
-			{
-				AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','no_network_connection')
-					);
-				
-				return;
-			}
-			
-			emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label");
-			if (emailLabel.fontStyles != null)
-				emailLabel.fontStyles.color = 0xEEEEEE;
-			else
-				emailLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.TOP);
-			
-			if (emailField.text == "")
-			{
-				emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_address_required");
-				emailLabel.fontStyles.color = 0xFF0000;
-				return;
-			}
-			else if (!DataValidator.validateEmail(emailField.text))
-			{
-				emailLabel.text = ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_address_invalid");
-				emailLabel.fontStyles.color = 0xFF0000;
-				return;
-			}
-			
-			//Disable send button temporarily
-			sendEmailButton.isEnabled = false;
-			
-			//Calculate File Name
-			var fileName:String ="SpikeQRCode.png";
-			
-			//Read csv raw bytes into memory
-			var fileData:ByteArray = PNGEncoder.encode(qrCodeBitmapData);
-			
-			//Create URL Request Address
-			var vars:URLVariables = new URLVariables();
-			vars.fileName = fileName;
-			vars.mimeType = "image/png";
-			vars.emailSubject = ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_subject');
-			vars.emailBody = ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_body');
-			vars.userEmail = emailField.text.replace(" ", "");
-			vars.mode = EmailSender.MODE_EMAIL_USER;
-			
-			//Send data
-			EmailSender.sendData
-				(
-					EmailSender.TRANSMISSION_URL_WITH_ATTACHMENT,
-					onEmailSent,
-					vars,
-					fileData
-				);
-		}
-		
-		private function onEmailSent(event:flash.events.Event):void 
-		{ 
-			if (!SystemUtil.isApplicationActive)
-			{
-				SystemUtil.executeWhenApplicationIsActive(onEmailSent, event);
-				return;
-			}
-			
-			var loader:URLLoader = URLLoader(event.target);
-			loader.removeEventListener(flash.events.Event.COMPLETE, onEmailSent);
-			
-			var response:Object = loader.data;
-			loader = null;
-			
-			if (response.success == "true")
-			{
-				AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_success_message')
-					);
-				
-				closeEmailCallout();
-			}
-			else
-			{
-				sendEmailButton.isEnabled = true;
-				
-				AlertManager.showActionAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations','error_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_error_message') + ": " + response.statuscode,
-						Number.NaN,
-						[
-							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },	
-							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','try_again_button_label'), triggered: onTryAgain },	
-						]
-					);
-				
-				function onTryAgain(e:starling.events.Event):void
-				{
-					Starling.juggler.delayCall(onSendQRCode, 0.5, null);
-				}
-			}
-		}
-		
-		private function onCancelSendEmail(e:starling.events.Event):void
-		{
-			closeEmailCallout();
+			EmailFileSender.sendFile
+			(
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_subject'),
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_body'),
+				"SpikeQRCode.png",
+				PNGEncoder.encode(qrCodeBitmapData),
+				"image/png",
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_success_message'),
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_error_message'),
+				""
+			);
 		}
 		
 		override protected function onStarlingResize(event:ResizeEvent):void 
@@ -1003,30 +801,6 @@ package ui.screens.display.settings.maintenance
 				restoreButton = null;
 			}
 			
-			if (cancelSendEmailButton != null)
-			{
-				cancelSendEmailButton.removeEventListener(starling.events.Event.TRIGGERED, onCancelSendEmail);
-				cancelSendEmailButton.removeFromParent();
-				cancelSendEmailButton.dispose();
-				cancelSendEmailButton = null;
-			}
-			
-			if (sendQRCodeButton != null)
-			{
-				sendQRCodeButton.removeEventListener(starling.events.Event.TRIGGERED, onSendQRCode);
-				sendQRCodeButton.removeFromParent();
-				sendQRCodeButton.dispose();
-				sendQRCodeButton = null;
-			}
-			
-			if (sendEmailButton != null)
-			{
-				sendEmailButton.removeEventListener(starling.events.Event.TRIGGERED, onSendEmail);
-				sendEmailButton.removeFromParent();
-				sendEmailButton.dispose();
-				sendEmailButton = null;
-			}
-			
 			if (qrCodeImage != null)
 			{
 				qrCodeImage.removeFromParent();
@@ -1040,27 +814,6 @@ package ui.screens.display.settings.maintenance
 			{
 				qrCodeBitmapData.dispose();
 				qrCodeBitmapData = null;
-			}
-			
-			if (emailLabel != null)
-			{
-				emailLabel.removeFromParent();
-				emailLabel.dispose();
-				emailLabel = null;
-			}
-			
-			if (emailField != null)
-			{
-				emailField.removeFromParent();
-				emailField.dispose();
-				emailField = null;
-			}
-			
-			if (positionHelper != null)
-			{
-				positionHelper.removeFromParent();
-				positionHelper.dispose();
-				positionHelper = null;
 			}
 			
 			if (actionsContainer != null)
@@ -1089,27 +842,6 @@ package ui.screens.display.settings.maintenance
 				sendEmailContainer.removeFromParent();
 				sendEmailContainer.dispose();
 				sendEmailContainer = null;
-			}
-			
-			if (emailActionsContainer != null)
-			{
-				emailActionsContainer.removeFromParent();
-				emailActionsContainer.dispose();
-				emailActionsContainer = null;
-			}
-			
-			if (mainEmailContainer != null)
-			{
-				mainEmailContainer.removeFromParent();
-				mainEmailContainer.dispose();
-				mainEmailContainer = null;
-			}
-			
-			if (qrCodeSenderCallout != null)
-			{
-				qrCodeSenderCallout.removeFromParent();
-				qrCodeSenderCallout.dispose();
-				qrCodeSenderCallout = null;
 			}
 			
 			if (preloader != null)

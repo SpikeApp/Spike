@@ -3,6 +3,7 @@ package ui.screens.display.settings.maintenance
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	
 	import flash.display.StageOrientation;
+	import flash.filesystem.File;
 	import flash.text.engine.LineJustification;
 	import flash.text.engine.SpaceJustifier;
 	
@@ -40,6 +41,7 @@ package ui.screens.display.settings.maintenance
 	import starling.events.ResizeEvent;
 	
 	import ui.popups.AlertManager;
+	import ui.popups.EmailFileSender;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	
@@ -62,12 +64,13 @@ package ui.screens.display.settings.maintenance
 		private var lastBackupLabel:Label;
 		private var instructionsLabel:Label;
 		private var wifiOnlyCheck:Check;
+		private var emailDatabaseButton:Button;
 		
 		/* Properties */
 		private var isLoading:Boolean = false;
 		private var dateFormatterForBackupDate:DateTimeFormatter;
 		private var wifiOnlyValue:Boolean;
-		
+
 		public function DatabaseMaintenanceSettingsList()
 		{
 			super(true);
@@ -121,6 +124,10 @@ package ui.screens.display.settings.maintenance
 			backupButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','backup_button_label'));
 			backupButton.addEventListener(starling.events.Event.TRIGGERED, onBackupDatabase);
 			actionsContainer.addChild(backupButton);
+			
+			//Email Button
+			emailDatabaseButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','send_database_email_button_label'));
+			emailDatabaseButton.addEventListener(starling.events.Event.TRIGGERED, onEmailDatabase);
 			
 			//Schedule
 			backupScheduler = LayoutFactory.createPickerList();
@@ -211,7 +218,8 @@ package ui.screens.display.settings.maintenance
 			var data:Array = [];
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','schedule_backups_label'), accessory: backupScheduler } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','automatic_backups_only_on_wifi_label'), accessory: wifiOnlyCheck } );
-			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','actions_label'), accessory: actionsContainer } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','icloud_actions_label'), accessory: actionsContainer } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_actions_label'), accessory: emailDatabaseButton } );
 			if (isLoading)
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','status_label'), accessory: preloaderContainer } );
 			data.push( { label: "", accessory: lastBackupLabel } );
@@ -223,6 +231,22 @@ package ui.screens.display.settings.maintenance
 		/**
 		 * Event Listeners
 		 */
+		private function onEmailDatabase(e:starling.events.Event):void
+		{
+			EmailFileSender.sendFile
+			(
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_email_subject'),
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_email_body'),
+				"spike.db",
+				File.applicationStorageDirectory.resolvePath("spike.db"),
+				"application/x-sqlite3",
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_email_success_message'),
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_email_error_message'),
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','missing_local_database_label')
+			);
+		}
+		
+		
 		private function onBackupDatabase(e:starling.events.Event):void
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
@@ -543,6 +567,14 @@ package ui.screens.display.settings.maintenance
 				restoreButton.removeFromParent();
 				restoreButton.dispose();
 				restoreButton = null;
+			}
+			
+			if (emailDatabaseButton != null)
+			{
+				emailDatabaseButton.removeEventListener(starling.events.Event.TRIGGERED, onEmailDatabase);
+				emailDatabaseButton.removeFromParent();
+				emailDatabaseButton.dispose();
+				emailDatabaseButton = null;
 			}
 			
 			if (actionsContainer != null)
