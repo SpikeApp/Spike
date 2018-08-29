@@ -154,9 +154,6 @@ package utils
 				outputArray = null;
 			}
 			
-			//Warn listeners
-			_instance.dispatchEventWith(starling.events.Event.COMPLETE);
-			
 			if (index > 1) 
 			{
 				Trace.myTrace("SiDiary.as", "There's new data to export. Requesting user's email address...");
@@ -206,6 +203,9 @@ package utils
 			EmailFileSender.instance.removeEventListener(Event.COMPLETE, onCSVSent);
 			EmailFileSender.instance.removeEventListener(Event.CANCEL, onCSVCanceled);
 			
+			//Warn listeners
+			_instance.dispatchEventWith(starling.events.Event.COMPLETE);
+			
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_EXPORT_SIDIARY, String(new Date().valueOf()));
 			
 			dispose();
@@ -215,6 +215,9 @@ package utils
 		{
 			EmailFileSender.instance.removeEventListener(Event.COMPLETE, onCSVSent);
 			EmailFileSender.instance.removeEventListener(Event.CANCEL, onCSVCanceled);
+			
+			//Warn listeners
+			_instance.dispatchEventWith(starling.events.Event.COMPLETE);
 			
 			dispose();
 		}

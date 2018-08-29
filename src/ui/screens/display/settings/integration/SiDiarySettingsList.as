@@ -68,6 +68,8 @@ package ui.screens.display.settings.integration
 		private function onGenerateCSV(e:Event):void
 		{
 			exportBtn.label = ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen','export_button__standby_label');
+			exportBtn.validate();
+			exportBtn.isEnabled = false;
 			
 			SiDiary.instance.addEventListener(Event.COMPLETE, onExportComplete);
 			Starling.juggler.delayCall(SiDiary.exportSiDiary, 0.5);
@@ -75,8 +77,14 @@ package ui.screens.display.settings.integration
 		
 		private function onExportComplete(e:Event):void
 		{
+			SiDiary.instance.removeEventListener(Event.COMPLETE, onExportComplete);
+			
 			if (exportBtn != null && exportBtn.label != null)
+			{
 				exportBtn.label = ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen','export_button_label');
+				exportBtn.validate();
+				exportBtn.isEnabled = true;
+			}
 		}
 		
 		/**
@@ -85,6 +93,7 @@ package ui.screens.display.settings.integration
 		override public function dispose():void
 		{
 			EmailFileSender.dispose();
+			SiDiary.instance.removeEventListener(Event.COMPLETE, onExportComplete);
 			
 			if (exportBtn != null)
 			{
