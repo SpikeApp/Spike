@@ -17,7 +17,7 @@ package services.bluetooth
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
-	import flash.system.Capabilities;
+	import flash.filesystem.File;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
@@ -45,6 +45,8 @@ package services.bluetooth
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
 	
+	import flash.system.Capabilities;
+	
 	import feathers.controls.Alert;
 	
 	import model.ModelLocator;
@@ -64,7 +66,7 @@ package services.bluetooth
 	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
-	import ui.popups.G4WixelSender;
+	import ui.popups.EmailFileSender;
 	
 	import utils.BadgeBuilder;
 	import utils.Trace;
@@ -80,6 +82,7 @@ package services.bluetooth
 		[ResourceBundle("globaltranslations")]
 		[ResourceBundle("bluetoothservice")]
 		[ResourceBundle("transmitterservice")]
+		[ResourceBundle("wixelsender")]
 		
 		private static var _instance:CGMBluetoothService = new CGMBluetoothService();
 		public static function get instance():CGMBluetoothService
@@ -2078,8 +2081,19 @@ package services.bluetooth
 			}
 			
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_WARNING_OLD_WXL_CODE_USED, (new Date()).valueOf().toString());
-			var body:String = "Hi,\n\nRequest for support wxl.\n\nregards.";
-			G4WixelSender.displayWixelSender();
+			
+			//Send Wixel File
+			EmailFileSender.sendFile
+			(
+				ModelLocator.resourceManagerInstance.getString('wixelsender',"email_subject"),
+				ModelLocator.resourceManagerInstance.getString('wixelsender',"email_body"),
+				"xBridge2.zip",
+				File.applicationDirectory.resolvePath("assets/files/xBridge2.zip"),
+				"application/zip",
+				ModelLocator.resourceManagerInstance.getString('wixelsender','wixel_file_sent_successfully'),
+				ModelLocator.resourceManagerInstance.getString('wixelsender','wixel_file_not_sent'),
+				ModelLocator.resourceManagerInstance.getString('wixelsender','wixel_file_not_found')
+			);
 		}
 		
 		private static function myTrace(log:String):void {

@@ -203,6 +203,9 @@ package utils
 		
 		private static function onCSVSent(e:Event):void
 		{
+			EmailFileSender.instance.removeEventListener(Event.COMPLETE, onCSVSent);
+			EmailFileSender.instance.removeEventListener(Event.CANCEL, onCSVCanceled);
+			
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_EXPORT_SIDIARY, String(new Date().valueOf()));
 			
 			dispose();
@@ -210,6 +213,9 @@ package utils
 		
 		private static function onCSVCanceled(e:Event):void
 		{
+			EmailFileSender.instance.removeEventListener(Event.COMPLETE, onCSVSent);
+			EmailFileSender.instance.removeEventListener(Event.CANCEL, onCSVCanceled);
+			
 			dispose();
 		}
 		
