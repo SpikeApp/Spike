@@ -368,6 +368,9 @@ package
 				error.indexOf("Error #2004 at flash.text.engine::ElementFormat()") != -1 ||
 				error.indexOf("Error #1016 at services::NightscoutService$/getRemoteTreatments()") != -1 ||
 				error.indexOf("getBatchAt()") != -1 ||
+				error.indexOf("StageTextTextEditor/render()") != -1 ||
+				error.indexOf("native extension class with your key") != -1 ||
+				error.indexOf("StackScreenNavigator/handleDragEnd()") != -1 ||
 				error.indexOf("Graphic/getBounds()") != -1
 			)
 			{

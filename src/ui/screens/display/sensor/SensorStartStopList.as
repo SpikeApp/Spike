@@ -325,6 +325,10 @@ package ui.screens.display.sensor
 		
 		private function setDataProvider():void
 		{
+			//Validation
+			if (sensorStartDateLabel == null || sensorAgeLabel == null || totalCalibrationsLabel == null || lastCalibrationDateLabel == null || calibrationActionsContainer == null || skipWarmUpsCheck == null)
+				return;
+			
 			/* Populate List Content */
 			sensorStartDateLabel.text = sensorStartDateValue;
 			sensorAgeLabel.text = sensorAgeValue;
@@ -334,9 +338,9 @@ package ui.screens.display.sensor
 			var sensorChildrenContent:Array = [];
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_label'), accessory: sensorStartDateLabel });
 			sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_age_lavel'), accessory: sensorAgeLabel });
-			if (inSensorCountdown && !shouldSkipWarmup)
+			if (inSensorCountdown && !shouldSkipWarmup && sensorCountdownLabel != null)
 				sensorChildrenContent.push({ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','warmup_countdown'), accessory: sensorCountdownLabel });
-			if (!CGMBlueToothDevice.knowsFSLAge() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
+			if (!CGMBlueToothDevice.knowsFSLAge() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "" && actionButton != null)
 				sensorChildrenContent.push({ label: "", accessory: actionButton });
 			
 			dataProvider = new HierarchicalCollection(

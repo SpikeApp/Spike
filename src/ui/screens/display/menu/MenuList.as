@@ -215,9 +215,6 @@ package ui.screens.display.menu
 		
 		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
-			setupRenderFactory();
-			setTopPadding();
-			
 			if (!initialStart)
 			{
 				removeEventListener( Event.CHANGE, onMenuChanged );
@@ -229,6 +226,8 @@ package ui.screens.display.menu
 			else
 				initialStart = false;
 			
+			SystemUtil.executeWhenApplicationIsActive(setupRenderFactory);
+			SystemUtil.executeWhenApplicationIsActive(setTopPadding);
 			SystemUtil.executeWhenApplicationIsActive(refreshContent);
 		}
 		
