@@ -3,8 +3,6 @@ package ui.screens.display.settings.alarms
 	import com.adobe.utils.StringUtil;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.AlertType;
 	import database.Database;
 	

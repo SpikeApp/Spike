@@ -476,6 +476,9 @@ package ui.screens.display.settings.alarms
 			{
 				setupCalloutPosition();
 				
+				if (positionHelper == null || positionHelper.parent == null)
+					return;
+				
 				alarmCustomizerCallout = new Callout();
 				alarmCustomizerCallout.content = alarmCreatorList;
 				alarmCustomizerCallout.origin = positionHelper;
@@ -484,6 +487,10 @@ package ui.screens.display.settings.alarms
 			if (positionHelper == null || positionHelper.parent == null)
 			{
 				setupCalloutPosition();
+				
+				if (positionHelper == null || positionHelper.parent == null)
+					return;
+				
 				alarmCustomizerCallout.origin = positionHelper;
 			}
 			

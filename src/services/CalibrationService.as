@@ -394,6 +394,7 @@ package services
 				var now:Number = new Date().valueOf();
 				//Calibration.initialCalibration(asNumber, now - TIME_5_MINUTES, now, CGMBlueToothDevice.isMiaoMiao() ? 36 : 5);
 				Calibration.initialCalibration(asNumber, now - TimeSpan.TIME_5_MINUTES, now, CGMBlueToothDevice.isMiaoMiao() ? 36 : 5);
+				AlarmService.canUploadCalibrationToNightscout = true;
 				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 				_instance.dispatchEvent(calibrationServiceEvent);
 			}
@@ -548,6 +549,7 @@ package services
 							
 							Calibration.clearLastCalibration();
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+							AlarmService.canUploadCalibrationToNightscout = true;
 							var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
 							_instance.dispatchEvent(calibrationServiceEvent);
 							
@@ -643,6 +645,7 @@ package services
 							
 							Calibration.clearLastCalibration();
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+							AlarmService.canUploadCalibrationToNightscout = true;
 							var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
 							_instance.dispatchEvent(calibrationServiceEvent);
 							
@@ -720,6 +723,7 @@ package services
 								asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 							
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+							AlarmService.canUploadCalibrationToNightscout = true;
 							_instance.dispatchEvent(new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT));
 							
 							myTrace("Calibration created : " + newcalibration.print("   "));
@@ -773,6 +777,8 @@ package services
 				
 				var calibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
 				myTrace("Calibration created : " + calibration.print("   "));
+				
+				AlarmService.canUploadCalibrationToNightscout = true;
 			}
 		}
 		

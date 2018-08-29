@@ -204,6 +204,7 @@ package services
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
 		private static var lastMissedReadingAlertCheckTimeStamp:Number;
 		private static var lastApplicationStoppedAlertCheckTimeStamp:Number;
+		public static var canUploadCalibrationToNightscout:Boolean = true;
 		
 		//for repeat of alarms every minute, this is only for non-snoozed alerts
 		//each element in an array represents certain alarm 
@@ -644,6 +645,8 @@ package services
 					} else {
 						myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
+					
+					canUploadCalibrationToNightscout = true;
 				}
 			}
 			
@@ -667,6 +670,7 @@ package services
 				SpikeANE.stopPlayingSound();
 				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
+				canUploadCalibrationToNightscout = true;
 			}
 			
 			function batteryLevelSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -906,7 +910,7 @@ package services
 			myTrace("in openSnoozePickerDialog with id = " + NotificationService.notificationIdToText(notificationId) + ", cancelling notification");
 			Notifications.service.cancel(notificationId);
 			
-			if (listOfAlerts == null || alertName == null || alertName == "" || alertType == null)
+			if (listOfAlerts == null || alertName == null || alertType == null || snoozeValueMinutes == null || snoozeValueStrings == null)
 				return;
 			
 			var index:int = 0;
@@ -922,18 +926,18 @@ package services
 				AlarmSnoozer.instance.addEventListener(AlarmSnoozer.CANCELLED, canceledHandler);
 				if 
 				(
-					snoozeText == "low_alert_notification_alert_text" ||
-					snoozeText == "verylow_alert_notification_alert_text" ||
-					snoozeText == "high_alert_notification_alert_text" ||
-					snoozeText == "veryhigh_alert_notification_alert_text" ||
-					snoozeText == "fast_drop_alert_notification_alert_text" ||
-					snoozeText == "fast_rise_alert_notification_alert_text" ||
-					snoozeText == "snooze_text_low_alert" ||
-					snoozeText == "snooze_text_very_low_alert" ||
-					snoozeText == "snooze_text_high_alert" ||
-					snoozeText == "snooze_text_very_high_alert" ||
-					snoozeText == "snooze_text_fast_drop_alert" ||
-					snoozeText == "snooze_text_fast_rise_alert"
+					(snoozeText != null && snoozeText == "low_alert_notification_alert_text") ||
+					(snoozeText != null && snoozeText == "verylow_alert_notification_alert_text") ||
+					(snoozeText != null && snoozeText == "high_alert_notification_alert_text") ||
+					(snoozeText != null && snoozeText == "veryhigh_alert_notification_alert_text") ||
+					(snoozeText != null && snoozeText == "fast_drop_alert_notification_alert_text") ||
+					(snoozeText != null && snoozeText == "fast_rise_alert_notification_alert_text") ||
+					(snoozeText != null && snoozeText == "snooze_text_low_alert") ||
+					(snoozeText != null && snoozeText == "snooze_text_very_low_alert") ||
+					(snoozeText != null && snoozeText == "snooze_text_high_alert") ||
+					(snoozeText != null && snoozeText == "snooze_text_very_high_alert") ||
+					(snoozeText != null && snoozeText == "snooze_text_fast_drop_alert") ||
+					(snoozeText != null && snoozeText == "snooze_text_fast_rise_alert")
 				)
 				{
 					SystemUtil.executeWhenApplicationIsActive
@@ -1570,12 +1574,12 @@ package services
 			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			alertType = Database.getAlertType(alertName);
-			if (alertType != null && alertType.enabled) {
+			if (alertType != null && alertType.enabled && !isNaN(alertValue) && alertName != "") {
 				if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					||
 					isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
 					myTrace("in checkAlarms, calibration request alert not snoozed ");
-					if (Calibration.last() != null && BgReading.last30Minutes().length >= 2) 
+					if (Calibration.last() != null && BgReading.last30Minutes() != null && BgReading.last30Minutes().length >= 2) 
 					{
 						var isOptimaCalibration:Boolean = GlucoseHelper.isOptimalConditionToCalibrate();
 						var lastCalibrationTimestamp:Number = Calibration.last().timestamp;
@@ -1615,7 +1619,11 @@ package services
 							userWarnedOfSuboptimalCalibration = false;
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON, String(userWarnedOfSuboptimalCalibration), true, false);
 							
-							NightscoutService.uploadOptimalCalibrationNotification();
+							if (canUploadCalibrationToNightscout)
+							{
+								NightscoutService.uploadOptimalCalibrationNotification();
+								canUploadCalibrationToNightscout = false;
+							}
 						} 
 						else 
 						{

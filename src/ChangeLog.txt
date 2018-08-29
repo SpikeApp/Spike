@@ -9,6 +9,7 @@ ENHANCEMENT: Lots of optimizations under the hood regarding file and email manag
 FIX: Sensor Start events are now correctly uploaded to Nightscout. (Miguel)
 FIX: Optimal calibration notifications should now fire the default iOS sound and respect the mute switch. (Miguel)
 FIX: Attempt to fix an issue that prevented Spike from displaying the latest glucose value in the main chart when brought to the foreground. (Miguel)
+FIX: Attempt to fix an issue that uploaded a note to Nightscout repeatedly notifying of optimal conditions for calibration. (Miguel)
 FIX: Several fixes for the main menu. Should not select the wrong buttons anymore. (Miguel)
 FIX: 12h dates are now displayed correctly. (Miguel)
 FIX: Fixes and issue where followers, after pressing Login to test Nightscout credentials, would need to restart Spike in order to display Nightscout data. (Miguel)
