@@ -9,6 +9,7 @@ package ui.screens.display.settings.integration
 	import starling.core.Starling;
 	import starling.events.Event;
 	
+	import ui.popups.EmailFileSender;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	
@@ -22,11 +23,11 @@ package ui.screens.display.settings.integration
 		/* Display Objects */
 		private var exportBtn:Button;
 		
-
 		public function SiDiarySettingsList()
 		{
 			super();
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
@@ -83,6 +84,8 @@ package ui.screens.display.settings.integration
 		 */		
 		override public function dispose():void
 		{
+			EmailFileSender.dispose();
+			
 			if (exportBtn != null)
 			{
 				exportBtn.removeEventListener(Event.TRIGGERED, onGenerateCSV);

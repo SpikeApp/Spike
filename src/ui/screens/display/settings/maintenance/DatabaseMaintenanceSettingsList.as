@@ -39,6 +39,7 @@ package ui.screens.display.settings.maintenance
 	
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.text.TrueTypeCompositor;
 	
 	import ui.popups.AlertManager;
 	import ui.popups.EmailFileSender;
@@ -233,6 +234,11 @@ package ui.screens.display.settings.maintenance
 		 */
 		private function onEmailDatabase(e:starling.events.Event):void
 		{
+			if(emailDatabaseButton != null)
+				emailDatabaseButton.isEnabled = false;
+			
+			EmailFileSender.instance.addEventListener(Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.addEventListener(Event.CANCEL, onFileSenderClosed);
 			EmailFileSender.sendFile
 			(
 				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_email_subject'),
@@ -246,6 +252,14 @@ package ui.screens.display.settings.maintenance
 			);
 		}
 		
+		private function onFileSenderClosed(e:starling.events.Event):void
+		{
+			EmailFileSender.instance.removeEventListener(Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(Event.CANCEL, onFileSenderClosed);
+			
+			if (emailDatabaseButton != null)
+				emailDatabaseButton.isEnabled = true;
+		}
 		
 		private function onBackupDatabase(e:starling.events.Event):void
 		{
@@ -530,6 +544,10 @@ package ui.screens.display.settings.maintenance
 		
 		override public function dispose():void
 		{
+			EmailFileSender.instance.removeEventListener(Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(Event.CANCEL, onFileSenderClosed);
+			EmailFileSender.dispose();
+			
 			if (backupScheduler != null)
 			{
 				backupScheduler.removeEventListener(Event.CHANGE, onBackupSchedulerChanged);

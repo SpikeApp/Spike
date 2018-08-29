@@ -698,6 +698,11 @@ package ui.screens.display.settings.maintenance
 			if (qrCodeBitmapData == null)
 				return;
 			
+			if (sendQRCodeButton != null)
+				sendQRCodeButton.isEnabled = false;
+			
+			EmailFileSender.instance.addEventListener(starling.events.Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.addEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
 			EmailFileSender.sendFile
 			(
 				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_subject'),
@@ -709,6 +714,15 @@ package ui.screens.display.settings.maintenance
 				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_error_message'),
 				""
 			);
+		}
+		
+		private function onFileSenderClosed(e:starling.events.Event):void
+		{
+			EmailFileSender.instance.removeEventListener(starling.events.Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
+			
+			if (sendQRCodeButton != null)
+				sendQRCodeButton.isEnabled = true;
 		}
 		
 		override protected function onStarlingResize(event:ResizeEvent):void 
@@ -785,6 +799,10 @@ package ui.screens.display.settings.maintenance
 		
 		override public function dispose():void
 		{
+			EmailFileSender.instance.removeEventListener(starling.events.Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
+			EmailFileSender.dispose();
+			
 			if (backupButton != null)
 			{
 				backupButton.removeEventListener(starling.events.Event.TRIGGERED, onBackup);

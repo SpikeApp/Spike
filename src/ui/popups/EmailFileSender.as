@@ -180,12 +180,14 @@ package ui.popups
 		{
 			if (emailLabel == null || sendButton == null || fileDataProperty == null || fileNameProperty === null || mimeTypeProperty == null || emailSubjectProperty == null || emailBodyProperty == null || emailSentMessageProperty == null || emailFailedMessageProperty == null || fileNotFoundMessageProperty == null)
 			{
+				_instance.dispatchEventWith(starling.events.Event.CANCEL);
 				dispose();
 				return;
 			}
 			
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
+				_instance.dispatchEventWith(starling.events.Event.CANCEL);
 				dispose();
 				
 				AlertManager.showSimpleAlert
@@ -216,7 +218,7 @@ package ui.popups
 			
 			sendButton.isEnabled = false;
 			
-			//Get the wixel zip file
+			//Get the file
 			if ((fileDataProperty is File && fileDataProperty.exists && fileDataProperty.size > 0) || fileDataProperty is ByteArray)
 			{
 				var fileBytes:ByteArray;
@@ -256,7 +258,8 @@ package ui.popups
 			}
 			else
 			{
-				dispose();
+				_instance.dispatchEventWith(starling.events.Event.CANCEL);
+				dispose(true);
 				
 				if (fileDataProperty is File)
 				{
@@ -266,6 +269,8 @@ package ui.popups
 						fileNotFoundMessageProperty
 					);
 				}
+				
+				dispose();
 			}
 		}
 		
@@ -287,9 +292,9 @@ package ui.popups
 					Number.NaN
 				);
 				
-				dispose();
-				
 				_instance.dispatchEventWith(starling.events.Event.COMPLETE);
+				
+				dispose();
 			}
 			else
 			{
@@ -304,9 +309,9 @@ package ui.popups
 					]
 				);
 				
-				dispose(true);
-				
 				_instance.dispatchEventWith(starling.events.Event.CANCEL);
+				
+				dispose(true);
 				
 				function onTryAgain(e:starling.events.Event):void
 				{
@@ -315,6 +320,8 @@ package ui.popups
 				
 				function onCancelRetry(e:starling.events.Event):void
 				{
+					_instance.dispatchEventWith(starling.events.Event.CANCEL);
+					
 					dispose();
 				}
 			}
@@ -322,9 +329,9 @@ package ui.popups
 		
 		private static function onCancel(e:starling.events.Event):void
 		{
-			dispose();
-			
 			_instance.dispatchEventWith(starling.events.Event.CANCEL);
+			
+			dispose();
 		}
 		
 		private static function onStarlingResize(event:ResizeEvent):void 
@@ -339,9 +346,11 @@ package ui.popups
 		/**
 		 * Utility
 		 */
-		private static function dispose(keepProperties:Boolean = false):void
+		public static function dispose(keepProperties:Boolean = false):void
 		{
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
+			_instance.removeEventListeners();
 			
 			if (!SystemUtil.isApplicationActive)
 			{
