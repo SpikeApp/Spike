@@ -2073,6 +2073,14 @@ package ui.chart
 			}
 			
 			//Adjust Main Chart and Picker Position
+			if (_graphWidth - (handPicker.x + handPicker.width) <= _graphWidth / 67)
+			{
+				//Hand picker is almost at the end of the screen (less or equal than 1.5% of the screen width), probably the user left it there unintentionaly.
+				//Let's put the handpicker at the end of the screen and make sure we display the latest glucose value
+				handPicker.x = _graphWidth - handPicker.width;
+				displayLatestBGValue = true;
+			}
+			
 			if (displayLatestBGValue)
 			{
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
