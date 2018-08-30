@@ -8,14 +8,20 @@ package ui
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
+	import flash.desktop.NativeApplication;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.InvokeEvent;
+	import flash.filesystem.File;
+	import flash.filesystem.FileMode;
+	import flash.filesystem.FileStream;
 	import flash.system.Capabilities;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 	import flash.text.engine.LineJustification;
 	import flash.text.engine.SpaceJustifier;
+	import flash.utils.ByteArray;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -33,7 +39,7 @@ package ui
 	import feathers.controls.Alert;
 	import feathers.controls.text.TextBlockTextRenderer;
 	import feathers.core.ITextRenderer;
-	import feathers.events.FeathersEventType;
+	import feathers.data.ListCollection;
 	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
@@ -59,6 +65,7 @@ package ui
 	[ResourceBundle("3dtouch")]
 	[ResourceBundle("crashreport")]
 	[ResourceBundle("disclaimerscreen")]
+	[ResourceBundle("maintenancesettingsscreen")]
 
 	public class InterfaceController extends EventDispatcher
 	{
@@ -67,6 +74,8 @@ package ui
 		public static var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter;
 		public static var peripheralConnected:Boolean = false;
 		public static var peripheralConnectionStatusChangeTimestamp:Number;
+		private static var lastInvoke:Number = 0;
+		private static var backupDatabaseData:ByteArray;
 		
 		public function InterfaceController() {}
 		
@@ -124,6 +133,9 @@ package ui
 				
 				Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 				CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
+				
+				/* File Association */
+				NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
 				
 				//3D Touch Management
 				setup3DTouch();
@@ -429,6 +441,115 @@ package ui
 				ModelLocator.resourceManagerInstance.getString('transmitterscreen',"connected_to_peripheral_device_id_stored"),
 				30
 			);*/
+		}
+		
+		/**
+		 * Spike Database Import
+		 */
+		private static function onInvoke(event:InvokeEvent):void 
+		{
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastInvoke > 5000)
+			{
+				//Do nothing.
+			}
+			else
+				return;
+			
+			var items:Array = event.arguments;
+			
+			if ( items.length > 0 ) 
+			{
+				var file:File = new File( event.arguments[0] );
+				if (file.type == ".db" && file.extension == "db" && file.name.indexOf("spike") != -1 && file.size > 0)
+				{
+					lastInvoke = now;
+					
+					var alert:Alert = Alert.show
+						(
+							ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_restore_confirmation_label'),
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							new ListCollection
+							(
+								[
+									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase"), triggered: ignoreRestore  },	
+									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: restoreDatabase }	
+								]
+							)
+						)
+					alert.buttonGroupProperties.gap = 10;
+					alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+					alert.messageFactory = function():ITextRenderer
+					{
+						var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
+						messageRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
+						
+						return messageRenderer;
+					};
+					
+					function restoreDatabase(e:starling.events.Event):void
+					{
+						//Read file into memory
+						var databaseStream:FileStream = new FileStream();
+						databaseStream.open(file, FileMode.READ);
+						
+						//Read database raw bytes into memory
+						backupDatabaseData = new ByteArray();
+						databaseStream.readBytes(backupDatabaseData);
+						databaseStream.close();
+						
+						//Delete file
+						if (file != null)
+							file.deleteFile();
+						
+						//Notify ANE
+						SpikeANE.performDatabaseResetActions();
+						
+						//Halt Spike
+						Trace.myTrace("Spike.as", "Halting Spike...");
+						Database.instance.addEventListener(DatabaseEvent.DATABASE_CLOSED_EVENT, onLocalDatabaseClosed);
+						Spike.haltApp();
+					}
+					
+					function ignoreRestore(e:starling.events.Event):void
+					{
+						//Delete file
+						if (file != null)
+							file.deleteFile();
+					}
+				}
+			}
+		}
+		
+		private static function onLocalDatabaseClosed(e:DatabaseEvent):void
+		{
+			Trace.myTrace("Spike.as", "Spike halted and local database connection closed!");
+			
+			NativeApplication.nativeApplication.removeEventListener(InvokeEvent.INVOKE, onInvoke);
+			
+			//Restore database
+			var databaseTargetFile:File = File.applicationStorageDirectory.resolvePath("spike.db");
+			var databaseFileStream:FileStream = new FileStream();
+			databaseFileStream.open(databaseTargetFile, FileMode.WRITE);
+			databaseFileStream.writeBytes(backupDatabaseData, 0, backupDatabaseData.length);
+			databaseFileStream.close();
+			
+			//Alert user
+			var alert:Alert = Alert.show
+				(
+					ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','restore_successfull_label'),
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title')
+				);
+			alert.messageFactory = function():ITextRenderer
+			{
+				var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
+				messageRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
+				
+				return messageRenderer;
+			};
+			
+			Trace.myTrace("Spike.as", "Database successfully restored!");
 		}
 		
 		/**
