@@ -8,6 +8,7 @@ ENHANCEMENT: Added alarms snoozed times to the status.json endpoint in Spike's i
 ENHANCEMENT: Lots of optimizations under the hood regarding file and email management. (Miguel)
 FIX: Sensor Start events are now correctly uploaded to Nightscout. (Miguel)
 FIX: Optimal calibration notifications should now fire the default iOS sound and respect the mute switch. (Miguel)
+FIX: Several fixes and enhancements on how Spike handles and saves transmitter's MAC addresses. Should also fix an issue that forces the user to forget and scan MiaoMiao to reconnect it to Spike. (Johan & Miguel) 
 FIX: Attempt to fix an issue that prevented Spike from displaying the latest glucose value in the main chart when brought to the foreground. (Miguel)
 FIX: Attempt to fix an issue that uploaded a note to Nightscout repeatedly notifying of optimal conditions for calibration. (Miguel)
 FIX: Several fixes for the main menu. Should not select the wrong buttons anymore. (Miguel)
