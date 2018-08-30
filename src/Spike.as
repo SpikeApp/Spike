@@ -1,5 +1,7 @@
 package 
 {
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	
 	import flash.desktop.NativeApplication;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
@@ -283,6 +285,9 @@ package
 						//Delete file
 						if (file != null)
 							file.deleteFile();
+						
+						//Notify ANE
+						SpikeANE.performDatabaseResetActions();
 						
 						//Halt Spike
 						Trace.myTrace("Spike.as", "Halting Spike...");

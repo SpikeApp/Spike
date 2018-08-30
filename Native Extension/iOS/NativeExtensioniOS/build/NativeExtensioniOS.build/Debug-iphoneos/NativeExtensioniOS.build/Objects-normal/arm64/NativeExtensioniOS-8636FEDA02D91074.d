@@ -12,4 +12,5 @@ dependencies: \
   /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQAESUitil.h \
   /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/Context.h \
   /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/Trace.h \
-  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/G5Api.h
+  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/G5Api.h \
+  /Volumes/Data\ HD/Development/GitHub/Spike/Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS/FQToolsUtil.h

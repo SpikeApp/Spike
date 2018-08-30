@@ -12,6 +12,7 @@ FIX: Attempt to fix an issue that prevented Spike from displaying the latest glu
 FIX: Attempt to fix an issue that uploaded a note to Nightscout repeatedly notifying of optimal conditions for calibration. (Miguel)
 FIX: Several fixes for the main menu. Should not select the wrong buttons anymore. (Miguel)
 FIX: 12h dates are now displayed correctly. (Miguel)
+FIX: Still some more fixes for not displaying full 24h of data on the main chart for MiaoMiao followers. (Miguel)
 FIX: Fixes and issue where followers, after pressing Login to test Nightscout credentials, would need to restart Spike in order to display Nightscout data. (Miguel)
 
 2.2.5

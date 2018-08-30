@@ -178,6 +178,9 @@ package com.spikeapp.spike.airlibrary
 		public static function getBatteryStatus():void {
 		}
 		
+		public static function performDatabaseResetActions():void {
+		}
+		
 		/************
 		 ** UTILITIES
 		 ************/

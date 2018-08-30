@@ -259,6 +259,10 @@ package com.spikeapp.spike.airlibrary
 		public static function getBatteryStatus():int {
 			return (context.call("getBatteryStatus") as int);
 		}
+		
+		public static function performDatabaseResetActions():void {
+			context.call("performDatabaseResetActions");
+		}
 
 		/************
 		 ** UTILITIES

@@ -5,6 +5,7 @@ package services
 	import com.distriqt.extension.cloudstorage.events.DocumentEvent;
 	import com.distriqt.extension.cloudstorage.events.DocumentStoreEvent;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -305,6 +306,9 @@ package services
 				
 				//Uncompress database
 				remoteDatabaseData.uncompress(CompressionAlgorithm.ZLIB);
+				
+				//Notify ANE
+				SpikeANE.performDatabaseResetActions();
 				
 				//Halt Spike
 				Trace.myTrace("ICloudService.as", "Halting Spike...");
