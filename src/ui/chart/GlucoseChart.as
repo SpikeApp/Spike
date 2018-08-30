@@ -770,7 +770,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.width / 2));
@@ -821,9 +821,9 @@ package ui.chart
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
-				if (glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower())
+				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower()) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
 					glucoseMarker.alpha = 0;
-				
+			
 				//Set variables for next iteration
 				previousXCoordinate = glucoseMarker.x;
 				previousYCoordinate = glucoseMarker.y;
@@ -1977,7 +1977,7 @@ package ui.chart
 					currentTimestamp = Number((mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp);
 				}
 				
-				if (_dataSource.length > 288 && !CGMBlueToothDevice.isMiaoMiao()) // >24H
+				if (_dataSource.length > 288 && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isFollower()) // >24H
 				{
 					var difference:int = _dataSource.length - 288;
 					for (var i:int = 0; i < difference; i++) 
@@ -2343,7 +2343,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -2395,7 +2395,7 @@ package ui.chart
 				
 				//Hide markers without sensor
 				var glucoseReading:BgReading = _dataSource[i] as BgReading;
-				if (glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower())
+				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower()) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
 					glucoseMarker.alpha = 0;
 				
 				
