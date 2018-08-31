@@ -25,6 +25,7 @@ package network.httpserver.API
 	import ui.InterfaceController;
 	import ui.chart.GlucoseFactory;
 	
+	import utils.BatteryInfo;
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
 	import utils.SpikeJSON;
@@ -57,36 +58,56 @@ package network.httpserver.API
 			
 			try
 			{
+				//Parameters
+				var numReadings:int = 1;
+				if (params.count != null)	
+					numReadings = int(params.count);
+				
+				var now:Number = new Date().valueOf();
+				
 				//Main response object
 				var responseObject:Object = {};
 				
 				//Status property
 				responseObject.status = [ {now: new Date().valueOf()} ];
 				
-				//Bgs Propery
-				var latestReading:BgReading;
-				if (!CGMBlueToothDevice.isFollower())
-					latestReading = BgReading.lastNoSensor();
+				//Bgs Property
+				var readingsList:Array = BgReading.latest(numReadings + 1, CGMBlueToothDevice.isFollower());
+				var readingsCollection:Array = [];
+				var loopLength: int;
+				if (readingsList.length > numReadings)
+					loopLength = readingsList.length - 1;
 				else
-					latestReading = BgReading.lastWithCalculatedValue();
+					loopLength = readingsList.length;
 				
-				var now:Number = new Date().valueOf();
-				
-				responseObject.bgs =
-				[ 
+				for (var i:int = 0; i < loopLength; i++) 
+				{
+					var bgReading:BgReading = readingsList[i] as BgReading;
+					if (bgReading == null || bgReading.calculatedValue == 0)
+						continue;
+					
+					var bgsObject:Object = {};
+					bgsObject.sgv = BgGraphBuilder.unitizedString(bgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+					bgsObject.trend = bgReading.getSlopeOrdinal()
+					bgsObject.direction = bgReading.slopeName();
+					bgsObject.datetime = bgReading.timestamp;
+					bgsObject.filtered = !CGMBlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : Math.round(bgReading.calculatedValue) * 1000;
+					bgsObject.unfiltered = !CGMBlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : Math.round(bgReading.calculatedValue) * 1000;
+					bgsObject.noise = bgReading.noiseValue();
+					if (i == 0)
 					{
-						sgv: BgGraphBuilder.unitizedString(latestReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
-						trend: latestReading.getSlopeOrdinal(), 
-						direction: latestReading.slopeName(), 
-						datetime: latestReading.timestamp,
-						filtered: !CGMBlueToothDevice.isFollower() ? Math.round(latestReading.ageAdjustedFiltered() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
-						unfiltered: !CGMBlueToothDevice.isFollower() ? Math.round(latestReading.usedRaw() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
-						noise: latestReading.noiseValue(),
-						bgdelta: Number(BgGraphBuilder.unitizedDeltaString(false, false)),
-						iob: String(TreatmentsManager.getTotalIOB(now)),
-						cob: TreatmentsManager.getTotalCOB(now)
-					} 
-				];
+						bgsObject.bgdelta = Number(BgGraphBuilder.unitizedDeltaString(false, false));
+						bgsObject.battery = String(BatteryInfo.getBatteryLevel());
+						bgsObject.iob = String(TreatmentsManager.getTotalIOB(now));
+						bgsObject.cob = TreatmentsManager.getTotalCOB(now);
+						bgsObject.bwp = "0";
+						bgsObject.bwpo = 0;
+					}
+					
+					readingsCollection.push(bgsObject);
+				}
+				
+				responseObject.bgs = readingsCollection;
 				
 				//Cals Property
 				var latestCalibration:Calibration = Calibration.last();
@@ -116,7 +137,6 @@ package network.httpserver.API
 				}
 				
 				//Final Response
-				//response = JSON.stringify(responseObject);
 				response = SpikeJSON.stringify(responseObject);
 			} 
 			catch(error:Error) 
@@ -187,7 +207,6 @@ package network.httpserver.API
 					readingsCollection.push(bgObject);
 				}
 				
-				//response = JSON.stringify(readingsCollection);
 				response = SpikeJSON.stringify(readingsCollection);
 				
 				readingsList = null;
@@ -279,7 +298,6 @@ package network.httpserver.API
 					}
 				}
 				
-				//response = JSON.stringify(readingsCollection);
 				response = SpikeJSON.stringify(readingsCollection);
 				
 				readingsCollection = null;
