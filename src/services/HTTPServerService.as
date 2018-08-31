@@ -2,6 +2,8 @@ package services
 {
 	import flash.events.Event;
 	
+	import cryptography.Keys;
+	
 	import database.LocalSettings;
 	
 	import events.FollowerEvent;
@@ -15,6 +17,7 @@ package services
 	import network.httpserver.API.NightscoutAPIGeneralController;
 	import network.httpserver.API.SpikeTreatmentsController;
 	
+	import utils.Cryptography;
 	import utils.Trace;
 
 	public class HTTPServerService
@@ -58,7 +61,7 @@ package services
 		{
 			httpServerServiceEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON) == "true";
 			dexcomServerUsername = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_USERNAME);
-			dexcomServerPassword = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD);
+			dexcomServerPassword = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD));
 			
 			if (dexcomAuthenticationController != null)
 			{

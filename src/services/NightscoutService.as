@@ -21,6 +21,8 @@ package services
 	
 	import spark.formatters.DateTimeFormatter;
 	
+	import cryptography.Keys;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -51,6 +53,7 @@ package services
 	
 	import utils.BatteryInfo;
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.SpikeJSON;
 	import utils.TimeSpan;
 	import utils.Trace;
@@ -584,7 +587,7 @@ package services
 			
 			nightscoutFollowOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
 			
-			nightscoutFollowAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)))));
+			nightscoutFollowAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET))))));
 		}
 		
 		private static function activateFollower():void
@@ -2340,7 +2343,7 @@ package services
 		
 		private static function setupNightscoutProperties():void
 		{
-			apiSecret = !CGMBlueToothDevice.isFollower() ? Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET))))) : Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)))));
+			apiSecret = !CGMBlueToothDevice.isFollower() ? Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET)))))) : Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET))))));
 			
 			nightscoutEventsURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";
 			if (nightscoutEventsURL.indexOf('http') == -1) nightscoutEventsURL = "https://" + nightscoutEventsURL;

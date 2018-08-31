@@ -4,6 +4,8 @@ package ui.screens.display.settings.general
 	
 	import flash.display.StageOrientation;
 	
+	import cryptography.Keys;
+	
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
@@ -33,6 +35,7 @@ package ui.screens.display.settings.general
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("generalsettingsscreen")]
@@ -84,7 +87,7 @@ package ui.screens.display.settings.general
 			collectionMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE);
 			followNSURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL);
 			nightscoutOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
-			nightscoutAPISecretValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET);
+			nightscoutAPISecretValue = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET));
 		}
 		
 		private function setupContent():void
@@ -194,8 +197,9 @@ package ui.screens.display.settings.general
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET) != String(nightscoutOffset))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET, String(nightscoutOffset));
 			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != String(nightscoutAPISecretValue))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET, String(nightscoutAPISecretValue));
+			var apiSecretToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, String(nightscoutAPISecretValue));
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != apiSecretToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET, apiSecretToSave);
 			
 			//Refresh main menu. Menu items are different for hosts and followers
 			AppInterface.instance.menu.refreshContent();

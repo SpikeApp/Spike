@@ -113,7 +113,6 @@ package model
 			_phoneMuted = value;
 		}
 
-		
 		public function ModelLocator()
 		{
 			if (_instance != null)

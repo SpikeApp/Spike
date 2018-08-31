@@ -237,7 +237,7 @@ package ui.screens.display.settings.maintenance
 			if(emailDatabaseButton != null)
 				emailDatabaseButton.isEnabled = false;
 			
-			EmailFileSender.instance.addEventListener(Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.addEventListener(Event.COMPLETE, onFileSenderClosed);
 			EmailFileSender.instance.addEventListener(Event.CANCEL, onFileSenderClosed);
 			EmailFileSender.sendFile
 			(
@@ -254,7 +254,7 @@ package ui.screens.display.settings.maintenance
 		
 		private function onFileSenderClosed(e:starling.events.Event):void
 		{
-			EmailFileSender.instance.removeEventListener(Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(Event.COMPLETE, onFileSenderClosed);
 			EmailFileSender.instance.removeEventListener(Event.CANCEL, onFileSenderClosed);
 			
 			if (emailDatabaseButton != null)
@@ -544,7 +544,7 @@ package ui.screens.display.settings.maintenance
 		
 		override public function dispose():void
 		{
-			EmailFileSender.instance.removeEventListener(Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(Event.COMPLETE, onFileSenderClosed);
 			EmailFileSender.instance.removeEventListener(Event.CANCEL, onFileSenderClosed);
 			EmailFileSender.dispose();
 			

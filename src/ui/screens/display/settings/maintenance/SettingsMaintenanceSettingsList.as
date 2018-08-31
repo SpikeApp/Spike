@@ -8,9 +8,6 @@ package ui.screens.display.settings.maintenance
 	import com.distriqt.extension.scanner.Symbology;
 	import com.distriqt.extension.scanner.events.AuthorisationEvent;
 	import com.distriqt.extension.scanner.events.ScannerEvent;
-	import com.hurlant.crypto.symmetric.AESKey;
-	import com.hurlant.util.Base64;
-	import com.hurlant.util.Hex;
 	
 	import flash.display.BitmapData;
 	import flash.display.StageOrientation;
@@ -18,7 +15,6 @@ package ui.screens.display.settings.maintenance
 	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequestMethod;
-	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
 	import cryptography.Keys;
@@ -58,6 +54,7 @@ package ui.screens.display.settings.maintenance
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	import utils.Trace;
 	
@@ -244,7 +241,7 @@ package ui.screens.display.settings.maintenance
 			}
 			
 			//Encrypt settings
-			var allSettingsEncrypted:String = encryptString(Keys.AES256, allSettingsString);
+			var allSettingsEncrypted:String = Cryptography.encryptStringStrong(Keys.STRENGTH_256_BIT, allSettingsString);
 			
 			//Upload them (anonymously and privatly)
 			var parameters:Object = {};
@@ -301,7 +298,7 @@ package ui.screens.display.settings.maintenance
 				var url:String = String(responseJSON.url);
 				if (url.indexOf("https://snippets.glot.io") != -1)
 				{
-					var encryptedURL:String = encryptString(Keys.AES256, url);
+					var encryptedURL:String = Cryptography.encryptStringStrong(Keys.STRENGTH_256_BIT, url);
 					
 					try
 					{
@@ -507,7 +504,7 @@ package ui.screens.display.settings.maintenance
 			{
 				try
 				{
-					var urlDecrypted:String = decodeString(Keys.AES256, qrCode);
+					var urlDecrypted:String = Cryptography.decryptStringStrong(Keys.STRENGTH_256_BIT, qrCode);
 					
 					if (urlDecrypted.indexOf("https://snippets.glot.io") != -1)
 					{
@@ -582,7 +579,7 @@ package ui.screens.display.settings.maintenance
 			if (responseJSON != null && responseJSON.files != null && responseJSON.files is Array && responseJSON.files[0] != null && responseJSON.files[0].content != null)
 			{
 				var settingsEncrypted:String = String(responseJSON.files[0].content);
-				var settingsDecrypted:String = decodeString(Keys.AES256, settingsEncrypted);
+				var settingsDecrypted:String = Cryptography.decryptStringStrong(Keys.STRENGTH_256_BIT, settingsEncrypted);
 				
 				try
 				{
@@ -701,7 +698,7 @@ package ui.screens.display.settings.maintenance
 			if (sendQRCodeButton != null)
 				sendQRCodeButton.isEnabled = false;
 			
-			EmailFileSender.instance.addEventListener(starling.events.Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.addEventListener(starling.events.Event.COMPLETE, onFileSenderClosed);
 			EmailFileSender.instance.addEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
 			EmailFileSender.sendFile
 			(
@@ -718,7 +715,7 @@ package ui.screens.display.settings.maintenance
 		
 		private function onFileSenderClosed(e:starling.events.Event):void
 		{
-			EmailFileSender.instance.removeEventListener(starling.events.Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(starling.events.Event.COMPLETE, onFileSenderClosed);
 			EmailFileSender.instance.removeEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
 			
 			if (sendQRCodeButton != null)
@@ -749,27 +746,7 @@ package ui.screens.display.settings.maintenance
 		/**
 		 * Helpers
 		 */
-		private function encryptString(key:String, content:String):String
-		{
-			var keyBytes:ByteArray = Hex.toArray(key);
-			var contentBytes:ByteArray = Hex.toArray(Hex.fromString(content));
-			var aes:AESKey = new AESKey(keyBytes);
-			aes.encrypt( contentBytes );
-			contentBytes.compress();
-			
-			return Base64.encodeByteArray(contentBytes);
-		}
 		
-		private function decodeString(key:String, content:String):String
-		{
-			var keyBytes:ByteArray = Hex.toArray(key);
-			var contentBytes:ByteArray = Base64.decodeToByteArray(content);
-			contentBytes.uncompress();
-			var aes:AESKey = new AESKey(keyBytes);
-			aes.decrypt( contentBytes );
-			
-			return contentBytes.toString();
-		}
 		
 		private function recoverFromContextLost():void
 		{
@@ -799,7 +776,7 @@ package ui.screens.display.settings.maintenance
 		
 		override public function dispose():void
 		{
-			EmailFileSender.instance.removeEventListener(starling.events.Event.CLOSE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(starling.events.Event.COMPLETE, onFileSenderClosed);
 			EmailFileSender.instance.removeEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
 			EmailFileSender.dispose();
 			

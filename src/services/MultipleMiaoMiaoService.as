@@ -21,6 +21,8 @@ package services
 	
 	import spark.formatters.DateTimeFormatter;
 	
+	import cryptography.Keys;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -34,6 +36,7 @@ package services
 	
 	import network.NetworkConnector;
 	
+	import utils.Cryptography;
 	import utils.DateTimeUtilities;
 	import utils.SpikeJSON;
 	import utils.Trace;
@@ -675,7 +678,7 @@ package services
 			
 			nightscoutDownloadOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "") {
-				nightscoutDownloadAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)))));
+				nightscoutDownloadAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET))))));
 			} else {
 				nightscoutDownloadAPISecret = "";
 			}

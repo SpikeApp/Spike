@@ -4,6 +4,8 @@ package ui.screens.display.settings.integration
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
 	
+	import cryptography.Keys;
+	
 	import database.LocalSettings;
 	
 	import feathers.controls.Button;
@@ -40,6 +42,7 @@ package ui.screens.display.settings.integration
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DataValidator;
 	import utils.DeviceInfo;
 	
@@ -102,7 +105,7 @@ package ui.screens.display.settings.integration
 		{
 			httpServiceEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON) == "true";
 			serverUsername = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_USERNAME);
-			serverPassword = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD);
+			serverPassword = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD));
 		}
 		
 		private function setupContent():void
@@ -224,8 +227,9 @@ package ui.screens.display.settings.integration
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_USERNAME, userNameTextInput.text);
 				
 			//Password
-			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD) != passwordTextInput.text)
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD, passwordTextInput.text);
+			var passwordToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, passwordTextInput.text);
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD) != passwordToSave)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD, passwordToSave);
 			
 			needsSave = false;
 		}

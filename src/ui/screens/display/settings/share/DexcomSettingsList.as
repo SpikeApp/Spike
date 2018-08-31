@@ -2,6 +2,8 @@ package ui.screens.display.settings.share
 {
 	import com.adobe.utils.StringUtil;
 	
+	import cryptography.Keys;
+	
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
@@ -40,6 +42,7 @@ package ui.screens.display.settings.share
 	import ui.screens.display.dexcomshare.DexcomShareFollowersList;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("sharesettingsscreen")]
@@ -105,7 +108,7 @@ package ui.screens.display.settings.share
 			/* Get data from database */
 			isDexcomEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true";
 			selectedUsername = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME);
-			selectedPassword = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
+			selectedPassword = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD));
 			selectedServerCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true" ? "us" : "non-us";
 			selectedDexcomShareSerialNumber = !CGMBlueToothDevice.isDexcomG5() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER).toUpperCase() : "";
 			isSyncWifiOnly = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_WIFI_ONLY_UPLOADER_ON) == "true";
@@ -230,8 +233,9 @@ package ui.screens.display.settings.share
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME, selectedUsername);
 			
 			//Password
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != selectedPassword)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, selectedPassword);
+			var passwordToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, selectedPassword);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != passwordToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, passwordToSave);
 			
 			//Serial
 			if (!CGMBlueToothDevice.isDexcomG5() && !CGMBlueToothDevice.isDexcomG6() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER) != selectedDexcomShareSerialNumber.toUpperCase())

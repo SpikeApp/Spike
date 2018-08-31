@@ -25,6 +25,8 @@ package ui
 	
 	import spark.formatters.DateTimeFormatter;
 	
+	import cryptography.Keys;
+	
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
@@ -56,6 +58,7 @@ package ui
 	import ui.screens.Screens;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	import utils.Trace;
 
@@ -124,6 +127,40 @@ package ui
 			{
 				Trace.myTrace("interfaceController.as", "Database initialized successfully!");
 				//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
+				
+				//Cryptography
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DATABASE_IS_ENCRYPTED) != "true")
+				{
+					Trace.myTrace("interfaceController.as", "Encrypting database passwords for backwards compatibility...");
+					
+					//Main Nightscout API Secret
+					var mainNightscoutAPISecret:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
+					mainNightscoutAPISecret = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, mainNightscoutAPISecret);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET, mainNightscoutAPISecret);
+					
+					//Follower Nightscout API Secret
+					var followerNightscoutAPISecret:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET);
+					followerNightscoutAPISecret = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, followerNightscoutAPISecret);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET, followerNightscoutAPISecret);
+					
+					//Dexcom Share Password
+					var dexcomSharePassword:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
+					dexcomSharePassword = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, dexcomSharePassword);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, dexcomSharePassword);
+					
+					//IFTTT Maker Keys
+					var IFTTTMakerKeys:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY);
+					IFTTTMakerKeys = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, IFTTTMakerKeys);
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY, IFTTTMakerKeys);
+					
+					//Internal HTTP Password
+					var internalHTTPPassword:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD);
+					internalHTTPPassword = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, internalHTTPPassword);
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD, internalHTTPPassword);
+					
+					//Update Flag
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DATABASE_IS_ENCRYPTED, "true");
+				}
 				
 				//NSLog
 				if (ModelLocator.INTERNAL_TESTING)

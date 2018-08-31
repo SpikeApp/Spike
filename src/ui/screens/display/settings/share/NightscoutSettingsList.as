@@ -1,5 +1,7 @@
 package ui.screens.display.settings.share
 {
+	import cryptography.Keys;
+	
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
@@ -23,6 +25,7 @@ package ui.screens.display.settings.share
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("sharesettingsscreen")]
@@ -77,7 +80,7 @@ package ui.screens.display.settings.share
 			/* Get data from database */
 			isNSEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true";
 			selectedURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
-			selectedAPISecret = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
+			selectedAPISecret = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET));
 			isBatteryUploaderEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) == "true";
 			isWifiOnlyUploaderEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true";
 			isUploadOptimalCalibrationsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON) == "true";
@@ -150,9 +153,10 @@ package ui.screens.display.settings.share
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON, nsEnabledValue);
 				
 				//API Secret
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != selectedAPISecret)
+				var apiSecretToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, selectedAPISecret);
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != apiSecretToSave)
 				{
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET, selectedAPISecret);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET, apiSecretToSave);
 					needsCredentialRechek = true;
 				}
 				

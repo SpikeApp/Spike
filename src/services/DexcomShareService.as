@@ -13,6 +13,8 @@ package services
 	import flash.utils.Timer;
 	import flash.utils.setTimeout;
 	
+	import cryptography.Keys;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
@@ -37,6 +39,7 @@ package services
 	import ui.popups.AlertManager;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	import utils.SpikeJSON;
 	import utils.TimeSpan;
@@ -921,7 +924,7 @@ package services
 			accountName = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME);
 			
 			//Password
-			accountPassword = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
+			accountPassword = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD));
 			
 			//Transmitter ID
 			if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) transmitterID = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
