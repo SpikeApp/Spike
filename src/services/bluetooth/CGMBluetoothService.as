@@ -18,6 +18,7 @@ package services.bluetooth
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.filesystem.File;
+	import flash.system.Capabilities;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
@@ -44,8 +45,6 @@ package services.bluetooth
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
-	
-	import flash.system.Capabilities;
 	
 	import feathers.controls.Alert;
 	
@@ -296,6 +295,14 @@ package services.bluetooth
 				return;
 			else
 				initialStart = false;
+			
+			//Perform database reset actions
+			if (SpikeANE.getDatabaseResetStatus() == true)
+			{
+				//Database was previously resetted. Forget Bluetooth device and update the reset flag to false so it doesn't run again on the next Spike boot.
+				SpikeANE.setDatabaseResetStatus(false);
+				CGMBlueToothDevice.forgetBlueToothDevice();
+			}
 			
 			peripheralConnected = false;
 			
