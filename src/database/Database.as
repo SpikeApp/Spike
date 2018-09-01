@@ -2225,8 +2225,6 @@ package database
 				conn.commit();
 				conn.close();
 				
-				trace("TREATMENT DELETED FROM DATABASE");
-				
 			} catch (error:SQLError) {
 				if (conn.connected) {
 					conn.rollback();

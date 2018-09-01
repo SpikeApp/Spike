@@ -204,7 +204,6 @@ package services
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
 		private static var lastMissedReadingAlertCheckTimeStamp:Number;
 		private static var lastApplicationStoppedAlertCheckTimeStamp:Number;
-		public static var canUploadCalibrationToNightscout:Boolean = true;
 		
 		//for repeat of alarms every minute, this is only for non-snoozed alerts
 		//each element in an array represents certain alarm 
@@ -275,7 +274,12 @@ package services
 		private static var queuedAlertSound:String = "";
 		private static var lastQueuedAlertSoundTimeStamp:Number = 0;
 		
-		private static var userWarnedOfSuboptimalCalibration:Boolean = false;
+		/**
+		 * Optimal Calibrations
+		 */
+		public static var userWarnedOfSuboptimalCalibration:Boolean = false;
+		public static var userRequestedSuboptimalCalibrationNotification:Boolean = false;
+		public static var canUploadCalibrationToNightscout:Boolean = true;
 		
 		public static function get instance():AlarmService {
 			return _instance;
@@ -645,8 +649,6 @@ package services
 					} else {
 						myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
-					
-					canUploadCalibrationToNightscout = true;
 				}
 			}
 			
@@ -670,7 +672,6 @@ package services
 				SpikeANE.stopPlayingSound();
 				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.data.index];
 				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
-				canUploadCalibrationToNightscout = true;
 			}
 			
 			function batteryLevelSnoozePicker_closedHandler(event:starling.events.Event): void {
@@ -1600,9 +1601,10 @@ package services
 							
 							SpikeANE.vibrate();
 							userWarnedOfSuboptimalCalibration = true;
+							userRequestedSuboptimalCalibrationNotification = false;
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON, String(userWarnedOfSuboptimalCalibration), true, false);
 						} 
-						else if (alertValue < ((now.valueOf() - lastCalibrationTimestamp) / 1000 / 60 / 60) && GlucoseHelper.isOptimalConditionToCalibrate()) 
+						else if (alertValue < ((now.valueOf() - lastCalibrationTimestamp) / 1000 / 60 / 60) && isOptimaCalibration && !userRequestedSuboptimalCalibrationNotification) 
 						{
 							myTrace("in checkAlarms, calibration is necessary");
 							fireAlert(
