@@ -15,6 +15,7 @@ package ui.screens.display.settings.share
 	
 	import model.ModelLocator;
 	
+	import services.AlarmService;
 	import services.NightscoutService;
 	
 	import starling.events.Event;
@@ -173,7 +174,12 @@ package ui.screens.display.settings.share
 				
 				//Optimal Calibration Uploader
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON) != String(isUploadOptimalCalibrationsEnabled))
+				{
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_UPLOAD_OPTIMAL_CALIBRATION_TO_NS_ON, String(isUploadOptimalCalibrationsEnabled));
+					
+					if (isUploadOptimalCalibrationsEnabled)
+						AlarmService.canUploadCalibrationToNightscout = true;
+				}
 				
 				//Wi-Fi Only Uploader
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) != String(isWifiOnlyUploaderEnabled))
