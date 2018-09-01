@@ -2559,7 +2559,8 @@ package services
 					activateFollower();
 				}
 				else
-					deactivateFollower()
+					if(followerModeEnabled)
+						deactivateFollower();
 			}
 			else if (e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET || e.data == CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)
 			{

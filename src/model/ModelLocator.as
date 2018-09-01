@@ -1,6 +1,5 @@
 package model
 {
-	import com.distriqt.extension.cloudstorage.CloudStorage;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.scanner.Scanner;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
