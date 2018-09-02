@@ -40,6 +40,7 @@ package ui.popups
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("sidiarysettingsscreen")]
 
 	public class EmailFileSender extends EventDispatcher
 	{
@@ -217,6 +218,10 @@ package ui.popups
 			}
 			
 			sendButton.isEnabled = false;
+			sendButton.label = ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen',"export_button__standby_label");
+			sendButton.validate();
+			mainContainer.validate();
+			emailCallout.validate();
 			
 			//Get the file
 			if ((fileDataProperty is File && fileDataProperty.exists && fileDataProperty.size > 0) || fileDataProperty is ByteArray)
