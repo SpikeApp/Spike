@@ -541,7 +541,7 @@ package ui
 							file.deleteFile();
 						
 						//Notify ANE
-						SpikeANE.performDatabaseResetActions();
+						SpikeANE.setDatabaseResetStatus(true);
 						
 						//Halt Spike
 						Trace.myTrace("Spike.as", "Halting Spike...");

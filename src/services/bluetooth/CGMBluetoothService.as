@@ -14,13 +14,18 @@ package services.bluetooth
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
+	import flash.desktop.NativeApplication;
+	import flash.desktop.SystemIdleMode;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.filesystem.File;
+	import flash.system.Capabilities;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
 	
 	import G5G6Model.AuthChallengeRxMessage;
 	import G5G6Model.AuthChallengeTxMessage;
@@ -45,8 +50,6 @@ package services.bluetooth
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
 	
-	import flash.system.Capabilities;
-	
 	import feathers.controls.Alert;
 	
 	import model.ModelLocator;
@@ -64,7 +67,9 @@ package services.bluetooth
 	import services.NotificationService;
 	
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
+	import ui.InterfaceController;
 	import ui.popups.AlertManager;
 	import ui.popups.EmailFileSender;
 	
@@ -296,6 +301,31 @@ package services.bluetooth
 				return;
 			else
 				initialStart = false;
+			
+			//Check if database was previously resetted. 
+			if (SpikeANE.getDatabaseResetStatus() == true)
+			{
+				myTrace("Database was previously restored. Forgetting current Bluetooth device...");
+				
+				//Update the reset flag to false so it doesn't run again on the next Spike boot
+				SpikeANE.setDatabaseResetStatus(false);
+				
+				//Forget current Bluetooth device 
+				CGMBlueToothDevice.forgetBlueToothDevice();
+				
+				//Start automatic scanning after 5 seconds
+				var autoScanTimeout:uint = setTimeout( function():void 
+				{
+					clearTimeout(autoScanTimeout);
+					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON && !CGMBluetoothService.bluetoothPeripheralActive() && !CGMBlueToothDevice.alwaysScan())
+					{
+						myTrace("Starting automatic scan after database restore...");
+						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+						CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped, false, 0, true);
+						CGMBluetoothService.startScanning(true);
+					}
+				}, 5000 );
+			}
 			
 			peripheralConnected = false;
 			

@@ -121,9 +121,8 @@
         
         FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m in didDiscoverPeripheral UUIDString =  %@",UUIDString]);
 
-        if (self.selectMAC ==  NULL || [[FQToolsUtil userDefaults:@"databaseResetted"]  isEqual: @"true"]) {
+        if (self.selectMAC ==  NULL) {
             _selectMAC = UUIDString;
-            [FQToolsUtil saveUserDefaults:@"false" key:@"databaseResetted"];
             FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_newG5Mac", (const uint8_t*) FPANE_ConvertNSString_TO_uint8([NSString stringWithFormat:@"%@%@", UUIDString, @"JJ§§((hhd"]));
         } else {
             if ([[self.selectMAC uppercaseString] rangeOfString:[UUIDString uppercaseString]].location == NSNotFound) {

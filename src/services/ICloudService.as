@@ -308,7 +308,7 @@ package services
 				remoteDatabaseData.uncompress(CompressionAlgorithm.ZLIB);
 				
 				//Notify ANE
-				SpikeANE.performDatabaseResetActions();
+				SpikeANE.setDatabaseResetStatus(true);
 				
 				//Halt Spike
 				Trace.myTrace("ICloudService.as", "Halting Spike...");

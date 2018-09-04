@@ -117,9 +117,8 @@
             MAC = [[dataStr substringFromIndex:4]uppercaseString];
             FPANE_Log([NSString stringWithFormat:@"spiketrace ANE FQBLEManager.m in didDiscoverPeripheral MAC =  %@",MAC]);
 
-            if (self.selectMAC ==  NULL || [[FQToolsUtil userDefaults:@"databaseResetted"]  isEqual: @"true"]) {
+            if (self.selectMAC ==  NULL) {
                 _selectMAC = MAC;
-                [FQToolsUtil saveUserDefaults:@"false" key:@"databaseResetted"];
                 FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_newMiaoMiaoMac", (const uint8_t*) FPANE_ConvertNSString_TO_uint8([NSString stringWithFormat:@"%@%@", MAC, @"JJ§§((hhd"]));
             } else {
                 if ([[self.selectMAC uppercaseString] rangeOfString:[MAC uppercaseString]].location == NSNotFound) {

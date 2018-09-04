@@ -263,6 +263,24 @@ FREObject getAppVersion(FREContext ctx, void* funcData, uint32_t argc, FREObject
     return FPANE_NSStringToFREObject(appVersion);
 }
 
+FREObject setDatabaseResetStatus(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    NSString * status = [FPANE_FREObjectToNSString(argv[0]) mutableCopy];
+    FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m in setDatabaseResetStatus, Database Reset Status = %@", status]);
+    
+    [FQToolsUtil saveUserDefaults:status key:@"databaseResetted"];
+    return nil;
+}
+
+FREObject getDatabaseResetStatus(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    BOOL isDatabaseResetted = [[FQToolsUtil userDefaults:@"databaseResetted"] isEqual: @"true"];
+    
+    FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m in getDatabaseResetStatus, Database Reset Status = %s", isDatabaseResetted ? "true" : "false"]);
+    
+    return FPANE_BOOLToFREObject(isDatabaseResetted);
+}
+
 /**********
  ** DEVICE
  **********/
@@ -296,13 +314,6 @@ FREObject getBatteryStatus(FREContext ctx, void* funcData, uint32_t argc, FREObj
     int batteryState = [spikeDevice batteryState];
     
     return FPANE_IntToFREObject(batteryState);
-}
-
-FREObject performDatabaseResetActions(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
-{
-    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m performDatabaseResetActions");
-    [FQToolsUtil saveUserDefaults:@"true" key:@"databaseResetted"];
-    return nil;
 }
 
 /************
@@ -421,7 +432,7 @@ void NativeExtensionInitializer( void** extDataToSet, FREContextInitializer* ctx
 
 void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FREContext ctx, uint32_t* numFunctionsToTest, const FRENamedFunction** functionsToSet) {
     
-    *numFunctionsToTest = 49;
+    *numFunctionsToTest = 50;
     
     FRENamedFunction * func = (FRENamedFunction *) malloc(sizeof(FRENamedFunction) * *numFunctionsToTest);
 
@@ -542,111 +553,115 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[24].name = (const uint8_t*) "getAppVersion";
     func[24].functionData = NULL;
     func[24].function = &getAppVersion;
+    
+    func[25].name = (const uint8_t*) "setDatabaseResetStatus";
+    func[25].functionData = NULL;
+    func[25].function = &setDatabaseResetStatus;
+    
+    func[26].name = (const uint8_t*) "getDatabaseResetStatus";
+    func[26].functionData = NULL;
+    func[26].function = &getDatabaseResetStatus;
 
     /**********
      ** DEVICE
      **********/
-    func[25].name = (const uint8_t*) "checkMute";
-    func[25].functionData = NULL;
-    func[25].function = &checkMute;
-    
-    func[26].name = (const uint8_t*) "vibrate";
-    func[26].functionData = NULL;
-    func[26].function = &vibrate;
-    
-    func[27].name = (const uint8_t*) "getBatteryLevel";
+    func[27].name = (const uint8_t*) "checkMute";
     func[27].functionData = NULL;
-    func[27].function = &getBatteryLevel;
+    func[27].function = &checkMute;
     
-    func[28].name = (const uint8_t*) "getBatteryStatus";
+    func[28].name = (const uint8_t*) "vibrate";
     func[28].functionData = NULL;
-    func[28].function = &getBatteryStatus;
+    func[28].function = &vibrate;
     
-    func[29].name = (const uint8_t*) "performDatabaseResetActions";
+    func[29].name = (const uint8_t*) "getBatteryLevel";
     func[29].functionData = NULL;
-    func[29].function = &performDatabaseResetActions;
+    func[29].function = &getBatteryLevel;
+    
+    func[30].name = (const uint8_t*) "getBatteryStatus";
+    func[30].functionData = NULL;
+    func[30].function = &getBatteryStatus;
 
     /************
      ** UTILITIES
      ************/
-    func[30].name = (const uint8_t*) "generateHMAC_SHA1";
-    func[30].functionData = NULL;
-    func[30].function = &generateHMAC_SHA1;
-    
-    func[31].name = (const uint8_t*) "AESEncryptWithKey";
+    func[31].name = (const uint8_t*) "generateHMAC_SHA1";
     func[31].functionData = NULL;
-    func[31].function = &AESEncryptWithKey;
+    func[31].function = &generateHMAC_SHA1;
     
-    func[32].name = (const uint8_t*) "startMonitoringAndRangingBeaconsInRegion";
+    func[32].name = (const uint8_t*) "AESEncryptWithKey";
     func[32].functionData = NULL;
-    func[32].function = &startMonitoringAndRangingBeaconsInRegion;
+    func[32].function = &AESEncryptWithKey;
     
-    func[33].name = (const uint8_t*) "stopMonitoringAndRangingBeaconsInRegion";
+    func[33].name = (const uint8_t*) "startMonitoringAndRangingBeaconsInRegion";
     func[33].functionData = NULL;
-    func[33].function = &stopMonitoringAndRangingBeaconsInRegion;
-
-    func[34].name = (const uint8_t*) "writeTraceToFile";
+    func[33].function = &startMonitoringAndRangingBeaconsInRegion;
+    
+    func[34].name = (const uint8_t*) "stopMonitoringAndRangingBeaconsInRegion";
     func[34].functionData = NULL;
-    func[34].function = &writeTraceToFile;
+    func[34].function = &stopMonitoringAndRangingBeaconsInRegion;
 
-    func[35].name = (const uint8_t*) "resetTraceFilePath";
+    func[35].name = (const uint8_t*) "writeTraceToFile";
     func[35].functionData = NULL;
-    func[35].function = &resetTraceFilePath;
+    func[35].function = &writeTraceToFile;
+
+    func[36].name = (const uint8_t*) "resetTraceFilePath";
+    func[36].functionData = NULL;
+    func[36].function = &resetTraceFilePath;
 
     /**********************
      **  G5 FUNCTIONS
      *********************/
-    func[36].name = (const uint8_t*) "ScanAndConnectToG5Device";
-    func[36].functionData = NULL;
-    func[36].function = &ScanAndConnectToG5Device;
-    
-    func[37].name = (const uint8_t*) "setG5MAC";
+    func[37].name = (const uint8_t*) "ScanAndConnectToG5Device";
     func[37].functionData = NULL;
-    func[37].function = &setG5MAC;
-   
-    func[38].name = (const uint8_t*) "resetG5Mac";
+    func[37].function = &ScanAndConnectToG5Device;
+    
+    func[38].name = (const uint8_t*) "setG5MAC";
     func[38].functionData = NULL;
-    func[38].function = &resetG5Mac;
-    
-    func[39].name = (const uint8_t*) "cancelG5ConnectionWithMAC";
-    func[39].functionData = NULL;
-    func[39].function = &cancelG5ConnectionWithMAC;
-    
-    func[40].name = (const uint8_t*) "stopScanningG5";
-    func[40].functionData = NULL;
-    func[40].function = &stopScanningG5;
-    
-    func[41].name = (const uint8_t*) "forgetG5";
-    func[41].functionData = NULL;
-    func[41].function = &forgetG5;
-    
-    func[42].name = (const uint8_t*) "startScanDeviceG5";
-    func[42].functionData = NULL;
-    func[42].function = &startScanDeviceG5;
-    
-    func[43].name = (const uint8_t*) "stopScanDeviceG5";
-    func[43].functionData = NULL;
-    func[43].function = &stopScanDeviceG5;
-    
-    func[44].name = (const uint8_t*) "setTransmitterIdG5";
-    func[44].functionData = NULL;
-    func[44].function = &setTransmitterIdG5;
-    
-    func[45].name = (const uint8_t*) "setTestData";
-    func[45].functionData = NULL;
-    func[45].function = &setTestData;
-    
-    func[46].name = (const uint8_t*) "setG5Reset";
-    func[46].functionData = NULL;
-    func[46].function = &setG5Reset;
-    
-    func[47].name = (const uint8_t*) "doG5FirmwareVersionRequest";
-    func[47].functionData = NULL;
-    func[47].function = &doG5FirmwareVersionRequest;
+    func[38].function = &setG5MAC;
    
-    func[48].name = (const uint8_t*) "doG5BatteryInfoRequest";
+    func[39].name = (const uint8_t*) "resetG5Mac";
+    func[39].functionData = NULL;
+    func[39].function = &resetG5Mac;
+    
+    func[40].name = (const uint8_t*) "cancelG5ConnectionWithMAC";
+    func[40].functionData = NULL;
+    func[40].function = &cancelG5ConnectionWithMAC;
+    
+    func[41].name = (const uint8_t*) "stopScanningG5";
+    func[41].functionData = NULL;
+    func[41].function = &stopScanningG5;
+    
+    func[42].name = (const uint8_t*) "forgetG5";
+    func[42].functionData = NULL;
+    func[42].function = &forgetG5;
+    
+    func[43].name = (const uint8_t*) "startScanDeviceG5";
+    func[43].functionData = NULL;
+    func[43].function = &startScanDeviceG5;
+    
+    func[44].name = (const uint8_t*) "stopScanDeviceG5";
+    func[44].functionData = NULL;
+    func[44].function = &stopScanDeviceG5;
+    
+    func[45].name = (const uint8_t*) "setTransmitterIdG5";
+    func[45].functionData = NULL;
+    func[45].function = &setTransmitterIdG5;
+    
+    func[46].name = (const uint8_t*) "setTestData";
+    func[46].functionData = NULL;
+    func[46].function = &setTestData;
+    
+    func[47].name = (const uint8_t*) "setG5Reset";
+    func[47].functionData = NULL;
+    func[47].function = &setG5Reset;
+    
+    func[48].name = (const uint8_t*) "doG5FirmwareVersionRequest";
     func[48].functionData = NULL;
-    func[48].function = &doG5BatteryInfoRequest;
+    func[48].function = &doG5FirmwareVersionRequest;
+   
+    func[49].name = (const uint8_t*) "doG5BatteryInfoRequest";
+    func[49].functionData = NULL;
+    func[49].function = &doG5BatteryInfoRequest;
    
     *functionsToSet = func;
 }

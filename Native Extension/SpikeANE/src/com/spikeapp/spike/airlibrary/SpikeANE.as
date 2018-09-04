@@ -241,6 +241,14 @@ package com.spikeapp.spike.airlibrary
 			return (context.call("getAppVersion") as String);
 		}
 		
+		public static function setDatabaseResetStatus(isResetted:Boolean):void {
+			context.call("setDatabaseResetStatus", isResetted ? "true" : "false");
+		}
+		
+		public static function getDatabaseResetStatus():Boolean {
+			return context.call("getDatabaseResetStatus") as Boolean;
+		}
+		
 		/**********
 		 ** DEVICE
 		 **********/
@@ -258,10 +266,6 @@ package com.spikeapp.spike.airlibrary
 		
 		public static function getBatteryStatus():int {
 			return (context.call("getBatteryStatus") as int);
-		}
-		
-		public static function performDatabaseResetActions():void {
-			context.call("performDatabaseResetActions");
 		}
 
 		/************

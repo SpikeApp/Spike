@@ -163,6 +163,13 @@ package com.spikeapp.spike.airlibrary
 			return "x.x.x";
 		}
 		
+		public static function setDatabaseResetStatus(isResetted:Boolean):void {
+		}
+		
+		public static function getDatabaseResetStatus():Boolean {
+			return false;
+		}
+		
 		/**********
 		 ** DEVICE
 		 **********/
@@ -176,9 +183,6 @@ package com.spikeapp.spike.airlibrary
 		}
 		
 		public static function getBatteryStatus():void {
-		}
-		
-		public static function performDatabaseResetActions():void {
 		}
 		
 		/************

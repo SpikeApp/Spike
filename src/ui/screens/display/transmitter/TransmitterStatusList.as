@@ -822,7 +822,7 @@ package ui.screens.display.transmitter
 			{
 				CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped, false, 0, true);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, InterfaceController.userInitiatedBTScanningSucceeded, false, 0, true);
-				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded);
+				SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, InterfaceController.userInitiatedBTScanningSucceeded, false, 0, true);
 				CGMBluetoothService.startScanning(true);
 				
 				AlertManager.showSimpleAlert(
