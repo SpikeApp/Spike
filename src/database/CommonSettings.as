@@ -93,6 +93,7 @@ package database
 		 * Bluereader<br>
 		 * BluKon<br>
 		 * Transmiter PL<br>
+		 * SweetReader<br>
 		 * <br>
 		 * Default value is an empty string, peripheral type unknown
 		  */
@@ -158,12 +159,12 @@ package database
 		 public static const COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP:int = 35;
 		 
 		 /**
-		 * For limitter and/or bluereaderw<br>
+		 * For limitter and/or bluereader and/or SweetReader<br>
 		 * value 0 means level not known
 		  */
 		 public static const COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL:int = 36;
 		 /**
-		  * For bluereaderw<br>
+		  * For bluereader<br>
 		  * value 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BLUEREADER_BATTERY_LEVEL:int = 37;
@@ -507,6 +508,11 @@ package database
 		 public static const COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_TIMESPAN:int = 188;
 		 public static const COMMON_SETTING_ICLOUD_BACKUP_LAST_PERFORMED:int = 189;
 		 public static const COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY:int = 190;
+		 
+		 /**
+		 * SweetReader battery level, default value = 0
+		  */
+		 public static const COMMON_SETTING_SWEETREADER_BATTERY_LEVEL:int = 191;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -699,7 +705,8 @@ package database
 			 "false",//COMMON_SETTING_OPTIMAL_CALIBRATION_BY_ALARM_NOTIFIED_ON
 			 "604800000",//COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_TIMESPAN (1 week by default)
 			 "0",//COMMON_SETTING_ICLOUD_BACKUP_LAST_PERFORMED
-			 "false"//COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY
+			 "false",//COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY
+			 "0"//COMMON_SETTING_SWEETREADER_BATTERY_LEVEL
 		 ];
 
 		 public function CommonSettings()

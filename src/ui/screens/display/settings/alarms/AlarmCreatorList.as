@@ -178,7 +178,7 @@ package ui.screens.display.settings.alarms
 					minimumStepperValue = 170;
 					maximumStepperValue = 240;
 				}
-				else if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL())
+				else if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL() || CGMBlueToothDevice.isSweetReader())
 				{
 					minimumStepperValue = 5;
 					maximumStepperValue = 90;
@@ -238,7 +238,7 @@ package ui.screens.display.settings.alarms
 						alarmValue = 210;
 					else if (CGMBlueToothDevice.isMiaoMiao())
 						alarmValue = 30;
-					else if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL())
+					else if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL() || CGMBlueToothDevice.isSweetReader())
 						alarmValue = 20;
 				}
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT)

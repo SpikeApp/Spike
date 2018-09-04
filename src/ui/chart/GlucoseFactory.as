@@ -424,6 +424,27 @@ package ui.chart
 						transmitterBatteryColor = 0xff1c1c;
 				}
 			}
+			else if (CGMBlueToothDevice.isSweetReader())
+			{
+				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SWEETREADER_BATTERY_LEVEL);
+				
+				if (transmitterBattery == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					transmitterBattery = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					transmitterBattery = String(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SWEETREADER_BATTERY_LEVEL) + "%");
+				
+				transmitterValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SWEETREADER_BATTERY_LEVEL))
+				
+				if (!isNaN(transmitterValue))
+				{
+					if (transmitterValue > 40)
+						transmitterBatteryColor = 0x4bef0a;
+					else if (transmitterValue > 20)
+						transmitterBatteryColor = 0xff671c;
+					else
+						transmitterBatteryColor = 0xff1c1c;
+				}
+			}
 			else if (CGMBlueToothDevice.isMiaoMiao())
 			{
 				transmitterBattery = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);

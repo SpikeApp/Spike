@@ -203,7 +203,7 @@ package ui.screens.display.settings.treatments
 			if (infoPillEnabledValue)
 			{
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"transmitter_battery"), accessory: displayTransmitterBatteryEnabled, selectable: false });
-				if (!CGMBlueToothDevice.isBlueReader() && !CGMBlueToothDevice.isBluKon() && !CGMBlueToothDevice.isLimitter() && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isTransmiter_PL())
+				if (!CGMBlueToothDevice.isSweetReader() && !CGMBlueToothDevice.isBlueReader() && !CGMBlueToothDevice.isBluKon() && !CGMBlueToothDevice.isLimitter() && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isTransmiter_PL())
 					data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"raw_glucose_extended"), accessory: displayRawEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"sensor_age"), accessory: displaySAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"canula_age"), accessory: displayCAGEEnabled, selectable: false });

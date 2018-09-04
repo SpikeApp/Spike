@@ -5,7 +5,6 @@ package ui.screens
 	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
-	import feathers.controls.ScrollPolicy;
 	import feathers.events.FeathersEventType;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
