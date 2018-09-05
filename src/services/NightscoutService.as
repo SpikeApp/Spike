@@ -1951,7 +1951,7 @@ package services
 			
 			//Upload Sensor Start treatment
 			//NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, JSON.stringify(activeSensorStarts), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
-			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(activeSensorStarts[0]), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL, apiSecret, URLRequestMethod.PUT, SpikeJSON.stringify(activeSensorStarts[0]), MODE_SENSOR_START, onUploadSensorStartComplete, onConnectionFailed);
 		}
 		
 		private static function getSensorStart():void
@@ -1994,7 +1994,7 @@ package services
 			
 			syncSensorStartActive = false;
 			
-			if (response.indexOf("Sensor Start") != -1 && response.indexOf("Error") == -1)
+			if (response.indexOf("ok") != -1 && response.indexOf("Error") == -1)
 			{
 				Trace.myTrace("NightscoutService.as", "Sensor start uploaded successfuly");
 				if (activeSensorStarts.length > 0)
@@ -2008,7 +2008,7 @@ package services
 			}
 			else
 			{
-				Trace.myTrace("NightscoutService.as", "Error uploading sensor start!");
+				Trace.myTrace("NightscoutService.as", "Error uploading sensor start! Response: " + response);
 			}
 		}
 		
