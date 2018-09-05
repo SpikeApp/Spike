@@ -285,6 +285,21 @@ package treatments
 			Database.updateProfileSynchronous(profile);
 		}
 		
+		public static function insertProfile(profile:Profile):void
+		{	
+			Trace.myTrace("ProfileManager.as", "insertProfile called!");
+			
+			//Push to memory
+			profilesList.push(profile);
+			profilesMap[profile.ID] = profile;
+			
+			//Save to Database
+			Database.insertProfileSynchronous(profile);
+			
+			//Sort profile list by time
+			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+		}
+		
 		public static function addNightscoutCarbAbsorptionRate(rate:Number):void
 		{
 			Trace.myTrace("ProfileManager.as", "Adding Nightscout carbs absorption rate: " + rate);

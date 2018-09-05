@@ -47,6 +47,10 @@ package ui.screens.display.settings.maintenance
 	import starling.textures.Texture;
 	import starling.utils.SystemUtil;
 	
+	import treatments.Insulin;
+	import treatments.Profile;
+	import treatments.ProfileManager;
+	
 	import ui.AppInterface;
 	import ui.popups.AlertManager;
 	import ui.popups.EmailFileSender;
@@ -221,9 +225,53 @@ package ui.screens.display.settings.maintenance
 			refreshContent();
 			
 			//Parse all settings into a string
+			var i:int = 0;
+			var appVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 			var allCommonSettings:Array = CommonSettings.getAllSettings();
 			var allLocalSettings:Array = LocalSettings.getAllSettings();
-			var allSettingsObject:Object = { commonSettings: allCommonSettings, localSettings: allLocalSettings };
+			var allInsulins:Array = [];
+			var allProfiles:Array = [];
+			
+			for (i = 0; i < ProfileManager.insulinsList.length; i++) 
+			{
+				var insulin:Insulin = ProfileManager.insulinsList[i] as Insulin;
+				
+				var insulinAsObject:Object = {};
+				insulinAsObject.ID = insulin.ID;
+				insulinAsObject.name = insulin.name;
+				insulinAsObject.dia = insulin.dia;
+				insulinAsObject.type = insulin.type;
+				insulinAsObject.isDefault = insulin.isDefault;
+				insulinAsObject.timestamp = insulin.timestamp;
+				insulinAsObject.isHidden = insulin.isHidden;
+				
+				allInsulins.push(insulinAsObject);
+			}
+			
+			for (i = 0; i < ProfileManager.profilesList.length; i++) 
+			{
+				var profile:Profile = ProfileManager.profilesList[i] as Profile;
+				
+				var profileAsObject:Object = {};
+				profileAsObject.ID = profile.ID;
+				profileAsObject.time = profile.time;
+				profileAsObject.name = profile.name;
+				profileAsObject.insulinToCarbRatios = profile.insulinToCarbRatios;
+				profileAsObject.insulinSensitivityFactors = profile.insulinSensitivityFactors;
+				profileAsObject.carbsAbsorptionRate = profile.carbsAbsorptionRate;
+				profileAsObject.basalRates = profile.basalRates;
+				profileAsObject.targetGlucoseRates = profile.targetGlucoseRates;
+				profileAsObject.timestamp = profile.timestamp;
+				
+				allProfiles.push(profileAsObject);
+			}
+			
+			var allSettingsObject:Object = {};
+			allSettingsObject.appVersion = appVersion;
+			allSettingsObject.commonSettings = allCommonSettings;
+			allSettingsObject.localSettings = allLocalSettings;
+			allSettingsObject.insulins = allInsulins;
+			allSettingsObject.profiles = allProfiles;
 			
 			try
 			{
@@ -598,15 +646,90 @@ package ui.screens.display.settings.maintenance
 				
 				if (allSettingsJSON != null && allSettingsJSON.commonSettings != null && allSettingsJSON.commonSettings is Array && allSettingsJSON.localSettings != null && allSettingsJSON.localSettings is Array)
 				{
+					var appVersion:String = allSettingsJSON.appVersion;
 					var commonSettingsArray:Array = allSettingsJSON.commonSettings;
 					var localSettingsArray:Array = allSettingsJSON.localSettings;
-					
-					//Import Settings
-					var i:int;
 					var commonSettingsLength:int = commonSettingsArray.length;
 					var localSettingsLength:int = localSettingsArray.length;
 					var peripheralType:String = "";
+					var insulinsArray:Array = allSettingsJSON.insulins;
+					var insulinsLength:int = insulinsArray.length;
+					var profilesArray:Array = allSettingsJSON.profiles;
+					var profilesLength:int = profilesArray.length;
+					var i:int;
 					
+					//Import Insulins
+					try
+					{
+						if (insulinsArray != null && insulinsArray is Array && insulinsArray.length > 0)
+						{
+							for (i = 0; i < insulinsLength; i++) 
+							{
+								var insulinAsObject:Object = insulinsArray[i] as Object;
+								if (insulinAsObject.ID != null &&
+									insulinAsObject.name != null &&
+									insulinAsObject.dia != null &&
+									insulinAsObject.type != null &&
+									insulinAsObject.isDefault != null &&
+									insulinAsObject.isHidden != null
+								)
+								{
+									ProfileManager.addInsulin
+									(
+										insulinAsObject.name, 
+										insulinAsObject.dia, 
+										insulinAsObject.type, 
+										insulinAsObject.isDefault, 
+										insulinAsObject.ID, 
+										true, 
+										insulinAsObject.isHidden
+									);
+								}
+							}
+						}
+					} 
+					catch(error:Error) {}
+					
+					//Import Profiles
+					try
+					{
+						if (profilesArray != null && profilesArray is Array && profilesArray.length > 0)
+						{
+							for (i = 0; i < profilesLength; i++) 
+							{
+								var profileAsObject:Object = profilesArray[i] as Object;
+								if (profileAsObject.ID != null &&
+									profileAsObject.time != null &&
+									profileAsObject.name != null &&
+									profileAsObject.insulinToCarbRatios != null &&
+									profileAsObject.insulinSensitivityFactors != null &&
+									profileAsObject.carbsAbsorptionRate != null &&
+									profileAsObject.basalRates != null &&
+									profileAsObject.targetGlucoseRates != null &&
+									profileAsObject.timestamp != null
+								)
+								{
+									var profile:Profile = new Profile
+										(
+											profileAsObject.ID,
+											profileAsObject.time,
+											profileAsObject.name,
+											profileAsObject.insulinToCarbRatios,
+											profileAsObject.insulinSensitivityFactors,
+											profileAsObject.carbsAbsorptionRate,
+											profileAsObject.basalRates,
+											profileAsObject.targetGlucoseRates,
+											profileAsObject.timestamp
+										);
+									
+									ProfileManager.insertProfile(profile);
+								}
+							}
+						}
+					} 
+					catch(error:Error) {}
+					
+					//Import Settings
 					for (i = 0; i < commonSettingsLength; i++) 
 					{
 						if (i == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE)
