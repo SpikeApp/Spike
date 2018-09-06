@@ -1120,6 +1120,9 @@ package services
 		
 		public static function deleteTreatment(treatment:Treatment):void
 		{
+			if (treatment.type == Treatment.TYPE_SENSOR_START)
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "in deleteTreatment.");
 			
 			//Check if the treatment is already present in another queue and delete it.
@@ -2536,9 +2539,11 @@ package services
 			}
 			else if (e.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" && Sensor.getActiveSensor() != null && uploadSensorStart)
 			{
-				Trace.myTrace("NightscoutService.as", "in onSettingChanged, uploading new sensor.");
-				
-				getSensorStart();
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) != "0")
+				{
+					Trace.myTrace("NightscoutService.as", "in onSettingChanged, uploading new sensor.");
+					getSensorStart();
+				}
 			}
 			else if 
 				(e.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE ||

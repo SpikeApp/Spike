@@ -475,8 +475,8 @@ package ui.screens.display.sensor
 				
 				//Restart the sensor (this will reset all current calibrations)
 				var currentSensorTimestamp:Number = Sensor.getActiveSensor().startedAt;
-				Sensor.stopSensor();
 				NightscoutService.uploadSensorStart = false;
+				Sensor.stopSensor();
 				Sensor.startSensor(currentSensorTimestamp);
 				NightscoutService.uploadSensorStart = true;
 				setupInitialState();
