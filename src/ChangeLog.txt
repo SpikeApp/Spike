@@ -11,6 +11,7 @@ ENHANCEMENT: Lots of optimizations under the hood regarding file and email manag
 ENHANCEMENT: Several enhancements to calibration popups that hopefully will make them more reliable and avoid situations where the calibration was not accepted by Spike. (Miguel)
 FIX: Sensor Start events are now correctly uploaded to Nightscout. (Miguel)
 FIX: Optimal calibration notifications should now fire the default iOS sound and respect the mute switch. Also made improvements and fixes to Optimal Calibration notes uploaded to Nightscout, including not sending repeated notes. (Miguel)
+FIX: Incorrect placement of latest glucose marker on main chart after adding a calibration. Also addresses some wrong scaling of the chart axis. (Miguel)
 FIX: Several fixes and enhancements on how Spike handles and saves transmitter's MAC addresses. Should also fix an issue that forces the user to forget and scan MiaoMiao to reconnect it to Spike. (Johan & Miguel) 
 FIX: Attempt to fix an issue that prevented Spike from displaying the latest glucose value in the main chart when brought to the foreground. (Miguel)
 FIX: Attempt to fix an issue that uploaded a note to Nightscout repeatedly notifying of optimal conditions for calibration. (Miguel)

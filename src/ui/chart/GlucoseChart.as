@@ -3392,38 +3392,9 @@ package ui.chart
 				//Get and adjust latest calibration value and chart's lowest and highest glucose values
 				var latestCalibrationGlucose:Number = BgReading.lastNoSensor().calculatedValue;
 				
-				if (latestCalibrationGlucose < 40)
-					latestCalibrationGlucose = 40;
-				else if (latestCalibrationGlucose > 400)
-					latestCalibrationGlucose = 400;
-				
-				if (!fixedSize) //Dynamic Chart
-				{
-					if (latestCalibrationGlucose < lowestGlucoseValue)
-						lowestGlucoseValue = latestCalibrationGlucose;
-					else if (latestCalibrationGlucose > highestGlucoseValue)
-						highestGlucoseValue = latestCalibrationGlucose;
-				}
-				else //Fixed Sized Chart
-				{
-					lowestGlucoseValue = minAxisValue;
-					if (resizeOutOfBounds && latestCalibrationGlucose < minAxisValue)
-						lowestGlucoseValue = latestCalibrationGlucose;
-					
-					highestGlucoseValue = maxAxisValue;
-					if (resizeOutOfBounds && latestCalibrationGlucose > maxAxisValue)
-						highestGlucoseValue = latestCalibrationGlucose
-				}
-				
-				//Calculate positions
-				var totalGlucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
-				scaleYFactor = (_graphHeight - (mainChartGlucoseMarkerRadius*2))/totalGlucoseDifference;
-				var glucoseY:Number = _graphHeight - (mainChartGlucoseMarkerRadius*2) - ((latestCalibrationGlucose - lowestGlucoseValue) * scaleYFactor);
-				
 				//Set and adjust latest marker's properties
 				var latestMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker;
 				latestMarker.newBgReading = BgReading.lastNoSensor();
-				latestMarker.y = glucoseY;
 				var latestGlucoseProperties:Object = GlucoseFactory.getGlucoseOutput(latestCalibrationGlucose);
 				latestMarker.glucoseOutput = latestGlucoseProperties.glucoseOutput;
 				latestMarker.glucoseValueFormatted = latestGlucoseProperties.glucoseValueFormatted;
@@ -3447,100 +3418,16 @@ package ui.chart
 						);
 				}
 				
-				//Hide glucose marker if it is out of bounds (fixed size chart);
-				if (latestMarker.glucoseValue < lowestGlucoseValue || latestMarker.glucoseValue > highestGlucoseValue)
-					latestMarker.alpha = 0;
-				else
-					latestMarker.alpha = 1;
-				
-				//Redraw Line if needed
-				if(_displayLine && latestMarker.glucoseValue >= lowestGlucoseValue && latestMarker.glucoseValue <= highestGlucoseValue)
-				{
-					//Dispose previous lines
-					destroyAllLines(false);
-					
-					var line:SpikeLine = new SpikeLine();
-					line.lineStyle(1, 0xFFFFFF, 1);
-					
-					if (mainChartLine != null) mainChartLine.removeFromParent(true);
-					mainChartLine = line;
-					
-					var markerLength:int = mainChartGlucoseMarkersList.length;
-					var previousGlucoseMarker:GlucoseMarker;
-					
-					//Redraw Line
-					for (var i:int = 0; i < markerLength; i++) 
-					{
-						var glucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList[i] as GlucoseMarker;
-						
-						if(i == 0)
-							line.moveTo(glucoseMarker.x, glucoseMarker.y);
-						else
-						{
-							var currentLineX:Number;
-							var currentLineY:Number;
-							
-							if(i < markerLength -1)
-							{
-								currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
-								currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
-							}
-							else if (i == markerLength -1)
-							{
-								currentLineX = glucoseMarker.x + (glucoseMarker.width);
-								currentLineY = glucoseMarker.y + (glucoseMarker.height);
-							}
-							
-							//Style
-							line.lineStyle(1, glucoseMarker.color, 1);
-							var currentColor:uint = glucoseMarker.color
-							var previousColor:uint;
-							
-							//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-							if(previousGlucoseMarker != null && glucoseMarker != null)
-							{
-								var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
-								if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-								{
-									currentColor = oldColor;
-									previousColor = oldColor;
-								}
-								else
-									previousColor = previousGlucoseMarker.color;
-							}
-							
-							if (isNaN(previousColor))
-								line.lineTo(currentLineX, currentLineY);
-							else
-								line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
-							
-							line.moveTo(currentLineX, currentLineY);
-						}
-						//Hide glucose marker
-						glucoseMarker.alpha = 0;
-						previousGlucoseMarker = glucoseMarker;
-					}
-					
-					//Remove touch events from line
-					line.touchable = false;
-					
-					mainChart.addChild(line);
-					mainChartLineList.push(line);
-				}
-				
 				// Update Display Fields	
 				glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
 				glucoseValueDisplay.fontStyles.color = latestMarker.color;
 				glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, chartFontColor);
 				
+				//Redraw main chart
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0);
+				
 				//Deativate DummyMode
 				dummyModeActive = false;
-				
-				//Dispose YAxis
-				yAxisContainer.dispose();
-				
-				//Redraw YAxis
-				yAxisContainer.addChild(drawYAxis());
 				
 				//Reposition treatments
 				manageTreatments();
@@ -3560,7 +3447,7 @@ package ui.chart
 				var latestRawMarker:GlucoseMarker = rawGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker;
 				latestRawMarker.newBgReading = BgReading.lastNoSensor();
 				latestRawMarker.newRaw = latestRawGlucose;
-				latestRawMarker.y = glucoseY;
+				latestRawMarker.y = rawGlucoseY;
 				
 				//Hide raw glucose marker if it is out of bounds (fixed size chart);
 				if (latestRawGlucose < lowestGlucoseValue || latestRawGlucose > highestGlucoseValue)
