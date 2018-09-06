@@ -3386,6 +3386,9 @@ package ui.chart
 			if (Calibration.allForSensor().length <= 1) //Don't run on first calibration
 				return;
 			
+			if (!SystemUtil.isApplicationActive) //Don't run if Spike is in the background
+				return;
+			
 			//Adjust last glucose marker and display texts
 			if (mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
@@ -3399,6 +3402,7 @@ package ui.chart
 				latestMarker.glucoseOutput = latestGlucoseProperties.glucoseOutput;
 				latestMarker.glucoseValueFormatted = latestGlucoseProperties.glucoseValueFormatted;
 				latestMarker.color = GlucoseFactory.getGlucoseColor(latestCalibrationGlucose);
+				latestMarker.updateColor();
 				
 				if (BgReading.lastNoSensor().hideSlope)
 					latestMarker.slopeArrow = "\u21C4";
@@ -3417,26 +3421,19 @@ package ui.chart
 						);
 				}
 				
+				// Update Display Fields	
+				glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
+				glucoseValueDisplay.fontStyles.color = latestMarker.color;
+				glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, chartFontColor);
+				
+				//Redraw main chart
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0);
+				
 				//Deativate DummyMode
 				dummyModeActive = false;
 				
-				function updateComponents():void
-				{
-					latestMarker.updateColor();
-					
-					// Update Display Fields	
-					glucoseValueDisplay.text = latestMarker.glucoseOutput + " " + latestMarker.slopeArrow;
-					glucoseValueDisplay.fontStyles.color = latestMarker.color;
-					glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, chartFontColor);
-					
-					//Redraw main chart
-					redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0);
-					
-					//Reposition treatments
-					manageTreatments();
-				}
-				
-				SystemUtil.executeWhenApplicationIsActive(updateComponents);
+				//Reposition treatments
+				manageTreatments();
 			}
 			
 			//Adjust latest raw marker 
