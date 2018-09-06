@@ -2397,7 +2397,6 @@ package services.bluetooth
 						if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_BATTERY_FROM_MARKER)) > CGMBluetoothService.G5_G6_BATTERY_READ_PERIOD_MS) {
 							SpikeANE.doG5BatteryInfoRequest();
 						} else {
-							//not disconnecting because this may increase G5/G6 battery usage
 							SpikeANE.disconnectG5();
 						}
 					}
