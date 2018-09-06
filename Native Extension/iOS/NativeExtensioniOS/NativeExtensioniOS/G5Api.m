@@ -73,6 +73,12 @@
     }
 }
 
++(void)disconnect{
+    FPANE_Log(@"spiketrace ANE G5Api.m in disconnect");
+    G5BleManager *manager = [G5BleManager shared];
+    [manager disconnect];
+}
+
 +(void)forgetPeripheral{
     FPANE_Log(@"spiketrace ANE G5Api.m in forgetPeripheral");
         G5BleManager *manager = [G5BleManager shared];

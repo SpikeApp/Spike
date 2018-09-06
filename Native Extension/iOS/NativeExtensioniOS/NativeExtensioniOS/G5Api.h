@@ -15,6 +15,8 @@
 
 +(void)cancelConnectWithMAC:(NSString *)MAC; //cancel your connected peripheral
 
++(void)disconnect;
+
 +(void)forgetPeripheral;
 
 +(void)startScanDevice;

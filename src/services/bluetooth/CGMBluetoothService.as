@@ -2398,6 +2398,7 @@ package services.bluetooth
 							SpikeANE.doG5BatteryInfoRequest();
 						} else {
 							//not disconnecting because this may increase G5/G6 battery usage
+							SpikeANE.disconnectG5();
 						}
 					}
 					
