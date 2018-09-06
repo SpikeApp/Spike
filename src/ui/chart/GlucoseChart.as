@@ -696,19 +696,16 @@ package ui.chart
 			}
 			
 			/**
-			 * RAW Properties
-			 */
-			if (isRaw) var lastCalibration:Calibration = Calibration.last();
-			
-			/**
 			 * Creation and placement of the glucose values
 			 */
 			//Loop through all available data points
 			var dataLength:int = _dataSource.length;
 			for(i = 0; i < dataLength; i++)
 			{
+				var glucoseReading:BgReading = _dataSource[i] as BgReading;
+				
 				//Get current glucose value
-				var currentGlucoseValue:Number = !isRaw ? Number(_dataSource[i].calculatedValue) : GlucoseFactory.getRawGlucose(_dataSource[i], lastCalibration);
+				var currentGlucoseValue:Number = !isRaw ? Number(glucoseReading.calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
 				if(currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
 				else if (currentGlucoseValue > 400)
@@ -719,7 +716,7 @@ package ui.chart
 				if(i==0)
 					glucoseX = !isRaw ? 0 : glucoseMarkerRadius;
 				else
-					glucoseX = (Number(_dataSource[i].timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
+					glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
 				
 				//Define glucose marker y position
 				var glucoseY:Number = chartHeight - (glucoseMarkerRadius * 2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
@@ -739,7 +736,7 @@ package ui.chart
 							y: glucoseY,
 							index: i,
 							radius: glucoseMarkerRadius,
-							bgReading: _dataSource[i],
+							bgReading: glucoseReading,
 							previousGlucoseValueFormatted: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValueFormatted : null,
 							previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 						}
@@ -754,7 +751,7 @@ package ui.chart
 							y: glucoseY,
 							index: i,
 							radius: glucoseMarkerRadius,
-							bgReading: _dataSource[i],
+							bgReading: glucoseReading,
 							raw: currentGlucoseValue,
 							rawColor: rawColor
 						},
@@ -820,7 +817,6 @@ package ui.chart
 				}
 				
 				//Hide markers without sensor
-				var glucoseReading:BgReading = _dataSource[i] as BgReading;
 				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower()) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
 					glucoseMarker.alpha = 0;
 			
@@ -2236,14 +2232,13 @@ package ui.chart
 				}
 			}
 			
-			//Raw
-			if (isRaw) var lastCalibration:Calibration = Calibration.last();
-			
 			//Loop through all available data points
 			var dataLength:int = _dataSource.length;
 			for(i = 0; i < dataLength; i++)
 			{
-				var currentGlucoseValue:Number = !isRaw ? Number(_dataSource[i].calculatedValue) : GlucoseFactory.getRawGlucose(_dataSource[i], lastCalibration);
+				var glucoseReading:BgReading = _dataSource[i] as BgReading;
+				
+				var currentGlucoseValue:Number = !isRaw ? Number(glucoseReading.calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
 				if (currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
 				else if (currentGlucoseValue > 400)
@@ -2260,7 +2255,7 @@ package ui.chart
 				if(i==0)
 					glucoseX = !isRaw ? 0 : glucoseMarkerRadius;
 				else
-					glucoseX = (Number(_dataSource[i].timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
+					glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
 				
 				//Define glucose marker y position
 				var glucoseY:Number = chartHeight - (glucoseMarkerRadius*2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
@@ -2286,7 +2281,7 @@ package ui.chart
 								y: glucoseY,
 								index: i,
 								radius: glucoseMarkerRadius,
-								bgReading: _dataSource[i],
+								bgReading: glucoseReading,
 								previousGlucoseValueFormatted: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValueFormatted : null,
 								previousGlucoseValue: previousGlucoseMarker != null ? previousGlucoseMarker.glucoseValue : null
 							}
@@ -2301,7 +2296,7 @@ package ui.chart
 								y: glucoseY,
 								index: i,
 								radius: glucoseMarkerRadius,
-								bgReading: _dataSource[i],
+								bgReading: glucoseReading,
 								raw: currentGlucoseValue,
 								rawColor: rawColor
 							},
@@ -2394,7 +2389,6 @@ package ui.chart
 				}
 				
 				//Hide markers without sensor
-				var glucoseReading:BgReading = _dataSource[i] as BgReading;
 				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower()) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
 					glucoseMarker.alpha = 0;
 				
