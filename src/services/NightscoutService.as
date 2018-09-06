@@ -556,7 +556,7 @@ package services
 							return;
 						}
 						
-						Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully! DIA: " + dia + " CAR: " + carbAbsorptionRate);
+						Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!" + " Unit: " + (isNightscoutMgDl ? "mg/dL" : "mmol/L")  + " DIA: " + dia + " CAR: " + carbAbsorptionRate);
 						
 						isNSProfileSet = true; //Mark profile as downloaded
 							
