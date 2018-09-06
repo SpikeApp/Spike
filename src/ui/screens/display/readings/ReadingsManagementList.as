@@ -307,7 +307,16 @@ package ui.screens.display.readings
 			function deleteReading(e:Event):void
 			{
 				//Delete reading from Spike, database and list
-				ModelLocator.bgReadings.removeAt(id);
+				for(var i:int = ModelLocator.bgReadings.length - 1 ; i >= 0; i--)
+				{
+					var tempReading:BgReading = ModelLocator.bgReadings[i];
+					if (tempReading != null && tempReading.uniqueId == bgReading.uniqueId)
+					{
+						ModelLocator.bgReadings.removeAt(i);
+						break;
+					}
+				}
+				
 				Database.deleteBgReadingSynchronous(bgReading);
 				dataProvider.removeItem(item);
 			}
