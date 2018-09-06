@@ -98,6 +98,7 @@ package services
 		public static var ignoreSettingsChanged:Boolean = false;
 		public static var uploadSensorStart:Boolean = true;
 		private static var serviceHalted:Boolean = false;
+		private static var isNightscoutMgDl:Boolean = true;
 		
 		/* Data Variables */
 		private static var apiSecret:String;
@@ -519,6 +520,10 @@ package services
 					var profileProperties:Object = SpikeJSON.parse(response);
 					if (profileProperties != null)
 					{
+						//Get Nightscout default unit
+						if (profileProperties[0].units != null && (profileProperties[0].units as String).indexOf("mg") == -1)
+							isNightscoutMgDl = false;
+						
 						var dia:Number = Number.NaN;
 						var carbAbsorptionRate:Number = Number.NaN;
 						
@@ -1270,6 +1275,7 @@ package services
 				try
 				{
 					var userInfoProperties:Object = SpikeJSON.parse(response) as Object;
+					
 					if (userInfoProperties != null)
 					{
 						var currentBG:Number = userInfoProperties.bgnow != null && userInfoProperties.bgnow.mean != null ? Number(userInfoProperties.bgnow.mean) : Number.NaN;
@@ -1277,9 +1283,26 @@ package services
 						var raw:Number = userInfoProperties.rawbg != null && userInfoProperties.rawbg.mgdl != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true" && !CGMBlueToothDevice.isBlueReader() && !CGMBlueToothDevice.isBluKon() && !CGMBlueToothDevice.isLimitter() && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isTransmiter_PL() ? Number(userInfoProperties.rawbg.mgdl) : Number.NaN;
 						!isNaN(raw) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? raw = Math.round((BgReading.mgdlToMmol(raw)) * 10) / 10 : raw = raw;
 						var outcome:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.outcomeDisplay != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON) == "true" ? Number(userInfoProperties.bwp.outcomeDisplay) : Number.NaN;
-						!isNaN(outcome) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? outcome = Math.round((BgReading.mgdlToMmol(outcome)) * 10) / 10 : outcome = outcome;
 						var effect:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.effectDisplay != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON) == "true" ? Number(userInfoProperties.bwp.effectDisplay) : Number.NaN;
-						!isNaN(effect) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? effect = Math.round((BgReading.mgdlToMmol(effect)) * 10) / 10 : effect = effect;
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" && isNightscoutMgDl)
+						{
+							//User is using mmol but Nightscout is on mg/dL. Do conversion.
+							if (!isNaN(outcome))
+								outcome = Math.round((BgReading.mgdlToMmol(outcome)) * 10) / 10;
+							
+							if (!isNaN(effect))
+								effect = Math.round((BgReading.mgdlToMmol(effect)) * 10) / 10;
+						}
+						else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" && !isNightscoutMgDl)
+						{
+							//User is using mg/dL but Nightscout is on mmol/l. Do conversion.
+							if (!isNaN(outcome))
+								outcome = Math.round(BgReading.mmolToMgdl(outcome));
+							
+							if (!isNaN(effect))
+								effect = Math.round(BgReading.mmolToMgdl(effect));
+						}
+						
 						if (!isNaN(currentBG) && !isNaN(outcome) && !isNaN(effect) && outcome < currentBG) effect = -effect;
 						var openAPSLastMoment:Number = userInfoProperties.openaps != null && userInfoProperties.openaps.lastLoopMoment != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON) == "true" ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.openaps.lastLoopMoment), new Date()).minutes : Number.NaN;
 						var pumpBattery:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.battery != null && userInfoProperties.pump.data.battery.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_BATTERY_ON) == "true" ? userInfoProperties.pump.data.battery.display : "";
