@@ -1961,15 +1961,20 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "in getSensorStart.");
 			
+			var currentSensor:Sensor = Sensor.getActiveSensor();
+			
+			if (currentSensor == null || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) == "0")
+				return;
+			
 			var newSensor:Object = new Object();
 			var eventID:String = UniqueId.createEventId();
 			newSensor["_id"] = eventID;	
 			newSensor["eventType"] = "Sensor Start";	
-			newSensor["created_at"] = formatter.format(Sensor.getActiveSensor().startedAt).replace("000+0000", "000Z");
+			newSensor["created_at"] = formatter.format(currentSensor.startedAt).replace("000+0000", "000Z");
 			newSensor["enteredBy"] = "Spike";
 			
 			//Add sensor start to Chart
-			TreatmentsManager.addInternalSensorStartTreatment(Sensor.getActiveSensor().startedAt, eventID);
+			TreatmentsManager.addInternalSensorStartTreatment(currentSensor.startedAt, eventID);
 			
 			activeSensorStarts.push(newSensor);
 			
