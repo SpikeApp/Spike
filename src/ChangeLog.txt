@@ -9,6 +9,7 @@ ENHANCEMENT: Added alarms snoozed times to the status.json endpoint in Spike's i
 ENHANCEMENT: Added count variable to the pebble endpoint in Spike's internal HTTP Server for better integration with 3rd party apps. Endpoint can be reached at http://127.0.0.1:1979/pebble (Miguel) 
 ENHANCEMENT: Lots of optimizations under the hood regarding file and email management. (Miguel)
 ENHANCEMENT: Several enhancements to calibration popups that hopefully will make them more reliable and avoid situations where the calibration was not accepted by Spike. (Miguel)
+ENHANCEMENT: Better handling of raw calculation when plotted to the main chart. (Miguel)
 FIX: Sensor Start events are now correctly uploaded to Nightscout. (Miguel)
 FIX: Optimal calibration notifications should now fire the default iOS sound and respect the mute switch. Also made improvements and fixes to Optimal Calibration notes uploaded to Nightscout, including not sending repeated notes. (Miguel)
 FIX: Incorrect placement of latest glucose marker on main chart after adding a calibration. Also addresses some wrong scaling of the chart axis. (Miguel)
