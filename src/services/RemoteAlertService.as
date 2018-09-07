@@ -182,7 +182,7 @@ package services
 				myTrace("this alert has already been shown to the user");
 				return;
 			}
-			else if ((String(data.message).indexOf(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION)) != -1 || (possibleVersion.charAt(1).indexOf(".") != -1 && versionAIsSmallerThanB(possibleVersion, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION)))) && String(data.message).indexOf("TestFlight") != -1)
+			else if ((String(data.message).indexOf(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION)) != -1 || (possibleVersion.charAt(1).indexOf(".") != -1 && versionAIsSmallerThanB(possibleVersion, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION)))) && String(data.message).indexOf("App Center") != -1)
 			{
 				//It's an update alert but user already has the latest versio
 				//Update Database so this alert is not shown anymore.
