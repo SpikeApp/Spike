@@ -145,6 +145,10 @@ package com.spikeapp.spike.airlibrary
 			context.call("doG5BatteryInfoRequest");
 		}
 		
+		public static function disconnectG5():void {
+			context.call("disconnectG5");
+		}
+		
 		/**********************
 		 * ** HEALTHKIT
 		 * *******************/

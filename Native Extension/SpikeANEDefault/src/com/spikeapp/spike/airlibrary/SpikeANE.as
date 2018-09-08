@@ -101,6 +101,9 @@ package com.spikeapp.spike.airlibrary
 		public static function doG5BatteryInfoRequest():void {
 		}
 		
+		public static function disconnectG5():void {
+		}
+		
 		/****************
 		 * ** Status event received from objective-c side
 		 * ***************/

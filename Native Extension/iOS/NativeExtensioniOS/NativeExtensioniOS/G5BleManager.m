@@ -6,12 +6,11 @@
 
 @interface G5BleManager()
 {
-	NSDate *_startDate;
+	NSDate *_timeStampOfLastG5Reading;
 }
 @property (strong ,nonatomic) CBCharacteristic *writeCharacteristic;
 @property (strong ,nonatomic) CBCharacteristic *notifyCharacteristic;
 
-@property (assign ,nonatomic) NSDate *timeStampOfLastG5Reading;
 @property (assign, nonatomic) BOOL awaitingAuthStatusRxMessage;
 
 @end
@@ -113,10 +112,6 @@
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m in didDiscoverPeripheral peripheral.name %@",peripheral.name]);
     NSString * expectedPeripheralName = [[NSString stringWithFormat:@"DEXCOM%@", [_transmitterID substringFromIndex:4]] uppercaseString];
     if ([[peripheral.name uppercaseString] isEqualToString:expectedPeripheralName]){
-        if ([[NSDate date]timeIntervalSinceDate:_timeStampOfLastG5Reading] < 60) {
-            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m in didDiscoverPeripheral G5 but last reading was less than 1 minute ago, ignoring this peripheral discovery. continue scan"]);
-            return;
-        };
         NSString* UUIDString = [peripheral.identifier UUIDString];
         
         FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m in didDiscoverPeripheral UUIDString =  %@",UUIDString]);
@@ -155,6 +150,16 @@
     FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m in didConnectPeripheral, connected peripheral name:%@ MAC: %@, uuid:%@", peripheral.name, self.selectMAC, uuid]);
     self.peripheral = peripheral;
     [self.peripheral setDelegate:self];
+    
+    if (_timeStampOfLastG5Reading) {
+        NSTimeInterval timer = [[NSDate date]timeIntervalSinceDate:_timeStampOfLastG5Reading];
+        if (timer < 60) {
+            FPANE_Log([NSString stringWithFormat:@"spiketrace ANE G5BLEManager.m in didConnectPeripheral G5 but last reading was less than 1 minute ago, disconnecting"]);
+            [self.manager cancelPeripheralConnection:self.peripheral];
+            return;
+        };
+    };
+    
     [self.peripheral discoverServices:@[[CBUUID UUIDWithString:G5_MM_SERVICE_UUID]]];
     FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_connectedG5", (const uint8_t*) "");
 }
@@ -290,6 +295,10 @@
             [self.peripheral writeValue:dataToWrite forCharacteristic:self.notifyCharacteristic type:CBCharacteristicWriteWithResponse];
         }
     } else {
+        if ((int)bytes[0] == 47) {
+            //sensor data received
+            _timeStampOfLastG5Reading = [NSDate date];
+        }
         
         FREDispatchStatusEventAsync([Context getContext], (const uint8_t*) "StatusEvent_G5DataPacketReceived", (const uint8_t*) FPANE_ConvertNSString_TO_uint8([NSString stringWithFormat:@"%@%@", dataAsString, @"JJ§§((hhd"]));
     }
@@ -311,6 +320,12 @@
     if (self.peripheral.state == CBPeripheralStateConnected) {
          [self.manager cancelPeripheralConnection:self.peripheral];
          self.peripheral = nil;
+    }
+}
+
+- (void)disconnect{
+    if (self.peripheral.state == CBPeripheralStateConnected) {
+        [self.manager cancelPeripheralConnection:self.peripheral];
     }
 }
 

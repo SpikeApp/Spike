@@ -60,6 +60,8 @@
 //cancel connect
 - (void)cancelConnectDevice;
 
+- (void)disconnect;
+
 //get servicies
 - (void)disCoverServiceWith:(CBPeripheral *)peripheral;
 
