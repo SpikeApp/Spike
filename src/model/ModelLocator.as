@@ -61,7 +61,7 @@ package model
 		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
 		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * TimeSpan.TIME_24_HOURS + Constants.READING_OFFSET;
 
-		public static const TEST_FLIGHT_MODE:Boolean = true;
+		public static const CRASHLYTICS_MODE:Boolean = true;
 		public static const IS_IPAD:Boolean = false;
 		public static const INTERNAL_TESTING:Boolean = false;
 		
@@ -186,7 +186,7 @@ package model
 				TextToSpeechService.init();
 				ICloudService.init();
 				RemoteAlertService.init();
-				if (!TEST_FLIGHT_MODE) UpdateService.init();
+				if (!CRASHLYTICS_MODE) UpdateService.init();
 				updateApplicationVersion();
 				//MultipleMiaoMiaoService.init();
 			}

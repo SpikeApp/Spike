@@ -112,7 +112,7 @@ package ui.screens
 			glucoseSettings = new GlucoseSettingsList();
 			screenRenderer.addChild(glucoseSettings);
 			
-			if (!ModelLocator.TEST_FLIGHT_MODE)
+			if (!ModelLocator.CRASHLYTICS_MODE)
 			{
 				//Update Section Label
 				updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
