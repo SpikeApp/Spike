@@ -23,3 +23,5 @@ libNativeExtensioniOS.a
 /widget/Spike.xcworkspace/xcuserdata/spike.xcuserdatad/
 iPadDescriptor.txt
 iPhoneDescriptor.txt
+/crashlytics/
+/bin-release-temp/
