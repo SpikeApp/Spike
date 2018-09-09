@@ -32,6 +32,8 @@ package network.httpserver.API
 		{
 			Trace.myTrace("DexcomShareController.as", "LoginPublisherAccountByName called!");
 			
+			return responseSuccess(SESSION_ID);
+			
 			try
 			{
 				if (String(params.accountName) != accountName)
