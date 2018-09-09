@@ -690,8 +690,9 @@ package services
 			}
 			
 			nightscoutDownloadOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "") {
-				nightscoutDownloadAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET)))));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "") {
+				nightscoutDownloadAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET)))));
 			} else {
 				nightscoutDownloadAPISecret = "";
 			}
