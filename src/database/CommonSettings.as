@@ -1,6 +1,7 @@
 package database
  {
  	import flash.events.EventDispatcher;
+ 	import flash.system.Capabilities;
  	
  	import events.SettingsServiceEvent;
  	
@@ -14,6 +15,7 @@ package database
 	 public class CommonSettings extends EventDispatcher
 	 {
 		 [ResourceBundle("alertsettingsscreen")]
+		 [ResourceBundle("generalsettingsscreen")]
 		 
 		 private static var _instance:CommonSettings = new CommonSettings();
 
@@ -685,7 +687,7 @@ package database
 			 "00:00>0>DefaultNoAlertToBeReplaced",//COMMON_SETTING_FAST_RISE_ALERT
 			 "00:00>0>DefaultNoAlertToBeReplaced",//COMMON_SETTING_FAST_DROP_ALERT
 			 "20",//COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME
-			 "en_US",//COMMON_SETTING_APP_LANGUAGE
+			 "default",//COMMON_SETTING_APP_LANGUAGE
 			 "false",//COMMON_SETTING_FAST_RISE_ALERT_GLUCOSE_THRESHOLDS_ON
 			 "",//COMMON_SETTING_FAST_RISE_ALERT_LOW_GLUCOSE_THRESHOLD
 			 "",//COMMON_SETTING_FAST_RISE_ALERT_HIGH_GLUCOSE_THRESHOLD
@@ -831,6 +833,12 @@ package database
 					 setCommonSetting(COMMON_SETTING_CALIBRATION_REQUEST_ALERT, newString);
 				 }
 			 }
+			 /*if (commonSettingId == COMMON_SETTING_APP_LANGUAGE) {
+				 if ((commonSettings[COMMON_SETTING_APP_LANGUAGE] as String).indexOf('default') > -1) {
+					 newString = ModelLocator.resourceManagerInstance.getString("generalsettingsscreen","default_language");
+					 setCommonSetting(COMMON_SETTING_APP_LANGUAGE, newString);
+				 }
+			 }*/
 			 return commonSettings[commonSettingId];
 		 }
 		 
