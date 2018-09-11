@@ -1,3 +1,6 @@
+2.5.2
+FEATURE: Spike will now automatically check for new updates in App Center and notify the user only if the App Center version is newer than the one currently installed. The user will be presented with a pop up showing options to download the update, ignore it or remind later. This feature is enabled by default for all users but can be disabled in Settings -> Maintenance -> Check App Updates. (Miguel) 
+
 2.5.1
 FEATURE: Added Dutch language. (Translators)
 ENHANCEMENTS: Some enhancements to several languages. (Translators)

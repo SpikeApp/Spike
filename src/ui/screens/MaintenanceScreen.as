@@ -16,6 +16,7 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.settings.general.UpdateSettingsList;
 	import ui.screens.display.settings.maintenance.DatabaseMaintenanceSettingsList;
 	import ui.screens.display.settings.maintenance.SettingsMaintenanceSettingsList;
 	
@@ -23,6 +24,7 @@ package ui.screens
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("maintenancesettingsscreen")]
+	[ResourceBundle("generalsettingsscreen")]
 
 	public class MaintenanceScreen extends BaseSubScreen
 	{
@@ -31,6 +33,8 @@ package ui.screens
 		private var settingsMaintenanceSettings:SettingsMaintenanceSettingsList;
 		private var databaseMaintenanceLabel:Label;
 		private var databaseMaintenanceSettings:DatabaseMaintenanceSettingsList;
+		private var updatesSettingsList:UpdateSettingsList;
+		private var updateLabel:Label;
 		
 		public function MaintenanceScreen() 
 		{
@@ -66,6 +70,17 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
+			if (ModelLocator.APPCENTER_MODE)
+			{
+				//Update Section Label
+				updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
+				screenRenderer.addChild(updateLabel);
+				
+				//Update Settings
+				updatesSettingsList = new UpdateSettingsList();
+				screenRenderer.addChild(updatesSettingsList);
+			}
+			
 			//Settings Section Label
 			settingsMaintenanceLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','settings_section_label'));
 			screenRenderer.addChild(settingsMaintenanceLabel);
@@ -78,7 +93,7 @@ package ui.screens
 			databaseMaintenanceLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_section_label'));
 			screenRenderer.addChild(databaseMaintenanceLabel);
 			
-			//Settings Settings
+			//Database Settings
 			databaseMaintenanceSettings = new DatabaseMaintenanceSettingsList();
 			screenRenderer.addChild(databaseMaintenanceSettings);
 		}
@@ -111,11 +126,13 @@ package ui.screens
 			{
 				if (settingsMaintenanceLabel != null) settingsMaintenanceLabel.paddingLeft = 30;
 				if (databaseMaintenanceLabel != null) databaseMaintenanceLabel.paddingLeft = 30;
+				if (updateLabel != null) updateLabel.paddingLeft = 30;
 			}
 			else
 			{
 				if (settingsMaintenanceLabel != null) settingsMaintenanceLabel.paddingLeft = 0;
 				if (databaseMaintenanceLabel != null) databaseMaintenanceLabel.paddingLeft = 0;
+				if (updateLabel != null) updateLabel.paddingLeft = 0;
 			}
 			
 			setupHeaderSize();
@@ -152,6 +169,20 @@ package ui.screens
 				databaseMaintenanceLabel.removeFromParent();
 				databaseMaintenanceLabel.dispose();
 				databaseMaintenanceLabel = null;
+			}
+			
+			if (updatesSettingsList != null)
+			{
+				updatesSettingsList.removeFromParent();
+				updatesSettingsList.dispose();
+				updatesSettingsList = null;
+			}
+			
+			if (updateLabel != null)
+			{
+				updateLabel.removeFromParent();
+				updateLabel.dispose();
+				updateLabel = null;
 			}
 			
 			super.dispose();

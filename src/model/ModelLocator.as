@@ -21,6 +21,7 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.AlarmService;
+	import services.AppCenterService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
@@ -189,6 +190,8 @@ package model
 				if (!APPCENTER_MODE) UpdateService.init();
 				updateApplicationVersion();
 				//MultipleMiaoMiaoService.init();
+				if (APPCENTER_MODE)
+					AppCenterService.init();
 			}
 		}
 		

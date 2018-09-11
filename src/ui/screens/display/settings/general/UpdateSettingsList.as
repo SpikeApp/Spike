@@ -24,7 +24,6 @@ package ui.screens.display.settings.general
 		private var updatesToggle:ToggleSwitch;
 		
 		/* Properties */
-		public var needsSave:Boolean = false;
 		private var updatesEnabled:Boolean;
 		
 		public function UpdateSettingsList()
@@ -36,8 +35,8 @@ package ui.screens.display.settings.general
 			super.initialize();
 			
 			setupProperties();
-			setupContent();
 			setupInitialState();
+			setupContent();
 		}
 		
 		/**
@@ -60,6 +59,8 @@ package ui.screens.display.settings.general
 			updatesToggle = LayoutFactory.createToggleSwitch(false);
 			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
 				updatesToggle.pivotX = -8;
+			updatesToggle.isSelected = updatesEnabled;
+			updatesToggle.addEventListener( Event.CHANGE, onUpdatesOnOff );
 			
 			//Define Notifications Settings Data
 			dataProvider = new ArrayCollection(
@@ -70,23 +71,13 @@ package ui.screens.display.settings.general
 		
 		private function setupInitialState():void
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") updatesEnabled = true;
-			else updatesEnabled = false;
-			
-			updatesToggle.isSelected = updatesEnabled;
-			updatesToggle.addEventListener( Event.CHANGE, onUpdatesOnOff );
+			updatesEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON) == "true";
 		}
 		
 		public function save():void
 		{
-			var updateValueToSave:String;
-			if(updatesEnabled) updateValueToSave = "true";
-			else updateValueToSave = "false";
-			
-			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) != updateValueToSave)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON, updateValueToSave);
-			
-			needsSave = false;
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON) != String(updatesEnabled))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON, String(updatesEnabled));
 		}
 		
 		/**
@@ -95,7 +86,7 @@ package ui.screens.display.settings.general
 		private function onUpdatesOnOff(event:Event):void
 		{
 			updatesEnabled = updatesToggle.isSelected;
-			needsSave = true;
+			save();
 		}
 		
 		/**
