@@ -37,6 +37,7 @@ package services
 		//Properties
 		private static var latestVersion:String = "";
 		private static var lastReminded:Number = 0;
+		private static var lastChecked:Number = 0;
 		private static var serviceHalted:Boolean = false;
 		private static var serviceActive:Boolean = false;
 		
@@ -121,7 +122,10 @@ package services
 				return;
 			}
 			
-			checkUpdate();
+			//Check updates (if possible)
+			var now:Number = new Date().valueOf();
+			if (now - lastReminded >= TimeSpan.TIME_24_HOURS && now - lastChecked >= TimeSpan.TIME_1_HOUR)
+				checkUpdate();
 		}
 		
 		private static function onUpdateResponse(e:flash.events.Event):void
@@ -149,7 +153,7 @@ package services
 				if (releasesList != null && releasesList.length > 0 && releasesList[0] != null && releasesList[0].version != null)
 				{
 					latestVersion = releasesList[0].version as String;
-					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) != "x.x.x" && new Date().valueOf() - lastReminded > TimeSpan.TIME_24_HOURS && latestVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE) && versionAIsSmallerThanB(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION), latestVersion))
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) != "x.x.x" && latestVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE) && versionAIsSmallerThanB(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION), latestVersion))
 					{
 						//There's an update in App Center
 						myTrace("Notifying user of new App Center update! New version: " + latestVersion);
@@ -171,6 +175,8 @@ package services
 					else
 						myTrace("Not updating. User already has the latest version!");
 				}
+				
+				lastChecked = new Date().valueOf();
 			} 
 			catch(error:Error) 
 			{
