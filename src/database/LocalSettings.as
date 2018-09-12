@@ -274,6 +274,12 @@ package database
 		 */
 		public static const LOCAL_SETTING_DATABASE_IS_ENCRYPTED:int=128;
 		
+		/**
+		 * System Volume
+		 */
+		public static const LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_ON:int=129;
+		public static const LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_VALUE:int=130;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -403,7 +409,9 @@ package database
 			"false",//LOCAL_SETTING_MIAOMIAO_FOLLOWER_ENABLED
 			"false",//LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED
 			"false",//LOCAL_SETTING_REMOVE_SENSOR_WARMUP_WARNING_DISPLAYED
-			"false"//LOCAL_SETTING_DATABASE_IS_ENCRYPTED
+			"false",//LOCAL_SETTING_DATABASE_IS_ENCRYPTED
+			"false",//LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_ON
+			"50"//LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_VALUE
 		];
 		
 		public function LocalSettings() {

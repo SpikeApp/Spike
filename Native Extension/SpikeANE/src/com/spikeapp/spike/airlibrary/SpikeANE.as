@@ -195,8 +195,8 @@ package com.spikeapp.spike.airlibrary
 		 * If volume = Number.NaN, then volume will not be set
 		 * VOLUME PARAMETER NOT FULLY TESTED, PROBABLY DOESN'T WORK, NEEDS TO BE FPANE_FREObjectToDouble in objective-c side
 		 */
-		public static function playSound(sound:String, volume:Number = Number.NaN):void {
-			context.call("playSound", sound, isNaN(volume) ? 101: new Number(volume));
+		public static function playSound(sound:String, volume:Number = Number.NaN, systemVolume:Number = Number.NaN):void {
+			context.call("playSound", sound, isNaN(volume) ? 101: new Number(volume), isNaN(systemVolume) ? 101 : systemVolume);
 		}
 		
 		public static function isPlayingSound():Boolean {

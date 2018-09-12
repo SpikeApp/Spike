@@ -132,7 +132,7 @@ package com.spikeapp.spike.airlibrary
 		public static function stopPlayingSound():void {
 		}
 
-		public static function playSound(sound:String, volume:Number = Number.NaN):void {
+		public static function playSound(sound:String, volume:Number = Number.NaN, systemVolume:Number = Number.NaN):void {
 		}
 		
 		public static function isPlayingSound():Boolean {
