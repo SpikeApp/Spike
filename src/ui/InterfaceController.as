@@ -574,10 +574,15 @@ package ui
 			
 			//Alert user
 			var alert:Alert = Alert.show
-				(
-					ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','restore_successfull_label'),
-					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title')
-				);
+			(
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','restore_successfull_label'),
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title')
+			);
+			alert.buttonsDataProvider = new ListCollection(
+				[
+					{ label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','terminate_spike_button_label'), triggered: onTerminateSpike }
+				]
+			);
 			alert.messageFactory = function():ITextRenderer
 			{
 				var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
@@ -587,6 +592,11 @@ package ui
 			};
 			
 			Trace.myTrace("Spike.as", "Database successfully restored!");
+			
+			function onTerminateSpike(e:Event):void
+			{
+				SpikeANE.terminateApp();
+			}
 		}
 		
 		/**

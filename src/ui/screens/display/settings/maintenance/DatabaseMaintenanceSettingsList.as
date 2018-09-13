@@ -1,6 +1,7 @@
 package ui.screens.display.settings.maintenance
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.display.StageOrientation;
 	import flash.filesystem.File;
@@ -26,6 +27,7 @@ package ui.screens.display.settings.maintenance
 	import feathers.core.ITextRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
+	import feathers.data.ListCollection;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
@@ -334,7 +336,12 @@ package ui.screens.display.settings.maintenance
 			var alert:Alert = new Alert();
 			alert.title = ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title');
 			alert.message = ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','restore_successfull_label');
-			alert.touchable = false;
+			alert.buttonsDataProvider = new ListCollection(
+				[
+					{ label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','terminate_spike_button_label'), triggered: onTerminateSpike }
+				]
+			);
+			
 			alert.messageFactory = function():ITextRenderer
 			{
 				var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
@@ -345,6 +352,11 @@ package ui.screens.display.settings.maintenance
 			
 			PopUpManager.removeAllPopUps();
 			PopUpManager.addPopUp(alert);
+			
+			function onTerminateSpike(e:Event):void
+			{
+				SpikeANE.terminateApp();
+			}
 		}
 		
 		private function onErrorSavingDatabase(e:ICloudEvent):void

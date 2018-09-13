@@ -253,6 +253,10 @@ package com.spikeapp.spike.airlibrary
 			return context.call("getDatabaseResetStatus") as Boolean;
 		}
 		
+		public static function terminateApp():void {
+			context.call("terminateApp");
+		}
+		
 		/**********
 		 ** DEVICE
 		 **********/

@@ -173,6 +173,9 @@ package com.spikeapp.spike.airlibrary
 			return false;
 		}
 		
+		public static function terminateApp():void {
+		}
+		
 		/**********
 		 ** DEVICE
 		 **********/
