@@ -166,7 +166,7 @@ package services
 								[
 									{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later"), triggered: onRemindLater },
 									{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update"), triggered: onIgnoreUpdate },
-									{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_download"), triggered: onDownload }	
+									{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_update_button_label"), triggered: onUpdate }	
 								]
 							);
 						alert.buttonGroupProperties.gap = 0;
@@ -196,7 +196,7 @@ package services
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE, latestVersion as String);
 		}
 		
-		private static function onDownload(e:starling.events.Event):void
+		private static function onUpdate(e:starling.events.Event):void
 		{
 			//Go to App Center control panel 
 			navigateToURL(new URLRequest(!ModelLocator.IS_IPAD ? "https://install.appcenter.ms/orgs/Nightscout-Foundation/apps/Spike" : "https://install.appcenter.ms/orgs/Nightscout-Foundation/apps/Spike-for-iPad"));
