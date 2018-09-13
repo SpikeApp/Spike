@@ -593,7 +593,7 @@ package ui
 			
 			Trace.myTrace("Spike.as", "Database successfully restored!");
 			
-			function onTerminateSpike(e:Event):void
+			function onTerminateSpike(e:starling.events.Event):void
 			{
 				SpikeANE.terminateApp();
 			}
