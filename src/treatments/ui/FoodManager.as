@@ -478,6 +478,7 @@ package treatments.ui
 				
 				totalFiber += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fiber;
 				totalFiber = Math.round(totalFiber * 100) / 100;
+					
 				
 				totalFats += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fats;
 				totalFats = Math.round(totalFats * 100) / 100;
@@ -495,7 +496,7 @@ package treatments.ui
 				cartTotals.title.width = 210;
 				cartTotals.title.validate();
 				cartTotals.value.wordWrap = true;
-				cartTotals.value.text = "Protein: " + totalProteins + "g" + "\n" + "Carbs: " + totalCarbs + "g" + "\n" + "Fiber: " + totalFiber + "g" + "\n" + "Fats: " + totalFats + "g" + "\n" + "Calories: " + totalCalories + "Kcal";
+				cartTotals.value.text = "Protein: " + (!isNaN(totalProteins) ? totalProteins + "g" : "N/A") + "\n" + "Carbs: " + (!isNaN(totalCarbs) ? totalCarbs + "g" : "N/A") + "\n" + "Fiber: " + (!isNaN(totalFiber) ? totalFiber + "g" : "N/A") + "\n" + "Fats: " + (!isNaN(totalFats) ? totalFats + "g" : "N/A") + "\n" + "Calories: " + (!isNaN(totalCalories) ? totalCalories + "Kcal" : "N/A");
 				cartTotals.value.width = 210;
 				cartTotals.value.validate();
 					

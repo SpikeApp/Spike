@@ -210,7 +210,7 @@ package ui.screens.display.treatments
 			{
 				factoryIDFunction = function( item:Object, index:int ):String
 				{
-					if(index === 0 && !BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					if(index === 0 && !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						return "calibration-item";
 					else if(index == 0 || index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 7)
 						return "treatment-item";
