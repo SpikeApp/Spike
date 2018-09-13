@@ -1292,7 +1292,7 @@ package services
 			if ((new Date()).valueOf() - lastQueuedAlertSoundTimeStamp < TimeSpan.TIME_2_SECONDS) {//it should normally be max 1 second
 				if (queuedAlertSound != "") {
 					myTrace("in phoneNotMuted, sound queued and fired alert time < 2 seconds ago");
-					SpikeANE.playSound(queuedAlertSound, Number.NaN, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_ON) == "true" ? Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_VALUE)) : Number.NaN);
+					SpikeANE.playSound(queuedAlertSound, Number.NaN, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_ON) == "true" ? Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_VALUE)) : Number.NaN);
 				}
 			}
 			queuedAlertSound = "";
@@ -1365,7 +1365,7 @@ package services
 			if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default") && !(StringUtil.trim(alertType.sound) == "")) {//check against default for backward compability. Default sound can't be played with playSound
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") 
 				{
-					SpikeANE.playSound("../assets/sounds/" + soundToSet, Number.NaN, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_ON) == "true" ? Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_VALUE)) : Number.NaN);
+					SpikeANE.playSound("../assets/sounds/" + soundToSet, Number.NaN, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_ON) == "true" ? Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_VALUE)) : Number.NaN);
 				}
 				else 
 				{

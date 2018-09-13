@@ -208,6 +208,22 @@ FREObject isPlayingSound (FREContext ctx, void* funcData, uint32_t argc, FREObje
 }
 
 FREObject say (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0]) {
+    //Get desired system volume
+    float desiredSystemVolume = FPANE_FREObjectToDouble(argv[2]);
+    if (desiredSystemVolume < 101)
+    {
+        //101 means no change to system volume. We also divide it by 100 because 0 = muted and 1 = max volume.
+        desiredSystemVolume = desiredSystemVolume / 100;
+        float currentSystemVolume = [[AVAudioSession sharedInstance] outputVolume];
+        if (fabsf(desiredSystemVolume - currentSystemVolume) > 0.05)
+        {
+            //We only change the system volume if the difference betwwen the current system volume and the desired one is bigger than 5 points.
+            //This avoids showing the volume hud when the difference is too little to actually be noticeable
+            [_soundPlayer changeSystemVolume:desiredSystemVolume];
+        }
+    }
+    
+    //Speak
     NSString * text = [FPANE_FREObjectToNSString(argv[0]) mutableCopy];
     NSString * language = [FPANE_FREObjectToNSString(argv[1]) mutableCopy];
     [_soundPlayer say:text language:language];

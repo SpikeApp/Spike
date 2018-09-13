@@ -207,8 +207,8 @@ package com.spikeapp.spike.airlibrary
 		 * text : text to be spoken<br> 
 		 * language  : examplle "en-US" , or "nl-BE"
 		 */
-		public static function say(text:String, language:String):void {
-			context.call("say", text, language);
+		public static function say(text:String, language:String, systemVolume:Number = Number.NaN):void {
+			context.call("say", text, language, isNaN(systemVolume) ? 101 : systemVolume);
 		}
 		
 		/**

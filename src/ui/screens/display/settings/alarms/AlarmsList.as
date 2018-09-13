@@ -61,7 +61,7 @@ package ui.screens.display.settings.alarms
 		private var fastDropIconImage:Image;
 		private var widgetWatchConfigSender:Button;
 		private var actionsContainer:LayoutGroup;
-		private var controlSystemValue:ToggleSwitch;
+		private var controlSystemVolumeToggle:ToggleSwitch;
 		private var systemVolumeSlider:Slider;
 		private var customSystemValueLabel:Label;
 		private var volumeSliderContainer:LayoutGroup;
@@ -101,8 +101,8 @@ package ui.screens.display.settings.alarms
 		
 		private function setupInitialContent():void
 		{
-			isSystemVolumeUserDefined = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_ON) == "true";
-			userDefinedSystemVolume = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_VALUE));
+			isSystemVolumeUserDefined = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_ON) == "true";
+			userDefinedSystemVolume = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_VALUE));
 			muteOverrideValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true";
 			appInactiveValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true";
 		}
@@ -110,8 +110,10 @@ package ui.screens.display.settings.alarms
 		private function setupContent():void
 		{
 			/* Controls & Icons */
-			controlSystemValue = LayoutFactory.createToggleSwitch(isSystemVolumeUserDefined);
-			controlSystemValue.addEventListener(Event.CHANGE, onSystemVolumeManagedChanged);
+			
+			//System Volume
+			controlSystemVolumeToggle = LayoutFactory.createToggleSwitch(isSystemVolumeUserDefined);
+			controlSystemVolumeToggle.addEventListener(Event.CHANGE, onSystemVolumeManagedChanged);
 			var volumeSliderLayout:VerticalLayout = new VerticalLayout();
 			volumeSliderLayout.horizontalAlign = HorizontalAlign.RIGHT;
 			volumeSliderLayout.gap = 0;
@@ -126,10 +128,16 @@ package ui.screens.display.settings.alarms
 			systemVolumeSlider.value = userDefinedSystemVolume;
 			volumeSliderContainer.addChild(systemVolumeSlider);
 			systemVolumeSlider.addEventListener(Event.CHANGE, onSystemVolumeValueChanged);
+			
+			//Mute
 			muteOverride = LayoutFactory.createToggleSwitch(muteOverrideValue);
 			muteOverride.addEventListener(Event.CHANGE, onOverrideMute);
+			
+			//App Inactive Alert
 			appInactive = LayoutFactory.createToggleSwitch(appInactiveValue);
 			appInactive.addEventListener(Event.CHANGE, onAppInactive);
+			
+			//Menu Items
 			chevronTexture = MaterialDeepGreyAmberMobileThemeIcons.chevronRightTexture;
 			alertTypesIconImage = new Image(chevronTexture);
 			batteryLowIconImage = new Image(chevronTexture);
@@ -174,9 +182,9 @@ package ui.screens.display.settings.alarms
 		{
 			/* Data */
 			var dataSectionsContainer:Array = [];
-			dataSectionsContainer.push({ screen: null, label: "Override System Volume", accessory: controlSystemValue, selectable:false });
+			dataSectionsContainer.push({ screen: null, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"override_system_volume_label"), accessory: controlSystemVolumeToggle, selectable:false });
 			if (isSystemVolumeUserDefined)
-				dataSectionsContainer.push({ screen: null, label: "Custom Volume", accessory: volumeSliderContainer, selectable:false });
+				dataSectionsContainer.push({ screen: null, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"custom_system_volume_label"), accessory: volumeSliderContainer, selectable:false });
 			dataSectionsContainer.push({ screen: null, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"override_mute_label"), accessory: muteOverride, selectable:false });
 			dataSectionsContainer.push({ screen: null, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"app_inactive_label"), accessory: appInactive, selectable:false });
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALERT_TYPES_LIST, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"alert_types_label"), accessory: alertTypesIconImage });
@@ -241,8 +249,8 @@ package ui.screens.display.settings.alarms
 		
 		private function onSystemVolumeManagedChanged(e:Event):void
 		{
-			isSystemVolumeUserDefined = controlSystemValue.isSelected;
-			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_ON, String(isSystemVolumeUserDefined));
+			isSystemVolumeUserDefined = controlSystemVolumeToggle.isSelected;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_ON, String(isSystemVolumeUserDefined));
 			refreshContent();
 		}
 		
@@ -250,7 +258,7 @@ package ui.screens.display.settings.alarms
 		{
 			userDefinedSystemVolume = systemVolumeSlider.value;
 			customSystemValueLabel.text = userDefinedSystemVolume + "%";
-			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_USER_DEFINED_SYSTEM_VOLUME_VALUE, String(userDefinedSystemVolume));
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_VALUE, String(userDefinedSystemVolume));
 		}
 		
 		private function onMenuChanged(e:Event):void 
@@ -399,12 +407,12 @@ package ui.screens.display.settings.alarms
 				actionsContainer = null;
 			}
 			
-			if (controlSystemValue != null)
+			if (controlSystemVolumeToggle != null)
 			{
-				controlSystemValue.removeEventListener(Event.CHANGE, onSystemVolumeManagedChanged);
-				controlSystemValue.removeFromParent();
-				controlSystemValue.dispose();
-				controlSystemValue = null;
+				controlSystemVolumeToggle.removeEventListener(Event.CHANGE, onSystemVolumeManagedChanged);
+				controlSystemVolumeToggle.removeFromParent();
+				controlSystemVolumeToggle.dispose();
+				controlSystemVolumeToggle = null;
 			}
 			
 			if (systemVolumeSlider != null)

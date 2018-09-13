@@ -64,7 +64,7 @@ package model
 
 		public static const APPCENTER_MODE:Boolean = true;
 		public static const IS_IPAD:Boolean = false;
-		public static const INTERNAL_TESTING:Boolean = true;
+		public static const INTERNAL_TESTING:Boolean = false;
 		
 		public static function get instance():ModelLocator
 		{

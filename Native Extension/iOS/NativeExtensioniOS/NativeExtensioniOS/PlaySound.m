@@ -5,7 +5,7 @@
 #import "FPANEUtils.h"
 #import <MediaPlayer/MPMusicPlayerController.h>
 
-@interface PlaySound() <AVAudioPlayerDelegate>
+@interface PlaySound() <AVAudioPlayerDelegate, AVSpeechSynthesizerDelegate>
 @property (strong) AVAudioPlayer *audioPlayer;
 @property (strong) AVSpeechSynthesizer *syn;
 @property float currentSystemVolume;
@@ -38,20 +38,6 @@
     return [_audioPlayer isPlaying];
 }
 
-
-- (void) say:(NSString *) text language:(NSString *) language {
-    FPANE_Log(@"spiketrace ANE PlaySound.m say");
-    if (![_audioPlayer isPlaying]) {
-        FPANE_Log(@"spiketrace ANE PlaySound.m say, audioPlayer not playing, trying to speak text now");
-        _syn = [[AVSpeechSynthesizer alloc] init];
-        AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:text];
-        [utterance setRate:0.51f];
-        [utterance setPitchMultiplier:1];
-        [utterance setVoice:[AVSpeechSynthesisVoice voiceWithLanguage:language]];
-        [_syn speakUtterance:utterance];
-    }
-}
-
 - (void) changeSystemVolume:(float) volume  {
     //We save the current system volume so we can restore it after the sound finishes playing
     _currentSystemVolume = [[AVAudioSession sharedInstance] outputVolume];
@@ -71,13 +57,31 @@
 - (void) restoreSystemVolume  {
     if (_shouldRestoreSystemVolume)
     {
-        //Restore system volume to how it was before. Update restore flag so it doesn't try to restore on the next sound if not needed.
+        //Restore system volume to how it was before. Update restore flag so it doesn't try to restore on the next sound/speech if not needed.
         _shouldRestoreSystemVolume = false;
         [self updateSystemVolume:_currentSystemVolume];
     }
 }
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
+    [self restoreSystemVolume];
+}
+
+- (void) say:(NSString *) text language:(NSString *) language {
+    FPANE_Log(@"spiketrace ANE PlaySound.m say");
+    if (![_audioPlayer isPlaying]) {
+        FPANE_Log(@"spiketrace ANE PlaySound.m say, audioPlayer not playing, trying to speak text now");
+        _syn = [[AVSpeechSynthesizer alloc] init];
+        AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:text];
+        [utterance setRate:0.51f];
+        [utterance setPitchMultiplier:1];
+        [utterance setVoice:[AVSpeechSynthesisVoice voiceWithLanguage:language]];
+        _syn.delegate = self;
+        [_syn speakUtterance:utterance];
+    }
+}
+
+-(void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didFinishSpeechUtterance:(AVSpeechUtterance *)utterance {
     [self restoreSystemVolume];
 }
 

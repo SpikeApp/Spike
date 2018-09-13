@@ -139,7 +139,7 @@ package com.spikeapp.spike.airlibrary
 			return false;
 		}
 
-		public static function say(text:String, language:String):void {
+		public static function say(text:String, language:String, systemVolume:Number = Number.NaN):void {
 		}
 
 		public static function setAvAudioSessionCategory(toCategoryPlayback:Boolean):void {

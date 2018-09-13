@@ -140,7 +140,7 @@ package services
 			myTrace("Text to speak: " + text);
 			
 			//Start Text To Speech
-			SpikeANE.say(text, language);		
+			SpikeANE.say(text, language, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_ON) == "true" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_VALUE)) : Number.NaN);	
 		}
 		
 		//Remove all spaces in the string.
