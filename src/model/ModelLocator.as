@@ -147,6 +147,9 @@ package model
 				//Set Language
 				ModelLocator.resourceManagerInstance.localeChain = [CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE),"en_US"];
 				
+				//To make sure the default language gets stored in the settings
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE,CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE));
+				
 				//Manage Rotation
 				var preventRotation:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
 				Constants.appStage.autoOrients = !preventRotation;

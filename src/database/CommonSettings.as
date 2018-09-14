@@ -7,6 +7,7 @@ package database
  	
  	import model.ModelLocator;
  	
+ 	import utils.Constants;
  	import utils.DeviceInfo;
 
 	 /**
@@ -833,12 +834,26 @@ package database
 					 setCommonSetting(COMMON_SETTING_CALIBRATION_REQUEST_ALERT, newString);
 				 }
 			 }
-			 /*if (commonSettingId == COMMON_SETTING_APP_LANGUAGE) {
+			 if (commonSettingId == COMMON_SETTING_APP_LANGUAGE) {
 				 if ((commonSettings[COMMON_SETTING_APP_LANGUAGE] as String).indexOf('default') > -1) {
-					 newString = ModelLocator.resourceManagerInstance.getString("generalsettingsscreen","default_language");
-					 setCommonSetting(COMMON_SETTING_APP_LANGUAGE, newString);
+					 //temporary store current localeChain
+					 var tempLocaleChainStorage:Array = ModelLocator.resourceManagerInstance.localeChain;
+					 var systemLanguage:String = Constants.systemLocale.replace("-","_");
+					 //temporary set localeChain to the actual iOS language setting, for instance could be nl_BE
+					 ModelLocator.resourceManagerInstance.localeChain = [systemLanguage];
+					 //in the locale files for (as example) nl_BE,  default_language has value nl_NL, this is the locale files that should be used
+					 systemLanguage = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','default_language');
+					 //now reset ModelLocator.resourceManagerInstance.localeChain;
+					 ModelLocator.resourceManagerInstance.localeChain = tempLocaleChainStorage;
+					 
+					 //not storing the retrieved language in the settings, because the first time that getCommonSetting is called with id COMMON_SETTING_APP_LANGUAGE
+					 //we get as systemLanguage always en_US and not the actual language we expect (in the example given in the comments it should be nl_NL
+					 //so the settings value stays 'default'
+					 //next time, systemLanguage gets the correct value
+					 
+					 return systemLanguage;
 				 }
-			 }*/
+			 }
 			 return commonSettings[commonSettingId];
 		 }
 		 
