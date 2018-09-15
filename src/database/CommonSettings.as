@@ -836,13 +836,24 @@ package database
 			 }
 			 if (commonSettingId == COMMON_SETTING_APP_LANGUAGE) {
 				 if ((commonSettings[COMMON_SETTING_APP_LANGUAGE] as String).indexOf('default') > -1) {
-					 //temporary store current localeChain
+					 //app_language will be determined based on iOS settings and locale files
+					 
+					 //temporary store current localeChain, will be reset later
 					 var tempLocaleChainStorage:Array = ModelLocator.resourceManagerInstance.localeChain;
+					 
+					 //get iOS language and country
 					 var systemLanguage:String = Constants.systemLocale.replace("-","_");
+					 var country:String = systemLanguage.split("_")[0];
+					 
 					 //temporary set localeChain to the actual iOS language setting, for instance could be nl_BE
-					 ModelLocator.resourceManagerInstance.localeChain = [systemLanguage];
+					 //add country as second choice, en_US as third choice
+					 ModelLocator.resourceManagerInstance.localeChain = [systemLanguage, country, "en_US"];
+					 
 					 //in the locale files for (as example) nl_BE,  default_language has value nl_NL, this is the locale files that should be used
-					 systemLanguage = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','default_language');
+					 //if nl_BE folder would not exist or generalsettingsscreen.properties would not exist or default_language would not exist,
+					 //then search would be done in folder nl and if still not found then in en_US
+					 var newAppLanguage:String = ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','default_language');
+					 
 					 //now reset ModelLocator.resourceManagerInstance.localeChain;
 					 ModelLocator.resourceManagerInstance.localeChain = tempLocaleChainStorage;
 					 
@@ -851,7 +862,7 @@ package database
 					 //so the settings value stays 'default'
 					 //next time, systemLanguage gets the correct value
 					 
-					 return systemLanguage;
+					 return newAppLanguage;
 				 }
 			 }
 			 return commonSettings[commonSettingId];
