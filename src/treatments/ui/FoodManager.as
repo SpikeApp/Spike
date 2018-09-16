@@ -473,6 +473,7 @@ package treatments.ui
 			var totalCarbsNaN:Boolean = false;
 			var totalFiber:Number = 0;
 			var totalFiberNaN:Boolean = false;
+			var totalFiberToSubstract:Number = 0;
 			var totalFats:Number = 0;
 			var totalFatsNaN:Boolean = false;
 			var totalCalories:Number = 0;
@@ -498,7 +499,11 @@ package treatments.ui
 				
 				var itemFiber:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fiber) * 100) / 100;
 				if (!isNaN(itemFiber))
+				{
 					totalFiber += itemFiber;
+					if (cartItem.substractFiber)
+						totalFiberToSubstract += itemFiber;
+				}
 				else
 					totalFiberNaN = true;
 				
@@ -517,8 +522,9 @@ package treatments.ui
 			
 			//Round values
 			totalProteins = Math.round(totalProteins * 100) / 100;
-			totalCarbs = Math.round(totalCarbs * 100) / 100;
+			totalCarbs = Math.round((totalCarbs - totalFiberToSubstract) * 100) / 100;
 			totalFiber = Math.round(totalFiber * 100) / 100;
+			totalFiberToSubstract = Math.round(totalFiberToSubstract * 100) / 100;
 			totalFats = Math.round(totalFats * 100) / 100;
 			totalCalories = Math.round(totalCalories * 100) / 100;
 			
@@ -532,7 +538,7 @@ package treatments.ui
 				cartTotals.title.width = 210;
 				cartTotals.title.validate();
 				cartTotals.value.wordWrap = true;
-				cartTotals.value.text = "Protein: " + (totalProteins == 0 && totalProteinsNaN ? "N/A" : totalProteins + "g") + "\n" + "Carbs: " + (totalCarbs == 0 && totalCarbsNaN ? "N/A" : totalCarbs + "g") + "\n" + "Fiber: " + (totalFiber == 0 && totalFiberNaN ? "N/A" : totalFiber + "g") + "\n" + "Fats: " + (totalFats == 0 && totalFatsNaN ? "N/A" : totalFats + "g") + "\n" + "Calories: " + (totalCalories == 0 && totalCaloriesNaN ? "N/A" : totalCalories + "Kcal");
+				cartTotals.value.text = "Protein: " + (totalProteins == 0 && totalProteinsNaN ? "N/A" : totalProteins + "g") + "\n" + "Carbs: " + (totalCarbs == 0 && totalCarbsNaN ? "N/A" : totalCarbs + "g") + (totalFiberToSubstract != 0 ? " (-" + totalFiberToSubstract + "g fiber)" : "") + "\n" + "Fiber: " + (totalFiber == 0 && totalFiberNaN ? "N/A" : totalFiber + "g") + "\n" + "Fats: " + (totalFats == 0 && totalFatsNaN ? "N/A" : totalFats + "g") + "\n" + "Calories: " + (totalCalories == 0 && totalCaloriesNaN ? "N/A" : totalCalories + "Kcal");
 				cartTotals.value.width = 210;
 				cartTotals.value.validate();
 					
