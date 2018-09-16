@@ -1,4 +1,4 @@
-package treatments.ui
+package treatments.food.ui
 {
 	import com.distriqt.extension.scanner.AuthorisationStatus;
 	import com.distriqt.extension.scanner.Scanner;
@@ -58,9 +58,9 @@ package treatments.ui
 	import starling.textures.Texture;
 	import starling.utils.SystemUtil;
 	
-	import treatments.Food;
-	import treatments.Recipe;
-	import treatments.network.FoodAPIConnector;
+	import treatments.food.Food;
+	import treatments.food.Recipe;
+	import treatments.food.network.FoodAPIConnector;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;

@@ -36,7 +36,7 @@ package treatments
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
-	import treatments.ui.FoodManager;
+	import treatments.food.ui.FoodManager;
 	
 	import ui.AppInterface;
 	import ui.chart.GlucoseFactory;
@@ -45,6 +45,7 @@ package treatments
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import treatments.food.Food;
 
 	public class BolusWizard
 	{

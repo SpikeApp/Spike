@@ -1,4 +1,4 @@
-package treatments.network
+package treatments.food.network
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.hurlant.crypto.Crypto;
@@ -23,7 +23,7 @@ package treatments.network
 	
 	import events.FoodEvent;
 	
-	import treatments.Food;
+	import treatments.food.Food;
 	
 	import utils.SpikeJSON;
 	import utils.UniqueId;

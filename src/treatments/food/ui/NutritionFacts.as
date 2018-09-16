@@ -1,4 +1,4 @@
-package treatments.ui
+package treatments.food.ui
 {
 	import feathers.controls.LayoutGroup;
 	import feathers.layout.HorizontalAlign;

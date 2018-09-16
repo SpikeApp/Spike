@@ -1,4 +1,4 @@
-package treatments
+package treatments.food
 {
 	public class Food
 	{

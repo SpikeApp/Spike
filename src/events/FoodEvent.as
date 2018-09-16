@@ -2,7 +2,7 @@ package events
 {
 	import flash.events.Event;
 	
-	import treatments.Food;
+	import treatments.food.Food;
 
 	public class FoodEvent extends Event
 	{

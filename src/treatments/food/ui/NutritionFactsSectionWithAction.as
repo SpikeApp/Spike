@@ -1,4 +1,4 @@
-package treatments.ui
+package treatments.food.ui
 {
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
@@ -6,19 +6,21 @@ package treatments.ui
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
+	import starling.display.DisplayObject;
+	
 	import ui.screens.display.LayoutFactory;
 	
-	public class NutritionFactsSection extends LayoutGroup
+	public class NutritionFactsSectionWithAction extends LayoutGroup
 	{
 		//Display Objects
 		public  var title:Label;
-		public var value:Label;
 		
-		public function NutritionFactsSection(width:Number)
+		public function NutritionFactsSectionWithAction(width:Number)
 		{
 			super();
 			
 			this.width = width;
+			
 			
 			createLayout();
 			createContent();	
@@ -36,13 +38,12 @@ package treatments.ui
 		private function createContent():void
 		{
 			title = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
-			title.width = width;
 			addChild(title);
-			
-			value = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false);
-			value.wordWrap = true;
-			value.width;
-			addChild(value);
+		}
+		
+		public function setComponent(component:DisplayObject):void
+		{
+			addChild(component);
 		}
 		
 		override public function dispose():void
@@ -52,13 +53,6 @@ package treatments.ui
 				title.removeFromParent();
 				title.dispose();
 				title = null;
-			}
-			
-			if (value != null)
-			{
-				value.removeFromParent();
-				value.dispose();
-				value = null;
 			}
 			
 			super.dispose();

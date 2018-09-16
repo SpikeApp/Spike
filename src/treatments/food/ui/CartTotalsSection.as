@@ -1,4 +1,4 @@
-package treatments.ui
+package treatments.food.ui
 {
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
@@ -6,21 +6,19 @@ package treatments.ui
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
-	import starling.display.DisplayObject;
-	
 	import ui.screens.display.LayoutFactory;
 	
-	public class NutritionFactsSectionWithAction extends LayoutGroup
+	public class CartTotalsSection extends LayoutGroup
 	{
 		//Display Objects
 		public  var title:Label;
+		public var value:Label;
 		
-		public function NutritionFactsSectionWithAction(width:Number)
+		public function CartTotalsSection(width:Number)
 		{
 			super();
 			
 			this.width = width;
-			
 			
 			createLayout();
 			createContent();	
@@ -32,18 +30,20 @@ package treatments.ui
 			verticalLayout.horizontalAlign = HorizontalAlign.CENTER;
 			verticalLayout.verticalAlign = VerticalAlign.TOP;
 			verticalLayout.gap = 5;
+			verticalLayout.paddingTop = verticalLayout.paddingBottom = 10;
 			this.layout = verticalLayout;
 		}
 		
 		private function createContent():void
 		{
-			title = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+			title = LayoutFactory.createLabel("", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, true);
+			title.width = width;
 			addChild(title);
-		}
-		
-		public function setComponent(component:DisplayObject):void
-		{
-			addChild(component);
+			
+			value = LayoutFactory.createLabel("", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, false);
+			value.wordWrap = true;
+			value.width;
+			addChild(value);
 		}
 		
 		override public function dispose():void
@@ -53,6 +53,13 @@ package treatments.ui
 				title.removeFromParent();
 				title.dispose();
 				title = null;
+			}
+			
+			if (value != null)
+			{
+				value.removeFromParent();
+				value.dispose();
+				value = null;
 			}
 			
 			super.dispose();

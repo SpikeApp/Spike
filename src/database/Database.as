@@ -25,10 +25,10 @@ package database
 	
 	import stats.BasicUserStats;
 	
-	import treatments.Food;
+	import treatments.food.Food;
 	import treatments.Insulin;
 	import treatments.Profile;
-	import treatments.Recipe;
+	import treatments.food.Recipe;
 	import treatments.Treatment;
 	
 	import utils.TimeSpan;

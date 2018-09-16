@@ -1,4 +1,4 @@
-package treatments.ui
+package treatments.food.ui
 {
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
@@ -8,13 +8,13 @@ package treatments.ui
 	
 	import ui.screens.display.LayoutFactory;
 	
-	public class CartTotalsSection extends LayoutGroup
+	public class NutritionFactsSection extends LayoutGroup
 	{
 		//Display Objects
 		public  var title:Label;
 		public var value:Label;
 		
-		public function CartTotalsSection(width:Number)
+		public function NutritionFactsSection(width:Number)
 		{
 			super();
 			
@@ -30,17 +30,16 @@ package treatments.ui
 			verticalLayout.horizontalAlign = HorizontalAlign.CENTER;
 			verticalLayout.verticalAlign = VerticalAlign.TOP;
 			verticalLayout.gap = 5;
-			verticalLayout.paddingTop = verticalLayout.paddingBottom = 10;
 			this.layout = verticalLayout;
 		}
 		
 		private function createContent():void
 		{
-			title = LayoutFactory.createLabel("", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, true);
+			title = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
 			title.width = width;
 			addChild(title);
 			
-			value = LayoutFactory.createLabel("", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, false);
+			value = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false);
 			value.wordWrap = true;
 			value.width;
 			addChild(value);

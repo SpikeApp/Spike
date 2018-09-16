@@ -1,4 +1,4 @@
-package treatments.ui
+package treatments.food.ui
 {
 	import database.Database;
 	
@@ -13,7 +13,7 @@ package treatments.ui
 	
 	import starling.events.Event;
 	
-	import treatments.Food;
+	import treatments.food.Food;
 	
 	import ui.screens.display.LayoutFactory;
 	
