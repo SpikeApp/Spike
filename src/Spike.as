@@ -243,6 +243,26 @@ package
 				error.indexOf("native extension class with your key") != -1 ||
 				error.indexOf("StackScreenNavigator/handleDragEnd()") != -1 ||
 				error.indexOf("nativePath()") != -1 ||
+				error.indexOf("ExtensionContext/call()") != -1 ||
+				error.indexOf("myTrace()") != -1 ||
+				error.indexOf("getSensor()") != -1 ||
+				error.indexOf("internalRefresh()") != -1 ||
+				error.indexOf("insertBgReadingSynchronous()") != -1 ||
+				error.indexOf("describeType()") != -1 ||
+				error.indexOf("builtin::splice()") != -1 ||
+				error.indexOf("builtin::concat()") != -1 ||
+				error.indexOf("CollectionEvent()") != -1 ||
+				error.indexOf("SQLConnection/close()") != -1 ||
+				error.indexOf("JSONEncoder/objectToString()") != -1 ||
+				error.indexOf("Sort/findItem()") != -1 ||
+				error.indexOf("ui::InterfaceController$/onInvoke()") != -1 ||
+				error.indexOf("addItemsToView()") != -1 ||
+				error.indexOf("FromtimeAndValueArrayCollection()") != -1 ||
+				error.indexOf("JSONEncoder/arrayToString()") != -1 ||
+				error.indexOf("builtin::sortOn()") != -1 ||
+				error.indexOf("getCalibrationForSensorId()") != -1 ||
+				error.indexOf("ListDataViewPort: active renderers should be empty") != -1 ||
+				error.indexOf("StageTextTextEditor/render()") != -1 ||
 				error.indexOf("Graphic/getBounds()") != -1
 			)
 			{
