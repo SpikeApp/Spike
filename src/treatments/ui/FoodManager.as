@@ -11,12 +11,15 @@ package treatments.ui
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.Database;
 	
 	import distriqtkey.DistriqtKey;
 	
 	import events.FoodEvent;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
 	import feathers.controls.Check;
@@ -56,10 +59,14 @@ package treatments.ui
 	import starling.utils.SystemUtil;
 	
 	import treatments.Food;
+	import treatments.Recipe;
 	import treatments.network.FoodAPIConnector;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
+	
+	import utils.Constants;
+	import utils.UniqueId;
 
 	public class FoodManager extends LayoutGroup
 	{
@@ -361,6 +368,7 @@ package treatments.ui
 			
 			saveRecipe = LayoutFactory.createButton("Save as Recipe");
 			saveRecipe.pivotX = 4;
+			saveRecipe.addEventListener(Event.TRIGGERED, onAddRecipe);
 			
 			//Food Details
 			foodDetailsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.TOP, 5);
@@ -460,33 +468,61 @@ package treatments.ui
 		{
 			var cartData:Array = [];
 			var totalProteins:Number = 0;
+			var totalProteinsNaN:Boolean = false;
 			var totalCarbs:Number = 0;
+			var totalCarbsNaN:Boolean = false;
 			var totalFiber:Number = 0;
+			var totalFiberNaN:Boolean = false;
 			var totalFats:Number = 0;
+			var totalFatsNaN:Boolean = false;
 			var totalCalories:Number = 0;
+			var totalCaloriesNaN:Boolean = false;
 			
 			for (var i:int = 0; i < cartList.length; i++) 
 			{
 				var cartItem:Object = cartList[i];
-				cartData.push( { label: cartItem.quantity + cartItem.servingUnit + " " + (cartItem.food as Food).name, accessory: createDeleteButton(), food: cartItem.food, quantity: cartItem.quantity, servingUnit: cartItem.servingUnit } );
+				var cartFood:Food = cartItem.food as Food;
+				cartData.push( { label: cartItem.quantity + cartItem.servingUnit + " " + cartFood.name, accessory: createDeleteButton(), food: cartFood, quantity: cartItem.quantity, servingUnit: cartItem.servingUnit } );
 				
-				totalProteins += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).proteins;
-				totalProteins = Math.round(totalProteins * 100) / 100;
+				var itemProteins:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.proteins) * 100) / 100;
+				if (!isNaN(itemProteins))
+					totalProteins += itemProteins;
+				else
+					totalProteinsNaN = true;
 				
-				totalCarbs += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).carbs;
-				totalCarbs = Math.round(totalCarbs * 100) / 100;
+				var itemCarbs:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.carbs) * 100) / 100;
+				if(!isNaN(itemCarbs))
+					totalCarbs += itemCarbs;
+				else
+					totalCarbsNaN = true;
 				
-				totalFiber += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fiber;
-				totalFiber = Math.round(totalFiber * 100) / 100;
-					
+				var itemFiber:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fiber) * 100) / 100;
+				if (!isNaN(itemFiber))
+					totalFiber += itemFiber;
+				else
+					totalFiberNaN = true;
 				
-				totalFats += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).fats;
-				totalFats = Math.round(totalFats * 100) / 100;
+				var itemFats:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fats) * 100) / 100;
+				if (!isNaN(itemFats))
+					totalFats += itemFats;
+				else
+					totalFatsNaN = true;
 				
-				totalCalories += (cartItem.quantity / (cartItem.food as Food).servingSize) * (cartItem.food as Food).kcal;
-				totalCalories = Math.round(totalCalories * 100) / 100;
+				var itemCalories:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.kcal) * 100) / 100;
+				if (!isNaN(itemCalories))
+					totalCalories += itemCalories;
+				else
+					totalCaloriesNaN = true;
 			}
 			
+			//Round values
+			totalProteins = Math.round(totalProteins * 100) / 100;
+			totalCarbs = Math.round(totalCarbs * 100) / 100;
+			totalFiber = Math.round(totalFiber * 100) / 100;
+			totalFats = Math.round(totalFats * 100) / 100;
+			totalCalories = Math.round(totalCalories * 100) / 100;
+			
+			//Create Total's UI
 			if (cartData.length > 0)
 			{
 				if (cartTotals != null) cartTotals.removeFromParent(true);
@@ -496,7 +532,7 @@ package treatments.ui
 				cartTotals.title.width = 210;
 				cartTotals.title.validate();
 				cartTotals.value.wordWrap = true;
-				cartTotals.value.text = "Protein: " + (!isNaN(totalProteins) ? totalProteins + "g" : "N/A") + "\n" + "Carbs: " + (!isNaN(totalCarbs) ? totalCarbs + "g" : "N/A") + "\n" + "Fiber: " + (!isNaN(totalFiber) ? totalFiber + "g" : "N/A") + "\n" + "Fats: " + (!isNaN(totalFats) ? totalFats + "g" : "N/A") + "\n" + "Calories: " + (!isNaN(totalCalories) ? totalCalories + "Kcal" : "N/A");
+				cartTotals.value.text = "Protein: " + (totalProteins == 0 && totalProteinsNaN ? "N/A" : totalProteins + "g") + "\n" + "Carbs: " + (totalCarbs == 0 && totalCarbsNaN ? "N/A" : totalCarbs + "g") + "\n" + "Fiber: " + (totalFiber == 0 && totalFiberNaN ? "N/A" : totalFiber + "g") + "\n" + "Fats: " + (totalFats == 0 && totalFatsNaN ? "N/A" : totalFats + "g") + "\n" + "Calories: " + (totalCalories == 0 && totalCaloriesNaN ? "N/A" : totalCalories + "Kcal");
 				cartTotals.value.width = 210;
 				cartTotals.value.validate();
 					
@@ -1049,6 +1085,241 @@ package treatments.ui
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 				
 				FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
+			}
+		}
+		
+		private function onAddRecipe(e:Event):void
+		{
+			//Variables
+			var recipeName:String = "";
+			var recipeServingSize:String = "";
+			var recipeServingUnit:String = "";
+			var recipeNotes:String = "";
+			
+			var contentLayout:VerticalLayout = new VerticalLayout();
+			contentLayout.horizontalAlign = HorizontalAlign.CENTER;
+			contentLayout.verticalAlign = VerticalAlign.TOP;
+			contentLayout.gap = 10;
+			contentLayout.paddingBottom = -25;
+			var contentContainer:LayoutGroup = new LayoutGroup();
+			contentContainer.layout = contentLayout;
+			var recipeNameTextInput:TextInput = LayoutFactory.createTextInput(false, false, 250, HorizontalAlign.CENTER, false, false, false, true, true);
+			recipeNameTextInput.prompt = "Name";
+			recipeNameTextInput.addEventListener(Event.CHANGE, onRecipeNameChanged);
+			contentContainer.addChild(recipeNameTextInput);
+			
+			var servingsContent:LayoutGroup = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
+			var recipeServingSizeTextInput:TextInput = LayoutFactory.createTextInput(false, false, 120, HorizontalAlign.CENTER, true, false, false, true, true);
+			recipeServingSizeTextInput.prompt = "Serving Size";
+			recipeServingSizeTextInput.addEventListener(Event.CHANGE, onRecipeServingSizeChanged);
+			servingsContent.addChild(recipeServingSizeTextInput);
+			var recipeServingUnitTextInput:TextInput = LayoutFactory.createTextInput(false, false, 120, HorizontalAlign.CENTER, false, false, false, true, true);
+			recipeServingUnitTextInput.prompt = "Serving Unit";
+			recipeServingUnitTextInput.addEventListener(Event.CHANGE, onRecipeServingUnitChanged);
+			servingsContent.addChild(recipeServingUnitTextInput);
+			contentContainer.addChild(servingsContent);
+			
+			var notesTextInput:TextInput = LayoutFactory.createTextInput(false, false, 250, HorizontalAlign.CENTER, false, false, false, true, true);
+			notesTextInput.prompt = "Notes";
+			notesTextInput.addEventListener(Event.CHANGE, onRecipeNotesChanged);
+			contentContainer.addChild(notesTextInput);
+			
+			var actionsContainer:LayoutGroup = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 10);
+			var cancelButton:Button = LayoutFactory.createButton("Cancel");
+			cancelButton.addEventListener(Event.TRIGGERED, onCancelRecipe);
+			var saveButton:Button = LayoutFactory.createButton("Save");
+			saveButton.isEnabled = false;
+			saveButton.addEventListener(Event.TRIGGERED, onSaveRecipe);
+			actionsContainer.addChild(cancelButton);
+			actionsContainer.addChild(saveButton);
+			
+			contentContainer.addChild(actionsContainer);
+			
+			var recipePopup:Alert = Alert.show("", "Add Recipe", null, contentContainer, true, false);
+			recipePopup.validate();
+			recipePopup.x = ((Constants.stageWidth - recipePopup.width) / 2) + 5;
+			recipePopup.y = 70;
+			recipePopup.gap = 0;
+			recipePopup.headerProperties.maxHeight = 30;
+			recipeNameTextInput.setFocus();
+			
+			function onRecipeNameChanged(e:Event):void
+			{
+				var origin:TextInput = e.currentTarget as TextInput;
+				if (origin == null)
+					return;
+				
+				recipeName = origin.text;
+				validateFields();
+			}
+			
+			function onRecipeServingSizeChanged(e:Event):void
+			{
+				var origin:TextInput = e.currentTarget as TextInput;
+				if (origin == null)
+					return;
+				
+				recipeServingSize = origin.text;
+				validateFields();
+			}
+			
+			function onRecipeServingUnitChanged(e:Event):void
+			{
+				var origin:TextInput = e.currentTarget as TextInput;
+				if (origin == null)
+					return;
+				
+				recipeServingUnit = origin.text;
+				validateFields();
+			}
+			
+			function onRecipeNotesChanged(e:Event):void
+			{
+				var origin:TextInput = e.currentTarget as TextInput;
+				if (origin == null)
+					return;
+				
+				recipeNotes = origin.text;
+				validateFields();
+			}
+			
+			function validateFields():void
+			{
+				saveButton.isEnabled = recipeName == "" || recipeServingSize == "" || recipeServingUnit == "" ? false : true;
+			}
+			
+			function onSaveRecipe(e:Event):void
+			{
+				disposeRecipeUI();
+				
+				if (cartList == null && cartList.length == 0)
+					return;
+				
+				var recipeFoods:Array = [];
+				
+				for (var i:int = 0; i < cartList.length; i++) 
+				{
+					var cartItem:Object = cartList[i];
+					if (cartItem == null) continue;
+					
+					var cartFood:Food = cartItem.food as Food;
+					if (cartFood == null) continue;
+					
+					var food:Food = new Food
+					(
+						cartFood.id,
+						cartFood.name,
+						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.proteins) * 100) / 100,
+						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.carbs) * 100) / 100,
+						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fats) * 100) / 100,
+						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.kcal) * 100) / 100,
+						cartFood.servingSize,
+						cartItem.servingUnit,
+						new Date().valueOf(),
+						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fiber) * 100) / 100,
+						cartFood.brand,
+						cartFood.link,
+						cartFood.source,
+						cartFood.barcode,
+						cartItem.substractFiber
+					);
+					
+					recipeFoods.push(food);
+				}
+				
+				var recipe:Recipe = new Recipe
+				(
+					null,
+					recipeName,
+					recipeServingSize,
+					recipeServingUnit,
+					recipeFoods,
+					new Date().valueOf(),
+					recipeNotes
+				);
+				
+				//Add to database
+				Database.insertRecipeSynchronous(recipe);
+			}
+			
+			function onCancelRecipe(e:Event):void
+			{
+				disposeRecipeUI();
+			}
+			
+			function disposeRecipeUI():void
+			{
+				if (recipeNameTextInput != null)
+				{
+					recipeNameTextInput.removeFromParent();
+					recipeNameTextInput.dispose();
+					recipeNameTextInput = null;
+				}
+				
+				if (recipeServingSizeTextInput != null)
+				{
+					recipeServingSizeTextInput.removeFromParent();
+					recipeServingSizeTextInput.dispose();
+					recipeServingSizeTextInput = null;
+				}
+				
+				if (recipeServingUnitTextInput != null)
+				{
+					recipeServingUnitTextInput.removeFromParent();
+					recipeServingUnitTextInput.dispose();
+					recipeServingUnitTextInput = null;
+				}
+				
+				if (notesTextInput != null)
+				{
+					notesTextInput.removeFromParent();
+					notesTextInput.dispose();
+					notesTextInput = null;
+				}
+				
+				if (servingsContent != null)
+				{
+					servingsContent.removeFromParent();
+					servingsContent.dispose();
+					servingsContent = null;
+				}
+				
+				if (contentContainer != null)
+				{
+					contentContainer.removeFromParent();
+					contentContainer.dispose();
+					contentContainer = null;
+				}
+				
+				if (cancelButton != null)
+				{
+					cancelButton.removeEventListener(Event.TRIGGERED, onCancelRecipe);
+					cancelButton.removeFromParent();
+					cancelButton.dispose();
+					cancelButton = null;
+				}
+				
+				if (saveButton != null)
+				{
+					saveButton.removeEventListener(Event.TRIGGERED, onSaveRecipe);
+					saveButton.removeFromParent();
+					saveButton.dispose();
+					saveButton = null;
+				}
+				
+				if (actionsContainer != null)
+				{
+					actionsContainer.removeFromParent();
+					actionsContainer.dispose();
+					actionsContainer = null;
+				}
+				
+				if (recipePopup != null)
+				{
+					recipePopup.removeFromParent();
+					recipePopup.dispose();
+					recipePopup = null;
+				}
 			}
 		}
 		

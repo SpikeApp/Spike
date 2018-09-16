@@ -16,8 +16,9 @@ package treatments
 		public var source:String;
 		public var barcode:String;
 		public var timestamp:Number;
+		public var substractFiber:Boolean;
 		
-		public function Food(id:String, name:String, proteins:Number, carbs:Number, fats:Number, kcal:Number, servingSize:Number, servingUnit:String, timestamp:Number, fiber:Number = Number.NaN, brand:String = "", link:String = "", source:String = "", barcode:String = "")
+		public function Food(id:String, name:String, proteins:Number, carbs:Number, fats:Number, kcal:Number, servingSize:Number, servingUnit:String, timestamp:Number, fiber:Number = Number.NaN, brand:String = "", link:String = "", source:String = "", barcode:String = "", substractFiber:Boolean = false)
 		{
 			this.id = id;
 			this.name = name;
@@ -33,6 +34,7 @@ package treatments
 			this.timestamp = timestamp;
 			this.source = source;
 			this.barcode = barcode;
+			this.substractFiber = substractFiber;
 		}
 	}
 }

@@ -11,7 +11,6 @@ package database
 	import flash.filesystem.File;
 	
 	import mx.collections.ArrayCollection;
-	import mx.utils.ObjectUtil;
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
@@ -29,6 +28,7 @@ package database
 	import treatments.Food;
 	import treatments.Insulin;
 	import treatments.Profile;
+	import treatments.Recipe;
 	import treatments.Treatment;
 	
 	import utils.TimeSpan;
@@ -190,6 +190,33 @@ package database
 			"proteins STRING, " +
 			"carbs STRING, " +
 			"fiber STRING, " +
+			"fats STRING, " +
+			"calories STRING, " +
+			"servingsize STRING, " +
+			"servingunit STRING, " +
+			"link STRING, " +
+			"barcode STRING, " +
+			"source STRING, " +
+			"notes STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_RECIPES_LIST:String = "CREATE TABLE IF NOT EXISTS recipeslist(" +
+			"id STRING PRIMARY KEY," +
+			"name STRING, " +
+			"servingsize STRING, " +
+			"servingunit STRING, " +
+			"notes STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_RECIPES_FOODS:String = "CREATE TABLE IF NOT EXISTS recipesfoods(" +
+			"recipeid STRING," +
+			"foodid STRING," +
+			"name STRING, " +
+			"brand STRING, " +
+			"proteins STRING, " +
+			"carbs STRING, " +
+			"fiber STRING, " +
+			"substractfiber STRING, " +
 			"fats STRING, " +
 			"calories STRING, " +
 			"servingsize STRING, " +
@@ -810,7 +837,7 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				finishedCreatingTables();
+				createRecipesListTable();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -818,6 +845,48 @@ package database
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				dispatchInformation('failed_to_create_foods_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createRecipesListTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_RECIPES_LIST;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createRecipesFoodsTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create recipes list table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_recipes_list_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createRecipesFoodsTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_RECIPES_FOODS;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				finishedCreatingTables();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create recipes foods table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_recipes_foods_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -2989,6 +3058,97 @@ package database
 			} finally {
 				if (conn.connected) conn.close();
 				return foodFound;
+			}
+		}
+		
+		/**
+		 * inserts a recipe in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertRecipeSynchronous(recipe:Recipe):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				
+				var text:String;
+				
+				//Add Recipe
+				text = "INSERT INTO recipeslist (";
+				text += "id, ";
+				text += "name, ";
+				text += "servingsize, ";
+				text += "servingunit, ";
+				text += "notes, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + recipe.id + "', ";
+				text += "'" + recipe.name + "', ";
+				text += "'" + recipe.servingSize + "', ";
+				text += "'" + recipe.servingUnit + "', ";
+				text += "'" + recipe.notes + "', ";
+				text += recipe.timestamp + ")";
+				insertRequest.text = text;
+				insertRequest.execute();
+				
+				//Add Foods
+				for (var i:int = 0; i < recipe.foods.length; i++) 
+				{
+					var food:Food = recipe.foods[i];
+					text = "INSERT INTO recipesfoods (";
+					text += "recipeid, ";
+					text += "foodid, ";
+					text += "name, ";
+					text += "brand, ";
+					text += "proteins, ";
+					text += "carbs, ";
+					text += "fiber, ";
+					text += "substractfiber, ";
+					text += "fats, ";
+					text += "calories, ";
+					text += "servingsize, ";
+					text += "servingunit, ";
+					text += "link, ";
+					text += "barcode, ";
+					text += "source, ";
+					text += "notes, ";
+					text += "lastmodifiedtimestamp) ";
+					text += "VALUES (";
+					text += "'" + recipe.id + "', ";
+					text += "'" + food.id + "', ";
+					text += "'" + food.name.replace(/'/g, "''") + "', ";
+					text += "'" + food.brand.replace(/'/g, "''") + "', ";
+					text += "'" + food.proteins + "', ";
+					text += "'" + food.carbs + "', ";
+					text += "'" + food.fiber + "', ";
+					text += "'" + food.substractFiber + "', ";
+					text += "'" + food.fats + "', ";
+					text += "'" + food.kcal + "', ";
+					text += "'" + food.servingSize + "', ";
+					text += "'" + food.servingUnit.replace(/'/g, "''") + "', ";
+					text += "'" + food.link + "', ";
+					text += "'" + food.barcode + "', ";
+					text += "'" + food.source + "', ";
+					text += "'', ";
+					text += food.timestamp + ")";
+					
+					insertRequest.text = text;
+					insertRequest.execute();
+				}
+				
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_recipe_or_food_in_db', error.message + " - " + error.details);
 			}
 		}
 		
