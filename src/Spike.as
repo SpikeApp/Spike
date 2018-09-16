@@ -242,6 +242,7 @@ package
 				error.indexOf("StageTextTextEditor/render()") != -1 ||
 				error.indexOf("native extension class with your key") != -1 ||
 				error.indexOf("StackScreenNavigator/handleDragEnd()") != -1 ||
+				error.indexOf("nativePath()") != -1 ||
 				error.indexOf("Graphic/getBounds()") != -1
 			)
 			{
