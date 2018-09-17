@@ -17,7 +17,6 @@ package treatments.food.connectors
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import database.Database;
@@ -466,8 +465,6 @@ package treatments.food.connectors
 		{
 			var data:Array = [];
 			var recipessDBResult:Object = Database.getRecipesSynchronous(recipe, page);
-			
-			trace(ObjectUtil.toString(recipessDBResult));
 			
 			if (recipessDBResult != null && recipessDBResult.recipesList != null && recipessDBResult.recipesList is Array && recipessDBResult.totalRecords != null)
 			{
