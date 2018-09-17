@@ -28,17 +28,25 @@ package treatments.food
 			this.notes = notes;
 		}
 		
-		public function performCalculations():void
+		public function performCalculations(forServingSize:Number = Number.NaN):void
 		{
+			var calculationServingSize:Number = !isNaN(forServingSize) ? forServingSize : Number(servingSize);
+			
+			totalProteins = 0;
+			totalCarbs = 0;
+			totalFiber = 0;
+			totalFats = 0;
+			totalCalories = 0;
+			
 			//Add to totals
 			for (var i:int = 0; i < foods.length; i++) 
 			{
 				var food:Food = foods[i];
-				var foodProteins:Number = (Number(servingSize) / food.recipeServingSize) * food.proteins;
-				var foodCarbs:Number = (Number(servingSize) / food.recipeServingSize) * food.carbs;
-				var foodFiber:Number = (Number(servingSize) / food.recipeServingSize) * food.fiber;
-				var foodFats:Number = (Number(servingSize) / food.recipeServingSize) * food.fats;
-				var foodCalories:Number = (Number(servingSize) / food.recipeServingSize) * food.kcal;;
+				var foodProteins:Number = (calculationServingSize / food.recipeServingSize) * food.proteins;
+				var foodCarbs:Number = (calculationServingSize / food.recipeServingSize) * food.carbs;
+				var foodFiber:Number = (calculationServingSize / food.recipeServingSize) * food.fiber;
+				var foodFats:Number = (calculationServingSize / food.recipeServingSize) * food.fats;
+				var foodCalories:Number = (calculationServingSize / food.recipeServingSize) * food.kcal;;
 				
 				totalProteins += !isNaN(foodProteins) ? foodProteins : 0;
 				totalCarbs += !isNaN(foodCarbs) ? foodCarbs : 0;

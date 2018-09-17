@@ -664,15 +664,33 @@ package treatments.food.ui
 		
 		private function updateFoodDetails(amount:Number):void
 		{
-			var selectedFood:Food = activeFood;
-			
-			if (selectedFood != null && !isNaN(amount))
+			if (currentMode != RECIPES_MODE)
 			{
-				nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.carbs) * 100) / 100) + "g" : "N/A" );
-				nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fiber) * 100) / 100) + "g" : "N/A" );
-				nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.proteins) * 100) / 100) + "g" : "N/A" );
-				nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fats) * 100) / 100) + "g" : "N/A" );
-				nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.kcal) * 100) / 100) + "Kcal" : "N/A" );
+				var selectedFood:Food = activeFood;
+				
+				if (selectedFood != null && !isNaN(amount))
+				{
+					nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.carbs) * 100) / 100) + "g" : "N/A" );
+					nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fiber) * 100) / 100) + "g" : "N/A" );
+					nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.proteins) * 100) / 100) + "g" : "N/A" );
+					nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fats) * 100) / 100) + "g" : "N/A" );
+					nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.kcal) * 100) / 100) + "Kcal" : "N/A" );
+				}
+			}
+			else if (currentMode == RECIPES_MODE)
+			{
+				var selectedRecipe:Recipe = activeRecipe;
+				
+				if (selectedRecipe != null && !isNaN(amount))
+				{
+					selectedRecipe.performCalculations(amount);
+					
+					nutritionFacts.setCarbsValue(!isNaN(selectedRecipe.totalCarbs) ? selectedRecipe.totalCarbs + "g" : "N/A" );
+					nutritionFacts.setFiberValue(!isNaN(selectedRecipe.totalFiber) ? selectedRecipe.totalFiber + "g" : "N/A" );
+					nutritionFacts.setProteinsValue(!isNaN(selectedRecipe.totalProteins) ? selectedRecipe.totalProteins + "g" : "N/A" );
+					nutritionFacts.setFatsValue(!isNaN(selectedRecipe.totalFats) ? selectedRecipe.totalFats + "g" : "N/A" );
+					nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? selectedRecipe.totalCalories + "Kcal" : "N/A" );
+				}
 			}
 		}
 		
@@ -1479,8 +1497,10 @@ package treatments.food.ui
 		{
 			addFoodButton.isEnabled = foodAmountInput.text != null && foodAmountInput.text.length > 0 ? true : false;
 			
-			if(foodAmountInput != null && activeFood != null)
+			if(foodAmountInput != null && activeFood != null && currentMode != RECIPES_MODE)
 				updateFoodDetails(foodAmountInput.text != null && foodAmountInput.text.length > 0 ? Number(foodAmountInput.text) : activeFood.servingSize);
+			else if (foodAmountInput != null && activeRecipe != null && currentMode == RECIPES_MODE)
+				updateFoodDetails(foodAmountInput.text != null && foodAmountInput.text.length > 0 ? Number(foodAmountInput.text) : Number(activeRecipe.servingSize));
 		}
 		
 		private function onFirstPage(e:Event):void
@@ -1755,6 +1775,8 @@ package treatments.food.ui
 		public function clearData():void
 		{
 			cartList.length = 0;
+			activeFood = null;
+			activeRecipe = null;
 			basketList.dataProvider = new ArrayCollection( [] );
 			hidePreloader();
 			hideAddFavorite();
