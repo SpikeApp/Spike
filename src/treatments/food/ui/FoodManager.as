@@ -11,8 +11,6 @@ package treatments.food.ui
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.Database;
 	
 	import distriqtkey.DistriqtKey;
@@ -66,7 +64,6 @@ package treatments.food.ui
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
-	import utils.UniqueId;
 
 	public class FoodManager extends LayoutGroup
 	{
@@ -393,12 +390,12 @@ package treatments.food.ui
 			favoriteButton = new Button();
 			favoriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.favoriteOutlineTexture);
 			favoriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
-			favoriteButton.addEventListener(Event.TRIGGERED, onAddFoodAsFavorite);
+			favoriteButton.addEventListener(Event.TRIGGERED, onAddFoodOrRecipeAsFavorite);
 			
 			unfavoriteButton = new Button();
 			unfavoriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.favoriteTexture);
 			unfavoriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
-			unfavoriteButton.addEventListener(Event.TRIGGERED, onRemoveFoodAsFavorite);
+			unfavoriteButton.addEventListener(Event.TRIGGERED, onRemoveFoodOrRecipeAsFavorite);
 			
 			//Add Food Components
 			addFoodContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
@@ -603,8 +600,18 @@ package treatments.food.ui
 			
 			nutritionFacts.isRecipe();
 			
-			favoriteButton.removeFromParent();
-			unfavoriteButton.removeFromParent();
+			if (Database.isRecipeFavoriteSynchronous(selectedRecipe))
+			{
+				//Recipe is a favorite
+				foodDetailsTitleContainer.addChild(unfavoriteButton);
+				favoriteButton.removeFromParent();
+			}
+			else
+			{
+				//Recipe is not a favorite
+				foodDetailsTitleContainer.addChild(favoriteButton);
+				unfavoriteButton.removeFromParent();
+			}
 			
 			foodAmountInput.text = selectedRecipe.servingSize;
 			addFoodButton.isEnabled = true;
@@ -999,7 +1006,7 @@ package treatments.food.ui
 			}
 		}
 		
-		private function onAddFoodAsFavorite(e:Event):void
+		private function onAddFoodOrRecipeAsFavorite(e:Event):void
 		{
 			if (currentMode == FATSECRET_MODE)
 			{
@@ -1022,7 +1029,7 @@ package treatments.food.ui
 				return;
 			}
 			
-			if (activeFood != null)
+			if (activeFood != null && currentMode != RECIPES_MODE)
 			{
 				Database.insertFoodSynchronous(activeFood);
 				favoriteButton.removeFromParent();
@@ -1038,11 +1045,24 @@ package treatments.food.ui
 					FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
 				}
 			}
+			else if (activeRecipe != null && currentMode == RECIPES_MODE)
+			{
+				Database.insertRecipeSynchronous(activeRecipe);
+				favoriteButton.removeFromParent();
+				foodDetailsTitleContainer.addChild(unfavoriteButton);
+				
+				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
+				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+				
+				dontClearSearchResults = true;
+				
+				FoodAPIConnector.recipesSearch(searchInput.text, currentPage);
+			}
 		}
 		
-		private function onRemoveFoodAsFavorite(e:Event):void
+		private function onRemoveFoodOrRecipeAsFavorite(e:Event):void
 		{
-			if (activeFood != null)
+			if (activeFood != null && currentMode != RECIPES_MODE)
 			{
 				Database.deleteFoodSynchronous(activeFood);
 				unfavoriteButton.removeFromParent();
@@ -1057,6 +1077,19 @@ package treatments.food.ui
 					
 					FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
 				}
+			}
+			else if (activeRecipe != null && currentMode == RECIPES_MODE)
+			{
+				Database.deleteRecipeSynchronous(activeRecipe);
+				unfavoriteButton.removeFromParent();
+				foodDetailsTitleContainer.addChild(favoriteButton);
+				
+				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
+				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+				
+				dontClearSearchResults = true;
+				
+				FoodAPIConnector.recipesSearch(searchInput.text, currentPage);
 			}
 		}
 		
@@ -1114,7 +1147,11 @@ package treatments.food.ui
 			hidePreloader();
 			
 			//Clear/reset components
-			resetComponents();
+			if (!dontClearSearchResults)
+			{
+				resetComponents();
+				foodAmountInput.text = "";
+			}
 			
 			if (e.recipesList != null)
 			{

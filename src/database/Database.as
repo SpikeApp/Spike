@@ -2999,7 +2999,7 @@ package database
 		}
 		
 		/**
-		 * deletes a food in the database<br>
+		 * Deletes a food in the database<br>
 		 * dispatches info if anything goes wrong 
 		 */
 		public static function deleteFoodSynchronous(food:Food):void {
@@ -3261,6 +3261,73 @@ package database
 			} finally {
 				if (conn.connected) conn.close();
 				return returnObject;
+			}
+		}
+		
+		/**
+		 * Checks if a recipe is saved in Database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function isRecipeFavoriteSynchronous(recipe:Recipe):Boolean 
+		{
+			var recipeFound:Boolean = false;
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery +=	"SELECT id FROM recipeslist WHERE id = '" + recipe.id + "'";
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				
+				if (result.data != null && result.data is Array && result.data.length > 0)
+				{
+					recipeFound = true;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_recipe_is_favourite', error.message + " - " + error.details);
+				return recipeFound;
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_recipe_is_favourite',other.getStackTrace().toString());
+				return recipeFound;
+			} finally {
+				if (conn.connected) conn.close();
+				return recipeFound;
+			}
+		}
+		
+		/**
+		 * Deletes a recipe and all it's foods from the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteRecipeSynchronous(recipe:Recipe):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from recipeslist WHERE id = " + "'" + recipe.id + "'";
+				deleteRequest.execute();
+				deleteRequest.text = "DELETE from recipesfoods WHERE recipeid = " + "'" + recipe.id + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_recipe_in_db', error.message + " - " + error.details);
 			}
 		}
 		
