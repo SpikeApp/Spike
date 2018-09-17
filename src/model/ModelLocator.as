@@ -149,6 +149,7 @@ package model
 				
 				//To make sure the default language gets stored in the settings
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE,CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE));
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE,CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
 				
 				//Manage Rotation
 				var preventRotation:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
