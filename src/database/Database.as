@@ -25,11 +25,11 @@ package database
 	
 	import stats.BasicUserStats;
 	
-	import treatments.food.Food;
 	import treatments.Insulin;
 	import treatments.Profile;
-	import treatments.food.Recipe;
 	import treatments.Treatment;
+	import treatments.food.Food;
+	import treatments.food.Recipe;
 	
 	import utils.TimeSpan;
 	import utils.Trace;
@@ -3149,6 +3149,109 @@ package database
 					conn.close();
 				}
 				dispatchInformation('error_while_inserting_recipe_or_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Get recipes by name synchronously
+		 */
+		public static function getRecipesSynchronous(recipeName:String, page:int):Object {
+			
+			var returnObject:Object = {};
+			var recipesList:Array = [];
+			var recipeBatchAmount:int = 50;
+			var recipeOffSet:int = (page - 1) * recipeBatchAmount;
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery += "SELECT *, ";
+				sqlQuery += "(SELECT COUNT(id) FROM recipeslist WHERE name LIKE '%" + recipeName + "%') AS `totalRecords` ";
+				sqlQuery += "FROM recipeslist WHERE name LIKE '%" + recipeName + "%' ORDER BY name COLLATE NOCASE ASC LIMIT " + recipeBatchAmount + " OFFSET " + recipeOffSet;
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				
+				if (result.data != null && result.data is Array)
+				{
+					returnObject.totalRecords = result.data[0]["totalRecords"] != null ? int(result.data[0]["totalRecords"]) : 0;
+					
+					var foundRecipesList:Array = result.data;
+					var numRecipes:int = foundRecipesList.length;
+					
+					for (var i:int = 0; i < numRecipes; i++) 
+					{
+						var tempRecipe:Object = foundRecipesList[i] as Object;
+						var recipesFoods:Array = [];
+						
+						var recipe:Recipe = new Recipe
+						(
+							tempRecipe.id,
+							tempRecipe.name,
+							tempRecipe.servingsize,
+							tempRecipe.servingunit,
+							recipesFoods,
+							tempRecipe.lastmodifiedtimestamp,
+							tempRecipe.notes
+						);
+						
+						//Query database for foods belonging to this recipe
+						var recipeSQLQuery:String = "SELECT * FROM recipesfoods WHERE recipeid LIKE '%" + tempRecipe.id + "%' ORDER BY name COLLATE NOCASE ASC";
+						getRequest.text = recipeSQLQuery;
+						getRequest.execute();
+						var recipeResult:SQLResult = getRequest.getResult();
+						
+						if (recipeResult.data != null && recipeResult.data is Array)
+						{
+							var tempRecipesFoodsList:Array = recipeResult.data;
+							var numRecipeFoods:int = tempRecipesFoodsList.length;
+							
+							for (var j:int = 0; j < numRecipeFoods; j++) 
+							{
+								var tempFood:Object = tempRecipesFoodsList[j] as Object;
+								var food:Food = new Food
+								(
+									tempFood.foodid,
+									tempFood.name,
+									Number(tempFood.proteins),
+									Number(tempFood.carbs),
+									Number(tempFood.fats),
+									Number(tempFood.calories),
+									Number(tempFood.servingsize),
+									tempFood.servingunit,
+									tempFood.lastmodifiedtimestamp,
+									Number(tempFood.fiber),
+									tempFood.brand,
+									tempFood.link,
+									tempFood.source,
+									tempFood.barcode,
+									tempFood.substractfiber == "true" ? true : false
+								);
+								
+								recipesFoods.push(food);
+							}
+						}
+						
+						recipesList.push(recipe);
+					}
+					
+					returnObject.recipesList = recipesList;
+				}
+				
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_recipes', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_recipes',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnObject;
 			}
 		}
 		

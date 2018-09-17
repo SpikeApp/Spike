@@ -1,4 +1,4 @@
-package treatments.food.network
+package treatments.food.connectors
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.hurlant.crypto.Crypto;
@@ -17,6 +17,7 @@ package treatments.food.network
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
+	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import database.Database;
@@ -24,6 +25,7 @@ package treatments.food.network
 	import events.FoodEvent;
 	
 	import treatments.food.Food;
+	import treatments.food.Recipe;
 	
 	import utils.SpikeJSON;
 	import utils.UniqueId;
@@ -68,7 +70,7 @@ package treatments.food.network
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
 				return;
 			}
 			
@@ -110,7 +112,7 @@ package treatments.food.network
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
 				return;
 			}
 			
@@ -152,7 +154,7 @@ package treatments.food.network
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
 				return;
 			}
 			
@@ -193,7 +195,7 @@ package treatments.food.network
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
 				return;
 			}
 			
@@ -223,7 +225,7 @@ package treatments.food.network
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
 				return;
 			}
 			
@@ -244,7 +246,7 @@ package treatments.food.network
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
 				return;
 			}
 			
@@ -273,7 +275,7 @@ package treatments.food.network
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
 				return;
 			}
 			
@@ -366,6 +368,8 @@ package treatments.food.network
 							null,
 							data,
 							null,
+							null,
+							null,
 							allFavoritesProperties
 						)
 					);
@@ -445,6 +449,8 @@ package treatments.food.network
 							null,
 							data,
 							null,
+							null,
+							null,
 							{ pageNumber: 1, totalPages: 1, totalRecords: data.length }
 						)
 					);
@@ -454,6 +460,57 @@ package treatments.food.network
 			}
 			else
 				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_NOT_FOUND) );
+		}
+		
+		public static function recipesSearch(recipe:String, page:int):void
+		{
+			var data:Array = [];
+			var recipessDBResult:Object = Database.getRecipesSynchronous(recipe, page);
+			
+			trace(ObjectUtil.toString(recipessDBResult));
+			
+			if (recipessDBResult != null && recipessDBResult.recipesList != null && recipessDBResult.recipesList is Array && recipessDBResult.totalRecords != null)
+			{
+				var allRecipesProperties:Object = { pageNumber: page, totalPages: Math.ceil(recipessDBResult.totalRecords / 50), totalRecords: recipessDBResult.totalRecords }
+				var recipes:Array = recipessDBResult.recipesList;
+				
+				for (var i:int = 0; i < recipes.length; i++) 
+				{
+					var recipeObject:Recipe = recipes[i];
+					
+					data.push
+					(
+						{
+							label: recipeObject.name,
+							recipe: recipeObject
+						}
+					);
+				}
+				
+				//Notify Listeners
+				if (data.length > 0)
+				{
+					_instance.dispatchEvent
+						(
+							new FoodEvent
+							(
+								FoodEvent.RECIPES_SEARCH_RESULT,
+								false,
+								false,
+								null,
+								null,
+								null,
+								data,
+								null,
+								allRecipesProperties
+							)
+						);
+				}
+				else
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.RECIPE_NOT_FOUND) );
+			}
+			else
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.RECIPE_NOT_FOUND) );
 		}
 		
 		/**
@@ -759,6 +816,8 @@ package treatments.food.network
 										null,
 										data,
 										null,
+										null,
+										null,
 										FSSearchProperties
 									)
 								);
@@ -774,7 +833,7 @@ package treatments.food.network
 				} 
 				catch(error:Error) 
 				{
-					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
 				}
 			}
 			else if (currentMode == OPENFOODFACTS_MODE)
@@ -868,6 +927,8 @@ package treatments.food.network
 										null,
 										data,
 										null,
+										null,
+										null,
 										OFFSearchProperties
 									)
 								);
@@ -878,7 +939,7 @@ package treatments.food.network
 				} 
 				catch(error:Error) 
 				{
-					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
 				}
 			}
 			else if (currentMode == USDA_SEARCH_MODE)
@@ -948,6 +1009,8 @@ package treatments.food.network
 										null,
 										data,
 										null,
+										null,
+										null,
 										USDASearchProperties
 									)
 								);
@@ -963,7 +1026,7 @@ package treatments.food.network
 				} 
 				catch(error:Error) 
 				{
-					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
 				}
 			}
 			else if (currentMode == USDA_REPORT_MODE)
@@ -1052,7 +1115,7 @@ package treatments.food.network
 				} 
 				catch(error:Error) 
 				{
-					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
 				}
 			}
 			
@@ -1086,7 +1149,7 @@ package treatments.food.network
 			} 
 			catch(error:Error) 
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
 			}
 		}
 		
@@ -1099,7 +1162,7 @@ package treatments.food.network
 			
 			var errorMessage:String = e.text.indexOf("2032") == -1 ? e.text : "Error connecting to service!\nTry again later.";
 			
-			_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, errorMessage) );
+			_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, errorMessage) );
 		}
 		
 		/**

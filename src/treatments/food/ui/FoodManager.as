@@ -11,8 +11,6 @@ package treatments.food.ui
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.Database;
 	
 	import distriqtkey.DistriqtKey;
@@ -60,7 +58,7 @@ package treatments.food.ui
 	
 	import treatments.food.Food;
 	import treatments.food.Recipe;
-	import treatments.food.network.FoodAPIConnector;
+	import treatments.food.connectors.FoodAPIConnector;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -76,6 +74,7 @@ package treatments.food.ui
 		
 		//MODES
 		private static const FAVORITES_MODE:String = "favorites";
+		private static const RECIPES_MODE:String = "recipes";
 		private static const FATSECRET_MODE:String = "fatSecret";
 		private static const OPENFOODFACTS_MODE:String = "openFoodFacts";
 		private static const USDA_MODE:String = "usdaSearch";
@@ -186,6 +185,7 @@ package treatments.food.ui
 			(
 				[
 					{ label: "Favorites" },
+					{ label: "Recipes" },
 					{ label: "FatSecret" },
 					{ label: "Open Food Facts" },
 					{ label: "USDA" },
@@ -462,6 +462,14 @@ package treatments.food.ui
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 			
 			FoodAPIConnector.favoritesSearchFood("", currentPage);
+		}
+		
+		private function getInitialRecipes():void
+		{
+			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
+			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+			
+			FoodAPIConnector.recipesSearch("", currentPage);
 		}
 		
 		private function populateBasketList():void
@@ -773,6 +781,8 @@ package treatments.food.ui
 			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
+			FoodAPIConnector.instance.removeEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+			FoodAPIConnector.instance.removeEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
 			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
 		}
 		
@@ -833,21 +843,40 @@ package treatments.food.ui
 			if (databaseAPISelector.selectedIndex == 0)
 			{
 				currentMode = FAVORITES_MODE;
+				searchContainer.addChild(scanButton);
+				searchInput.prompt = "Search Food";
+				searchInput.text = "";
 				showAddFavorite();
+				getInitialFavorites();
 			}
-			else if (databaseAPISelector.selectedIndex == 1)
+			if (databaseAPISelector.selectedIndex == 1)
 			{
-				currentMode = FATSECRET_MODE;
+				currentMode = RECIPES_MODE;
+				searchContainer.removeChild(scanButton);
+				searchInput.prompt = "Search Recipe";
+				searchInput.text = "";
 				hideAddFavorite();
+				getInitialRecipes();
 			}
 			else if (databaseAPISelector.selectedIndex == 2)
 			{
-				currentMode = OPENFOODFACTS_MODE;
+				currentMode = FATSECRET_MODE;
+				searchContainer.addChild(scanButton);
+				searchInput.prompt = "Search Food";
 				hideAddFavorite();
 			}
 			else if (databaseAPISelector.selectedIndex == 3)
 			{
+				currentMode = OPENFOODFACTS_MODE;
+				searchContainer.addChild(scanButton);
+				searchInput.prompt = "Search Food";
+				hideAddFavorite();
+			}
+			else if (databaseAPISelector.selectedIndex == 4)
+			{
 				currentMode = USDA_MODE;
+				searchContainer.addChild(scanButton);
+				searchInput.prompt = "Search Food";
 				hideAddFavorite();
 			}
 		}
@@ -857,12 +886,19 @@ package treatments.food.ui
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
+			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
+			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
 			resetComponents(resetPagination == true || (e != null && e.currentTarget is Button));
 			
 			if (currentMode == FAVORITES_MODE)
 			{
 				hidePreloader();
 				FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
+			}
+			else if (currentMode == RECIPES_MODE)
+			{
+				hidePreloader();
+				FoodAPIConnector.recipesSearch(searchInput.text, currentPage);
 			}
 			else if (currentMode == FATSECRET_MODE)
 			{
@@ -1020,6 +1056,28 @@ package treatments.food.ui
 			
 			//Reset variables
 			dontClearSearchResults = false;
+		}
+		
+		private function onRecipesSearchResult(e:FoodEvent):void
+		{
+			//Reset variables
+			removeFoodEventListeners();
+			hidePreloader();
+			
+			//Clear/reset components
+			resetComponents();
+			
+			if (e.recipesList != null)
+			{
+				//Populate recipes list with results
+				foodResultsList.dataProvider = new ArrayCollection(e.recipesList);
+			}
+			
+			//Update pagination
+			if (e.searchProperties != null)
+			{
+				updatePagination(e.searchProperties);
+			}
 		}
 		
 		private function onFoodDetailsReceived(e:FoodEvent):void
