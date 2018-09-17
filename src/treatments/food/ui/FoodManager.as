@@ -1717,6 +1717,7 @@ package treatments.food.ui
 		
 		public function clearData():void
 		{
+			cartList.length = 0;
 			basketList.dataProvider = new ArrayCollection( [] );
 			hidePreloader();
 			hideAddFavorite();

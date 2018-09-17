@@ -709,6 +709,7 @@ package treatments
 			bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
 			
 			bwSuggestionLabel.text = "";
+			bwNotes.text = "";
 			
 			//Components Show/Hide
 			showHideCarbExtras();
