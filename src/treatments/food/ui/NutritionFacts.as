@@ -68,7 +68,7 @@ package treatments.food.ui
 			secondRowContainer.addChild(caloriesContainer);
 			
 			//Third Row
-			thirdRowContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.TOP);
+			thirdRowContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.RIGHT, VerticalAlign.TOP);
 			thirdRowContainer.width = width;
 			addChild(thirdRowContainer);
 			
@@ -173,6 +173,20 @@ package treatments.food.ui
 		public function setAmountComponent(component:DisplayObject):void
 		{
 			amountContainer.setComponent(component);
+		}
+		
+		public function isRecipe():void
+		{
+			thirdRowContainer.removeChildren();
+			thirdRowContainer.addChild(amountContainer);
+		}
+		
+		public function isFood():void
+		{
+			thirdRowContainer.removeChildren();
+			thirdRowContainer.addChild(linkContainer);
+			thirdRowContainer.addChild(subtractFiberContainer);
+			thirdRowContainer.addChild(amountContainer);
 		}
 	}
 }

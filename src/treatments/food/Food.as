@@ -17,8 +17,10 @@ package treatments.food
 		public var barcode:String;
 		public var timestamp:Number;
 		public var substractFiber:Boolean;
+		public var recipeServingSize:Number;
+		public var recipeServingUnit:String;
 		
-		public function Food(id:String, name:String, proteins:Number, carbs:Number, fats:Number, kcal:Number, servingSize:Number, servingUnit:String, timestamp:Number, fiber:Number = Number.NaN, brand:String = "", link:String = "", source:String = "", barcode:String = "", substractFiber:Boolean = false)
+		public function Food(id:String, name:String, proteins:Number, carbs:Number, fats:Number, kcal:Number, servingSize:Number, servingUnit:String, timestamp:Number, fiber:Number = Number.NaN, brand:String = "", link:String = "", source:String = "", barcode:String = "", substractFiber:Boolean = false, recipeServingSize:Number = 0, recipeServingUnit:String = "")
 		{
 			this.id = id;
 			this.name = name;
@@ -35,6 +37,8 @@ package treatments.food
 			this.source = source;
 			this.barcode = barcode;
 			this.substractFiber = substractFiber;
+			this.recipeServingSize = recipeServingSize;
+			this.recipeServingUnit = recipeServingUnit;
 		}
 	}
 }

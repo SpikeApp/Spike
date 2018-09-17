@@ -11,6 +11,8 @@ package treatments.food.ui
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.Database;
 	
 	import distriqtkey.DistriqtKey;
@@ -138,6 +140,8 @@ package treatments.food.ui
 
 		private var foodInserter:FoodInserter;
 
+		private var activeRecipe:Recipe;
+
 		public function FoodManager(width:Number, containerHeight:Number)
 		{
 			this.width = width;
@@ -228,7 +232,7 @@ package treatments.food.ui
 			foodResultsList.width = width;
 			foodResultsList.maxWidth = width;
 			foodResultsList.height = 150;
-			foodResultsList.addEventListener(Event.CHANGE, onFoodSelected);
+			foodResultsList.addEventListener(Event.CHANGE, onFoodOrRecipeSelected);
 			mainContentContainer.addChild(foodResultsList);
 			
 			foodResultsList.itemRendererFactory = function():IListItemRenderer 
@@ -408,7 +412,7 @@ package treatments.food.ui
 			addFoodButton = LayoutFactory.createButton("Add");
 			addFoodButton.paddingLeft = addFoodButton.paddingRight = 12;
 			addFoodButton.height = 32;
-			addFoodButton.addEventListener(starling.events.Event.TRIGGERED, onAddFood);
+			addFoodButton.addEventListener(starling.events.Event.TRIGGERED, onAddFoodOrRecipe);
 			addFoodContainer.addChild(addFoodButton);
 			
 			//Subtract Fiber Component
@@ -580,6 +584,32 @@ package treatments.food.ui
 		/**
 		 * Helper Functions
 		 */
+		private function displayRecipeDetails(selectedRecipe:Recipe):void
+		{
+			activeRecipe = selectedRecipe;
+			
+			if (foodDetailsContainer.parent == null)
+			{
+				var detailsIndex:int = mainContentContainer.getChildIndex(actionsContainer);
+				mainContentContainer.addChildAt(foodDetailsContainer, detailsIndex);
+			}
+			
+			nutritionFacts.setServingsValue(!isNaN(Number(selectedRecipe.servingSize)) ? selectedRecipe.servingSize + (selectedRecipe.servingUnit != null && selectedRecipe.servingUnit != "" && selectedRecipe.servingUnit != "undefined" ? selectedRecipe.servingUnit : "" ) : "N/A" );
+			nutritionFacts.setCarbsValue(!isNaN(selectedRecipe.totalCarbs) ? String(selectedRecipe.totalCarbs) + "g" : "N/A" );
+			nutritionFacts.setFiberValue(!isNaN(selectedRecipe.totalFiber) ? String(selectedRecipe.totalFiber) + "g" : "N/A" );
+			nutritionFacts.setProteinsValue(!isNaN(selectedRecipe.totalProteins) ? String(selectedRecipe.totalProteins) + "g" : "N/A" );
+			nutritionFacts.setFatsValue(!isNaN(selectedRecipe.totalFats) ? String(selectedRecipe.totalFats) + "g" : "N/A" );
+			nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? selectedRecipe.totalCalories + "Kcal" : "N/A" );
+			
+			nutritionFacts.isRecipe();
+			
+			favoriteButton.removeFromParent();
+			unfavoriteButton.removeFromParent();
+			
+			foodAmountInput.text = selectedRecipe.servingSize;
+			addFoodButton.isEnabled = true;
+		}
+		
 		private function displayFoodDetails(selectedFood:Food):void
 		{
 			onFoodAmountChanged(null);
@@ -598,6 +628,8 @@ package treatments.food.ui
 			nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(selectedFood.fats) + "g" : "N/A" );
 			nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? selectedFood.kcal + "Kcal" : "N/A" );
 			
+			nutritionFacts.isFood();
+			
 			if (selectedFood.link != null && selectedFood.link != "")
 			{
 				foodLink.isEnabled = true;
@@ -607,7 +639,7 @@ package treatments.food.ui
 				foodLink.isEnabled = false;
 			
 			substractFiberCheck.isEnabled = isNaN(selectedFood.fiber) ? false : true;
-			addFoodButton.isEnabled = isNaN(selectedFood.carbs) ? true : false;
+			addFoodButton.isEnabled = !isNaN(selectedFood.carbs) ? true : false;
 			
 			if (Database.isFoodFavoriteSynchronous(selectedFood))
 			{
@@ -917,22 +949,36 @@ package treatments.food.ui
 			}
 		}
 		
-		private function onFoodSelected(e:Event):void
+		private function onFoodOrRecipeSelected(e:Event):void
 		{
-			if (foodResultsList.selectedItem != null && foodResultsList.selectedItem.food != null)
+			if (foodResultsList.selectedItem != null)
 			{
 				foodAmountInput.text = "";
 				substractFiberCheck.isSelected = false;
 				removeFoodInserter();
 				
-				var selectedFood:Food = foodResultsList.selectedItem.food;
+				var selectedFood:Food;
+				var selectedRecipe:Recipe;
 				
 				if (currentMode == OPENFOODFACTS_MODE || currentMode == FAVORITES_MODE)
 				{
+					if (foodResultsList.selectedItem.food == null) return;
+					
+					selectedFood = foodResultsList.selectedItem.food;
 					displayFoodDetails(selectedFood);
+				}
+				else if (currentMode == RECIPES_MODE)
+				{
+					if (foodResultsList.selectedItem.recipe == null) return;
+					
+					selectedRecipe = foodResultsList.selectedItem.recipe;
+					displayRecipeDetails(selectedRecipe);
 				}
 				else if (currentMode == FATSECRET_MODE)
 				{
+					if (foodResultsList.selectedItem.food == null) return;
+					
+					selectedFood = foodResultsList.selectedItem.food;
 					showPreloader();
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
@@ -941,6 +987,9 @@ package treatments.food.ui
 				}
 				else if (currentMode == USDA_MODE)
 				{
+					if (foodResultsList.selectedItem.food == null) return;
+					
+					selectedFood = foodResultsList.selectedItem.food;
 					showPreloader();
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
@@ -1038,9 +1087,9 @@ package treatments.food.ui
 						var food:Food = visibleFoods[i].food;
 						if (food != null && food.id == activeFood.id)
 						{
-							foodResultsList.removeEventListener(Event.CHANGE, onFoodSelected);
+							foodResultsList.removeEventListener(Event.CHANGE, onFoodOrRecipeSelected);
 							foodResultsList.selectedIndex = i;
-							foodResultsList.addEventListener(Event.CHANGE, onFoodSelected);
+							foodResultsList.addEventListener(Event.CHANGE, onFoodOrRecipeSelected);
 							break;
 						}
 					}
@@ -1277,7 +1326,7 @@ package treatments.food.ui
 						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.carbs) * 100) / 100,
 						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fats) * 100) / 100,
 						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.kcal) * 100) / 100,
-						cartFood.servingSize,
+						cartItem.quantity,
 						cartItem.servingUnit,
 						new Date().valueOf(),
 						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fiber) * 100) / 100,
@@ -1285,7 +1334,9 @@ package treatments.food.ui
 						cartFood.link,
 						cartFood.source,
 						cartFood.barcode,
-						cartItem.substractFiber
+						cartItem.substractFiber,
+						Number(recipeServingSize),
+						recipeServingUnit
 					);
 					
 					recipeFoods.push(food);
@@ -1419,11 +1470,29 @@ package treatments.food.ui
 			onPerformSearch(null, false);
 		}
 		
-		private function onAddFood(e:starling.events.Event):void
+		private function onAddFoodOrRecipe(e:starling.events.Event):void
 		{
 			addFoodButton.isEnabled = false;
 			
-			cartList.push( { food:activeFood, quantity: Number(foodAmountInput.text), servingUnit: activeFood.servingUnit, substractFiber: substractFiberCheck.isSelected } );
+			if (currentMode != RECIPES_MODE)
+			{
+				if (activeFood == null) return;
+				
+				cartList.push( { food:activeFood, quantity: Number(foodAmountInput.text), servingUnit: activeFood.servingUnit, substractFiber: substractFiberCheck.isSelected } );
+			}
+			else
+			{
+				for (var i:int = 0; i < activeRecipe.foods.length; i++) 
+				{
+					var recipeFood:Food = activeRecipe.foods[i];
+					
+					if (recipeFood == null) continue;
+					
+					cartList.push( { food:recipeFood, quantity: (Number(foodAmountInput.text) / Number(activeRecipe.servingSize)) * recipeFood.servingSize, servingUnit: recipeFood.servingUnit, substractFiber: recipeFood.substractFiber } );
+				}
+				
+			}
+			
 			basketAmountLabel.text = String(cartList.length);
 			jump(basketSprite, 0.4);
 			
@@ -1644,6 +1713,33 @@ package treatments.food.ui
 			resetComponents();
 			resetComponentsExtended();
 			dispatchEventWith(starling.events.Event.COMPLETE);
+		}
+		
+		public function clearData():void
+		{
+			basketList.dataProvider = new ArrayCollection( [] );
+			hidePreloader();
+			hideAddFavorite();
+			showAddFavorite();
+			removeFoodEventListeners();
+			removeFoodInserter();
+			databaseAPISelector.removeEventListener(starling.events.Event.CHANGE, onAPIChanged);
+			databaseAPISelector.selectedIndex = 0;
+			databaseAPISelector.addEventListener(starling.events.Event.CHANGE, onAPIChanged);
+			foodAmountInput.text = "";
+			searchInput.prompt = "Search Food";
+			searchInput.text = "";
+			foodResultsList.dataProvider = new ArrayCollection( [] );
+			firstPageButton.isEnabled = false;
+			previousPageButton.isEnabled = false;
+			paginationLabel.text = "1/1"
+			paginationLabel.isEnabled = false;
+			nextPageButton.isEnabled = false;
+			lastPageButton.isEnabled = false;
+			basketAmountLabel.text = "0";
+			foodAmountInput.text = "";
+			currentMode = FAVORITES_MODE;
+			getInitialFavorites();
 		}
 	}
 }

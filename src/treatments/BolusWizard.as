@@ -150,7 +150,7 @@ package treatments
 		private static var bwFoodLoaderButton:Button;
 		private static var bwTotalScrollContainer:ScrollContainer;
 
-		private static var bwFoodSearcher:FoodManager;
+		private static var bwFoodManager:FoodManager;
 		
 		public function BolusWizard()
 		{
@@ -267,7 +267,7 @@ package treatments
 			bwFoodsContainer.addChild(bwFoodsLabel);
 			
 			bwFoodLoaderButton = LayoutFactory.createButton("");
-			bwFoodLoaderButton.addEventListener(Event.TRIGGERED, onShowFoodSearcher);
+			bwFoodLoaderButton.addEventListener(Event.TRIGGERED, onShowFoodManager);
 			bwFoodsContainer.addChild(bwFoodLoaderButton);
 			
 			//Carbs Offset
@@ -541,6 +541,7 @@ package treatments
 			bwCarbsContainer.validate();
 			bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
 			bwFoodsLabel.text = "Foods";
+			bwFoodsLabel.validate();
 			bwFoodLoaderButton.label = "Load Foods";
 			bwFoodLoaderButton.validate();
 			bwFoodsContainer.validate();
@@ -1095,15 +1096,15 @@ package treatments
 			}
 		}
 		
-		private static function onShowFoodSearcher(e:Event):void
+		private static function onShowFoodManager(e:Event):void
 		{
 			if (bwWizardScrollContainer != null)
 			{
-				if (bwFoodSearcher == null)
+				if (bwFoodManager == null)
 				{
-					bwFoodSearcher = new FoodManager(contentWidth, bolusWizardCallout.height - bolusWizardCallout.paddingTop - bolusWizardCallout.paddingBottom - 15);
-					bwFoodSearcher.addEventListener(Event.COMPLETE, onFoodManagerCompleted);
-					bwTotalScrollContainer.addChild(bwFoodSearcher);
+					bwFoodManager = new FoodManager(contentWidth, bolusWizardCallout.height - bolusWizardCallout.paddingTop - bolusWizardCallout.paddingBottom - 15);
+					bwFoodManager.addEventListener(Event.COMPLETE, onFoodManagerCompleted);
+					bwTotalScrollContainer.addChild(bwFoodManager);
 				}
 				
 				bwTotalScrollContainer.scrollToPageIndex( 1, bwTotalScrollContainer.verticalPageIndex );
@@ -1116,7 +1117,7 @@ package treatments
 			{
 				//Calculate all food carbs the user has added to the food manager
 				var totalCarbs:Number = 0;
-				var foodsList:Array = bwFoodSearcher.cartList;
+				var foodsList:Array = bwFoodManager.cartList;
 				var addedFoods:int = 0;
 				var addedFoodNames:Array = [];
 				
@@ -1154,12 +1155,11 @@ package treatments
 				//Update foods label
 				if (addedFoods > 0)
 				{
-					bwCarbsLabel.text = "Carbs" + " " + "(" + addedFoods + ")";
-					bwCarbsLabel.validate();
-					bwCarbsStepper.validate();
-					bwCarbsLabelContainer.validate();
-					bwCarbsContainer.validate();
-					bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
+					bwFoodsLabel.text = "Foods" + " " + "(" + addedFoods + ")";
+					bwFoodsLabel.validate();
+					bwFoodLoaderButton.validate();
+					bwFoodsContainer.validate();
+					bwFoodLoaderButton.x = contentWidth - bwFoodLoaderButton.width;
 					bwNotes.text = addedFoodNames.join(", ");
 				}
 				
@@ -1533,6 +1533,11 @@ package treatments
 		{
 			if (bolusWizardCallout != null)
 			{
+				if (bwFoodManager != null)
+				{
+					bwFoodManager.clearData();
+				}
+				
 				bolusWizardCallout.close(false);
 				clearTimeout(calculationTimeout);
 			}
@@ -1540,7 +1545,7 @@ package treatments
 		
 		private static function addBolusWizardTreatment(e:Event):void
 		{
-			
+			closeCallout(null);
 		}
 	}
 }

@@ -221,6 +221,8 @@ package database
 			"calories STRING, " +
 			"servingsize STRING, " +
 			"servingunit STRING, " +
+			"recipeservingsize STRING, " +
+			"recipeservingunit STRING, " +
 			"link STRING, " +
 			"barcode STRING, " +
 			"source STRING, " +
@@ -3090,7 +3092,7 @@ package database
 				text += "'" + recipe.id + "', ";
 				text += "'" + recipe.name + "', ";
 				text += "'" + recipe.servingSize + "', ";
-				text += "'" + recipe.servingUnit + "', ";
+				text += "'" + recipe.servingUnit.replace(/'/g, "''") + "', ";
 				text += "'" + recipe.notes + "', ";
 				text += recipe.timestamp + ")";
 				insertRequest.text = text;
@@ -3113,6 +3115,8 @@ package database
 					text += "calories, ";
 					text += "servingsize, ";
 					text += "servingunit, ";
+					text += "recipeservingsize, ";
+					text += "recipeservingunit, ";
 					text += "link, ";
 					text += "barcode, ";
 					text += "source, ";
@@ -3131,6 +3135,8 @@ package database
 					text += "'" + food.kcal + "', ";
 					text += "'" + food.servingSize + "', ";
 					text += "'" + food.servingUnit.replace(/'/g, "''") + "', ";
+					text += "'" + recipe.servingSize + "', ";
+					text += "'" + recipe.servingUnit.replace(/'/g, "''") + "', ";
 					text += "'" + food.link + "', ";
 					text += "'" + food.barcode + "', ";
 					text += "'" + food.source + "', ";
@@ -3229,13 +3235,16 @@ package database
 									tempFood.link,
 									tempFood.source,
 									tempFood.barcode,
-									tempFood.substractfiber == "true" ? true : false
+									tempFood.substractfiber == "true" ? true : false,
+									Number(tempFood.recipeservingsize),
+									tempFood.recipeservingunit
 								);
 								
 								recipesFoods.push(food);
 							}
 						}
 						
+						recipe.performCalculations();
 						recipesList.push(recipe);
 					}
 					
