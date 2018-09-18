@@ -33,6 +33,9 @@
 		961EB788208946B3005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB787208946B3005F0E9F /* Images.xcassets */; };
 		961EB78E2089488B005F0E9F /* PushNotificationPayload.apns in Resources */ = {isa = PBXBuildFile; fileRef = 961EB78C2089488B005F0E9F /* PushNotificationPayload.apns */; };
 		961EB79420894D59005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB79320894D59005F0E9F /* Images.xcassets */; };
+		964061D72151C2F00068A061 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 964061D62151C2F00068A061 /* HealthKit.framework */; };
+		964061D82151C2F90068A061 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 964061D62151C2F00068A061 /* HealthKit.framework */; };
+		964061D92151C2FF0068A061 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 964061D62151C2F00068A061 /* HealthKit.framework */; };
 		9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C510155202806D600872D37 /* NotificationCenter.framework */; };
 		9654C7F62087C35F0021B684 /* TodayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9654C7F52087C35F0021B684 /* TodayViewController.swift */; };
 		9654C7F92087C35F0021B684 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9654C7F72087C35F0021B684 /* MainInterface.storyboard */; };
@@ -42,9 +45,6 @@
 		96728E612096D27700ADFFDE /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96728E602096D27700ADFFDE /* ComplicationController.swift */; };
 		96A54793212C8AFB00FDE960 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96A54792212C8AFB00FDE960 /* CloudKit.framework */; };
 		96B9CB5520969B9300782124 /* FSInterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B9CB5420969B9300782124 /* FSInterfaceController.swift */; };
-		96C6A5BD21477821004B5AB8 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C6A5BC21477821004B5AB8 /* HealthKit.framework */; };
-		96C6A5BE2147782A004B5AB8 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C6A5BC21477821004B5AB8 /* HealthKit.framework */; };
-		96C6A5BF21477830004B5AB8 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C6A5BC21477821004B5AB8 /* HealthKit.framework */; };
 		96D5EE94208F7B3900308288 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
 		A9F0B0D10FA7E63562B1D19D /* Pods_SpikeTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */; };
 		DE6AF41AC6B6BE56B457596D /* Pods_SpikeUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4F850F9FEC9EE7AB5D05EB4 /* Pods_SpikeUITests.framework */; };
@@ -181,6 +181,7 @@
 		961EB78F208949B5005F0E9F /* watch Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "watch Extension.entitlements"; sourceTree = "<group>"; };
 		961EB790208949E2005F0E9F /* watch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = watch.entitlements; sourceTree = "<group>"; };
 		961EB79320894D59005F0E9F /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		964061D62151C2F00068A061 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		9654C7F22087C35F0021B684 /* fswidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = fswidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9654C7F52087C35F0021B684 /* TodayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewController.swift; sourceTree = "<group>"; };
 		9654C7F82087C35F0021B684 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
@@ -190,7 +191,6 @@
 		96728E602096D27700ADFFDE /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
 		96A54792212C8AFB00FDE960 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		96B9CB5420969B9300782124 /* FSInterfaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FSInterfaceController.swift; sourceTree = "<group>"; };
-		96C6A5BC21477821004B5AB8 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		F4F850F9FEC9EE7AB5D05EB4 /* Pods_SpikeUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SpikeUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Spike.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -200,7 +200,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				96C6A5BD21477821004B5AB8 /* HealthKit.framework in Frameworks */,
+				964061D92151C2FF0068A061 /* HealthKit.framework in Frameworks */,
 				96A54793212C8AFB00FDE960 /* CloudKit.framework in Frameworks */,
 				89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */,
 			);
@@ -226,7 +226,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				96C6A5BE2147782A004B5AB8 /* HealthKit.framework in Frameworks */,
+				964061D82151C2F90068A061 /* HealthKit.framework in Frameworks */,
 				1C510156202806D600872D37 /* NotificationCenter.framework in Frameworks */,
 				677BE12171EF0760555A41F4 /* Pods_widget.framework in Frameworks */,
 			);
@@ -243,7 +243,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				96C6A5BF21477830004B5AB8 /* HealthKit.framework in Frameworks */,
+				964061D72151C2F00068A061 /* HealthKit.framework in Frameworks */,
 				9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */,
 				9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */,
 			);
@@ -333,7 +333,7 @@
 		1C510154202806D600872D37 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				96C6A5BC21477821004B5AB8 /* HealthKit.framework */,
+				964061D62151C2F00068A061 /* HealthKit.framework */,
 				96A54792212C8AFB00FDE960 /* CloudKit.framework */,
 				9654C8022087C8790021B684 /* Pods_widget.framework */,
 				1C510155202806D600872D37 /* NotificationCenter.framework */,
@@ -559,7 +559,6 @@
 				TargetAttributes = {
 					1C51011D202806B400872D37 = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -587,7 +586,6 @@
 					};
 					1C510152202806D600872D37 = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -599,7 +597,6 @@
 					};
 					961EB75E2089460D005F0E9F = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -608,7 +605,6 @@
 					};
 					961EB76A2089460D005F0E9F = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -617,7 +613,6 @@
 					};
 					9654C7F12087C35F0021B684 = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -1168,6 +1163,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Spike/Spike.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = Spike/Info.plist;
@@ -1178,6 +1174,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1190,6 +1187,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Spike/Spike.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = Spike/Info.plist;
@@ -1200,6 +1198,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1296,6 +1295,7 @@
 			baseConfigurationReference = 25546BC7F0898ACECC757489 /* Pods-widget.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = widget/Info.plist;
@@ -1307,6 +1307,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = ./Spike/Bridge.h;
 				SWIFT_VERSION = 4.0;
@@ -1319,6 +1320,7 @@
 			baseConfigurationReference = 20BF87FC35601698DA9C39BE /* Pods-widget.release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = widget/Info.plist;
@@ -1330,6 +1332,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = ./Spike/Bridge.h;
 				SWIFT_VERSION = 4.0;
@@ -1343,12 +1346,14 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = watch/watch.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				IBSC_MODULE = watch_Extension;
 				INFOPLIST_FILE = watch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -1363,12 +1368,14 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = watch/watch.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				IBSC_MODULE = watch_Extension;
 				INFOPLIST_FILE = watch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -1382,6 +1389,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CODE_SIGN_ENTITLEMENTS = "watch Extension/watch Extension.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = "watch Extension/Info.plist";
@@ -1392,6 +1400,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -1405,6 +1414,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CODE_SIGN_ENTITLEMENTS = "watch Extension/watch Extension.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = "watch Extension/Info.plist";
@@ -1415,6 +1425,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -1427,6 +1438,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = fswidget/Info.plist;
@@ -1438,6 +1450,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.fswidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 4.0;
@@ -1449,6 +1462,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = fswidget/Info.plist;
@@ -1460,6 +1474,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.fswidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 4.0;

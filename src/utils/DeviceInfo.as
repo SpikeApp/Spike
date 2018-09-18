@@ -180,6 +180,8 @@ package utils
 				{
 					deviceModel = "iPad Mini 4";
 				}
+				else
+					deviceModel = "iPhone X?";
 			}
 			
 			return deviceModel;
@@ -212,7 +214,7 @@ package utils
 					else if (deviceSpecs.indexOf("iPad2,5") != -1 || deviceSpecs.indexOf("iPad2,6") != -1 || deviceSpecs.indexOf("iPad2,7") != -1 || deviceSpecs.indexOf("iPad4,4") != -1 || deviceSpecs.indexOf("iPad4,5") != -1 || deviceSpecs.indexOf("iPad4,6") != -1 || deviceSpecs.indexOf("iPad4,7") != -1 || deviceSpecs.indexOf("iPad4,8") != -1 || deviceSpecs.indexOf("iPad4,9") != -1 || deviceSpecs.indexOf("iPad5,1") != -1 || deviceSpecs.indexOf("iPad5,2") != -1)
 						deviceType = IPAD_MINI_1_2_3_4;
 					else
-						deviceType = IPHONE_6_6S_7_8 //Default
+						deviceType = IPHONE_X_Xs //Default
 				}
 				else
 				{
@@ -237,7 +239,7 @@ package utils
 					else if (hypotenuse == 12.9)
 						deviceType = IPAD_PRO_129;
 					else
-						deviceType = IPHONE_6_6S_7_8 //Default
+						deviceType = IPHONE_X_Xs //Default
 				}
 			}
 			
