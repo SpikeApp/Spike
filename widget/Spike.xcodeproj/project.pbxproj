@@ -31,7 +31,6 @@
 		961EB77C2089460D005F0E9F /* watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 961EB75F2089460D005F0E9F /* watch.app */; };
 		961EB786208946A1005F0E9F /* GlanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 961EB785208946A1005F0E9F /* GlanceController.swift */; };
 		961EB788208946B3005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB787208946B3005F0E9F /* Images.xcassets */; };
-		961EB78D2089488B005F0E9F /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 961EB78B2089488B005F0E9F /* Info.plist */; };
 		961EB78E2089488B005F0E9F /* PushNotificationPayload.apns in Resources */ = {isa = PBXBuildFile; fileRef = 961EB78C2089488B005F0E9F /* PushNotificationPayload.apns */; };
 		961EB79420894D59005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB79320894D59005F0E9F /* Images.xcassets */; };
 		9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C510155202806D600872D37 /* NotificationCenter.framework */; };
@@ -704,7 +703,6 @@
 				961EB7772089460D005F0E9F /* Assets.xcassets in Resources */,
 				961EB78E2089488B005F0E9F /* PushNotificationPayload.apns in Resources */,
 				961EB788208946B3005F0E9F /* Images.xcassets in Resources */,
-				961EB78D2089488B005F0E9F /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

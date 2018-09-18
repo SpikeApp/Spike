@@ -250,7 +250,7 @@ package ui.screens.display.settings.alarms
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"enabled"), accessory: alertEnabled },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"name_label"), accessory: alertName },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"snooze_notification_label"), accessory: enableSnoozeInNotification },
-					{ label: Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_label") : ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_iphone_x_label"), accessory: snoozeMinutes },
+					{ label: Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_label") : ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_iphone_x_label"), accessory: snoozeMinutes },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"repeat_label"), accessory: enableRepeat },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"sound_label"), accessory: soundList },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"vibration_label"), accessory: enableVibration },
@@ -264,7 +264,7 @@ package ui.screens.display.settings.alarms
 				item.labelField = "label";
 				item.accessoryField = "accessory";
 				item.paddingRight = 0;
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
 					item.paddingRight = -2;
 				item.accessoryOffsetX = -10;
 				item.accessoryLabelProperties.wordWrap = true;

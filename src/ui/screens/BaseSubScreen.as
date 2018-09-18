@@ -76,7 +76,7 @@ package ui.screens
 		
 		protected function setupHeaderSize():void
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
 			{
 				if (this.header != null)
 				{

@@ -147,7 +147,7 @@ package ui.popups
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;

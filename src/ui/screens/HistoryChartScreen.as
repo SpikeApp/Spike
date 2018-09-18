@@ -437,7 +437,7 @@ package ui.screens
 		private function createChart():void
 		{	
 			//When in landscape mode and device is iPhone X, make the header height same as oher models, we don't need to worry about the extra status bar size
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
 			{
 				if (Constants.isPortrait)
 				{
@@ -460,7 +460,7 @@ package ui.screens
 			Constants.isPortrait ? glucoseChartTopPadding = 7 : glucoseChartTopPadding = 0;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4) glucoseChartTopPadding = 0;
 			if (glucoseChartTopPadding == 0) availableScreenHeight += 7;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
 				availableScreenHeight -= 15; //To avoid lower notch
 			
 			mainChartHeight = availableScreenHeight;
@@ -479,7 +479,7 @@ package ui.screens
 			//Create and setup glucose chart
 			var chartWidth:Number = Constants.stageWidth;
 			var chartX:Number = 0;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 			{
 				chartWidth -= 40;
 				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
@@ -524,7 +524,7 @@ package ui.screens
 				
 				var chartWidth:Number = Constants.stageWidth;
 				var chartX:Number = 0;
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 				{
 					chartWidth -= 40;
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
@@ -687,7 +687,7 @@ package ui.screens
 			var sectionMultiplier:Number = 3;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				sectionMultiplier = 2.5;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
 				sectionMultiplier = 3.1;
 			
 			pieChartHeight = (sectionMultiplier * dummyPieChartStatsSection.title.height) + (sectionMultiplier * dummyPieChartStatsSection.message.height);

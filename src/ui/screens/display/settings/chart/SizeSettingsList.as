@@ -70,7 +70,7 @@ package ui.screens.display.settings.chart
 			glucoseDisplayFontSize.maximum = 100;
 			glucoseDisplayFontSize.value = 50;
 			glucoseDisplayFontSize.step = 50;
-			glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? glucoseMarkerRadius.width : 100;
 			if (!Constants.isPortrait)
 				glucoseDisplayFontSize.width += 100;
 			glucoseDisplayFontSize.pivotX = 10;
@@ -80,7 +80,7 @@ package ui.screens.display.settings.chart
 			timeAgoDisplayFontSize.maximum = 100;
 			timeAgoDisplayFontSize.value = 50;
 			timeAgoDisplayFontSize.step = 50;
-			timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? glucoseMarkerRadius.width : 100;
 			if (!Constants.isPortrait)
 				timeAgoDisplayFontSize.width += 100;
 			timeAgoDisplayFontSize.pivotX = 10;
@@ -90,7 +90,7 @@ package ui.screens.display.settings.chart
 			axisFontSize.maximum = 100;
 			axisFontSize.value = 50;
 			axisFontSize.step = 50;
-			axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? glucoseMarkerRadius.width : 100;
 			if (!Constants.isPortrait)
 				axisFontSize.width += 100;
 			axisFontSize.pivotX = 10;
@@ -201,21 +201,21 @@ package ui.screens.display.settings.chart
 			{
 				if (glucoseDisplayFontSize != null)
 				{
-					glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? glucoseMarkerRadius.width : 100;
 					if (!Constants.isPortrait)
 						glucoseDisplayFontSize.width += 100;
 				}
 				
 				if (timeAgoDisplayFontSize != null)
 				{
-					timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? glucoseMarkerRadius.width : 100;
 					if (!Constants.isPortrait)
 						timeAgoDisplayFontSize.width += 100;
 				}
 				
 				if (axisFontSize != null)
 				{
-					axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? glucoseMarkerRadius.width : 100;
 					if (!Constants.isPortrait)
 						axisFontSize.width += 100;
 				}

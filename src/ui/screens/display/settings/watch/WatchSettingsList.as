@@ -568,7 +568,7 @@ package ui.screens.display.settings.watch
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;
@@ -707,7 +707,7 @@ package ui.screens.display.settings.watch
 			
 			if (instructionsTitleLabel != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 					instructionsTitleLabel.width = width - 40;
 				else
 					instructionsTitleLabel.width = width - 20;
@@ -715,7 +715,7 @@ package ui.screens.display.settings.watch
 			
 			if (instructionsDescriptionLabel != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 					instructionsDescriptionLabel.width = width - 40;
 				else
 					instructionsDescriptionLabel.width = width - 20;

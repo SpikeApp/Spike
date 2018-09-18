@@ -236,7 +236,7 @@ package ui.screens.display.readings
 				itemRenderer.iconOffsetX = 10;
 				itemRenderer.labelField = "label";
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 						itemRenderer.paddingLeft = 30;

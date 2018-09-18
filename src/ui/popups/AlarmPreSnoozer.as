@@ -179,7 +179,7 @@ package ui.popups
 			}
 			snoozeStatusLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER);
 			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
 			{
 				cancelButton.paddingLeft = cancelButton.paddingRight = 10;
 				preSnoozeButton.paddingLeft = preSnoozeButton.paddingRight = 10;
@@ -199,7 +199,7 @@ package ui.popups
 			snoozeCallout.content = mainContainer;
 			snoozeCallout.origin = positionHelper;
 			snoozeCallout.minWidth = 240;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
 				snoozeCallout.paddingLeft = snoozeCallout.paddingRight = 12;
 		}
 		
@@ -218,7 +218,7 @@ package ui.popups
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;

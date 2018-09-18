@@ -125,7 +125,7 @@ package ui.screens
 		 */
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			if (Constants.isPortrait || Constants.deviceModel != DeviceInfo.IPHONE_X)
+			if (Constants.isPortrait || Constants.deviceModel != DeviceInfo.IPHONE_X_Xs)
 			{
 				screenRenderer.x = 0;
 				licenseContentLabel.width = Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2);
@@ -136,7 +136,7 @@ package ui.screens
 			}
 			else
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{

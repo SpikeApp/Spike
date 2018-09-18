@@ -229,7 +229,7 @@ package ui.screens.display.treatments
 				}
 				itemRenderer.iconOffsetX = 0;
 				itemRenderer.paddingRight = -25;
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 						itemRenderer.paddingLeft = 30;

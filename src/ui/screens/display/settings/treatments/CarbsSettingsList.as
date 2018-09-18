@@ -240,7 +240,7 @@ package ui.screens.display.settings.treatments
 			
 			if (carbAbsorptionRateDescription != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 					carbAbsorptionRateDescription.width = width - 30;
 				else
 					carbAbsorptionRateDescription.width = width;
@@ -248,7 +248,7 @@ package ui.screens.display.settings.treatments
 			
 			if (carbAbsorptionTimeDescription != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
 					carbAbsorptionTimeDescription.width = width - 30;
 				else
 					carbAbsorptionTimeDescription.width = width;
