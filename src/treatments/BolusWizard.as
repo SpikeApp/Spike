@@ -1065,7 +1065,7 @@ package treatments
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;
@@ -1725,6 +1725,8 @@ package treatments
 			
 			function addTreatment():void
 			{
+				var now:Number = new Date().valueOf();
+				
 				if ((suggestedInsulin > 0 && bwCarbsStepper.value > 0) || (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value > 0))
 				{
 					if (!canAddInsulin)
@@ -1737,39 +1739,41 @@ package treatments
 				}
 				else if (suggestedInsulin > 0 && suggestedCarbs <= 0 && bwCarbsStepper.value <= 0)
 				{
+					//Bolus Treatment
+					
 					if (!canAddInsulin)
 					{
 						displayInsulinRequiredAlert();
 						return;
 					}
 					
-					/*var treatment:Treatment = new Treatment
+					var treatment:Treatment = new Treatment
 					(
 						Treatment.TYPE_BOLUS,
-						new Date().valueOf(),
-						insulinValue,
-						insulinList.selectedItem.id,
+						now,
+						suggestedInsulin,
+						bwInsulinTypePicker.selectedItem.id,
 						0,
 						0,
-						getEstimatedGlucose(treatmentTime.value.valueOf()),
-						notes.text
+						TreatmentsManager.getEstimatedGlucose(now),
+						bwNotes.text
 					);
 					
 					//Add to list
-					treatmentsList.push(treatment);
-					treatmentsMap[treatment.ID] = treatment;
+					TreatmentsManager.treatmentsList.push(treatment);
+					TreatmentsManager.treatmentsMap[treatment.ID] = treatment;
 					
-					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+					Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatment.type);
 					
 					//Notify listeners
-					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 					
 					//Insert in DB
 					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						Database.insertTreatmentSynchronous(treatment);
 					
 					//Upload to Nightscout
-					NightscoutService.uploadTreatment(treatment);*/
+					NightscoutService.uploadTreatment(treatment);
 				}
 				else if (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value <= 0)
 				{

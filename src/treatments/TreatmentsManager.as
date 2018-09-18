@@ -70,7 +70,7 @@ package treatments
 		
 		/* Internal objects */
 		public static var treatmentsList:Array = [];
-		private static var treatmentsMap:Dictionary = new Dictionary();
+		public static var treatmentsMap:Dictionary = new Dictionary();
 		
 		/* Internal Properties */
 		public static var pumpIOB:Number = 0;
