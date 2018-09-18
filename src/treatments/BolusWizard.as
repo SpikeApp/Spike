@@ -1,11 +1,17 @@
 package treatments
 {
+	import flash.net.drm.AddToDeviceGroupSetting;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
+	import database.CGMBlueToothDevice;
+	import database.Database;
+	import database.LocalSettings;
+	
+	import events.TreatmentsEvent;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
@@ -19,6 +25,8 @@ package treatments
 	import feathers.controls.ScrollPolicy;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.Direction;
 	import feathers.layout.HorizontalAlign;
@@ -30,22 +38,27 @@ package treatments
 	
 	import model.ModelLocator;
 	
+	import services.NightscoutService;
+	
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
+	import treatments.food.Food;
 	import treatments.food.ui.FoodManager;
 	
 	import ui.AppInterface;
 	import ui.chart.GlucoseFactory;
+	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.extraoptions.ExtraOptionsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
-	import treatments.food.Food;
+	import utils.Trace;
 
 	public class BolusWizard
 	{
@@ -60,6 +73,8 @@ package treatments
 		private static var currentIOB:Number = 0;
 		private static var currentCOB:Number = 0;
 		private static var currentBG:Number = 0;
+		private static var suggestedCarbs:Number = 0;
+		private static var suggestedInsulin:Number = 0;
 		
 		/* Objects */
 		private static var currentProfile:Profile;
@@ -149,8 +164,17 @@ package treatments
 		private static var bwFoodsLabel:Label;
 		private static var bwFoodLoaderButton:Button;
 		private static var bwTotalScrollContainer:ScrollContainer;
-
 		private static var bwFoodManager:FoodManager;
+
+		private static var bwInsulinTypeContainer:LayoutGroup;
+
+		private static var bwInsulinTypeLabel:Label;
+
+		private static var bwInsulinTypePicker:PickerList;
+
+		private static var createInsulinButton:Button;
+
+		private static var canAddInsulin:Boolean;
 		
 		public function BolusWizard()
 		{
@@ -298,6 +322,20 @@ package treatments
 			
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
 			bwCarbTypePicker.validate();
+			
+			//Insulin Type
+			bwInsulinTypeContainer = LayoutFactory.createLayoutGroup("horizontal");
+			bwMainContainer.addChild(bwInsulinTypeContainer);
+			
+			bwInsulinTypeLabel = LayoutFactory.createLabel("");
+			bwInsulinTypeContainer.addChild(bwInsulinTypeLabel);
+			
+			bwInsulinTypePicker = LayoutFactory.createPickerList();
+			bwInsulinTypePicker.labelField = "label";
+			bwInsulinTypePicker.popUpContentManager = new DropDownPopUpContentManager();
+			
+			bwInsulinTypeContainer.addChild(bwInsulinTypePicker);
+			bwInsulinTypePicker.validate();
 			
 			//Trend
 			bwTrendContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -507,6 +545,10 @@ package treatments
 		
 		private static function populateComponents():void
 		{
+			//Properies
+			suggestedInsulin = 0;
+			suggestedCarbs = 0;
+			
 			//Title
 			bwTitle.text = "Bolus Wizard";
 			
@@ -572,6 +614,87 @@ package treatments
 			
 			bwCarbTypeContainer.validate();
 			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
+			
+			//Insulin Type
+			bwInsulinTypeLabel.text = "Insulin Type";
+			
+			var askForInsulinConfiguration:Boolean = true;
+			if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
+			{
+				var insulinDataProvider:ArrayCollection = new ArrayCollection();
+				var userInsulins:Array = sortInsulinsByDefault(ProfileManager.insulinsList.concat());
+				var numInsulins:int = userInsulins.length
+				for (var i:int = 0; i < numInsulins; i++) 
+				{
+					var insulin:Insulin = userInsulins[i];
+					if (insulin.name.indexOf("Nightscout") == -1 && !insulin.isHidden)
+					{
+						insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
+						askForInsulinConfiguration = false;
+					}
+				}
+				bwInsulinTypePicker.dataProvider = insulinDataProvider;
+				bwInsulinTypePicker.popUpContentManager = new DropDownPopUpContentManager();
+				bwInsulinTypePicker.itemRendererFactory = function():IListItemRenderer
+				{
+					var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+					renderer.paddingRight = renderer.paddingLeft = 15;
+					return renderer;
+				};
+			}
+			
+			if (askForInsulinConfiguration)
+			{
+				if (createInsulinButton != null)
+				{
+					createInsulinButton.removeEventListeners();
+					createInsulinButton.removeFromParent(true);
+				}
+				createInsulinButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','configure_insulins_button_label'));
+				createInsulinButton.addEventListener(Event.TRIGGERED, onConfigureInsulins);
+				bwInsulinTypeContainer.removeChild(bwInsulinTypePicker);
+				bwInsulinTypeContainer.addChild(createInsulinButton);
+				createInsulinButton.validate();
+				bwInsulinTypeContainer.validate();
+				createInsulinButton.x = contentWidth - createInsulinButton.width + 1;
+				
+				canAddInsulin = false;
+				
+				function onConfigureInsulins(e:Event):void
+				{
+					if (createInsulinButton != null) createInsulinButton.removeEventListener(Event.TRIGGERED, onConfigureInsulins);
+					
+					AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_PROFILE );
+					
+					var popupTween:Tween=new Tween(bolusWizardCallout, 0.3, Transitions.LINEAR);
+					popupTween.fadeTo(0);
+					popupTween.onComplete = function():void
+					{
+						closeCallout(null);
+					}
+					Starling.juggler.add(popupTween);
+				}
+			}
+			else
+			{
+				canAddInsulin = true;
+				
+				if (bwInsulinTypePicker.parent == null)
+				{
+					if (createInsulinButton != null)
+					{
+						createInsulinButton.removeEventListeners();
+						createInsulinButton.removeFromParent(true);
+						createInsulinButton = null;
+					}
+					
+					bwInsulinTypeContainer.addChild(bwInsulinTypePicker);
+				}
+				
+				bwInsulinTypePicker.validate();
+				bwInsulinTypeContainer.validate();
+				bwInsulinTypePicker.x = contentWidth - bwInsulinTypePicker.width + 1;
+			}
 			
 			//Current Trend
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
@@ -719,6 +842,28 @@ package treatments
 			
 			//Reset Callout Vertical Scroll
 			bwWizardScrollContainer.verticalScrollPosition = 0;
+		}
+		
+		private static function sortInsulinsByDefault(insulins:Array):Array
+		{
+			insulins.sortOn(["name"], Array.CASEINSENSITIVE);
+			
+			for (var i:int = 0; i < insulins.length; i++) 
+			{
+				var insulin:Insulin = insulins[i];
+				if (insulin.isDefault)
+				{
+					//Remove it from the array
+					insulins.removeAt(i);
+					
+					//Add it to the beginning
+					insulins.unshift(insulin);
+					
+					break;
+				}
+			}
+			
+			return insulins;
 		}
 		
 		private static function updateCriticalData():void
@@ -1085,14 +1230,29 @@ package treatments
 			
 			if (record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh) 
 			{
+				if (bolusWizardAddButton != null)
+					bolusWizardAddButton.isEnabled = false;
+				
 				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Blood glucose in target (" + currentProfile.targetGlucoseRates + ") or within 10mg/dL difference.";
 			}
 			else if (record.insulin < 0) 
 			{
+				if (bolusWizardAddButton != null)
+					bolusWizardAddButton.isEnabled = true;
+				
+				suggestedCarbs = Number(record.carbsneeded);
+				suggestedInsulin = 0;
+				
 				bwSuggestionLabel.text = "Carbs needed: " + record.carbsneeded + "g" + "\n" + "Insulin equivalent: " + record.insulin + "U"; 
 			}
 			else
 			{
+				if (bolusWizardAddButton != null)
+					bolusWizardAddButton.isEnabled = true;
+				
+				suggestedCarbs = 0;
+				suggestedInsulin = Number(record.insulin);
+				
 				bwSuggestionLabel.text = "Insulin needed: " + record.insulin + "U";
 			}
 		}
@@ -1546,7 +1706,94 @@ package treatments
 		
 		private static function addBolusWizardTreatment(e:Event):void
 		{
-			closeCallout(null);
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_BOLUS_WIZARD_DISCLAIMER_ACCEPTED) != "true")
+			{
+				AlertManager.showActionAlert
+				(
+					"Disclaimer",
+					"Bolus Wizard disclaimer message!",
+					Number.NaN,
+					[
+						{ label: "Cancel" },
+						{ label: "I Accept", triggered: disclaimerAccepted }
+					],
+					HorizontalAlign.JUSTIFY
+				);
+			}
+			else
+				addTreatment();
+			
+			function addTreatment():void
+			{
+				if ((suggestedInsulin > 0 && bwCarbsStepper.value > 0) || (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value > 0))
+				{
+					if (!canAddInsulin)
+					{
+						displayInsulinRequiredAlert();
+						return;
+					}
+					
+					trace("It's a meal treatment");
+				}
+				else if (suggestedInsulin > 0 && suggestedCarbs <= 0 && bwCarbsStepper.value <= 0)
+				{
+					if (!canAddInsulin)
+					{
+						displayInsulinRequiredAlert();
+						return;
+					}
+					
+					/*var treatment:Treatment = new Treatment
+					(
+						Treatment.TYPE_BOLUS,
+						new Date().valueOf(),
+						insulinValue,
+						insulinList.selectedItem.id,
+						0,
+						0,
+						getEstimatedGlucose(treatmentTime.value.valueOf()),
+						notes.text
+					);
+					
+					//Add to list
+					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
+					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Insert in DB
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						Database.insertTreatmentSynchronous(treatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(treatment);*/
+				}
+				else if (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value <= 0)
+				{
+					trace("it's a carb correction treatment");
+				}
+				
+				closeCallout(null);
+			}
+			
+			function disclaimerAccepted():void
+			{
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_BOLUS_WIZARD_DISCLAIMER_ACCEPTED, "true", true, false);
+				
+				addTreatment();
+			}
+			
+			function displayInsulinRequiredAlert():void
+			{
+				AlertManager.showSimpleAlert
+				(
+					"Warning",
+					"In order to add the treatment you first need to configure your insulins. Please press the Configure Insulins button."
+				);
+			}
 		}
 	}
 }
