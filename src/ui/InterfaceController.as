@@ -485,7 +485,7 @@ package ui
 		 */
 		private static function onInvoke(event:InvokeEvent):void 
 		{
-			if (event == null || event.arguments = null || event.arguments[0] == null)
+			if (event == null || event.arguments == null || event.arguments[0] == null)
 				return;
 			
 			var now:Number = new Date().valueOf();

@@ -3,6 +3,7 @@ FEATURE: Spike will now automatically check for new updates in App Center and no
 FEATURE: Spike can now override the device volume when playing alarms. You can set a custom volume in Settings -> Alarms -> Override System Volume. Before playing an alarm sound Spike will change your device volume to the value you defined in Settings, play the alarm and then restore the device volume to how it was before. (Miguel)
 FEATURE: Spike can also override the device volume when speaking glucose readings. Activate this option in Settings -> Speech -> Override System Volume. Everything stated in the item above also applies to the Speech feature. (Miguel)
 ENHANCEMENT: Added a button, for convenience, to terminate Spike in the pop up that appears after a successful database restore. This avoids having to restart the phone or closing Spike from the app switcher. (Miguel)
+ENHANCEMENT: Updated Adobe Air framework to version 31. (Miguel)
 
 2.5.1
 FEATURE: Added Dutch language. (Translators)
