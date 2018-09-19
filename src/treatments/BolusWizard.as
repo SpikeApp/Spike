@@ -66,6 +66,7 @@ package treatments
 		
 		/* Properties */
 		private static var initialStart:Boolean = true;
+		private static var canAddInsulin:Boolean = false;
 		private static var contentWidth:Number = 270;
 		private static var yPos:Number = 0;
 		private static var calculationTimeout:uint = 0;
@@ -164,16 +165,10 @@ package treatments
 		private static var bwFoodLoaderButton:Button;
 		private static var bwTotalScrollContainer:ScrollContainer;
 		private static var bwFoodManager:FoodManager;
-
 		private static var bwInsulinTypeContainer:LayoutGroup;
-
 		private static var bwInsulinTypeLabel:Label;
-
 		private static var bwInsulinTypePicker:PickerList;
-
 		private static var createInsulinButton:Button;
-
-		private static var canAddInsulin:Boolean;
 		
 		public function BolusWizard()
 		{
@@ -1252,7 +1247,9 @@ package treatments
 				bwSuggestionLabel.text = "Insulin needed: " + record.insulin + "U";
 			}
 			
+			//Components validation
 			validateCarbOffset();
+			validateOtherCorrection();
 		}
 		
 		private static function validateCarbOffset():void
@@ -1265,6 +1262,27 @@ package treatments
 			else
 			{
 				bwCarbsOffsetStepper.isEnabled = false;
+			}
+		}
+		
+		private static function validateOtherCorrection():void
+		{
+			if (currentBG != 0 && currentBG >= Number(currentProfile.targetGlucoseRates))
+			{
+				//Current glucose is above current target. Enable other correction components.
+				bwOtherCorrectionAmountLabel.isEnabled = true;
+				bwOtherCorrectionLabel.isEnabled = true;
+				bwOtherCorrectionCheck.isEnabled = true;
+				bwOtherCorrectionAmountStepper.isEnabled = true;
+			}
+			else
+			{
+				//Current glucose is below current target. Disable other correction components
+				bwOtherCorrectionAmountLabel.isEnabled = false;
+				bwOtherCorrectionLabel.isEnabled = false;
+				bwOtherCorrectionCheck.isSelected = false;
+				bwOtherCorrectionCheck.isEnabled = false;
+				bwOtherCorrectionAmountStepper.isEnabled = false;
 			}
 		}
 		
