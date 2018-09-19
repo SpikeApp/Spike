@@ -67,8 +67,6 @@ package services
 			
 			//Register event listener for app in foreground
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
-			
-			
 		}
 		
 		private static function deactivateService():void
