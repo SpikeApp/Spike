@@ -1,6 +1,5 @@
 package treatments
 {
-	import flash.net.drm.AddToDeviceGroupSetting;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
@@ -8,6 +7,7 @@ package treatments
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
+	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
 	
@@ -54,7 +54,6 @@ package treatments
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.extraoptions.ExtraOptionsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -1098,9 +1097,6 @@ package treatments
 				return;
 			}
 			
-			//var targetBGLow:Number = 70; //CHANGE ON FINAL
-			//var targetBGHigh:Number = 140; //CHANGE ON FINAL
-			
 			var targetBGLow:Number = Number(currentProfile.targetGlucoseRates) - 10;
 			var targetBGHigh:Number = Number(currentProfile.targetGlucoseRates) + 10;
 			
@@ -1254,6 +1250,21 @@ package treatments
 				suggestedInsulin = Number(record.insulin);
 				
 				bwSuggestionLabel.text = "Insulin needed: " + record.insulin + "U";
+			}
+			
+			validateCarbOffset();
+		}
+		
+		private static function validateCarbOffset():void
+		{
+			if ((suggestedInsulin > 0 && bwCarbsStepper.value > 0) || (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value > 0))
+			{
+				//Meal Treatment
+				bwCarbsOffsetStepper.isEnabled = true;
+			}
+			else
+			{
+				bwCarbsOffsetStepper.isEnabled = false;
 			}
 		}
 		
@@ -1726,32 +1737,132 @@ package treatments
 			function addTreatment():void
 			{
 				var now:Number = new Date().valueOf();
+				var carbDelayMinutes:Number = 20;
+				var treatment:Treatment;
 				
 				if ((suggestedInsulin > 0 && bwCarbsStepper.value > 0) || (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value > 0))
 				{
+					//Meal Treatment
 					if (!canAddInsulin)
 					{
 						displayInsulinRequiredAlert();
 						return;
 					}
 					
-					trace("It's a meal treatment");
+					//Carb absorption delay
+					if (bwCarbTypePicker.selectedIndex == 0)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+					else if (bwCarbTypePicker.selectedIndex == 1)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+					else if (bwCarbTypePicker.selectedIndex == 2)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+					
+					if (bwCarbsOffsetStepper.value == 0)
+					{
+						treatment = new Treatment
+						(
+							Treatment.TYPE_MEAL_BOLUS,
+							now,
+							suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
+							bwInsulinTypePicker.selectedItem.id,
+							suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+							0,
+							TreatmentsManager.getEstimatedGlucose(now),
+							bwNotes.text,
+							null,
+							carbDelayMinutes
+						);
+						
+						//Add to list
+						TreatmentsManager.treatmentsList.push(treatment);
+						TreatmentsManager.treatmentsMap[treatment.ID] = treatment;
+						
+						Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatment.type);
+						
+						//Notify listeners
+						TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+						
+						//Insert in DB
+						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+							Database.insertTreatmentSynchronous(treatment);
+						
+						//Upload to Nightscout
+						NightscoutService.uploadTreatment(treatment);
+					}
+					else
+					{
+						//Insulin portion
+						var treatmentInsulin:Treatment = new Treatment
+						(
+							Treatment.TYPE_MEAL_BOLUS,
+							now,
+							suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
+							bwInsulinTypePicker.selectedItem.id,
+							0,
+							0,
+							TreatmentsManager.getEstimatedGlucose(now),
+							bwNotes.text
+						);
+						
+						//Add to list
+						TreatmentsManager.treatmentsList.push(treatmentInsulin);
+						TreatmentsManager.treatmentsMap[treatmentInsulin.ID] = treatmentInsulin;
+						
+						Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatmentInsulin.type);
+						
+						//Carb portion
+						var carbTime:Number = now + (bwCarbsOffsetStepper.value * 60 * 1000);
+						var treatmentCarbs:Treatment = new Treatment
+						(
+							Treatment.TYPE_MEAL_BOLUS,
+							carbTime,
+							0,
+							bwInsulinTypePicker.selectedItem.id,
+							suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+							0,
+							TreatmentsManager.getEstimatedGlucose(carbTime <= now ? carbTime : now),
+							bwNotes.text,
+							null,
+							carbDelayMinutes
+						);
+						if (carbTime > now) treatmentCarbs.needsAdjustment = true;
+						
+						//Add to list
+						TreatmentsManager.treatmentsList.push(treatmentCarbs);
+						TreatmentsManager.treatmentsMap[treatmentCarbs.ID] = treatmentCarbs;
+						
+						Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatmentCarbs.type);
+						
+						//Notify listeners
+						TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentInsulin));
+						TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentCarbs));
+						
+						//Insert in DB
+						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						{
+							Database.insertTreatmentSynchronous(treatmentInsulin);
+							Database.insertTreatmentSynchronous(treatmentCarbs);
+						}
+						
+						//Upload to Nightscout
+						NightscoutService.uploadTreatment(treatmentInsulin);
+						NightscoutService.uploadTreatment(treatmentCarbs);
+					}
 				}
 				else if (suggestedInsulin > 0 && suggestedCarbs <= 0 && bwCarbsStepper.value <= 0)
 				{
 					//Bolus Treatment
-					
 					if (!canAddInsulin)
 					{
 						displayInsulinRequiredAlert();
 						return;
 					}
 					
-					var treatment:Treatment = new Treatment
+					treatment = new Treatment
 					(
 						Treatment.TYPE_BOLUS,
 						now,
-						suggestedInsulin,
+						suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
 						bwInsulinTypePicker.selectedItem.id,
 						0,
 						0,
@@ -1777,7 +1888,43 @@ package treatments
 				}
 				else if (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value <= 0)
 				{
-					trace("it's a carb correction treatment");
+					//Carb treatment
+					if (bwCarbTypePicker.selectedIndex == 0)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+					else if (bwCarbTypePicker.selectedIndex == 1)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+					else if (bwCarbTypePicker.selectedIndex == 2)
+						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+					
+					treatment = new Treatment
+					(
+						Treatment.TYPE_CARBS_CORRECTION,
+						now,
+						0,
+						"",
+						suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+						0,
+						TreatmentsManager.getEstimatedGlucose(now),
+						bwNotes.text,
+						null,
+						carbDelayMinutes
+					);
+					
+					//Add to list
+					TreatmentsManager.treatmentsList.push(treatment);
+					TreatmentsManager.treatmentsMap[treatment.ID] = treatment;
+					
+					Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatment.type);
+					
+					//Notify listeners
+					TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Insert in DB
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						Database.insertTreatmentSynchronous(treatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(treatment);
 				}
 				
 				closeCallout(null);
