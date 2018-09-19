@@ -22,6 +22,7 @@ package ui.screens
 	import ui.screens.display.settings.chart.GlucoseDistributionSettingsList;
 	import ui.screens.display.settings.chart.ModeSettingsList;
 	import ui.screens.display.settings.chart.SizeSettingsList;
+	import ui.screens.display.settings.chart.VisualizationSettingsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -39,6 +40,8 @@ package ui.screens
 		private var chartGlucoseDistributionLabel:Label;
 		private var chartModeLabel:Label;
 		private var chartModeSettings:ModeSettingsList;
+		private var chartVisualizationLabel:Label;
+		private var chartVisualizationSettings:VisualizationSettingsList;
 		
 		public function ChartSettingsScreen() 
 		{
@@ -93,6 +96,14 @@ package ui.screens
 			chartModeSettings = new ModeSettingsList();
 			screenRenderer.addChild(chartModeSettings);
 			
+			//Visualization Section Label
+			chartVisualizationLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','visualization_section_label'), true);
+			screenRenderer.addChild(chartVisualizationLabel);
+			
+			//Visualization Settings
+			chartVisualizationSettings = new VisualizationSettingsList();
+			screenRenderer.addChild(chartVisualizationSettings);
+			
 			//Size Section Label
 			chartSizeLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','size_settings_title'), true);
 			screenRenderer.addChild(chartSizeLabel);
@@ -123,6 +134,8 @@ package ui.screens
 			//Save Settings
 			if (chartModeSettings.needsSave)
 				chartModeSettings.save();
+			if (chartVisualizationSettings.needsSave)
+				chartVisualizationSettings.save();
 			if (chartColorSettings.needsSave)
 				chartColorSettings.save();
 			if (chartSizeSettings.needsSave)
@@ -148,6 +161,7 @@ package ui.screens
 			{
 				if (chartGlucoseDistributionLabel != null) chartGlucoseDistributionLabel.paddingLeft = 30;
 				if (chartModeLabel != null) chartModeLabel.paddingLeft = 30;
+				if (chartVisualizationLabel != null) chartVisualizationLabel.paddingLeft = 30;
 				if (chartSizeLabel != null) chartSizeLabel.paddingLeft = 30;
 				if (chartColorLabel != null) chartColorLabel.paddingLeft = 30;
 			}
@@ -155,6 +169,7 @@ package ui.screens
 			{
 				if (chartGlucoseDistributionLabel != null) chartGlucoseDistributionLabel.paddingLeft = 0;
 				if (chartModeLabel != null) chartModeLabel.paddingLeft = 0;
+				if (chartVisualizationLabel != null) chartVisualizationLabel.paddingLeft = 0;
 				if (chartSizeLabel != null) chartSizeLabel.paddingLeft = 0;
 				if (chartColorLabel != null) chartColorLabel.paddingLeft = 0;
 			}
@@ -221,6 +236,20 @@ package ui.screens
 				chartModeSettings.removeFromParent();
 				chartModeSettings.dispose();
 				chartModeSettings = null;
+			}
+			
+			if (chartVisualizationLabel != null)
+			{
+				chartVisualizationLabel.removeFromParent();
+				chartVisualizationLabel.dispose();
+				chartVisualizationLabel = null;
+			}
+			
+			if (chartVisualizationSettings != null)
+			{
+				chartVisualizationSettings.removeFromParent();
+				chartVisualizationSettings.dispose();
+				chartVisualizationSettings = null;
 			}
 			
 			super.dispose();

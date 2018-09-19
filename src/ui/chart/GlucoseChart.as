@@ -149,6 +149,12 @@ package ui.chart
 		private var timeDisplayFont:Number;
 		private var retroDisplayFont:Number;
 		private var labelsYPos:Number;
+		private var displayTargetLine:Boolean;
+		private var displayUrgentHighLine:Boolean;
+		private var displayHighLine:Boolean;
+		private var displayLowLine:Boolean;
+		private var displayUrgentLowLine:Boolean;
+		private var targetLineColor:uint;
 		
 		//Display Objects
 		private var glucoseTimelineContainer:Sprite;
@@ -181,6 +187,9 @@ package ui.chart
 		private var lowUrgentGlucoseLineMarker:SpikeLine;
 		private var lowUrgentGlucoseLegend:Label;
 		private var lowUrgentGlucoseDashedLine:SpikeLine;
+		private var targetGlucoseLineMarker:SpikeLine;
+		private var targetGlucoseLegend:Label;
+		private var targetGlucoseDashedLine:SpikeLine;
 		private var yAxis:Sprite;
 		private var xRightMask:Quad;
 		private var xLeftMask:Quad;
@@ -195,6 +204,7 @@ package ui.chart
 		private var glucoseHigh:Number;
 		private var glucoseLow:Number;
 		private var glucoseUrgentLow:Number;
+		private var currentUserBGTarget:Number = Number.NaN;
 		
 		//Movement
 		private var scrollMultiplier:Number;
@@ -315,11 +325,28 @@ package ui.chart
 			//Raw
 			displayRaw = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_RAW_ON) == "true" && (CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) && !isHistoricalData;
 			
-			//Threshold
+			//Thresholds
+			displayTargetLine = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_TARGET_LINE) == "true";
+			displayUrgentHighLine = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_URGENT_HIGH_LINE) == "true";
+			displayHighLine = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_HIGH_LINE) == "true";
+			displayLowLine = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_LOW_LINE) == "true";
+			displayUrgentLowLine = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DISPLAY_URGENT_LOW_LINE) == "true";
+			
 			glucoseUrgentLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
 			glucoseLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
 			glucoseHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
 			glucoseUrgentHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+			
+			currentUserBGTarget = Number.NaN;
+			
+			if (displayTargetLine)
+			{
+				try
+				{
+					currentUserBGTarget = Number(ProfileManager.getProfileByTime(new Date().valueOf()).targetGlucoseRates);
+				} 
+				catch(error:Error) {}
+			}
 			
 			//Colors
 			lineColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_COLOR));
@@ -331,7 +358,8 @@ package ui.chart
 			lowGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR));
 			lowUrgentGlucoseMarkerColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)); 
 			oldColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR)); 
-			rawColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR)); 
+			rawColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR));
+			targetLineColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TARGET_LINE_COLOR));
 			
 			//Size
 			mainChartGlucoseMarkerRadius = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_MARKER_RADIUS));
@@ -1732,7 +1760,7 @@ package ui.chart
 			/**
 			 * Urgent High Glucose Threshold
 			 */
-			if(glucoseUrgentHigh > lowestGlucoseValue && glucoseUrgentHigh < highestGlucoseValue && !dummyModeActive)
+			if(glucoseUrgentHigh > lowestGlucoseValue && glucoseUrgentHigh < highestGlucoseValue && displayUrgentHighLine && !dummyModeActive)
 			{
 				//Line Marker
 				if (highUrgentGlucoseLineMarker != null) highUrgentGlucoseLineMarker.dispose();
@@ -1779,7 +1807,7 @@ package ui.chart
 			/**
 			 * High Glucose Threshold
 			 */
-			if(glucoseHigh > lowestGlucoseValue && glucoseHigh < highestGlucoseValue)
+			if(glucoseHigh > lowestGlucoseValue && glucoseHigh < highestGlucoseValue && displayHighLine)
 			{
 				//Line Marker
 				if (highGlucoseLineMarker != null) highGlucoseLineMarker.dispose();
@@ -1826,7 +1854,7 @@ package ui.chart
 			/**
 			 * Low Glucose Threshold
 			 */
-			if(glucoseLow > lowestGlucoseValue && glucoseLow < highestGlucoseValue)
+			if(glucoseLow > lowestGlucoseValue && glucoseLow < highestGlucoseValue && displayLowLine)
 			{
 				//Line Marker
 				if (lowGlucoseLineMarker != null) lowGlucoseLineMarker.dispose();
@@ -1873,7 +1901,7 @@ package ui.chart
 			/**
 			 * Urgent Low Glucose Threshold
 			 */
-			if(glucoseUrgentLow > lowestGlucoseValue && glucoseUrgentLow < highestGlucoseValue && !dummyModeActive)
+			if(glucoseUrgentLow > lowestGlucoseValue && glucoseUrgentLow < highestGlucoseValue && displayUrgentLowLine && !dummyModeActive)
 			{
 				//Line Marker
 				if (lowUrgentGlucoseLineMarker != null) lowUrgentGlucoseLineMarker.dispose();
@@ -1915,6 +1943,57 @@ package ui.chart
 				lowUrgentGlucoseDashedLine.y = _graphHeight - ((glucoseUrgentLow - lowestGlucoseValue) * scaleYFactor) - lineThickness;
 				lowUrgentGlucoseDashedLine.touchable = false;
 				yAxis.addChild(lowUrgentGlucoseDashedLine);
+			}
+			
+			/**
+			 * Target Glucose
+			 */
+			if(!isNaN(currentUserBGTarget) && displayTargetLine && currentUserBGTarget > lowestGlucoseValue && currentUserBGTarget < highestGlucoseValue && !dummyModeActive)
+			{
+				//Line Marker
+				if (targetGlucoseLineMarker != null) targetGlucoseLineMarker.dispose();
+				targetGlucoseLineMarker = GraphLayoutFactory.createHorizontalLine(legendSize, lineThickness, lineColor);
+				targetGlucoseLineMarker.x = _graphWidth - legendSize;
+				targetGlucoseLineMarker.y = _graphHeight - ((currentUserBGTarget - lowestGlucoseValue) * scaleYFactor) - lineThickness;
+				targetGlucoseLineMarker.touchable = false;
+				yAxis.addChild(targetGlucoseLineMarker);
+				
+				//Legend
+				var targetGlucoseAxisValue:Number = currentUserBGTarget;
+				if(glucoseUnit != "mg/dL")
+					targetGlucoseAxisValue = Math.round(((BgReading.mgdlToMmol((currentUserBGTarget))) * 10)) / 10;
+				
+				var targetGlucoseOutput:String
+				if (glucoseUnit == "mg/dL")
+					targetGlucoseOutput = String(targetGlucoseAxisValue);
+				else
+				{
+					if ( targetGlucoseAxisValue % 1 == 0)
+						targetGlucoseOutput = String(targetGlucoseAxisValue) + ".0";
+					else
+						targetGlucoseOutput = String(targetGlucoseAxisValue);
+				}
+				
+				if (targetGlucoseLegend != null) targetGlucoseLegend.dispose();
+				targetGlucoseLegend = GraphLayoutFactory.createGraphLegend(targetGlucoseOutput, lineColor, legendTextSize * userAxisFontMultiplier);
+				if (userAxisFontMultiplier >= 1)
+					targetGlucoseLegend.y = _graphHeight - ((currentUserBGTarget - lowestGlucoseValue) * scaleYFactor) - ((targetGlucoseLegend.height / userAxisFontMultiplier) / 2) - ((targetGlucoseLegend.height / userAxisFontMultiplier) / 8);
+				else
+					targetGlucoseLegend.y = _graphHeight - ((currentUserBGTarget - lowestGlucoseValue) * scaleYFactor) - ((targetGlucoseLegend.height * userAxisFontMultiplier) / 2) - ((targetGlucoseLegend.height * userAxisFontMultiplier) / 8);
+				targetGlucoseLegend.y -= lineThickness;
+				targetGlucoseLegend.x = Math.round(_graphWidth - targetGlucoseLineMarker.width - targetGlucoseLegend.width - legendMargin);
+				yAxis.addChild(targetGlucoseLegend);
+				
+				//Dashed Line
+				if (targetGlucoseDashedLine != null) targetGlucoseDashedLine.dispose();
+				targetGlucoseDashedLine = GraphLayoutFactory.createHorizontalDashedLine(_graphWidth, dashLineWidth, dashLineGap, dashLineThickness, targetLineColor, legendMargin + dashLineWidth + ((legendTextSize * userAxisFontMultiplier) - legendTextSize));
+				targetGlucoseDashedLine.y = _graphHeight - ((currentUserBGTarget - lowestGlucoseValue) * scaleYFactor) - lineThickness;
+				targetGlucoseDashedLine.touchable = false;
+				yAxis.addChild(targetGlucoseDashedLine);
+			}
+			else if (targetGlucoseLineMarker != null)
+			{
+				targetGlucoseLineMarker.removeFromParent(true);
 			}
 			
 			yAxisHeight = yAxis.height;
@@ -2401,8 +2480,21 @@ package ui.chart
 			if(chartType == MAIN_CHART && !isRaw)
 			{
 				//YAxis
-				if(highestGlucoseValue != previousHighestGlucoseValue || lowestGlucoseValue != previousLowestGlucoseValue)
+				var newBgTarget:Number = Number.NaN;
+				if (displayTargetLine)
 				{
+					try
+					{
+						newBgTarget = Number(ProfileManager.getProfileByTime(new Date().valueOf()).targetGlucoseRates);
+					} 
+					catch(error:Error) {}
+				}
+				
+				if((highestGlucoseValue != previousHighestGlucoseValue || lowestGlucoseValue != previousLowestGlucoseValue) || (displayTargetLine && !isNaN(newBgTarget) && newBgTarget != currentUserBGTarget))
+				{
+					//Update BG Target Variable
+					currentUserBGTarget = newBgTarget;
+					
 					//Dispose YAxis
 					yAxisContainer.dispose();
 					
@@ -4757,6 +4849,27 @@ package ui.chart
 				lowUrgentGlucoseDashedLine.removeFromParent();
 				lowUrgentGlucoseDashedLine.dispose();
 				lowUrgentGlucoseDashedLine = null;
+			}
+			
+			if (targetGlucoseLineMarker != null)
+			{
+				targetGlucoseLineMarker.removeFromParent();
+				targetGlucoseLineMarker.dispose();
+				targetGlucoseLineMarker = null;
+			}
+			
+			if (targetGlucoseLegend != null)
+			{
+				targetGlucoseLegend.removeFromParent();
+				targetGlucoseLegend.dispose();
+				targetGlucoseLegend = null;
+			}
+			
+			if (targetGlucoseDashedLine != null)
+			{
+				targetGlucoseDashedLine.removeFromParent();
+				targetGlucoseDashedLine.dispose();
+				targetGlucoseDashedLine = null;
 			}
 			
 			if (yAxis != null)

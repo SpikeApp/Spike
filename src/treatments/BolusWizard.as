@@ -974,6 +974,7 @@ package treatments
 			bwOtherCorrectionAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwIOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
+			bwTrendCheck.addEventListener(Event.CHANGE, performCalculations);
 			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, onCloseCallout);
 			bolusWizardAddButton.addEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
@@ -1236,8 +1237,14 @@ package treatments
 			
 			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh;
 			
+			trace("isInTarget", isInTarget);
+			trace("currentTrendCorrection", currentTrendCorrection);
+			trace("bwTrendCheck.isSelected", bwTrendCheck.isSelected);
+			
 			if (!isInTarget && currentTrendCorrection != 0 && bwTrendCheck.isSelected)
 			{
+				trace("sim????");
+				
 				if (currentTrendCorrectionUnit == "U")
 				{
 					insulin += currentTrendCorrection;
@@ -1249,8 +1256,12 @@ package treatments
 					record.carbs = carbs;
 				}
 				
+				trace("DEBUG:\n", ObjectUtil.toString(record));
+				
 				//Calculate total again
 				isInTarget = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh;
+				
+				trace("isInTarget", isInTarget);
 			}
 			
 			if (isInTarget) 
