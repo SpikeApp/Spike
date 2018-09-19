@@ -70,6 +70,7 @@ package treatments
 		/* Properties */
 		private static var initialStart:Boolean = true;
 		private static var canAddInsulin:Boolean = false;
+		private static var bgIsWithinTarget:Boolean = false;
 		private static var contentWidth:Number = 270;
 		private static var yPos:Number = 0;
 		private static var calculationTimeout:uint = 0;
@@ -172,6 +173,10 @@ package treatments
 		private static var bwInsulinTypeLabel:Label;
 		private static var bwInsulinTypePicker:PickerList;
 		private static var createInsulinButton:Button;
+
+		private static var currentTrendCorrection:Number;
+
+		private static var currentTrendCorrectionUnit:String;
 		
 		public function BolusWizard()
 		{
@@ -342,7 +347,7 @@ package treatments
 			bwTrendLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwTrendContainer.addChild(bwTrendLabelContainer);
 			
-			bwTrendCheck = LayoutFactory.createCheckMark(true);
+			bwTrendCheck = LayoutFactory.createCheckMark(false);
 			bwTrendContainer.addChild(bwTrendCheck);
 			
 			bwTrendLabel = LayoutFactory.createLabel("");
@@ -695,7 +700,7 @@ package treatments
 			
 			//Current Trend
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
-			bwTrendCheck.isSelected = latestBgReading != null ? true : false;
+			//bwTrendCheck.isSelected = latestBgReading != null ? true : false;
 			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
 			var currentTrendCorrection:Number = 0;
 			var currentTrendCorrectionUnit:String = "U";
@@ -733,7 +738,7 @@ package treatments
 				}
 			}
 			
-			if (currentTrendCorrection == 0) bwTrendCheck.isSelected = false;
+			//if (currentTrendCorrection == 0) bwTrendCheck.isSelected = false;
 			bwCurrentTrendLabel.text = currentTrendCorrection + currentTrendCorrectionUnit;
 			bwCurrentTrendLabel.validate();
 			bwTrendContainer.validate();
@@ -886,10 +891,10 @@ package treatments
 			
 			//Current Trend
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
-			bwTrendCheck.isSelected = latestBgReading != null ? true : false;
+			//bwTrendCheck.isSelected = latestBgReading != null ? true : false;
 			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
-			var currentTrendCorrection:Number = 0;
-			var currentTrendCorrectionUnit:String = "U";
+			currentTrendCorrection = 0;
+			currentTrendCorrectionUnit = "U";
 			if (currentTrendArrow != "")
 			{
 				if (currentTrendArrow == "\u2197")
@@ -924,8 +929,9 @@ package treatments
 				}
 			}
 			
-			if (currentTrendCorrection == 0) bwTrendCheck.isSelected = false;
+			//if (currentTrendCorrection == 0) bwTrendCheck.isSelected = false;
 			bwCurrentTrendLabel.text = currentTrendCorrection + currentTrendCorrectionUnit;
+			bwTrendLabel.validate();
 			bwCurrentTrendLabel.validate();
 			bwTrendContainer.validate();
 			bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
@@ -1120,13 +1126,9 @@ package treatments
 			var roundingcorrection:Number = 0;
 			
 			// Load IOB;
-			if (bwIOBCheck.isSelected) {
-				trace("CHECKED!");
-				iob = currentIOB;
-			}
-			else
+			if (bwIOBCheck.isSelected) 
 			{
-				trace("not checked");
+				iob = currentIOB;
 			}
 			
 			// Load COB
@@ -1232,8 +1234,29 @@ package treatments
 			
 			var outcome:Number = record.bg - record.iob * isf;
 			
-			if (record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh) 
+			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh;
+			
+			if (!isInTarget && currentTrendCorrection != 0 && bwTrendCheck.isSelected)
 			{
+				if (currentTrendCorrectionUnit == "U")
+				{
+					insulin += currentTrendCorrection;
+					record.insulin = insulin;
+				}
+				else if (currentTrendCorrectionUnit == "g")
+				{
+					carbs += currentTrendCorrection;
+					record.carbs = carbs;
+				}
+				
+				//Calculate total again
+				isInTarget = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh;
+			}
+			
+			if (isInTarget) 
+			{
+				bgIsWithinTarget = true;
+				
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = false;
 				
@@ -1241,6 +1264,8 @@ package treatments
 			}
 			else if (record.insulin < 0) 
 			{
+				bgIsWithinTarget = false;
+				
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = true;
 				
@@ -1251,6 +1276,8 @@ package treatments
 			}
 			else
 			{
+				bgIsWithinTarget = false;
+				
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = true;
 				
@@ -1793,9 +1820,9 @@ package treatments
 							(
 								Treatment.TYPE_MEAL_BOLUS,
 								now,
-								suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
+								suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0) + (bwTrendCheck.isSelected && currentTrendCorrection != 0 && currentTrendCorrectionUnit == "U" ? currentTrendCorrection : 0),
 								bwInsulinTypePicker.selectedItem.id,
-								suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+								suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0) + ((bwTrendCheck.isSelected && currentTrendCorrection != 0 && currentTrendCorrectionUnit == "g" ? currentTrendCorrection : 0)),
 								0,
 								TreatmentsManager.getEstimatedGlucose(now),
 								bwNotes.text,
@@ -1826,7 +1853,7 @@ package treatments
 							(
 								Treatment.TYPE_MEAL_BOLUS,
 								now,
-								suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
+								suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0) + (bwTrendCheck.isSelected && currentTrendCorrection != 0 && currentTrendCorrectionUnit == "U" ? currentTrendCorrection : 0),
 								bwInsulinTypePicker.selectedItem.id,
 								0,
 								0,
@@ -1848,7 +1875,7 @@ package treatments
 								carbTime,
 								0,
 								bwInsulinTypePicker.selectedItem.id,
-								suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+								suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0) + (bwTrendCheck.isSelected && currentTrendCorrection != 0 && currentTrendCorrectionUnit == "g" ? currentTrendCorrection : 0),
 								0,
 								TreatmentsManager.getEstimatedGlucose(carbTime <= now ? carbTime : now),
 								bwNotes.text,
@@ -1892,7 +1919,7 @@ package treatments
 						(
 							Treatment.TYPE_BOLUS,
 							now,
-							suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
+							suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0) + (bwTrendCheck.isSelected && currentTrendCorrection != 0 && currentTrendCorrectionUnit == "U" ? currentTrendCorrection : 0),
 							bwInsulinTypePicker.selectedItem.id,
 							0,
 							0,
@@ -1932,7 +1959,7 @@ package treatments
 							now,
 							0,
 							"",
-							suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+							suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0) + (bwTrendCheck.isSelected && currentTrendCorrection != 0 && currentTrendCorrectionUnit == "U" ? currentTrendCorrection : 0),
 							0,
 							TreatmentsManager.getEstimatedGlucose(now),
 							bwNotes.text,
