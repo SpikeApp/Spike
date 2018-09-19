@@ -11,6 +11,8 @@ package treatments
 	import database.Database;
 	import database.LocalSettings;
 	
+	import events.FollowerEvent;
+	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
 	import feathers.controls.Button;
@@ -39,6 +41,7 @@ package treatments
 	import model.ModelLocator;
 	
 	import services.NightscoutService;
+	import services.TransmitterService;
 	
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
@@ -197,7 +200,7 @@ package treatments
 			disableEventListeners();
 			populateComponents();
 			enableEventListeners();
-			performCalculations();
+			updateCriticalData();
 			displayCallout();
 		}		
 		
@@ -664,7 +667,7 @@ package treatments
 					popupTween.fadeTo(0);
 					popupTween.onComplete = function():void
 					{
-						closeCallout(null);
+						onCloseCallout(null);
 					}
 					Starling.juggler.add(popupTween);
 				}
@@ -831,8 +834,8 @@ package treatments
 			//Components Show/Hide
 			showHideCarbExtras();
 			showHideExerciseAdjustment();
-			showHideSicknessAdjustment();
-			showHideOtherCorrection();
+			onShowHideSicknessAdjustment();
+			onShowHideOtherCorrection();
 			
 			//Reset Callout Vertical Scroll
 			bwWizardScrollContainer.verticalScrollPosition = 0;
@@ -934,6 +937,7 @@ package treatments
 			bwCurrentIOBLabel.validate();
 			bwIOBContainer.validate();
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
+			bwIOBCheck.isSelected = currentIOB > 0;
 			
 			//Current COB
 			currentCOB = TreatmentsManager.getTotalCOB(now);
@@ -941,6 +945,7 @@ package treatments
 			bwCurrentCOBLabel.validate();
 			bwCOBContainer.validate();
 			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
+			bwCOBCheck.isSelected = currentCOB > 0;
 			
 			//Calculations
 			performCalculations();
@@ -957,15 +962,16 @@ package treatments
 			bwExerciseIntensityPicker.addEventListener(Event.CHANGE, onExerciseIntensityChanged);
 			bwExerciseDurationPicker.addEventListener(Event.CHANGE, onExerciseDurationChanged);
 			bwExerciseAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwSicknessCheck.addEventListener(Event.CHANGE, showHideSicknessAdjustment);
+			bwSicknessCheck.addEventListener(Event.CHANGE, onShowHideSicknessAdjustment);
 			bwSicknessAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwOtherCorrectionCheck.addEventListener(Event.CHANGE, showHideOtherCorrection);
+			bwOtherCorrectionCheck.addEventListener(Event.CHANGE, onShowHideOtherCorrection);
 			bwOtherCorrectionAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwIOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
-			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, closeCallout);
-			bolusWizardAddButton.addEventListener(Event.TRIGGERED, addBolusWizardTreatment);
-			
+			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, onCloseCallout);
+			bolusWizardAddButton.addEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 		}
 		
 		private static function disableEventListeners():void
@@ -979,14 +985,16 @@ package treatments
 			bwExerciseIntensityPicker.removeEventListener(Event.CHANGE, onExerciseIntensityChanged);
 			bwExerciseDurationPicker.removeEventListener(Event.CHANGE, onExerciseDurationChanged);
 			bwExerciseAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwSicknessCheck.removeEventListener(Event.CHANGE, showHideSicknessAdjustment);
+			bwSicknessCheck.removeEventListener(Event.CHANGE, onShowHideSicknessAdjustment);
 			bwSicknessAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwOtherCorrectionCheck.removeEventListener(Event.CHANGE, showHideOtherCorrection);
+			bwOtherCorrectionCheck.removeEventListener(Event.CHANGE, onShowHideOtherCorrection);
 			bwOtherCorrectionAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
 			bwIOBCheck.removeEventListener(Event.CHANGE, performCalculations);
 			bwCOBCheck.removeEventListener(Event.CHANGE, performCalculations);
-			bolusWizardCancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
-			bolusWizardAddButton.removeEventListener(Event.TRIGGERED, addBolusWizardTreatment);
+			bolusWizardCancelButton.removeEventListener(Event.TRIGGERED, onCloseCallout);
+			bolusWizardAddButton.removeEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 		}
 		
 		private static function displayCallout():void
@@ -1086,7 +1094,7 @@ package treatments
 			if (currentProfile == null || currentProfile.insulinSensitivityFactors == "" || currentProfile.insulinToCarbRatios == "" || currentProfile.targetGlucoseRates == "")
 			{
 				//We don't have enough profile data. Show missed profile data callout and abort!
-				closeCallout(null);
+				onCloseCallout(null);
 				displayMissedSettingsCallout();
 				
 				return;
@@ -1097,7 +1105,6 @@ package treatments
 			
 			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 			var ic:Number = Number(currentProfile.insulinToCarbRatios);
-			var insulincob:Number = 0;
 			var bg:Number = 0;
 			var insulinbg:Number = 0;
 			var bgdiff:Number = 0;
@@ -1106,6 +1113,7 @@ package treatments
 			var extraCorrections:Number = bwOtherCorrectionAmountStepper.value;
 			var iob:Number = 0;
 			var cob:Number = 0;
+			var insulincob:Number = 0;
 			var carbsneeded:Number = 0;
 			var total:Number = 0;
 			var insulin:Number = 0;
@@ -1113,7 +1121,12 @@ package treatments
 			
 			// Load IOB;
 			if (bwIOBCheck.isSelected) {
+				trace("CHECKED!");
 				iob = currentIOB;
+			}
+			else
+			{
+				trace("not checked");
 			}
 			
 			// Load COB
@@ -1161,10 +1174,10 @@ package treatments
 			}
 			
 			//Total & rounding
-			if (bwIOBCheck.isEnabled) 
-			{
-				total = insulinbg + insulincarbs + insulincob - currentIOB + extraCorrections;
-			}
+			//if (bwIOBCheck.isSelected) 
+			//{
+				total = insulinbg + insulincarbs + insulincob - iob + extraCorrections;
+			//}
 			
 			insulin = roundTo(total, 0.05);
 			insulin = Math.round(insulin * 100) / 100;
@@ -1249,7 +1262,7 @@ package treatments
 			
 			//Components validation
 			validateCarbOffset();
-			validateOtherCorrection();
+			//validateOtherCorrection();
 		}
 		
 		private static function validateCarbOffset():void
@@ -1284,6 +1297,19 @@ package treatments
 				bwOtherCorrectionCheck.isEnabled = false;
 				bwOtherCorrectionAmountStepper.isEnabled = false;
 			}
+		}
+		
+		/**
+		 * Event Listeners
+		 */
+		private static function onBgReadingReceivedMaster(e:TransmitterServiceEvent):void
+		{
+			updateCriticalData();
+		}
+		
+		private static function onBgReadingReceivedFollower(e:FollowerEvent):void
+		{
+			updateCriticalData();
 		}
 		
 		private static function onShowFoodManager(e:Event):void
@@ -1683,7 +1709,7 @@ package treatments
 			performCalculations();
 		}
 		
-		private static function showHideSicknessAdjustment(e:Event = null):void
+		private static function onShowHideSicknessAdjustment(e:Event = null):void
 		{
 			if (bwSicknessCheck.isSelected)
 			{
@@ -1701,7 +1727,7 @@ package treatments
 			performCalculations();
 		}
 		
-		private static function showHideOtherCorrection(e:Event = null):void
+		private static function onShowHideOtherCorrection(e:Event = null):void
 		{
 			if (bwOtherCorrectionCheck.isSelected)
 			{
@@ -1719,35 +1745,21 @@ package treatments
 			performCalculations();
 		}
 		
-		private static function closeCallout(e:Event):void
-		{
-			if (bolusWizardCallout != null)
-			{
-				if (bwFoodManager != null)
-				{
-					bwFoodManager.clearData();
-				}
-				
-				bolusWizardCallout.close(false);
-				clearTimeout(calculationTimeout);
-			}
-		}
-		
-		private static function addBolusWizardTreatment(e:Event):void
+		private static function onAddBolusWizardTreatment(e:Event):void
 		{
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_BOLUS_WIZARD_DISCLAIMER_ACCEPTED) != "true")
 			{
 				AlertManager.showActionAlert
-				(
-					"Disclaimer",
-					"Bolus Wizard disclaimer message!",
-					Number.NaN,
-					[
-						{ label: "Cancel" },
-						{ label: "I Accept", triggered: disclaimerAccepted }
-					],
-					HorizontalAlign.JUSTIFY
-				);
+					(
+						"Disclaimer",
+						"Bolus Wizard disclaimer message!",
+						Number.NaN,
+						[
+							{ label: "Cancel" },
+							{ label: "I Accept", triggered: disclaimerAccepted }
+						],
+						HorizontalAlign.JUSTIFY
+					);
 			}
 			else
 				addTreatment();
@@ -1778,18 +1790,18 @@ package treatments
 					if (bwCarbsOffsetStepper.value == 0)
 					{
 						treatment = new Treatment
-						(
-							Treatment.TYPE_MEAL_BOLUS,
-							now,
-							suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
-							bwInsulinTypePicker.selectedItem.id,
-							suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
-							0,
-							TreatmentsManager.getEstimatedGlucose(now),
-							bwNotes.text,
-							null,
-							carbDelayMinutes
-						);
+							(
+								Treatment.TYPE_MEAL_BOLUS,
+								now,
+								suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
+								bwInsulinTypePicker.selectedItem.id,
+								suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+								0,
+								TreatmentsManager.getEstimatedGlucose(now),
+								bwNotes.text,
+								null,
+								carbDelayMinutes
+							);
 						
 						//Add to list
 						TreatmentsManager.treatmentsList.push(treatment);
@@ -1811,16 +1823,16 @@ package treatments
 					{
 						//Insulin portion
 						var treatmentInsulin:Treatment = new Treatment
-						(
-							Treatment.TYPE_MEAL_BOLUS,
-							now,
-							suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
-							bwInsulinTypePicker.selectedItem.id,
-							0,
-							0,
-							TreatmentsManager.getEstimatedGlucose(now),
-							bwNotes.text
-						);
+							(
+								Treatment.TYPE_MEAL_BOLUS,
+								now,
+								suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
+								bwInsulinTypePicker.selectedItem.id,
+								0,
+								0,
+								TreatmentsManager.getEstimatedGlucose(now),
+								bwNotes.text
+							);
 						
 						//Add to list
 						TreatmentsManager.treatmentsList.push(treatmentInsulin);
@@ -1831,18 +1843,18 @@ package treatments
 						//Carb portion
 						var carbTime:Number = now + (bwCarbsOffsetStepper.value * 60 * 1000);
 						var treatmentCarbs:Treatment = new Treatment
-						(
-							Treatment.TYPE_MEAL_BOLUS,
-							carbTime,
-							0,
-							bwInsulinTypePicker.selectedItem.id,
-							suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
-							0,
-							TreatmentsManager.getEstimatedGlucose(carbTime <= now ? carbTime : now),
-							bwNotes.text,
-							null,
-							carbDelayMinutes
-						);
+							(
+								Treatment.TYPE_MEAL_BOLUS,
+								carbTime,
+								0,
+								bwInsulinTypePicker.selectedItem.id,
+								suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+								0,
+								TreatmentsManager.getEstimatedGlucose(carbTime <= now ? carbTime : now),
+								bwNotes.text,
+								null,
+								carbDelayMinutes
+							);
 						if (carbTime > now) treatmentCarbs.needsAdjustment = true;
 						
 						//Add to list
@@ -1877,16 +1889,16 @@ package treatments
 					}
 					
 					treatment = new Treatment
-					(
-						Treatment.TYPE_BOLUS,
-						now,
-						suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
-						bwInsulinTypePicker.selectedItem.id,
-						0,
-						0,
-						TreatmentsManager.getEstimatedGlucose(now),
-						bwNotes.text
-					);
+						(
+							Treatment.TYPE_BOLUS,
+							now,
+							suggestedInsulin + (bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0),
+							bwInsulinTypePicker.selectedItem.id,
+							0,
+							0,
+							TreatmentsManager.getEstimatedGlucose(now),
+							bwNotes.text
+						);
 					
 					//Add to list
 					TreatmentsManager.treatmentsList.push(treatment);
@@ -1915,18 +1927,18 @@ package treatments
 						carbDelayMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
 					
 					treatment = new Treatment
-					(
-						Treatment.TYPE_CARBS_CORRECTION,
-						now,
-						0,
-						"",
-						suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
-						0,
-						TreatmentsManager.getEstimatedGlucose(now),
-						bwNotes.text,
-						null,
-						carbDelayMinutes
-					);
+						(
+							Treatment.TYPE_CARBS_CORRECTION,
+							now,
+							0,
+							"",
+							suggestedCarbs + (bwCarbsCheck.isSelected ? bwCarbsStepper.value : 0),
+							0,
+							TreatmentsManager.getEstimatedGlucose(now),
+							bwNotes.text,
+							null,
+							carbDelayMinutes
+						);
 					
 					//Add to list
 					TreatmentsManager.treatmentsList.push(treatment);
@@ -1945,7 +1957,7 @@ package treatments
 					NightscoutService.uploadTreatment(treatment);
 				}
 				
-				closeCallout(null);
+				onCloseCallout(null);
 			}
 			
 			function disclaimerAccepted():void
@@ -1958,10 +1970,26 @@ package treatments
 			function displayInsulinRequiredAlert():void
 			{
 				AlertManager.showSimpleAlert
-				(
-					"Warning",
-					"In order to add the treatment you first need to configure your insulins. Please press the Configure Insulins button."
-				);
+					(
+						"Warning",
+						"In order to add treatments you first need to configure your insulins. To do so, please press the Configure Insulins button."
+					);
+			}
+		}
+		
+		private static function onCloseCallout(e:Event):void
+		{
+			disableEventListeners();
+			
+			if (bolusWizardCallout != null)
+			{
+				if (bwFoodManager != null)
+				{
+					bwFoodManager.clearData();
+				}
+				
+				bolusWizardCallout.close(false);
+				clearTimeout(calculationTimeout);
 			}
 		}
 	}
