@@ -495,6 +495,7 @@ package treatments
 			bwOtherCorrectionContainer.addChild(bwOtherCorrectionLabelContainer);
 			
 			bwOtherCorrectionCheck = LayoutFactory.createCheckMark(false);
+			bwOtherCorrectionCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionCheck);
 			
 			bwOtherCorrectionLabel = LayoutFactory.createLabel("");
@@ -1117,7 +1118,7 @@ package treatments
 			var bgdiff:Number = 0;
 			var insulincarbs:Number = 0;
 			var carbs:Number = 0;
-			var extraCorrections:Number = bwOtherCorrectionAmountStepper.value;
+			var extraCorrections:Number = bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0;
 			var iob:Number = 0;
 			var cob:Number = 0;
 			var insulincob:Number = 0;
@@ -1192,9 +1193,27 @@ package treatments
 				carbsneeded = Math.ceil(-total * ic);
 			}
 			
-			var preAdjustmentInsulin:Number = insulin;
+			//Trend
+			if (currentTrendCorrection != 0 && bwTrendCheck.isSelected)
+			{
+				if (currentTrendCorrectionUnit == "U")
+				{
+					insulin += currentTrendCorrection;
+				}
+				else if (currentTrendCorrectionUnit == "g")
+				{
+					carbsneeded += currentTrendCorrection;
+					
+					//Recalculate insulin
+					insulin -= roundTo(currentTrendCorrection / ic, 0.01);
+					insulin = Math.round(insulin * 100) / 100;
+					roundingcorrection = insulin - total;
+				}
+			}
 			
 			//Exercise Adjustment
+			var preAdjustmentInsulin:Number = insulin;
+			
 			if (insulin > 0 && bwExerciseCheck.isSelected)
 			{
 				preAdjustmentInsulin -= insulin * (bwExerciseAmountStepper.value / 100);
@@ -1231,38 +1250,11 @@ package treatments
 			record.roundingcorrection = roundingcorrection;
 			record.carbsneeded = carbsneeded;
 			
-			trace("DEBUG:\n", ObjectUtil.toString(record));
-			
 			var outcome:Number = record.bg - record.iob * isf;
 			
+			trace(ObjectUtil.toString(record));
+			
 			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh;
-			
-			trace("isInTarget", isInTarget);
-			trace("currentTrendCorrection", currentTrendCorrection);
-			trace("bwTrendCheck.isSelected", bwTrendCheck.isSelected);
-			
-			if (!isInTarget && currentTrendCorrection != 0 && bwTrendCheck.isSelected)
-			{
-				trace("sim????");
-				
-				if (currentTrendCorrectionUnit == "U")
-				{
-					insulin += currentTrendCorrection;
-					record.insulin = insulin;
-				}
-				else if (currentTrendCorrectionUnit == "g")
-				{
-					carbs += currentTrendCorrection;
-					record.carbs = carbs;
-				}
-				
-				trace("DEBUG:\n", ObjectUtil.toString(record));
-				
-				//Calculate total again
-				isInTarget = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh;
-				
-				trace("isInTarget", isInTarget);
-			}
 			
 			if (isInTarget) 
 			{
@@ -1283,7 +1275,7 @@ package treatments
 				suggestedCarbs = Number(record.carbsneeded);
 				suggestedInsulin = 0;
 				
-				bwSuggestionLabel.text = "Carbs needed: " + record.carbsneeded + "g" + "\n" + "Insulin equivalent: " + record.insulin + "U"; 
+				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Carbs needed: " + record.carbsneeded + "g" + "\n" + "Insulin equivalent: " + record.insulin + "U"; 
 			}
 			else
 			{
@@ -1295,7 +1287,7 @@ package treatments
 				suggestedCarbs = 0;
 				suggestedInsulin = Number(record.insulin);
 				
-				bwSuggestionLabel.text = "Insulin needed: " + record.insulin + "U";
+				bwSuggestionLabel.text = "Projected outcome: " + outcome + "\n" + "Insulin needed: " + record.insulin + "U";
 			}
 			
 			//Components validation
