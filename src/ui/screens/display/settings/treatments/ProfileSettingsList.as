@@ -399,6 +399,10 @@ package ui.screens.display.settings.treatments
 			for (var i:int = 0; i < userProfiles.length; i++) 
 			{
 				var existingProfile:Profile = userProfiles[i] as Profile;
+				
+				if (editMode && selectedProfile.ID == existingProfile.ID)
+					continue;
+				
 				var existingProfileDate:Date = ProfileManager.getProfileDate(existingProfile);
 				
 				if (suggestedHour == existingProfileDate.hours && suggestedMinutes == existingProfileDate.minutes)
@@ -543,6 +547,7 @@ package ui.screens.display.settings.treatments
 			}
 			else if (editMode)
 			{
+				selectedProfile.time = MathHelper.formatNumberToString(profileStartTime.value.hours) + ":" + MathHelper.formatNumberToString(profileStartTime.value.minutes);
 				selectedProfile.insulinSensitivityFactors = unit == "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value)));
 				selectedProfile.insulinToCarbRatios = String(ICStepper.value);
 				selectedProfile.targetGlucoseRates = unit == "mgdl" ? String(targetBGStepper.value) : String(Math.round(BgReading.mmolToMgdl(targetBGStepper.value)));
@@ -570,10 +575,7 @@ package ui.screens.display.settings.treatments
 		
 		private function onTimeChanged(e:Event):void
 		{
-			if (doesProfileTimeOverlap())
-				saveProfileButton.isEnabled = false;
-			else
-				saveProfileButton.isEnabled = true;
+			saveProfileButton.isEnabled = doesProfileTimeOverlap() ? false : true;
 		}
 		
 		private function onISFGuide(e:Event):void
