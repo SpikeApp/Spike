@@ -528,6 +528,11 @@ package database
 		 public static const COMMON_SETTING_CHART_DISPLAY_LOW_LINE:int = 197;
 		 public static const COMMON_SETTING_CHART_DISPLAY_URGENT_LOW_LINE:int = 198;
 		 public static const COMMON_SETTING_CHART_TARGET_LINE_COLOR:int = 199;
+		 
+		 /**
+		 * Bolus Wizard
+		 */
+		 public static const COMMON_SETTING_BOLUS_WIZARD_DEFAULT_EXTENDED_BOLUS_SOUND:int = 200;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -729,7 +734,8 @@ package database
 			 "true",//COMMON_SETTING_CHART_DISPLAY_HIGH_LINE
 			 "true",//COMMON_SETTING_CHART_DISPLAY_LOW_LINE
 			 "true",//COMMON_SETTING_CHART_DISPLAY_URGENT_LOW_LINE
-			 "15658734"//COMMON_SETTING_CHART_TARGET_LINE_COLOR
+			 "15658734",//COMMON_SETTING_CHART_TARGET_LINE_COLOR
+			 ""//COMMON_SETTING_BOLUS_WIZARD_DEFAULT_EXTENDED_BOLUS_SOUND
 		 ];
 
 		 public function CommonSettings()

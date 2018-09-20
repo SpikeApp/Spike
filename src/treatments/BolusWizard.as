@@ -1,5 +1,10 @@
 package treatments
 {
+	import com.adobe.utils.StringUtil;
+	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.notifications.builders.NotificationBuilder;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
@@ -18,6 +23,7 @@ package treatments
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
 	import feathers.controls.Check;
+	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
@@ -27,6 +33,7 @@ package treatments
 	import feathers.controls.ScrollPolicy;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
+	import feathers.controls.popups.VerticalCenteredPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -41,11 +48,13 @@ package treatments
 	import model.ModelLocator;
 	
 	import services.NightscoutService;
+	import services.NotificationService;
 	import services.TransmitterService;
 	
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
 	import starling.core.Starling;
+	import starling.display.DisplayObject;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
@@ -57,9 +66,11 @@ package treatments
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.settings.alarms.AlertCustomizerList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.TimeSpan;
 	import utils.Trace;
 
 	public class BolusWizard
@@ -79,6 +90,9 @@ package treatments
 		private static var currentBG:Number = 0;
 		private static var suggestedCarbs:Number = 0;
 		private static var suggestedInsulin:Number = 0;
+		private static var currentTrendCorrection:Number;
+		private static var currentTrendCorrectionUnit:String;
+		private static var bwExtendedBolusSoundAccessoriesList:Array;
 		
 		/* Objects */
 		private static var currentProfile:Profile;
@@ -173,10 +187,14 @@ package treatments
 		private static var bwInsulinTypeLabel:Label;
 		private static var bwInsulinTypePicker:PickerList;
 		private static var createInsulinButton:Button;
-
-		private static var currentTrendCorrection:Number;
-
-		private static var currentTrendCorrectionUnit:String;
+		private static var bwExtendedBolusReminderContainer:LayoutGroup;
+		private static var bwExtendedBolusReminderLabelContainer:LayoutGroup;
+		private static var bwExtendedBolusReminderCheck:Check;
+		private static var bwExtendedBolusReminderLabel:Label;
+		private static var bwExtendedBolusReminderDateTimeContainer:LayoutGroup;
+		private static var bwExtendedBolusReminderDateTimeSpinner:DateTimeSpinner;
+		private static var bwExtendedBolusSoundListContainer:LayoutGroup;
+		private static var bwExtendedBolusSoundList:PickerList;
 		
 		public function BolusWizard()
 		{
@@ -512,6 +530,99 @@ package treatments
 			bwOtherCorrectionAmountStepper.validate();
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountStepper);
 			
+			//Extended Bolus Reminder
+			bwExtendedBolusReminderContainer = LayoutFactory.createLayoutGroup("vertical");
+			bwExtendedBolusReminderContainer.width = contentWidth;
+			bwMainContainer.addChild(bwExtendedBolusReminderContainer);
+			
+			bwExtendedBolusReminderLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwExtendedBolusReminderContainer.addChild(bwExtendedBolusReminderLabelContainer);
+			
+			bwExtendedBolusReminderCheck = LayoutFactory.createCheckMark(false);
+			bwExtendedBolusReminderLabelContainer.addChild(bwExtendedBolusReminderCheck);
+			
+			bwExtendedBolusReminderLabel = LayoutFactory.createLabel("");
+			bwExtendedBolusReminderLabelContainer.addChild(bwExtendedBolusReminderLabel);
+			
+			//Extended Bolus Reminder Date/Time Spinner
+			bwExtendedBolusReminderDateTimeContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
+			bwExtendedBolusReminderDateTimeContainer.width = contentWidth;
+			(bwExtendedBolusReminderDateTimeContainer.layout as VerticalLayout).paddingTop = 25;
+			
+			bwExtendedBolusReminderDateTimeSpinner = new DateTimeSpinner();
+			bwExtendedBolusReminderDateTimeSpinner.locale = Constants.getUserLocale(true);
+			bwExtendedBolusReminderDateTimeSpinner.height = 30;
+			bwExtendedBolusReminderDateTimeContainer.addChild(bwExtendedBolusReminderDateTimeSpinner);
+			
+			//Extended Bolus Sound Selector
+			bwExtendedBolusSoundListContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER);
+			bwExtendedBolusSoundListContainer.width = contentWidth;
+			(bwExtendedBolusSoundListContainer.layout as HorizontalLayout).paddingTop = 20;
+			(bwExtendedBolusSoundListContainer.layout as HorizontalLayout).paddingBottom = 5;
+			bwExtendedBolusReminderDateTimeContainer.addChild(bwExtendedBolusSoundListContainer);
+			
+			bwExtendedBolusSoundList = LayoutFactory.createPickerList();
+			var soundListPopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
+			soundListPopUp.margin = 25;
+			bwExtendedBolusSoundList.popUpContentManager = soundListPopUp;
+			bwExtendedBolusSoundList.maxWidth = contentWidth - 50;
+			bwExtendedBolusSoundList.addEventListener(Event.CLOSE, onSoundListClose);
+			
+			var soundLabelsList:Array = AlertCustomizerList.ALERT_NAMES_LIST.split(",");
+			soundLabelsList.insertAt(1, "Default iOS");
+			var soundFilesList:Array = AlertCustomizerList.ALERT_SOUNDS_LIST.split(",");
+			soundFilesList[0] = "";
+			soundFilesList.insertAt(1, "default");
+			var soundListProvider:ArrayCollection = new ArrayCollection();
+			bwExtendedBolusSoundAccessoriesList = [];
+			var selectedSoundFileIndex:int = 0;
+			
+			var soundListLength:uint = soundLabelsList.length;
+			for (var i:int = 0; i < soundListLength; i++) 
+			{
+				/* Set Label */
+				var labelValue:String = StringUtil.trim(soundLabelsList[i]);
+				
+				/* Set Accessory */
+				var accessoryValue:DisplayObject;
+				if (StringUtil.trim(soundFilesList[i]) == "" || StringUtil.trim(soundFilesList[i]) == "default")
+					accessoryValue = new Sprite();
+				else
+				{
+					accessoryValue = LayoutFactory.createPlayButton(onPlaySound);
+					accessoryValue.pivotX = -15;
+				}
+				
+				bwExtendedBolusSoundAccessoriesList.push(accessoryValue);
+				
+				/* Set Sound File */
+				var soundFileValue:String;
+				if (StringUtil.trim(soundFilesList[i]) != "" && StringUtil.trim(soundFilesList[i]) != "default")
+					soundFileValue = "../assets/sounds/" + StringUtil.trim(soundFilesList[i]);
+				else
+					soundFileValue = StringUtil.trim(soundFilesList[i]);
+				
+				soundListProvider.push( { label: labelValue, accessory: accessoryValue, soundFile: soundFileValue } );
+				
+				if (soundFileValue == CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_DEFAULT_EXTENDED_BOLUS_SOUND))
+					selectedSoundFileIndex = i
+			}
+			
+			bwExtendedBolusSoundList.dataProvider = soundListProvider;
+			bwExtendedBolusSoundList.itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				itemRenderer.accessoryField = "accessory";
+				itemRenderer.accessoryOffsetX = -20;
+				itemRenderer.labelOffsetX = 20;
+				
+				return itemRenderer;
+			};
+			bwExtendedBolusSoundList.selectedIndex = selectedSoundFileIndex;
+			
+			bwExtendedBolusSoundListContainer.addChild(bwExtendedBolusSoundList);
+			
 			//Notes
 			bwNotes = LayoutFactory.createTextInput(false, false, contentWidth, HorizontalAlign.CENTER, false, false, false, true, true);
 			bwNotes.prompt = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
@@ -544,6 +655,19 @@ package treatments
 			
 			//Final Adjustments
 			bwWizardScrollContainer.addChild(bwMainContainer);
+		}
+		
+		private static function onPlaySound(e:Event):void
+		{
+			var selectedItemData:Object = DefaultListItemRenderer(Button(e.currentTarget).parent).data;
+			var soundFile:String = selectedItemData.soundFile;
+			if(soundFile != "" && soundFile != "default" && soundFile != "no_sound")
+				SpikeANE.playSound(soundFile);
+		}
+		
+		private static function onSoundListClose():void
+		{
+			SpikeANE.stopPlayingSound();
 		}
 		
 		private static function populateComponents():void
@@ -834,14 +958,22 @@ package treatments
 			bwOtherCorrectionContainer.validate();
 			bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
 			
-			bwSuggestionLabel.text = "";
+			//Extended Bolus
+			bwExtendedBolusReminderLabel.text = "Extended Bolus Reminder";
+			bwExtendedBolusReminderCheck.isSelected = false;
+			
+			//Note
 			bwNotes.text = "";
 			
+			//Suggestion
+			bwSuggestionLabel.text = "";
+			
 			//Components Show/Hide
-			showHideCarbExtras();
-			showHideExerciseAdjustment();
+			onShowHideCarbExtras();
+			onShowHideExerciseAdjustment();
 			onShowHideSicknessAdjustment();
 			onShowHideOtherCorrection();
+			onShowHideExtendedBolusReminder();
 			
 			//Reset Callout Vertical Scroll
 			bwWizardScrollContainer.verticalScrollPosition = 0;
@@ -962,9 +1094,9 @@ package treatments
 		{
 			bwGlucoseCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwGlucoseStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwCarbsCheck.addEventListener(Event.CHANGE, showHideCarbExtras);
+			bwCarbsCheck.addEventListener(Event.CHANGE, onShowHideCarbExtras);
 			bwCarbsStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwExerciseCheck.addEventListener(Event.CHANGE, showHideExerciseAdjustment);
+			bwExerciseCheck.addEventListener(Event.CHANGE, onShowHideExerciseAdjustment);
 			bwExerciseTimePicker.addEventListener(Event.CHANGE, onExerciseTimeChanged);
 			bwExerciseIntensityPicker.addEventListener(Event.CHANGE, onExerciseIntensityChanged);
 			bwExerciseDurationPicker.addEventListener(Event.CHANGE, onExerciseDurationChanged);
@@ -980,15 +1112,16 @@ package treatments
 			bolusWizardAddButton.addEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
+			bwExtendedBolusReminderCheck.addEventListener(Event.CHANGE, onShowHideExtendedBolusReminder);
 		}
 		
 		private static function disableEventListeners():void
 		{
 			bwGlucoseCheck.removeEventListener(Event.CHANGE, performCalculations);
 			bwGlucoseStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwCarbsCheck.removeEventListener(Event.CHANGE, showHideCarbExtras);
+			bwCarbsCheck.removeEventListener(Event.CHANGE, onShowHideCarbExtras);
 			bwCarbsStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwExerciseCheck.removeEventListener(Event.CHANGE, showHideExerciseAdjustment);
+			bwExerciseCheck.removeEventListener(Event.CHANGE, onShowHideExerciseAdjustment);
 			bwExerciseTimePicker.removeEventListener(Event.CHANGE, onExerciseTimeChanged);
 			bwExerciseIntensityPicker.removeEventListener(Event.CHANGE, onExerciseIntensityChanged);
 			bwExerciseDurationPicker.removeEventListener(Event.CHANGE, onExerciseDurationChanged);
@@ -1003,6 +1136,7 @@ package treatments
 			bolusWizardAddButton.removeEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
+			bwExtendedBolusReminderCheck.removeEventListener(Event.CHANGE, onShowHideExtendedBolusReminder);
 		}
 		
 		private static function displayCallout():void
@@ -1449,7 +1583,7 @@ package treatments
 			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
 		}
 		
-		private static function showHideCarbExtras(e:Event = null):void
+		private static function onShowHideCarbExtras(e:Event = null):void
 		{
 			if (!bwCarbsCheck.isSelected)
 			{
@@ -1467,7 +1601,7 @@ package treatments
 			performCalculations();
 		}
 		
-		private static function showHideExerciseAdjustment(e:Event = null):void
+		private static function onShowHideExerciseAdjustment(e:Event = null):void
 		{
 			if (bwExerciseCheck.isSelected)
 			{
@@ -1775,6 +1909,28 @@ package treatments
 			performCalculations();
 		}
 		
+		private static function onShowHideExtendedBolusReminder(e:Event = null):void
+		{
+			if (bwExtendedBolusReminderCheck.isSelected)
+			{
+				var childIndex:int = bwExtendedBolusReminderContainer.getChildIndex(bwExtendedBolusReminderLabelContainer);
+				if (childIndex != -1)
+				{
+					bwExtendedBolusReminderContainer.addChildAt(bwExtendedBolusReminderDateTimeContainer, childIndex + 1);
+					
+					bwExtendedBolusReminderDateTimeSpinner.minimum = new Date(new Date().valueOf() + TimeSpan.TIME_5_MINUTES);;
+					bwExtendedBolusReminderDateTimeSpinner.value = new Date(new Date().valueOf() + TimeSpan.TIME_1_HOUR);;
+					
+					bwExtendedBolusReminderDateTimeSpinner.validate();
+					bwExtendedBolusReminderDateTimeContainer.validate();
+				}
+			}
+			else
+				bwExtendedBolusReminderDateTimeContainer.removeFromParent();
+			
+			performCalculations();
+		}
+		
 		private static function onAddBolusWizardTreatment(e:Event):void
 		{
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_BOLUS_WIZARD_DISCLAIMER_ACCEPTED) != "true")
@@ -1985,6 +2141,33 @@ package treatments
 					
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
+				}
+				
+				//Extended Bolus Reminder
+				if (bwExtendedBolusReminderCheck.isSelected)
+				{
+					var delayInSeconds:int = int(TimeSpan.fromDates(new Date(), bwExtendedBolusReminderDateTimeSpinner.value).totalSeconds);
+					
+					//Validation
+					if (delayInSeconds < 0) //User selected to be reminder on a date/time in the past
+						return;
+					
+					var soundFile:String = String(bwExtendedBolusSoundList.selectedItem.soundFile);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_DEFAULT_EXTENDED_BOLUS_SOUND, soundFile, true, false);
+					
+					trace("soundFile", soundFile);
+					
+					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+						.setId(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT)
+						.setAlert("Extended Bolus Reminder")
+						.setTitle("Extended Bolus Reminder")
+						.setBody("Don't forget your extended bolus...")
+						.enableVibration(true)
+						.enableLights(true)
+						.setSound(soundFile)
+						.setDelay(delayInSeconds);
+					
+					Notifications.service.notify(notificationBuilder.build())
 				}
 				
 				onCloseCallout(null);
