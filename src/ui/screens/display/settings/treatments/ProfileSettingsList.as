@@ -490,12 +490,26 @@ package ui.screens.display.settings.treatments
 				return;
 			}
 			
-			if (profile != null)
+			AlertManager.showActionAlert
+			(
+				"Warning",
+				"Are you sure you want to delete this profile?\n\nThis can not be undone!",
+				Number.NaN,
+				[
+					{ label: "Cancel" },
+					{ label: "Yes", triggered: deleteProfile }
+				]
+			);
+			
+			function deleteProfile():void
 			{
-				ProfileManager.deleteProfile(profile);
-				
-				configureComponents();
-				refreshContent();
+				if (profile != null)
+				{
+					ProfileManager.deleteProfile(profile);
+					
+					configureComponents();
+					refreshContent();
+				}
 			}
 		}
 		
