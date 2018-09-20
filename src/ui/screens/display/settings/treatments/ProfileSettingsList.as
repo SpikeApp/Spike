@@ -173,7 +173,7 @@ package ui.screens.display.settings.treatments
 			guidesContainer.addChild(ISFGuideButton);
 			
 			//Glossary
-			glossaryLabel = LayoutFactory.createLabel("ISF (Insulin Sensitivity Factor): The amount of glucose (mg/dL or mmol/L) lowered by 1U of insulin.\n\nI:C (Insulin to Carb Ratio): The amount of carbs (g) covered by 1U of insulin.\n\nTarget BG: The glucose value (mg/dL or mmol/L) you're aiming at, the one you want to stay at most of the time.\n\nTo determine your ISF and I:C please read the guides below.", HorizontalAlign.JUSTIFY);
+			glossaryLabel = LayoutFactory.createLabel("ISF (Insulin Sensitivity Factor): The amount of glucose (mg/dL or mmol/L) lowered by 1U of insulin.\n\nI:C (Insulin to Carb Ratio): The amount of carbs (g) covered by 1U of insulin.\n\nTarget BG: The glucose value (mg/dL or mmol/L) you're aiming at, the one you want to stay at most of the time.\n\nTo determine your ISF and I:C please read the guides below.\n\nTrends: The amount of insulin or carbs needed to make an upward or downward trend arrow flat.", HorizontalAlign.JUSTIFY);
 			glossaryLabel.wordWrap = true;
 			glossaryLabel.width = width;
 			glossaryLabel.paddingTop = glossaryLabel.paddingBottom = 10;
@@ -225,12 +225,12 @@ package ui.screens.display.settings.treatments
 				data.push( { label: "ISF", accessory: ISFStepper } );
 				data.push( { label: "I:C", accessory: ICStepper } );
 				data.push( { label: "Target BG", accessory: targetBGStepper } );
-				data.push( { label: "Trend \u2197", accessory: trend45UpStepper } );
-				data.push( { label: "Trend \u2191", accessory: trend90UpStepper } );
-				data.push( { label: "Trend \u2191\u2191", accessory: trendDoubleUpStepper } );
-				data.push( { label: "Trend \u2198", accessory: trend45DownStepper } );
-				data.push( { label: "Trend \u2193", accessory: trend90DownStepper } );
-				data.push( { label: "Trend \u2193\u2193", accessory: trendDoubleDownStepper } );
+				data.push( { label: "Trend \u2197 - Units Of Insulin", accessory: trend45UpStepper } );
+				data.push( { label: "Trend \u2191 - Units Of Insulin", accessory: trend90UpStepper } );
+				data.push( { label: "Trend \u2191\u2191 - Units Of Insulin", accessory: trendDoubleUpStepper } );
+				data.push( { label: "Trend \u2198 - Grams Of Carbs", accessory: trend45DownStepper } );
+				data.push( { label: "Trend \u2193 - Grams Of Carbs", accessory: trend90DownStepper } );
+				data.push( { label: "Trend \u2193\u2193 - Grams Of Carbs", accessory: trendDoubleDownStepper } );
 			}
 			
 			if (!addMode && !editMode)
