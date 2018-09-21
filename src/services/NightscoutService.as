@@ -981,6 +981,7 @@ package services
 			//Check if the treatment is already present in another queue and delete it.
 			if (!deleteInternalTreatment(activeTreatmentsDelete, treatment))
 			{
+				//Treatments that should not be reuploaded to Nightscout
 				if 
 				(
 					treatment.note.indexOf("Exercise (NS)") != -1 ||
@@ -990,6 +991,7 @@ package services
 					treatment.note.indexOf("Resume Pump") != -1 ||
 					treatment.note.indexOf("Suspend Pump") != -1 ||
 					treatment.note.indexOf("Profile Switch") != -1 ||
+					treatment.note.indexOf("Combo Bolus") != -1 ||
 					treatment.note.indexOf("Announcement") != -1
 				)
 					return;

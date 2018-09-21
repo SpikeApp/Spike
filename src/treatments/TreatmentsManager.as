@@ -1486,6 +1486,8 @@ package treatments
 						treatmentType = Treatment.TYPE_CARBS_CORRECTION;
 						treatmentCarbs = Number(nsTreatment.carbs);
 					}
+					
+					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Combo Bolus";
 				}
 				else if (treatmentEventType == "Carb Correction" || treatmentEventType == "Carbs")
 				{
