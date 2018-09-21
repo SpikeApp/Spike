@@ -188,5 +188,94 @@ package treatments.food.ui
 			thirdRowContainer.addChild(subtractFiberContainer);
 			thirdRowContainer.addChild(amountContainer);
 		}
+		
+		override public function dispose():void
+		{
+			if (servingSizeContainer != null)
+			{
+				servingSizeContainer.removeFromParent();
+				servingSizeContainer.dispose();
+				servingSizeContainer = null;
+			}
+			
+			if (servingSizeContainer != null)
+			{
+				carbsContainer.removeFromParent();
+				carbsContainer.dispose();
+				carbsContainer = null;
+			}
+			
+			if (fiberContainer != null)
+			{
+				fiberContainer.removeFromParent();
+				fiberContainer.dispose();
+				fiberContainer = null;
+			}
+			
+			if (proteinsContainer != null)
+			{
+				proteinsContainer.removeFromParent();
+				proteinsContainer.dispose();
+				proteinsContainer = null;
+			}
+			
+			if (fatsContainer != null)
+			{
+				fatsContainer.removeFromParent();
+				fatsContainer.dispose();
+				fatsContainer = null;
+			}
+			
+			if (caloriesContainer != null)
+			{
+				caloriesContainer.removeFromParent();
+				caloriesContainer.dispose();
+				caloriesContainer = null;
+			}
+			
+			if (linkContainer != null)
+			{
+				linkContainer.removeFromParent();
+				linkContainer.dispose();
+				linkContainer = null;
+			}
+			
+			if (subtractFiberContainer != null)
+			{
+				subtractFiberContainer.removeFromParent();
+				subtractFiberContainer.dispose();
+				subtractFiberContainer = null;
+			}
+			
+			if (amountContainer != null)
+			{
+				amountContainer.removeFromParent();
+				amountContainer.dispose();
+				amountContainer = null;
+			}
+			
+			if (firstRowContainer != null)
+			{
+				firstRowContainer.removeFromParent();
+				firstRowContainer.dispose();
+				firstRowContainer = null;
+			}
+			
+			if (secondRowContainer != null)
+			{
+				secondRowContainer.removeFromParent();
+				secondRowContainer.dispose();
+				secondRowContainer = null;
+			}
+			
+			if (thirdRowContainer != null)
+			{
+				thirdRowContainer.removeFromParent();
+				thirdRowContainer.dispose();
+				thirdRowContainer = null;
+			}
+
+			super.dispose();
+		}
 	}
 }

@@ -21,7 +21,6 @@ package treatments.food.ui
 			
 			this.width = width;
 			
-			
 			createLayout();
 			createContent();	
 		}

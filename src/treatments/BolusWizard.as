@@ -55,6 +55,7 @@ package treatments
 	import starling.animation.Tween;
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
+	import starling.display.Image;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	
@@ -195,21 +196,13 @@ package treatments
 		private static var bwExtendedBolusReminderDateTimeSpinner:DateTimeSpinner;
 		private static var bwExtendedBolusSoundListContainer:LayoutGroup;
 		private static var bwExtendedBolusSoundList:PickerList;
-
 		private static var bwFinalCalculationsContainer:LayoutGroup;
-
 		private static var bwFinalCalculatedInsulinContainer:LayoutGroup;
-
 		private static var bwFinalCalculatedInsulinLabel:Label;
-
 		private static var bwFinalCalculatedInsulinStepper:NumericStepper;
-
 		private static var bwFinalCalculatedCarbsContainer:LayoutGroup;
-
 		private static var bwFinalCalculatedCarbsLabel:Label;
-
 		private static var bwFinalCalculatedCarbsStepper:NumericStepper;
-
 		private static var finalCalculationsLabel:Label;
 		
 		public function BolusWizard()
@@ -229,22 +222,22 @@ package treatments
 				return;
 			}
 			
-			if (initialStart)
-			{
-				createDisplayObjects();
-				setCalloutPositionHelper();
-				initialStart = false;
-			}
-			
-			disableEventListeners();
-			populateComponents();
-			enableEventListeners();
+			//Components & Data
+			createDisplayObjects();
 			updateCriticalData();
+			setCalloutPositionHelper();
 			displayCallout();
+			
+			//Global Event Listeners
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 		}		
 		
 		private static function createDisplayObjects():void
 		{
+			//Variables
+			var i:int;
+			
 			//Total Content Layout
 			var bwTotalScrollLayout:TiledRowsLayout = new TiledRowsLayout();
 			bwTotalScrollLayout.paging = Direction.HORIZONTAL;
@@ -275,7 +268,7 @@ package treatments
 			bwMainContainer.width = contentWidth;
 			
 			//Title
-			bwTitle = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			bwTitle = LayoutFactory.createLabel("Bolus Wizard", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			bwTitle.width = contentWidth;
 			bwMainContainer.addChild(bwTitle);
 			
@@ -287,14 +280,19 @@ package treatments
 			bwCurrentGlucoseContainer.addChild(bwGlucoseLabelContainer);
 			
 			bwGlucoseCheck = LayoutFactory.createCheckMark(true);
+			bwGlucoseCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwGlucoseLabelContainer.addChild(bwGlucoseCheck);
 			
-			bwGlucoseLabel = LayoutFactory.createLabel("");
+			bwGlucoseLabel = LayoutFactory.createLabel("Blood Glucose");
 			bwGlucoseLabelContainer.addChild(bwGlucoseLabel);
 			
-			bwGlucoseStepper = LayoutFactory.createNumericStepper(0, 0, 0, 1);
+			bwGlucoseStepper = LayoutFactory.createNumericStepper(40, 400, 0, 1);
+			bwGlucoseStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwGlucoseStepper.validate();
 			bwCurrentGlucoseContainer.addChild(bwGlucoseStepper);
+			
+			bwCurrentGlucoseContainer.validate();
+			bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
 			
 			bwMainContainer.addChild(bwCurrentGlucoseContainer);
 			
@@ -306,14 +304,22 @@ package treatments
 			bwCarbsContainer.addChild(bwCarbsLabelContainer);
 			
 			bwCarbsCheck = LayoutFactory.createCheckMark(true);
+			bwCarbsCheck.addEventListener(Event.CHANGE, onShowHideCarbExtras);
 			bwCarbsLabelContainer.addChild(bwCarbsCheck);
 			
-			bwCarbsLabel = LayoutFactory.createLabel("");
+			bwCarbsLabel = LayoutFactory.createLabel("Carbs");
 			bwCarbsLabelContainer.addChild(bwCarbsLabel);
 			
 			bwCarbsStepper = LayoutFactory.createNumericStepper(0, 500, 0, 0.5);
+			bwCarbsStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwCarbsStepper.validate();
 			bwCarbsContainer.addChild(bwCarbsStepper);
+			
+			bwCarbsLabel.validate();
+			bwCarbsStepper.validate();
+			bwCarbsLabelContainer.validate();
+			bwCarbsContainer.validate();
+			bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
 			
 			bwMainContainer.addChild(bwCarbsContainer);
 			
@@ -322,20 +328,25 @@ package treatments
 			bwFoodsContainer.width = contentWidth;
 			bwMainContainer.addChild(bwFoodsContainer);
 			
-			bwFoodsLabel = LayoutFactory.createLabel("");
+			bwFoodsLabel = LayoutFactory.createLabel("Foods");
 			bwFoodsLabel.paddingLeft = 25;
 			bwFoodsContainer.addChild(bwFoodsLabel);
 			
-			bwFoodLoaderButton = LayoutFactory.createButton("");
+			bwFoodLoaderButton = LayoutFactory.createButton("Load Foods");
 			bwFoodLoaderButton.addEventListener(Event.TRIGGERED, onShowFoodManager);
 			bwFoodsContainer.addChild(bwFoodLoaderButton);
+			
+			bwFoodsLabel.validate();
+			bwFoodLoaderButton.validate();
+			bwFoodsContainer.validate();
+			bwFoodLoaderButton.x = contentWidth - bwFoodLoaderButton.width;
 			
 			//Carbs Offset
 			bwCarbsOffsetContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwCarbsOffsetContainer.width = contentWidth;
 			bwMainContainer.addChild(bwCarbsOffsetContainer);
 			
-			bwCarbsOffsetLabel = LayoutFactory.createLabel("");
+			bwCarbsOffsetLabel = LayoutFactory.createLabel("Carbs Offset (Min)");
 			bwCarbsOffsetLabel.paddingLeft = 25;
 			bwCarbsOffsetContainer.addChild(bwCarbsOffsetLabel);
 			
@@ -343,35 +354,136 @@ package treatments
 			bwCarbsOffsetStepper.validate();
 			bwCarbsOffsetContainer.addChild(bwCarbsOffsetStepper);
 			
+			bwCarbsOffsetContainer.validate();
+			bwCarbsOffsetStepper.x = contentWidth - bwCarbsOffsetStepper.width + 12;
+			
 			//Carb Type
 			bwCarbTypeContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwMainContainer.addChild(bwCarbTypeContainer);
 			
-			bwCarbTypeLabel = LayoutFactory.createLabel("");
+			bwCarbTypeLabel = LayoutFactory.createLabel("Carb Type");
 			bwCarbTypeLabel.paddingLeft = 25;
 			bwCarbTypeContainer.addChild(bwCarbTypeLabel);
 			
 			bwCarbTypePicker = LayoutFactory.createPickerList();
 			bwCarbTypePicker.labelField = "label";
 			bwCarbTypePicker.popUpContentManager = new DropDownPopUpContentManager();
+			bwCarbTypePicker.dataProvider = new ArrayCollection
+				(
+					[
+						ModelLocator.resourceManagerInstance.getString('treatments','carbs_fast_label'),
+						ModelLocator.resourceManagerInstance.getString('treatments','carbs_medium_label'),
+						ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label')
+					]
+				);
+			
+			var defaultCarbType:String = ProfileManager.getDefaultTimeAbsortionCarbType();
+			if (defaultCarbType == "fast")
+				bwCarbTypePicker.selectedIndex = 0;
+			else if (defaultCarbType == "medium")
+				bwCarbTypePicker.selectedIndex = 1;
+			else if (defaultCarbType == "slow")
+				bwCarbTypePicker.selectedIndex = 2;
+			else
+				bwCarbTypePicker.selectedIndex = 2;
+			
 			bwCarbTypePicker.addEventListener(Event.CHANGE, onCarbTypeChanged);
 			
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
+			
 			bwCarbTypePicker.validate();
+			bwCarbTypeContainer.validate();
+			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
 			
 			//Insulin Type
 			bwInsulinTypeContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwMainContainer.addChild(bwInsulinTypeContainer);
 			
-			bwInsulinTypeLabel = LayoutFactory.createLabel("");
+			bwInsulinTypeLabel = LayoutFactory.createLabel("Insulin Type");
 			bwInsulinTypeContainer.addChild(bwInsulinTypeLabel);
 			
 			bwInsulinTypePicker = LayoutFactory.createPickerList();
 			bwInsulinTypePicker.labelField = "label";
 			bwInsulinTypePicker.popUpContentManager = new DropDownPopUpContentManager();
-			
 			bwInsulinTypeContainer.addChild(bwInsulinTypePicker);
-			bwInsulinTypePicker.validate();
+			
+			var askForInsulinConfiguration:Boolean = true;
+			if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
+			{
+				var insulinDataProvider:ArrayCollection = new ArrayCollection();
+				var userInsulins:Array = sortInsulinsByDefault(ProfileManager.insulinsList.concat());
+				var numInsulins:int = userInsulins.length
+				for (i = 0; i < numInsulins; i++) 
+				{
+					var insulin:Insulin = userInsulins[i];
+					if (insulin.name.indexOf("Nightscout") == -1 && !insulin.isHidden)
+					{
+						insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
+						askForInsulinConfiguration = false;
+					}
+				}
+				bwInsulinTypePicker.dataProvider = insulinDataProvider;
+				bwInsulinTypePicker.popUpContentManager = new DropDownPopUpContentManager();
+				bwInsulinTypePicker.itemRendererFactory = function():IListItemRenderer
+				{
+					var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+					renderer.paddingRight = renderer.paddingLeft = 15;
+					return renderer;
+				};
+			}
+			
+			if (askForInsulinConfiguration)
+			{
+				if (createInsulinButton != null)
+				{
+					createInsulinButton.removeEventListeners();
+					createInsulinButton.removeFromParent(true);
+				}
+				createInsulinButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','configure_insulins_button_label'));
+				createInsulinButton.addEventListener(Event.TRIGGERED, onConfigureInsulins);
+				bwInsulinTypeContainer.removeChild(bwInsulinTypePicker);
+				bwInsulinTypeContainer.addChild(createInsulinButton);
+				createInsulinButton.validate();
+				bwInsulinTypeContainer.validate();
+				createInsulinButton.x = contentWidth - createInsulinButton.width + 1;
+				
+				canAddInsulin = false;
+				
+				function onConfigureInsulins(e:Event):void
+				{
+					if (createInsulinButton != null) createInsulinButton.removeEventListener(Event.TRIGGERED, onConfigureInsulins);
+					
+					AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_PROFILE );
+					
+					var popupTween:Tween=new Tween(bolusWizardCallout, 0.3, Transitions.LINEAR);
+					popupTween.fadeTo(0);
+					popupTween.onComplete = function():void
+					{
+						onCloseCallout(null);
+					}
+					Starling.juggler.add(popupTween);
+				}
+			}
+			else
+			{
+				canAddInsulin = true;
+				
+				if (bwInsulinTypePicker.parent == null)
+				{
+					if (createInsulinButton != null)
+					{
+						createInsulinButton.removeEventListeners();
+						createInsulinButton.removeFromParent(true);
+						createInsulinButton = null;
+					}
+					
+					bwInsulinTypeContainer.addChild(bwInsulinTypePicker);
+				}
+				
+				bwInsulinTypePicker.validate();
+				bwInsulinTypeContainer.validate();
+				bwInsulinTypePicker.x = contentWidth - bwInsulinTypePicker.width + 1;
+			}
 			
 			//Trend
 			bwTrendContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -382,13 +494,56 @@ package treatments
 			bwTrendContainer.addChild(bwTrendLabelContainer);
 			
 			bwTrendCheck = LayoutFactory.createCheckMark(false);
+			bwTrendCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwTrendContainer.addChild(bwTrendCheck);
 			
-			bwTrendLabel = LayoutFactory.createLabel("");
+			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
+			bwTrendLabel = LayoutFactory.createLabel("Trend" + " " + currentTrendArrow);
 			bwTrendContainer.addChild(bwTrendLabel);
 			
-			bwCurrentTrendLabel = LayoutFactory.createLabel("");
+			var currentTrendCorrection:Number = 0;
+			var currentTrendCorrectionUnit:String = "U";
+			if (currentTrendArrow != "")
+			{
+				if (currentTrendArrow == "\u2197")
+				{
+					currentTrendCorrection = currentProfile.trend45Up;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2191")
+				{
+					currentTrendCorrection = currentProfile.trend90Up;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2191\u2191")
+				{
+					currentTrendCorrection = currentProfile.trendDoubleUp;
+					currentTrendCorrectionUnit = "U";
+				}
+				else if (currentTrendArrow == "\u2198")
+				{
+					currentTrendCorrection = currentProfile.trend45Down;
+					currentTrendCorrectionUnit = "g";
+				}
+				else if (currentTrendArrow == "\u2193")
+				{
+					currentTrendCorrection = currentProfile.trend90Down;
+					currentTrendCorrectionUnit = "g";
+				}
+				else if (currentTrendArrow == "\u2193\u2193")
+				{
+					currentTrendCorrection = currentProfile.trendDoubleDown;
+					currentTrendCorrectionUnit = "g";
+				}
+			}
+			
+			bwCurrentTrendLabel = LayoutFactory.createLabel(currentTrendCorrection + currentTrendCorrectionUnit);
 			bwTrendContainer.addChild(bwCurrentTrendLabel);
+			
+			bwCurrentTrendLabel.validate();
+			bwTrendContainer.validate();
+			bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
+			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
 			
 			//Current IOB
 			bwIOBContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -399,13 +554,19 @@ package treatments
 			bwIOBContainer.addChild(bwIOBLabelContainer);
 			
 			bwIOBCheck = LayoutFactory.createCheckMark(false);
+			bwIOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwIOBLabelContainer.addChild(bwIOBCheck);
 			
-			bwIOBLabel = LayoutFactory.createLabel("");
+			bwIOBLabel = LayoutFactory.createLabel("IOB");
 			bwIOBLabelContainer.addChild(bwIOBLabel);
 			
-			bwCurrentIOBLabel = LayoutFactory.createLabel("");
+			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
+			bwCurrentIOBLabel = LayoutFactory.createLabel(GlucoseFactory.formatIOB(currentIOB));
 			bwIOBContainer.addChild(bwCurrentIOBLabel);
+			
+			bwCurrentIOBLabel.validate();
+			bwIOBContainer.validate();
+			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			//Current COB
 			bwCOBContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -416,13 +577,19 @@ package treatments
 			bwCOBContainer.addChild(bwCOBLabelContainer);
 			
 			bwCOBCheck = LayoutFactory.createCheckMark(false);
+			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwCOBLabelContainer.addChild(bwCOBCheck);
 			
-			bwCOBLabel = LayoutFactory.createLabel("");
+			bwCOBLabel = LayoutFactory.createLabel("COB");
 			bwCOBLabelContainer.addChild(bwCOBLabel);
 			
-			bwCurrentCOBLabel = LayoutFactory.createLabel("");
+			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
+			bwCurrentCOBLabel = LayoutFactory.createLabel(GlucoseFactory.formatCOB(currentCOB));
 			bwCOBContainer.addChild(bwCurrentCOBLabel);
+			
+			bwCurrentCOBLabel.validate();
+			bwCOBContainer.validate();
+			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
 			
 			//Exercise Adjustment
 			bwExerciseContainer = LayoutFactory.createLayoutGroup("vertical");
@@ -433,9 +600,10 @@ package treatments
 			bwExerciseContainer.addChild(bwExerciseLabelContainer);
 			
 			bwExerciseCheck = LayoutFactory.createCheckMark(false);
+			bwExerciseCheck.addEventListener(Event.CHANGE, onShowHideExerciseAdjustment);
 			bwExerciseLabelContainer.addChild(bwExerciseCheck);
 			
-			bwExerciseLabel = LayoutFactory.createLabel("");
+			bwExerciseLabel = LayoutFactory.createLabel("Exercise Adjustment");
 			bwExerciseLabelContainer.addChild(bwExerciseLabel);
 			
 			bwExerciseSettingsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
@@ -445,34 +613,56 @@ package treatments
 			bwExerciseTimeContainer.width = contentWidth;
 			bwExerciseSettingsContainer.addChild(bwExerciseTimeContainer);
 			
-			bwExerciseTimeLabel = LayoutFactory.createLabel("");
+			bwExerciseTimeLabel = LayoutFactory.createLabel("Time");
 			bwExerciseTimeLabel.paddingLeft = 25;
 			bwExerciseTimeContainer.addChild(bwExerciseTimeLabel);
 			
 			bwExerciseTimePicker = LayoutFactory.createPickerList();
 			bwExerciseTimePicker.labelField = "label";
 			bwExerciseTimePicker.popUpContentManager = new DropDownPopUpContentManager();
+			bwExerciseTimePicker.dataProvider = new ArrayCollection
+				(
+					[
+						{ label: "Before Exercise" },	
+						{ label: "After Exercise" }	
+					]
+				);
+			bwExerciseTimePicker.selectedIndex = 0;
+			bwExerciseTimePicker.addEventListener(Event.CHANGE, onExerciseTimeChanged);
 			bwExerciseTimeContainer.addChild(bwExerciseTimePicker);
 			bwExerciseTimePicker.validate();
+			bwExerciseTimePicker.x = contentWidth - bwExerciseTimePicker.width;
 			
 			bwExerciseIntensityContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwExerciseIntensityContainer.width = contentWidth;
 			bwExerciseSettingsContainer.addChild(bwExerciseIntensityContainer);
 			
-			bwExerciseIntensityLabel = LayoutFactory.createLabel("");
+			bwExerciseIntensityLabel = LayoutFactory.createLabel("Intensity");
 			bwExerciseIntensityLabel.paddingLeft = 25;
 			bwExerciseIntensityContainer.addChild(bwExerciseIntensityLabel);
 			
 			bwExerciseIntensityPicker = LayoutFactory.createPickerList();
 			bwExerciseIntensityPicker.labelField = "label";
 			bwExerciseIntensityPicker.popUpContentManager = new DropDownPopUpContentManager();
+			bwExerciseIntensityPicker.dataProvider = new ArrayCollection
+				(
+					[
+						{ label: "Low" },	
+						{ label: "Moderate" },	
+						{ label: "High" }	
+					]
+				);
+			bwExerciseIntensityPicker.selectedIndex = 0;
+			bwExerciseIntensityPicker.addEventListener(Event.CHANGE, onExerciseIntensityChanged);
 			bwExerciseIntensityContainer.addChild(bwExerciseIntensityPicker);
+			bwExerciseIntensityPicker.validate();
+			bwExerciseIntensityPicker.x = contentWidth - bwExerciseIntensityPicker.width;
 			
 			bwExerciseDurationContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwExerciseDurationContainer.width = contentWidth;
 			bwExerciseSettingsContainer.addChild(bwExerciseDurationContainer);
 			
-			bwExerciseDurationLabel = LayoutFactory.createLabel("");
+			bwExerciseDurationLabel = LayoutFactory.createLabel("Duration");
 			bwExerciseDurationLabel.paddingLeft = 25;
 			bwExerciseDurationContainer.addChild(bwExerciseDurationLabel);
 			
@@ -481,19 +671,37 @@ package treatments
 			var bwExerciseDurationPopup:DropDownPopUpContentManager = new DropDownPopUpContentManager();
 			bwExerciseDurationPopup.primaryDirection = RelativePosition.TOP;
 			bwExerciseDurationPicker.popUpContentManager = bwExerciseDurationPopup;
+			bwExerciseDurationPicker.dataProvider = new ArrayCollection
+				(
+					[
+						{ label: "15 min" },	
+						{ label: "30 min" },	
+						{ label: "45 min" },	
+						{ label: "60 min" },	
+						{ label: "90 min" },	
+						{ label: "120 min" },	
+						{ label: "180 min" }	
+					]
+				);
+			bwExerciseDurationPicker.selectedIndex = 0;
+			bwExerciseDurationPicker.addEventListener(Event.CHANGE, onExerciseDurationChanged);
 			bwExerciseDurationContainer.addChild(bwExerciseDurationPicker);
+			bwExerciseDurationPicker.validate();
+			bwExerciseDurationPicker.x = contentWidth - bwExerciseDurationPicker.width;
 			
 			bwExerciseAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwExerciseAmountContainer.width = contentWidth;
 			bwExerciseSettingsContainer.addChild(bwExerciseAmountContainer);
 			
-			bwExerciseAmountLabel = LayoutFactory.createLabel("");
+			bwExerciseAmountLabel = LayoutFactory.createLabel("Reduction (%)");
 			bwExerciseAmountLabel.paddingLeft = 25;
 			bwExerciseAmountContainer.addChild(bwExerciseAmountLabel);
 			
 			bwExerciseAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, 1);
+			bwExerciseAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwExerciseAmountStepper.validate();
 			bwExerciseAmountContainer.addChild(bwExerciseAmountStepper);
+			bwExerciseAmountStepper.x = contentWidth - bwExerciseAmountStepper.width + 12;
 			
 			//Sickness Adjustment
 			bwSicknessContainer = LayoutFactory.createLayoutGroup("vertical");
@@ -504,21 +712,26 @@ package treatments
 			bwSicknessContainer.addChild(bwSicknessLabelContainer);
 			
 			bwSicknessCheck = LayoutFactory.createCheckMark(false);
+			bwSicknessCheck.addEventListener(Event.CHANGE, onShowHideSicknessAdjustment);
 			bwSicknessLabelContainer.addChild(bwSicknessCheck);
 			
-			bwSicknessLabel = LayoutFactory.createLabel("");
+			bwSicknessLabel = LayoutFactory.createLabel("Sickness Adjustment");
 			bwSicknessLabelContainer.addChild(bwSicknessLabel);
 			
 			bwSicknessAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwSicknessAmountContainer.width = contentWidth;
 			
-			bwSicknessAmountLabel = LayoutFactory.createLabel("");
+			bwSicknessAmountLabel = LayoutFactory.createLabel("Increase (%)");
 			bwSicknessAmountLabel.paddingLeft = 25;
 			bwSicknessAmountContainer.addChild(bwSicknessAmountLabel);
 			
 			bwSicknessAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, 1);
+			bwSicknessAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwSicknessAmountStepper.validate();
 			bwSicknessAmountContainer.addChild(bwSicknessAmountStepper);
+			
+			bwSicknessContainer.validate();
+			bwSicknessAmountStepper.x = contentWidth - bwSicknessAmountStepper.width + 12;
 			
 			//Other Correction
 			bwOtherCorrectionContainer = LayoutFactory.createLayoutGroup("vertical");
@@ -529,22 +742,27 @@ package treatments
 			bwOtherCorrectionContainer.addChild(bwOtherCorrectionLabelContainer);
 			
 			bwOtherCorrectionCheck = LayoutFactory.createCheckMark(false);
+			bwOtherCorrectionCheck.addEventListener(Event.CHANGE, onShowHideOtherCorrection);
 			bwOtherCorrectionCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionCheck);
 			
-			bwOtherCorrectionLabel = LayoutFactory.createLabel("");
+			bwOtherCorrectionLabel = LayoutFactory.createLabel("Extra Correction");
 			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionLabel);
 			
 			bwOtherCorrectionAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwOtherCorrectionAmountContainer.width = contentWidth;
 			
-			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("");
+			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("Amount (U)");
 			bwOtherCorrectionAmountLabel.paddingLeft = 25;
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountLabel);
 			
 			bwOtherCorrectionAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, 0.05);
+			bwOtherCorrectionAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwOtherCorrectionAmountStepper.validate();
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountStepper);
+			
+			bwOtherCorrectionContainer.validate();
+			bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
 			
 			//Extended Bolus Reminder
 			bwExtendedBolusReminderContainer = LayoutFactory.createLayoutGroup("vertical");
@@ -555,9 +773,10 @@ package treatments
 			bwExtendedBolusReminderContainer.addChild(bwExtendedBolusReminderLabelContainer);
 			
 			bwExtendedBolusReminderCheck = LayoutFactory.createCheckMark(false);
+			bwExtendedBolusReminderCheck.addEventListener(Event.CHANGE, onShowHideExtendedBolusReminder);
 			bwExtendedBolusReminderLabelContainer.addChild(bwExtendedBolusReminderCheck);
 			
-			bwExtendedBolusReminderLabel = LayoutFactory.createLabel("");
+			bwExtendedBolusReminderLabel = LayoutFactory.createLabel("Extended Bolus Reminder");
 			bwExtendedBolusReminderLabelContainer.addChild(bwExtendedBolusReminderLabel);
 			
 			//Extended Bolus Reminder Date/Time Spinner
@@ -594,7 +813,7 @@ package treatments
 			var selectedSoundFileIndex:int = 0;
 			
 			var soundListLength:uint = soundLabelsList.length;
-			for (var i:int = 0; i < soundListLength; i++) 
+			for (i = 0; i < soundListLength; i++) 
 			{
 				/* Set Label */
 				var labelValue:String = StringUtil.trim(soundLabelsList[i]);
@@ -669,7 +888,8 @@ package treatments
 			bwFinalCalculatedInsulinLabel = LayoutFactory.createLabel("Insulin", HorizontalAlign.CENTER);
 			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinLabel);
 			
-			bwFinalCalculatedInsulinStepper = LayoutFactory.createNumericStepper(0, 200, 0, 0.1);
+			bwFinalCalculatedInsulinStepper = LayoutFactory.createNumericStepper(0, 200, 0, 0.01);
+			bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
 			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinStepper);
 			
 			bwFinalCalculatedCarbsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
@@ -679,6 +899,7 @@ package treatments
 			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsLabel);
 			
 			bwFinalCalculatedCarbsStepper = LayoutFactory.createNumericStepper(0, 1000, 0, 0.5);
+			bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
 			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsStepper);
 			
 			bwMainContainer.addChild(bwFinalCalculationsContainer);
@@ -694,15 +915,24 @@ package treatments
 			bwMainContainer.addChild(bolusWizardActionContainer);
 			
 			bolusWizardCancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
+			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, onCloseCallout);
 			bolusWizardActionContainer.addChild(bolusWizardCancelButton);
 			
 			bolusWizardAddButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
+			bolusWizardAddButton.addEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
 			bolusWizardActionContainer.addChild(bolusWizardAddButton);
 			
 			bwMainContainer.addChild(bolusWizardActionContainer);
 			
 			//Final Adjustments
 			bwWizardScrollContainer.addChild(bwMainContainer);
+			
+			//Components Show/Hide
+			onShowHideCarbExtras();
+			onShowHideExerciseAdjustment();
+			onShowHideSicknessAdjustment();
+			onShowHideOtherCorrection();
+			onShowHideExtendedBolusReminder();
 		}
 		
 		private static function onPlaySound(e:Event):void
@@ -716,324 +946,6 @@ package treatments
 		private static function onSoundListClose():void
 		{
 			SpikeANE.stopPlayingSound();
-		}
-		
-		private static function populateComponents():void
-		{
-			//Properies
-			suggestedInsulin = 0;
-			suggestedCarbs = 0;
-			
-			//Title
-			bwTitle.text = "Bolus Wizard";
-			
-			//Current Glucose
-			bwGlucoseLabel.text = "Blood Glucose";
-			bwGlucoseCheck.isSelected = true;
-			bwGlucoseStepper.minimum = 0;
-			bwGlucoseStepper.maximum = 400;
-			latestBgReading = BgReading.lastWithCalculatedValue();
-			if (latestBgReading != null && new Date().valueOf() - latestBgReading.timestamp <= TIME_11_MINUTES) //Only use BG readings less than 11 minutes ago.
-			{
-				currentBG = Math.round(latestBgReading.calculatedValue);
-			}
-			else
-			{
-				bwGlucoseCheck.isSelected = false
-				currentBG = 0;
-			}
-			
-			bwGlucoseStepper.value = currentBG;
-			bwGlucoseStepper.step = 1;
-			bwCurrentGlucoseContainer.validate();
-			bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
-			
-			//Carbs
-			bwCarbsCheck.isSelected = true;
-			bwCarbsLabel.text = "Carbs";
-			bwCarbsStepper.value = 0;
-			bwCarbsLabel.validate();
-			bwCarbsStepper.validate();
-			bwCarbsLabelContainer.validate();
-			bwCarbsContainer.validate();
-			bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
-			bwFoodsLabel.text = "Foods";
-			bwFoodsLabel.validate();
-			bwFoodLoaderButton.label = "Load Foods";
-			bwFoodLoaderButton.validate();
-			bwFoodsContainer.validate();
-			bwFoodLoaderButton.x = contentWidth - bwFoodLoaderButton.width;
-			bwCarbsOffsetLabel.text = "Carbs Offset (Min)";
-			bwCarbsOffsetStepper.value = 0;
-			bwCarbsOffsetContainer.validate();
-			bwCarbsOffsetStepper.x = contentWidth - bwCarbsOffsetStepper.width + 12;
-			bwCarbTypeLabel.text = "Carb Type";
-			bwCarbTypePicker.dataProvider = new ArrayCollection
-			(
-				[
-					ModelLocator.resourceManagerInstance.getString('treatments','carbs_fast_label'),
-					ModelLocator.resourceManagerInstance.getString('treatments','carbs_medium_label'),
-					ModelLocator.resourceManagerInstance.getString('treatments','carbs_slow_label')
-				]
-			);
-			
-			var defaultCarbType:String = ProfileManager.getDefaultTimeAbsortionCarbType();
-			if (defaultCarbType == "fast")
-				bwCarbTypePicker.selectedIndex = 0;
-			else if (defaultCarbType == "medium")
-				bwCarbTypePicker.selectedIndex = 1;
-			else if (defaultCarbType == "slow")
-				bwCarbTypePicker.selectedIndex = 2;
-			else
-				bwCarbTypePicker.selectedIndex = 2;
-			
-			bwCarbTypeContainer.validate();
-			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
-			
-			//Insulin Type
-			bwInsulinTypeLabel.text = "Insulin Type";
-			
-			var askForInsulinConfiguration:Boolean = true;
-			if (ProfileManager.insulinsList != null && ProfileManager.insulinsList.length > 0)
-			{
-				var insulinDataProvider:ArrayCollection = new ArrayCollection();
-				var userInsulins:Array = sortInsulinsByDefault(ProfileManager.insulinsList.concat());
-				var numInsulins:int = userInsulins.length
-				for (var i:int = 0; i < numInsulins; i++) 
-				{
-					var insulin:Insulin = userInsulins[i];
-					if (insulin.name.indexOf("Nightscout") == -1 && !insulin.isHidden)
-					{
-						insulinDataProvider.push( { label:insulin.name, id: insulin.ID } );
-						askForInsulinConfiguration = false;
-					}
-				}
-				bwInsulinTypePicker.dataProvider = insulinDataProvider;
-				bwInsulinTypePicker.popUpContentManager = new DropDownPopUpContentManager();
-				bwInsulinTypePicker.itemRendererFactory = function():IListItemRenderer
-				{
-					var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-					renderer.paddingRight = renderer.paddingLeft = 15;
-					return renderer;
-				};
-			}
-			
-			if (askForInsulinConfiguration)
-			{
-				if (createInsulinButton != null)
-				{
-					createInsulinButton.removeEventListeners();
-					createInsulinButton.removeFromParent(true);
-				}
-				createInsulinButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','configure_insulins_button_label'));
-				createInsulinButton.addEventListener(Event.TRIGGERED, onConfigureInsulins);
-				bwInsulinTypeContainer.removeChild(bwInsulinTypePicker);
-				bwInsulinTypeContainer.addChild(createInsulinButton);
-				createInsulinButton.validate();
-				bwInsulinTypeContainer.validate();
-				createInsulinButton.x = contentWidth - createInsulinButton.width + 1;
-				
-				canAddInsulin = false;
-				
-				function onConfigureInsulins(e:Event):void
-				{
-					if (createInsulinButton != null) createInsulinButton.removeEventListener(Event.TRIGGERED, onConfigureInsulins);
-					
-					AppInterface.instance.navigator.pushScreen( Screens.SETTINGS_PROFILE );
-					
-					var popupTween:Tween=new Tween(bolusWizardCallout, 0.3, Transitions.LINEAR);
-					popupTween.fadeTo(0);
-					popupTween.onComplete = function():void
-					{
-						onCloseCallout(null);
-					}
-					Starling.juggler.add(popupTween);
-				}
-			}
-			else
-			{
-				canAddInsulin = true;
-				
-				if (bwInsulinTypePicker.parent == null)
-				{
-					if (createInsulinButton != null)
-					{
-						createInsulinButton.removeEventListeners();
-						createInsulinButton.removeFromParent(true);
-						createInsulinButton = null;
-					}
-					
-					bwInsulinTypeContainer.addChild(bwInsulinTypePicker);
-				}
-				
-				bwInsulinTypePicker.validate();
-				bwInsulinTypeContainer.validate();
-				bwInsulinTypePicker.x = contentWidth - bwInsulinTypePicker.width + 1;
-			}
-			
-			//Current Trend
-			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
-			//bwTrendCheck.isSelected = latestBgReading != null ? true : false;
-			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
-			var currentTrendCorrection:Number = 0;
-			var currentTrendCorrectionUnit:String = "U";
-			if (currentTrendArrow != "")
-			{
-				if (currentTrendArrow == "\u2197")
-				{
-					currentTrendCorrection = currentProfile.trend45Up;
-					currentTrendCorrectionUnit = "U";
-				}
-				else if (currentTrendArrow == "\u2191")
-				{
-					currentTrendCorrection = currentProfile.trend90Up;
-					currentTrendCorrectionUnit = "U";
-				}
-				else if (currentTrendArrow == "\u2191\u2191")
-				{
-					currentTrendCorrection = currentProfile.trendDoubleUp;
-					currentTrendCorrectionUnit = "U";
-				}
-				else if (currentTrendArrow == "\u2198")
-				{
-					currentTrendCorrection = currentProfile.trend45Down;
-					currentTrendCorrectionUnit = "g";
-				}
-				else if (currentTrendArrow == "\u2193")
-				{
-					currentTrendCorrection = currentProfile.trend90Down;
-					currentTrendCorrectionUnit = "g";
-				}
-				else if (currentTrendArrow == "\u2193\u2193")
-				{
-					currentTrendCorrection = currentProfile.trendDoubleDown;
-					currentTrendCorrectionUnit = "g";
-				}
-			}
-			
-			//if (currentTrendCorrection == 0) bwTrendCheck.isSelected = false;
-			bwCurrentTrendLabel.text = currentTrendCorrection + currentTrendCorrectionUnit;
-			bwCurrentTrendLabel.validate();
-			bwTrendContainer.validate();
-			bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
-			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
-			
-			//Current IOB
-			bwIOBCheck.isSelected = false;
-			bwIOBLabel.text = "IOB";
-			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
-			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(currentIOB);
-			bwCurrentIOBLabel.validate();
-			bwIOBContainer.validate();
-			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
-			
-			//Current COB
-			bwCOBCheck.isSelected = false;
-			bwCOBLabel.text = "COB";
-			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
-			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(currentCOB);
-			bwCurrentCOBLabel.validate();
-			bwCOBContainer.validate();
-			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
-			
-			//Exercise Adjustment
-			bwExerciseCheck.isSelected = false;
-			bwExerciseLabel.text = "Exercise Adjustment";
-			
-			//Time
-			bwExerciseTimeLabel.text = "Time";
-			bwExerciseTimePicker.dataProvider = new ArrayCollection
-			(
-				[
-					{ label: "Before Exercise" },	
-					{ label: "After Exercise" }	
-				]
-			);
-			bwExerciseTimePicker.selectedIndex = 0;
-			bwExerciseTimePicker.validate();
-			bwExerciseTimePicker.x = contentWidth - bwExerciseTimePicker.width;
-			
-			//Intensity
-			bwExerciseIntensityLabel.text = "Intensity";
-			bwExerciseIntensityPicker.dataProvider = new ArrayCollection
-			(
-				[
-					{ label: "Low" },	
-					{ label: "Moderate" },	
-					{ label: "High" }	
-				]
-			);
-			bwExerciseIntensityPicker.selectedIndex = 0;
-			bwExerciseIntensityPicker.validate();
-			bwExerciseIntensityPicker.x = contentWidth - bwExerciseIntensityPicker.width;
-			
-			//Duration
-			bwExerciseDurationLabel.text = "Duration";
-			bwExerciseDurationPicker.dataProvider = new ArrayCollection
-			(
-				[
-					{ label: "15 min" },	
-					{ label: "30 min" },	
-					{ label: "45 min" },	
-					{ label: "60 min" },	
-					{ label: "90 min" },	
-					{ label: "120 min" },	
-					{ label: "180 min" }	
-				]
-			);
-			bwExerciseDurationPicker.selectedIndex = 0;
-			bwExerciseDurationPicker.validate();
-			bwExerciseDurationPicker.x = contentWidth - bwExerciseDurationPicker.width;
-			
-			//bwSicknessContainer.validate();
-			//Amount
-			bwExerciseAmountLabel.text = "Reduction (%)";
-			bwExerciseAmountStepper.x = contentWidth - bwExerciseAmountStepper.width + 12;
-			
-			//Sickness Adjustment
-			bwSicknessLabel.text = "Sickness Adjustment";
-			bwSicknessAmountLabel.text = "Increase (%)";
-			bwSicknessCheck.isSelected = false;
-			bwSicknessAmountStepper.value = 0;
-			bwSicknessContainer.validate();
-			bwSicknessAmountStepper.x = contentWidth - bwSicknessAmountStepper.width + 12;
-			
-			//Other Correction
-			bwOtherCorrectionLabel.text = "Extra Correction";
-			bwOtherCorrectionAmountLabel.text = "Amount (U)";
-			bwOtherCorrectionCheck.isSelected = false;
-			bwOtherCorrectionAmountStepper.value = 0;
-			bwOtherCorrectionContainer.validate();
-			bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
-			
-			//Extended Bolus
-			bwExtendedBolusReminderLabel.text = "Extended Bolus Reminder";
-			bwExtendedBolusReminderCheck.isSelected = false;
-			
-			//Note
-			bwNotes.text = "";
-			
-			//Final Calculations
-			finalCalculationsLabel.text = "Final Calculations";
-			bwFinalCalculatedInsulinLabel.text = "Insulin";
-			bwFinalCalculatedCarbsLabel.text = "Carbs";
-			bwFinalCalculatedInsulinStepper.value = 0;
-			bwFinalCalculatedInsulinStepper.step = 0.01;
-			bwFinalCalculatedCarbsStepper.value = 0;
-			bwFinalCalculatedCarbsStepper.step = 0.5;
-			
-			//Suggestion
-			bwSuggestionLabel.text = "";
-			
-			//Components Show/Hide
-			onShowHideCarbExtras();
-			onShowHideExerciseAdjustment();
-			onShowHideSicknessAdjustment();
-			onShowHideOtherCorrection();
-			onShowHideExtendedBolusReminder();
-			
-			//Reset Callout Vertical Scroll
-			bwWizardScrollContainer.verticalScrollPosition = 0;
 		}
 		
 		private static function sortInsulinsByDefault(insulins:Array):Array
@@ -1147,59 +1059,6 @@ package treatments
 			performCalculations();
 		}
 		
-		private static function enableEventListeners():void
-		{
-			bwGlucoseCheck.addEventListener(Event.CHANGE, performCalculations);
-			bwGlucoseStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwCarbsCheck.addEventListener(Event.CHANGE, onShowHideCarbExtras);
-			bwCarbsStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwExerciseCheck.addEventListener(Event.CHANGE, onShowHideExerciseAdjustment);
-			bwExerciseTimePicker.addEventListener(Event.CHANGE, onExerciseTimeChanged);
-			bwExerciseIntensityPicker.addEventListener(Event.CHANGE, onExerciseIntensityChanged);
-			bwExerciseDurationPicker.addEventListener(Event.CHANGE, onExerciseDurationChanged);
-			bwExerciseAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwSicknessCheck.addEventListener(Event.CHANGE, onShowHideSicknessAdjustment);
-			bwSicknessAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwOtherCorrectionCheck.addEventListener(Event.CHANGE, onShowHideOtherCorrection);
-			bwOtherCorrectionAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
-			bwIOBCheck.addEventListener(Event.CHANGE, performCalculations);
-			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
-			bwTrendCheck.addEventListener(Event.CHANGE, performCalculations);
-			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, onCloseCallout);
-			bolusWizardAddButton.addEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
-			bwExtendedBolusReminderCheck.addEventListener(Event.CHANGE, onShowHideExtendedBolusReminder);
-			bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
-			bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
-		}
-		
-		private static function disableEventListeners():void
-		{
-			bwGlucoseCheck.removeEventListener(Event.CHANGE, performCalculations);
-			bwGlucoseStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwCarbsCheck.removeEventListener(Event.CHANGE, onShowHideCarbExtras);
-			bwCarbsStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwExerciseCheck.removeEventListener(Event.CHANGE, onShowHideExerciseAdjustment);
-			bwExerciseTimePicker.removeEventListener(Event.CHANGE, onExerciseTimeChanged);
-			bwExerciseIntensityPicker.removeEventListener(Event.CHANGE, onExerciseIntensityChanged);
-			bwExerciseDurationPicker.removeEventListener(Event.CHANGE, onExerciseDurationChanged);
-			bwExerciseAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwSicknessCheck.removeEventListener(Event.CHANGE, onShowHideSicknessAdjustment);
-			bwSicknessAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwOtherCorrectionCheck.removeEventListener(Event.CHANGE, onShowHideOtherCorrection);
-			bwOtherCorrectionAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
-			bwIOBCheck.removeEventListener(Event.CHANGE, performCalculations);
-			bwCOBCheck.removeEventListener(Event.CHANGE, performCalculations);
-			bolusWizardCancelButton.removeEventListener(Event.TRIGGERED, onCloseCallout);
-			bolusWizardAddButton.removeEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
-			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
-			bwExtendedBolusReminderCheck.removeEventListener(Event.CHANGE, onShowHideExtendedBolusReminder);
-			bwFinalCalculatedInsulinStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
-			bwFinalCalculatedCarbsStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
-		}
-		
 		private static function onFinalTreatmentChanged(e:Event):void
 		{
 			bolusWizardAddButton.isEnabled = bwFinalCalculatedInsulinStepper.value != 0 || bwFinalCalculatedCarbsStepper.value != 0 ? true : false;
@@ -1308,8 +1167,10 @@ package treatments
 				return;
 			}
 			
-			var targetBGLow:Number = Number(currentProfile.targetGlucoseRates);
-			var targetBGHigh:Number = Number(currentProfile.targetGlucoseRates);
+			var targetBG:Number = Number(currentProfile.targetGlucoseRates);
+			var targetBGLow:Number = targetBG;
+			var targetBGHigh:Number = targetBG;
+			var acceptedMargin:Number = 10;
 			
 			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 			var ic:Number = Number(currentProfile.insulinToCarbRatios);
@@ -1454,7 +1315,7 @@ package treatments
 			
 			trace(ObjectUtil.toString(record));
 			
-			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && outcome > targetBGLow && outcome < targetBGHigh;
+			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && Math.abs(outcome - targetBG) <= acceptedMargin;
 			outcome = Math.round(outcome);
 			
 			if (isInTarget) 
@@ -1464,8 +1325,11 @@ package treatments
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = false;
 				
-				bwSuggestionLabel.text = "Projected outcome: " + outcome
-				bwSuggestionLabel.text += "\n" + "Blood glucose in target (" + currentProfile.targetGlucoseRates + "mg/dL) or within 10mg/dL difference.";
+				bwSuggestionLabel.text = "Projected outcome: " + outcome;
+				if (outcome == targetBG)
+					bwSuggestionLabel.text += "\n" + "Blood glucose in target (" + currentProfile.targetGlucoseRates + "mg/dL)";
+				else
+					bwSuggestionLabel.text += "\n" + "Blood glucose in target (" + currentProfile.targetGlucoseRates + "mg/dL) or within 10mg/dL difference.";
 			}
 			else if (record.insulin < 0) 
 			{
@@ -1498,7 +1362,16 @@ package treatments
 				suggestedInsulin = Number(record.insulin);
 				
 				//Calculate outcome
-				var outcomeWithInsulinTreatment:Number = Math.round(outcome - (Number(record.insulin) * isf) + (Number(record.insulincarbs / isf)));
+				var outcomeWithInsulinTreatment:Number = outcome - (Number(record.insulin) * isf) + (Number(record.insulincarbs / isf));
+				
+				if (record.carbs > 0)
+				{
+					var insulinToCoverExtraCarbs:Number = (record.carbs / isf);
+					var bgImpactWithExtraCarbs:Number = insulinToCoverExtraCarbs * isf;
+					outcomeWithInsulinTreatment += bgImpactWithExtraCarbs;
+				}
+				
+				outcomeWithInsulinTreatment = Math.round(outcomeWithInsulinTreatment);
 				
 				//Update Suggestion Label
 				bwSuggestionLabel.text = "Outcome without extra treatments: " + outcome;
@@ -2254,17 +2127,808 @@ package treatments
 		
 		private static function onCloseCallout(e:Event):void
 		{
-			disableEventListeners();
+			clearTimeout(calculationTimeout);
+			
+			disposeComponents();
+		}
+		
+		private static function disposeComponents():void
+		{
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
 			
 			if (bolusWizardCallout != null)
 			{
-				if (bwFoodManager != null)
+				bolusWizardCallout.close();
+			}
+			
+			if(bwExtendedBolusSoundAccessoriesList != null && bwExtendedBolusSoundAccessoriesList.length > 0)
+			{
+				var length:int = bwExtendedBolusSoundAccessoriesList.length;
+				for (var i:int = 0; i < length; i++) 
 				{
-					bwFoodManager.clearData();
+					var btn:Button = bwExtendedBolusSoundAccessoriesList[i] as Button;
+					if (btn != null)
+					{
+						btn.removeEventListener(Event.TRIGGERED, onPlaySound);
+						btn.removeFromParent();
+						if (btn.defaultIcon != null)
+						{
+							(btn.defaultIcon as Image).texture.dispose();
+							btn.defaultIcon.dispose();
+						}
+						btn.dispose();
+						btn = null;
+					}
 				}
-				
-				bolusWizardCallout.close(false);
-				clearTimeout(calculationTimeout);
+				bwExtendedBolusSoundAccessoriesList.length = 0;
+				bwExtendedBolusSoundAccessoriesList = null;
+			}
+			
+			if (bwFoodManager != null)
+			{
+				bwFoodManager.removeEventListener(Event.COMPLETE, onFoodManagerCompleted);
+				bwFoodManager.removeFromParent();
+				bwFoodManager.dispose()
+				bwFoodManager = null;
+			}
+			
+			if (calloutPositionHelper != null)
+			{
+				calloutPositionHelper.removeFromParent();
+				calloutPositionHelper.dispose();
+				calloutPositionHelper = null;
+			}
+			
+			if (bwGlucoseLabel != null)
+			{
+				bwGlucoseLabel.removeFromParent();
+				bwGlucoseLabel.dispose();
+				bwGlucoseLabel = null;
+			}
+			
+			if (bwGlucoseStepper != null)
+			{
+				bwGlucoseStepper.removeEventListener(Event.CHANGE, delayCalculations);
+				bwGlucoseStepper.removeFromParent();
+				bwGlucoseStepper.dispose();
+				bwGlucoseStepper = null;
+			}
+			
+			if (bwTitle != null)
+			{
+				bwTitle.removeFromParent();
+				bwTitle.dispose();
+				bwTitle = null;
+			}
+			
+			if (bolusWizardCancelButton != null)
+			{
+				bolusWizardCancelButton.removeEventListener(Event.TRIGGERED, onCloseCallout);
+				bolusWizardCancelButton.removeFromParent();
+				bolusWizardCancelButton.dispose();
+				bolusWizardCancelButton = null;
+			}
+			
+			if (bolusWizardAddButton != null)
+			{
+				bolusWizardAddButton.removeEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
+				bolusWizardAddButton.removeFromParent();
+				bolusWizardAddButton.dispose();
+				bolusWizardAddButton = null;
+			}
+			
+			if (bwGlucoseCheck != null)
+			{
+				bwGlucoseCheck.removeEventListener(Event.CHANGE, performCalculations);
+				bwGlucoseCheck.removeFromParent();
+				bwGlucoseCheck.dispose();
+				bwGlucoseCheck = null;
+			}
+			
+			if (bwIOBLabel != null)
+			{
+				bwIOBLabel.removeFromParent();
+				bwIOBLabel.dispose();
+				bwIOBLabel = null;
+			}
+			
+			if (bwCurrentIOBLabel != null)
+			{
+				bwCurrentIOBLabel.removeFromParent();
+				bwCurrentIOBLabel.dispose();
+				bwCurrentIOBLabel = null;
+			}
+			
+			if (bwCOBLabel != null)
+			{
+				bwCOBLabel.removeFromParent();
+				bwCOBLabel.dispose();
+				bwCOBLabel = null;
+			}
+			
+			if (bwCurrentCOBLabel != null)
+			{
+				bwCurrentCOBLabel.removeFromParent();
+				bwCurrentCOBLabel.dispose();
+				bwCurrentCOBLabel = null;
+			}
+			
+			if (bwCarbsCheck != null)
+			{
+				bwCarbsCheck.removeEventListener(Event.CHANGE, onShowHideCarbExtras);
+				bwCarbsCheck.removeFromParent();
+				bwCarbsCheck.dispose();
+				bwCarbsCheck = null;
+			}
+			
+			if (bwCarbsLabel != null)
+			{
+				bwCarbsLabel.removeFromParent();
+				bwCarbsLabel.dispose();
+				bwCarbsLabel = null;
+			}
+			
+			if (bwCarbsStepper != null)
+			{
+				bwCarbsStepper.removeEventListener(Event.CHANGE, delayCalculations);
+				bwCarbsStepper.removeFromParent();
+				bwCarbsStepper.dispose();
+				bwCarbsStepper = null;
+			}
+		
+			if (bwCarbTypeLabel != null)
+			{
+				bwCarbTypeLabel.removeFromParent();
+				bwCarbTypeLabel.dispose();
+				bwCarbTypeLabel = null;
+			}
+			
+			if (bwCarbsOffsetLabel != null)
+			{
+				bwCarbsOffsetLabel.removeFromParent();
+				bwCarbsOffsetLabel.dispose();
+				bwCarbsOffsetLabel = null;
+			}
+			
+			if (bwCarbsOffsetStepper != null)
+			{
+				bwCarbsOffsetStepper.removeFromParent();
+				bwCarbsOffsetStepper.dispose();
+				bwCarbsOffsetStepper = null;
+			}
+			
+			if (bwCarbTypePicker != null)
+			{
+				bwCarbTypePicker.removeEventListener(Event.CHANGE, onCarbTypeChanged);
+				bwCarbTypePicker.removeFromParent();
+				bwCarbTypePicker.dispose();
+				bwCarbTypePicker = null;
+			}
+			
+			if (bwOtherCorrectionLabel != null)
+			{
+				bwOtherCorrectionLabel.removeFromParent();
+				bwOtherCorrectionLabel.dispose();
+				bwOtherCorrectionLabel = null;
+			}
+			
+			if (bwOtherCorrectionAmountStepper != null)
+			{
+				bwOtherCorrectionAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
+				bwOtherCorrectionAmountStepper.removeFromParent();
+				bwOtherCorrectionAmountStepper.dispose();
+				bwOtherCorrectionAmountStepper = null;
+			}
+			
+			if (bwIOBCheck != null)
+			{
+				bwIOBCheck.removeEventListener(Event.CHANGE, performCalculations);
+				bwIOBCheck.removeFromParent();
+				bwIOBCheck.dispose();
+				bwIOBCheck = null;
+			}
+			
+			if (bwCOBCheck != null)
+			{
+				bwCOBCheck.removeEventListener(Event.CHANGE, performCalculations);
+				bwCOBCheck.removeFromParent();
+				bwCOBCheck.dispose();
+				bwCOBCheck = null;
+			}
+			
+			if (bwNotes != null)
+			{
+				bwNotes.removeFromParent();
+				bwNotes.dispose();
+				bwNotes = null;
+			}
+			
+			if (bwSuggestionLabel != null)
+			{
+				bwSuggestionLabel.removeFromParent();
+				bwSuggestionLabel.dispose();
+				bwSuggestionLabel = null;
+			}
+			
+			if (missedSettingsTitle != null)
+			{
+				missedSettingsTitle.removeFromParent();
+				missedSettingsTitle.dispose();
+				missedSettingsTitle = null;
+			}
+			
+			if (missedSettingsLabel != null)
+			{
+				missedSettingsLabel.removeFromParent();
+				missedSettingsLabel.dispose();
+				missedSettingsLabel = null;
+			}
+			
+			if (missedSettingsCancelButton != null)
+			{
+				missedSettingsCancelButton.removeEventListener(Event.TRIGGERED, onCloseConfigureCallout);
+				missedSettingsCancelButton.removeFromParent();
+				missedSettingsCancelButton.dispose();
+				missedSettingsCancelButton = null;
+			}
+			
+			if (missedSettingsConfigureButton != null)
+			{
+				missedSettingsConfigureButton.removeEventListener(Event.TRIGGERED, onPerformConfiguration);
+				missedSettingsConfigureButton.removeFromParent();
+				missedSettingsConfigureButton.dispose();
+				missedSettingsConfigureButton = null;
+			}
+			
+			if (bwSicknessCheck != null)
+			{
+				bwSicknessCheck.removeEventListener(Event.CHANGE, onShowHideSicknessAdjustment);
+				bwSicknessCheck.removeFromParent();
+				bwSicknessCheck.dispose();
+				bwSicknessCheck = null;
+			}
+			
+			if (bwSicknessLabel != null)
+			{
+				bwSicknessLabel.removeFromParent();
+				bwSicknessLabel.dispose();
+				bwSicknessLabel = null;
+			}
+			
+			if (bwSicknessAmountStepper != null)
+			{
+				bwSicknessAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
+				bwSicknessAmountStepper.removeFromParent();
+				bwSicknessAmountStepper.dispose();
+				bwSicknessAmountStepper = null;
+			}
+			
+			if (bwSicknessAmountLabel != null)
+			{
+				bwSicknessAmountLabel.removeFromParent();
+				bwSicknessAmountLabel.dispose();
+				bwSicknessAmountLabel = null;
+			}
+			
+			if (bwExerciseCheck != null)
+			{
+				bwExerciseCheck.removeEventListener(Event.CHANGE, onShowHideExerciseAdjustment);
+				bwExerciseCheck.removeFromParent();
+				bwExerciseCheck.dispose();
+				bwExerciseCheck = null;
+			}
+			
+			if (bwExerciseLabel != null)
+			{
+				bwExerciseLabel.removeFromParent();
+				bwExerciseLabel.dispose();
+				bwExerciseLabel = null;
+			}
+			
+			if (bwExerciseTimeLabel != null)
+			{
+				bwExerciseTimeLabel.removeFromParent();
+				bwExerciseTimeLabel.dispose();
+				bwExerciseTimeLabel = null;
+			}
+			
+			if (bwExerciseTimePicker != null)
+			{
+				bwExerciseTimePicker.removeEventListener(Event.CHANGE, onExerciseTimeChanged);
+				bwExerciseTimePicker.removeFromParent();
+				bwExerciseTimePicker.dispose();
+				bwExerciseTimePicker = null;
+			}
+			
+			if (bwExerciseIntensityLabel != null)
+			{
+				bwExerciseIntensityLabel.removeFromParent();
+				bwExerciseIntensityLabel.dispose();
+				bwExerciseIntensityLabel = null;
+			}
+			
+			if (bwExerciseIntensityPicker != null)
+			{
+				bwExerciseIntensityPicker.removeEventListener(Event.CHANGE, onExerciseIntensityChanged);
+				bwExerciseIntensityPicker.removeFromParent();
+				bwExerciseIntensityPicker.dispose();
+				bwExerciseIntensityPicker = null;
+			}
+			
+			if (bwExerciseDurationLabel != null)
+			{
+				bwExerciseDurationLabel.removeFromParent();
+				bwExerciseDurationLabel.dispose();
+				bwExerciseDurationLabel = null;
+			}
+			
+			if (bwExerciseDurationPicker != null)
+			{
+				bwExerciseDurationPicker.removeEventListener(Event.CHANGE, onExerciseDurationChanged);
+				bwExerciseDurationPicker.removeFromParent();
+				bwExerciseDurationPicker.dispose();
+				bwExerciseDurationPicker = null;
+			}
+			
+			if (bwExerciseAmountLabel != null)
+			{
+				bwExerciseAmountLabel.removeFromParent();
+				bwExerciseAmountLabel.dispose();
+				bwExerciseAmountLabel = null;
+			}
+			
+			if (bwExerciseAmountStepper != null)
+			{
+				bwExerciseAmountStepper.removeEventListener(Event.CHANGE, delayCalculations);
+				bwExerciseAmountStepper.removeFromParent();
+				bwExerciseAmountStepper.dispose();
+				bwExerciseAmountStepper = null;
+			}
+			
+			if (bwOtherCorrectionCheck != null)
+			{
+				bwOtherCorrectionCheck.removeEventListener(Event.CHANGE, onShowHideOtherCorrection);
+				bwOtherCorrectionCheck.removeEventListener(Event.CHANGE, performCalculations);
+				bwOtherCorrectionCheck.removeFromParent();
+				bwOtherCorrectionCheck.dispose();
+				bwOtherCorrectionCheck = null;
+			}
+			
+			if (bwOtherCorrectionAmountLabel != null)
+			{
+				bwOtherCorrectionAmountLabel.removeFromParent();
+				bwOtherCorrectionAmountLabel.dispose();
+				bwOtherCorrectionAmountLabel = null;
+			}
+			
+			if (bwTrendCheck != null)
+			{
+				bwTrendCheck.removeEventListener(Event.CHANGE, performCalculations);
+				bwTrendCheck.removeFromParent();
+				bwTrendCheck.dispose();
+				bwTrendCheck = null;
+			}
+			
+			if (bwTrendLabel != null)
+			{
+				bwTrendLabel.removeFromParent();
+				bwTrendLabel.dispose();
+				bwTrendLabel = null;
+			}
+			
+			if (bwCurrentTrendLabel != null)
+			{
+				bwCurrentTrendLabel.removeFromParent();
+				bwCurrentTrendLabel.dispose();
+				bwCurrentTrendLabel = null;
+			}
+			
+			if (bwFoodsLabel != null)
+			{
+				bwFoodsLabel.removeFromParent();
+				bwFoodsLabel.dispose();
+				bwFoodsLabel = null;
+			}
+			
+			if (bwFoodLoaderButton != null)
+			{
+				bwFoodLoaderButton.removeEventListener(Event.TRIGGERED, onShowFoodManager);
+				bwFoodLoaderButton.removeFromParent();
+				bwFoodLoaderButton.dispose();
+				bwFoodLoaderButton = null;
+			}
+			
+			if (bwFoodManager != null)
+			{
+				bwFoodManager.removeFromParent();
+				bwFoodManager.dispose();
+				bwFoodManager = null;
+			}
+			
+			if (bwInsulinTypeLabel != null)
+			{
+				bwInsulinTypeLabel.removeFromParent();
+				bwInsulinTypeLabel.dispose();
+				bwInsulinTypeLabel = null;
+			}
+			
+			if (bwInsulinTypePicker != null)
+			{
+				bwInsulinTypePicker.removeFromParent();
+				bwInsulinTypePicker.dispose();
+				bwInsulinTypePicker = null;
+			}
+			
+			if (createInsulinButton != null)
+			{
+				createInsulinButton.removeEventListeners();
+				createInsulinButton.removeFromParent();
+				createInsulinButton.dispose();
+				createInsulinButton = null;
+			}
+			
+			if (bwExtendedBolusReminderCheck != null)
+			{
+				bwExtendedBolusReminderCheck.removeEventListener(Event.CHANGE, onShowHideExtendedBolusReminder);
+				bwExtendedBolusReminderCheck.removeFromParent();
+				bwExtendedBolusReminderCheck.dispose();
+				bwExtendedBolusReminderCheck = null;
+			}
+			
+			if (bwExtendedBolusReminderLabel != null)
+			{
+				bwExtendedBolusReminderLabel.removeFromParent();
+				bwExtendedBolusReminderLabel.dispose();
+				bwExtendedBolusReminderLabel = null;
+			}
+			
+			if (bwExtendedBolusReminderDateTimeSpinner != null)
+			{
+				bwExtendedBolusReminderDateTimeSpinner.removeFromParent();
+				bwExtendedBolusReminderDateTimeSpinner.dispose();
+				bwExtendedBolusReminderDateTimeSpinner = null;
+			}
+			
+			if (bwExtendedBolusSoundList != null)
+			{
+				bwExtendedBolusSoundList.removeEventListener(Event.CLOSE, onSoundListClose);
+				bwExtendedBolusSoundList.removeFromParent();
+				bwExtendedBolusSoundList.dispose();
+				bwExtendedBolusSoundList = null;
+			}
+			
+			if (bwFinalCalculatedInsulinLabel != null)
+			{
+				bwFinalCalculatedInsulinLabel.removeFromParent();
+				bwFinalCalculatedInsulinLabel.dispose();
+				bwFinalCalculatedInsulinLabel = null;
+			}
+			
+			if (bwFinalCalculatedInsulinStepper != null)
+			{
+				bwFinalCalculatedInsulinStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
+				bwFinalCalculatedInsulinStepper.removeFromParent();
+				bwFinalCalculatedInsulinStepper.dispose();
+				bwFinalCalculatedInsulinStepper = null;
+			}
+			
+			if (bwFinalCalculatedCarbsLabel != null)
+			{
+				bwFinalCalculatedCarbsLabel.removeFromParent();
+				bwFinalCalculatedCarbsLabel.dispose();
+				bwFinalCalculatedCarbsLabel = null;
+			}
+			
+			if (bwFinalCalculatedCarbsStepper != null)
+			{
+				bwFinalCalculatedCarbsStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
+				bwFinalCalculatedCarbsStepper.removeFromParent();
+				bwFinalCalculatedCarbsStepper.dispose();
+				bwFinalCalculatedCarbsStepper = null;
+			}
+			
+			if (finalCalculationsLabel != null)
+			{
+				finalCalculationsLabel.removeFromParent();
+				finalCalculationsLabel.dispose();
+				finalCalculationsLabel = null;
+			}
+			
+			if (missedSettingsActionsContainer != null)
+			{
+				missedSettingsActionsContainer.removeFromParent();
+				missedSettingsActionsContainer.dispose();
+				missedSettingsActionsContainer = null;
+			}
+			
+			if (missedSettingsContainer != null)
+			{
+				missedSettingsContainer.removeFromParent();
+				missedSettingsContainer.dispose();
+				missedSettingsContainer = null;
+			}
+			
+			if (bolusWizardActionContainer != null)
+			{
+				bolusWizardActionContainer.removeFromParent();
+				bolusWizardActionContainer.dispose();
+				bolusWizardActionContainer = null;
+			}
+			
+			if (bolusWizardConfigureCallout != null)
+			{
+				bolusWizardConfigureCallout.removeFromParent();
+				bolusWizardConfigureCallout.disposeContent = true;
+				bolusWizardConfigureCallout.dispose();
+				bolusWizardConfigureCallout = null;
+			}
+			
+			if (bwFinalCalculatedCarbsContainer != null)
+			{
+				bwFinalCalculatedCarbsContainer.removeFromParent();
+				bwFinalCalculatedCarbsContainer.dispose();
+				bwFinalCalculatedCarbsContainer = null;
+			}
+			
+			if (bwFinalCalculatedInsulinContainer != null)
+			{
+				bwFinalCalculatedInsulinContainer.removeFromParent();
+				bwFinalCalculatedInsulinContainer.dispose();
+				bwFinalCalculatedInsulinContainer = null;
+			}
+			
+			if (bwFinalCalculationsContainer != null)
+			{
+				bwFinalCalculationsContainer.removeFromParent();
+				bwFinalCalculationsContainer.dispose();
+				bwFinalCalculationsContainer = null;
+			}
+			
+			if (bwExtendedBolusSoundListContainer != null)
+			{
+				bwExtendedBolusSoundListContainer.removeFromParent();
+				bwExtendedBolusSoundListContainer.dispose();
+				bwExtendedBolusSoundListContainer = null;
+			}
+			
+			if (bwExtendedBolusReminderDateTimeContainer != null)
+			{
+				bwExtendedBolusReminderDateTimeContainer.removeFromParent();
+				bwExtendedBolusReminderDateTimeContainer.dispose();
+				bwExtendedBolusReminderDateTimeContainer = null;
+			}
+			
+			if (bwExtendedBolusReminderLabelContainer != null)
+			{
+				bwExtendedBolusReminderLabelContainer.removeFromParent();
+				bwExtendedBolusReminderLabelContainer.dispose();
+				bwExtendedBolusReminderLabelContainer = null;
+			}
+			
+			if (bwExtendedBolusReminderContainer != null)
+			{
+				bwExtendedBolusReminderContainer.removeFromParent();
+				bwExtendedBolusReminderContainer.dispose();
+				bwExtendedBolusReminderContainer = null;
+			}
+			
+			if (bwOtherCorrectionAmountContainer != null)
+			{
+				bwOtherCorrectionAmountContainer.removeFromParent();
+				bwOtherCorrectionAmountContainer.dispose();
+				bwOtherCorrectionAmountContainer = null;
+			}
+			
+			if (bwOtherCorrectionLabelContainer != null)
+			{
+				bwOtherCorrectionLabelContainer.removeFromParent();
+				bwOtherCorrectionLabelContainer.dispose();
+				bwOtherCorrectionLabelContainer = null;
+			}
+			
+			if (bwOtherCorrectionContainer != null)
+			{
+				bwOtherCorrectionContainer.removeFromParent();
+				bwOtherCorrectionContainer.dispose();
+				bwOtherCorrectionContainer = null;
+			}
+			
+			if (bwSicknessAmountContainer != null)
+			{
+				bwSicknessAmountContainer.removeFromParent();
+				bwSicknessAmountContainer.dispose();
+				bwSicknessAmountContainer = null;
+			}
+			
+			if (bwSicknessLabelContainer != null)
+			{
+				bwSicknessLabelContainer.removeFromParent();
+				bwSicknessLabelContainer.dispose();
+				bwSicknessLabelContainer = null;
+			}
+			
+			if (bwSicknessContainer != null)
+			{
+				bwSicknessContainer.removeFromParent();
+				bwSicknessContainer.dispose();
+				bwSicknessContainer = null;
+			}
+			
+			if (bwExerciseAmountContainer != null)
+			{
+				bwExerciseAmountContainer.removeFromParent();
+				bwExerciseAmountContainer.dispose();
+				bwExerciseAmountContainer = null;
+			}
+			
+			if (bwExerciseDurationContainer != null)
+			{
+				bwExerciseDurationContainer.removeFromParent();
+				bwExerciseDurationContainer.dispose();
+				bwExerciseDurationContainer = null;
+			}
+			
+			if (bwExerciseIntensityContainer != null)
+			{
+				bwExerciseIntensityContainer.removeFromParent();
+				bwExerciseIntensityContainer.dispose();
+				bwExerciseIntensityContainer = null;
+			}
+			
+			if (bwExerciseTimeContainer != null)
+			{
+				bwExerciseTimeContainer.removeFromParent();
+				bwExerciseTimeContainer.dispose();
+				bwExerciseTimeContainer = null;
+			}
+			
+			if (bwExerciseSettingsContainer != null)
+			{
+				bwExerciseSettingsContainer.removeFromParent();
+				bwExerciseSettingsContainer.dispose();
+				bwExerciseSettingsContainer = null;
+			}
+			
+			if (bwExerciseLabelContainer != null)
+			{
+				bwExerciseLabelContainer.removeFromParent();
+				bwExerciseLabelContainer.dispose();
+				bwExerciseLabelContainer = null;
+			}
+			
+			if (bwExerciseContainer != null)
+			{
+				bwExerciseContainer.removeFromParent();
+				bwExerciseContainer.dispose();
+				bwExerciseContainer = null;
+			}
+			
+			if (bwCOBLabelContainer != null)
+			{
+				bwCOBLabelContainer.removeFromParent();
+				bwCOBLabelContainer.dispose();
+				bwCOBLabelContainer = null;
+			}
+			
+			if (bwCOBContainer != null)
+			{
+				bwCOBContainer.removeFromParent();
+				bwCOBContainer.dispose();
+				bwCOBContainer = null;
+			}
+			
+			if (bwIOBLabelContainer != null)
+			{
+				bwIOBLabelContainer.removeFromParent();
+				bwIOBLabelContainer.dispose();
+				bwIOBLabelContainer = null;
+			}
+			
+			if (bwIOBContainer != null)
+			{
+				bwIOBContainer.removeFromParent();
+				bwIOBContainer.dispose();
+				bwIOBContainer = null;
+			}
+			
+			if (bwTrendLabelContainer != null)
+			{
+				bwTrendLabelContainer.removeFromParent();
+				bwTrendLabelContainer.dispose();
+				bwTrendLabelContainer = null;
+			}
+			
+			if (bwTrendContainer != null)
+			{
+				bwTrendContainer.removeFromParent();
+				bwTrendContainer.dispose();
+				bwTrendContainer = null;
+			}
+			
+			if (bwInsulinTypeContainer != null)
+			{
+				bwInsulinTypeContainer.removeFromParent();
+				bwInsulinTypeContainer.dispose();
+				bwInsulinTypeContainer = null;
+			}
+			
+			if (bwCarbTypeContainer != null)
+			{
+				bwCarbTypeContainer.removeFromParent();
+				bwCarbTypeContainer.dispose();
+				bwCarbTypeContainer = null;
+			}
+			
+			if (bwCarbsOffsetContainer != null)
+			{
+				bwCarbsOffsetContainer.removeFromParent();
+				bwCarbsOffsetContainer.dispose();
+				bwCarbsOffsetContainer = null;
+			}
+			
+			if (bwFoodsContainer != null)
+			{
+				bwFoodsContainer.removeFromParent();
+				bwFoodsContainer.dispose();
+				bwFoodsContainer = null;
+			}
+			
+			if (bwCarbsLabelContainer != null)
+			{
+				bwCarbsLabelContainer.removeFromParent();
+				bwCarbsLabelContainer.dispose();
+				bwCarbsLabelContainer = null;
+			}
+			
+			if (bwCarbsContainer != null)
+			{
+				bwCarbsContainer.removeFromParent();
+				bwCarbsContainer.dispose();
+				bwCarbsContainer = null;
+			}
+			
+			if (bwGlucoseLabelContainer != null)
+			{
+				bwGlucoseLabelContainer.removeFromParent();
+				bwGlucoseLabelContainer.dispose();
+				bwGlucoseLabelContainer = null;
+			}
+			
+			if (bwCurrentGlucoseContainer != null)
+			{
+				bwCurrentGlucoseContainer.removeFromParent();
+				bwCurrentGlucoseContainer.dispose();
+				bwCurrentGlucoseContainer = null;
+			}
+			
+			if (bwMainContainer != null)
+			{
+				bwMainContainer.removeFromParent();
+				bwMainContainer.dispose();
+				bwMainContainer = null;
+			}
+			
+			if (bwWizardScrollContainer != null)
+			{
+				bwWizardScrollContainer.removeFromParent();
+				bwWizardScrollContainer.dispose();
+				bwWizardScrollContainer = null;
+			}
+			
+			if (bwTotalScrollContainer != null)
+			{
+				bwTotalScrollContainer.removeFromParent();
+				bwTotalScrollContainer.dispose();
+				bwTotalScrollContainer = null;
+			}
+			
+			if (bolusWizardCallout != null)
+			{
+				bolusWizardCallout.disposeContent = true;
+				bolusWizardCallout.disposeOnSelfClose = true;
+				bolusWizardCallout.dispose();
+				bolusWizardCallout = null;
 			}
 		}
 	}
