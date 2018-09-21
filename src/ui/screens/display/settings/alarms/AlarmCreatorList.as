@@ -120,7 +120,7 @@ package ui.screens.display.settings.alarms
 		
 		private function setupInitialState(glucoseUnit:String = null):void
 		{
-			if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED && alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) || CGMBlueToothDevice.isBluKon())
+			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED || alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT || ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY || alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT) && CGMBlueToothDevice.isBluKon()))
 				hideValue = true;
 			
 			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE)
@@ -584,16 +584,16 @@ package ui.screens.display.settings.alarms
 			alarmData.startTimeStamp = (Number(alarmData.startHour) * 60 * 60 * 1000) + (Number(alarmData.startMinutes) * 60 * 1000);
 				
 			/* Value */
-			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED && alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT)
+			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED || alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT)
 				alarmData.value = 0;
-			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT)
+			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY || alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT)
 			{
 				if (!CGMBlueToothDevice.isBluKon())
 					alarmData.value = valueStepper.value;
 				else
 					alarmData.value = 5;
 			}
-			else if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING && alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) || (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT))
+			else if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING || alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) || (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION || alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT))
 				alarmData.value = valueStepper.value;
 			else
 			{
