@@ -228,7 +228,7 @@ package ui.screens.display.settings.alarms
 			if (positionHelper != null)
 				positionHelper.x = (Constants.stageWidth - (BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding * 2)) / 2;
 			
-			if (addAlertButton != null && Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+			if (addAlertButton != null && Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
 				addAlertButton.pivotX = -6;
 			else
 				addAlertButton.pivotX = -12;

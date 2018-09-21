@@ -149,14 +149,14 @@ package ui.screens.display.menu
 		{
 			if (Constants.isPortrait)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					paddingTop = 33;
 				else
 					paddingTop = 1;
 			}
 			else
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					paddingTop = 12;
 				else
 					paddingTop = 20;
@@ -207,7 +207,7 @@ package ui.screens.display.menu
 					return item.label;
 				};
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					item.paddingLeft = 40;
 				return item;
 			};
@@ -236,7 +236,7 @@ package ui.screens.display.menu
 		 */
 		override protected function draw():void
 		{
-			if (Constants.isPortrait || Constants.deviceModel != DeviceInfo.IPHONE_X_Xs || (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && Constants.currentOrientation != StageOrientation.ROTATED_RIGHT))
+			if (Constants.isPortrait || Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr || (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && Constants.currentOrientation != StageOrientation.ROTATED_RIGHT))
 			{
 				if (maxTempWidth != 0)
 				{
@@ -249,7 +249,7 @@ package ui.screens.display.menu
 					}
 				}
 			}
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
 				if (lastCalculatedWidth == 0) maxTempWidth + 85;
 				width = lastCalculatedWidth + 45;

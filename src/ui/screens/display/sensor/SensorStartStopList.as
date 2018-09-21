@@ -264,7 +264,7 @@ package ui.screens.display.sensor
 				item.iconField = "icon";
 				item.accessoryField = "accessory";
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{
@@ -284,7 +284,7 @@ package ui.screens.display.sensor
 				var headerRenderer:DefaultGroupedListHeaderOrFooterRenderer = new DefaultGroupedListHeaderOrFooterRenderer();
 				headerRenderer.contentLabelField = "label";
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{
@@ -420,7 +420,7 @@ package ui.screens.display.sensor
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','stop_alert_button_label'), triggered: onStopSensorTriggered }
 				]
 			);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				alert.maxWidth = 270;
 		}
 		

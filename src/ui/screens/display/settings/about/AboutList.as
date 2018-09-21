@@ -135,9 +135,9 @@ package ui.screens.display.settings.about
 				itemRenderer.iconField = "icon";
 				itemRenderer.accessoryField = "accessory";
 				itemRenderer.gap = 8;
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					itemRenderer.paddingLeft = 30;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
 					itemRenderer.paddingRight = 30;
 				itemRenderer.labelFunction = function( item:Object ):String
 				{
@@ -158,7 +158,7 @@ package ui.screens.display.settings.about
 				var headerRenderer:DefaultGroupedListHeaderOrFooterRenderer = new DefaultGroupedListHeaderOrFooterRenderer();
 				headerRenderer.contentLabelField = "label";
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{

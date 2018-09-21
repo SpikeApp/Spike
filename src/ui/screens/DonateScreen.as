@@ -189,7 +189,7 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			if (!Constants.isPortrait && Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if (!Constants.isPortrait && Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				if (donationTitle != null && donationDescription != null && contentContainer != null)
 				{

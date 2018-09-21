@@ -60,7 +60,7 @@ package ui.chart
 				fontSize = 12;
 				pillHeight = 21;
 			}
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				fontSize = 10;
 				pillHeight = 19;

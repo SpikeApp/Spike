@@ -184,7 +184,7 @@ package ui.screens
 			timeAgoDisplay = LayoutFactory.createLabel(timeAgoOutput, HorizontalAlign.LEFT, VerticalAlign.MIDDLE, infoFontSize, false, timeAgoColor);
 			timeAgoDisplay.width = 350;
 			timeAgoDisplay.y = 10;
-			timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
+			timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
 			timeAgoDisplay.validate();
 			addChild(timeAgoDisplay);
 			
@@ -202,7 +202,7 @@ package ui.screens
 			slopeDisplay = LayoutFactory.createLabel(latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit() : "", HorizontalAlign.RIGHT, VerticalAlign.MIDDLE, infoFontSize, false, latestSlopeInfoColor);
 			slopeDisplay.width = 300;
 			slopeDisplay.validate();
-			slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
+			slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
 			slopeDisplay.y = timeAgoDisplay.y;
 			addChild(slopeDisplay);
 			
@@ -210,7 +210,7 @@ package ui.screens
 			var now:Number = new Date().valueOf();
 			IOBCOBDisplay = GraphLayoutFactory.createChartStatusText(timeAgoColor != 0 ? "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) : "", timeAgoColor, infoFontSize, Align.CENTER, false, Constants.stageWidth);
 			var IOBCOBLayoutData:AnchorLayoutData = new AnchorLayoutData();
-			if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs)
+			if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				IOBCOBLayoutData.bottom = 10;
 			else
 				IOBCOBLayoutData.bottom = 20;
@@ -506,7 +506,7 @@ package ui.screens
 			var textFormat:flash.text.TextFormat = sNativeFormat;
 			var maxTextWidth:int  = Constants.stageWidth - (Constants.isPortrait ? Constants.stageWidth * 0.2 : Constants.stageWidth * 0.1);
 			var maxTextHeight:int = Constants.stageHeight - Constants.headerHeight;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				maxTextHeight -= maxTextHeight * 0.35;
 			
 			if (isNaN(maxTextWidth) || isNaN(maxTextHeight)) return;
@@ -710,7 +710,7 @@ package ui.screens
 			//Adjust label position
 			if (timeAgoDisplay != null && slopeDisplay != null)
 			{
-				timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
+				timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
 				
 				if (CGMBlueToothDevice.isMiaoMiao() && miaoMiaoHitArea != null)
 				{
@@ -718,7 +718,7 @@ package ui.screens
 					miaoMiaoHitArea.x = timeAgoDisplay.x;
 				}
 				
-				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
+				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
 			}
 			
 			SystemUtil.executeWhenApplicationIsActive( calculateValues );
@@ -727,7 +727,7 @@ package ui.screens
 		
 		private function onCreation(event:starling.events.Event):void
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && this.header != null)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && this.header != null)
 			{
 				if (Constants.isPortrait)
 				{

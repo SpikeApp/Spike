@@ -130,7 +130,7 @@ package ui.screens.display.settings.transmitter
 			transmitterType.labelField = "label";
 			transmitterType.popUpContentManager = new DropDownPopUpContentManager();
 			transmitterType.dataProvider = transmitterTypeList;
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				transmitterType.buttonFactory = function():Button
 				{

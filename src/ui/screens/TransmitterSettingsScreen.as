@@ -134,7 +134,7 @@ package ui.screens
 		
 		override protected function onStarlingBaseResize(e:ResizeEvent):void 
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
 				if (transmitterLabel != null) transmitterLabel.paddingLeft = 30;
 			}

@@ -77,7 +77,7 @@ package ui.screens.display.help
 				return textRenderer;
 			};
 			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 			{
 				if (missedReadingsDescriptionLabel != null)
 					missedReadingsDescriptionLabel.width = width - 40;

@@ -97,7 +97,7 @@ package ui.screens.display.dexcomshare
 			hasElasticEdges = false;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				width = 250;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				width = 240;
 			else
 				width = 300;

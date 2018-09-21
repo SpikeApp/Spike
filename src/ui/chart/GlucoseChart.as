@@ -570,7 +570,7 @@ package ui.chart
 			repositionTreatmentPills();
 			
 			//iPhone X masks for landscape mode
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 			{
 				xRightMask = new Quad(60, scrollerChart.y, fakeChartMaskColor);
 				xRightMask.y = chartTopPadding;
@@ -2752,14 +2752,14 @@ package ui.chart
 		{
 			/* Calculate Font Sizes */
 			deviceFontMultiplier = DeviceInfo.getFontMultipier();
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs) 
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr) 
 				glucoseDisplayFont = 54 * deviceFontMultiplier * userBGFontMultiplier;
 			else
 				glucoseDisplayFont = (!DeviceInfo.isTablet() ? 38 : 48) * deviceFontMultiplier * userBGFontMultiplier;
 			
 			timeDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
 			retroDisplayFont = 15 * deviceFontMultiplier * userTimeAgoFontMultiplier;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				timeDisplayFont += 1;
 				retroDisplayFont += 1;
@@ -2797,7 +2797,7 @@ package ui.chart
 				glucoseTimeAgoPill.y = labelsYPos;
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 				glucoseTimeAgoPill.y = labelsYPos - 4;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseTimeAgoPill.y = labelsYPos - 8;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
 				glucoseTimeAgoPill.y = labelsYPos + 5;

@@ -134,14 +134,14 @@ package ui.screens.display.dexcomshare
 			hasElasticEdges = false;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				width = 250;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				width = 240;
 			else
 				width = 300;
 			
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				height = 300;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				height = 400;
 			else
 				height = 500;
@@ -196,7 +196,7 @@ package ui.screens.display.dexcomshare
 			followerName.addEventListener(FeathersEventType.ENTER, onTextInputEnter);
 			
 			followerEmail = LayoutFactory.createLabel(followerInfoExtended.Email, HorizontalAlign.RIGHT, VerticalAlign.TOP, 9);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				followerEmail.width = 150;
 			else
 				followerEmail.width = 160;

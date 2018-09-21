@@ -96,7 +96,7 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT && bugReportLabel != null)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT && bugReportLabel != null)
 			{
 				bugReportLabel.paddingLeft = 30;
 			}

@@ -95,7 +95,7 @@ package ui.screens.display.settings.general
 			glucoseUnitsPicker.labelField = "label";
 			glucoseUnitsPicker.popUpContentManager = new DropDownPopUpContentManager();
 			glucoseUnitsPicker.dataProvider = glucoseUnits;
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseUnitsPicker.pivotX = 38;
 			if (selectedUnit == "mmol/L") 
 				glucoseUnitsPicker.selectedIndex = 1;
@@ -103,27 +103,27 @@ package ui.screens.display.settings.general
 			//Round MGDL values
 			roundMgDlCheck = LayoutFactory.createCheckMark(roundMfDlValue);
 			roundMgDlCheck.pivotX = 3;
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				roundMgDlCheck.pivotX = 41;
 			
 			//Glucose Urgent High Value
 			glucoseUrgentHighStepper = new NumericStepper();
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseUrgentHighStepper.pivotX = 28;
 			
 			//Glucose High Value
 			glucoseHighStepper = new NumericStepper();
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseHighStepper.pivotX = 28;
 			
 			//Glucose Low Value
 			glucoseLowStepper = new NumericStepper();
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseLowStepper.pivotX = 28;
 			
 			//Glucose Urgent Low Value
 			glucoseUrgentLowStepper = new NumericStepper();
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseUrgentLowStepper.pivotX = 28;
 			
 			//Define Glucose Settings Data
@@ -143,7 +143,7 @@ package ui.screens.display.settings.general
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.paddingRight = 0;
-				if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+				if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					itemRenderer.paddingRight = -40;
 				return itemRenderer;
 			};
@@ -158,7 +158,7 @@ package ui.screens.display.settings.general
 				itemRenderer.labelField = "label";
 				itemRenderer.accessoryLabelProperties.wordWrap = true;
 				itemRenderer.defaultLabelProperties.wordWrap = true;
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{
@@ -172,7 +172,7 @@ package ui.screens.display.settings.general
 				}
 				else
 				{
-					if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+					if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 						itemRenderer.paddingRight = -40;
 					else
 						itemRenderer.paddingRight = 0;

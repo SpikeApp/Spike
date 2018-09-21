@@ -237,14 +237,14 @@ package ui.screens.display.settings.integration
 			instructionsButton.addEventListener(Event.TRIGGERED, onShowInstructions);
 			
 			//Maker Key Input Field
-			makerKeyTextInput = LayoutFactory.createTextInput(false, false, Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? 160 : 130, HorizontalAlign.RIGHT);
+			makerKeyTextInput = LayoutFactory.createTextInput(false, false, Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 160 : 130, HorizontalAlign.RIGHT);
 			if (!Constants.isPortrait) makerKeyTextInput.width += 100;
 			makerKeyTextInput.fontStyles.size = 11;
 			makerKeyTextInput.text = makerKeyValue;
 			makerKeyTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Maker Key Description
-			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? 10 : 9);
+			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 10 : 9);
 			makerKeyDescriptionLabel.wordWrap = true;
 			makerKeyDescriptionLabel.width = width - 10;
 			
@@ -740,7 +740,7 @@ package ui.screens.display.settings.integration
 			
 			if (makerKeyTextInput != null)
 			{
-				makerKeyTextInput.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs ? 160 : 130;
+				makerKeyTextInput.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 160 : 130;
 				if (!Constants.isPortrait)
 					makerKeyTextInput.width += 100;
 			}

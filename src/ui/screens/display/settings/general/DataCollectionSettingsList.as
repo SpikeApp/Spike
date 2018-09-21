@@ -285,7 +285,7 @@ package ui.screens.display.settings.general
 			
 			if (nightscoutAPIDescription != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					nightscoutAPIDescription.width = width - (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 30 : 40);
 				else
 					nightscoutAPIDescription.width = width;

@@ -283,7 +283,7 @@ package ui.screens.display.settings.integration
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;
@@ -462,7 +462,7 @@ package ui.screens.display.settings.integration
 			
 			if (instructionsDescriptionLabel != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					instructionsDescriptionLabel.width = width - 40;
 				else
 					instructionsDescriptionLabel.width = width - 20;
@@ -473,7 +473,7 @@ package ui.screens.display.settings.integration
 			
 			if (developersAPIDescriptionLabel != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					developersAPIDescriptionLabel.width = width - 40;
 				else
 					developersAPIDescriptionLabel.width = width - 20;

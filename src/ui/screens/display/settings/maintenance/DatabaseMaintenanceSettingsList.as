@@ -475,7 +475,7 @@ package ui.screens.display.settings.maintenance
 			
 			if (instructionsLabel != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					instructionsLabel.width = width - (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 30 : 40);
 			else
 				instructionsLabel.width = width;

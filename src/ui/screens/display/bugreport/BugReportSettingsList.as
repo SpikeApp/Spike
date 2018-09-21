@@ -112,7 +112,7 @@ package ui.screens.display.bugreport
 				fieldWidth = 165;
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 				fieldWidth = 200;
-			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				fieldWidth = 155;
 			else if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97)
 				fieldWidth = 400;
@@ -497,7 +497,7 @@ package ui.screens.display.bugreport
 				itemRenderer.defaultLabelProperties.wordWrap = true;
 				itemRenderer.paddingBottom = itemRenderer.paddingTop = 10;
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{

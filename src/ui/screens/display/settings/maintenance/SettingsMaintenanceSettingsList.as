@@ -851,7 +851,7 @@ package ui.screens.display.settings.maintenance
 			
 			if (restoreInstructions != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					restoreInstructions.width = width - (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 30 : 40);
 				else
 					restoreInstructions.width = width;

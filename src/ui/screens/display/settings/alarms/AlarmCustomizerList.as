@@ -243,7 +243,7 @@ package ui.screens.display.settings.alarms
 					alarmControls.scale = 0.8;
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 					alarmControls.scale = 0.9;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs)
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					alarmControls.scale = 0.7;
 				alarmControls.pivotX = -8;
 				alarmControls.addEventListener(AlarmManagerAccessory.EDIT, onEditAlarm);
@@ -291,7 +291,7 @@ package ui.screens.display.settings.alarms
 				item.accessoryLabelProperties.wordWrap = true;
 				item.defaultLabelProperties.wordWrap = true;
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{
