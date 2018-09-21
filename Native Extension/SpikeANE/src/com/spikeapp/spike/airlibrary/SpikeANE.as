@@ -257,6 +257,10 @@ package com.spikeapp.spike.airlibrary
 			context.call("terminateApp");
 		}
 		
+		public static function setStatusBarToWhite():void {
+			context.call("setStatusBarToWhite");
+		}
+		
 		/**********
 		 ** DEVICE
 		 **********/

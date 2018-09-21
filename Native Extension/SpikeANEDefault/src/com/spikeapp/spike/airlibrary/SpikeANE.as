@@ -176,6 +176,9 @@ package com.spikeapp.spike.airlibrary
 		public static function terminateApp():void {
 		}
 		
+		public static function setStatusBarToWhite():void {
+		}
+		
 		/**********
 		 ** DEVICE
 		 **********/

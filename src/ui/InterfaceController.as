@@ -174,6 +174,7 @@ package ui
 				/* File Association */
 				NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
 				
+				
 				//3D Touch Management
 				setup3DTouch();
 			}
@@ -402,6 +403,9 @@ package ui
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, central_peripheralDisconnectHandler);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_CONNECTED, bluetoothDeviceConnectionCompleted);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_DISCONNECTED, central_peripheralDisconnectHandler);
+			
+			//Statusbar
+			SpikeANE.setStatusBarToWhite();
 		}
 		
 		private static function deviceNotPaired(event:flash.events.Event):void 
