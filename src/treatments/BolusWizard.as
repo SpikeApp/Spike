@@ -2092,6 +2092,8 @@ package treatments
 					var soundFile:String = String(bwExtendedBolusSoundList.selectedItem.soundFile);
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_DEFAULT_EXTENDED_BOLUS_SOUND, soundFile, true, false);
 					
+					Trace.myTrace("BolusWizard.as", "Added new extended bolus notification that will fire at: " + new Date(new Date().valueOf() + (delayInSeconds * 1000)).toString());
+					
 					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 						.setId(NotificationService.ID_FOR_EXTENDED_BOLUS_ALERT)
 						.setAlert("Extended Bolus Reminder")
@@ -2102,7 +2104,7 @@ package treatments
 						.setSound(soundFile)
 						.setDelay(delayInSeconds);
 					
-					Notifications.service.notify(notificationBuilder.build())
+					Notifications.service.notify(notificationBuilder.build());
 				}
 				
 				onCloseCallout(null);

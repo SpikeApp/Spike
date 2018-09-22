@@ -23,6 +23,7 @@ package ui
 	import ui.screens.AlarmsCustomizerSettingsScreen;
 	import ui.screens.AlarmsSettingsScreen;
 	import ui.screens.AlertTypesListScreen;
+	import ui.screens.BolusWizardSettingsScreen;
 	import ui.screens.BugReportScreen;
 	import ui.screens.ChartScreen;
 	import ui.screens.ChartSettingsScreen;
@@ -174,6 +175,11 @@ package ui
 			var profileSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( ProfileSettingsScreen );
 			profileSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_PROFILE, profileSettingsScreenItem );
+			
+			/* Profile Settings Screen */
+			var bolusWizardSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BolusWizardSettingsScreen );
+			bolusWizardSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_BOLUS_WIZARD, bolusWizardSettingsScreenItem );
 			
 			/* Chart Settings Screen */
 			chartSettingsScreenItem = new StackScreenNavigatorItem( ChartSettingsScreen );
