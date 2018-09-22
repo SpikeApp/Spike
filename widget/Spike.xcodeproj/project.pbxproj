@@ -33,15 +33,15 @@
 		961EB788208946B3005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB787208946B3005F0E9F /* Images.xcassets */; };
 		961EB78E2089488B005F0E9F /* PushNotificationPayload.apns in Resources */ = {isa = PBXBuildFile; fileRef = 961EB78C2089488B005F0E9F /* PushNotificationPayload.apns */; };
 		961EB79420894D59005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB79320894D59005F0E9F /* Images.xcassets */; };
-		964061D72151C2F00068A061 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 964061D62151C2F00068A061 /* HealthKit.framework */; };
-		964061D82151C2F90068A061 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 964061D62151C2F00068A061 /* HealthKit.framework */; };
-		964061D92151C2FF0068A061 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 964061D62151C2F00068A061 /* HealthKit.framework */; };
 		9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C510155202806D600872D37 /* NotificationCenter.framework */; };
 		9654C7F62087C35F0021B684 /* TodayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9654C7F52087C35F0021B684 /* TodayViewController.swift */; };
 		9654C7F92087C35F0021B684 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9654C7F72087C35F0021B684 /* MainInterface.storyboard */; };
 		9654C7FD2087C35F0021B684 /* fswidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9654C7F22087C35F0021B684 /* fswidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9654C8022087C8790021B684 /* Pods_widget.framework */; };
 		9654C8042087C8DB0021B684 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
+		965D78442155C01C00FA1024 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 965D78432155C01C00FA1024 /* HealthKit.framework */; };
+		965D78452155C02200FA1024 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 965D78432155C01C00FA1024 /* HealthKit.framework */; };
+		965D78462155C02700FA1024 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 965D78432155C01C00FA1024 /* HealthKit.framework */; };
 		96728E612096D27700ADFFDE /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96728E602096D27700ADFFDE /* ComplicationController.swift */; };
 		96A54793212C8AFB00FDE960 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96A54792212C8AFB00FDE960 /* CloudKit.framework */; };
 		96B9CB5520969B9300782124 /* FSInterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B9CB5420969B9300782124 /* FSInterfaceController.swift */; };
@@ -181,13 +181,13 @@
 		961EB78F208949B5005F0E9F /* watch Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "watch Extension.entitlements"; sourceTree = "<group>"; };
 		961EB790208949E2005F0E9F /* watch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = watch.entitlements; sourceTree = "<group>"; };
 		961EB79320894D59005F0E9F /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		964061D62151C2F00068A061 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		9654C7F22087C35F0021B684 /* fswidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = fswidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9654C7F52087C35F0021B684 /* TodayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewController.swift; sourceTree = "<group>"; };
 		9654C7F82087C35F0021B684 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
 		9654C7FA2087C35F0021B684 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9654C8022087C8790021B684 /* Pods_widget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_widget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9654C8052087CED70021B684 /* fswidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = fswidget.entitlements; sourceTree = "<group>"; };
+		965D78432155C01C00FA1024 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		96728E602096D27700ADFFDE /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
 		96A54792212C8AFB00FDE960 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		96B9CB5420969B9300782124 /* FSInterfaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FSInterfaceController.swift; sourceTree = "<group>"; };
@@ -200,7 +200,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				964061D92151C2FF0068A061 /* HealthKit.framework in Frameworks */,
+				965D78442155C01C00FA1024 /* HealthKit.framework in Frameworks */,
 				96A54793212C8AFB00FDE960 /* CloudKit.framework in Frameworks */,
 				89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */,
 			);
@@ -226,7 +226,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				964061D82151C2F90068A061 /* HealthKit.framework in Frameworks */,
+				965D78452155C02200FA1024 /* HealthKit.framework in Frameworks */,
 				1C510156202806D600872D37 /* NotificationCenter.framework in Frameworks */,
 				677BE12171EF0760555A41F4 /* Pods_widget.framework in Frameworks */,
 			);
@@ -243,7 +243,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				964061D72151C2F00068A061 /* HealthKit.framework in Frameworks */,
+				965D78462155C02700FA1024 /* HealthKit.framework in Frameworks */,
 				9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */,
 				9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */,
 			);
@@ -333,7 +333,7 @@
 		1C510154202806D600872D37 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				964061D62151C2F00068A061 /* HealthKit.framework */,
+				965D78432155C01C00FA1024 /* HealthKit.framework */,
 				96A54792212C8AFB00FDE960 /* CloudKit.framework */,
 				9654C8022087C8790021B684 /* Pods_widget.framework */,
 				1C510155202806D600872D37 /* NotificationCenter.framework */,
