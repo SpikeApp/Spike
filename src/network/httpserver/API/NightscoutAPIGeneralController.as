@@ -87,7 +87,7 @@ package network.httpserver.API
 						continue;
 					
 					var bgsObject:Object = {};
-					bgsObject.sgv = BgGraphBuilder.unitizedString(bgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+					bgsObject.sgv = BgGraphBuilder.unitizedString(bgReading.calculatedValue, true)
 					bgsObject.trend = bgReading.getSlopeOrdinal()
 					bgsObject.direction = bgReading.slopeName();
 					bgsObject.datetime = bgReading.timestamp;

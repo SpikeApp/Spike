@@ -1,4 +1,7 @@
 2.5.3
+FIX: The Pebble endpoint on Spike's internal server now returns the sgv value always in mg/dL. (Miguel)
+
+2.5.3
 ENHANCEMENT: Full iPhone Xr & Xs Max support. Spike is now compatible with all new iPhone and Apple Watch models. (Miguel)
 FIX: Fixes an issue where Spike would overwrite combo bolus treatments inserted in Nightscout. (Miguel)
 FIX: Fixes an issue that prevented some users to modify alarm values. (Miguel)
