@@ -2093,10 +2093,10 @@ package treatments
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_DEFAULT_EXTENDED_BOLUS_SOUND, soundFile, true, false);
 					
 					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
-						.setId(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT)
+						.setId(NotificationService.ID_FOR_EXTENDED_BOLUS_ALERT)
 						.setAlert("Extended Bolus Reminder")
 						.setTitle("Extended Bolus Reminder")
-						.setBody("Don't forget your bolus...")
+						.setBody("This is a reminder for your extended bolus.")
 						.enableVibration(true)
 						.enableLights(true)
 						.setSound(soundFile)
