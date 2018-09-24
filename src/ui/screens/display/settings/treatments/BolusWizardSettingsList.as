@@ -124,10 +124,10 @@ package ui.screens.display.settings.treatments
 		public function save():void
 		{
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION) != String(insulinPrecisionValue))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION, String(insulinPrecisionValue));
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION, String(insulinPrecisionValue), true, false);
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION) != String(carbsPrecisionValue))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION, String(carbsPrecisionValue));
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION, String(carbsPrecisionValue), true, false);
 			
 			needsSave = false;
 		}

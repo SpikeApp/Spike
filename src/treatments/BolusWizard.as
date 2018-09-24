@@ -204,6 +204,10 @@ package treatments
 		private static var bwFinalCalculatedCarbsLabel:Label;
 		private static var bwFinalCalculatedCarbsStepper:NumericStepper;
 		private static var finalCalculationsLabel:Label;
+
+		private static var insulinPrecision:Number;
+
+		private static var carbsPrecision:Number;
 		
 		public function BolusWizard()
 		{
@@ -223,15 +227,25 @@ package treatments
 			}
 			
 			//Components & Data
+			getInitialSettings();
 			createDisplayObjects();
 			updateCriticalData();
 			setCalloutPositionHelper();
 			displayCallout();
-			
-			//Global Event Listeners
+			setGlobalEventListeners();
+		}		
+		
+		private static function setGlobalEventListeners():void
+		{
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
-		}		
+		}
+		
+		private static function getInitialSettings():void
+		{
+			insulinPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION));
+			carbsPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION));
+		}
 		
 		private static function createDisplayObjects():void
 		{
@@ -756,7 +770,7 @@ package treatments
 			bwOtherCorrectionAmountLabel.paddingLeft = 25;
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountLabel);
 			
-			bwOtherCorrectionAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, 0.05);
+			bwOtherCorrectionAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, insulinPrecision);
 			bwOtherCorrectionAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwOtherCorrectionAmountStepper.validate();
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountStepper);
@@ -888,7 +902,7 @@ package treatments
 			bwFinalCalculatedInsulinLabel = LayoutFactory.createLabel("Insulin", HorizontalAlign.CENTER);
 			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinLabel);
 			
-			bwFinalCalculatedInsulinStepper = LayoutFactory.createNumericStepper(0, 200, 0, 0.01);
+			bwFinalCalculatedInsulinStepper = LayoutFactory.createNumericStepper(0, 200, 0, insulinPrecision);
 			bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
 			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinStepper);
 			
@@ -898,7 +912,7 @@ package treatments
 			bwFinalCalculatedCarbsLabel = LayoutFactory.createLabel("Carbs", HorizontalAlign.CENTER);
 			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsLabel);
 			
-			bwFinalCalculatedCarbsStepper = LayoutFactory.createNumericStepper(0, 1000, 0, 0.5);
+			bwFinalCalculatedCarbsStepper = LayoutFactory.createNumericStepper(0, 1000, 0, carbsPrecision);
 			bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
 			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsStepper);
 			
@@ -1197,13 +1211,14 @@ package treatments
 			// Load COB
 			if (bwCOBCheck.isSelected) {
 				cob = currentCOB;
-				insulincob = roundTo(cob / ic, 0.01);
+				insulincob = roundTo(cob / ic, insulinPrecision);
 			}
 			
 			// Load BG
 			if (bwGlucoseCheck.isSelected)
 			{
 				bg = bwGlucoseStepper.value;
+				
 				if (isNaN(bg))
 				{
 					bg = 0;
@@ -1222,7 +1237,7 @@ package treatments
 				
 				if (bg !== 0)
 				{
-					insulinbg = roundTo(bgdiff / isf, 0.01);
+					insulinbg = roundTo(bgdiff / isf, insulinPrecision);
 				}
 			}
 			
@@ -1235,7 +1250,7 @@ package treatments
 					carbs = 0;
 				}
 				
-				insulincarbs = roundTo(carbs / ic, 0.01);
+				insulincarbs = roundTo(carbs / ic, insulinPrecision);
 			}
 			
 			//Total & rounding
@@ -1244,14 +1259,18 @@ package treatments
 				total = insulinbg + insulincarbs + insulincob - iob + extraCorrections;
 			//}
 			
-			insulin = roundTo(total, 0.05);
+			insulin = roundTo(total, insulinPrecision);
 			insulin = Math.round(insulin * 100) / 100;
 			roundingcorrection = insulin - total;
 			
 			// Carbs needed if too much IOB
 			if (insulin < 0) 
 			{
-				carbsneeded = Math.ceil(-total * ic);
+				//carbsneeded = Math.ceil(-total * ic);
+				
+				trace("carbsneeded before", -total * ic);
+				carbsneeded = roundTo(-total * ic, carbsPrecision);
+				trace("carbsneeded after", carbsneeded);
 			}
 			
 			//Trend
@@ -1264,9 +1283,10 @@ package treatments
 				else if (currentTrendCorrectionUnit == "g")
 				{
 					carbsneeded += currentTrendCorrection;
+					carbsneeded = roundTo(carbsneeded, carbsPrecision);
 					
 					//Recalculate insulin
-					insulin -= roundTo(currentTrendCorrection / ic, 0.01);
+					insulin -= roundTo(currentTrendCorrection / ic, insulinPrecision);
 					insulin = Math.round(insulin * 100) / 100;
 					roundingcorrection = insulin - total;
 				}
@@ -1278,7 +1298,7 @@ package treatments
 			if (insulin > 0 && bwExerciseCheck.isSelected)
 			{
 				preAdjustmentInsulin -= insulin * (bwExerciseAmountStepper.value / 100);
-				preAdjustmentInsulin = roundTo(preAdjustmentInsulin, 0.05);
+				preAdjustmentInsulin = roundTo(preAdjustmentInsulin, insulinPrecision);
 				preAdjustmentInsulin = Math.round(preAdjustmentInsulin * 100) / 100;
 			}
 			
@@ -1286,7 +1306,7 @@ package treatments
 			if (insulin > 0 && bwSicknessCheck.isSelected)
 			{
 				preAdjustmentInsulin += insulin * (bwSicknessAmountStepper.value / 100);
-				preAdjustmentInsulin = roundTo(preAdjustmentInsulin, 0.05);
+				preAdjustmentInsulin = roundTo(preAdjustmentInsulin, insulinPrecision);
 				preAdjustmentInsulin = Math.round(preAdjustmentInsulin * 100) / 100;
 			}
 			
