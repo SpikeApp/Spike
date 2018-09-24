@@ -1269,10 +1269,7 @@ package treatments
 			if (insulin < 0) 
 			{
 				//carbsneeded = Math.ceil(-total * ic);
-				
-				trace("carbsneeded before", -total * ic);
 				carbsneeded = roundTo(-total * ic, carbsPrecision);
-				trace("carbsneeded after", carbsneeded);
 			}
 			
 			//Trend
