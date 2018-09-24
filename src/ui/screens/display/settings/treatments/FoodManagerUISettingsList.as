@@ -1,0 +1,136 @@
+package ui.screens.display.settings.treatments
+{
+	import database.CommonSettings;
+	
+	import feathers.controls.PickerList;
+	import feathers.controls.popups.DropDownPopUpContentManager;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.data.ArrayCollection;
+	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
+	
+	import model.ModelLocator;
+	
+	import starling.events.Event;
+	
+	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.SpikeList;
+	
+	import utils.Constants;
+	
+	[ResourceBundle("foodmanager")]
+	
+	public class FoodManagerUISettingsList extends SpikeList 
+	{
+		/* Display Objects */
+		private var defaultScreenPicker:PickerList;
+		
+		/* Properties */
+		public var needsSave:Boolean;
+		private var defaultScreenValue:String;
+		
+		public function FoodManagerUISettingsList()
+		{
+			super(true);
+			
+			setupProperties();
+			setupInitialContent();	
+			setupContent();
+		}
+		
+		/**
+		 * Functionality
+		 */
+		private function setupProperties():void
+		{
+			/* Set Properties */
+			clipContent = false;
+			isSelectable = false;
+			autoHideBackground = true;
+			hasElasticEdges = false;
+			paddingBottom = 5;
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+		}
+		
+		private function setupInitialContent():void
+		{
+			/* Get Values From Database */
+			defaultScreenValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN);
+		}
+		
+		private function setupContent():void
+		{	
+			//Insulin Precision
+			defaultScreenPicker = LayoutFactory.createPickerList();
+			
+			var defaultScreenValuesList:ArrayCollection = new ArrayCollection();
+			defaultScreenValuesList.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','favourites_label'), value: "favorites" } );
+			defaultScreenValuesList.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','recipes_label'), value: "recipes" } );
+			defaultScreenValuesList.push( { label: "FatSecret", value: "fatsecret" } );
+			defaultScreenValuesList.push( { label: "Open Food Facts", value: "openfoodfacts" } );
+			defaultScreenValuesList.push( { label: "USDA", value: "usda" } );
+			
+			defaultScreenPicker.popUpContentManager = new DropDownPopUpContentManager();
+			defaultScreenPicker.dataProvider = defaultScreenValuesList;
+			
+			if (defaultScreenValue == "favorites")
+				defaultScreenPicker.selectedIndex = 0;
+			else if (defaultScreenValue == "recipes")
+				defaultScreenPicker.selectedIndex = 1;
+			else if (defaultScreenValue == "fatsecret")
+				defaultScreenPicker.selectedIndex = 2;
+			else if (defaultScreenValue == "openfoodfacts")
+				defaultScreenPicker.selectedIndex = 3;
+			else if (defaultScreenValue == "usda")
+				defaultScreenPicker.selectedIndex = 4;
+				
+			defaultScreenPicker.itemRendererFactory = function():IListItemRenderer
+			{
+				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				itemRenderer.labelField = "label";
+				return itemRenderer;
+			}
+			defaultScreenPicker.addEventListener(Event.CHANGE, onSettingsChanged);
+
+			//Set screen content
+			var data:Array = [];
+			
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','default_screen_label'), accessory: defaultScreenPicker } );
+			
+			dataProvider = new ArrayCollection(data);
+		}
+		
+		public function save():void
+		{
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN) != defaultScreenValue)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN, defaultScreenValue, true, false);
+			
+			needsSave = false;
+		}
+		
+		/**
+		 * Event Listeners
+		 */
+		private function onSettingsChanged(e:Event):void
+		{
+			defaultScreenValue = defaultScreenPicker.selectedItem.value;
+			
+			needsSave = true;
+		}
+		
+		/**
+		 * Utility
+		 */	
+		override public function dispose():void
+		{
+			if (defaultScreenPicker != null)
+			{
+				defaultScreenPicker.removeEventListener(Event.CHANGE, onSettingsChanged);
+				defaultScreenPicker.dispose();
+				defaultScreenPicker = null;
+			}
+			
+			super.dispose();
+		}
+	}
+}

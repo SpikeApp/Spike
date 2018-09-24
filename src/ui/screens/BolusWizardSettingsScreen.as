@@ -16,7 +16,7 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
-	import ui.screens.display.settings.treatments.BolusWizardSettingsList;
+	import ui.screens.display.settings.treatments.BolusWizardCalculationsSettingsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -26,7 +26,7 @@ package ui.screens
 	public class BolusWizardSettingsScreen extends BaseSubScreen
 	{
 		/* Display Objects */
-		private var bolusWizardSettings:BolusWizardSettingsList;
+		private var bolusWizardSettings:BolusWizardCalculationsSettingsList;
 		private var bolusWizardLabel:Label;
 		
 		public function BolusWizardSettingsScreen() 
@@ -61,12 +61,12 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
-			//Insulins Section Label
+			//Calculations Section Label
 			bolusWizardLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('treatments','calculations_label'), true);
 			screenRenderer.addChild(bolusWizardLabel);
 			
-			//Insulins Settings
-			bolusWizardSettings = new BolusWizardSettingsList();
+			//Calculations Settings
+			bolusWizardSettings = new BolusWizardCalculationsSettingsList();
 			screenRenderer.addChild(bolusWizardSettings);
 		}
 		

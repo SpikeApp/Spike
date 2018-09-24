@@ -28,6 +28,7 @@ package ui.screens
 		public static const SETTINGS_PROFILE:String = "profileSettings";
 		public static const SETTINGS_TREATMENTS:String = "treatmentsSettings";
 		public static const SETTINGS_BOLUS_WIZARD:String = "bolusWizardSettings";
+		public static const SETTINGS_FOOD_MANAGER:String = "foodManagerSettings";
 		public static const DISCLAIMER:String = "disclaimer";
 		public static const HELP:String = "help";
 		public static const ALL_TREATMENTS:String = "allTreatments";

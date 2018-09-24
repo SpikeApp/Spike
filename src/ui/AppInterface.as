@@ -29,6 +29,7 @@ package ui
 	import ui.screens.ChartSettingsScreen;
 	import ui.screens.DisclaimerScreen;
 	import ui.screens.DonateScreen;
+	import ui.screens.FoodManagerSettingsScreen;
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
 	import ui.screens.GlucoseManagementScreen;
@@ -176,10 +177,15 @@ package ui
 			profileSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_PROFILE, profileSettingsScreenItem );
 			
-			/* Profile Settings Screen */
+			/* Bolus Wizard Settings Screen */
 			var bolusWizardSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BolusWizardSettingsScreen );
 			bolusWizardSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_BOLUS_WIZARD, bolusWizardSettingsScreenItem );
+			
+			/* Food Manager Settings Screen */
+			var foodManagerSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( FoodManagerSettingsScreen );
+			foodManagerSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_FOOD_MANAGER, foodManagerSettingsScreenItem );
 			
 			/* Chart Settings Screen */
 			chartSettingsScreenItem = new StackScreenNavigatorItem( ChartSettingsScreen );

@@ -18,9 +18,9 @@ package ui.screens.display.settings.treatments
 	
 	import utils.Constants;
 	
-	[ResourceBundle("profilesettingsscreen")]
+	[ResourceBundle("treatments")]
 	
-	public class BolusWizardSettingsList extends SpikeList 
+	public class BolusWizardCalculationsSettingsList extends SpikeList 
 	{
 		/* Display Objects */
 		private var insulinPrecisionPicker:PickerList;
@@ -31,7 +31,7 @@ package ui.screens.display.settings.treatments
 		private var insulinPrecisionValue:Number;
 		private var carbsPrecisionValue:Number;
 		
-		public function BolusWizardSettingsList()
+		public function BolusWizardCalculationsSettingsList()
 		{
 			super(true);
 			

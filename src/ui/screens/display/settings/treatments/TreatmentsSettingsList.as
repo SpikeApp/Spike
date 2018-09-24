@@ -62,6 +62,7 @@ package ui.screens.display.settings.treatments
 		private var loadInstructions:Button;
 		private var pumpUserEnabled:Check;
 		private var bolusWizardIconImage:Image;
+		private var foodManagerIconImage:Image;
 		
 		/* Internal Variables */
 		public var needsSave:Boolean = false;
@@ -129,6 +130,7 @@ package ui.screens.display.settings.treatments
 			chevronIconTexture = MaterialDeepGreyAmberMobileThemeIcons.chevronRightTexture;
 			profileIconImage = new Image(chevronIconTexture);
 			bolusWizardIconImage = new Image(chevronIconTexture);
+			foodManagerIconImage = new Image(chevronIconTexture);
 			
 			/* Enable/Disable Switch */
 			treatmentsEnabled = LayoutFactory.createToggleSwitch(treatmentsEnabledValue);
@@ -229,6 +231,7 @@ package ui.screens.display.settings.treatments
 			{
 				data.push({ screen: Screens.SETTINGS_PROFILE, label: ModelLocator.resourceManagerInstance.getString('treatments',"profile_menu_label"), accessory: profileIconImage, selectable: true });
 				data.push({ screen: Screens.SETTINGS_BOLUS_WIZARD, label: ModelLocator.resourceManagerInstance.getString('treatments',"bolus_wizard_settings_label"), accessory: bolusWizardIconImage, selectable: true });
+				data.push({ screen: Screens.SETTINGS_FOOD_MANAGER, label: ModelLocator.resourceManagerInstance.getString('treatments',"food_manager_label"), accessory: foodManagerIconImage, selectable: true });
 			}
 			data.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"enabled"), accessory: treatmentsEnabled, selectable: false });
 			if (treatmentsEnabledValue)
@@ -486,6 +489,14 @@ package ui.screens.display.settings.treatments
 					bolusWizardIconImage.texture.dispose();
 				bolusWizardIconImage.dispose();
 				bolusWizardIconImage = null;
+			}
+			
+			if (foodManagerIconImage != null)
+			{
+				if (foodManagerIconImage.texture != null)
+					foodManagerIconImage.texture.dispose();
+				foodManagerIconImage.dispose();
+				foodManagerIconImage = null;
 			}
 			
 			if (treatmentsEnabled != null)
