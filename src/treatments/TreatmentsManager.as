@@ -26,6 +26,9 @@ package treatments
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.Radio;
+	import feathers.controls.ScrollBarDisplayMode;
+	import feathers.controls.ScrollContainer;
+	import feathers.controls.ScrollPolicy;
 	import feathers.controls.TextInput;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
@@ -33,8 +36,10 @@ package treatments
 	import feathers.core.ToggleGroup;
 	import feathers.data.ArrayCollection;
 	import feathers.events.FeathersEventType;
+	import feathers.layout.Direction;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.TiledRowsLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
@@ -48,6 +53,9 @@ package treatments
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	
+	import treatments.food.Food;
+	import treatments.food.ui.FoodManager;
 	
 	import ui.AppInterface;
 	import ui.popups.AlertManager;
@@ -76,6 +84,7 @@ package treatments
 		public static var pumpIOB:Number = 0;
 		public static var pumpCOB:Number = 0;
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
+		private static var foodManager:FoodManager;
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -106,6 +115,10 @@ package treatments
 		private static var mediumCarb:Radio;
 		private static var slowCarb:Radio;
 		private static var carbDelayGroup:ToggleGroup;
+		private static var foodManagerButton:Button;
+		private static var foodManagerContainer:LayoutGroup;
+		private static var totalScrollContainer:ScrollContainer;
+		private static var contentScrollContainer:ScrollContainer;
 		
 		public function TreatmentsManager()
 		{
@@ -480,6 +493,33 @@ package treatments
 			//Time
 			var now:Number = new Date().valueOf();
 			
+			//Total Content Layout
+			var totalScrollLayout:TiledRowsLayout = new TiledRowsLayout();
+			totalScrollLayout.paging = Direction.HORIZONTAL;
+			totalScrollLayout.tileHorizontalAlign = HorizontalAlign.LEFT;
+			totalScrollLayout.tileVerticalAlign = VerticalAlign.TOP;
+			totalScrollLayout.horizontalAlign = HorizontalAlign.LEFT;
+			totalScrollLayout.verticalAlign = VerticalAlign.TOP;
+			totalScrollLayout.useSquareTiles = false;
+			
+			//Total Container
+			if (totalScrollContainer != null) totalScrollContainer.removeFromParent(true);
+			totalScrollContainer = new ScrollContainer();
+			totalScrollContainer.layout = totalScrollLayout;
+			totalScrollContainer.snapToPages = true;
+			totalScrollContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
+			
+			//Content Scroll Container
+			var contentScrollContainerLayout:VerticalLayout = new VerticalLayout();
+			//contentScrollContainerLayout.paddingRight = 10;
+			
+			if (contentScrollContainer != null) contentScrollContainer.removeFromParent(true); 
+			contentScrollContainer = new ScrollContainer();
+			contentScrollContainer.layout = contentScrollContainerLayout;
+			contentScrollContainer.scrollBarDisplayMode = ScrollBarDisplayMode.FIXED_FLOAT;
+			//contentScrollContainer.verticalScrollBarProperties.paddingLeft = 10;
+			totalScrollContainer.addChild(contentScrollContainer);
+			
 			//Display Container
 			var displayLayout:VerticalLayout = new VerticalLayout();
 			displayLayout.horizontalAlign = HorizontalAlign.LEFT;
@@ -488,6 +528,7 @@ package treatments
 			if (treatmentInserterContainer != null) treatmentInserterContainer.removeFromParent(true);
 			treatmentInserterContainer = new LayoutGroup();
 			treatmentInserterContainer.layout = displayLayout;
+			contentScrollContainer.addChild(treatmentInserterContainer);
 			
 			//Title
 			var treatmentTitle:String = "";
@@ -607,6 +648,15 @@ package treatments
 				carbDelayContainer.addChild(slowCarb);
 				treatmentInserterContainer.addChild(carbDelayContainer);
 				
+				//Food manager
+				foodManagerContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER);
+				treatmentInserterContainer.addChild(foodManagerContainer);
+				
+				foodManagerButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','load_foods_button_label'));
+				foodManagerButton.addEventListener(Event.TRIGGERED, onLoadFoodManager);
+				foodManagerContainer.addChild(foodManagerButton);
+				
+				//Spacer
 				if (carbSpacer != null) carbSpacer.removeFromParent(true);
 				carbSpacer = new Sprite();
 				carbSpacer.height = 10;
@@ -647,12 +697,14 @@ package treatments
 			{
 				carbsTextInput.width = treatmentTime.width;
 				carbDelayContainer.width = treatmentTime.width;
+				foodManagerContainer.width = treatmentTime.width;
 			}
 			else if (type == Treatment.TYPE_MEAL_BOLUS)
 			{
 				extendedCarbContainer.width = treatmentTime.width;
 				carbsTextInput.width = treatmentTime.width - carbOffSet.width - carbOffsetSuffix.width;
 				carbDelayContainer.width = treatmentTime.width;
+				foodManagerContainer.width = treatmentTime.width;
 			}
 			
 			treatmentInserterTitleLabel.width = treatmentTime.width;
@@ -771,11 +823,32 @@ package treatments
 			calloutPositionHelper.x = Constants.stageWidth / 2;
 			Starling.current.stage.addChild(calloutPositionHelper);
 			
-			if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
-			treatmentCallout = Callout.show(treatmentInserterContainer, calloutPositionHelper);
+			treatmentInserterContainer.validate();
+			var contentOriginalHeight:Number = treatmentInserterContainer.height + 60;
+			var suggestedCalloutHeight:Number = Constants.stageHeight - yPos - 10;
+			var finalCalloutHeight:Number = contentOriginalHeight > suggestedCalloutHeight ?  suggestedCalloutHeight : contentOriginalHeight;
+			
+			if (treatmentCallout != null) treatmentCallout.dispose();
+			treatmentCallout = Callout.show(totalScrollContainer, calloutPositionHelper);
+			treatmentCallout.disposeContent = false;
 			treatmentCallout.paddingBottom = 15;
+			if (finalCalloutHeight != contentOriginalHeight)
+			{
+				contentScrollContainerLayout.paddingRight = 10;
+				treatmentCallout.paddingRight = 10;
+			}
 			treatmentCallout.closeOnTouchBeganOutside = false;
 			treatmentCallout.closeOnTouchEndedOutside = false;
+			treatmentCallout.height = finalCalloutHeight;
+			treatmentCallout.addEventListener(Event.CLOSE, onTreatmentsCalloutClosed);
+			treatmentCallout.validate();
+			
+			var treatmentCallOutWidth:Number = treatmentCallout.width;
+			
+			contentScrollContainer.height = finalCalloutHeight - 60;
+			contentScrollContainer.maxHeight = finalCalloutHeight - 60;
+			totalScrollContainer.height = finalCalloutHeight - 60;
+			totalScrollContainer.maxHeight = finalCalloutHeight - 60;
 			
 			//Keyboard Focus
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
@@ -798,12 +871,14 @@ package treatments
 				{
 					carbsTextInput.width = actionContainer.width;
 					carbDelayContainer.width = actionContainer.width;
+					foodManagerContainer.width = actionContainer.width;
 				}
 				else if (type == Treatment.TYPE_MEAL_BOLUS)
 				{
 					extendedCarbContainer.width = actionContainer.width;
 					carbsTextInput.width = actionContainer.width - carbOffSet.width - carbOffsetSuffix.width;
 					carbDelayContainer.width = actionContainer.width;
+					foodManagerContainer.width = actionContainer.width;
 				}
 				
 				notes.width = actionContainer.width;
@@ -813,11 +888,21 @@ package treatments
 				treatmentInserterContainer.validate();
 			}
 			
+			function onTreatmentsCalloutClosed(e:Event):void
+			{
+				if (foodManager != null)
+				{
+					foodManager.removeEventListener(Event.COMPLETE, onFoodManagerCompleted);
+					foodManager.dispose();
+					foodManager = null;
+				}
+			}
+			
 			function closeCallout(e:Event):void
 			{
 				if (cancelButton != null) cancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
 				
-				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
+				if (treatmentCallout != null) treatmentCallout.close(true);
 			}
 			
 			function onInsulinEntered (e:Event):void
@@ -875,7 +960,7 @@ package treatments
 					NightscoutService.uploadTreatment(treatment);
 				}
 				
-				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
+				if (treatmentCallout != null) treatmentCallout.close(true);
 			}
 			
 			function onCarbsEntered (e:Event):void
@@ -946,7 +1031,7 @@ package treatments
 					NightscoutService.uploadTreatment(treatment);
 				}
 				
-				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
+				if (treatmentCallout != null) treatmentCallout.close(true);
 			}
 			
 			function onMealEntered (e:Event):void
@@ -1098,7 +1183,7 @@ package treatments
 					}
 				}
 				
-				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
+				if (treatmentCallout != null) treatmentCallout.close(true);
 			}
 			
 			function onBGCheckEntered (e:Event):void
@@ -1176,7 +1261,7 @@ package treatments
 					NightscoutService.uploadTreatment(treatment);
 				}
 				
-				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
+				if (treatmentCallout != null) treatmentCallout.close(true);
 			}
 			
 			function onNoteEntered (e:Event):void
@@ -1232,7 +1317,7 @@ package treatments
 					NightscoutService.uploadTreatment(treatment);
 				}
 				
-				if (treatmentCallout != null) treatmentCallout.removeFromParent(true);
+				if (treatmentCallout != null) treatmentCallout.close(true);
 			}
 			
 			function onConfigureInsulins(e:Event):void
@@ -1245,9 +1330,100 @@ package treatments
 				popupTween.fadeTo(0);
 				popupTween.onComplete = function():void
 				{
-					treatmentCallout.removeFromParent(true);
+					treatmentCallout.close(true);
 				}
 				Starling.juggler.add(popupTween);
+			}
+			
+			function onLoadFoodManager(e:Event):void
+			{
+				var contentWidth:Number;
+				if (treatmentCallOutWidth - treatmentCallout.paddingLeft - treatmentCallout.paddingRight - 10 < 280)
+				{
+					treatmentCallout.width = 270 + treatmentCallout.paddingLeft + treatmentCallout.paddingRight + 10;
+					contentWidth = 270;
+				}
+				else
+				{
+					contentWidth = treatmentCallout.width - treatmentCallout.paddingLeft - treatmentCallout.paddingRight;
+				}
+				
+				if (foodManager == null)
+				{	
+					foodManager = new FoodManager(contentWidth, treatmentCallout.height - treatmentCallout.paddingTop - treatmentCallout.paddingBottom - 15);
+					foodManager.addEventListener(Event.COMPLETE, onFoodManagerCompleted);
+					totalScrollContainer.addChild(foodManager);
+				}
+				
+				totalScrollContainer.scrollToPageIndex( 1, totalScrollContainer.verticalPageIndex );
+			}
+			
+			function roundTo (x:Number, step:Number):Number
+			{
+				if (x) return Math.round(x / step) * step;
+				
+				return 0;
+			}
+			
+			function onFoodManagerCompleted(e:Event):void
+			{
+				if (treatmentCallout != null)
+				{
+					treatmentCallout.width = treatmentCallOutWidth;
+					
+					//Calculate all food carbs the user has added to the food manager
+					var totalCarbs:Number = 0;
+					var foodsList:Array = foodManager.cartList;
+					var addedFoods:int = 0;
+					var addedFoodNames:Array = [];
+					
+					for (var i:int = 0; i < foodsList.length; i++) 
+					{
+						var food:Food = foodsList[i].food;
+						if (food == null) 
+							continue;
+						
+						var quantity:Number = foodsList[i].quantity;
+						if (isNaN(quantity)) 
+							continue;
+						
+						var carbs:Number = food.carbs;
+						if (isNaN(carbs)) 
+							continue;
+						
+						var fiber:Number = food.fiber;
+						var substractFiber:Boolean = foodsList[i].substractFiber;
+						if (substractFiber && !isNaN(fiber))
+							carbs -= fiber;
+						
+						var finalCarbs:Number = (quantity / food.servingSize) * carbs;
+						if (!isNaN(finalCarbs))
+						{
+							totalCarbs += finalCarbs;
+							addedFoods += 1;
+							addedFoodNames.push(quantity + food.servingUnit + " " + food.name);
+						}
+					}
+					
+					totalCarbs = Math.round(totalCarbs * 10) / 10;
+					
+					//Populate the carbs numeric stepper with all carbs from the food manager
+					carbsTextInput.text = totalCarbs != 0 ? String(totalCarbs) : "";
+					
+					//Update foods label
+					if (addedFoods > 0)
+					{
+						//bwFoodsLabel.text = "Foods" + " " + "(" + addedFoods + ")";
+						//bwFoodsLabel.validate();
+						//bwFoodLoaderButton.validate();
+						//bwFoodsContainer.validate();
+						//bwFoodLoaderButton.x = contentWidth - bwFoodLoaderButton.width;
+						notes.text = addedFoodNames.join(", ");
+					}
+					
+					//Scroll to the Bolus Wizard screen
+					totalScrollContainer.scrollToPageIndex( 0, totalScrollContainer.verticalPageIndex );
+				}
 			}
 			
 			function onClearFocus(e:Event):void
