@@ -137,338 +137,13 @@ package treatments.food.ui
 		private var totalPages:int = 1;	
 		private var dontClearSearchResults:Boolean = false;
 		private var activeRecipe:Recipe;
+		private var loadedFromExternalContainer:Boolean; 
 
-		
-		
-		
-		override public function dispose():void
-		{
-			if (title != null)
-			{
-				title.removeFromParent();
-				title.dispose();
-				title = null;
-			}
-			
-			if (databaseAPISelector != null)
-			{
-				databaseAPISelector.removeEventListener(starling.events.Event.CHANGE, onAPIChanged);
-				databaseAPISelector.removeFromParent();
-				databaseAPISelector.dispose();
-				databaseAPISelector = null;
-			}
-			
-			if (searchInput != null)
-			{
-				searchInput.removeFromParent();
-				searchInput.dispose();
-				searchInput = null;
-			}
-			
-			if (searchButton != null)
-			{
-				searchButton.removeEventListener(starling.events.Event.TRIGGERED, onPerformSearch);
-				searchButton.removeFromParent();
-				searchButton.dispose();
-				searchButton = null;
-			}
-			
-			if (scanButton != null)
-			{
-				scanButton.removeEventListener(starling.events.Event.TRIGGERED, onScan);
-				scanButton.removeFromParent();
-				scanButton.dispose();
-				scanButton = null;
-			}
-			
-			if (foodResultsList != null)
-			{
-				foodResultsList.removeEventListener(Event.CHANGE, onFoodOrRecipeSelected);
-				foodResultsList.removeFromParent();
-				foodResultsList.dispose();
-				foodResultsList = null;
-			}
-			
-			if (paginationLabel != null)
-			{
-				paginationLabel.removeFromParent();
-				paginationLabel.dispose();
-				paginationLabel = null;
-			}
-			
-			if (firstPageButton != null)
-			{
-				firstPageButton.removeEventListener(Event.TRIGGERED, onFirstPage);
-				firstPageButton.removeFromParent();
-				firstPageButton.dispose();
-				firstPageButton = null;
-			}
-			
-			if (previousPageButton != null)
-			{
-				previousPageButton.removeEventListener(Event.TRIGGERED, onPreviousPage);
-				previousPageButton.removeFromParent();
-				previousPageButton.dispose();
-				previousPageButton = null;
-			}
-			
-			if (nextPageButton != null)
-			{
-				nextPageButton.removeEventListener(Event.TRIGGERED, onNextPage);
-				nextPageButton.removeFromParent();
-				nextPageButton.dispose();
-				nextPageButton = null;
-			}
-			
-			if (lastPageButton != null)
-			{
-				lastPageButton.removeEventListener(Event.TRIGGERED, onLastPage);
-				lastPageButton.removeFromParent();
-				lastPageButton.dispose();
-				lastPageButton = null;
-			}
-			
-			if (addFavorite != null)
-			{
-				addFavorite.removeEventListener(TouchEvent.TOUCH, onAddManualFavorite);
-				addFavorite.removeFromParent();
-				addFavorite.dispose();
-				addFavorite = null;
-			}
-			
-			if (addFavoriteImage != null)
-			{
-				addFavoriteImage.removeFromParent();
-				if (addFavoriteImage.texture != null)
-					addFavoriteImage.texture.dispose();
-				addFavoriteImage.dispose();
-				addFavoriteImage = null;
-			}
-			
-			if (addFavoriteBackground != null)
-			{
-				addFavoriteBackground.removeFromParent();
-				addFavoriteBackground.dispose();
-				addFavoriteBackground = null;
-			}
-			
-			if (addFavoriteHitArea != null)
-			{
-				addFavoriteHitArea.removeFromParent();
-				addFavoriteHitArea.dispose();
-				addFavoriteHitArea = null;
-			}
-			
-			if (preloader != null)
-			{
-				preloader.removeFromParent();
-				preloader.dispose();
-				preloader = null;
-			}
-			
-			if (basketSprite != null)
-			{
-				basketSprite.removeEventListener(TouchEvent.TOUCH, onDisplayBasket);
-				basketSprite.removeFromParent();
-				basketSprite.dispose();
-				basketSprite = null;
-			}
-			
-			if (basketImage != null)
-			{
-				basketImage.removeFromParent();
-				if (basketImage.texture != null)
-					basketImage.texture.dispose();
-				basketImage.dispose();
-				basketImage = null;
-			}
-			
-			if (basketAmountLabel != null)
-			{
-				basketAmountLabel.removeFromParent();
-				basketAmountLabel.dispose();
-				basketAmountLabel = null;
-			}
-			
-			if (basketHitArea != null)
-			{
-				basketHitArea.removeFromParent();
-				basketHitArea.dispose();
-				basketHitArea = null;
-			}
-			
-			if (cartTotals != null)
-			{
-				cartTotals.removeFromParent();
-				cartTotals.dispose();
-				cartTotals = null;
-			}
-			
-			if (basketList != null)
-			{
-				basketList.removeFromParent();
-				basketList.dispose();
-				basketList = null;
-			}
-			
-			if (saveRecipe != null)
-			{
-				saveRecipe.removeEventListener(Event.TRIGGERED, onAddRecipe);
-				saveRecipe.removeFromParent();
-				saveRecipe.dispose();
-				saveRecipe = null;
-			}
-			
-			if (foodDetailsTitle != null)
-			{
-				foodDetailsTitle.removeFromParent();
-				foodDetailsTitle.dispose();
-				foodDetailsTitle = null;
-			}
-			
-			if (favoriteButton != null)
-			{
-				favoriteButton.removeEventListener(Event.TRIGGERED, onAddFoodOrRecipeAsFavorite);
-				favoriteButton.removeFromParent();
-				favoriteButton.dispose();
-				favoriteButton = null;
-			}
-			
-			if (unfavoriteButton != null)
-			{
-				unfavoriteButton.removeEventListener(Event.TRIGGERED, onRemoveFoodOrRecipeAsFavorite);
-				unfavoriteButton.removeFromParent();
-				unfavoriteButton.dispose();
-				unfavoriteButton = null;
-			}
-			
-			if (foodAmountInput != null)
-			{
-				foodAmountInput.removeEventListener(Event.CHANGE, onFoodAmountChanged);
-				foodAmountInput.removeFromParent();
-				foodAmountInput.dispose();
-				foodAmountInput = null;
-			}
-			
-			if (addFoodButton != null)
-			{
-				addFoodButton.removeEventListener(starling.events.Event.TRIGGERED, onAddFoodOrRecipe);
-				addFoodButton.removeFromParent();
-				addFoodButton.dispose();
-				addFoodButton = null;
-			}
-			
-			if (substractFiberCheck != null)
-			{
-				substractFiberCheck.removeFromParent();
-				substractFiberCheck.dispose();
-				substractFiberCheck = null;
-			}
-			
-			if (foodLink != null)
-			{
-				foodLink.removeEventListener(Event.TRIGGERED, onFoodLinkTriggered);
-				foodLink.removeFromParent();
-				foodLink.dispose();
-				foodLink = null;
-			}
-			
-			if (nutritionFacts != null)
-			{
-				nutritionFacts.removeFromParent();
-				nutritionFacts.dispose();
-				nutritionFacts = null;
-			}
-			
-			if (finishButton != null)
-			{
-				finishButton.removeEventListener(Event.TRIGGERED, onCompleteFoodManager);
-				finishButton.removeFromParent();
-				finishButton.dispose();
-				finishButton = null;
-			}
-			
-			if (foodInserter != null)
-			{
-				foodInserter.removeEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
-				foodInserter.removeFromParent();
-				foodInserter.dispose();
-				foodInserter = null;
-			}
-			
-			if (actionsContainer != null)
-			{
-				actionsContainer.removeFromParent();
-				actionsContainer.dispose();
-				actionsContainer = null;
-			}
-			
-			if (addFoodContainer != null)
-			{
-				addFoodContainer.removeFromParent();
-				addFoodContainer.dispose();
-				addFoodContainer = null;
-			}
-			
-			if (foodDetailsTitleContainer != null)
-			{
-				foodDetailsTitleContainer.removeFromParent();
-				foodDetailsTitleContainer.dispose();
-				foodDetailsTitleContainer = null;
-			}
-			
-			if (foodDetailsContainer != null)
-			{
-				foodDetailsContainer.removeFromParent();
-				foodDetailsContainer.dispose();
-				foodDetailsContainer = null;
-			}
-			
-			if (basketPreloaderContainer != null)
-			{
-				basketPreloaderContainer.removeFromParent();
-				basketPreloaderContainer.dispose();
-				basketPreloaderContainer = null;
-			}
-			
-			if (paginationContainer != null)
-			{
-				paginationContainer.removeFromParent();
-				paginationContainer.dispose();
-				paginationContainer = null;
-			}
-			
-			if (footerContainer != null)
-			{
-				footerContainer.removeFromParent();
-				footerContainer.dispose();
-				footerContainer = null;
-			}
-			
-			if (searchContainer != null)
-			{
-				searchContainer.removeFromParent();
-				searchContainer.dispose();
-				searchContainer = null;
-			}
-			
-			if (mainContentContainer != null)
-			{
-				mainContentContainer.removeFromParent();
-				mainContentContainer.dispose();
-				mainContentContainer = null;
-			}
-			
-			super.dispose();
-		}
-		
-		
-		
-
-		public function FoodManager(width:Number, containerHeight:Number)
+		public function FoodManager(width:Number, containerHeight:Number, loadedFromExternalContainer:Boolean = false)
 		{
 			this.width = width;
 			this.containerHeight = containerHeight;
+			this.loadedFromExternalContainer = loadedFromExternalContainer;
 			
 			setupProperties();
 			createContent(); 
@@ -768,6 +443,7 @@ package treatments.food.ui
 			actionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 0);
 			actionsContainer.width = width;
 			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
+			if (loadedFromExternalContainer) (actionsContainer.layout as HorizontalLayout).paddingBottom = 20;
 			mainContentContainer.addChild(actionsContainer);
 			
 			finishButton = LayoutFactory.createButton("FINISH");
@@ -2136,6 +1812,325 @@ package treatments.food.ui
 			getInitialFavorites();
 		}
 		
-		
+		override public function dispose():void
+		{
+			if (title != null)
+			{
+				title.removeFromParent();
+				title.dispose();
+				title = null;
+			}
+			
+			if (databaseAPISelector != null)
+			{
+				databaseAPISelector.removeEventListener(starling.events.Event.CHANGE, onAPIChanged);
+				databaseAPISelector.removeFromParent();
+				databaseAPISelector.dispose();
+				databaseAPISelector = null;
+			}
+			
+			if (searchInput != null)
+			{
+				searchInput.removeFromParent();
+				searchInput.dispose();
+				searchInput = null;
+			}
+			
+			if (searchButton != null)
+			{
+				searchButton.removeEventListener(starling.events.Event.TRIGGERED, onPerformSearch);
+				searchButton.removeFromParent();
+				searchButton.dispose();
+				searchButton = null;
+			}
+			
+			if (scanButton != null)
+			{
+				scanButton.removeEventListener(starling.events.Event.TRIGGERED, onScan);
+				scanButton.removeFromParent();
+				scanButton.dispose();
+				scanButton = null;
+			}
+			
+			if (foodResultsList != null)
+			{
+				foodResultsList.removeEventListener(Event.CHANGE, onFoodOrRecipeSelected);
+				foodResultsList.removeFromParent();
+				foodResultsList.dispose();
+				foodResultsList = null;
+			}
+			
+			if (paginationLabel != null)
+			{
+				paginationLabel.removeFromParent();
+				paginationLabel.dispose();
+				paginationLabel = null;
+			}
+			
+			if (firstPageButton != null)
+			{
+				firstPageButton.removeEventListener(Event.TRIGGERED, onFirstPage);
+				firstPageButton.removeFromParent();
+				firstPageButton.dispose();
+				firstPageButton = null;
+			}
+			
+			if (previousPageButton != null)
+			{
+				previousPageButton.removeEventListener(Event.TRIGGERED, onPreviousPage);
+				previousPageButton.removeFromParent();
+				previousPageButton.dispose();
+				previousPageButton = null;
+			}
+			
+			if (nextPageButton != null)
+			{
+				nextPageButton.removeEventListener(Event.TRIGGERED, onNextPage);
+				nextPageButton.removeFromParent();
+				nextPageButton.dispose();
+				nextPageButton = null;
+			}
+			
+			if (lastPageButton != null)
+			{
+				lastPageButton.removeEventListener(Event.TRIGGERED, onLastPage);
+				lastPageButton.removeFromParent();
+				lastPageButton.dispose();
+				lastPageButton = null;
+			}
+			
+			if (addFavorite != null)
+			{
+				addFavorite.removeEventListener(TouchEvent.TOUCH, onAddManualFavorite);
+				addFavorite.removeFromParent();
+				addFavorite.dispose();
+				addFavorite = null;
+			}
+			
+			if (addFavoriteImage != null)
+			{
+				addFavoriteImage.removeFromParent();
+				if (addFavoriteImage.texture != null)
+					addFavoriteImage.texture.dispose();
+				addFavoriteImage.dispose();
+				addFavoriteImage = null;
+			}
+			
+			if (addFavoriteBackground != null)
+			{
+				addFavoriteBackground.removeFromParent();
+				addFavoriteBackground.dispose();
+				addFavoriteBackground = null;
+			}
+			
+			if (addFavoriteHitArea != null)
+			{
+				addFavoriteHitArea.removeFromParent();
+				addFavoriteHitArea.dispose();
+				addFavoriteHitArea = null;
+			}
+			
+			if (preloader != null)
+			{
+				preloader.removeFromParent();
+				preloader.dispose();
+				preloader = null;
+			}
+			
+			if (basketSprite != null)
+			{
+				basketSprite.removeEventListener(TouchEvent.TOUCH, onDisplayBasket);
+				basketSprite.removeFromParent();
+				basketSprite.dispose();
+				basketSprite = null;
+			}
+			
+			if (basketImage != null)
+			{
+				basketImage.removeFromParent();
+				if (basketImage.texture != null)
+					basketImage.texture.dispose();
+				basketImage.dispose();
+				basketImage = null;
+			}
+			
+			if (basketAmountLabel != null)
+			{
+				basketAmountLabel.removeFromParent();
+				basketAmountLabel.dispose();
+				basketAmountLabel = null;
+			}
+			
+			if (basketHitArea != null)
+			{
+				basketHitArea.removeFromParent();
+				basketHitArea.dispose();
+				basketHitArea = null;
+			}
+			
+			if (cartTotals != null)
+			{
+				cartTotals.removeFromParent();
+				cartTotals.dispose();
+				cartTotals = null;
+			}
+			
+			if (basketList != null)
+			{
+				basketList.removeFromParent();
+				basketList.dispose();
+				basketList = null;
+			}
+			
+			if (saveRecipe != null)
+			{
+				saveRecipe.removeEventListener(Event.TRIGGERED, onAddRecipe);
+				saveRecipe.removeFromParent();
+				saveRecipe.dispose();
+				saveRecipe = null;
+			}
+			
+			if (foodDetailsTitle != null)
+			{
+				foodDetailsTitle.removeFromParent();
+				foodDetailsTitle.dispose();
+				foodDetailsTitle = null;
+			}
+			
+			if (favoriteButton != null)
+			{
+				favoriteButton.removeEventListener(Event.TRIGGERED, onAddFoodOrRecipeAsFavorite);
+				favoriteButton.removeFromParent();
+				favoriteButton.dispose();
+				favoriteButton = null;
+			}
+			
+			if (unfavoriteButton != null)
+			{
+				unfavoriteButton.removeEventListener(Event.TRIGGERED, onRemoveFoodOrRecipeAsFavorite);
+				unfavoriteButton.removeFromParent();
+				unfavoriteButton.dispose();
+				unfavoriteButton = null;
+			}
+			
+			if (foodAmountInput != null)
+			{
+				foodAmountInput.removeEventListener(Event.CHANGE, onFoodAmountChanged);
+				foodAmountInput.removeFromParent();
+				foodAmountInput.dispose();
+				foodAmountInput = null;
+			}
+			
+			if (addFoodButton != null)
+			{
+				addFoodButton.removeEventListener(starling.events.Event.TRIGGERED, onAddFoodOrRecipe);
+				addFoodButton.removeFromParent();
+				addFoodButton.dispose();
+				addFoodButton = null;
+			}
+			
+			if (substractFiberCheck != null)
+			{
+				substractFiberCheck.removeFromParent();
+				substractFiberCheck.dispose();
+				substractFiberCheck = null;
+			}
+			
+			if (foodLink != null)
+			{
+				foodLink.removeEventListener(Event.TRIGGERED, onFoodLinkTriggered);
+				foodLink.removeFromParent();
+				foodLink.dispose();
+				foodLink = null;
+			}
+			
+			if (nutritionFacts != null)
+			{
+				nutritionFacts.removeFromParent();
+				nutritionFacts.dispose();
+				nutritionFacts = null;
+			}
+			
+			if (finishButton != null)
+			{
+				finishButton.removeEventListener(Event.TRIGGERED, onCompleteFoodManager);
+				finishButton.removeFromParent();
+				finishButton.dispose();
+				finishButton = null;
+			}
+			
+			if (foodInserter != null)
+			{
+				foodInserter.removeEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
+				foodInserter.removeFromParent();
+				foodInserter.dispose();
+				foodInserter = null;
+			}
+			
+			if (actionsContainer != null)
+			{
+				actionsContainer.removeFromParent();
+				actionsContainer.dispose();
+				actionsContainer = null;
+			}
+			
+			if (addFoodContainer != null)
+			{
+				addFoodContainer.removeFromParent();
+				addFoodContainer.dispose();
+				addFoodContainer = null;
+			}
+			
+			if (foodDetailsTitleContainer != null)
+			{
+				foodDetailsTitleContainer.removeFromParent();
+				foodDetailsTitleContainer.dispose();
+				foodDetailsTitleContainer = null;
+			}
+			
+			if (foodDetailsContainer != null)
+			{
+				foodDetailsContainer.removeFromParent();
+				foodDetailsContainer.dispose();
+				foodDetailsContainer = null;
+			}
+			
+			if (basketPreloaderContainer != null)
+			{
+				basketPreloaderContainer.removeFromParent();
+				basketPreloaderContainer.dispose();
+				basketPreloaderContainer = null;
+			}
+			
+			if (paginationContainer != null)
+			{
+				paginationContainer.removeFromParent();
+				paginationContainer.dispose();
+				paginationContainer = null;
+			}
+			
+			if (footerContainer != null)
+			{
+				footerContainer.removeFromParent();
+				footerContainer.dispose();
+				footerContainer = null;
+			}
+			
+			if (searchContainer != null)
+			{
+				searchContainer.removeFromParent();
+				searchContainer.dispose();
+				searchContainer = null;
+			}
+			
+			if (mainContentContainer != null)
+			{
+				mainContentContainer.removeFromParent();
+				mainContentContainer.dispose();
+				mainContentContainer = null;
+			}
+			
+			super.dispose();
+		}
 	}
 }

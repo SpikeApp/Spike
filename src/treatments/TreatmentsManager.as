@@ -4,6 +4,7 @@ package treatments
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
+	import flash.system.System;
 	import flash.text.SoftKeyboardType;
 	import flash.utils.Dictionary;
 	
@@ -814,15 +815,16 @@ package treatments
 			treatmentCallout.closeOnTouchBeganOutside = false;
 			treatmentCallout.closeOnTouchEndedOutside = false;
 			treatmentCallout.height = finalCalloutHeight;
+			treatmentCallout.paddingBottom = 0;
 			treatmentCallout.addEventListener(Event.CLOSE, onTreatmentsCalloutClosed);
 			treatmentCallout.validate();
 			
 			var treatmentCallOutWidth:Number = treatmentCallout.width;
 			
-			contentScrollContainer.height = finalCalloutHeight - 60;
-			contentScrollContainer.maxHeight = finalCalloutHeight - 60;
-			totalScrollContainer.height = finalCalloutHeight - 60;
-			totalScrollContainer.maxHeight = finalCalloutHeight - 60;
+			contentScrollContainer.height = finalCalloutHeight - 50;
+			contentScrollContainer.maxHeight = finalCalloutHeight - 50;
+			totalScrollContainer.height = finalCalloutHeight - 50;
+			totalScrollContainer.maxHeight = finalCalloutHeight - 50;
 			
 			//Keyboard Focus
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
@@ -1314,7 +1316,7 @@ package treatments
 				
 				if (foodManager == null)
 				{	
-					foodManager = new FoodManager(contentWidth, treatmentCallout.height - treatmentCallout.paddingTop - treatmentCallout.paddingBottom - 15);
+					foodManager = new FoodManager(contentWidth, treatmentCallout.height - treatmentCallout.paddingTop - treatmentCallout.paddingBottom - 15, true);
 					foodManager.addEventListener(Event.COMPLETE, onFoodManagerCompleted);
 					totalScrollContainer.addChild(foodManager);
 				}
@@ -1629,6 +1631,9 @@ package treatments
 					treatmentCallout.dispose();
 					treatmentCallout = null;
 				}
+				
+				System.pauseForGCIfCollectionImminent(0);
+				System.gc();
 			}
 		}
 		

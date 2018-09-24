@@ -1,5 +1,7 @@
 package ui.screens.display.treatments
 {
+	import flash.system.System;
+	
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
@@ -16,6 +18,7 @@ package ui.screens.display.treatments
 	
 	import services.CalibrationService;
 	
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.Texture;
@@ -299,6 +302,16 @@ package ui.screens.display.treatments
 		{
 			removeEventListener( Event.CHANGE, onMenuChanged );
 			
+			if (dataProvider != null)
+			{
+				dataProvider.dispose( function( item:Object ):void
+				{
+					var icon:DisplayObject = DisplayObject(item.icon);
+					if (icon != null)
+						icon.dispose();
+				});
+			}
+			
 			if (calibrationTexture != null)
 			{
 				calibrationTexture.dispose();
@@ -410,6 +423,9 @@ package ui.screens.display.treatments
 			}
 			
 			super.dispose();
+			
+			System.pauseForGCIfCollectionImminent(0);
+			System.gc();
 		}
 	}
 }

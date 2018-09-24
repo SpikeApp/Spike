@@ -5,6 +5,7 @@ package treatments
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
+	import flash.system.System;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
@@ -2955,6 +2956,9 @@ package treatments
 				bolusWizardCallout.dispose();
 				bolusWizardCallout = null;
 			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			System.gc();
 		}
 	}
 }
