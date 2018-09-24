@@ -862,242 +862,6 @@ package treatments
 				treatmentInserterContainer.validate();
 			}
 			
-			function onTreatmentsCalloutClosed(e:Event):void
-			{
-				if (foodManager != null)
-				{
-					foodManager.removeEventListener(Event.COMPLETE, onFoodManagerCompleted);
-					foodManager.dispose();
-					foodManager = null;
-				}
-				
-				if (treatmentInserterTitleLabel != null)
-				{
-					treatmentInserterTitleLabel.removeFromParent();
-					treatmentInserterTitleLabel.dispose();
-					treatmentInserterTitleLabel = null;
-				}
-				
-				if (insulinTextInput != null)
-				{
-					insulinTextInput.removeEventListener(FeathersEventType.ENTER, onClearFocus);
-					insulinTextInput.removeFromParent();
-					insulinTextInput.dispose();
-					insulinTextInput = null;
-				}
-				
-				if (glucoseTextInput != null)
-				{
-					glucoseTextInput.removeEventListener(FeathersEventType.ENTER, onClearFocus);
-					glucoseTextInput.removeFromParent();
-					glucoseTextInput.dispose();
-					glucoseTextInput = null;
-				}
-				
-				if (carbsTextInput != null)
-				{
-					carbsTextInput.removeEventListener(FeathersEventType.ENTER, onClearFocus);
-					carbsTextInput.removeFromParent();
-					carbsTextInput.dispose();
-					carbsTextInput = null;
-				}
-				
-				if (notes != null)
-				{
-					notes.removeEventListener(FeathersEventType.ENTER, onClearFocus);
-					notes.removeFromParent();
-					notes.dispose();
-					notes = null;
-				}
-				
-				if (cancelButton != null)
-				{
-					cancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
-					cancelButton.removeFromParent();
-					cancelButton.dispose();
-					cancelButton = null;
-				}
-				
-				if (addButton != null)
-				{
-					addButton.removeEventListener(Event.TRIGGERED, actionFunction);
-					addButton.removeFromParent();
-					addButton.dispose();
-					addButton = null;
-				}
-				
-				if (createInsulinButton != null)
-				{
-					createInsulinButton.removeEventListener(Event.TRIGGERED, onConfigureInsulins);
-					createInsulinButton.removeFromParent();
-					createInsulinButton.dispose();
-					createInsulinButton = null;
-				}
-				
-				if (foodManagerButton != null)
-				{
-					foodManagerButton.removeEventListener(Event.TRIGGERED, onLoadFoodManager);
-					foodManagerButton.removeFromParent();
-					foodManagerButton.dispose();
-					foodManagerButton = null;
-				}
-				
-				if (insulinSpacer != null)
-				{
-					insulinSpacer.removeFromParent();
-					insulinSpacer.dispose();
-					insulinSpacer = null;
-				}
-				
-				if (glucoseSpacer != null)
-				{
-					glucoseSpacer.removeFromParent();
-					glucoseSpacer.dispose();
-					glucoseSpacer = null;
-				}
-				
-				if (carbOffSet != null)
-				{
-					carbOffSet.removeFromParent();
-					carbOffSet.dispose();
-					carbOffSet = null;
-				}
-				
-				if (carbOffsetSuffix != null)
-				{
-					carbOffsetSuffix.removeFromParent();
-					carbOffsetSuffix.dispose();
-					carbOffsetSuffix = null;
-				}
-				
-				if (fastCarb != null)
-				{
-					fastCarb.removeFromParent();
-					fastCarb.dispose();
-					fastCarb = null;
-				}
-				
-				if (mediumCarb != null)
-				{
-					mediumCarb.removeFromParent();
-					mediumCarb.dispose();
-					mediumCarb = null;
-				}
-				
-				if (slowCarb != null)
-				{
-					slowCarb.removeFromParent();
-					slowCarb.dispose();
-					slowCarb = null;
-				}
-				
-				if (carbSpacer != null)
-				{
-					carbSpacer.removeFromParent();
-					carbSpacer.dispose();
-					carbSpacer = null;
-				}
-				
-				if (noteSpacer != null)
-				{
-					noteSpacer.removeFromParent();
-					noteSpacer.dispose();
-					noteSpacer = null;
-				}
-				
-				if (treatmentTime != null)
-				{
-					treatmentTime.removeFromParent();
-					treatmentTime.dispose();
-					treatmentTime = null;
-				}
-				
-				if (treatmentSpacer != null)
-				{
-					treatmentSpacer.removeFromParent();
-					treatmentSpacer.dispose();
-					treatmentSpacer = null;
-				}
-				
-				if (insulinList != null)
-				{
-					insulinList.removeFromParent();
-					insulinList.dispose();
-					insulinList = null;
-				}
-				
-				if (calloutPositionHelper != null)
-				{
-					calloutPositionHelper.removeFromParent();
-					calloutPositionHelper.dispose();
-					calloutPositionHelper = null;
-				}
-				
-				if (totalScrollContainer != null)
-				{
-					totalScrollContainer.removeFromParent();
-					totalScrollContainer.dispose();
-					totalScrollContainer = null;
-				}
-				
-				if (contentScrollContainer != null)
-				{
-					contentScrollContainer.removeFromParent();
-					contentScrollContainer.dispose();
-					contentScrollContainer = null;
-				}
-				
-				if (treatmentInserterContainer != null)
-				{
-					treatmentInserterContainer.removeFromParent();
-					treatmentInserterContainer.dispose();
-					treatmentInserterContainer = null;
-				}
-				
-				if (extendedCarbContainer != null)
-				{
-					extendedCarbContainer.removeFromParent();
-					extendedCarbContainer.dispose();
-					extendedCarbContainer = null;
-				}
-				
-				if (carbDelayContainer != null)
-				{
-					carbDelayContainer.removeFromParent();
-					carbDelayContainer.dispose();
-					carbDelayContainer = null;
-				}
-				
-				if (foodManagerContainer != null)
-				{
-					foodManagerContainer.removeFromParent();
-					foodManagerContainer.dispose();
-					foodManagerContainer = null;
-				}
-				
-				if (otherFieldsContainer != null)
-				{
-					otherFieldsContainer.removeFromParent();
-					otherFieldsContainer.dispose();
-					otherFieldsContainer = null;
-				}
-				
-				if (actionContainer != null)
-				{
-					actionContainer.removeFromParent();
-					actionContainer.dispose();
-					actionContainer = null;
-				}
-				
-				if (treatmentCallout != null)
-				{
-					treatmentCallout.removeEventListener(Event.CLOSE, onTreatmentsCalloutClosed);
-					treatmentCallout.removeFromParent();
-					treatmentCallout.dispose();
-					treatmentCallout = null;
-				}
-			}
-			
 			function closeCallout(e:Event):void
 			{
 				if (cancelButton != null) cancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
@@ -1558,13 +1322,6 @@ package treatments
 				totalScrollContainer.scrollToPageIndex( 1, totalScrollContainer.verticalPageIndex );
 			}
 			
-			function roundTo (x:Number, step:Number):Number
-			{
-				if (x) return Math.round(x / step) * step;
-				
-				return 0;
-			}
-			
 			function onFoodManagerCompleted(e:Event):void
 			{
 				if (treatmentCallout != null)
@@ -1613,11 +1370,6 @@ package treatments
 					//Update foods label
 					if (addedFoods > 0)
 					{
-						//bwFoodsLabel.text = "Foods" + " " + "(" + addedFoods + ")";
-						//bwFoodsLabel.validate();
-						//bwFoodLoaderButton.validate();
-						//bwFoodsContainer.validate();
-						//bwFoodLoaderButton.x = contentWidth - bwFoodLoaderButton.width;
 						notes.text = addedFoodNames.join(", ");
 					}
 					
@@ -1639,6 +1391,244 @@ package treatments
 				
 				if (notes != null)
 					notes.clearFocus();
+			}
+			
+			function onTreatmentsCalloutClosed(e:Event):void
+			{
+				//Dispose Components	
+				if (foodManager != null)
+				{
+					foodManager.removeEventListener(Event.COMPLETE, onFoodManagerCompleted);
+					foodManager.dispose();
+					foodManager = null;
+				}
+				
+				if (treatmentInserterTitleLabel != null)
+				{
+					treatmentInserterTitleLabel.removeFromParent();
+					treatmentInserterTitleLabel.dispose();
+					treatmentInserterTitleLabel = null;
+				}
+				
+				if (insulinTextInput != null)
+				{
+					insulinTextInput.removeEventListener(FeathersEventType.ENTER, onClearFocus);
+					insulinTextInput.removeFromParent();
+					insulinTextInput.dispose();
+					insulinTextInput = null;
+				}
+				
+				if (glucoseTextInput != null)
+				{
+					glucoseTextInput.removeEventListener(FeathersEventType.ENTER, onClearFocus);
+					glucoseTextInput.removeFromParent();
+					glucoseTextInput.dispose();
+					glucoseTextInput = null;
+				}
+				
+				if (carbsTextInput != null)
+				{
+					carbsTextInput.removeEventListener(FeathersEventType.ENTER, onClearFocus);
+					carbsTextInput.removeFromParent();
+					carbsTextInput.dispose();
+					carbsTextInput = null;
+				}
+				
+				if (notes != null)
+				{
+					notes.removeEventListener(FeathersEventType.ENTER, onClearFocus);
+					notes.removeFromParent();
+					notes.dispose();
+					notes = null;
+				}
+				
+				if (cancelButton != null)
+				{
+					cancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
+					cancelButton.removeFromParent();
+					cancelButton.dispose();
+					cancelButton = null;
+				}
+				
+				if (addButton != null)
+				{
+					addButton.removeEventListener(Event.TRIGGERED, actionFunction);
+					addButton.removeFromParent();
+					addButton.dispose();
+					addButton = null;
+				}
+				
+				if (createInsulinButton != null)
+				{
+					createInsulinButton.removeEventListener(Event.TRIGGERED, onConfigureInsulins);
+					createInsulinButton.removeFromParent();
+					createInsulinButton.dispose();
+					createInsulinButton = null;
+				}
+				
+				if (foodManagerButton != null)
+				{
+					foodManagerButton.removeEventListener(Event.TRIGGERED, onLoadFoodManager);
+					foodManagerButton.removeFromParent();
+					foodManagerButton.dispose();
+					foodManagerButton = null;
+				}
+				
+				if (insulinSpacer != null)
+				{
+					insulinSpacer.removeFromParent();
+					insulinSpacer.dispose();
+					insulinSpacer = null;
+				}
+				
+				if (glucoseSpacer != null)
+				{
+					glucoseSpacer.removeFromParent();
+					glucoseSpacer.dispose();
+					glucoseSpacer = null;
+				}
+				
+				if (carbOffSet != null)
+				{
+					carbOffSet.removeFromParent();
+					carbOffSet.dispose();
+					carbOffSet = null;
+				}
+				
+				if (carbOffsetSuffix != null)
+				{
+					carbOffsetSuffix.removeFromParent();
+					carbOffsetSuffix.dispose();
+					carbOffsetSuffix = null;
+				}
+				
+				if (fastCarb != null)
+				{
+					fastCarb.removeFromParent();
+					fastCarb.dispose();
+					fastCarb = null;
+				}
+				
+				if (mediumCarb != null)
+				{
+					mediumCarb.removeFromParent();
+					mediumCarb.dispose();
+					mediumCarb = null;
+				}
+				
+				if (slowCarb != null)
+				{
+					slowCarb.removeFromParent();
+					slowCarb.dispose();
+					slowCarb = null;
+				}
+				
+				if (carbSpacer != null)
+				{
+					carbSpacer.removeFromParent();
+					carbSpacer.dispose();
+					carbSpacer = null;
+				}
+				
+				if (noteSpacer != null)
+				{
+					noteSpacer.removeFromParent();
+					noteSpacer.dispose();
+					noteSpacer = null;
+				}
+				
+				if (treatmentTime != null)
+				{
+					treatmentTime.removeFromParent();
+					treatmentTime.dispose();
+					treatmentTime = null;
+				}
+				
+				if (treatmentSpacer != null)
+				{
+					treatmentSpacer.removeFromParent();
+					treatmentSpacer.dispose();
+					treatmentSpacer = null;
+				}
+				
+				if (insulinList != null)
+				{
+					insulinList.removeFromParent();
+					insulinList.dispose();
+					insulinList = null;
+				}
+				
+				if (calloutPositionHelper != null)
+				{
+					calloutPositionHelper.removeFromParent();
+					calloutPositionHelper.dispose();
+					calloutPositionHelper = null;
+				}
+				
+				if (totalScrollContainer != null)
+				{
+					totalScrollContainer.removeFromParent();
+					totalScrollContainer.dispose();
+					totalScrollContainer = null;
+				}
+				
+				if (contentScrollContainer != null)
+				{
+					contentScrollContainer.removeFromParent();
+					contentScrollContainer.dispose();
+					contentScrollContainer = null;
+				}
+				
+				if (treatmentInserterContainer != null)
+				{
+					treatmentInserterContainer.removeFromParent();
+					treatmentInserterContainer.dispose();
+					treatmentInserterContainer = null;
+				}
+				
+				if (extendedCarbContainer != null)
+				{
+					extendedCarbContainer.removeFromParent();
+					extendedCarbContainer.dispose();
+					extendedCarbContainer = null;
+				}
+				
+				if (carbDelayContainer != null)
+				{
+					carbDelayContainer.removeFromParent();
+					carbDelayContainer.dispose();
+					carbDelayContainer = null;
+				}
+				
+				if (foodManagerContainer != null)
+				{
+					foodManagerContainer.removeFromParent();
+					foodManagerContainer.dispose();
+					foodManagerContainer = null;
+				}
+				
+				if (otherFieldsContainer != null)
+				{
+					otherFieldsContainer.removeFromParent();
+					otherFieldsContainer.dispose();
+					otherFieldsContainer = null;
+				}
+				
+				if (actionContainer != null)
+				{
+					actionContainer.removeFromParent();
+					actionContainer.dispose();
+					actionContainer = null;
+				}
+				
+				if (treatmentCallout != null)
+				{
+					treatmentCallout.removeEventListener(Event.CLOSE, onTreatmentsCalloutClosed);
+					treatmentCallout.disposeContent = true;
+					treatmentCallout.removeFromParent();
+					treatmentCallout.dispose();
+					treatmentCallout = null;
+				}
 			}
 		}
 		
