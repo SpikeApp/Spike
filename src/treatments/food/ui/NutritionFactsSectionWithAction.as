@@ -13,7 +13,7 @@ package treatments.food.ui
 	public class NutritionFactsSectionWithAction extends LayoutGroup
 	{
 		//Display Objects
-		public  var title:Label;
+		public var title:Label;
 		
 		public function NutritionFactsSectionWithAction(width:Number)
 		{
@@ -37,6 +37,10 @@ package treatments.food.ui
 		private function createContent():void
 		{
 			title = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+			title.width = width;
+			title.maxWidth = width;
+			title.wordWrap = true;
+			
 			addChild(title);
 		}
 		

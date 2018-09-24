@@ -99,6 +99,7 @@ package treatments
 		private static var insulinPrecision:Number;
 		private static var carbsPrecision:Number;
 		private static var isMgDl:Boolean;
+		private static var fiberPrecision:Number;
 		
 		/* Objects */
 		private static var currentProfile:Profile;
@@ -247,6 +248,7 @@ package treatments
 			isMgDl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true";
 			insulinPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION));
 			carbsPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION));
+			fiberPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION));
 		}
 		
 		private static function createDisplayObjects():void
@@ -1479,7 +1481,9 @@ package treatments
 					var fiber:Number = food.fiber;
 					var substractFiber:Boolean = foodsList[i].substractFiber;
 					if (substractFiber && !isNaN(fiber))
-						carbs -= fiber;
+					{
+						carbs -= fiberPrecision == 1 ? fiber : fiber / 2;
+					}
 					
 					var finalCarbs:Number = (quantity / food.servingSize) * carbs;
 					if (!isNaN(finalCarbs))

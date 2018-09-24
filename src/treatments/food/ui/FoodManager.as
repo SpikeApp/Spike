@@ -11,6 +11,7 @@ package treatments.food.ui
 	import flash.net.navigateToURL;
 	import flash.utils.setTimeout;
 	
+	import database.CommonSettings;
 	import database.Database;
 	
 	import distriqtkey.DistriqtKey;
@@ -123,13 +124,13 @@ package treatments.food.ui
 		private var footerContainer:LayoutGroup;
 		
 		//PROPERTIES
+		public var cartList:Array;
 		private var currentMode:String = "";
 		private var renderTimoutID1:uint;
 		private var renderTimoutID2:uint;
 		private var renderTimoutID3:uint;
 		private var containerHeight:Number;
 		private var selectedFoodLink:String;
-		public var cartList:Array;
 		private var activeFood:Food;
 		private var basketList:List;
 		private var deleteButtonsList:Array = [];
@@ -138,6 +139,8 @@ package treatments.food.ui
 		private var dontClearSearchResults:Boolean = false;
 		private var activeRecipe:Recipe;
 		private var loadedFromExternalContainer:Boolean; 
+		private var defaultScreen:String;
+		private var fiberPrecision:Number;
 
 		public function FoodManager(width:Number, containerHeight:Number, loadedFromExternalContainer:Boolean = false)
 		{
@@ -146,6 +149,7 @@ package treatments.food.ui
 			this.loadedFromExternalContainer = loadedFromExternalContainer;
 			
 			setupProperties();
+			setupInitialSettings();
 			createContent(); 
 		}
 		
@@ -153,6 +157,12 @@ package treatments.food.ui
 		{
 			this.layout = new VerticalLayout();
 			this.cartList = [];
+		}
+		
+		private function setupInitialSettings():void
+		{
+			defaultScreen = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN);
+			fiberPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION));
 		}
 		
 		private function createContent():void
@@ -195,6 +205,7 @@ package treatments.food.ui
 			);
 			databaseAPISelector.labelField = "label";
 			databaseAPISelector.popUpContentManager = new DropDownPopUpContentManager();
+			databaseAPISelector.selectedIndex = -1;
 			databaseAPISelector.addEventListener(starling.events.Event.CHANGE, onAPIChanged);
 			mainContentContainer.addChild(databaseAPISelector);
 			
@@ -431,7 +442,7 @@ package treatments.food.ui
 			nutritionFacts.setProteinsTitle("Proteins");
 			nutritionFacts.setFatsTitle("Fats");
 			nutritionFacts.setCaloriesTitle("Calories");
-			nutritionFacts.setSubtractFiberTitle("Remove Fiber");
+			nutritionFacts.setSubtractFiberTitle(fiberPrecision == 1 ? "Subtract Whole Fiber" : "Subtract Half Fiber");
 			nutritionFacts.setSubtractFiberComponent(substractFiberCheck);
 			nutritionFacts.setLinkTitle("Link");
 			nutritionFacts.setLinkComponent(foodLink);
@@ -450,13 +461,27 @@ package treatments.food.ui
 			finishButton.addEventListener(starling.events.Event.TRIGGERED, onCompleteFoodManager);
 			actionsContainer.addChild(finishButton);
 			
-			//Get Favourit Foods
-			currentMode = FAVORITES_MODE;
-			getInitialFavorites();
-			
-			//Final layout adjustments
-			hidePreloader();
-			showAddFavorite();
+			//Setup Initial Screen
+			if (defaultScreen == "favorites")
+			{
+				databaseAPISelector.selectedIndex = 0;
+			}
+			else if (defaultScreen == "recipes")
+			{
+				databaseAPISelector.selectedIndex = 1
+			}
+			else if (defaultScreen == "fatsecret")
+			{
+				databaseAPISelector.selectedIndex = 2;
+			}
+			else if (defaultScreen == "openfoodfacts")
+			{
+				databaseAPISelector.selectedIndex = 3;
+			}
+			else if (defaultScreen == "usda")
+			{
+				databaseAPISelector.selectedIndex = 4;
+			}
 		}
 		
 		private function getInitialFavorites():void
@@ -513,7 +538,7 @@ package treatments.food.ui
 				{
 					totalFiber += itemFiber;
 					if (cartItem.substractFiber)
-						totalFiberToSubstract += itemFiber;
+						totalFiberToSubstract += fiberPrecision == 1 ? itemFiber : itemFiber / 2;
 				}
 				else
 					totalFiberNaN = true;

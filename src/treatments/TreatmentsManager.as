@@ -1329,6 +1329,7 @@ package treatments
 				if (treatmentCallout != null)
 				{
 					treatmentCallout.width = treatmentCallOutWidth;
+					var fiberPrecision:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION));
 					
 					//Calculate all food carbs the user has added to the food manager
 					var totalCarbs:Number = 0;
@@ -1353,7 +1354,7 @@ package treatments
 						var fiber:Number = food.fiber;
 						var substractFiber:Boolean = foodsList[i].substractFiber;
 						if (substractFiber && !isNaN(fiber))
-							carbs -= fiber;
+							carbs -= fiberPrecision == 1 ? fiber : fiber / 2;
 						
 						var finalCarbs:Number = (quantity / food.servingSize) * carbs;
 						if (!isNaN(finalCarbs))
