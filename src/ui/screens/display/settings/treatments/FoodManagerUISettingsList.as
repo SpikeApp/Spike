@@ -2,6 +2,7 @@ package ui.screens.display.settings.treatments
 {
 	import database.CommonSettings;
 	
+	import feathers.controls.Check;
 	import feathers.controls.PickerList;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
@@ -24,10 +25,12 @@ package ui.screens.display.settings.treatments
 	{
 		/* Display Objects */
 		private var defaultScreenPicker:PickerList;
+		private var searchAsITypeCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean;
 		private var defaultScreenValue:String;
+		private var searchAsITypeValue:Boolean;
 		
 		public function FoodManagerUISettingsList()
 		{
@@ -56,11 +59,12 @@ package ui.screens.display.settings.treatments
 		{
 			/* Get Values From Database */
 			defaultScreenValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN);
+			searchAsITypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE) == "true";
 		}
 		
 		private function setupContent():void
 		{	
-			//Insulin Precision
+			//Default Screen
 			defaultScreenPicker = LayoutFactory.createPickerList();
 			
 			var defaultScreenValuesList:ArrayCollection = new ArrayCollection();
@@ -91,11 +95,16 @@ package ui.screens.display.settings.treatments
 				return itemRenderer;
 			}
 			defaultScreenPicker.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Search As I Type
+			searchAsITypeCheck = LayoutFactory.createCheckMark(searchAsITypeValue);
+			searchAsITypeCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 
 			//Set screen content
 			var data:Array = [];
 			
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','default_screen_label'), accessory: defaultScreenPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','search_as_i_type_label'), accessory: searchAsITypeCheck } );
 			
 			dataProvider = new ArrayCollection(data);
 		}
@@ -104,6 +113,9 @@ package ui.screens.display.settings.treatments
 		{
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN) != defaultScreenValue)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN, defaultScreenValue, true, false);
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE) != String(searchAsITypeValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE, String(searchAsITypeValue), true, false);
 			
 			needsSave = false;
 		}
@@ -114,6 +126,7 @@ package ui.screens.display.settings.treatments
 		private function onSettingsChanged(e:Event):void
 		{
 			defaultScreenValue = defaultScreenPicker.selectedItem.value;
+			searchAsITypeValue = searchAsITypeCheck.isSelected;
 			
 			needsSave = true;
 		}
@@ -128,6 +141,13 @@ package ui.screens.display.settings.treatments
 				defaultScreenPicker.removeEventListener(Event.CHANGE, onSettingsChanged);
 				defaultScreenPicker.dispose();
 				defaultScreenPicker = null;
+			}
+			
+			if (searchAsITypeCheck != null)
+			{
+				searchAsITypeCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				searchAsITypeCheck.dispose();
+				searchAsITypeCheck = null;
 			}
 			
 			super.dispose();

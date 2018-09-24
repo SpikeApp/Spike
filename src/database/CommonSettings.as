@@ -541,6 +541,7 @@ package database
 		  */
 		 public static const COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION:int = 203;
 		 public static const COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN:int = 204;
+		 public static const COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE:int = 205;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -747,7 +748,8 @@ package database
 			 "0.5",//COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION
 			 "1",//COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION
 			 "1",//COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION
-			 "favorites"//COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN
+			 "favorites",//COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN
+			 "false"//COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE
 		 ];
 
 		 public function CommonSettings()

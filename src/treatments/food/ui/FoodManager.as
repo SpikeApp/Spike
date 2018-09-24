@@ -9,6 +9,7 @@ package treatments.food.ui
 	
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
+	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
 	import database.CommonSettings;
@@ -141,6 +142,7 @@ package treatments.food.ui
 		private var loadedFromExternalContainer:Boolean; 
 		private var defaultScreen:String;
 		private var fiberPrecision:Number;
+		private var autoSearchTimeoutID:uint = 0;
 
 		public function FoodManager(width:Number, containerHeight:Number, loadedFromExternalContainer:Boolean = false)
 		{
@@ -215,6 +217,8 @@ package treatments.food.ui
 			
 			searchInput = LayoutFactory.createTextInput(false, false, width/2, HorizontalAlign.CENTER, false, false, false, false, true);
 			searchInput.prompt = "Search Food";
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE) == "true")
+				searchInput.addEventListener(Event.CHANGE, onSearchInputChanged);
 			searchContainer.addChild(searchInput);
 			
 			searchButton = LayoutFactory.createButton("Go");
@@ -498,6 +502,23 @@ package treatments.food.ui
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
 			
 			FoodAPIConnector.recipesSearch("", currentPage);
+		}
+		
+		private function onSearchInputChanged(e:Event):void
+		{
+			clearTimeout(autoSearchTimeoutID);
+			
+			if (currentMode != FAVORITES_MODE && currentMode != RECIPES_MODE)
+			{
+				autoSearchTimeoutID = setTimeout( function():void {
+					clearTimeout(autoSearchTimeoutID);
+					onPerformSearch();
+				}, 500 );
+			}
+			else
+			{
+				onPerformSearch();
+			}
 		}
 		
 		private function populateBasketList():void
@@ -965,7 +986,7 @@ package treatments.food.ui
 			}
 		}
 		
-		private function onPerformSearch(e:starling.events.Event, resetPagination:Boolean = true):void
+		private function onPerformSearch(e:starling.events.Event = null, resetPagination:Boolean = true):void
 		{
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
@@ -1686,7 +1707,6 @@ package treatments.food.ui
 		{
 			try
 			{
-				Scanner.init( !ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad );
 				if (Scanner.isSupported)
 				{
 					Scanner.service.addEventListener( AuthorisationEvent.CHANGED, onCameraAuthorization );
@@ -1807,38 +1827,10 @@ package treatments.food.ui
 			dispatchEventWith(starling.events.Event.COMPLETE);
 		}
 		
-		public function clearData():void
-		{
-			cartList.length = 0;
-			activeFood = null;
-			activeRecipe = null;
-			basketList.dataProvider = new ArrayCollection( [] );
-			hidePreloader();
-			hideAddFavorite();
-			showAddFavorite();
-			removeFoodEventListeners();
-			removeFoodInserter();
-			databaseAPISelector.removeEventListener(starling.events.Event.CHANGE, onAPIChanged);
-			databaseAPISelector.selectedIndex = 0;
-			databaseAPISelector.addEventListener(starling.events.Event.CHANGE, onAPIChanged);
-			foodAmountInput.text = "";
-			searchInput.prompt = "Search Food";
-			searchInput.text = "";
-			foodResultsList.dataProvider = new ArrayCollection( [] );
-			firstPageButton.isEnabled = false;
-			previousPageButton.isEnabled = false;
-			paginationLabel.text = "1/1"
-			paginationLabel.isEnabled = false;
-			nextPageButton.isEnabled = false;
-			lastPageButton.isEnabled = false;
-			basketAmountLabel.text = "0";
-			foodAmountInput.text = "";
-			currentMode = FAVORITES_MODE;
-			getInitialFavorites();
-		}
-		
 		override public function dispose():void
 		{
+			clearTimeout(autoSearchTimeoutID);
+			
 			if (title != null)
 			{
 				title.removeFromParent();
@@ -1856,6 +1848,7 @@ package treatments.food.ui
 			
 			if (searchInput != null)
 			{
+				searchInput.removeEventListener(Event.CHANGE, onSearchInputChanged);
 				searchInput.removeFromParent();
 				searchInput.dispose();
 				searchInput = null;
