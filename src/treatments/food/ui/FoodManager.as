@@ -836,12 +836,19 @@ package treatments.food.ui
 		
 		private function hidePreloader():void
 		{
-			preloader.visible = false;
-			preloader.removeFromParent();
-			basketPreloaderContainer.readjustLayout();
-			basketPreloaderContainer.validate();
-			basketSprite.y += 5;
-			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
+			try
+			{
+				//if (preloader != null && preloader.visible == false && preloader.parent != null)
+				//{
+					preloader.visible = false;
+					preloader.removeFromParent();
+					basketPreloaderContainer.readjustLayout();
+					basketPreloaderContainer.validate();
+					basketSprite.y += 5;
+					(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
+				//}
+			} 
+			catch(error:Error) {}
 		}
 		
 		private function showAddFavorite():void
@@ -1830,6 +1837,7 @@ package treatments.food.ui
 		override public function dispose():void
 		{
 			clearTimeout(autoSearchTimeoutID);
+			removeFoodEventListeners();
 			
 			if (title != null)
 			{

@@ -17,6 +17,7 @@ package treatments.food.connectors
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
+	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import database.Database;
@@ -676,6 +677,8 @@ package treatments.food.connectors
 			var foodList:Array;
 			var i:int = 0;
 			var now:Number = new Date().valueOf();
+			
+			trace(ObjectUtil.toString(JSON.parse(response)));
 			
 			//Process responde
 			if (currentMode == FATSECRET_MODE)
