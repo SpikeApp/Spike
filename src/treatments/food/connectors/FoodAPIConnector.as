@@ -488,7 +488,7 @@ package treatments.food.connectors
 					data.push
 					(
 						{
-							label: recipeObject.name,
+							label: recipeObject.name + (recipeObject.notes != "" ? "\n<font face=\"Roboto\">" + recipeObject.notes + "</font>" : ""),
 							recipe: recipeObject
 						}
 					);

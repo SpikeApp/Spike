@@ -42,7 +42,7 @@ package treatments.food.ui
 			
 			value = LayoutFactory.createLabel("", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, false);
 			value.wordWrap = true;
-			value.width;
+			value.width = width;
 			addChild(value);
 		}
 		

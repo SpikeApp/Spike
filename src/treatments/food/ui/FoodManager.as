@@ -51,7 +51,6 @@ package treatments.food.ui
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
-	import starling.text.TextFormat;
 	import starling.textures.Texture;
 	import starling.utils.SystemUtil;
 	
@@ -386,7 +385,7 @@ package treatments.food.ui
 			};
 			
 			saveRecipe = LayoutFactory.createButton("Save as Recipe");
-			saveRecipe.pivotX = 4;
+			saveRecipe.pivotX = 48;
 			saveRecipe.addEventListener(Event.TRIGGERED, onSaveRecipe);
 			
 			//Food Details
@@ -538,7 +537,7 @@ package treatments.food.ui
 		private function getInitialFavorites():void
 		{
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 			
 			FoodAPIConnector.favoritesSearchFood("", currentPage);
 		}
@@ -546,7 +545,7 @@ package treatments.food.ui
 		private function getInitialRecipes():void
 		{
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
-			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
 			
 			FoodAPIConnector.recipesSearch("", currentPage);
 		}
@@ -650,21 +649,24 @@ package treatments.food.ui
 			//Create Total's UI
 			if (cartData.length > 0)
 			{
+				var cartWidth:Number = 210;
+				
 				if (cartTotals != null) cartTotals.removeFromParent(true);
-				cartTotals = new CartTotalsSection(210);
-				cartTotals.width = 210;
+				cartTotals = new CartTotalsSection(cartWidth);
+				cartTotals.width = cartWidth;
 				cartTotals.title.text = "Cart Totals";
-				cartTotals.title.width = 210;
+				cartTotals.title.width = cartWidth;
 				cartTotals.title.validate();
 				cartTotals.value.wordWrap = true;
 				cartTotals.value.text = "Protein: " + (totalProteins == 0 && totalProteinsNaN ? "N/A" : totalProteins + "g") + "\n" + "Carbs: " + (totalCarbs == 0 && totalCarbsNaN ? "N/A" : totalCarbs + "g") + (totalFiberToSubstract != 0 ? " (-" + totalFiberToSubstract + "g fiber)" : "") + "\n" + "Fiber: " + (totalFiber == 0 && totalFiberNaN ? "N/A" : totalFiber + "g") + "\n" + "Fats: " + (totalFats == 0 && totalFatsNaN ? "N/A" : totalFats + "g") + "\n" + "Calories: " + (totalCalories == 0 && totalCaloriesNaN ? "N/A" : totalCalories + "Kcal");
-				cartTotals.value.width = 210;
+				cartTotals.value.width = cartWidth;
 				cartTotals.value.validate();
 					
 				cartData.push( { label: "", accessory: cartTotals } );
 				cartData.push( { label: "", accessory: saveRecipe } );
 			}
 			
+			basketList.width = cartWidth;
 			basketList.dataProvider = new ArrayCollection( cartData );
 		}
 		
@@ -889,6 +891,7 @@ package treatments.food.ui
 			deleteButton.defaultIcon = deleteButtonIcon;
 			deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
 			deleteButton.scale = 0.8;
+			deleteButton.pivotX = 20;
 			deleteButton.addEventListener(Event.TRIGGERED, onDeleteFoodFromCart);
 			
 			//Save so it can be discarted later
@@ -999,10 +1002,10 @@ package treatments.food.ui
 		
 		private function removeFoodEventListeners():void
 		{
-			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
-			FoodAPIConnector.instance.removeEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+			FoodAPIConnector.instance.removeEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
 			FoodAPIConnector.instance.removeEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
 			FoodAPIConnector.instance.removeEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
 		}
@@ -1105,10 +1108,10 @@ package treatments.food.ui
 		private function onPerformSearch(e:starling.events.Event = null, resetPagination:Boolean = true):void
 		{
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
-			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
 			resetComponents(resetPagination == true || (e != null && e.currentTarget is Button));
 			
 			if (currentMode == FAVORITES_MODE)
@@ -1170,7 +1173,7 @@ package treatments.food.ui
 					selectedFood = foodResultsList.selectedItem.food;
 					showPreloader();
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
-					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
 					FoodAPIConnector.fatSecretGetFoodDetails(selectedFood.id);
 				}
@@ -1181,7 +1184,7 @@ package treatments.food.ui
 					selectedFood = foodResultsList.selectedItem.food;
 					showPreloader();
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_DETAILS_RESULT, onFoodDetailsReceived);
-					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
 					FoodAPIConnector.usdaGetFoodInfo(selectedFood.id);
 				}
@@ -1220,7 +1223,7 @@ package treatments.food.ui
 				if (currentMode == FAVORITES_MODE)
 				{
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 					
 					dontClearSearchResults = true;
 					
@@ -1234,7 +1237,7 @@ package treatments.food.ui
 				foodDetailsTitleContainer.addChild(unfavoriteButton);
 				
 				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
-				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
 				
 				dontClearSearchResults = true;
 				
@@ -1253,7 +1256,7 @@ package treatments.food.ui
 				if (currentMode == FAVORITES_MODE)
 				{
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 					
 					dontClearSearchResults = true;
 					
@@ -1267,7 +1270,7 @@ package treatments.food.ui
 				foodDetailsTitleContainer.addChild(favoriteButton);
 				
 				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
-				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodNotFound);
+				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
 				
 				dontClearSearchResults = true;
 				
@@ -1361,7 +1364,7 @@ package treatments.food.ui
 				displayFoodDetails(food);
 		}
 		
-		private function onFoodNotFound (e:FoodEvent):void
+		private function onFoodOrRecipeNotFound (e:FoodEvent):void
 		{
 			removeFoodEventListeners();
 			hidePreloader();
@@ -1414,7 +1417,7 @@ package treatments.food.ui
 			if (currentMode == FAVORITES_MODE)
 			{
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 				
 				FoodAPIConnector.favoritesSearchFood(searchInput.text, currentPage);
 			}
@@ -1454,7 +1457,7 @@ package treatments.food.ui
 			var notesTextInput:TextInput = LayoutFactory.createTextInput(false, false, 250, HorizontalAlign.CENTER, false, false, false, true, true);
 			notesTextInput.prompt = "Notes";
 			notesTextInput.addEventListener(Event.CHANGE, onRecipeNotesChanged);
-			contentContainer.addChild(notesTextInput);
+			//contentContainer.addChild(notesTextInput);
 			
 			var actionsContainer:LayoutGroup = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 10);
 			var cancelButton:Button = LayoutFactory.createButton("Cancel");
@@ -1588,6 +1591,12 @@ package treatments.food.ui
 				
 				//Add to database
 				Database.insertRecipeSynchronous(recipe);
+				
+				//Refresh Recipes List
+				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
+				FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
+				
+				FoodAPIConnector.recipesSearch(searchInput.text, currentPage);
 			}
 			
 			function onCancelRecipe(e:Event):void
@@ -1761,6 +1770,10 @@ package treatments.food.ui
 					basketCallout = Callout.show(basketList, basketSprite, new <String>[RelativePosition.LEFT]);
 					basketCallout.disposeContent = false;
 					basketCallout.disposeOnSelfClose = false;
+					basketCallout.width = 262;
+					basketCallout.maxWidth = 262;
+					Callout.stagePaddingTop = Callout.stagePaddingBottom = 10;
+					basketCallout.validate();
 					basketCallout.addEventListener(Event.CLOSE, onBasketCalloutClosed);
 				}
 			}
@@ -1889,7 +1902,7 @@ package treatments.food.ui
 			if (barCode != null && barCode != "")
 			{
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
-				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodNotFound);
+				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
 				
 				if (currentMode == OPENFOODFACTS_MODE)

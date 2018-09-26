@@ -92,6 +92,7 @@ package ui.screens.display.settings.treatments
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
+				itemRenderer.paddingRight = itemRenderer.paddingLeft = 15;
 				return itemRenderer;
 			}
 			defaultScreenPicker.addEventListener(Event.CHANGE, onSettingsChanged);
