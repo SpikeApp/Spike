@@ -219,6 +219,8 @@ package treatments
 		public static function display():void
 		{
 			contentWidth = Constants.isPortrait ? Constants.stageWidth - 50 : Constants.stageHeight - 50;
+			if (contentWidth > 500)
+				contentWidth = 500;
 			
 			currentProfile = ProfileManager.getProfileByTime(new Date().valueOf());
 			
