@@ -15,8 +15,6 @@ package treatments.food.ui
 	import database.CommonSettings;
 	import database.Database;
 	
-	import distriqtkey.DistriqtKey;
-	
 	import events.FoodEvent;
 	
 	import feathers.controls.Alert;
@@ -44,8 +42,6 @@ package treatments.food.ui
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
-	import model.ModelLocator;
-	
 	import starling.animation.Transitions;
 	import starling.core.Starling;
 	import starling.display.Image;
@@ -55,6 +51,7 @@ package treatments.food.ui
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
+	import starling.text.TextFormat;
 	import starling.textures.Texture;
 	import starling.utils.SystemUtil;
 	
@@ -66,6 +63,7 @@ package treatments.food.ui
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.UniqueId;
 
 	public class FoodManager extends LayoutGroup
 	{
@@ -123,6 +121,7 @@ package treatments.food.ui
 		private var addFavoriteBackground:Quad;
 		private var foodInserter:FoodInserter;
 		private var footerContainer:LayoutGroup;
+		private var foodServingSizePickerList:PickerList;
 		
 		//PROPERTIES
 		public var cartList:Array;
@@ -143,6 +142,9 @@ package treatments.food.ui
 		private var defaultScreen:String;
 		private var fiberPrecision:Number;
 		private var autoSearchTimeoutID:uint = 0;
+		private var globalMultiplier:Number = 1;
+		private var globalUnit:String = "";	
+		private var accessoryList:Array = [];
 
 		public function FoodManager(width:Number, containerHeight:Number, loadedFromExternalContainer:Boolean = false)
 		{
@@ -385,7 +387,7 @@ package treatments.food.ui
 			
 			saveRecipe = LayoutFactory.createButton("Save as Recipe");
 			saveRecipe.pivotX = 4;
-			saveRecipe.addEventListener(Event.TRIGGERED, onAddRecipe);
+			saveRecipe.addEventListener(Event.TRIGGERED, onSaveRecipe);
 			
 			//Food Details
 			foodDetailsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.TOP, 5);
@@ -414,7 +416,7 @@ package treatments.food.ui
 			unfavoriteButton.addEventListener(Event.TRIGGERED, onRemoveFoodOrRecipeAsFavorite);
 			
 			//Add Food Components
-			addFoodContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
+			addFoodContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
 			
 			foodAmountInput = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
 			foodAmountInput.maxChars = 5;
@@ -439,8 +441,32 @@ package treatments.food.ui
 			foodLink.addEventListener(Event.TRIGGERED, onFoodLinkTriggered);
 			
 			//Nutrition Facts Component
+			foodServingSizePickerList = LayoutFactory.createPickerList();
+			foodServingSizePickerList.itemRendererFactory = function():IListItemRenderer
+			{
+				var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				renderer.paddingRight = renderer.paddingLeft = 15;
+				return renderer;
+			};
+			foodServingSizePickerList.buttonFactory = function():Button
+			{
+				var button:Button = new Button();
+				button.padding = 10;
+				button.width = width / 3;
+				button.maxWidth = width / 3;
+				
+				return button;
+			};
+			foodServingSizePickerList.addEventListener(Event.CHANGE, onServingChanged);
+			
+			foodServingSizePickerList.labelField = "label";
+			foodServingSizePickerList.popUpContentManager = new DropDownPopUpContentManager();
+			foodServingSizePickerList.selectedIndex = -1;
+			
 			nutritionFacts = new NutritionFacts(width);
 			nutritionFacts.setServingsTitle("Serving Size");
+			nutritionFacts.setServingsListTitle("Serving Size");
+			nutritionFacts.setServingsListComponent(foodServingSizePickerList);
 			nutritionFacts.setCarbsTitle("Carbs");
 			nutritionFacts.setFiberTitle("Fiber");
 			nutritionFacts.setProteinsTitle("Proteins");
@@ -485,6 +511,27 @@ package treatments.food.ui
 			else if (defaultScreen == "usda")
 			{
 				databaseAPISelector.selectedIndex = 4;
+			}
+		}
+		
+		private function onServingChanged(e:Event):void
+		{
+			if (activeFood != null)
+			{
+				if (foodServingSizePickerList.selectedItem.multiplier != null)
+				{
+					globalMultiplier = foodServingSizePickerList.selectedItem.multiplier;
+					globalUnit = foodServingSizePickerList.selectedItem.label;
+					foodAmountInput.text = "1";
+				}
+				else
+				{
+					globalMultiplier = 1;
+					globalUnit = "";
+					foodAmountInput.text = String(activeFood.servingSize);
+				}
+				
+				displayFoodDetails(activeFood, true);
 			}
 		}
 		
@@ -540,21 +587,36 @@ package treatments.food.ui
 			{
 				var cartItem:Object = cartList[i];
 				var cartFood:Food = cartItem.food as Food;
-				cartData.push( { label: cartItem.quantity + cartItem.servingUnit + " " + cartFood.name, accessory: createDeleteButton(), food: cartFood, quantity: cartItem.quantity, servingUnit: cartItem.servingUnit } );
+				var cartMultiplier:Number = cartItem.multiplier;
+				var cartGlobalUnit:String = cartItem.globalUnit;
+				var cartQuantity:Number = cartItem.quantity;
+				var cartServingSize:Number = cartFood.servingSize;
+				var cartID:String = cartItem.id;
+				var defaultUnit:Boolean = cartFood.defaultUnit;
 				
-				var itemProteins:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.proteins) * 100) / 100;
+				if (cartMultiplier != 1)
+				{
+					cartQuantity = cartQuantity * cartServingSize;
+				}
+				
+				var deleteButton:Button = createDeleteButton();
+				accessoryList.push(deleteButton);
+				
+				cartData.push( { label: cartItem.quantity + (cartMultiplier != 1 || !defaultUnit ? " x " : " ") + (cartGlobalUnit == "" ? cartItem.servingUnit : cartGlobalUnit) + " " + cartFood.name, accessory: deleteButton, food: cartFood, quantity: cartQuantity, servingUnit: (cartGlobalUnit == "" ? cartItem.servingUnit : cartGlobalUnit), id: cartID } );
+				
+				var itemProteins:Number = Math.round(((cartQuantity / cartServingSize) * cartFood.proteins * cartMultiplier) * 100) / 100;
 				if (!isNaN(itemProteins))
 					totalProteins += itemProteins;
 				else
 					totalProteinsNaN = true;
 				
-				var itemCarbs:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.carbs) * 100) / 100;
+				var itemCarbs:Number = Math.round(((cartQuantity / cartServingSize) * cartFood.carbs * cartMultiplier) * 100) / 100;
 				if(!isNaN(itemCarbs))
 					totalCarbs += itemCarbs;
 				else
 					totalCarbsNaN = true;
 				
-				var itemFiber:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fiber) * 100) / 100;
+				var itemFiber:Number = Math.round(((cartQuantity / cartServingSize) * cartFood.fiber * cartMultiplier) * 100) / 100;
 				if (!isNaN(itemFiber))
 				{
 					totalFiber += itemFiber;
@@ -564,13 +626,13 @@ package treatments.food.ui
 				else
 					totalFiberNaN = true;
 				
-				var itemFats:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fats) * 100) / 100;
+				var itemFats:Number = Math.round(((cartQuantity / cartServingSize) * cartFood.fats * cartMultiplier) * 100) / 100;
 				if (!isNaN(itemFats))
 					totalFats += itemFats;
 				else
 					totalFatsNaN = true;
 				
-				var itemCalories:Number = Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.kcal) * 100) / 100;
+				var itemCalories:Number = Math.round(((cartQuantity / cartServingSize) * cartFood.kcal * cartMultiplier));
 				if (!isNaN(itemCalories))
 					totalCalories += itemCalories;
 				else
@@ -583,7 +645,7 @@ package treatments.food.ui
 			totalFiber = Math.round(totalFiber * 100) / 100;
 			totalFiberToSubstract = Math.round(totalFiberToSubstract * 100) / 100;
 			totalFats = Math.round(totalFats * 100) / 100;
-			totalCalories = Math.round(totalCalories * 100) / 100;
+			totalCalories = Math.round(totalCalories);
 			
 			//Create Total's UI
 			if (cartData.length > 0)
@@ -639,12 +701,12 @@ package treatments.food.ui
 				mainContentContainer.addChildAt(foodDetailsContainer, detailsIndex);
 			}
 			
-			nutritionFacts.setServingsValue(!isNaN(Number(selectedRecipe.servingSize)) ? selectedRecipe.servingSize + (selectedRecipe.servingUnit != null && selectedRecipe.servingUnit != "" && selectedRecipe.servingUnit != "undefined" ? selectedRecipe.servingUnit : "" ) : "N/A" );
+			nutritionFacts.setServingsValue(!isNaN(Number(selectedRecipe.servingSize)) ? selectedRecipe.servingSize + " " + (selectedRecipe.servingUnit != null && selectedRecipe.servingUnit != "" && selectedRecipe.servingUnit != "undefined" ? selectedRecipe.servingUnit : "" ) : "N/A" );
 			nutritionFacts.setCarbsValue(!isNaN(selectedRecipe.totalCarbs) ? String(selectedRecipe.totalCarbs) + "g" : "N/A" );
 			nutritionFacts.setFiberValue(!isNaN(selectedRecipe.totalFiber) ? String(selectedRecipe.totalFiber) + "g" : "N/A" );
 			nutritionFacts.setProteinsValue(!isNaN(selectedRecipe.totalProteins) ? String(selectedRecipe.totalProteins) + "g" : "N/A" );
 			nutritionFacts.setFatsValue(!isNaN(selectedRecipe.totalFats) ? String(selectedRecipe.totalFats) + "g" : "N/A" );
-			nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? selectedRecipe.totalCalories + "Kcal" : "N/A" );
+			nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? Math.round(selectedRecipe.totalCalories) + "Kcal" : "N/A" );
 			
 			nutritionFacts.isRecipe();
 			
@@ -665,8 +727,17 @@ package treatments.food.ui
 			addFoodButton.isEnabled = true;
 		}
 		
-		private function displayFoodDetails(selectedFood:Food):void
+		private function displayFoodDetails(selectedFood:Food, skipServingUpdate:Boolean = false):void
 		{
+			if (selectedFood == null)
+				return;
+			
+			if (selectedFood.note == "")
+			{
+				globalMultiplier = 1;
+				globalUnit = "";
+			}
+			
 			onFoodAmountChanged(null);
 			activeFood = selectedFood;
 			
@@ -676,12 +747,40 @@ package treatments.food.ui
 				mainContentContainer.addChildAt(foodDetailsContainer, detailsIndex);
 			}
 			
-			nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" );
-			nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(selectedFood.carbs) + "g" : "N/A" );
-			nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(selectedFood.fiber) + "g" : "N/A" );
-			nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(selectedFood.proteins) + "g" : "N/A" );
-			nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(selectedFood.fats) + "g" : "N/A" );
-			nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? selectedFood.kcal + "Kcal" : "N/A" );
+			if (!skipServingUpdate)
+			{
+				if (selectedFood.note == "")
+					nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" );
+				else
+				{
+					var servingOptions:Array;
+					
+					try
+					{
+						servingOptions = JSON.parse(selectedFood.note) as Array;
+					} 
+					catch(error:Error) 
+					{
+						nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" );
+					}
+					
+					if (servingOptions != null)
+					{
+						servingOptions.unshift( { label: !isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" } );
+						foodServingSizePickerList.dataProvider = new ArrayCollection(servingOptions);
+						foodServingSizePickerList.invalidate();
+						nutritionFacts.setServingsListComponent(foodServingSizePickerList);
+					}
+					else
+						nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" );
+				}
+			}
+			
+			nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(selectedFood.carbs * globalMultiplier * 100) / 100) + "g" : "N/A" );
+			nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(selectedFood.fiber * globalMultiplier * 100) / 100) + "g" : "N/A" );
+			nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(selectedFood.proteins * globalMultiplier * 100) / 100) + "g" : "N/A" );
+			nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(selectedFood.fats * globalMultiplier * 100) / 100) + "g" : "N/A" );
+			nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? (Math.round(selectedFood.kcal * globalMultiplier)) + "Kcal" : "N/A" );
 			
 			nutritionFacts.isFood();
 			
@@ -718,11 +817,16 @@ package treatments.food.ui
 				
 				if (selectedFood != null && !isNaN(amount))
 				{
-					nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.carbs) * 100) / 100) + "g" : "N/A" );
-					nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fiber) * 100) / 100) + "g" : "N/A" );
-					nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.proteins) * 100) / 100) + "g" : "N/A" );
-					nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fats) * 100) / 100) + "g" : "N/A" );
-					nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.kcal) * 100) / 100) + "Kcal" : "N/A" );
+					if (globalMultiplier != 1)
+					{
+						amount = (amount * selectedFood.servingSize);
+					}
+					
+					nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.carbs * globalMultiplier) * 100) / 100) + "g" : "N/A" );
+					nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fiber * globalMultiplier) * 100) / 100) + "g" : "N/A" );
+					nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.proteins * globalMultiplier) * 100) / 100) + "g" : "N/A" );
+					nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fats * globalMultiplier) * 100) / 100) + "g" : "N/A" );
+					nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.kcal * globalMultiplier))) + "Kcal" : "N/A" );
 				}
 			}
 			else if (currentMode == RECIPES_MODE)
@@ -737,7 +841,7 @@ package treatments.food.ui
 					nutritionFacts.setFiberValue(!isNaN(selectedRecipe.totalFiber) ? selectedRecipe.totalFiber + "g" : "N/A" );
 					nutritionFacts.setProteinsValue(!isNaN(selectedRecipe.totalProteins) ? selectedRecipe.totalProteins + "g" : "N/A" );
 					nutritionFacts.setFatsValue(!isNaN(selectedRecipe.totalFats) ? selectedRecipe.totalFats + "g" : "N/A" );
-					nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? selectedRecipe.totalCalories + "Kcal" : "N/A" );
+					nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? Math.round(selectedRecipe.totalCalories) + "Kcal" : "N/A" );
 				}
 			}
 		}
@@ -793,10 +897,15 @@ package treatments.food.ui
 			return deleteButton;
 		}
 		
-		private function resetComponents(resetPagination:Boolean = true):void
+		private function resetComponents(resetPagination:Boolean = true, dontClearSearchResults:Boolean = false):void
 		{
-			foodResultsList.dataProvider = new ArrayCollection([]);
-			foodResultsList.selectedItem = null;
+			if (!dontClearSearchResults)
+			{
+				foodResultsList.dataProvider = new ArrayCollection([]);
+				foodResultsList.selectedItem = null;
+			}
+			
+			foodResultsList.selectedIndex = -1;
 			foodDetailsContainer.removeFromParent();
 			hidePreloader();
 			removeFoodInserter();
@@ -1311,7 +1420,7 @@ package treatments.food.ui
 			}
 		}
 		
-		private function onAddRecipe(e:Event):void
+		private function onSaveRecipe(e:Event):void
 		{
 			//Variables
 			var recipeName:String = "";
@@ -1423,30 +1532,44 @@ package treatments.food.ui
 				for (var i:int = 0; i < cartList.length; i++) 
 				{
 					var cartItem:Object = cartList[i];
-					if (cartItem == null) continue;
-					
 					var cartFood:Food = cartItem.food as Food;
-					if (cartFood == null) continue;
+					var quantity:Number = cartItem.quantity;
+					var multiplier:Number = cartItem.multiplier;
+					var substractFiber:Boolean = cartItem.substractFiber;
+					var servingSize:Number = cartFood.servingSize;
+					var servingUnit:String = cartFood.servingUnit;
+					var globalUnit:String = cartItem.globalUnit;
+					
+					if (cartItem == null || cartFood == null)
+						continue;
+					
+					if (multiplier != 1)
+					{
+						quantity = quantity * servingSize;
+						servingUnit = globalUnit != null && globalUnit != "" ? globalUnit : servingUnit;
+					}
 					
 					var food:Food = new Food
 					(
 						cartFood.id,
 						cartFood.name,
-						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.proteins) * 100) / 100,
-						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.carbs) * 100) / 100,
-						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fats) * 100) / 100,
-						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.kcal) * 100) / 100,
+						Math.round(((quantity / cartFood.servingSize) * cartFood.proteins * multiplier) * 100) / 100,
+						Math.round(((quantity / cartFood.servingSize) * cartFood.carbs * multiplier) * 100) / 100,
+						Math.round(((quantity / cartFood.servingSize) * cartFood.fats * multiplier) * 100) / 100,
+						Math.round(((quantity / cartFood.servingSize) * cartFood.kcal * multiplier) * 100) / 100,
 						cartItem.quantity,
-						cartItem.servingUnit,
+						servingUnit,
 						new Date().valueOf(),
-						Math.round(((cartItem.quantity / cartFood.servingSize) * cartFood.fiber) * 100) / 100,
+						Math.round(((quantity / cartFood.servingSize) * cartFood.fiber * multiplier) * 100) / 100,
 						cartFood.brand,
 						cartFood.link,
 						cartFood.source,
 						cartFood.barcode,
 						cartItem.substractFiber,
 						Number(recipeServingSize),
-						recipeServingUnit
+						recipeServingUnit,
+						"",
+						multiplier == 1
 					);
 					
 					recipeFoods.push(food);
@@ -1560,7 +1683,7 @@ package treatments.food.ui
 			addFoodButton.isEnabled = foodAmountInput.text != null && foodAmountInput.text.length > 0 ? true : false;
 			
 			if(foodAmountInput != null && activeFood != null && currentMode != RECIPES_MODE)
-				updateFoodDetails(foodAmountInput.text != null && foodAmountInput.text.length > 0 ? Number(foodAmountInput.text) : activeFood.servingSize);
+				updateFoodDetails(foodAmountInput.text != null && foodAmountInput.text.length > 0 ? Number(foodAmountInput.text) : globalMultiplier == 1 ? activeFood.servingSize : 1);
 			else if (foodAmountInput != null && activeRecipe != null && currentMode == RECIPES_MODE)
 				updateFoodDetails(foodAmountInput.text != null && foodAmountInput.text.length > 0 ? Number(foodAmountInput.text) : Number(activeRecipe.servingSize));
 		}
@@ -1597,7 +1720,7 @@ package treatments.food.ui
 			{
 				if (activeFood == null) return;
 				
-				cartList.push( { food:activeFood, quantity: Number(foodAmountInput.text), servingUnit: activeFood.servingUnit, substractFiber: substractFiberCheck.isSelected } );
+				cartList.push( { food:activeFood, quantity: Number(foodAmountInput.text), servingUnit: activeFood.servingUnit, substractFiber: substractFiberCheck.isSelected, multiplier: globalMultiplier, globalUnit: globalUnit, id: UniqueId.createEventId() } );
 			}
 			else
 			{
@@ -1607,7 +1730,7 @@ package treatments.food.ui
 					
 					if (recipeFood == null) continue;
 					
-					cartList.push( { food:recipeFood, quantity: (Number(foodAmountInput.text) / Number(activeRecipe.servingSize)) * recipeFood.servingSize, servingUnit: recipeFood.servingUnit, substractFiber: recipeFood.substractFiber } );
+					cartList.push( { food:recipeFood, quantity: (Number(foodAmountInput.text) / Number(activeRecipe.servingSize)) * recipeFood.servingSize, servingUnit: recipeFood.servingUnit, substractFiber: recipeFood.substractFiber, multiplier: 1, globalUnit: "", id: UniqueId.createEventId() } );
 				}
 				
 			}
@@ -1681,17 +1804,15 @@ package treatments.food.ui
 		
 		private function onDeleteFoodFromCart(e:Event):void
 		{
-			var foodToDelete:Food = (((e.currentTarget as Button).parent as Object).data as Object).food as Food;
-			var quantityToDelete:Number = Number((((e.currentTarget as Button).parent as Object).data as Object).quantity);
-			var servingUnitToDelete:String = (((e.currentTarget as Button).parent as Object).data as Object).servingUnit as String;
+			var itemID:String = (((e.currentTarget as Button).parent as Object).data as Object).id;
 			
-			if (foodToDelete != null)
+			if (itemID != null)
 			{
 				//Delete from cart
 				for (var i:int = 0; i < cartList.length; i++) 
 				{
 					var cartItem:Object = cartList[i] as Object;
-					if ((cartItem.food as Food).id == foodToDelete.id && cartItem.quantity == quantityToDelete && cartItem.servingUnit == servingUnitToDelete)
+					if (cartItem.id != null && cartItem.id == itemID)
 					{
 						cartList.removeAt(i);
 						break;
@@ -1829,7 +1950,7 @@ package treatments.food.ui
 		
 		private function onCompleteFoodManager(e:starling.events.Event):void
 		{
-			resetComponents();
+			resetComponents(false, true);
 			resetComponentsExtended();
 			dispatchEventWith(starling.events.Event.COMPLETE);
 		}
@@ -1838,6 +1959,30 @@ package treatments.food.ui
 		{
 			clearTimeout(autoSearchTimeoutID);
 			removeFoodEventListeners();
+			
+			if (accessoryList != null)
+			{
+				for (var i:int = 0; i < accessoryList.length; i++) 
+				{
+					var button:Button = accessoryList[i];
+					if (button != null)
+					{
+						button.removeEventListener(Event.TRIGGERED, onDeleteFoodFromCart);
+						button.removeFromParent();
+						if (button.defaultIcon != null)
+						{
+							if ((button.defaultIcon as Image).texture != null)
+								(button.defaultIcon as Image).texture.dispose();
+							
+							button.defaultIcon.dispose();
+						}
+						button.dispose();
+						button = null;
+					}
+				}
+				accessoryList.length = 0;
+				accessoryList = null;
+			}
 			
 			if (title != null)
 			{
@@ -1925,6 +2070,14 @@ package treatments.food.ui
 				lastPageButton = null;
 			}
 			
+			if (foodServingSizePickerList != null)
+			{
+				foodServingSizePickerList.removeEventListener(Event.CHANGE, onServingChanged);
+				foodServingSizePickerList.removeFromParent();
+				foodServingSizePickerList.dispose();
+				foodServingSizePickerList = null;
+			}
+			
 			if (addFavorite != null)
 			{
 				addFavorite.removeEventListener(TouchEvent.TOUCH, onAddManualFavorite);
@@ -2010,7 +2163,7 @@ package treatments.food.ui
 			
 			if (saveRecipe != null)
 			{
-				saveRecipe.removeEventListener(Event.TRIGGERED, onAddRecipe);
+				saveRecipe.removeEventListener(Event.TRIGGERED, onSaveRecipe);
 				saveRecipe.removeFromParent();
 				saveRecipe.dispose();
 				saveRecipe = null;

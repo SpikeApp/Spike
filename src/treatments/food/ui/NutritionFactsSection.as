@@ -41,7 +41,8 @@ package treatments.food.ui
 			
 			value = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, false);
 			value.wordWrap = true;
-			value.width;
+			value.width = width;
+			value.maxWidth = width;
 			addChild(value);
 		}
 		

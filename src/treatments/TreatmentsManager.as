@@ -1340,28 +1340,33 @@ package treatments
 					for (var i:int = 0; i < foodsList.length; i++) 
 					{
 						var food:Food = foodsList[i].food;
-						if (food == null) 
-							continue;
-						
 						var quantity:Number = foodsList[i].quantity;
-						if (isNaN(quantity)) 
-							continue;
-						
+						var multiplier:Number = foodsList[i].multiplier;
 						var carbs:Number = food.carbs;
-						if (isNaN(carbs)) 
-							continue;
-						
 						var fiber:Number = food.fiber;
 						var substractFiber:Boolean = foodsList[i].substractFiber;
-						if (substractFiber && !isNaN(fiber))
-							carbs -= fiberPrecision == 1 ? fiber : fiber / 2;
+						var servingSize:Number = food.servingSize;
+						var servingUnit:String = food.servingUnit;
+						var defaultUnit:Boolean = food.defaultUnit;
 						
-						var finalCarbs:Number = (quantity / food.servingSize) * carbs;
+						if (food == null || isNaN(quantity) || isNaN(multiplier) || isNaN(carbs)) 
+							continue;
+						
+						if (multiplier != 1)
+						{
+							quantity = quantity * servingSize;
+							servingUnit = foodsList[i].globalUnit != null && foodsList[i].globalUnit != "" ? foodsList[i].globalUnit : servingUnit;
+						}
+						
+						if (substractFiber && !isNaN(fiber))
+							carbs -= fiberPrecision == 1 ? fiber : (fiber / 2);
+						
+						var finalCarbs:Number = (quantity / servingSize) * carbs * multiplier;
 						if (!isNaN(finalCarbs))
 						{
 							totalCarbs += finalCarbs;
 							addedFoods += 1;
-							addedFoodNames.push(quantity + food.servingUnit + " " + food.name);
+							addedFoodNames.push(foodsList[i].quantity + (multiplier != 1 || !defaultUnit ? " x " : " ") + servingUnit + " " + food.name);
 						}
 					}
 					

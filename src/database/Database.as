@@ -227,6 +227,7 @@ package database
 			"barcode STRING, " +
 			"source STRING, " +
 			"notes STRING, " +
+			"defaultunit STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
@@ -2939,7 +2940,7 @@ package database
 				text += "'" + food.link + "', ";
 				text += "'" + food.barcode + "', ";
 				text += "'" + food.source + "', ";
-				text += "'', ";
+				text += "'" + food.note + "', ";
 				text += food.timestamp + ")";
 				
 				insertRequest.text = text;
@@ -2983,7 +2984,7 @@ package database
 					"link = '" + food.link + "', " +
 					"barcode = '" + food.barcode + "', " +
 					"source = '" + food.source + "', " +
-					"notes = '', " +
+					"source = '" + food.note + "', " +
 					"lastmodifiedtimestamp = " + food.timestamp + " " +
 					"WHERE id = '" + food.id + "'";
 				updateRequest.execute();
@@ -3121,6 +3122,7 @@ package database
 					text += "barcode, ";
 					text += "source, ";
 					text += "notes, ";
+					text += "defaultunit, ";
 					text += "lastmodifiedtimestamp) ";
 					text += "VALUES (";
 					text += "'" + recipe.id + "', ";
@@ -3140,13 +3142,13 @@ package database
 					text += "'" + food.link + "', ";
 					text += "'" + food.barcode + "', ";
 					text += "'" + food.source + "', ";
-					text += "'', ";
+					text += "'" + food.note + "', ";
+					text += "'" + food.defaultUnit + "', ";
 					text += food.timestamp + ")";
 					
 					insertRequest.text = text;
 					insertRequest.execute();
 				}
-				
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
@@ -3237,7 +3239,9 @@ package database
 									tempFood.barcode,
 									tempFood.substractfiber == "true" ? true : false,
 									Number(tempFood.recipeservingsize),
-									tempFood.recipeservingunit
+									tempFood.recipeservingunit,
+									tempFood.notes,
+									tempFood.defaultunit == "true" ? true : false
 								);
 								
 								recipesFoods.push(food);
@@ -3250,7 +3254,6 @@ package database
 					
 					returnObject.recipesList = recipesList;
 				}
-				
 				conn.close();
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();

@@ -1,7 +1,9 @@
 package treatments.food.ui
 {
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.PickerList;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
@@ -23,6 +25,7 @@ package treatments.food.ui
 		private var linkContainer:NutritionFactsSectionWithAction;
 		private var subtractFiberContainer:NutritionFactsSectionWithAction;
 		private var amountContainer:NutritionFactsSectionWithAction;
+		private var servingSizePickerListContainer:NutritionFactsSectionWithAction;
 		
 		public function NutritionFacts(width:Number)
 		{
@@ -40,11 +43,12 @@ package treatments.food.ui
 		private function createContent():void
 		{
 			//First Row
-			firstRowContainer = LayoutFactory.createLayoutGroup("horizontal");
+			firstRowContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.TOP);
 			firstRowContainer.width = width;
 			addChild(firstRowContainer);
 			
 			servingSizeContainer = new NutritionFactsSection(width / 3);
+			servingSizePickerListContainer = new NutritionFactsSectionWithAction(width / 3);
 			firstRowContainer.addChild(servingSizeContainer);
 			
 			carbsContainer = new NutritionFactsSection(width / 3);
@@ -82,6 +86,34 @@ package treatments.food.ui
 			thirdRowContainer.addChild(amountContainer);
 		}
 		
+		private function updateLayout(newPadding:Number):void
+		{
+			if (!isNaN(newPadding))
+			{
+				(secondRowContainer.layout as HorizontalLayout).paddingBottom = newPadding;
+				carbsContainer.value.paddingTop = newPadding;
+				fiberContainer.value.paddingTop = newPadding;
+				proteinsContainer.value.paddingTop = newPadding;
+				fatsContainer.value.paddingTop = newPadding;
+				caloriesContainer.value.paddingTop = newPadding;
+				linkContainer.title.paddingBottom = newPadding;
+				subtractFiberContainer.title.paddingBottom = newPadding;
+				amountContainer.title.paddingBottom = newPadding;
+			}
+			else
+			{
+				(secondRowContainer.layout as HorizontalLayout).paddingBottom = 0;
+				carbsContainer.value.paddingTop = 0;
+				fiberContainer.value.paddingTop = 0;
+				proteinsContainer.value.paddingTop = 0;
+				fatsContainer.value.paddingTop = 0;
+				caloriesContainer.value.paddingTop = 0;
+				linkContainer.title.paddingBottom = 0;
+				subtractFiberContainer.title.paddingBottom = 0;
+				amountContainer.title.paddingBottom = 0;
+			}
+		}
+		
 		/**
 		 * Public Methods
 		 */
@@ -93,6 +125,25 @@ package treatments.food.ui
 		public function setServingsValue(value:String):void
 		{
 			servingSizeContainer.value.text = value;
+			firstRowContainer.removeChild(servingSizePickerListContainer);
+			firstRowContainer.addChild(servingSizeContainer);
+			
+			updateLayout(Number.NaN);
+		}
+		
+		public function setServingsListTitle(title:String):void
+		{
+			servingSizePickerListContainer.title.text = title;
+		}
+		
+		public function setServingsListComponent(component:PickerList):void
+		{
+			component.maxWidth = width / 3;
+			servingSizePickerListContainer.setComponent(component);
+			firstRowContainer.removeChild(servingSizeContainer);
+			firstRowContainer.addChild(servingSizePickerListContainer);
+			
+			updateLayout(10);
 		}
 		
 		public function setCarbsTitle(title:String):void
@@ -198,7 +249,14 @@ package treatments.food.ui
 				servingSizeContainer = null;
 			}
 			
-			if (servingSizeContainer != null)
+			if (servingSizePickerListContainer != null)
+			{
+				servingSizePickerListContainer.removeFromParent();
+				servingSizePickerListContainer.dispose();
+				servingSizePickerListContainer = null;
+			}
+			
+			if (carbsContainer != null)
 			{
 				carbsContainer.removeFromParent();
 				carbsContainer.dispose();

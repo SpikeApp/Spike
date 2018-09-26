@@ -17,7 +17,6 @@ package treatments.food.connectors
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import database.Database;
@@ -326,6 +325,7 @@ package treatments.food.connectors
 						var favoriteBarCode:String = unprocessedFavorite.barcode;
 						var favoriteSource:String = unprocessedFavorite.source;
 						var favoriteTimestamp:Number = Number(unprocessedFavorite.lastmodifiedtimestamp);
+						var favoriteNote:String = unprocessedFavorite.notes;
 						
 						var favoriteFood:Food = new Food
 						(
@@ -342,7 +342,11 @@ package treatments.food.connectors
 							favoriteBrand,
 							favoriteLink,
 							favoriteSource,
-							favoriteBarCode
+							favoriteBarCode,
+							false,
+							0,
+							"",
+							favoriteNote
 						);
 						
 						data.push
@@ -407,6 +411,7 @@ package treatments.food.connectors
 						var favoriteBarCode:String = unprocessedFavorite.barcode;
 						var favoriteSource:String = unprocessedFavorite.source;
 						var favoriteTimestamp:Number = Number(unprocessedFavorite.lastmodifiedtimestamp);
+						var favoriteNotes:String = unprocessedFavorite.notes;
 						
 						var favoriteFood:Food = new Food
 						(
@@ -423,7 +428,11 @@ package treatments.food.connectors
 							favoriteBrand,
 							favoriteLink,
 							favoriteSource,
-							favoriteBarCode
+							favoriteBarCode,
+							false,
+							0,
+							"",
+							favoriteNotes
 						);
 						
 						data.push
@@ -578,6 +587,29 @@ package treatments.food.connectors
 		}
 		
 		/**
+		 * Capitalizes first word except if the word is less than 3 characters to avoid capitalizing "g" and "ml"
+		 */
+		private static function firstLetterUpperCase(strData:String):String 
+		{
+			strData = strData.toLowerCase();
+			var strArray:Array = strData.split(' ');
+			var newArray:Array = [];
+			for (var str:String in strArray) 
+			{
+				if ((strArray[str] as String).length > 2)
+				{
+					if (strArray[str].charAt(0) != "(")
+						newArray.push(strArray[str].charAt(0).toUpperCase() + strArray[str].slice(1));
+					else
+						newArray.push(strArray[str].charAt(0) + strArray[str].charAt(1).toUpperCase() + strArray[str].slice(2));
+				}
+				else
+					newArray.push(strArray[str]);
+			}
+			return newArray.join(' ');
+		}
+		
+		/**
 		 * Parses FatSecret foods
 		 */
 		public static function parseFatSecretFood(unprocessedFood:Object):Object
@@ -678,8 +710,6 @@ package treatments.food.connectors
 			var i:int = 0;
 			var now:Number = new Date().valueOf();
 			
-			trace(ObjectUtil.toString(JSON.parse(response)));
-			
 			//Process responde
 			if (currentMode == FATSECRET_MODE)
 			{
@@ -689,6 +719,10 @@ package treatments.food.connectors
 					if (foodsJSON.food != null) //Single food
 					{
 						var selectedFSServing:Object;
+						
+						var noteFS:String = "";
+						var notesListFS:Array = [];
+						var carbsPer100FS:Number = Number.NaN;
 						
 						if (foodsJSON.food.servings.serving is Array)
 						{
@@ -701,7 +735,27 @@ package treatments.food.connectors
 								if (servingDetails.measurement_description == "g" && Number(servingDetails.metric_serving_amount) == 100)
 								{
 									selectedServingIndex = i;
-									break;
+									
+									if(servingDetails.carbohydrate != null && !isNaN(Number(servingDetails.carbohydrate)) && Number(servingDetails.carbohydrate) != 0)
+									{
+										carbsPer100FS = Number(servingDetails.carbohydrate);
+									}
+								}
+								else
+								{
+									if (servingDetails.serving_description != null && servingDetails.serving_description != "" && servingDetails.carbohydrate != null && servingDetails.carbohydrate != "" && servingDetails.carbohydrate != "0")
+									{
+										var formattedFSServing:String = firstLetterUpperCase(servingDetails.serving_description);
+										formattedFSServing = formattedFSServing.replace(" g", "g");
+										formattedFSServing = formattedFSServing.replace(" ml", "ml");
+										formattedFSServing = formattedFSServing.replace(" dl", "dl");
+										formattedFSServing = formattedFSServing.replace(" cl", "cl");
+										
+										var extraFSServing:Object = {};
+										extraFSServing.label = formattedFSServing;
+										extraFSServing.multiplier = Number(servingDetails.carbohydrate);
+										notesListFS.push(extraFSServing);
+									}
 								}
 							}
 							
@@ -712,8 +766,41 @@ package treatments.food.connectors
 							selectedFSServing = foodsJSON.food.servings.serving;
 						}
 						
+						if (!isNaN(carbsPer100FS) && notesListFS.length)
+						{
+							for (var i2:int = 0; i2 < notesListFS.length; i2++) 
+							{
+								var extraFSServingParsed:Object = notesListFS[i2]; 
+								extraFSServingParsed.multiplier = extraFSServingParsed.multiplier / carbsPer100FS;
+							}
+							
+							noteFS = JSON.stringify(notesListFS);
+						}
+						
 						var servingUnitFS:String = String(selectedFSServing.measurement_description);
-						if (servingUnitFS != "g")
+						var addedExtras:Boolean = false;
+						if (selectedFSServing.serving_description != null && selectedFSServing.serving_description != "" && selectedFSServing.serving_description != "100 g")
+						{
+							servingUnitFS += " (" + selectedFSServing.serving_description;
+							addedExtras = true;
+						}
+						
+						if (selectedFSServing.metric_serving_amount != null && selectedFSServing.metric_serving_amount != "" && addedExtras)
+						{
+							servingUnitFS += " " + Number(selectedFSServing.metric_serving_amount);
+						}
+						
+						if (selectedFSServing.metric_serving_unit != null && selectedFSServing.metric_serving_unit != "" && addedExtras)
+						{
+							servingUnitFS += " " + selectedFSServing.metric_serving_unit;
+						}
+						
+						if (addedExtras)
+						{
+							servingUnitFS += ")";
+						}
+						
+						if (servingUnitFS != "g" && !addedExtras)
 						{
 							servingUnitFS = servingUnitFS.toLowerCase();
 							servingUnitFS = servingUnitFS.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
@@ -733,7 +820,12 @@ package treatments.food.connectors
 								Number(selectedFSServing.fiber),
 								foodsJSON.food.brand_name != null ? String(foodsJSON.food.brand_name).toUpperCase() : "",
 								String(foodsJSON.food.food_url),
-								"FatSecret"
+								"FatSecret",
+								"",
+								false,
+								0,
+								"",
+								noteFS
 							);
 						
 						if (!foodDetailMode)
@@ -859,8 +951,7 @@ package treatments.food.connectors
 								var offID:String = unprocessedOFFFood["_id"] != null ? String(unprocessedOFFFood["_id"]) : UniqueId.createEventId();
 								var quotePattern:RegExp = /&quot;/g;
 								var offName:String = unprocessedOFFFood.product_name != null ? String(unprocessedOFFFood.product_name).replace(/&quot;/g, "\"") : "";
-								offName.toLowerCase();
-								offName = offName.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
+								offName = firstLetterUpperCase(offName);
 								if (offName == "") continue;
 								var offBrand:String = unprocessedOFFFood.brands != null ? String(unprocessedOFFFood.brands) : "";
 								var offProteins:Number = unprocessedOFFFood.nutriments != null && unprocessedOFFFood.nutriments.proteins_100g != null ? Number(unprocessedOFFFood.nutriments.proteins_100g) : Number.NaN;
@@ -885,6 +976,37 @@ package treatments.food.connectors
 									}
 								}
 								var offBarCode:String = unprocessedOFFFood.code != null ? String(unprocessedOFFFood.code) : "";
+								var offNote:String = "";
+								
+								var offNotesList:Array = [];
+								
+								if (unprocessedOFFFood.serving_quantity != null && !isNaN(Number(unprocessedOFFFood.serving_quantity)) && Number(unprocessedOFFFood.serving_quantity) != 100 && Number(unprocessedOFFFood.serving_quantity) != 0 && unprocessedOFFFood.serving_size != null && String(unprocessedOFFFood.serving_size) != "")
+								{
+									var unformattedServingSize:String = String(unprocessedOFFFood.serving_size);
+									var firstPatternIndex:int = unformattedServingSize.indexOf("(");
+									if (firstPatternIndex != -1)
+									{
+										var secondPatternIndex:int = unformattedServingSize.indexOf(")");
+										var extractedString:String = StringUtil.trim(unformattedServingSize.slice(firstPatternIndex + 1, secondPatternIndex));
+										var substractedString:String = StringUtil.trim(unformattedServingSize.slice(0, firstPatternIndex));
+										
+										unformattedServingSize = extractedString + " " + "(" + substractedString + ")";
+									}
+									
+									unformattedServingSize = StringUtil.trim(firstLetterUpperCase(unformattedServingSize));
+									unformattedServingSize = unformattedServingSize.replace(" g", "g");
+									unformattedServingSize = unformattedServingSize.replace(" ml", "ml");
+									unformattedServingSize = unformattedServingSize.replace(" dl", "dl");
+									unformattedServingSize = unformattedServingSize.replace(" cl", "cl");
+									
+									var noteJSON:Object = {};
+									noteJSON.label = unformattedServingSize;
+									noteJSON.multiplier = Number(unprocessedOFFFood.serving_quantity) / 100;
+									
+									offNotesList.push(noteJSON);
+									
+									offNote = JSON.stringify(offNotesList);
+								}
 								
 								var offFood:Food = new Food
 								(
@@ -901,7 +1023,11 @@ package treatments.food.connectors
 									offBrand.toUpperCase(),
 									offLink,
 									"OpenFoodFacts",
-									offBarCode
+									offBarCode,
+									false,
+									0,
+									"",
+									offNote
 								);
 								
 								data.push
@@ -963,8 +1089,7 @@ package treatments.food.connectors
 								if (upcMatchIndex != -1) foodName = foodName.slice(0, upcMatchIndex);
 								var gtinMatchIndex:int = foodName.indexOf(", GTIN");
 								if (gtinMatchIndex != -1) foodName = foodName.slice(0, gtinMatchIndex);
-								foodName = foodName.toLowerCase();
-								foodName = foodName.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
+								foodName = firstLetterUpperCase(foodName);
 								
 								//Brand
 								var brand:String = unprocessedUSDAFood.manu != null ? String(unprocessedUSDAFood.manu).toUpperCase() : "";
@@ -1042,13 +1167,11 @@ package treatments.food.connectors
 						var upcBarCode:String = "";
 						if (upcUSDAIndex != -1)
 							upcBarCode = StringUtil.trim(foodNameUSDA.slice(upcUSDAIndex + 4));
-						trace("upcBarCode", upcBarCode);
 						var upcMatchIndexUSDA:int = foodNameUSDA.indexOf(", UPC");
 						if (upcMatchIndexUSDA != -1) foodNameUSDA = foodNameUSDA.slice(0, upcMatchIndexUSDA);
 						var gtinMatchIndexUSDA:int = foodNameUSDA.indexOf(", GTIN");
 						if (gtinMatchIndexUSDA != -1) foodNameUSDA = foodNameUSDA.slice(0, gtinMatchIndexUSDA);
-						foodNameUSDA = foodNameUSDA.toLowerCase();
-						foodNameUSDA = foodNameUSDA.replace(/(^[a-z]|\s[a-z])/g, function():String{ return arguments[1].toUpperCase(); });
+						foodNameUSDA = firstLetterUpperCase(foodNameUSDA);
 						var brandUSDA:String = foodsJSON.report.food.manu != null ? String(foodsJSON.report.food.manu).toUpperCase() : "";
 						var servingUnitUSDA:String = foodsJSON.report.food.ru != null ? String(foodsJSON.report.food.ru) : "";
 						var proteinsUSDA:Number = Number.NaN;
@@ -1058,7 +1181,8 @@ package treatments.food.connectors
 						var caloriesUSDA:Number = Number.NaN;
 						var linkUSDA:String = "https://ndb.nal.usda.gov/ndb/foods/show/" + foodIDUSDA;
 						var nutrientsUSDA:Array = foodsJSON.report.food.nutrients;
-						
+						var notesUSDA:String = "";
+						var notesListUSDA:Array = [];
 						
 						for (i = 0; i < nutrientsUSDA.length; i++) 
 						{
@@ -1082,13 +1206,72 @@ package treatments.food.connectors
 							else if (nutrientDetails.name.indexOf("Carbohydrate") != -1) 
 							{
 								if (nutrientDetails.value != null)
+								{
 									carbsUSDA = Number(nutrientDetails.value);
+									
+									if (nutrientDetails.measures != null && nutrientDetails.measures is Array && (nutrientDetails.measures as Array).length > 0)
+									{
+										for (var k:int = 0; k < nutrientDetails.measures.length; k++) 
+										{
+											var measure:Object = nutrientDetails.measures[k];
+											var value:Number = Number.NaN;
+											var label:String = "";
+											
+											if (measure.value != null)
+											{
+												value = Number(measure.value);
+											}
+											else
+												continue;
+											
+											if (measure.qty != null)
+											{
+												label += measure.qty + " ";
+											}
+											
+											if (measure.label != null && measure.label != "")
+											{
+												var unformatedLabel:String = measure.label;
+												unformatedLabel = firstLetterUpperCase(unformatedLabel);
+												
+												label += unformatedLabel + " ";
+											}
+											
+											if (measure.eqv != null && measure.eqv != 0)
+											{
+												label += "(" + measure.eqv + " ";
+											}
+											
+											if (measure.eunit != null && measure.eunit != "")
+											{
+												label += measure.eunit + ")";
+											}
+											
+											var formattedServingSizeUSDA:String = StringUtil.trim(firstLetterUpperCase(label));
+											formattedServingSizeUSDA = formattedServingSizeUSDA.replace(" g", "g");
+											formattedServingSizeUSDA = formattedServingSizeUSDA.replace(" ml", "ml");
+											formattedServingSizeUSDA = formattedServingSizeUSDA.replace(" dl", "dl");
+											formattedServingSizeUSDA = formattedServingSizeUSDA.replace(" cl", "cl");
+											
+											var noteJSONUSDA:Object = {};
+											noteJSONUSDA.label = formattedServingSizeUSDA;
+											noteJSONUSDA.multiplier = value / carbsUSDA;
+											notesListUSDA.push(noteJSONUSDA);
+										}
+										
+									}
+								}
 							}
 							else if (nutrientDetails.name.indexOf("Fiber") != -1) 
 							{
 								if (nutrientDetails.value != null)
 									fiberUSDA = Number(nutrientDetails.value);
 							}
+						}
+						
+						if (notesListUSDA.length > 0)
+						{
+							notesUSDA = JSON.stringify(notesListUSDA);
 						}
 						
 						var usdaFoodDetailed:Food = new Food
@@ -1106,11 +1289,14 @@ package treatments.food.connectors
 								brandUSDA,
 								linkUSDA,
 								"USDA",
-								upcBarCode
+								upcBarCode,
+								false,
+								0,
+								"",
+								notesUSDA
 							);
 						
 						_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_DETAILS_RESULT, false, false, usdaFoodDetailed) );
-						
 					}
 				} 
 				catch(error:Error) 
