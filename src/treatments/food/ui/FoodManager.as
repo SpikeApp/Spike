@@ -483,7 +483,7 @@ package treatments.food.ui
 			actionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 0);
 			actionsContainer.width = width;
 			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
-			if (loadedFromExternalContainer) (actionsContainer.layout as HorizontalLayout).paddingBottom = 20;
+			if (loadedFromExternalContainer) (actionsContainer.layout as HorizontalLayout).paddingBottom = 10;
 			mainContentContainer.addChild(actionsContainer);
 			
 			finishButton = LayoutFactory.createButton("FINISH");
@@ -1193,7 +1193,7 @@ package treatments.food.ui
 		
 		private function onAddFoodOrRecipeAsFavorite(e:Event):void
 		{
-			if (currentMode == FATSECRET_MODE)
+			/*if (currentMode == FATSECRET_MODE)
 			{
 				AlertManager.showActionAlert
 					(
@@ -1212,7 +1212,7 @@ package treatments.food.ui
 				}
 				
 				return;
-			}
+			}*/
 			
 			if (activeFood != null && currentMode != RECIPES_MODE)
 			{

@@ -819,12 +819,20 @@ package treatments
 			treatmentCallout.addEventListener(Event.CLOSE, onTreatmentsCalloutClosed);
 			treatmentCallout.validate();
 			
-			var treatmentCallOutWidth:Number = treatmentCallout.width;
-			
 			contentScrollContainer.height = finalCalloutHeight - 50;
 			contentScrollContainer.maxHeight = finalCalloutHeight - 50;
+			contentScrollContainer.validate();
 			totalScrollContainer.height = finalCalloutHeight - 50;
 			totalScrollContainer.maxHeight = finalCalloutHeight - 50;
+			totalScrollContainer.validate();
+			
+			var treatmentCallOutWidth:Number = treatmentCallout.width;
+			var treatmentCallOutHeight:Number = treatmentCallout.height;
+			var treatmentCallOutPaddingRight:Number = treatmentCallout.paddingRight;
+			var contentScrollContainerWidth:Number = contentScrollContainer.width;
+			var contentScrollContainerHeight:Number = contentScrollContainer.height;
+			var totalScrollContainerWidth:Number = totalScrollContainer.width;
+			var totalScrollContainerHeight:Number = totalScrollContainer.height;
 			
 			//Keyboard Focus
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
@@ -1303,20 +1311,25 @@ package treatments
 			
 			function onLoadFoodManager(e:Event):void
 			{
-				var contentWidth:Number;
-				if (treatmentCallOutWidth - treatmentCallout.paddingLeft - treatmentCallout.paddingRight - 10 < 280)
-				{
-					treatmentCallout.width = 270 + treatmentCallout.paddingLeft + treatmentCallout.paddingRight + 10;
+				var contentWidth:Number = Constants.stageWidth - (Constants.stageWidth * 0.2);
+				
+				if (contentWidth < 270)
 					contentWidth = 270;
-				}
-				else
-				{
-					contentWidth = treatmentCallout.width - treatmentCallout.paddingLeft - treatmentCallout.paddingRight;
-				}
+				else if (contentWidth > 500)
+					contentWidth = 500;
+				
+				var suggestedCalloutHeight:Number = Constants.stageHeight - yPos - 10;
+				
+				if (suggestedCalloutHeight > 730)
+					suggestedCalloutHeight = 730;
+				
+				treatmentCallout.paddingRight = 10;
+				treatmentCallout.width = contentWidth + treatmentCallout.paddingLeft + treatmentCallout.paddingRight + 10;
+				treatmentCallout.height = suggestedCalloutHeight;
 				
 				if (foodManager == null)
 				{	
-					foodManager = new FoodManager(contentWidth, treatmentCallout.height - treatmentCallout.paddingTop - treatmentCallout.paddingBottom - 15, true);
+					foodManager = new FoodManager(contentWidth, treatmentCallout.height - treatmentCallout.paddingTop - treatmentCallout.paddingBottom - 30, true);
 					foodManager.addEventListener(Event.COMPLETE, onFoodManagerCompleted);
 					totalScrollContainer.addChild(foodManager);
 				}
@@ -1328,7 +1341,15 @@ package treatments
 			{
 				if (treatmentCallout != null)
 				{
+					//Readjust Layout
 					treatmentCallout.width = treatmentCallOutWidth;
+					treatmentCallout.height = treatmentCallOutHeight;
+					treatmentCallout.paddingRight = treatmentCallOutPaddingRight;
+					contentScrollContainer.width = contentScrollContainerWidth;
+					contentScrollContainer.height = contentScrollContainerHeight;
+					totalScrollContainer.width = totalScrollContainerWidth;
+					totalScrollContainer.height = totalScrollContainerHeight;
+					
 					var fiberPrecision:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION));
 					
 					//Calculate all food carbs the user has added to the food manager
