@@ -714,7 +714,7 @@ package treatments.food.ui
 			
 			if (foodDetailsContainer.parent == null)
 			{
-				var detailsIndex:int = mainContentContainer.getChildIndex(actionsContainer);
+				var detailsIndex:int = mainContentContainer.getChildIndex(mainActionsContainer);
 				mainContentContainer.addChildAt(foodDetailsContainer, detailsIndex);
 			}
 			
@@ -760,7 +760,7 @@ package treatments.food.ui
 			
 			if (foodDetailsContainer.parent == null)
 			{
-				var detailsIndex:int = mainContentContainer.getChildIndex(actionsContainer);
+				var detailsIndex:int = mainContentContainer.getChildIndex(mainActionsContainer);
 				mainContentContainer.addChildAt(foodDetailsContainer, detailsIndex);
 			}
 			

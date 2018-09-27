@@ -537,7 +537,7 @@ package database
 		 public static const COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION:int = 202;
 		 
 		 /**
-		  * Food Manager
+		  * Food Manager #1
 		  */
 		 public static const COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION:int = 203;
 		 public static const COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN:int = 204;
@@ -589,6 +589,11 @@ package database
 		 public static const COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_120MIN:int = 246;
 		 public static const COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_180MIN:int = 247;
 		 public static const COMMON_SETTING_BOLUS_WIZARD_SICKNESS_ADJUSTMENT:int = 248;
+		 
+		 /**
+		  * Food Manager #2
+		  */
+		 public static const COMMON_SETTING_FOOD_MANAGER_IMPORT_FOODS_AS_NOTE:int = 249;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -839,7 +844,8 @@ package database
 			 "45",//COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_90MIN
 			 "50",//COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_120MIN
 			 "60",//COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_180MIN
-			 "0"//COMMON_SETTING_BOLUS_WIZARD_SICKNESS_ADJUSTMENT
+			 "0",//COMMON_SETTING_BOLUS_WIZARD_SICKNESS_ADJUSTMENT
+			 "true"//COMMON_SETTING_FOOD_MANAGER_IMPORT_FOODS_AS_NOTE
 		 ];
 
 		 public function CommonSettings()

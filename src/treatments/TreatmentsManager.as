@@ -1397,7 +1397,7 @@ package treatments
 					carbsTextInput.text = totalCarbs != 0 ? String(totalCarbs) : "";
 					
 					//Update foods label
-					if (addedFoods > 0)
+					if (addedFoods > 0 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_IMPORT_FOODS_AS_NOTE) == "true")
 					{
 						notes.text = addedFoodNames.join(", ");
 					}

@@ -26,11 +26,13 @@ package ui.screens.display.settings.treatments
 		/* Display Objects */
 		private var defaultScreenPicker:PickerList;
 		private var searchAsITypeCheck:Check;
+		private var importFoodsAsNoteCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean;
 		private var defaultScreenValue:String;
 		private var searchAsITypeValue:Boolean;
+		private var importFoodsAsNote:Boolean;
 		
 		public function FoodManagerUISettingsList()
 		{
@@ -60,6 +62,7 @@ package ui.screens.display.settings.treatments
 			/* Get Values From Database */
 			defaultScreenValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_DEFAULT_SCREEN);
 			searchAsITypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE) == "true";
+			importFoodsAsNote = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_IMPORT_FOODS_AS_NOTE) == "true";
 		}
 		
 		private function setupContent():void
@@ -100,12 +103,17 @@ package ui.screens.display.settings.treatments
 			//Search As I Type
 			searchAsITypeCheck = LayoutFactory.createCheckMark(searchAsITypeValue);
 			searchAsITypeCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Import Foods As Note
+			importFoodsAsNoteCheck = LayoutFactory.createCheckMark(importFoodsAsNote);
+			importFoodsAsNoteCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 
 			//Set screen content
 			var data:Array = [];
 			
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','default_screen_label'), accessory: defaultScreenPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','search_as_i_type_label'), accessory: searchAsITypeCheck } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','import_foods_as_note_label'), accessory: importFoodsAsNoteCheck } );
 			
 			dataProvider = new ArrayCollection(data);
 		}
@@ -118,6 +126,9 @@ package ui.screens.display.settings.treatments
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE) != String(searchAsITypeValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE, String(searchAsITypeValue), true, false);
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_IMPORT_FOODS_AS_NOTE) != String(importFoodsAsNote))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_IMPORT_FOODS_AS_NOTE, String(importFoodsAsNote), true, false);
+			
 			needsSave = false;
 		}
 		
@@ -128,6 +139,7 @@ package ui.screens.display.settings.treatments
 		{
 			defaultScreenValue = defaultScreenPicker.selectedItem.value;
 			searchAsITypeValue = searchAsITypeCheck.isSelected;
+			importFoodsAsNote = importFoodsAsNoteCheck.isSelected;
 			
 			needsSave = true;
 		}
@@ -140,6 +152,7 @@ package ui.screens.display.settings.treatments
 			if (defaultScreenPicker != null)
 			{
 				defaultScreenPicker.removeEventListener(Event.CHANGE, onSettingsChanged);
+				defaultScreenPicker.removeFromParent();
 				defaultScreenPicker.dispose();
 				defaultScreenPicker = null;
 			}
@@ -147,8 +160,17 @@ package ui.screens.display.settings.treatments
 			if (searchAsITypeCheck != null)
 			{
 				searchAsITypeCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				searchAsITypeCheck.removeFromParent();
 				searchAsITypeCheck.dispose();
 				searchAsITypeCheck = null;
+			}
+			
+			if (importFoodsAsNoteCheck != null)
+			{
+				importFoodsAsNoteCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				importFoodsAsNoteCheck.removeFromParent();
+				importFoodsAsNoteCheck.dispose();
+				importFoodsAsNoteCheck = null;
 			}
 			
 			super.dispose();

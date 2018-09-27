@@ -1540,7 +1540,8 @@ package treatments
 					bwFoodLoaderButton.validate();
 					bwFoodsContainer.validate();
 					bwFoodLoaderButton.x = contentWidth - bwFoodLoaderButton.width;
-					bwNotes.text = addedFoodNames.join(", ");
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_IMPORT_FOODS_AS_NOTE) == "true")
+						bwNotes.text = addedFoodNames.join(", ");
 				}
 				
 				//Update critical data
