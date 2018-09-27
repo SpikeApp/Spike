@@ -5,6 +5,8 @@ package treatments
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
+	import flash.net.URLRequest;
+	import flash.net.navigateToURL;
 	import flash.system.System;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
@@ -101,6 +103,7 @@ package treatments
 		private static var isMgDl:Boolean;
 		private static var fiberPrecision:Number;
 		private static var selectedExerciseID:int = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_15MIN;
+		private static var dontUpdateBG:Boolean = false;
 		
 		/* Objects */
 		private static var currentProfile:Profile;
@@ -211,6 +214,8 @@ package treatments
 		private static var bwFinalCalculatedCarbsLabel:Label;
 		private static var bwFinalCalculatedCarbsStepper:NumericStepper;
 		private static var finalCalculationsLabel:Label;
+		private static var bolusWizardMainActionContainer:LayoutGroup;
+		private static var instructionsButton:Button;
 		
 		public function BolusWizard()
 		{
@@ -252,6 +257,8 @@ package treatments
 			insulinPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION));
 			carbsPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION));
 			fiberPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION));
+			
+			dontUpdateBG = false;
 		}
 		
 		private static function createDisplayObjects():void
@@ -308,7 +315,7 @@ package treatments
 			bwGlucoseLabelContainer.addChild(bwGlucoseLabel);
 			
 			bwGlucoseStepper = LayoutFactory.createNumericStepper(isMgDl ? 40 : Math.round(BgReading.mgdlToMmol(40) * 10) / 10, isMgDl ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, 0, isMgDl ? 1 : 0.1);
-			bwGlucoseStepper.addEventListener(Event.CHANGE, delayCalculations);
+			bwGlucoseStepper.addEventListener(Event.CHANGE, onBGChanged);
 			bwGlucoseStepper.validate();
 			bwCurrentGlucoseContainer.addChild(bwGlucoseStepper);
 			
@@ -926,14 +933,12 @@ package treatments
 			bwMainContainer.addChild(bwFinalCalculationsContainer);
 			
 			//Action Buttons
-			var bolusWizardActionLayout:HorizontalLayout = new HorizontalLayout();
-			bolusWizardActionLayout.horizontalAlign = HorizontalAlign.CENTER;
-			bolusWizardActionLayout.gap = 5;
+			bolusWizardMainActionContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
+			bwMainContainer.addChild(bolusWizardMainActionContainer);
 			
-			bolusWizardActionContainer = new LayoutGroup();
+			bolusWizardActionContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
 			bolusWizardActionContainer.width = contentWidth;
-			bolusWizardActionContainer.layout = bolusWizardActionLayout;
-			bwMainContainer.addChild(bolusWizardActionContainer);
+			bolusWizardMainActionContainer.addChild(bolusWizardActionContainer);
 			
 			bolusWizardCancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
 			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, onCloseCallout);
@@ -943,7 +948,9 @@ package treatments
 			bolusWizardAddButton.addEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
 			bolusWizardActionContainer.addChild(bolusWizardAddButton);
 			
-			bwMainContainer.addChild(bolusWizardActionContainer);
+			instructionsButton = LayoutFactory.createButton("INSTRUCTIONS");
+			instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsButtonTriggered);
+			bolusWizardMainActionContainer.addChild(instructionsButton);
 			
 			//Final Adjustments
 			bwWizardScrollContainer.addChild(bwMainContainer);
@@ -954,6 +961,18 @@ package treatments
 			onShowHideSicknessAdjustment();
 			onShowHideOtherCorrection();
 			onShowHideExtendedBolusReminder();
+		}
+		
+		private static function onInstructionsButtonTriggered(e:Event):void
+		{
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Bolus-Wizard"));
+		}
+		
+		private static function onBGChanged(e:Event):void
+		{
+			dontUpdateBG = true;
+			
+			delayCalculations();
 		}
 		
 		private static function sortInsulinsByDefault(insulins:Array):Array
@@ -983,20 +1002,23 @@ package treatments
 			var now:Number = new Date().valueOf();
 			
 			//Current Glucose
-			latestBgReading = BgReading.lastWithCalculatedValue();
-			if (latestBgReading != null && now - latestBgReading.timestamp <= TIME_11_MINUTES) //Only use BG readings less than 11 minutes ago.
+			if (!dontUpdateBG)
 			{
-				currentBG = Math.round(latestBgReading.calculatedValue);
+				latestBgReading = BgReading.lastWithCalculatedValue();
+				if (latestBgReading != null && now - latestBgReading.timestamp <= TIME_11_MINUTES) //Only use BG readings less than 11 minutes ago.
+				{
+					currentBG = Math.round(latestBgReading.calculatedValue);
+				}
+				else
+				{
+					bwGlucoseCheck.isSelected = false
+					currentBG = 0;
+				}
+				
+				bwGlucoseStepper.value = isMgDl ? currentBG : Math.round(BgReading.mgdlToMmol(currentBG) * 100) / 100;
+				bwCurrentGlucoseContainer.validate();
+				bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
 			}
-			else
-			{
-				bwGlucoseCheck.isSelected = false
-				currentBG = 0;
-			}
-			
-			bwGlucoseStepper.value = isMgDl ? currentBG : Math.round(BgReading.mgdlToMmol(currentBG) * 100) / 100;
-			bwCurrentGlucoseContainer.validate();
-			bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
 			
 			//Current Trend
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
@@ -1328,9 +1350,13 @@ package treatments
 			trace(ObjectUtil.toString(record));
 			
 			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && Math.abs(outcome - targetBG) <= acceptedMargin;
+			var formattedTarget:Number = isMgDl ? Number(currentProfile.targetGlucoseRates) : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10;
+			var formattedErrorMargin:Number = isMgDl ? 10 : Math.round(BgReading.mgdlToMmol(10) * 100) / 100;
 			
 			if (isInTarget) 
 			{
+				trace("1");
+				
 				bgIsWithinTarget = true;
 				
 				if (bolusWizardAddButton != null)
@@ -1338,12 +1364,14 @@ package treatments
 				
 				bwSuggestionLabel.text = "Projected outcome: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
 				if (outcome == targetBG)
-					bwSuggestionLabel.text += "\n" + "Blood glucose in target (" + (isMgDl ? currentProfile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10) + ")";
+					bwSuggestionLabel.text += "\n\n" + "Blood glucose in target (" + formattedTarget + ")";
 				else
-					bwSuggestionLabel.text += "\n" + "Blood glucose in target (" + (isMgDl ? currentProfile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10) + ")" + " or within " + (isMgDl ? 10 : Math.round(BgReading.mgdlToMmol(10) * 100) / 100) + " " + GlucoseHelper.getGlucoseUnit() + " difference";
+					bwSuggestionLabel.text += "\n\n" + "Blood glucose in target (" + formattedTarget + ")" + " or within " + formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit() + " difference";
 			}
 			else if (record.insulin < 0) 
 			{
+				trace("2");
+				
 				bgIsWithinTarget = false;
 				
 				if (bolusWizardAddButton != null)
@@ -1355,14 +1383,24 @@ package treatments
 				var insulinToCoverCarbs:Number = (record.carbsneeded / isf) + (record.carbs / isf);
 				var bgImpact:Number = insulinToCoverCarbs * isf;
 				var outcomeWithCarbsTreatment:Number = outcome + bgImpact;
+				outcomeWithCarbsTreatment = isMgDl ? Math.round(outcomeWithCarbsTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithCarbsTreatment) * 10) / 10;
 				
 				bwSuggestionLabel.text = "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
-				bwSuggestionLabel.text += "\n" + "Outcome with calculated treatment: " + (isMgDl ? Math.round(outcomeWithCarbsTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithCarbsTreatment) * 10) / 10);
-				bwSuggestionLabel.text += "\n" + "Carbs needed: " + record.carbsneeded + "g";
-				bwSuggestionLabel.text += "\n" + "Insulin equivalent: " + record.insulin + "U"; 
+				bwSuggestionLabel.text += "\n\n" + "Outcome with calculated treatment: " + outcomeWithCarbsTreatment;
+				
+				if (record.carbs <= 0)
+					bwSuggestionLabel.text += "\n\n" + "Carbs needed: " + record.carbsneeded + "g";
+				else
+					bwSuggestionLabel.text += "\n\n" + "Extra carbs needed: " + record.carbsneeded + "g";
+				
+				bwSuggestionLabel.text += "\n\n" + "Insulin equivalent: " + record.insulin + "U"; 
+				
+				if (record.othercorrection > 0 && Math.abs(formattedTarget - outcomeWithCarbsTreatment) > formattedErrorMargin)
+					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
 			}
 			else
 			{
+				trace("3");
 				bgIsWithinTarget = false;
 				
 				if (bolusWizardAddButton != null)
@@ -1379,12 +1417,16 @@ package treatments
 					var insulinToCoverExtraCarbs:Number = (record.carbs / isf);
 					var bgImpactWithExtraCarbs:Number = insulinToCoverExtraCarbs * isf;
 					outcomeWithInsulinTreatment += bgImpactWithExtraCarbs;
+					outcomeWithInsulinTreatment = isMgDl ? Math.round(outcomeWithInsulinTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithInsulinTreatment) * 10) / 10
 				}
 				
 				//Update Suggestion Label
 				bwSuggestionLabel.text = "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
-				bwSuggestionLabel.text += "\n" + "Outcome with calculated treatment: " + (isMgDl ? Math.round(outcomeWithInsulinTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithInsulinTreatment) * 10) / 10);
-				bwSuggestionLabel.text += "\n" + "Insulin needed: " + record.insulin + "U";
+				bwSuggestionLabel.text += "\n\n" + "Outcome with calculated treatment: " + outcomeWithInsulinTreatment;
+				if (record.insulin > 0)
+					bwSuggestionLabel.text += "\n\n" + "Insulin needed: " + record.insulin + "U";
+				if (record.othercorrection > 0 && Math.abs(formattedTarget - outcomeWithInsulinTreatment) > formattedErrorMargin)
+					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
 			}
 			
 			//Update Final Calculation Components
@@ -2366,6 +2408,14 @@ package treatments
 				bolusWizardAddButton = null;
 			}
 			
+			if (instructionsButton != null)
+			{
+				instructionsButton.removeEventListener(Event.TRIGGERED, onInstructionsButtonTriggered);
+				instructionsButton.removeFromParent();
+				instructionsButton.dispose();
+				instructionsButton = null;
+			}
+			
 			if (bwGlucoseCheck != null)
 			{
 				bwGlucoseCheck.removeEventListener(Event.CHANGE, performCalculations);
@@ -2802,6 +2852,13 @@ package treatments
 				bolusWizardActionContainer.removeFromParent();
 				bolusWizardActionContainer.dispose();
 				bolusWizardActionContainer = null;
+			}
+			
+			if (bolusWizardMainActionContainer != null)
+			{
+				bolusWizardMainActionContainer.removeFromParent();
+				bolusWizardMainActionContainer.dispose();
+				bolusWizardMainActionContainer = null;
 			}
 			
 			if (bolusWizardConfigureCallout != null)

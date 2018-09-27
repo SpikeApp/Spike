@@ -121,6 +121,8 @@ package treatments.food.ui
 		private var foodInserter:FoodInserter;
 		private var footerContainer:LayoutGroup;
 		private var foodServingSizePickerList:PickerList;
+		private var instructionsButton:Button;
+		private var mainActionsContainer:LayoutGroup;
 		
 		//PROPERTIES
 		public var cartList:Array;
@@ -480,15 +482,23 @@ package treatments.food.ui
 			foodDetailsContainer.addChild(nutritionFacts);
 			
 			//Actions
-			actionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 0);
+			mainActionsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
+			mainActionsContainer.width = width;
+			(mainActionsContainer.layout as VerticalLayout).paddingTop = 4;
+			if (loadedFromExternalContainer) (mainActionsContainer.layout as VerticalLayout).paddingBottom = 10;
+			mainContentContainer.addChild(mainActionsContainer);
+			
+			actionsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 5);
 			actionsContainer.width = width;
-			(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
-			if (loadedFromExternalContainer) (actionsContainer.layout as HorizontalLayout).paddingBottom = 10;
-			mainContentContainer.addChild(actionsContainer);
+			mainActionsContainer.addChild(actionsContainer);
 			
 			finishButton = LayoutFactory.createButton("FINISH");
 			finishButton.addEventListener(starling.events.Event.TRIGGERED, onCompleteFoodManager);
 			actionsContainer.addChild(finishButton);
+			
+			instructionsButton = LayoutFactory.createButton("INSTRUCTIONS");
+			instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsTriggered);
+			mainActionsContainer.addChild(instructionsButton);
 			
 			//Setup Initial Screen
 			if (defaultScreen == "favorites")
@@ -511,6 +521,11 @@ package treatments.food.ui
 			{
 				databaseAPISelector.selectedIndex = 4;
 			}
+		}
+		
+		private function onInstructionsTriggered(e:Event):void
+		{
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Food-Manager"));
 		}
 		
 		private function onServingChanged(e:Event):void
@@ -2251,6 +2266,14 @@ package treatments.food.ui
 				finishButton = null;
 			}
 			
+			if (instructionsButton != null)
+			{
+				instructionsButton.removeEventListener(Event.TRIGGERED, onInstructionsTriggered);
+				instructionsButton.removeFromParent();
+				instructionsButton.dispose();
+				instructionsButton = null;
+			}
+			
 			if (foodInserter != null)
 			{
 				foodInserter.removeEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
@@ -2264,6 +2287,13 @@ package treatments.food.ui
 				actionsContainer.removeFromParent();
 				actionsContainer.dispose();
 				actionsContainer = null;
+			}
+			
+			if (mainActionsContainer != null)
+			{
+				mainActionsContainer.removeFromParent();
+				mainActionsContainer.dispose();
+				mainActionsContainer = null;
 			}
 			
 			if (addFoodContainer != null)
