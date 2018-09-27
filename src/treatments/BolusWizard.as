@@ -2021,11 +2021,11 @@ package treatments
 				AlertManager.showActionAlert
 					(
 						"Disclaimer",
-						"Bolus Wizard disclaimer message!",
+						"PLEASE READ CAREFULLY!\nThe Bolus Wizard provides information and content that has been assembled with the greatest of care and to the very best of our knowledge from internal and external sources. We nevertheless wish to emphasize that the Bolus Wizard is only to be used to provide you with information and to build awareness but it cannot replace consultation with a healthcare professional. Under no circumstances does Spike issue medical therapy recommendations or medical advice of any kind. For questions on the therapy and the settings that best apply to you (ISF, I:C, etc.), we recommend contacting a healthcare professional. No content - no matter whether provided by Spike itself, our cooperation partners, or users - can be understood as supplementing or replacing information from a healthcare professional.\n\nBy agreeing to the terms above indicates that you have read them and have agreed. All calculations must be confirmed before use. The suggested results are not a substitute for clinical judgment. Neither the author nor any other party involved in the preparation or publication of Spike and the Bolus Wizard shall be liable for use or misuse.\n\nWe strongly advise against using the Bolus Wizard if your sensor is giving inaccurate readings. This tends to happen during the first 24-48h after insertion or when the sensor is approaching end-of-life.",
 						Number.NaN,
 						[
-							{ label: "Cancel" },
-							{ label: "I Accept", triggered: disclaimerAccepted }
+							{ label: "CANCEL" },
+							{ label: "I AGREE", triggered: disclaimerAccepted }
 						],
 						HorizontalAlign.JUSTIFY
 					);
