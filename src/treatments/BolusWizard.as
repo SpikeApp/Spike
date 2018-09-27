@@ -719,7 +719,7 @@ package treatments
 			bwExerciseAmountContainer.addChild(bwExerciseAmountLabel);
 			
 			bwExerciseAmountStepper = LayoutFactory.createNumericStepper(0, 100, Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_15MIN)), 1);
-			bwExerciseAmountStepper.addEventListener(Event.CHANGE, onExerciseChanged);
+			bwExerciseAmountStepper.addEventListener(Event.CHANGE, onExerciseAdjustmentChanged);
 			bwExerciseAmountStepper.validate();
 			bwExerciseAmountContainer.addChild(bwExerciseAmountStepper);
 			bwExerciseAmountStepper.x = contentWidth - bwExerciseAmountStepper.width + 12;
@@ -746,8 +746,8 @@ package treatments
 			bwSicknessAmountLabel.paddingLeft = 25;
 			bwSicknessAmountContainer.addChild(bwSicknessAmountLabel);
 			
-			bwSicknessAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, 1);
-			bwSicknessAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
+			bwSicknessAmountStepper = LayoutFactory.createNumericStepper(0, 100, Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_SICKNESS_ADJUSTMENT)), 1);
+			bwSicknessAmountStepper.addEventListener(Event.CHANGE, onSicknessAdjustmentChanged);
 			bwSicknessAmountStepper.validate();
 			bwSicknessAmountContainer.addChild(bwSicknessAmountStepper);
 			
@@ -954,26 +954,6 @@ package treatments
 			onShowHideSicknessAdjustment();
 			onShowHideOtherCorrection();
 			onShowHideExtendedBolusReminder();
-		}
-		
-		private static function onExerciseChanged(e:Event):void
-		{
-			CommonSettings.setCommonSetting(selectedExerciseID, String(bwExerciseAmountStepper.value), true, false);
-			
-			delayCalculations();
-		}
-		
-		private static function onPlaySound(e:Event):void
-		{
-			var selectedItemData:Object = DefaultListItemRenderer(Button(e.currentTarget).parent).data;
-			var soundFile:String = selectedItemData.soundFile;
-			if(soundFile != "" && soundFile != "default" && soundFile != "no_sound")
-				SpikeANE.playSound(soundFile);
-		}
-		
-		private static function onSoundListClose():void
-		{
-			SpikeANE.stopPlayingSound();
 		}
 		
 		private static function sortInsulinsByDefault(insulins:Array):Array
@@ -2005,6 +1985,33 @@ package treatments
 				bwExtendedBolusReminderDateTimeContainer.removeFromParent();
 			
 			performCalculations();
+		}
+		
+		private static function onExerciseAdjustmentChanged(e:Event):void
+		{
+			CommonSettings.setCommonSetting(selectedExerciseID, String(bwExerciseAmountStepper.value), true, false);
+			
+			delayCalculations();
+		}
+		
+		private static function onSicknessAdjustmentChanged(e:Event):void
+		{
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_SICKNESS_ADJUSTMENT, String(bwSicknessAmountStepper.value), true, false);
+			
+			delayCalculations();
+		}
+		
+		private static function onPlaySound(e:Event):void
+		{
+			var selectedItemData:Object = DefaultListItemRenderer(Button(e.currentTarget).parent).data;
+			var soundFile:String = selectedItemData.soundFile;
+			if(soundFile != "" && soundFile != "default" && soundFile != "no_sound")
+				SpikeANE.playSound(soundFile);
+		}
+		
+		private static function onSoundListClose():void
+		{
+			SpikeANE.stopPlayingSound();
 		}
 		
 		private static function onAddBolusWizardTreatment(e:Event):void
