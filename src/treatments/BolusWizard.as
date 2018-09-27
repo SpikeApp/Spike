@@ -1022,7 +1022,6 @@ package treatments
 			
 			//Current Trend
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
-			//bwTrendCheck.isSelected = latestBgReading != null ? true : false;
 			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
 			currentTrendCorrection = 0;
 			currentTrendCorrectionUnit = "U";
@@ -1060,7 +1059,6 @@ package treatments
 				}
 			}
 			
-			//if (currentTrendCorrection == 0) bwTrendCheck.isSelected = false;
 			bwCurrentTrendLabel.text = currentTrendCorrection + currentTrendCorrectionUnit;
 			bwTrendLabel.validate();
 			bwCurrentTrendLabel.validate();
@@ -1196,13 +1194,11 @@ package treatments
 				return;
 			}
 			
-			//var targetBG:Number = isMgDl ? Number(currentProfile.targetGlucoseRates) : Math.round(BgReading.mmolToMgdl(Number(currentProfile.targetGlucoseRates)));
 			var targetBG:Number = Number(currentProfile.targetGlucoseRates);
 			var targetBGLow:Number = targetBG;
 			var targetBGHigh:Number = targetBG;
 			var acceptedMargin:Number = 10;
 			
-			//var isf:Number = isMgDl ? Number(currentProfile.insulinSensitivityFactors) : Math.round(BgReading.mmolToMgdl(Number(currentProfile.insulinSensitivityFactors)));
 			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 			var ic:Number = Number(currentProfile.insulinToCarbRatios);
 			var bg:Number = 0;
@@ -1355,8 +1351,6 @@ package treatments
 			
 			if (isInTarget) 
 			{
-				trace("1");
-				
 				bgIsWithinTarget = true;
 				
 				if (bolusWizardAddButton != null)
@@ -1370,8 +1364,6 @@ package treatments
 			}
 			else if (record.insulin < 0) 
 			{
-				trace("2");
-				
 				bgIsWithinTarget = false;
 				
 				if (bolusWizardAddButton != null)
@@ -1400,7 +1392,6 @@ package treatments
 			}
 			else
 			{
-				trace("3");
 				bgIsWithinTarget = false;
 				
 				if (bolusWizardAddButton != null)
@@ -1417,8 +1408,9 @@ package treatments
 					var insulinToCoverExtraCarbs:Number = (record.carbs / isf);
 					var bgImpactWithExtraCarbs:Number = insulinToCoverExtraCarbs * isf;
 					outcomeWithInsulinTreatment += bgImpactWithExtraCarbs;
-					outcomeWithInsulinTreatment = isMgDl ? Math.round(outcomeWithInsulinTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithInsulinTreatment) * 10) / 10
 				}
+				
+				outcomeWithInsulinTreatment = isMgDl ? Math.round(outcomeWithInsulinTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithInsulinTreatment) * 10) / 10;
 				
 				//Update Suggestion Label
 				bwSuggestionLabel.text = "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
