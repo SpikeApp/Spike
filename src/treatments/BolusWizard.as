@@ -100,6 +100,7 @@ package treatments
 		private static var carbsPrecision:Number;
 		private static var isMgDl:Boolean;
 		private static var fiberPrecision:Number;
+		private static var selectedExerciseID:int = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_15MIN;
 		
 		/* Objects */
 		private static var currentProfile:Profile;
@@ -717,8 +718,8 @@ package treatments
 			bwExerciseAmountLabel.paddingLeft = 25;
 			bwExerciseAmountContainer.addChild(bwExerciseAmountLabel);
 			
-			bwExerciseAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, 1);
-			bwExerciseAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
+			bwExerciseAmountStepper = LayoutFactory.createNumericStepper(0, 100, Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_15MIN)), 1);
+			bwExerciseAmountStepper.addEventListener(Event.CHANGE, onExerciseChanged);
 			bwExerciseAmountStepper.validate();
 			bwExerciseAmountContainer.addChild(bwExerciseAmountStepper);
 			bwExerciseAmountStepper.x = contentWidth - bwExerciseAmountStepper.width + 12;
@@ -953,6 +954,13 @@ package treatments
 			onShowHideSicknessAdjustment();
 			onShowHideOtherCorrection();
 			onShowHideExtendedBolusReminder();
+		}
+		
+		private static function onExerciseChanged(e:Event):void
+		{
+			CommonSettings.setCommonSetting(selectedExerciseID, String(bwExerciseAmountStepper.value), true, false);
+			
+			delayCalculations();
 		}
 		
 		private static function onPlaySound(e:Event):void
@@ -1596,219 +1604,317 @@ package treatments
 		{
 			if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 0)
 			{
-				bwExerciseAmountStepper.value = 0;
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_15MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_15MIN));
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_15MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_15MIN));
+				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 1)
 			{
-				bwExerciseAmountStepper.value = 0;
+				if (bwExerciseTimePicker.selectedIndex == 0)
+				{
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_30MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_30MIN));
+				}
+				else if (bwExerciseTimePicker.selectedIndex == 1)
+				{
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_30MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_30MIN));
+				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 2)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 10;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_45MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_45MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 0;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_45MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_45MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 3)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 15;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_60MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_60MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 0;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_60MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_60MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 4)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 20;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_90MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_90MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 7;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_90MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_90MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 5)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 30;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_120MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_120MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 10;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_120MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_120MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 0 && bwExerciseDurationPicker.selectedIndex == 6)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 45;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_180MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_180MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 15;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_180MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_LOW_180MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 0)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 5;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_15MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_15MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 0;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_15MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_15MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 1)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 15;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_30MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_30MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 10;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_30MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_30MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 2)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 20;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_45MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_45MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 15;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_45MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_45MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 3)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 30;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_60MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_60MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 20;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_60MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_60MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 4)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 40;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_90MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_90MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 25;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_90MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_90MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 5)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 55;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_120MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_120MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 25;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_120MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_120MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 1 && bwExerciseDurationPicker.selectedIndex == 6)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 75;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_180MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_MODERATE_180MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 30;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_180MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_MODERATE_180MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 0)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 10;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_15MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_15MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 0;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_15MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_15MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 1)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 20;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_30MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_30MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 20;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_30MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_30MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 2)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 30;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_45MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_45MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 30;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_45MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_45MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 3)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 45;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_60MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_60MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 40;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_60MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_60MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 4)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 60;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_90MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_90MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 45;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_90MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_90MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 5)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 75;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_120MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_120MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 50;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_120MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_120MIN));
 				}
 			}
 			else if (bwExerciseIntensityPicker.selectedIndex == 2 && bwExerciseDurationPicker.selectedIndex == 6)
 			{
 				if (bwExerciseTimePicker.selectedIndex == 0)
 				{
-					bwExerciseAmountStepper.value = 85;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_180MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_HIGH_180MIN));
 				}
 				else if (bwExerciseTimePicker.selectedIndex == 1)
 				{
-					bwExerciseAmountStepper.value = 60;
+					selectedExerciseID = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_180MIN;
+					
+					bwExerciseAmountStepper.value = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_AFTER_HIGH_180MIN));
 				}
 			}
 		}
