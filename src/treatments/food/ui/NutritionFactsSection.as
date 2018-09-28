@@ -36,6 +36,7 @@ package treatments.food.ui
 		private function createContent():void
 		{
 			title = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+			title.wordWrap = true
 			title.width = width;
 			addChild(title);
 			

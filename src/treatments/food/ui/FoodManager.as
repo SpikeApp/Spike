@@ -32,6 +32,9 @@ package treatments.food.ui
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
+	import feathers.controls.text.TextBlockTextRenderer;
+	import feathers.controls.text.TextFieldTextRenderer;
+	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
@@ -51,6 +54,7 @@ package treatments.food.ui
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
+	import starling.text.TextFormat;
 	import starling.textures.Texture;
 	import starling.utils.SystemUtil;
 	
@@ -62,6 +66,7 @@ package treatments.food.ui
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	import utils.UniqueId;
 
 	public class FoodManager extends LayoutGroup
@@ -382,9 +387,8 @@ package treatments.food.ui
 				item.iconSourceField = "icon";
 				item.accessoryLabelProperties.wordWrap = true;
 				item.defaultLabelProperties.wordWrap = true;
-				item.width = 220;
-				item.accessoryOffsetX = -20;
-				item.paddingRight = -20;
+				item.width = 250;
+				item.paddingRight = 30;
 				
 				return item;
 			};
@@ -424,7 +428,7 @@ package treatments.food.ui
 			
 			foodAmountInput = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
 			foodAmountInput.maxChars = 5;
-			foodAmountInput.height = 25;
+			foodAmountInput.height = 30;
 			foodAmountInput.addEventListener(Event.CHANGE, onFoodAmountChanged);
 			addFoodContainer.addChild(foodAmountInput);
 			
@@ -756,6 +760,7 @@ package treatments.food.ui
 			{
 				globalMultiplier = 1;
 				globalUnit = "";
+				foodAmountInput.text = String(selectedFood.servingSize);
 			}
 			
 			onFoodAmountChanged(null);
@@ -872,6 +877,39 @@ package treatments.food.ui
 			totalPages = paginationProperties.totalPages;
 			
 			paginationLabel.text = currentPage + "/" + totalPages;
+			
+			if (currentPage >= 100 && Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			{
+				if (paginationLabel.fontStyles == null)
+				{
+					paginationLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.MIDDLE);
+				}
+				
+				paginationLabel.fontStyles.size = 10;
+			}
+			else if (currentPage >= 10 && Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
+			{
+				if (paginationLabel.fontStyles == null)
+				{
+					paginationLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.MIDDLE);
+				}
+				
+				paginationLabel.fontStyles.size = 12;
+			}
+			else
+			{
+				if (paginationLabel.fontStyles == null)
+				{
+					paginationLabel.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.CENTER, VerticalAlign.MIDDLE);
+				}
+				
+				paginationLabel.fontStyles.size = 14;
+			}
+			
+			firstPageButton.focusManager = null;
+			previousPageButton.focusManager = null;
+			lastPageButton.focusManager = null;
+			previousPageButton.focusManager = null;
 			
 			if (currentPage == 1)
 			{

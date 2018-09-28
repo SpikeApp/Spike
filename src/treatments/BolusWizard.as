@@ -312,6 +312,7 @@ package treatments
 			bwGlucoseLabelContainer.addChild(bwGlucoseCheck);
 			
 			bwGlucoseLabel = LayoutFactory.createLabel("Blood Glucose");
+			bwGlucoseLabel.wordWrap = true;
 			bwGlucoseLabelContainer.addChild(bwGlucoseLabel);
 			
 			bwGlucoseStepper = LayoutFactory.createNumericStepper(isMgDl ? 40 : Math.round(BgReading.mgdlToMmol(40) * 10) / 10, isMgDl ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, 0, isMgDl ? 1 : 0.1);
@@ -336,6 +337,7 @@ package treatments
 			bwCarbsLabelContainer.addChild(bwCarbsCheck);
 			
 			bwCarbsLabel = LayoutFactory.createLabel("Carbs");
+			bwCarbsLabel.wordWrap = true;
 			bwCarbsLabelContainer.addChild(bwCarbsLabel);
 			
 			bwCarbsStepper = LayoutFactory.createNumericStepper(0, 500, 0, 0.5);
@@ -357,6 +359,7 @@ package treatments
 			bwMainContainer.addChild(bwFoodsContainer);
 			
 			bwFoodsLabel = LayoutFactory.createLabel("Foods");
+			bwFoodsLabel.wordWrap = true;
 			bwFoodsLabel.paddingLeft = 25;
 			bwFoodsContainer.addChild(bwFoodsLabel);
 			
@@ -375,6 +378,7 @@ package treatments
 			bwMainContainer.addChild(bwCarbsOffsetContainer);
 			
 			bwCarbsOffsetLabel = LayoutFactory.createLabel("Carbs Offset (Min)");
+			bwCarbsOffsetLabel.wordWrap = true;
 			bwCarbsOffsetLabel.paddingLeft = 25;
 			bwCarbsOffsetContainer.addChild(bwCarbsOffsetLabel);
 			
@@ -390,6 +394,7 @@ package treatments
 			bwMainContainer.addChild(bwCarbTypeContainer);
 			
 			bwCarbTypeLabel = LayoutFactory.createLabel("Carb Type");
+			bwCarbTypeLabel.wordWrap = true;
 			bwCarbTypeLabel.paddingLeft = 25;
 			bwCarbTypeContainer.addChild(bwCarbTypeLabel);
 			
@@ -428,6 +433,7 @@ package treatments
 			bwMainContainer.addChild(bwInsulinTypeContainer);
 			
 			bwInsulinTypeLabel = LayoutFactory.createLabel("Insulin Type");
+			bwInsulinTypeLabel.wordWrap = true;
 			bwInsulinTypeContainer.addChild(bwInsulinTypeLabel);
 			
 			bwInsulinTypePicker = LayoutFactory.createPickerList();
@@ -527,6 +533,7 @@ package treatments
 			
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
 			bwTrendLabel = LayoutFactory.createLabel("Trend" + " " + currentTrendArrow);
+			bwTrendLabel.wordWrap = true;
 			bwTrendContainer.addChild(bwTrendLabel);
 			
 			var currentTrendCorrection:Number = 0;
@@ -566,6 +573,7 @@ package treatments
 			}
 			
 			bwCurrentTrendLabel = LayoutFactory.createLabel(currentTrendCorrection + currentTrendCorrectionUnit);
+			bwCurrentTrendLabel.wordWrap = true;
 			bwTrendContainer.addChild(bwCurrentTrendLabel);
 			
 			bwCurrentTrendLabel.validate();
@@ -586,6 +594,7 @@ package treatments
 			bwIOBLabelContainer.addChild(bwIOBCheck);
 			
 			bwIOBLabel = LayoutFactory.createLabel("IOB");
+			bwIOBLabel.wordWrap = true;
 			bwIOBLabelContainer.addChild(bwIOBLabel);
 			
 			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
@@ -609,6 +618,7 @@ package treatments
 			bwCOBLabelContainer.addChild(bwCOBCheck);
 			
 			bwCOBLabel = LayoutFactory.createLabel("COB");
+			bwCOBLabel.wordWrap = true;
 			bwCOBLabelContainer.addChild(bwCOBLabel);
 			
 			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
@@ -632,6 +642,7 @@ package treatments
 			bwExerciseLabelContainer.addChild(bwExerciseCheck);
 			
 			bwExerciseLabel = LayoutFactory.createLabel("Exercise Adjustment");
+			bwExerciseLabel.wordWrap = true;
 			bwExerciseLabelContainer.addChild(bwExerciseLabel);
 			
 			bwExerciseSettingsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
@@ -642,6 +653,7 @@ package treatments
 			bwExerciseSettingsContainer.addChild(bwExerciseTimeContainer);
 			
 			bwExerciseTimeLabel = LayoutFactory.createLabel("Time");
+			bwExerciseTimeLabel.wordWrap = true;
 			bwExerciseTimeLabel.paddingLeft = 25;
 			bwExerciseTimeContainer.addChild(bwExerciseTimeLabel);
 			
@@ -666,6 +678,7 @@ package treatments
 			bwExerciseSettingsContainer.addChild(bwExerciseIntensityContainer);
 			
 			bwExerciseIntensityLabel = LayoutFactory.createLabel("Intensity");
+			bwExerciseIntensityLabel.wordWrap = true;
 			bwExerciseIntensityLabel.paddingLeft = 25;
 			bwExerciseIntensityContainer.addChild(bwExerciseIntensityLabel);
 			
@@ -691,6 +704,7 @@ package treatments
 			bwExerciseSettingsContainer.addChild(bwExerciseDurationContainer);
 			
 			bwExerciseDurationLabel = LayoutFactory.createLabel("Duration");
+			bwExerciseDurationLabel.wordWrap = true;
 			bwExerciseDurationLabel.paddingLeft = 25;
 			bwExerciseDurationContainer.addChild(bwExerciseDurationLabel);
 			
@@ -722,6 +736,7 @@ package treatments
 			bwExerciseSettingsContainer.addChild(bwExerciseAmountContainer);
 			
 			bwExerciseAmountLabel = LayoutFactory.createLabel("Reduction (%)");
+			bwExerciseAmountLabel.wordWrap = true;
 			bwExerciseAmountLabel.paddingLeft = 25;
 			bwExerciseAmountContainer.addChild(bwExerciseAmountLabel);
 			
@@ -744,12 +759,14 @@ package treatments
 			bwSicknessLabelContainer.addChild(bwSicknessCheck);
 			
 			bwSicknessLabel = LayoutFactory.createLabel("Sickness Adjustment");
+			bwSicknessLabel.wordWrap = true;
 			bwSicknessLabelContainer.addChild(bwSicknessLabel);
 			
 			bwSicknessAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwSicknessAmountContainer.width = contentWidth;
 			
 			bwSicknessAmountLabel = LayoutFactory.createLabel("Increase (%)");
+			bwSicknessAmountLabel.wordWrap = true;
 			bwSicknessAmountLabel.paddingLeft = 25;
 			bwSicknessAmountContainer.addChild(bwSicknessAmountLabel);
 			
@@ -775,12 +792,14 @@ package treatments
 			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionCheck);
 			
 			bwOtherCorrectionLabel = LayoutFactory.createLabel("Extra Correction");
+			bwOtherCorrectionLabel.wordWrap = true;
 			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionLabel);
 			
 			bwOtherCorrectionAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwOtherCorrectionAmountContainer.width = contentWidth;
 			
 			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("Amount (U)");
+			bwOtherCorrectionAmountLabel.wordWrap = true;
 			bwOtherCorrectionAmountLabel.paddingLeft = 25;
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountLabel);
 			
@@ -805,6 +824,7 @@ package treatments
 			bwExtendedBolusReminderLabelContainer.addChild(bwExtendedBolusReminderCheck);
 			
 			bwExtendedBolusReminderLabel = LayoutFactory.createLabel("Extended Bolus Reminder");
+			bwExtendedBolusReminderLabel.wordWrap = true;
 			bwExtendedBolusReminderLabelContainer.addChild(bwExtendedBolusReminderLabel);
 			
 			//Extended Bolus Reminder Date/Time Spinner
@@ -896,6 +916,7 @@ package treatments
 			finalCalculationsLabel.width = contentWidth;
 			finalCalculationsLabel.paddingTop = 15;
 			finalCalculationsLabel.paddingBottom = 5;
+			finalCalculationsLabel.wordWrap = true;
 			bwMainContainer.addChild(finalCalculationsLabel);
 			
 			//Wizard Suggestion
@@ -914,6 +935,7 @@ package treatments
 			bwFinalCalculationsContainer.addChild(bwFinalCalculatedInsulinContainer);
 			
 			bwFinalCalculatedInsulinLabel = LayoutFactory.createLabel("Insulin", HorizontalAlign.CENTER);
+			bwFinalCalculatedInsulinLabel.wordWrap = true;
 			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinLabel);
 			
 			bwFinalCalculatedInsulinStepper = LayoutFactory.createNumericStepper(0, 200, 0, insulinPrecision);
@@ -924,6 +946,7 @@ package treatments
 			bwFinalCalculationsContainer.addChild(bwFinalCalculatedCarbsContainer);
 			
 			bwFinalCalculatedCarbsLabel = LayoutFactory.createLabel("Carbs", HorizontalAlign.CENTER);
+			bwFinalCalculatedCarbsLabel.wordWrap = true;
 			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsLabel);
 			
 			bwFinalCalculatedCarbsStepper = LayoutFactory.createNumericStepper(0, 1000, 0, carbsPrecision);
@@ -1136,6 +1159,7 @@ package treatments
 			
 			if (missedSettingsLabel != null) missedSettingsLabel.removeFromParent(true);
 			missedSettingsLabel = LayoutFactory.createLabel("Profile not configured!", HorizontalAlign.CENTER);
+			missedSettingsLabel.wordWrap = true;
 			missedSettingsLabel.width = contentWidth;
 			missedSettingsContainer.addChild(missedSettingsLabel);
 			
