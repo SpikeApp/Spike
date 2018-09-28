@@ -316,16 +316,19 @@ package treatments.food.ui
 			addFavoriteImage = new Image(MaterialDeepGreyAmberMobileThemeIcons.addTexture);
 			addFavoriteImage.scale = 1;
 			addFavoriteImage.touchable = false;
+			addFavoriteImage.y = 5;
 			addFavorite.addChild(addFavoriteImage);
 			
 			addFavoriteBackground = new Quad(addFavoriteImage.bounds.width + 10, addFavoriteImage.bounds.height, 0xFF0000);
 			addFavoriteBackground.alpha = 0;
 			addFavoriteBackground.touchable = false;
+			addFavoriteBackground.y = 5;
 			addFavorite.addChildAt(addFavoriteBackground, 0);
 			
 			addFavoriteHitArea = new Quad(addFavoriteImage.bounds.width, addFavoriteImage.bounds.height, 0x00FF00);
 			addFavoriteHitArea.alpha = 0;
 			addFavoriteHitArea.touchable = true;
+			addFavoriteHitArea.y = 5;
 			addFavorite.addChild(addFavoriteHitArea);
 			
 			//Preloader
@@ -988,7 +991,6 @@ package treatments.food.ui
 			basketPreloaderContainer.readjustLayout();
 			basketPreloaderContainer.validate();
 			basketSprite.y += 5;
-			addFavorite.y += 5;
 		}
 		
 		private function hideAddFavorite():void
@@ -1410,7 +1412,7 @@ package treatments.food.ui
 				if (foodInserter != null) foodInserter.removeFromParent(true);
 				foodInserter = new FoodInserter(width);
 				foodInserter.addEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
-				var favoriteIndex:int = mainContentContainer.getChildIndex(actionsContainer);
+				var favoriteIndex:int = mainContentContainer.getChildIndex(mainActionsContainer);
 				mainContentContainer.addChildAt(foodInserter, favoriteIndex);
 				actionsContainer.removeChild(finishButton);
 				addFavorite.alpha = 0.2;

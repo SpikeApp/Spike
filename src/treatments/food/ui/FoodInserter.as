@@ -83,7 +83,7 @@ package treatments.food.ui
 			addChild(nameRowContainer);
 			
 			nameInputText = LayoutFactory.createTextInput(false, false, width, HorizontalAlign.CENTER, false, false, false, true, true);
-			nameInputText.height = 25;
+			//nameInputText.height = 25;
 			nameInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			nameContainer = new NutritionFactsSectionWithAction(width);
 			nameContainer.title.text = "Name";
@@ -96,7 +96,7 @@ package treatments.food.ui
 			addChild(brandRowContainer);
 			
 			brandInputText = LayoutFactory.createTextInput(false, false, width, HorizontalAlign.CENTER, false, false, false, true, true);
-			brandInputText.height = 25;
+			//brandInputText.height = 25;
 			brandInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			brandContainer = new NutritionFactsSectionWithAction(width);
 			brandContainer.title.text = "Brand";
@@ -110,7 +110,7 @@ package treatments.food.ui
 			
 			servingUnitInputText = LayoutFactory.createTextInput(false, false, (width - 10) / 2, HorizontalAlign.CENTER);
 			servingUnitInputText.paddingLeft = servingUnitInputText.paddingRight = 0;
-			servingUnitInputText.height = 25;
+			//servingUnitInputText.height = 25;
 			servingUnitInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			servingUnitContainer = new NutritionFactsSectionWithAction((width - 10) / 2);
 			servingUnitContainer.title.text = "Serving Unit";
@@ -119,7 +119,7 @@ package treatments.food.ui
 			
 			linkInputText = LayoutFactory.createTextInput(false, false, (width - 10) / 2, HorizontalAlign.CENTER);
 			linkInputText.paddingLeft = linkInputText.paddingRight = 0;
-			linkInputText.height = 25;
+			//linkInputText.height = 25;
 			linkInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			linkContainer = new NutritionFactsSectionWithAction((width - 10) / 2);
 			linkContainer.title.text = "Link";
@@ -132,7 +132,7 @@ package treatments.food.ui
 			addChild(firstRowContainer);
 			
 			servingSizeInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
-			servingSizeInputText.height = 25;
+			//servingSizeInputText.height = 25;
 			servingSizeInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			servingSizeContainer = new NutritionFactsSectionWithAction(width / 3);
 			servingSizeContainer.title.text = "Serving Size";
@@ -140,7 +140,7 @@ package treatments.food.ui
 			firstRowContainer.addChild(servingSizeContainer);
 			
 			carbsInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
-			carbsInputText.height = 25;
+			//carbsInputText.height = 25;
 			carbsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			carbsContainer = new NutritionFactsSectionWithAction(width / 3);
 			carbsContainer.title.text = "Carbs";
@@ -148,7 +148,7 @@ package treatments.food.ui
 			firstRowContainer.addChild(carbsContainer);
 			
 			fiberInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
-			fiberInputText.height = 25;
+			//fiberInputText.height = 25;
 			fiberInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			fiberContainer = new NutritionFactsSectionWithAction(width / 3);
 			fiberContainer.title.text = "Fiber";
@@ -161,7 +161,7 @@ package treatments.food.ui
 			addChild(secondRowContainer);
 			
 			proteinsInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
-			proteinsInputText.height = 25;
+			//proteinsInputText.height = 25;
 			proteinsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			proteinsContainer = new NutritionFactsSectionWithAction(width / 3);
 			proteinsContainer.title.text = "Proteins";
@@ -169,7 +169,7 @@ package treatments.food.ui
 			secondRowContainer.addChild(proteinsContainer);
 			
 			fatsInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
-			fatsInputText.height = 25;
+			//fatsInputText.height = 25;
 			fatsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			fatsContainer = new NutritionFactsSectionWithAction(width / 3);
 			fatsContainer.title.text = "Fats";
@@ -177,7 +177,7 @@ package treatments.food.ui
 			secondRowContainer.addChild(fatsContainer);
 			
 			caloriesInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
-			caloriesInputText.height = 25;
+			//caloriesInputText.height = 25;
 			caloriesInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			caloriesContainer = new NutritionFactsSectionWithAction(width / 3);
 			caloriesContainer.title.text = "Calories";
@@ -187,6 +187,7 @@ package treatments.food.ui
 			//Actions Row
 			actionsRowContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
 			(actionsRowContainer.layout as HorizontalLayout).paddingTop = 10;
+			(actionsRowContainer.layout as HorizontalLayout).paddingBottom = -10;
 			actionsRowContainer.width = width;
 			addChild(actionsRowContainer);
 			

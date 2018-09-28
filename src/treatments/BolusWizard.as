@@ -1088,7 +1088,7 @@ package treatments
 		
 		private static function onFinalTreatmentChanged(e:Event):void
 		{
-			bolusWizardAddButton.isEnabled = bwFinalCalculatedInsulinStepper.value != 0 || bwFinalCalculatedCarbsStepper.value != 0 ? true : false;
+			performCalculations(null, true);
 		}
 		
 		private static function displayCallout():void
@@ -1182,7 +1182,7 @@ package treatments
 		/**
 		 * Event Listeners
 		 */
-		private static function performCalculations(e:Event = null):void
+		private static function performCalculations(e:Event = null, useUserDefinedSettings:Boolean = false):void
 		{
 			//Validation
 			if (currentProfile == null || currentProfile.insulinSensitivityFactors == "" || currentProfile.insulinToCarbRatios == "" || currentProfile.targetGlucoseRates == "")
@@ -1257,7 +1257,7 @@ package treatments
 			// Load Carbs
 			if (bwCarbsCheck.isSelected)
 			{
-				carbs = bwCarbsStepper.value;
+				carbs = !useUserDefinedSettings ? bwCarbsStepper.value : bwFinalCalculatedCarbsStepper.value;
 				if (isNaN(carbs))
 				{
 					carbs = 0;
@@ -1269,7 +1269,7 @@ package treatments
 			//Total & rounding
 			//if (bwIOBCheck.isSelected) 
 			//{
-				total = insulinbg + insulincarbs + insulincob - iob + extraCorrections;
+				total = !useUserDefinedSettings ? insulinbg + insulincarbs + insulincob - iob + extraCorrections : bwFinalCalculatedInsulinStepper.value;
 			//}
 			
 			insulin = roundTo(total, insulinPrecision);
@@ -1387,7 +1387,7 @@ package treatments
 				
 				bwSuggestionLabel.text += "\n\n" + "Insulin equivalent: " + record.insulin + "U"; 
 				
-				if (record.othercorrection > 0 && Math.abs(formattedTarget - outcomeWithCarbsTreatment) > formattedErrorMargin)
+				if (Math.abs(formattedTarget - outcomeWithCarbsTreatment) > formattedErrorMargin)
 					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
 			}
 			else
@@ -1417,20 +1417,40 @@ package treatments
 				bwSuggestionLabel.text += "\n\n" + "Outcome with calculated treatment: " + outcomeWithInsulinTreatment;
 				if (record.insulin > 0)
 					bwSuggestionLabel.text += "\n\n" + "Insulin needed: " + record.insulin + "U";
-				if (record.othercorrection > 0 && Math.abs(formattedTarget - outcomeWithInsulinTreatment) > formattedErrorMargin)
+				if (Math.abs(formattedTarget - outcomeWithInsulinTreatment) > formattedErrorMargin)
 					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
 			}
 			
 			//Update Final Calculation Components
 			if (!isInTarget)
 			{
-				bwFinalCalculatedInsulinStepper.value = record.insulin + (currentTrendCorrection != 0 && bwTrendCheck.isSelected && currentTrendCorrectionUnit == "U" ? currentTrendCorrection : 0);
-				bwFinalCalculatedCarbsStepper.value = record.carbs + record.carbsneeded;
+				if (!useUserDefinedSettings)
+				{
+					bwFinalCalculatedInsulinStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
+					bwFinalCalculatedCarbsStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
+					
+					bwFinalCalculatedInsulinStepper.value = record.insulin + (currentTrendCorrection != 0 && bwTrendCheck.isSelected && currentTrendCorrectionUnit == "U" ? currentTrendCorrection : 0);
+					bwFinalCalculatedCarbsStepper.value = record.carbs + record.carbsneeded;
+					bolusWizardAddButton.isEnabled = bwFinalCalculatedInsulinStepper.value != 0 || bwFinalCalculatedCarbsStepper.value != 0 ? true : false;
+					
+					bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
+					bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
+				}
 			}
 			else
 			{
-				bwFinalCalculatedInsulinStepper.value = 0;
-				bwFinalCalculatedCarbsStepper.value = 0;
+				if (!useUserDefinedSettings)
+				{
+					bwFinalCalculatedInsulinStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
+					bwFinalCalculatedCarbsStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
+					
+					bwFinalCalculatedInsulinStepper.value = 0;
+					bwFinalCalculatedCarbsStepper.value = 0;
+					bolusWizardAddButton.isEnabled = bwFinalCalculatedInsulinStepper.value != 0 || bwFinalCalculatedCarbsStepper.value != 0 ? true : false;
+					
+					bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
+					bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
+				}
 			}
 			
 			//Components validation
