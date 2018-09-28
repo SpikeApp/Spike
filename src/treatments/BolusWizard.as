@@ -999,6 +999,12 @@ package treatments
 		
 		private static function updateCriticalData():void
 		{
+			if (bwFinalCalculatedCarbsStepper.value != suggestedCarbs || bwFinalCalculatedInsulinStepper.value != suggestedInsulin)
+			{
+				//User is in manual mode. Don't update critical data
+				return;
+			}
+			
 			var now:Number = new Date().valueOf();
 			
 			//Current Glucose
@@ -1088,7 +1094,10 @@ package treatments
 		
 		private static function onFinalTreatmentChanged(e:Event):void
 		{
-			performCalculations(null, true);
+			if (bwFinalCalculatedCarbsStepper.value != suggestedCarbs || bwFinalCalculatedInsulinStepper.value != suggestedInsulin)
+				performCalculations(null, true);
+			else
+				performCalculations();
 		}
 		
 		private static function displayCallout():void
@@ -1271,7 +1280,7 @@ package treatments
 			//{
 				total = !useUserDefinedSettings ? insulinbg + insulincarbs + insulincob - iob + extraCorrections : bwFinalCalculatedInsulinStepper.value;
 			//}
-			
+				
 			insulin = roundTo(total, insulinPrecision);
 			insulin = Math.round(insulin * 100) / 100;
 			roundingcorrection = insulin - total;
@@ -1345,7 +1354,7 @@ package treatments
 			
 			trace(ObjectUtil.toString(record));
 			
-			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.bg > 0 && Math.abs(outcome - targetBG) <= acceptedMargin;
+			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0 && Math.abs(outcome - targetBG) <= acceptedMargin;
 			var formattedTarget:Number = isMgDl ? Number(currentProfile.targetGlucoseRates) : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10;
 			var formattedErrorMargin:Number = isMgDl ? 10 : Math.round(BgReading.mgdlToMmol(10) * 100) / 100;
 			
@@ -1369,9 +1378,6 @@ package treatments
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = true;
 				
-				suggestedCarbs = Number(record.carbsneeded);
-				suggestedInsulin = 0;
-				
 				var insulinToCoverCarbs:Number = (record.carbsneeded / isf) + (record.carbs / isf);
 				var bgImpact:Number = insulinToCoverCarbs * isf;
 				var outcomeWithCarbsTreatment:Number = outcome + bgImpact;
@@ -1380,12 +1386,15 @@ package treatments
 				bwSuggestionLabel.text = "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
 				bwSuggestionLabel.text += "\n\n" + "Outcome with calculated treatment: " + outcomeWithCarbsTreatment;
 				
-				if (record.carbs <= 0)
-					bwSuggestionLabel.text += "\n\n" + "Carbs needed: " + record.carbsneeded + "g";
-				else
-					bwSuggestionLabel.text += "\n\n" + "Extra carbs needed: " + record.carbsneeded + "g";
+				if (!useUserDefinedSettings)
+				{
+					if (record.carbs <= 0)
+						bwSuggestionLabel.text += "\n\n" + "Carbs needed: " + record.carbsneeded + "g";
+					else
+						bwSuggestionLabel.text += "\n\n" + "Extra carbs needed: " + record.carbsneeded + "g";
 				
-				bwSuggestionLabel.text += "\n\n" + "Insulin equivalent: " + record.insulin + "U"; 
+					bwSuggestionLabel.text += "\n\n" + "Insulin equivalent: " + record.insulin + "U";
+				}
 				
 				if (Math.abs(formattedTarget - outcomeWithCarbsTreatment) > formattedErrorMargin)
 					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
@@ -1396,9 +1405,6 @@ package treatments
 				
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = true;
-				
-				suggestedCarbs = 0;
-				suggestedInsulin = Number(record.insulin);
 				
 				//Calculate outcome
 				var outcomeWithInsulinTreatment:Number = outcome - (Number(record.insulin) * isf) + (Number(record.insulincarbs / isf));
@@ -1415,7 +1421,7 @@ package treatments
 				//Update Suggestion Label
 				bwSuggestionLabel.text = "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
 				bwSuggestionLabel.text += "\n\n" + "Outcome with calculated treatment: " + outcomeWithInsulinTreatment;
-				if (record.insulin > 0)
+				if (record.insulin > 0 && !useUserDefinedSettings)
 					bwSuggestionLabel.text += "\n\n" + "Insulin needed: " + record.insulin + "U";
 				if (Math.abs(formattedTarget - outcomeWithInsulinTreatment) > formattedErrorMargin)
 					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
@@ -1435,6 +1441,9 @@ package treatments
 					
 					bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
 					bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
+					
+					suggestedInsulin = bwFinalCalculatedInsulinStepper.value;
+					suggestedCarbs = bwFinalCalculatedCarbsStepper.value;
 				}
 			}
 			else
@@ -1450,7 +1459,16 @@ package treatments
 					
 					bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
 					bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
+					
+					suggestedInsulin = bwFinalCalculatedInsulinStepper.value;
+					suggestedCarbs = bwFinalCalculatedCarbsStepper.value;
 				}
+			}
+			
+			if (useUserDefinedSettings)
+			{
+				//Warn user of manual mode
+				bwSuggestionLabel.text += "\n\n" + "Calculator is in manual mode. Critical data like glucose, trend, IOB and COB will not be automatically updated until you set insulin and carbs to their suggested values." + "\n" + "(" + "Insulin: " + suggestedInsulin + "U" + ", " + "Carbs: " + suggestedCarbs + "g" + ").";
 			}
 			
 			//Components validation
@@ -1459,7 +1477,7 @@ package treatments
 		
 		private static function validateCarbOffset():void
 		{
-			if ((suggestedInsulin > 0 && bwCarbsStepper.value > 0) || (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value > 0))
+			if (bwFinalCalculatedInsulinStepper.value > 0 && bwFinalCalculatedCarbsStepper.value > 0)
 			{
 				//Meal Treatment
 				bwCarbsOffsetStepper.isEnabled = true;
@@ -2203,7 +2221,7 @@ package treatments
 						NightscoutService.uploadTreatment(treatmentCarbs);
 					}
 				}
-				else if (suggestedInsulin > 0 && suggestedCarbs <= 0 && bwCarbsStepper.value <= 0)
+				else if (bwFinalCalculatedInsulinStepper.value > 0 && bwFinalCalculatedCarbsStepper.value == 0)
 				{
 					//Bolus Treatment
 					if (!canAddInsulin)
@@ -2240,7 +2258,7 @@ package treatments
 					//Upload to Nightscout
 					NightscoutService.uploadTreatment(treatment);
 				}
-				else if (suggestedCarbs > 0 && bwOtherCorrectionAmountStepper.value <= 0)
+				else if (bwFinalCalculatedInsulinStepper.value == 0 && bwFinalCalculatedCarbsStepper.value > 0)
 				{
 					//Carb treatment
 					if (bwCarbTypePicker.selectedIndex == 0)

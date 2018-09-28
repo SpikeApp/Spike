@@ -307,6 +307,11 @@ package ui.screens.display.settings.treatments
 				profileStartTime.touchable = false;
 				profileStartTime.alpha = 0.6;
 			}
+			else
+			{
+				profileStartTime.touchable = true;
+				profileStartTime.alpha = 1;
+			}
 			
 			if (addMode)
 			{
