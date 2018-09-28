@@ -480,6 +480,8 @@ package network.httpserver.API
 			spikeProfile.dia = ProfileManager.getInsulin(ProfileManager.getDefaultInsulinID()).dia;
 			spikeProfile.carbratio = [];
 			spikeProfile.sens = [];
+			spikeProfile["target_low"] = [];
+			spikeProfile["target_high"] = [];
 			
 			var userProfiles:Array = ProfileManager.profilesList;
 			for (var i:int = 0; i < userProfiles.length; i++) 
@@ -495,11 +497,15 @@ package network.httpserver.API
 					{
 						spikeProfile.carbratio.push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.insulinToCarbRatios), timeAsSeconds: "0" } );
 						spikeProfile.sens.push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.insulinSensitivityFactors), timeAsSeconds: "0" } );
+						spikeProfile["target_low"].push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.targetGlucoseRates), timeAsSeconds: "0" } );
+						spikeProfile["target_high"].push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.targetGlucoseRates), timeAsSeconds: "0" } );
 					}
 					else
 					{
 						spikeProfile.carbratio.push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.insulinToCarbRatios) } );
 						spikeProfile.sens.push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.insulinSensitivityFactors) } );
+						spikeProfile["target_low"].push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.targetGlucoseRates) } );
+						spikeProfile["target_high"].push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.targetGlucoseRates) } );
 					}
 				}
 			}
@@ -508,8 +514,6 @@ package network.httpserver.API
 			spikeProfile.delay = "20";
 			spikeProfile.timezone = "Europe/Lisbon";
 			spikeProfile.basal = [ { time: "00:00", value: "0.5", timeAsSeconds: "0" } ];
-			spikeProfile["target_low"] = [ { time: "00:00", value: "0", timeAsSeconds: "0" } ];
-			spikeProfile["target_high"] = [ { time: "00:00", value: "0", timeAsSeconds: "0" } ];
 			spikeProfile.startDate = nsFormatter.format(0);
 			spikeProfile.units = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mg/dl" : "mmol";
 			
