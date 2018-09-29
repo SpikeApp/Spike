@@ -1374,11 +1374,11 @@ package treatments
 			record.roundingcorrection = roundingcorrection;
 			record.carbsneeded = carbsneeded;
 			
-			var outcome:Number = record.bg - record.iob * isf;
+			var outcome:Number = record.bg - record.iob * isf + (record.insulincob * isf);
 			
 			trace(ObjectUtil.toString(record));
 			
-			var isInTarget:Boolean = record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0 && Math.abs(outcome - targetBG) <= acceptedMargin;
+			var isInTarget:Boolean = (record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0) || Math.abs(outcome - targetBG) <= acceptedMargin;
 			var formattedTarget:Number = isMgDl ? Number(currentProfile.targetGlucoseRates) : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10;
 			var formattedErrorMargin:Number = isMgDl ? 10 : Math.round(BgReading.mgdlToMmol(10) * 100) / 100;
 			
