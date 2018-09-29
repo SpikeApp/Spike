@@ -89,61 +89,6 @@ package treatments
 			return iob;
 		}
 		
-		private function COBxDrip(lastDecayedBy:Number, time:Number):CobCalc
-		{
-			var delay:int = 20; // minutes till carbs start decaying
-			var delayms:Number = delay * 60 * 1000;
-			
-			if (carbs > 0)
-			{
-				var thisCobCalc:CobCalc = new CobCalc();
-				thisCobCalc.carbTime = this.timestamp;
-				
-				// no previous carb treatment? Set to our start time
-				if (lastDecayedBy == 0) 
-				{
-					lastDecayedBy = thisCobCalc.carbTime;
-				}
-				
-				var carbs_hr:Number = 30; //30g per hour
-				var carbs_min:Number = carbs_hr / 60;
-				var carbs_ms:Number = carbs_min / (60 * 1000);
-				
-				thisCobCalc.decayedBy = thisCobCalc.carbTime; // initially set to start time for this treatment
-				
-				var minutesleft:Number = (lastDecayedBy - thisCobCalc.carbTime) / 1000 / 60;
-				var how_long_till_carbs_start_ms:Number = (lastDecayedBy - thisCobCalc.carbTime);
-				thisCobCalc.decayedBy += (Math.max(delay, minutesleft) + carbs / carbs_min) * 60 * 1000;
-				
-				if (delay > minutesleft) 
-				{
-					thisCobCalc.initialCarbs = carbs;
-				} 
-				else 
-				{
-					thisCobCalc.initialCarbs = carbs + minutesleft * carbs_min;
-				}
-				
-				var startDecay:Number = thisCobCalc.carbTime + (delay * 60 * 1000);
-				
-				if (time < lastDecayedBy || time > startDecay) 
-				{
-					thisCobCalc.isDecaying = 1;
-				} 
-				else 
-				{
-					thisCobCalc.isDecaying = 0;
-				}
-				
-				
-				return thisCobCalc;
-			} 
-			else 
-			{
-				return null;
-			}
-		}
-		
 		public function calculateCOB(lastDecayedBy:Number, time:Number):CobCalc
 		{
 			var absorptionRate:int = ProfileManager.getCarbAbsorptionRate();
@@ -206,6 +151,5 @@ package treatments
 			_dia = value;
 			this.insulinScaleFactor = 3 / _dia;
 		}
-
 	}
 }
