@@ -269,6 +269,7 @@ package treatments
 			
 			var isDecaying:Number = 0;
 			var lastDecayedBy:Number = 0;
+			totalActivity = 0;
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
@@ -289,8 +290,14 @@ package treatments
 							
 							if (decaysin_hr > -10 && !isNaN(isf)) 
 							{
-								getTotalIOB(cCalc.decayedBy);
 								var actStart:Number = 0;
+								if (lastDecayedBy != 0)
+								{
+									getTotalIOB(lastDecayedBy);
+									actStart = totalActivity;
+								}
+								
+								getTotalIOB(cCalc.decayedBy);
 								var actEnd:Number = totalActivity;
 								
 								var avgActivity:Number = (actStart + actEnd) / 2;
@@ -2133,6 +2140,10 @@ package treatments
 			var isDecaying:Number = 0;
 			var lastDecayedBy:Number = 0;
 			
+			var currentProfile:Profile = ProfileManager.getProfileByTime(now);
+			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
+			var ic:Number = Number(currentProfile.insulinToCarbRatios);
+			
 			var dataLength:int = treatmentsList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
@@ -2145,6 +2156,32 @@ package treatments
 					{
 						var decaysin_hr:Number = (cCalc.decayedBy - now) / 1000 / 60 / 60;
 									
+						if (decaysin_hr > -10 && !isNaN(isf)) 
+						{
+							var actStart:Number = 0;
+							if (lastDecayedBy != 0)
+							{
+								getTotalIOB(lastDecayedBy);
+								actStart = totalActivity;
+							}
+							
+							
+							getTotalIOB(cCalc.decayedBy);
+							var actEnd:Number = totalActivity;
+							
+							var avgActivity:Number = (actStart + actEnd) / 2;
+							var delayedCarbs:Number = ( avgActivity *  liverSensRatio / isf ) * ic;
+							var delayMinutes:Number = Math.round(delayedCarbs / carbsAbsorptionRate * 60);
+							
+							if (delayMinutes > 0) 
+							{
+								cCalc.decayedBy += (delayMinutes * 60 * 1000);
+								decaysin_hr = (cCalc.decayedBy - now) / 1000 / 60 / 60;
+							}
+						}
+						
+						lastDecayedBy = cCalc.decayedBy;
+						
 						if (decaysin_hr > 0) 
 						{
 							var treatmentCOB:Number = Math.min(Number(treatment.carbs), decaysin_hr * carbsAbsorptionRate);
