@@ -1041,13 +1041,20 @@ package services.bluetooth
 				}
 				servicesIndex++;
 			}
+			
+			//myTrace("expected RX characteristic = " + RX_Characteristic_UUID);
+			//myTrace("expected TX characteristic = " + TX_Characteristic_UUID);
+			//myTrace("looping through characteristics");			
 			for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
+				//myTrace("new characteristic found, id = " + (o.uuid as String));
 				if (RX_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 					break;
 				}
 				Read_CharacteristicsIndex++;
 			}
+			//myTrace("looping through characteristics");	
 			for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
+				//myTrace("new characteristic found, id = " + (o.uuid as String));
 				if (TX_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 					break;
 				}
