@@ -58,6 +58,7 @@ package services.bluetooth
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5G6Packet;
+	import model.TransmitterDataSweetReaderPacket;
 	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
@@ -146,6 +147,13 @@ package services.bluetooth
 		private static const xBridgeR_TX_Characteristic_UUID:String = "0000FFE2-0000-1000-8000-00805F9B34FB";
 		private static const xBridgeR_Advertisement_UUID:String = xBridgeR_Service_UUID;
 		private static const xBridgeR_Characteristics_UUID_Vector:Vector.<String> = new <String>[xBridgeR_RX_Characteristic_UUID];
+		
+		//Sweetreader UUID's
+		private static const SweetReader_Service_UUID:String = "6E400001-C352-11E5-953D-0002A5D5C51B";
+		private static const SweetReader_RX_Characteristic_UUID:String = "6E400003-C352-11E5-953D-0002A5D5C51B";
+		private static const SweetReader_TX_Characteristic_UUID:String = "6E400002-C352-11E5-953D-0002A5D5C51B";
+		private static const SweetReader_Advertisement_UUID:String = "";
+		private static const SweetReader_Characteristics_UUID_Vector:Vector.<String> = new <String>[BlueReader_TX_Characteristic_UUID, BlueReader_RX_Characteristic_UUID];
 		
 		//Following variables with get value which is dependent on peripheral type
 		/**
@@ -763,7 +771,7 @@ package services.bluetooth
 				} 
 			}
 			
-			if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isBluKon()) {
+			if (CGMBlueToothDevice.isSweetReader()|| CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isBluKon()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			}
 			
@@ -771,7 +779,7 @@ package services.bluetooth
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
 			
-			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6() || CGMBlueToothDevice.isDexcomG4())
+			if (CGMBlueToothDevice.isBluKon() || CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isSweetReader() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6() || CGMBlueToothDevice.isDexcomG4())
 				activeBluetoothPeripheral = event.peripheral;
 
 			discoverServices();
@@ -893,7 +901,11 @@ package services.bluetooth
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
-			}  else if (CGMBlueToothDevice.isDexcomG4()) {
+			} else if (CGMBlueToothDevice.isSweetReader()) {
+				peripheralConnected = false;
+				awaitingConnect = false;
+				tryReconnect();
+			} else if (CGMBlueToothDevice.isDexcomG4()) {
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
@@ -977,11 +989,15 @@ package services.bluetooth
 					}
 					index++;
 				}
-				waitingForPeripheralCharacteristicsDiscovered = true;
-				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], characteristics_UUID_Vector);
-				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
-				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
-				discoverServiceOrCharacteristicTimer.start();
+				if (index < activeBluetoothPeripheral.services.length) {
+					waitingForPeripheralCharacteristicsDiscovered = true;
+					activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], characteristics_UUID_Vector);
+					discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
+					discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
+					discoverServiceOrCharacteristicTimer.start();
+				} else {
+					myTrace('in discoverCharacteristics, did not find service_UUID, stop processing');
+				}
 			} else {
 				myTrace('in discoverCharacteristics, call tryReconnect');
 				tryReconnect();
@@ -1083,6 +1099,8 @@ package services.bluetooth
 					processG4TransmitterData(value);
 				} else if (CGMBlueToothDevice.isBlueReader()) {
 					processBlueReaderTransmitterData(value);
+				} else if (CGMBlueToothDevice.isSweetReader()) {
+					processSweetReaderTransmitterData(value);
 				} else if (CGMBlueToothDevice.isTransmiter_PL()) {
 					processTRANSMITER_PLTransmitterData(value);
 				} else {
@@ -1975,6 +1993,40 @@ package services.bluetooth
 			_instance.dispatchEvent(blueToothServiceEvent);
 		}
 		
+		public static function processSweetReaderTransmitterData(buffer:ByteArray):void {
+			buffer.position = 0;
+			buffer.endian = Endian.LITTLE_ENDIAN;
+			myTrace("in processSweetReaderTransmitterData data packet received from transmitter : " + utils.UniqueId.bytesToHex(buffer));
+			
+			buffer.position = 0;
+			var bufferAsString:String = buffer.readUTFBytes(buffer.length);
+			var blueToothServiceEvent:BlueToothServiceEvent;
+			myTrace("in processSweetReaderTransmitterData buffer as string =  " + bufferAsString);
+			var bufferAsStringSplitted:Array = bufferAsString.split(/\s/);
+			var raw_data:Number = new Number(bufferAsStringSplitted[0]);
+			
+			if (isNaN(raw_data)) {
+				myTrace("in processSweetReaderTransmitterData, data doesn't start with an Integer, no further processing");
+				return;
+			}
+			myTrace("in processSweetReaderTransmitterData, raw_data = " + raw_data.toString())
+			
+			var transmitterBatteryLevel:Number = Number.NaN;
+			var sensorAge:Number = Number.NaN;
+			if (bufferAsStringSplitted.length > 2) {
+				transmitterBatteryLevel = new Number(bufferAsStringSplitted[2]);
+				myTrace("in processSweetReaderTransmitterData, transmitterBatteryLevel = " + transmitterBatteryLevel.toString());
+				if (bufferAsStringSplitted.length > 3) {
+					sensorAge = new Number(bufferAsStringSplitted[3]);
+					myTrace("in processSweetReaderTransmitterData, sensorAge = " + sensorAge.toString());
+				}
+			}
+			myTrace("in processSweetReaderTransmitterData, dispatching transmitter data with transmitterBatteryLevel = " + transmitterBatteryLevel + " and sensorage = " + sensorAge);
+			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+			blueToothServiceEvent.data = new TransmitterDataSweetReaderPacket(raw_data, transmitterBatteryLevel, sensorAge, (new Date()).valueOf());
+			_instance.dispatchEvent(blueToothServiceEvent);
+		}
+		
 		private static function processG4TransmitterData(buffer:ByteArray):void {
 			myTrace("in processG4TransmitterData");
 			buffer.endian = Endian.LITTLE_ENDIAN;
@@ -2214,8 +2266,10 @@ package services.bluetooth
 				return "G4_RX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == BlueReader_RX_Characteristic_UUID.toUpperCase()) {
 				return "BlueReader_RX_Characteristic_UUID";
-			} else if (uuid.toUpperCase() == BlueReader_TX_Characteristic_UUID.toUpperCase()) {
-				return "BlueReader_TX_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == SweetReader_RX_Characteristic_UUID.toUpperCase()) {
+				return "SweetReader_RX_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == SweetReader_TX_Characteristic_UUID.toUpperCase()) {
+				return "SweetReader_TX_Characteristic_UUID";
 			} 
 			return uuid + ", unknown characteristic uuid";
 		}
@@ -2513,6 +2567,12 @@ package services.bluetooth
 				characteristics_UUID_Vector = BlueReader_Characteristics_UUID_Vector;
 				RX_Characteristic_UUID = BlueReader_RX_Characteristic_UUID;
 				TX_Characteristic_UUID = BlueReader_TX_Characteristic_UUID;
+			} else if (CGMBlueToothDevice.isSweetReader()) {
+				service_UUID = SweetReader_Service_UUID;
+				advertisement_UUID_Vector = new <String>[SweetReader_Advertisement_UUID];
+				characteristics_UUID_Vector = SweetReader_Characteristics_UUID_Vector;
+				RX_Characteristic_UUID = SweetReader_RX_Characteristic_UUID;
+				TX_Characteristic_UUID = SweetReader_TX_Characteristic_UUID;
 			} else if (CGMBlueToothDevice.isBluKon()) {
 				service_UUID = Blucon_Service_UUID;
 				advertisement_UUID_Vector = new <String>[Blucon_Advertisement_UUID];

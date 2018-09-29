@@ -28,6 +28,7 @@ package services
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5G6Packet;
+	import model.TransmitterDataSweetReaderPacket;
 	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
@@ -358,6 +359,26 @@ package services
 					}
 					BgReading.
 						create(transmitterDataBlueReaderPacket.bgValue, transmitterDataBlueReaderPacket.bgValue)
+						.saveToDatabaseSynchronous();
+					
+					//dispatch the event that there's new data
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.LAST_BGREADING_RECEIVED);
+					_instance.dispatchEvent(transmitterServiceEvent);
+				} else if (be.data is TransmitterDataSweetReaderPacket) {
+					myTrace("in transmitterDataReceived, is TransmitterDataSweetReaderPacket");
+					var transmitterDataSweetReaderPacket:TransmitterDataSweetReaderPacket = be.data as TransmitterDataSweetReaderPacket;
+					if (!isNaN(transmitterDataSweetReaderPacket.sweetReaderBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SWEETREADER_BATTERY_LEVEL, transmitterDataSweetReaderPacket.sweetReaderBatteryLevel.toString());
+						myTrace("in transmitterDataReceived, setting COMMON_SETTING_SWEETREADER_BATTERY_LEVEL to " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SWEETREADER_BATTERY_LEVEL));
+					}
+					if (!isNaN(transmitterDataSweetReaderPacket.sensorAge)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataSweetReaderPacket.sensorAge.toString());
+						myTrace("in transmitterDataReceived, setting COMMON_SETTING_FSL_SENSOR_AGE to " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
+					}
+					BgReading.
+						create(transmitterDataSweetReaderPacket.bgValue, transmitterDataSweetReaderPacket.bgValue)
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data

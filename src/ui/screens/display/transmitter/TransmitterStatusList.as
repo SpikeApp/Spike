@@ -336,6 +336,19 @@ package ui.screens.display.transmitter
 				else
 					batteryLevelValue = String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))  + "%";
 			}
+			else if (CGMBlueToothDevice.isSweetReader())
+			{
+				/* Transmitter Type */
+				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_sweetreader');
+				
+				/* Battery Level */
+				batteryLevelValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SWEETREADER_BATTERY_LEVEL);
+				
+				if (batteryLevelValue == "0" || transmitterNameValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_unknown')) 
+					batteryLevelValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','battery_unknown');
+				else
+					batteryLevelValue = String(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SWEETREADER_BATTERY_LEVEL)))  + "%";
+			}
 			else if (CGMBlueToothDevice.isTransmiter_PL())
 			{
 				/* Transmitter Type */

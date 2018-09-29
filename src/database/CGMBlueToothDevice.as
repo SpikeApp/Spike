@@ -21,7 +21,10 @@ package database
 	 * - Transmiter PL : similar to G4, except that it uses another scanning UUID.<br>
 	 * <br>
 	 * - BlueReader : similar to G4, except that no scanning UUID is known. App will scan without specifying a UUID. As a result scanning doesn't work when in background<br>. First connection must happen while the app is in the foreground.<br>
-	 * Once a successful connection is done, the app will only reconnect to this device. For transmitter types without known scanning UUID (bluereader and miaomaio) reconnection strategy is different.<br>
+	 * Once a successful connection is done, the app will only reconnect to this device. For transmitter types without known scanning UUID (bluereader, sweetreader and miaomaio) reconnection strategy is different.<br>
+	 * <br>
+	 * - SweetReader : similar to G4, except that no scanning UUID is known. App will scan without specifying a UUID. As a result scanning doesn't work when in background<br>. First connection must happen while the app is in the foreground.<br>
+	 * Once a successful connection is done, the app will only reconnect to this device. For transmitter types without known scanning UUID (bluereader, sweetreader and miaomaio) reconnection strategy is different.<br>
 	 * <br>
 	 * - MiaoMiao  similar to Bluereader. Handled by backgroundfetch ANE
 	 * <br>
@@ -154,6 +157,10 @@ package database
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUEREADER");
 		}
 		
+		public static function isSweetReader():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "SWEETREADER");
+		}
+		
 		public static function isBluKon():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUKON" ||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUCON");
@@ -183,12 +190,12 @@ package database
 		}
 		
 		/**
-		 * for type BlueReader, Limitter, BluKon, ie devices that transmit FSL sensor data<br>
+		 * for type BlueReader, Limitter, BluKon, SweetReader, ie devices that transmit FSL sensor data<br>
 		 * important for calibration
 		 *  
 		 */
 		public static function isTypeLimitter():Boolean {
-			return (isBlueReader() || isBluKon() || isLimitter() || isTransmiter_PL() || isMiaoMiao() || isxBridgeR());
+			return (isBlueReader() || isBluKon() || isLimitter() || isTransmiter_PL() || isMiaoMiao() || isxBridgeR() || isSweetReader());
 		}
 		
 		/**
@@ -215,7 +222,7 @@ package database
 		}
 		
 		/**
-		 * possible values : G4, G5, G6, BlueReader, BluKon, Limitter, xBridgeR, Follow 
+		 * possible values : G4, G5, G6, BlueReader, BluKon, Limitter, xBridgeR, Follow, SweetReader, Transmitter PL
 		 */
 		public static function deviceType():String {
 			if (isDexcomG4()) 
@@ -238,6 +245,8 @@ package database
 				return "MiaoMiao";
 			if (isxBridgeR())
 				return "xBridgeR";
+			if (isSweetReader())
+				return "SweetReader";
 			
 			return "unknown";
 		}
@@ -252,6 +261,7 @@ package database
 			else if (CGMBlueToothDevice.isBluKon()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
 			else if (CGMBlueToothDevice.isMiaoMiao()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_miaomiao');
 			else if (CGMBlueToothDevice.isBlueReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader');
+			else if (CGMBlueToothDevice.isSweetReader()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_sweetreader');
 			else if (CGMBlueToothDevice.isLimitter()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter');
 			else if (CGMBlueToothDevice.isTransmiter_PL()) transmitterName = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_transmitter_pl');
 			

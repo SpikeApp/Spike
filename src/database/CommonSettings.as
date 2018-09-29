@@ -93,6 +93,7 @@ package database
 		 * Bluereader<br>
 		 * BluKon<br>
 		 * Transmiter PL<br>
+		 * SweetReader<br>
 		 * <br>
 		 * Default value is an empty string, peripheral type unknown
 		  */
@@ -158,12 +159,12 @@ package database
 		 public static const COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP:int = 35;
 		 
 		 /**
-		 * For limitter and/or bluereaderw<br>
+		 * For limitter and/or bluereader and/or SweetReader<br>
 		 * value 0 means level not known
 		  */
 		 public static const COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL:int = 36;
 		 /**
-		  * For bluereaderw<br>
+		  * For bluereader<br>
 		  * value 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BLUEREADER_BATTERY_LEVEL:int = 37;
@@ -518,6 +519,10 @@ package database
 		 */
 		 public static const COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_ON:int = 192;
 		 public static const COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_VALUE:int = 193;
+		 /**
+		 * SweetReader battery level, default value = 0
+		  */
+		 public static const COMMON_SETTING_SWEETREADER_BATTERY_LEVEL:int = 194;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -713,7 +718,8 @@ package database
 			 "false",//COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY
 			 "true",//COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON
 			 "false",//COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_ON
-			 "50"//COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_VALUE
+			 "50",//COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_VALUE
+			 "0"//COMMON_SETTING_SWEETREADER_BATTERY_LEVEL
 		 ];
 
 		 public function CommonSettings()

@@ -92,9 +92,9 @@ package utils
 			if (debugMode)
 				trace(traceText);
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG) == "true") {
+			//if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG) == "true") {
 				SpikeANE.traceNSLog(traceText);
-			}
+			//}
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "false" || dontWriteToFile) {
 				
