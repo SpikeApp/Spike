@@ -177,6 +177,9 @@ package treatments
 						
 						treatmentsList.push(treatment);
 						treatmentsMap[treatment.ID] = treatment;
+						
+						//Sort Treatments
+						treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 					}
 				}
 				
@@ -277,6 +280,9 @@ package treatments
 				var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 				var ic:Number = Number(currentProfile.insulinToCarbRatios);
 				
+				//Sort Treatments
+				treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+				
 				var loopLength:int = treatmentsList.length;
 				for (var i:int = 0; i < loopLength; i++) 
 				{
@@ -291,7 +297,7 @@ package treatments
 							if (decaysin_hr > -10 && !isNaN(isf)) 
 							{
 								var actStart:Number = 0;
-								if (lastDecayedBy != 0)
+								if (true)//(lastDecayedBy != 0)
 								{
 									getTotalIOB(lastDecayedBy);
 									actStart = totalActivity;
