@@ -287,7 +287,7 @@ package treatments
 						{
 							var decaysin_hr:Number = (cCalc.decayedBy - time) / 1000 / 60 / 60;
 							
-							if (decaysin_hr > -10) 
+							if (decaysin_hr > -10 && !isNaN(isf)) 
 							{
 								getTotalIOB(lastDecayedBy);
 								var actStart:Number = totalActivity;
@@ -306,7 +306,7 @@ package treatments
 								}
 							}
 							
-							if (cCalc) 
+							if (cCalc != null &&!isNaN(isf)) 
 							{
 								lastDecayedBy = cCalc.decayedBy;
 							}
