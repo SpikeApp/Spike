@@ -2,6 +2,7 @@ package treatments
 {
 	import database.CommonSettings;
 	
+	import utils.TimeSpan;
 	import utils.UniqueId;
 
 	public class Treatment
@@ -59,8 +60,12 @@ package treatments
 		
 		public function calculateIOB(time:Number):Number
 		{
-			if (insulinAmount == 0 || time < timestamp) //If it's not an insulin treatment or requested time is before treatment time
+			activityContrib = 0;
+			
+			if (insulinAmount == 0 || time < timestamp || time - (dia * 60 * 60 * 1000) > timestamp + TimeSpan.TIME_10_MINUTES)//If it's not an insulin treatment or requested time is before treatment time
+			{
 				return 0;
+			}
 			
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
 			var iob:Number;
@@ -73,7 +78,8 @@ package treatments
 				iob = insulinAmount * (1 - 0.001852 * x1 * x1 + 0.001852 * x1);
 				if (!isNaN(isf))
 					activity = isf * insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
-			} else if (minAgo < 180) 
+			} 
+			else if (minAgo < 180) 
 			{
 				var x2:Number = (minAgo - 75) / 5;
 				iob = insulinAmount * (0.001323 * x2 * x2 - 0.054233 * x2 + 0.55556);

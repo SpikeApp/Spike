@@ -289,10 +289,8 @@ package treatments
 							
 							if (decaysin_hr > -10 && !isNaN(isf)) 
 							{
-								getTotalIOB(lastDecayedBy);
-								var actStart:Number = totalActivity;
-								
 								getTotalIOB(cCalc.decayedBy);
+								var actStart:Number = 0;
 								var actEnd:Number = totalActivity;
 								
 								var avgActivity:Number = (actStart + actEnd) / 2;
@@ -301,15 +299,12 @@ package treatments
 								
 								if (delayMinutes > 0) 
 								{
-									cCalc.decayedBy = new Date(cCalc.decayedBy + (delayMinutes * 1000)).valueOf();
+									cCalc.decayedBy += (delayMinutes * 60 * 1000);
 									decaysin_hr = (cCalc.decayedBy - time) / 1000 / 60 / 60;
 								}
 							}
 							
-							if (cCalc != null &&!isNaN(isf)) 
-							{
-								lastDecayedBy = cCalc.decayedBy;
-							}
+							lastDecayedBy = cCalc.decayedBy;
 							
 							if (decaysin_hr > 0) 
 							{

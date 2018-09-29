@@ -21,6 +21,7 @@ package utils
 		public static const TIME_24_HOURS:int = 86400000
 		public static const TIME_23_HOURS_59_MINUTES:int = 86340000;
 		public static const TIME_23_HOURS_57_MINUTES:int = 82620000;
+		public static const TIME_6_HOURS:int = 21600000;
 		public static const TIME_4_HOURS:int = 14400000;
 		public static const TIME_3_HOURS:int = 10800000;
 		public static const TIME_2_HOURS:int = 7200000;
