@@ -33,6 +33,7 @@ package treatments
 		public var needsAdjustment:Boolean = false;
 		public var carbDelayTime:Number = 20;
 		public var basalDuration:Number = 0;
+		public var activityContrib:Number = 0;
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = Number.NaN, basalDuration:Number = 0)
 		{
@@ -63,18 +64,24 @@ package treatments
 			
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
 			var iob:Number;
+			var activity:Number;
+			var isf:Number = Number(ProfileManager.getProfileByTime(new Date().valueOf()).insulinSensitivityFactors);
 			
 			if (minAgo < INSULIN_PEAK) 
 			{
 				var x1:Number = minAgo / 5 + 1;
 				iob = insulinAmount * (1 - 0.001852 * x1 * x1 + 0.001852 * x1);
+				activity = isf * insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
 			} else if (minAgo < 180) 
 			{
 				var x2:Number = (minAgo - 75) / 5;
 				iob = insulinAmount * (0.001323 * x2 * x2 - 0.054233 * x2 + 0.55556);
+				activity = isf * insulinAmount * (2 / dia / 60 - (minAgo - INSULIN_PEAK) * 2 / dia / 60 / (60 * 3 - INSULIN_PEAK));
 			}
 			
 			if (iob < 0.001 || isNaN(iob)) iob = 0;
+			
+			activityContrib = activity;
 			
 			return iob;
 		}

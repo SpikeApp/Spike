@@ -86,6 +86,7 @@ package treatments
 		public static var pumpCOB:Number = 0;
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 		private static var foodManager:FoodManager;
+		private static var totalActivity:Number = 0;
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -215,6 +216,7 @@ package treatments
 				return pumpIOB;
 			
 			var totalIOB:Number = 0;
+			totalActivity = 0;
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
@@ -225,6 +227,7 @@ package treatments
 					if (treatment != null && (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS))
 					{
 						totalIOB += treatment.calculateIOB(time);
+						totalActivity += !isNaN(treatment.activityContrib) ? treatment.activityContrib : 0;
 					}
 				}
 			}
@@ -269,6 +272,10 @@ package treatments
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
+				var currentProfile:Profile = ProfileManager.getProfileByTime(now);
+				var isf:Number = Number(currentProfile.insulinSensitivityFactors);
+				var ic:Number = Number(currentProfile.insulinToCarbRatios);
+				
 				var loopLength:int = treatmentsList.length;
 				for (var i:int = 0; i < loopLength; i++) 
 				{
@@ -282,24 +289,26 @@ package treatments
 							
 							if (decaysin_hr > -10) 
 							{
-								// units: BG
-								//var actStart = iob.calcTotal(treatments, devicestatus, profile, lastDecayedBy, spec_profile).activity;
-								//var actEnd = iob.calcTotal(treatments, devicestatus, profile, cCalc.decayedBy, spec_profile).activity;
-								//var avgActivity = (actStart + actEnd) / 2;
+								getTotalIOB(lastDecayedBy);
+								var actStart:Number = totalActivity;
 								
-								// units:  g     =       BG      *      scalar     /          BG / U                           *     g / U
-								//var delayedCarbs = ( avgActivity *  liverSensRatio / profile.getSensitivity(treatment.mills, spec_profile) ) * profile.getCarbRatio(treatment.mills, spec_profile);
-								//var delayMinutes = Math.round(delayedCarbs / profile.getCarbAbsorptionRate(treatment.mills, spec_profile) * 60);
-								//if (delayMinutes > 0) {
-								//cCalc.decayedBy.setMinutes(cCalc.decayedBy.getMinutes() + delayMinutes);
-								//decaysin_hr = (cCalc.decayedBy - time) / 1000 / 60 / 60;
-								//}
+								getTotalIOB(cCalc.decayedBy);
+								var actEnd:Number = totalActivity;
 								
+								var avgActivity:Number = (actStart + actEnd) / 2;
+								var delayedCarbs:Number = ( avgActivity *  liverSensRatio / isf ) * ic;
+								var delayMinutes:Number = Math.round(delayedCarbs / carbsAbsorptionRate * 60);
+								
+								if (delayMinutes > 0) 
+								{
+									cCalc.decayedBy = new Date(cCalc.decayedBy + (delayMinutes * 1000)).valueOf();
+									decaysin_hr = (cCalc.decayedBy - time) / 1000 / 60 / 60;
+								}
 							}
 							
 							if (cCalc) 
 							{
-								//lastDecayedBy = cCalc.decayedBy;
+								lastDecayedBy = cCalc.decayedBy;
 							}
 							
 							if (decaysin_hr > 0) 
@@ -323,64 +332,6 @@ package treatments
 				totalCOB = 0;
 			
 			return Math.round(totalCOB * 10) / 10;
-			
-			/*
-			XDRIP
-			time = new Date().valueOf(); //MAKE DYNAMIC
-			var carbsAbsorptionRate:Number = 30;
-			var liverSensRatio:Number = 2;
-			
-			if (treatmentsList != null && treatmentsList.length > 0)
-			{
-				var loopLength:int = treatmentsList.length;
-				for (var i:int = 0; i < loopLength; i++) 
-				{
-					var treatment:Treatment = treatmentsList[i];
-					if (treatment != null && (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS))
-					{
-						if (!isNaN(treatment.carbs) && treatment.carbs > 0)
-						{
-							var step_minutes:Number = 5;
-							var stepms:Number = step_minutes * 60 * 1000; // 600s = 10 mins
-							var tendtime:Number = time;
-							var dontLookThisFar:Number = 10 * 60 * 60 * 1000; // 10 hours max look
-							var carb_delay_minutes:Number = 15; // not likely a time dependent parameter
-							var carb_delay_ms_stepped:Number = (carb_delay_minutes / step_minutes) * step_minutes * (60 * 1000);
-							
-							var mytime:Number = (treatment.timestamp / stepms) * stepms; // effects of treatment occur only after it is given / fit to slot time
-							tendtime = mytime + dontLookThisFar;
-							
-							var cob_time:Number = mytime + carb_delay_ms_stepped;
-							var stomachDiff:Number = ((carbsAbsorptionRate * stepms) / (60 * 60 * 1000)); // initial value
-							var newdelayedCarbs:Number = 0;
-							var cob_remain:Number = treatment.carbs;
-							
-							while ((cob_remain > 0) && (stomachDiff > 0) && (cob_time < tendtime)) {
-								
-								//if (cob_time >= time) {
-									//timesliceCarbWriter(timeslices, cob_time, cob_remain);
-								//}
-								cob_time += stepms;
-								
-								stomachDiff = ((carbsAbsorptionRate * stepms) / (60 * 60 * 1000));
-								cob_remain -= stomachDiff;
-								
-								//newdelayedCarbs = (timesliceIactivityAtTime(timeslices, cob_time) * Profile.getLiverSensRatio(cob_time) / Profile.getSensitivity(cob_time)) * Profile.getCarbRatio(cob_time);
-								//newdelayedCarbs = 0 * liverSensRatio / Profile.getSensitivity(cob_time)) * Profile.getCarbRatio(cob_time);
-								
-								//if (newdelayedCarbs > 0) {
-									//final double maximpact = stomachDiff * Profile.maxLiverImpactRatio(cob_time);
-									//if (newdelayedCarbs > maximpact) newdelayedCarbs = maximpact;
-									//cob_remain += newdelayedCarbs; // add back on liverfactor adjustment
-								//}
-								
-								//counter++;
-								
-							}
-						}
-					}
-				}
-			}*/
 		}
 		
 		public static function setPumpCOB(value:Number):void
