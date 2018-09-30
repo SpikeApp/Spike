@@ -798,12 +798,12 @@ package treatments
 			bwOtherCorrectionAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwOtherCorrectionAmountContainer.width = contentWidth;
 			
-			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("Amount (U)");
+			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("Amount (U/g)");
 			bwOtherCorrectionAmountLabel.wordWrap = true;
 			bwOtherCorrectionAmountLabel.paddingLeft = 25;
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountLabel);
 			
-			bwOtherCorrectionAmountStepper = LayoutFactory.createNumericStepper(0, 100, 0, insulinPrecision);
+			bwOtherCorrectionAmountStepper = LayoutFactory.createNumericStepper(-1000, 1000, 0, insulinPrecision);
 			bwOtherCorrectionAmountStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwOtherCorrectionAmountStepper.validate();
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountStepper);
@@ -1240,6 +1240,7 @@ package treatments
 			var insulincarbs:Number = 0;
 			var carbs:Number = 0;
 			var extraCorrections:Number = bwOtherCorrectionCheck.isSelected ? bwOtherCorrectionAmountStepper.value : 0;
+			var trendCorrections:Number = 0;
 			var iob:Number = 0;
 			var cob:Number = 0;
 			var insulincob:Number = 0;
@@ -1247,6 +1248,19 @@ package treatments
 			var total:Number = 0;
 			var insulin:Number = 0;
 			var roundingcorrection:Number = 0;
+			
+			//Trend
+			if (currentTrendCorrection != 0 && bwTrendCheck.isSelected)
+			{
+				if (currentTrendCorrectionUnit == "U")
+				{
+					trendCorrections += currentTrendCorrection;
+				}
+				else if (currentTrendCorrectionUnit == "g")
+				{
+					trendCorrections -= roundTo(currentTrendCorrection / ic, insulinPrecision);
+				}
+			}
 			
 			// Load IOB;
 			if (bwIOBCheck.isSelected) 
@@ -1302,7 +1316,7 @@ package treatments
 			//Total & rounding
 			//if (bwIOBCheck.isSelected) 
 			//{
-				total = !useUserDefinedSettings ? insulinbg + insulincarbs + insulincob - iob + extraCorrections : bwFinalCalculatedInsulinStepper.value;
+				total = !useUserDefinedSettings ? insulinbg + insulincarbs + insulincob - iob + extraCorrections + trendCorrections : bwFinalCalculatedInsulinStepper.value;
 			//}
 				
 			insulin = roundTo(total, insulinPrecision);
@@ -1314,25 +1328,6 @@ package treatments
 			{
 				//carbsneeded = Math.ceil(-total * ic);
 				carbsneeded = roundTo(-total * ic, carbsPrecision);
-			}
-			
-			//Trend
-			if (currentTrendCorrection != 0 && bwTrendCheck.isSelected)
-			{
-				if (currentTrendCorrectionUnit == "U")
-				{
-					insulin += currentTrendCorrection;
-				}
-				else if (currentTrendCorrectionUnit == "g")
-				{
-					carbsneeded += currentTrendCorrection;
-					carbsneeded = roundTo(carbsneeded, carbsPrecision);
-					
-					//Recalculate insulin
-					insulin -= roundTo(currentTrendCorrection / ic, insulinPrecision);
-					insulin = Math.round(insulin * 100) / 100;
-					roundingcorrection = insulin - total;
-				}
 			}
 			
 			//Exercise Adjustment
@@ -1370,11 +1365,12 @@ package treatments
 			record.carbs = carbs;
 			record.insulincarbs = insulincarbs;
 			record.othercorrection = extraCorrections;
+			record.trendCorrection = trendCorrections;
 			record.insulin = insulin;
 			record.roundingcorrection = roundingcorrection;
 			record.carbsneeded = carbsneeded;
 			
-			var outcome:Number = record.bg - record.iob * isf + (record.insulincob * isf);
+			var outcome:Number = record.bg - (record.iob * isf) + (record.insulincob * isf);
 			
 			trace(ObjectUtil.toString(record));
 			
@@ -1384,6 +1380,21 @@ package treatments
 			
 			if (isInTarget) 
 			{
+				displayInTarget();
+			}
+			else if (record.insulin < 0) 
+			{
+				displayCarbsNeeded();
+			}
+			else
+			{
+				displayInsulinNeeded();
+			}
+			
+			function displayInTarget():void
+			{
+				trace("displayInTarget");
+				
 				bgIsWithinTarget = true;
 				
 				if (bolusWizardAddButton != null)
@@ -1395,15 +1406,18 @@ package treatments
 				else
 					bwSuggestionLabel.text += "\n\n" + "Blood glucose in target (" + formattedTarget + ")" + " or within " + formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit() + " difference";
 			}
-			else if (record.insulin < 0) 
+			
+			function displayCarbsNeeded():void
 			{
+				trace("displayCarbsNeeded");
+				
 				bgIsWithinTarget = false;
 				
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = true;
 				
 				var insulinToCoverCarbs:Number = (record.carbsneeded / isf) + (record.carbs / isf);
-				var bgImpact:Number = insulinToCoverCarbs * isf;
+				var bgImpact:Number = (insulinToCoverCarbs * isf) + (record.trendCorrection * isf);
 				var outcomeWithCarbsTreatment:Number = outcome + bgImpact;
 				outcomeWithCarbsTreatment = isMgDl ? Math.round(outcomeWithCarbsTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithCarbsTreatment) * 10) / 10;
 				
@@ -1416,22 +1430,25 @@ package treatments
 						bwSuggestionLabel.text += "\n\n" + "Carbs needed: " + record.carbsneeded + "g";
 					else
 						bwSuggestionLabel.text += "\n\n" + "Extra carbs needed: " + record.carbsneeded + "g";
-				
+					
 					bwSuggestionLabel.text += "\n\n" + "Insulin equivalent: " + record.insulin + "U";
 				}
 				
 				if (Math.abs(formattedTarget - outcomeWithCarbsTreatment) > formattedErrorMargin)
 					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
 			}
-			else
+			
+			function displayInsulinNeeded():void
 			{
+				trace("displayInsulinNeeded");
+				
 				bgIsWithinTarget = false;
 				
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = true;
 				
 				//Calculate outcome
-				var outcomeWithInsulinTreatment:Number = outcome - (Number(record.insulin) * isf) + (Number(record.insulincarbs / isf));
+				var outcomeWithInsulinTreatment:Number = outcome - (Number(record.insulin) * isf) + (Number(record.insulincarbs / isf)) + (record.trendCorrection * isf);
 				
 				if (record.carbs > 0)
 				{
@@ -1459,7 +1476,7 @@ package treatments
 					bwFinalCalculatedInsulinStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
 					bwFinalCalculatedCarbsStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
 					
-					bwFinalCalculatedInsulinStepper.value = record.insulin + (currentTrendCorrection != 0 && bwTrendCheck.isSelected && currentTrendCorrectionUnit == "U" ? currentTrendCorrection : 0);
+					bwFinalCalculatedInsulinStepper.value = record.insulin;
 					bwFinalCalculatedCarbsStepper.value = record.carbs + record.carbsneeded;
 					bolusWizardAddButton.isEnabled = bwFinalCalculatedInsulinStepper.value != 0 || bwFinalCalculatedCarbsStepper.value != 0 ? true : false;
 					
@@ -1477,8 +1494,8 @@ package treatments
 					bwFinalCalculatedInsulinStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
 					bwFinalCalculatedCarbsStepper.removeEventListener(Event.CHANGE, onFinalTreatmentChanged);
 					
-					bwFinalCalculatedInsulinStepper.value = 0;
-					bwFinalCalculatedCarbsStepper.value = 0;
+					bwFinalCalculatedInsulinStepper.value = 0 + (record.trendCorrection > 0 ? record.trendCorrection : 0);
+					bwFinalCalculatedCarbsStepper.value = 0 + (record.trendCorrection < 0 ? Math.abs(record.trendCorrection * ic) : 0);
 					bolusWizardAddButton.isEnabled = bwFinalCalculatedInsulinStepper.value != 0 || bwFinalCalculatedCarbsStepper.value != 0 ? true : false;
 					
 					bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
