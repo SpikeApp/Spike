@@ -1248,6 +1248,8 @@ package treatments
 			var total:Number = 0;
 			var insulin:Number = 0;
 			var roundingcorrection:Number = 0;
+			var exerciseMultiplier:Number = 1;
+			var sicknessMultiplier:Number = 1;
 			
 			//Trend
 			if (currentTrendCorrection != 0 && bwTrendCheck.isSelected)
@@ -1314,11 +1316,7 @@ package treatments
 			}
 			
 			//Total & rounding
-			//if (bwIOBCheck.isSelected) 
-			//{
-				total = !useUserDefinedSettings ? insulinbg + insulincarbs + insulincob - iob + extraCorrections + trendCorrections : bwFinalCalculatedInsulinStepper.value;
-			//}
-				
+			total = !useUserDefinedSettings ? insulinbg + insulincarbs + insulincob - iob + extraCorrections + trendCorrections : bwFinalCalculatedInsulinStepper.value;
 			insulin = roundTo(total, insulinPrecision);
 			insulin = Math.round(insulin * 100) / 100;
 			roundingcorrection = insulin - total;
@@ -1335,6 +1333,7 @@ package treatments
 			
 			if (insulin > 0 && bwExerciseCheck.isSelected)
 			{
+				exerciseMultiplier += bwExerciseAmountStepper.value / 100;
 				preAdjustmentInsulin -= insulin * (bwExerciseAmountStepper.value / 100);
 				preAdjustmentInsulin = roundTo(preAdjustmentInsulin, insulinPrecision);
 				preAdjustmentInsulin = Math.round(preAdjustmentInsulin * 100) / 100;
@@ -1343,6 +1342,7 @@ package treatments
 			// Sickness Adjustment
 			if (insulin > 0 && bwSicknessCheck.isSelected)
 			{
+				sicknessMultiplier -= bwSicknessAmountStepper.value / 100;
 				preAdjustmentInsulin += insulin * (bwSicknessAmountStepper.value / 100);
 				preAdjustmentInsulin = roundTo(preAdjustmentInsulin, insulinPrecision);
 				preAdjustmentInsulin = Math.round(preAdjustmentInsulin * 100) / 100;
@@ -1448,7 +1448,7 @@ package treatments
 					bolusWizardAddButton.isEnabled = true;
 				
 				//Calculate outcome
-				var outcomeWithInsulinTreatment:Number = outcome - (Number(record.insulin) * isf) + (Number(record.insulincarbs / isf)) + (record.trendCorrection * isf);
+				var outcomeWithInsulinTreatment:Number = outcome - (Number(record.insulin * exerciseMultiplier * sicknessMultiplier) * isf) + (Number((record.insulincarbs * exerciseMultiplier * sicknessMultiplier) / isf)) + (record.trendCorrection * isf);
 				
 				if (record.carbs > 0)
 				{
@@ -1457,6 +1457,7 @@ package treatments
 					outcomeWithInsulinTreatment += bgImpactWithExtraCarbs;
 				}
 				
+				//outcomeWithInsulinTreatment /= exerciseMultiplier;
 				outcomeWithInsulinTreatment = isMgDl ? Math.round(outcomeWithInsulinTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithInsulinTreatment) * 10) / 10;
 				
 				//Update Suggestion Label
