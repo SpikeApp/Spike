@@ -104,6 +104,10 @@ package treatments
 		private static var fiberPrecision:Number;
 		private static var selectedExerciseID:int = CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_15MIN;
 		private static var dontUpdateBG:Boolean = false;
+		private static var errorMarginValue:Number;
+		private static var autoIOB:Boolean;
+		private static var autoCOB:Boolean;
+		private static var autoTrend:Boolean;
 		
 		/* Objects */
 		private static var currentProfile:Profile;
@@ -257,6 +261,10 @@ package treatments
 			insulinPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION));
 			carbsPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_CARBS_PRECISION));
 			fiberPrecision = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_FIBER_PRECISION));
+			errorMarginValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_ACCEPTABLE_MARGIN));
+			autoIOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_AUTO_IOB_ENABLED) == "true";
+			autoCOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_AUTO_COB_ENABLED) == "true";
+			autoTrend = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_AUTO_TREND_ENABLED) == "true";
 			
 			dontUpdateBG = false;
 		}
@@ -528,7 +536,6 @@ package treatments
 			bwTrendContainer.addChild(bwTrendLabelContainer);
 			
 			bwTrendCheck = LayoutFactory.createCheckMark(false);
-			bwTrendCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwTrendContainer.addChild(bwTrendCheck);
 			
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
@@ -572,6 +579,11 @@ package treatments
 				}
 			}
 			
+			if (currentTrendCorrection != 0 && autoTrend)
+				bwTrendCheck.isEnabled = true;
+			
+			bwTrendCheck.addEventListener(Event.CHANGE, performCalculations);
+			
 			bwCurrentTrendLabel = LayoutFactory.createLabel(currentTrendCorrection + currentTrendCorrectionUnit);
 			bwCurrentTrendLabel.wordWrap = true;
 			bwTrendContainer.addChild(bwCurrentTrendLabel);
@@ -582,6 +594,8 @@ package treatments
 			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
 			
 			//Current IOB
+			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
+			
 			bwIOBContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwIOBContainer.width = contentWidth;
 			bwMainContainer.addChild(bwIOBContainer);
@@ -589,7 +603,7 @@ package treatments
 			bwIOBLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwIOBContainer.addChild(bwIOBLabelContainer);
 			
-			bwIOBCheck = LayoutFactory.createCheckMark(false);
+			bwIOBCheck = LayoutFactory.createCheckMark(currentIOB > 0 && autoIOB ? true : false);
 			bwIOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwIOBLabelContainer.addChild(bwIOBCheck);
 			
@@ -597,7 +611,6 @@ package treatments
 			bwIOBLabel.wordWrap = true;
 			bwIOBLabelContainer.addChild(bwIOBLabel);
 			
-			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
 			bwCurrentIOBLabel = LayoutFactory.createLabel(GlucoseFactory.formatIOB(currentIOB));
 			bwIOBContainer.addChild(bwCurrentIOBLabel);
 			
@@ -606,6 +619,8 @@ package treatments
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			//Current COB
+			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
+			
 			bwCOBContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwCOBContainer.width = contentWidth;
 			bwMainContainer.addChild(bwCOBContainer);
@@ -613,7 +628,7 @@ package treatments
 			bwCOBLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwCOBContainer.addChild(bwCOBLabelContainer);
 			
-			bwCOBCheck = LayoutFactory.createCheckMark(false);
+			bwCOBCheck = LayoutFactory.createCheckMark(currentCOB > 0 && autoCOB ? true : false);
 			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwCOBLabelContainer.addChild(bwCOBCheck);
 			
@@ -621,7 +636,6 @@ package treatments
 			bwCOBLabel.wordWrap = true;
 			bwCOBLabelContainer.addChild(bwCOBLabel);
 			
-			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
 			bwCurrentCOBLabel = LayoutFactory.createLabel(GlucoseFactory.formatCOB(currentCOB));
 			bwCOBContainer.addChild(bwCurrentCOBLabel);
 			
@@ -1094,6 +1108,7 @@ package treatments
 			bwTrendContainer.validate();
 			bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
 			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
+			bwTrendCheck.isSelected = currentTrendCorrection != 0 && autoTrend;
 			
 			//Current IOB
 			currentIOB = TreatmentsManager.getTotalIOB(now);
@@ -1101,7 +1116,6 @@ package treatments
 			bwCurrentIOBLabel.validate();
 			bwIOBContainer.validate();
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
-			bwIOBCheck.isSelected = currentIOB > 0;
 			
 			//Current COB
 			currentCOB = TreatmentsManager.getTotalCOB(now);
@@ -1109,7 +1123,6 @@ package treatments
 			bwCurrentCOBLabel.validate();
 			bwCOBContainer.validate();
 			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
-			bwCOBCheck.isSelected = currentCOB > 0;
 			
 			//Calculations
 			performCalculations();
@@ -1207,9 +1220,7 @@ package treatments
 		
 		private static function roundTo (x:Number, step:Number):Number
 		{
-			if (x) return Math.round(x / step) * step;
-			
-			return 0;
+			return Math.round(x / step) * step;
 		}
 		
 		/**
@@ -1230,7 +1241,7 @@ package treatments
 			var targetBG:Number = Number(currentProfile.targetGlucoseRates);
 			var targetBGLow:Number = targetBG;
 			var targetBGHigh:Number = targetBG;
-			var acceptedMargin:Number = 10;
+			var acceptedMargin:Number = errorMarginValue;
 			
 			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 			var ic:Number = Number(currentProfile.insulinToCarbRatios);
@@ -1324,8 +1335,12 @@ package treatments
 			// Carbs needed if too much IOB
 			if (insulin < 0) 
 			{
-				//carbsneeded = Math.ceil(-total * ic);
-				carbsneeded = roundTo(-total * ic, carbsPrecision);
+				carbsneeded = -total * ic;
+				
+				if (carbsPrecision == 1)
+					carbsneeded = Math.ceil(carbsneeded);
+				else
+					carbsneeded = roundTo(-total * ic, carbsPrecision);
 			}
 			
 			//Exercise Adjustment
@@ -1376,7 +1391,7 @@ package treatments
 			
 			var isInTarget:Boolean = (record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0) || Math.abs(outcome - targetBG) <= acceptedMargin;
 			var formattedTarget:Number = isMgDl ? Number(currentProfile.targetGlucoseRates) : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10;
-			var formattedErrorMargin:Number = isMgDl ? 10 : Math.round(BgReading.mgdlToMmol(10) * 100) / 100;
+			var formattedErrorMargin:Number = isMgDl ? acceptedMargin : Math.round(BgReading.mgdlToMmol(acceptedMargin) * 10) / 10;
 			
 			if (isInTarget) 
 			{
