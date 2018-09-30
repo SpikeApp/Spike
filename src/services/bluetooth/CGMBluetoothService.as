@@ -1020,6 +1020,7 @@ package services.bluetooth
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
+			//myTrace("Bluetooth peripheral characteristics discovered - extra tracing");
 			myTrace("Bluetooth peripheral characteristics discovered");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
@@ -1035,7 +1036,9 @@ package services.bluetooth
 			
 			var o:Object;
 			
+			//myTrace("looping through services");	
 			for each (o in activeBluetoothPeripheral.services) {
+				//myTrace("found service with UUID = " + service_UUID);
 				if (service_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 					break;
 				}
