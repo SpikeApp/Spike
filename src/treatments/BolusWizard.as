@@ -43,7 +43,6 @@ package treatments
 	import feathers.layout.Direction;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
-	import feathers.layout.RelativePosition;
 	import feathers.layout.TiledRowsLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
@@ -1187,6 +1186,13 @@ package treatments
 			missedSettingsConfigureButton.addEventListener(Event.TRIGGERED, onPerformConfiguration);
 			missedSettingsActionsContainer.addChild(missedSettingsConfigureButton);
 			
+			if (instructionsButton == null)
+			{
+				instructionsButton = LayoutFactory.createButton("INSTRUCTIONS");
+				instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsButtonTriggered);
+			}
+			missedSettingsContainer.addChild(instructionsButton);
+			
 			setCalloutPositionHelper();
 			
 			if (bolusWizardConfigureCallout != null) bolusWizardConfigureCallout.dispose();
@@ -1640,7 +1646,8 @@ package treatments
 			popupTween.fadeTo(0);
 			popupTween.onComplete = function():void
 			{
-				bolusWizardConfigureCallout.removeFromParent(true);
+				bolusWizardConfigureCallout.removeFromParent(false);
+				disposeComponents();
 			}
 			Starling.juggler.add(popupTween);
 		}

@@ -111,7 +111,7 @@ package ui.screens.display.settings.treatments
 			//Set screen content
 			var data:Array = [];
 			
-			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','default_screen_label'), accessory: defaultScreenPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','default_database_label'), accessory: defaultScreenPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','search_as_i_type_label'), accessory: searchAsITypeCheck } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('foodmanager','import_foods_as_note_label'), accessory: importFoodsAsNoteCheck } );
 			
