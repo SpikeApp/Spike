@@ -304,7 +304,7 @@ package treatments
 			bwMainContainer.width = contentWidth;
 			
 			//Title
-			bwTitle = LayoutFactory.createLabel("Bolus Wizard", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			bwTitle = LayoutFactory.createLabel("Bolus Calculator", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			bwTitle.width = contentWidth;
 			bwMainContainer.addChild(bwTitle);
 			
@@ -724,9 +724,7 @@ package treatments
 			
 			bwExerciseDurationPicker = LayoutFactory.createPickerList();
 			bwExerciseDurationPicker.labelField = "label";
-			var bwExerciseDurationPopup:DropDownPopUpContentManager = new DropDownPopUpContentManager();
-			bwExerciseDurationPopup.primaryDirection = RelativePosition.TOP;
-			bwExerciseDurationPicker.popUpContentManager = bwExerciseDurationPopup;
+			bwExerciseDurationPicker.popUpContentManager = new DropDownPopUpContentManager();
 			bwExerciseDurationPicker.dataProvider = new ArrayCollection
 				(
 					[
@@ -812,7 +810,7 @@ package treatments
 			bwOtherCorrectionAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwOtherCorrectionAmountContainer.width = contentWidth;
 			
-			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("Amount (U/g)");
+			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("Amount (g/U)");
 			bwOtherCorrectionAmountLabel.wordWrap = true;
 			bwOtherCorrectionAmountLabel.paddingLeft = 25;
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountLabel);
@@ -1002,7 +1000,7 @@ package treatments
 		
 		private static function onInstructionsButtonTriggered(e:Event):void
 		{
-			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Bolus-Wizard"));
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Bolus-Calculator"));
 		}
 		
 		private static function onBGChanged(e:Event):void
@@ -1166,7 +1164,7 @@ package treatments
 			missedSettingsContainer.width = contentWidth;
 			
 			if (missedSettingsTitle != null) missedSettingsTitle.removeFromParent(true);
-			missedSettingsTitle = LayoutFactory.createLabel("Bolus Wizard", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			missedSettingsTitle = LayoutFactory.createLabel("Bolus Calculator", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			missedSettingsTitle.width = contentWidth;
 			missedSettingsContainer.addChild(missedSettingsTitle);
 			
@@ -1239,8 +1237,6 @@ package treatments
 			}
 			
 			var targetBG:Number = Number(currentProfile.targetGlucoseRates);
-			var targetBGLow:Number = targetBG;
-			var targetBGHigh:Number = targetBG;
 			var acceptedMargin:Number = errorMarginValue;
 			
 			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
@@ -1297,15 +1293,7 @@ package treatments
 					bg = 0;
 				}
 				
-				if (bg < targetBGLow)
-				{
-					bgdiff = bg - targetBGLow;
-				}
-				else if (bg > targetBGHigh)
-				{
-					bgdiff = bg - targetBGHigh;
-				}
-				
+				bgdiff = bg - targetBG;
 				bgdiff = roundTo(bgdiff, 0.1);
 				
 				if (bg !== 0)
@@ -1367,8 +1355,7 @@ package treatments
 			
 			//Debug
 			var record:Object = {};
-			record.targetBGLow = targetBGLow;
-			record.targetBGHigh = targetBGHigh;
+			record.targetBGLow = targetBG;
 			record.isf = isf;
 			record.ic = ic;
 			record.iob = iob;
@@ -1385,7 +1372,7 @@ package treatments
 			record.roundingcorrection = roundingcorrection;
 			record.carbsneeded = carbsneeded;
 			
-			var outcome:Number = record.bg - (record.iob * isf) + (record.insulincob * isf);
+			var outcome:Number = record.bg - (record.iob * isf) + (record.insulincob * isf) + (record.insulincarbs * isf);
 			
 			trace(ObjectUtil.toString(record));
 			
@@ -1431,8 +1418,8 @@ package treatments
 				if (bolusWizardAddButton != null)
 					bolusWizardAddButton.isEnabled = true;
 				
-				var insulinToCoverCarbs:Number = (record.carbsneeded / isf) + (record.carbs / isf);
-				var bgImpact:Number = (insulinToCoverCarbs * isf) + (record.trendCorrection * isf);
+				var insulinToCoverCarbs:Number = (record.carbsneeded + record.carbs) / ic;
+				var bgImpact:Number = (insulinToCoverCarbs + record.trendCorrection) * isf;
 				var outcomeWithCarbsTreatment:Number = outcome + bgImpact;
 				outcomeWithCarbsTreatment = isMgDl ? Math.round(outcomeWithCarbsTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithCarbsTreatment) * 10) / 10;
 				
@@ -1463,11 +1450,11 @@ package treatments
 					bolusWizardAddButton.isEnabled = true;
 				
 				//Calculate outcome
-				var outcomeWithInsulinTreatment:Number = outcome - (Number(record.insulin * exerciseMultiplier * sicknessMultiplier) * isf) + (Number((record.insulincarbs * exerciseMultiplier * sicknessMultiplier) / isf)) + (record.trendCorrection * isf);
+				var outcomeWithInsulinTreatment:Number = outcome - (record.insulin * exerciseMultiplier * sicknessMultiplier * isf) - (record.insulincarbs * exerciseMultiplier * sicknessMultiplier * isf) - (record.trendCorrection * isf);
 				
 				if (record.carbs > 0)
 				{
-					var insulinToCoverExtraCarbs:Number = (record.carbs / isf);
+					var insulinToCoverExtraCarbs:Number = (record.carbs / ic);
 					var bgImpactWithExtraCarbs:Number = insulinToCoverExtraCarbs * isf;
 					outcomeWithInsulinTreatment += bgImpactWithExtraCarbs;
 				}
@@ -2151,7 +2138,7 @@ package treatments
 				AlertManager.showActionAlert
 					(
 						"Disclaimer",
-						"PLEASE READ CAREFULLY AND FULLY!\nThe Bolus Wizard provides information and content that has been assembled with the greatest of care and to the very best of our knowledge from internal and external sources. We nevertheless wish to emphasize that the Bolus Wizard is only to be used to provide you with information and to build awareness but it cannot replace consultation with a healthcare professional. It should be used for research purposes only! Under no circumstances does Spike issue medical therapy recommendations or medical advice of any kind. For questions on the therapy and the settings that best apply to you (ISF, I:C, etc.), we recommend contacting a healthcare professional. No content - no matter whether provided by Spike itself, our cooperation partners, or users - can be understood as supplementing or replacing information from a healthcare professional.\n\nBolus proposal provided by the calculator is solely a proposal. Always compare the proposed amount with the way you are actually feeling, and adjust the recommended bolus dosage accordingly. Always consult your healthcare professional before changing your diabetes therapy.\n\nThe calculator settings must be defined by a healthcare professional. Do not make or change the settings without the supervision of and consultancy from a healthcare professional. Wrong settings always lead to a wrong bolus proposal.\n\nIt is important to make the correct selection for your Insulin-to-Carbohydrate ratio (I:C) and Insulin Sensitivity Factor (ISF). If the selected I:C and/or ISF are wrong, all bolus dosage proposals will be wrong.\n\nUse of the bolus calculator requires an understanding of the use of rapid-acting insulin. Misuse or misunderstanding of the calculation, or the suggested bolus may lead to inappropriate insulin calculation.\n\nThe calculator cannot account for all the factors that may affect your required insulin dosage. The factors include incorrectly entered data (e.g. wrong BG), incorrect settings, and un-logged insulin or other data. Always compare the proposal with you current condition.\n\nThe calculator cannot account for unusual changes in your metabolism resulting from, e.g. extreme dieting. Always compare the proposal with you current condition.\n\nMake sure that the data you provide for the calculator is correct. Wrong data leads to wrong bolus proposals.\n\nDo not change your treatment based on a single calculation result that does not match how you feel, or if you believe that the proposal is incorrect.\n\nThe calculator for the calculation of insulin dosage proposals for rapid-acting insulin only. Do not use the calculator to calculate proposals for intermediate-acting insulin or for long-lasting (basal) insulin.\n\nThe calculator cannot account for instabilities related to your basal insulin treatment. Do not use the calculator, if your basal insulin treatment is not in balance or otherwise under control.\n\nBy agreeing to the terms above indicates that you have read them and have agreed. All calculations must be confirmed before use. The suggested results are not a substitute for clinical judgment. Neither the author nor any other party involved in the preparation or publication of Spike and the Bolus Wizard shall be liable for use or misuse.\n\nWe strongly advise against using the Bolus Wizard if your sensor is giving inaccurate readings. This tends to happen during the first 24-48h after insertion or when the sensor is approaching end-of-life.\n\nThe Bolus Wizard is a research tool only and in no circumstances should be used in a real world scenario.",
+						"PLEASE READ CAREFULLY AND FULLY!\nThe bolus calculatord provides information and content that has been assembled with the greatest of care and to the very best of our knowledge from internal and external sources. We nevertheless wish to emphasize that the bolus calculatord is only to be used to provide you with information and to build awareness but it cannot replace consultation with a healthcare professional. It should be used for research purposes only! Under no circumstances does Spike issue medical therapy recommendations or medical advice of any kind. For questions on the therapy and the settings that best apply to you (ISF, I:C, etc.), we recommend contacting a healthcare professional. No content - no matter whether provided by Spike itself, our cooperation partners, or users - can be understood as supplementing or replacing information from a healthcare professional.\n\nBolus proposal provided by the calculator is solely a proposal. Always compare the proposed amount with the way you are actually feeling, and adjust the recommended bolus dosage accordingly. Always consult your healthcare professional before changing your diabetes therapy.\n\nThe calculator settings must be defined by a healthcare professional. Do not make or change the settings without the supervision of and consultancy from a healthcare professional. Wrong settings always lead to a wrong bolus proposal.\n\nIt is important to make the correct selection for your Insulin-to-Carbohydrate ratio (I:C) and Insulin Sensitivity Factor (ISF). If the selected I:C and/or ISF are wrong, all bolus dosage proposals will be wrong.\n\nUse of the bolus calculator requires an understanding of the use of rapid-acting insulin. Misuse or misunderstanding of the calculation, or the suggested bolus may lead to inappropriate insulin calculation.\n\nThe calculator cannot account for all the factors that may affect your required insulin dosage. The factors include incorrectly entered data (e.g. wrong BG), incorrect settings, and un-logged insulin or other data. Always compare the proposal with you current condition.\n\nThe calculator cannot account for unusual changes in your metabolism resulting from, e.g. extreme dieting. Always compare the proposal with you current condition.\n\nMake sure that the data you provide for the calculator is correct. Wrong data leads to wrong bolus proposals.\n\nDo not change your treatment based on a single calculation result that does not match how you feel, or if you believe that the proposal is incorrect.\n\nThe calculator for the calculation of insulin dosage proposals for rapid-acting insulin only. Do not use the calculator to calculate proposals for intermediate-acting insulin or for long-lasting (basal) insulin.\n\nThe calculator cannot account for instabilities related to your basal insulin treatment. Do not use the calculator, if your basal insulin treatment is not in balance or otherwise under control.\n\nBy agreeing to the terms above indicates that you have read them and have agreed. All calculations must be confirmed before use. The suggested results are not a substitute for clinical judgment. Neither the author nor any other party involved in the preparation or publication of Spike and the bolus calculator shall be liable for use or misuse.\n\nWe strongly advise against using the bolus calculator if your sensor is giving inaccurate readings. This tends to happen during the first 24-48h after insertion or when the sensor is approaching end-of-life.\n\nThe bolus calculator is a research tool only and in no circumstances should be used in a real world scenario.",
 						Number.NaN,
 						[
 							{ label: "CANCEL" },

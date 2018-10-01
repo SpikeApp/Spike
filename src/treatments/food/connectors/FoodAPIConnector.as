@@ -17,6 +17,7 @@ package treatments.food.connectors
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
+	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import database.Database;
@@ -946,6 +947,9 @@ package treatments.food.connectors
 						for (i = 0; i < foodList.length; i++) 
 						{
 							var unprocessedOFFFood:Object = foodList[i];
+							
+							trace(ObjectUtil.toString(unprocessedOFFFood));
+							
 							if (unprocessedOFFFood != null)
 							{
 								var offID:String = unprocessedOFFFood["_id"] != null ? String(unprocessedOFFFood["_id"]) : UniqueId.createEventId();
@@ -964,8 +968,8 @@ package treatments.food.connectors
 									offCalories = convertKjToKcal(offCalories);
 								var offLink:String = unprocessedOFFFood.url != null ? String(unprocessedOFFFood.url) : "";
 								var offServingSize:Number = 100;
-								var offServingUnit:String = "g";
-								var offCategories:Array = unprocessedOFFFood.categories_hierarchy != null && unprocessedOFFFood.categories_hierarchy is Array ? unprocessedOFFFood.categories_hierarchy : [];
+								var offServingUnit:String = "g/ml";
+								/*var offCategories:Array = unprocessedOFFFood.categories_hierarchy != null && unprocessedOFFFood.categories_hierarchy is Array ? unprocessedOFFFood.categories_hierarchy : [];
 								for (var j:int = 0; j < offCategories.length; j++) 
 								{
 									var offCategory:String = String(offCategories[j]);
@@ -974,7 +978,16 @@ package treatments.food.connectors
 										offServingUnit = "ml";
 										break;
 									}
-								}
+								}*/
+								/*if (unprocessedOFFFood.nutrition_data_per != null)
+								{
+									if (String(unprocessedOFFFood.nutrition_data_per).indexOf("100") != -1)
+									{
+										offServingUnit = StringUtil.trim(String(unprocessedOFFFood.nutrition_data_per).replace("100", ""));
+									}
+								}*/
+								
+								
 								var offBarCode:String = unprocessedOFFFood.code != null ? String(unprocessedOFFFood.code) : "";
 								var offNote:String = "";
 								
