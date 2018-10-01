@@ -370,7 +370,7 @@ package treatments
 						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, spikeTreatment));
 						
 						//Delete from Nightscout
-						if (updateNightscout && NightscoutService.serviceActive)
+						if (updateNightscout && (NightscoutService.serviceActive || NightscoutService.followerModeEnabled))
 							NightscoutService.deleteTreatment(spikeTreatment);
 						
 						//Delete from databse
