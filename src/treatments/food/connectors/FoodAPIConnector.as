@@ -17,7 +17,6 @@ package treatments.food.connectors
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	
-	import mx.utils.ObjectUtil;
 	import mx.utils.StringUtil;
 	
 	import database.Database;
@@ -947,8 +946,6 @@ package treatments.food.connectors
 						for (i = 0; i < foodList.length; i++) 
 						{
 							var unprocessedOFFFood:Object = foodList[i];
-							
-							trace(ObjectUtil.toString(unprocessedOFFFood));
 							
 							if (unprocessedOFFFood != null)
 							{
