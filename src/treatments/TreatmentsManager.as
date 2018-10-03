@@ -1273,7 +1273,7 @@ package treatments
 			for (var i:int = 0; i < insulins.length; i++) 
 			{
 				var insulin:Insulin = insulins[i];
-				if (insulin.isDefault)
+				if (insulin.isDefault && !insulin.isHidden)
 				{
 					//Remove it from the array
 					insulins.removeAt(i);
