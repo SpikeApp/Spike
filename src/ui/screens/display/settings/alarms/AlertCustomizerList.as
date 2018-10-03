@@ -5,6 +5,7 @@ package ui.screens.display.settings.alarms
 	
 	import database.AlertType;
 	import database.Database;
+	import database.LocalSettings;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
@@ -420,7 +421,7 @@ package ui.screens.display.settings.alarms
 			var selectedItemData:Object = DefaultListItemRenderer(Button(e.currentTarget).parent).data;
 			var soundFile:String = selectedItemData.soundFile;
 			if(soundFile != "" && soundFile != "default" && soundFile != "no_sound")
-				SpikeANE.playSound(soundFile);
+				SpikeANE.playSound(soundFile, Number.NaN, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_ON) == "true" ? Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_VALUE)) : Number.NaN);
 		}
 		
 		private function onSoundListClose():void
