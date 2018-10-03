@@ -2,6 +2,7 @@
 ENHANCEMENT: Spike will now respect the override system volume when previewing alert sounds in settings -> alert types. (Miguel)
 FIX: The Pebble endpoint on Spike's internal server now returns the sgv value always in mg/dL. (Miguel)
 FIX: Workaround for the need to swipe twice from the screen bottom on iPhone X or above to close Spike. (Miguel)
+FIX: Small bug fixes for alarms snooze times saved to database to persist after Spike restarts. (Miguel)
 
 2.5.3
 ENHANCEMENT: Full iPhone Xr & Xs Max support. Spike is now compatible with all new iPhone and Apple Watch models. (Miguel)

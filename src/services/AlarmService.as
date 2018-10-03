@@ -2523,27 +2523,35 @@ package services
 		
 		private static function resetVeryLowAlertPreSnooze():void {
 			_veryLowAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_LOW_ALERT_PRESNOOZED, String(_veryLowAlertPreSnoozed), true, false);
 		}
 		private static function resetLowAlertPreSnooze():void {
 			_lowAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOW_ALERT_PRESNOOZED, String(_lowAlertPreSnoozed), true, false);
 		}
 		private static function resetVeryHighAlertPreSnooze():void {
 			_veryHighAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_PRESNOOZED, String(_veryHighAlertPreSnoozed), true, false);
 		}
 		private static function resetHighAlertPreSnooze():void {
 			_highAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HIGH_ALERT_PRESNOOZED, String(_highAlertPreSnoozed), true, false);
 		}
 		private static function resetMissedreadingAlertPreSnooze():void {
 			_missedReadingAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READINGS_ALERT_PRESNOOZED, String(_missedReadingAlertPreSnoozed), true, false);
 		}
 		private static function resetPhoneMutedAlertPreSnooze():void {
 			_phoneMutedAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_ALERT_PRESNOOZED, String(_phoneMutedAlertPreSnoozed), true, false);
 		}
 		private static function resetFastDropAlertPreSnooze():void {
 			_fastDropAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_DROP_ALERT_PRESNOOZED, String(_fastDropAlertPreSnoozed), true, false);
 		}
 		private static function resetFastRiseAlertPreSnooze():void {
 			_fastRiseAlertPreSnoozed = false;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FAST_RISE_ALERT_PRESNOOZED, String(_fastRiseAlertPreSnoozed), true, false);
 		}
 		
 		public static function veryLowAlertSnoozedUntilTimestamp():Number 
