@@ -1061,7 +1061,8 @@ package treatments
 			}
 			
 			//Current Trend
-			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
+			//var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
+			var currentTrendArrow:String = "\u2197";
 			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
 			currentTrendCorrection = 0;
 			currentTrendCorrectionUnit = "U";
@@ -1367,13 +1368,19 @@ package treatments
 			record.carbsneeded = carbsPrecision == 1 ? Math.ceil(carbsneeded) : roundTo(-total * ic, carbsPrecision);
 			
 			var outcome:Number = record.bg - (iob * isf) + (record.insulincob * isf) + (record.insulincarbs * isf) - (useUserDefinedSettings ? record.insulin * isf : 0);
+			trace("outcome", outcome);
+			
 			
 			trace(ObjectUtil.toString(record));
 			
-			var isInTarget:Boolean = (record.othercorrection === 0 && record.carbs === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0) || Math.abs(outcome - targetBG) <= acceptedMargin;
+			var isInTarget:Boolean = (record.othercorrection === 0 && record.trendCorrection === 0 && record.carbs === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0) || Math.abs(outcome - targetBG) <= acceptedMargin;
 			var formattedTarget:Number = isMgDl ? Number(currentProfile.targetGlucoseRates) : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10;
 			var formattedErrorMargin:Number = isMgDl ? acceptedMargin : Math.round(BgReading.mgdlToMmol(acceptedMargin) * 10) / 10;
 			var formattedISF:Number = isMgDl ? isf : Math.round(BgReading.mgdlToMmol(isf) * 10) / 10;
+			
+			
+			trace("isInTarget", isInTarget);
+			
 			
 			bwSuggestionLabel.text = "BG Target" + ": " +  formattedTarget + ", " + "ISF" + ": " + formattedISF + ", " + "I:C" + ": " + ic;
 			
@@ -1441,8 +1448,14 @@ package treatments
 				
 				bgIsWithinTarget = false;
 				
+				var trendCCorrectionHasInsulin:Boolean = bwTrendCheck.isSelected && currentTrendCorrection != 0 && currentTrendCorrectionUnit == "U";
+				
+				
 				//Calculate outcome
-				var outcomeWithInsulinTreatment:Number = outcome - (record.insulin * exerciseMultiplier * sicknessMultiplier * isf) - (record.insulincarbs * exerciseMultiplier * sicknessMultiplier * isf) - (record.trendCorrection * isf);
+				var outcomeWithInsulinTreatment:Number = outcome - (record.insulin * exerciseMultiplier * sicknessMultiplier * isf) - (record.insulincarbs * exerciseMultiplier * sicknessMultiplier * isf) + (record.trendCorrection * exerciseMultiplier * sicknessMultiplier * isf);
+				
+				
+				trace("outcomeWithInsulinTreatment", outcomeWithInsulinTreatment);
 				
 				if (record.carbs > 0)
 				{
