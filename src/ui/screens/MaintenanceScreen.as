@@ -108,6 +108,9 @@ package ui.screens
 		 */
 		override protected function onBackButtonTriggered(event:Event):void
 		{
+			if (updatesSettingsList.needsSave)
+				updatesSettingsList.save();
+			
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
 			

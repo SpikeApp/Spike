@@ -121,7 +121,24 @@ package services
 			}
 			
 			//Check updates (if possible)
-			var now:Number = new Date().valueOf();
+			var nowDate:Date = new Date();
+			var now:Number = nowDate.valueOf();
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_ENABLED) == "true")
+			{
+				var currentHour:Number = nowDate.hours;
+				var currentMinutes:Number = nowDate.minutes;
+				var quiteStartHour:Number = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_START_HOUR));
+				var quietStartMinutes:Number = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_START_MINUTES));
+				var quietEndHour:Number = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_END_HOUR));
+				var quietEndMinutes:Number = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_END_MINUTES));
+				
+				if ((currentHour >= quiteStartHour && currentMinutes >= quietStartMinutes) || (currentHour <= quietEndHour && currentMinutes <= quietEndMinutes))
+				{
+					myTrace("in onApplicationActivated, device in quiet time, aborting!");
+					return;
+				}
+			}
+			
 			if (now - lastReminded >= TimeSpan.TIME_24_HOURS && now - lastChecked >= TimeSpan.TIME_1_HOUR)
 				checkUpdate();
 		}

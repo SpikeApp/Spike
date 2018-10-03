@@ -1,8 +1,11 @@
 3.0.0
+FEATURE: Ability to set a quiet time for App Center updates in-app popups. If device is in quiet time Spike will not warn you if a new App Center update is available. Configure the quiet time in settings -> maintenance. (Miguel) 
 ENHANCEMENT: Spike will now respect the override system volume when previewing alert sounds in settings -> alert types. (Miguel)
 FIX: The Pebble endpoint on Spike's internal server now returns the sgv value always in mg/dL. (Miguel)
 FIX: Workaround for the need to swipe twice from the screen bottom on iPhone X or above to close Spike. (Miguel)
 FIX: Small bug fixes for alarms snooze times saved to database to persist after Spike restarts. (Miguel)
+FIX: Fix for phone needed to be restarted the first time the user tries to connect to a MiaoMiao device. (Johan)
+FIX: Fix for default insulin not always being displayed first when adding treatments. (Sascha)
 
 2.5.3
 ENHANCEMENT: Full iPhone Xr & Xs Max support. Spike is now compatible with all new iPhone and Apple Watch models. (Miguel)
