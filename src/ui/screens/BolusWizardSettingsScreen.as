@@ -17,17 +17,21 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.treatments.BolusWizardCalculationsSettingsList;
+	import ui.screens.display.settings.treatments.BolusWizardUISettingsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("treatments")]
+	[ResourceBundle("foodmanager")]
 
 	public class BolusWizardSettingsScreen extends BaseSubScreen
 	{
 		/* Display Objects */
-		private var bolusWizardSettings:BolusWizardCalculationsSettingsList;
-		private var bolusWizardLabel:Label;
+		private var bolusWizardCalculationsSettings:BolusWizardCalculationsSettingsList;
+		private var bolusWizardCalculationsLabel:Label;
+		private var bolusWizardUILabel:Label;
+		private var bolusWizardUISettings:BolusWizardUISettingsList;
 		
 		public function BolusWizardSettingsScreen() 
 		{
@@ -62,12 +66,20 @@ package ui.screens
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
 			//Calculations Section Label
-			bolusWizardLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('treatments','calculations_label'), true);
-			screenRenderer.addChild(bolusWizardLabel);
+			bolusWizardCalculationsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('treatments','calculations_label'), true);
+			screenRenderer.addChild(bolusWizardCalculationsLabel);
 			
 			//Calculations Settings
-			bolusWizardSettings = new BolusWizardCalculationsSettingsList();
-			screenRenderer.addChild(bolusWizardSettings);
+			bolusWizardCalculationsSettings = new BolusWizardCalculationsSettingsList();
+			screenRenderer.addChild(bolusWizardCalculationsSettings);
+			
+			//UI Section Label
+			bolusWizardUILabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('foodmanager','user_interface_lable'), true);
+			screenRenderer.addChild(bolusWizardUILabel);
+			
+			//UI Settings
+			bolusWizardUISettings = new BolusWizardUISettingsList(this);
+			screenRenderer.addChild(bolusWizardUISettings);
 		}
 		
 		/**
@@ -75,8 +87,11 @@ package ui.screens
 		 */
 		override protected function onBackButtonTriggered(event:Event):void
 		{
-			if (bolusWizardSettings.needsSave)
-				bolusWizardSettings.save();
+			if (bolusWizardCalculationsSettings.needsSave)
+				bolusWizardCalculationsSettings.save();
+			
+			if (bolusWizardUISettings.needsSave)
+				bolusWizardUISettings.save();
 			
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
@@ -95,11 +110,13 @@ package ui.screens
 		{
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
-				if (bolusWizardLabel != null) bolusWizardLabel.paddingLeft = 30;
+				if (bolusWizardCalculationsLabel != null) bolusWizardCalculationsLabel.paddingLeft = 30;
+				if (bolusWizardUILabel != null) bolusWizardUILabel.paddingLeft = 30;
 			}
 			else
 			{
-				if (bolusWizardLabel != null) bolusWizardLabel.paddingLeft = 0;
+				if (bolusWizardCalculationsLabel != null) bolusWizardCalculationsLabel.paddingLeft = 0;
+				if (bolusWizardUILabel != null) bolusWizardUILabel.paddingLeft = 0;
 			}
 			
 			setupHeaderSize();
@@ -110,18 +127,32 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
-			if (bolusWizardLabel != null)
+			if (bolusWizardCalculationsLabel != null)
 			{
-				bolusWizardLabel.removeFromParent();
-				bolusWizardLabel.dispose();
-				bolusWizardLabel = null;
+				bolusWizardCalculationsLabel.removeFromParent();
+				bolusWizardCalculationsLabel.dispose();
+				bolusWizardCalculationsLabel = null;
 			}
 			
-			if (bolusWizardSettings != null)
+			if (bolusWizardCalculationsSettings != null)
 			{
-				bolusWizardSettings.removeFromParent();
-				bolusWizardSettings.dispose();
-				bolusWizardSettings = null;
+				bolusWizardCalculationsSettings.removeFromParent();
+				bolusWizardCalculationsSettings.dispose();
+				bolusWizardCalculationsSettings = null;
+			}
+			
+			if (bolusWizardUILabel != null)
+			{
+				bolusWizardUILabel.removeFromParent();
+				bolusWizardUILabel.dispose();
+				bolusWizardUILabel = null;
+			}
+			
+			if (bolusWizardUISettings != null)
+			{
+				bolusWizardUISettings.removeFromParent();
+				bolusWizardUISettings.dispose();
+				bolusWizardUISettings = null;
 			}
 			
 			super.dispose();

@@ -73,11 +73,11 @@ package ui.screens
 			foodManagerCalculationsSettings = new FoodManagerCalculationsSettingsList();
 			screenRenderer.addChild(foodManagerCalculationsSettings);
 			
-			//Calculations Label
+			//UI Label
 			foodManagerUILabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('foodmanager','user_interface_lable'), true);
 			screenRenderer.addChild(foodManagerUILabel);
 			
-			//Calculations Settings
+			//UI Settings
 			foodManagerUISettings = new FoodManagerUISettingsList();
 			screenRenderer.addChild(foodManagerUISettings);
 		}

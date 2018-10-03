@@ -107,6 +107,8 @@ package treatments
 		private static var autoIOB:Boolean;
 		private static var autoCOB:Boolean;
 		private static var autoTrend:Boolean;
+		private static var suggestionsLineSpacing:String;
+		private static var suggestionsOnTop:Boolean;
 		
 		/* Objects */
 		private static var currentProfile:Profile;
@@ -264,6 +266,8 @@ package treatments
 			autoIOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_AUTO_IOB_ENABLED) == "true";
 			autoCOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_AUTO_COB_ENABLED) == "true";
 			autoTrend = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_AUTO_TREND_ENABLED) == "true";
+			suggestionsOnTop = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_SUGGESTION_COMPONENTS_ON_TOP) == "true";
+			suggestionsLineSpacing = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_NO_SPACE_BETWEEN_SUGGESTIONS) == "true" ? "\n" : "\n\n";
 			
 			dontUpdateBG = false;
 		}
@@ -306,6 +310,74 @@ package treatments
 			bwTitle = LayoutFactory.createLabel("Bolus Calculator", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			bwTitle.width = contentWidth;
 			bwMainContainer.addChild(bwTitle);
+			
+			//Final Calculations Label
+			finalCalculationsLabel = LayoutFactory.createLabel("Final Calculations", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+			finalCalculationsLabel.width = contentWidth;
+			finalCalculationsLabel.paddingTop = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_SUGGESTION_COMPONENTS_ON_TOP) == "true" ? 0 : 15;
+			finalCalculationsLabel.paddingBottom = 5;
+			finalCalculationsLabel.wordWrap = true;
+			if (suggestionsOnTop)
+				bwMainContainer.addChild(finalCalculationsLabel);
+			
+			//Wizard Suggestion
+			bwSuggestionLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 12, true, uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_SUGGESTION_LABEL_COLOR)));
+			bwSuggestionLabel.wordWrap = true;
+			bwSuggestionLabel.width = contentWidth;
+			if (suggestionsOnTop)
+				bwMainContainer.addChild(bwSuggestionLabel);
+			
+			//Final Calculated Insulin and Carbs
+			bwFinalCalculationsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
+			(bwFinalCalculationsContainer.layout as HorizontalLayout).paddingBottom = 10;
+			(bwFinalCalculationsContainer.layout as HorizontalLayout).paddingTop = 5;
+			bwFinalCalculationsContainer.width = contentWidth;
+			
+			bwFinalCalculatedInsulinContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
+			bwFinalCalculationsContainer.addChild(bwFinalCalculatedInsulinContainer);
+			
+			bwFinalCalculatedInsulinLabel = LayoutFactory.createLabel("Insulin", HorizontalAlign.CENTER);
+			bwFinalCalculatedInsulinLabel.wordWrap = true;
+			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinLabel);
+			
+			bwFinalCalculatedInsulinStepper = LayoutFactory.createNumericStepper(0, 200, 0, insulinPrecision);
+			bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
+			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinStepper);
+			
+			bwFinalCalculatedCarbsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
+			bwFinalCalculationsContainer.addChild(bwFinalCalculatedCarbsContainer);
+			
+			bwFinalCalculatedCarbsLabel = LayoutFactory.createLabel("Carbs", HorizontalAlign.CENTER);
+			bwFinalCalculatedCarbsLabel.wordWrap = true;
+			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsLabel);
+			
+			bwFinalCalculatedCarbsStepper = LayoutFactory.createNumericStepper(0, 1000, 0, carbsPrecision);
+			bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
+			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsStepper);
+			
+			if (suggestionsOnTop)
+				bwMainContainer.addChild(bwFinalCalculationsContainer);
+			
+			//Action Buttons
+			bolusWizardMainActionContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE);
+			
+			if (suggestionsOnTop)
+			{
+				(bolusWizardMainActionContainer.layout as VerticalLayout).paddingBottom = 5;
+				bwMainContainer.addChild(bolusWizardMainActionContainer);
+			}
+			
+			bolusWizardActionContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
+			bolusWizardActionContainer.width = contentWidth;
+			bolusWizardMainActionContainer.addChild(bolusWizardActionContainer);
+			
+			bolusWizardCancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
+			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, onCloseCallout);
+			bolusWizardActionContainer.addChild(bolusWizardCancelButton);
+			
+			bolusWizardAddButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
+			bolusWizardAddButton.addEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
+			bolusWizardActionContainer.addChild(bolusWizardAddButton);
 			
 			//Current Glucose
 			bwCurrentGlucoseContainer = LayoutFactory.createLayoutGroup("horizontal");
@@ -922,69 +994,23 @@ package treatments
 			bwNotes.prompt = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
 			bwMainContainer.addChild(bwNotes);
 			
-			//Final Calculations Label
-			finalCalculationsLabel = LayoutFactory.createLabel("Final Calculations", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
-			finalCalculationsLabel.width = contentWidth;
-			finalCalculationsLabel.paddingTop = 15;
-			finalCalculationsLabel.paddingBottom = 5;
-			finalCalculationsLabel.wordWrap = true;
-			bwMainContainer.addChild(finalCalculationsLabel);
+			//Actions
+			if (!suggestionsOnTop)
+			{
+				bwMainContainer.addChild(finalCalculationsLabel);
+				bwMainContainer.addChild(bwSuggestionLabel);
+				bwMainContainer.addChild(bwFinalCalculationsContainer);
+				bwMainContainer.addChild(bolusWizardMainActionContainer);
+			}
 			
-			//Wizard Suggestion
-			bwSuggestionLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 12, true);
-			bwSuggestionLabel.wordWrap = true;
-			bwSuggestionLabel.width = contentWidth;
-			bwMainContainer.addChild(bwSuggestionLabel);
-			
-			//Final Calculated Insulin and Carbs
-			bwFinalCalculationsContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
-			(bwFinalCalculationsContainer.layout as HorizontalLayout).paddingBottom = 10;
-			(bwFinalCalculationsContainer.layout as HorizontalLayout).paddingTop = 5;
-			bwFinalCalculationsContainer.width = contentWidth;
-			
-			bwFinalCalculatedInsulinContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
-			bwFinalCalculationsContainer.addChild(bwFinalCalculatedInsulinContainer);
-			
-			bwFinalCalculatedInsulinLabel = LayoutFactory.createLabel("Insulin", HorizontalAlign.CENTER);
-			bwFinalCalculatedInsulinLabel.wordWrap = true;
-			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinLabel);
-			
-			bwFinalCalculatedInsulinStepper = LayoutFactory.createNumericStepper(0, 200, 0, insulinPrecision);
-			bwFinalCalculatedInsulinStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
-			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinStepper);
-			
-			bwFinalCalculatedCarbsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
-			bwFinalCalculationsContainer.addChild(bwFinalCalculatedCarbsContainer);
-			
-			bwFinalCalculatedCarbsLabel = LayoutFactory.createLabel("Carbs", HorizontalAlign.CENTER);
-			bwFinalCalculatedCarbsLabel.wordWrap = true;
-			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsLabel);
-			
-			bwFinalCalculatedCarbsStepper = LayoutFactory.createNumericStepper(0, 1000, 0, carbsPrecision);
-			bwFinalCalculatedCarbsStepper.addEventListener(Event.CHANGE, onFinalTreatmentChanged);
-			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsStepper);
-			
-			bwMainContainer.addChild(bwFinalCalculationsContainer);
-			
-			//Action Buttons
-			bolusWizardMainActionContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
-			bwMainContainer.addChild(bolusWizardMainActionContainer);
-			
-			bolusWizardActionContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
-			bolusWizardActionContainer.width = contentWidth;
-			bolusWizardMainActionContainer.addChild(bolusWizardActionContainer);
-			
-			bolusWizardCancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
-			bolusWizardCancelButton.addEventListener(Event.TRIGGERED, onCloseCallout);
-			bolusWizardActionContainer.addChild(bolusWizardCancelButton);
-			
-			bolusWizardAddButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
-			bolusWizardAddButton.addEventListener(Event.TRIGGERED, onAddBolusWizardTreatment);
-			bolusWizardActionContainer.addChild(bolusWizardAddButton);
+			//Instructions Button
+			var bwInstructionsContainer:LayoutGroup = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER);
+			bwInstructionsContainer.width = contentWidth;
+			bwMainContainer.addChild(bwInstructionsContainer);
 			
 			instructionsButton = LayoutFactory.createButton("INSTRUCTIONS");
 			instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsButtonTriggered);
-			bolusWizardMainActionContainer.addChild(instructionsButton);
+			bwInstructionsContainer.addChild(instructionsButton);
 			
 			//Final Adjustments
 			bwWizardScrollContainer.addChild(bwMainContainer);
@@ -1061,8 +1087,8 @@ package treatments
 			}
 			
 			//Current Trend
-			//var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
-			var currentTrendArrow:String = "\u2198";
+			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
+			//var currentTrendArrow:String = "\u2198";
 			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
 			currentTrendCorrection = 0;
 			currentTrendCorrectionUnit = "U";
@@ -1110,6 +1136,7 @@ package treatments
 			
 			//Current IOB
 			currentIOB = TreatmentsManager.getTotalIOB(now);
+			//currentIOB = 0.72;
 			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(currentIOB);
 			bwCurrentIOBLabel.validate();
 			bwIOBContainer.validate();
@@ -1407,11 +1434,11 @@ package treatments
 				
 				bgIsWithinTarget = true;
 				
-				bwSuggestionLabel.text += "\n\n" + "Projected outcome: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
+				bwSuggestionLabel.text += suggestionsLineSpacing + "Projected outcome: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
 				if (outcome == targetBG)
-					bwSuggestionLabel.text += "\n\n" + "Blood glucose in target";
+					bwSuggestionLabel.text += suggestionsLineSpacing + "Blood glucose in target";
 				else
-					bwSuggestionLabel.text += "\n\n" + "Blood glucose in target or within " + formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit() + " difference";
+					bwSuggestionLabel.text += suggestionsLineSpacing + "Blood glucose in target or within " + formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit() + " difference";
 			}
 			
 			function displayCarbsNeeded():void
@@ -1426,21 +1453,21 @@ package treatments
 				var outcomeWithCarbsTreatment:Number = outcome + bgImpact;
 				outcomeWithCarbsTreatment = isMgDl ? Math.round(outcomeWithCarbsTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithCarbsTreatment) * 10) / 10;
 				
-				bwSuggestionLabel.text += "\n\n" + "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
-				bwSuggestionLabel.text += "\n\n" + "Outcome with calculated treatment: " + outcomeWithCarbsTreatment;
+				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
+				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome with calculated treatment: " + outcomeWithCarbsTreatment;
 				
 				if (!useUserDefinedSettings)
 				{
 					if (record.carbs <= 0)
-						bwSuggestionLabel.text += "\n\n" + "Carbs needed: " + record.carbsneeded + "g";
+						bwSuggestionLabel.text += suggestionsLineSpacing + "Carbs needed: " + record.carbsneeded + "g";
 					else
-						bwSuggestionLabel.text += "\n\n" + "Extra carbs needed: " + record.carbsneeded + "g";
+						bwSuggestionLabel.text += suggestionsLineSpacing + "Extra carbs needed: " + record.carbsneeded + "g";
 					
-					bwSuggestionLabel.text += "\n\n" + "Insulin equivalent: " + record.insulin + "U";
+					bwSuggestionLabel.text += suggestionsLineSpacing + "Insulin equivalent: " + record.insulin + "U";
 				}
 				
 				if (Math.abs(formattedTarget - outcomeWithCarbsTreatment) > formattedErrorMargin)
-					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
+					bwSuggestionLabel.text += suggestionsLineSpacing + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
 			}
 			
 			function displayInsulinNeeded():void
@@ -1448,9 +1475,6 @@ package treatments
 				trace("displayInsulinNeeded");
 				
 				bgIsWithinTarget = false;
-				
-				var trendCCorrectionHasInsulin:Boolean = bwTrendCheck.isSelected && currentTrendCorrection != 0 && currentTrendCorrectionUnit == "U";
-				
 				
 				//Calculate outcome
 				var outcomeWithInsulinTreatment:Number = outcome - (record.insulin * exerciseMultiplier * sicknessMultiplier * isf) - (record.insulincarbs * exerciseMultiplier * sicknessMultiplier * isf) + (record.trendCorrection * exerciseMultiplier * sicknessMultiplier * isf);
@@ -1469,12 +1493,12 @@ package treatments
 				outcomeWithInsulinTreatment = isMgDl ? Math.round(outcomeWithInsulinTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithInsulinTreatment) * 10) / 10;
 				
 				//Update Suggestion Label
-				bwSuggestionLabel.text += "\n\n" + "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
-				bwSuggestionLabel.text += "\n\n" + "Outcome with calculated treatment: " + outcomeWithInsulinTreatment;
+				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
+				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome with calculated treatment: " + outcomeWithInsulinTreatment;
 				if (record.insulin > 0 && !useUserDefinedSettings)
-					bwSuggestionLabel.text += "\n\n" + "Insulin needed: " + record.insulin + "U";
+					bwSuggestionLabel.text += suggestionsLineSpacing + "Insulin needed: " + record.insulin + "U";
 				if (Math.abs(formattedTarget - outcomeWithInsulinTreatment) > formattedErrorMargin)
-					bwSuggestionLabel.text += "\n\n" + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
+					bwSuggestionLabel.text += suggestionsLineSpacing + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
 			}
 			
 			function displayUserDefinedSettings():void
@@ -1482,12 +1506,12 @@ package treatments
 				trace("displayUserDefinedSettings");
 				
 				if (isInTarget && outcome == targetBG)
-					bwSuggestionLabel.text += "\n\n" + "Blood glucose in target";
+					bwSuggestionLabel.text += suggestionsLineSpacing + "Blood glucose in target";
 				else if (isInTarget)
-					bwSuggestionLabel.text += "\n\n" + "Blood glucose in target or within " + formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit() + " difference";
+					bwSuggestionLabel.text += suggestionsLineSpacing + "Blood glucose in target or within " + formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit() + " difference";
 				
-				bwSuggestionLabel.text += "\n\n" + "Outcome with calculated treatment: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
-				bwSuggestionLabel.text += "\n\n" + "Calculator is in manual mode. Critical data like glucose, trend, IOB and COB will not be automatically updated until you set insulin and carbs to their suggested values." + "\n" + "(" + "Insulin: " + suggestedInsulin + "U" + ", " + "Carbs: " + suggestedCarbs + "g" + ").";
+				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome with calculated treatment: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
+				bwSuggestionLabel.text += suggestionsLineSpacing + "Calculator is in manual mode. Critical data like glucose, trend, IOB and COB will not be automatically updated until you set insulin and carbs to their suggested values." + "\n" + "(" + "Insulin: " + suggestedInsulin + "U" + ", " + "Carbs: " + suggestedCarbs + "g" + ").";
 				
 			}
 			
@@ -1696,9 +1720,18 @@ package treatments
 			}
 			else
 			{
-				bwMainContainer.addChildAt(bwFoodsContainer, 3);
-				bwMainContainer.addChildAt(bwCarbsOffsetContainer, 4);
-				bwMainContainer.addChildAt(bwCarbTypeContainer, 5);
+				if (!suggestionsOnTop)
+				{
+					bwMainContainer.addChildAt(bwFoodsContainer, 3);
+					bwMainContainer.addChildAt(bwCarbsOffsetContainer, 4);
+					bwMainContainer.addChildAt(bwCarbTypeContainer, 5);
+				}
+				else
+				{
+					bwMainContainer.addChildAt(bwFoodsContainer, 7);
+					bwMainContainer.addChildAt(bwCarbsOffsetContainer, 8);
+					bwMainContainer.addChildAt(bwCarbTypeContainer, 9);
+				}
 			}
 			
 			performCalculations();
