@@ -1,5 +1,6 @@
 2.5.3
 FIX: The Pebble endpoint on Spike's internal server now returns the sgv value always in mg/dL. (Miguel)
+FIX: Workaround for the need to swipe twice from the screen bottom on iPhone X or above to close Spike. (Miguel)
 
 2.5.3
 ENHANCEMENT: Full iPhone Xr & Xs Max support. Spike is now compatible with all new iPhone and Apple Watch models. (Miguel)

@@ -5,6 +5,8 @@ package ui
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.systemgestures.ScreenEdges;
+	import com.distriqt.extension.systemgestures.SystemGestures;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
@@ -174,6 +176,8 @@ package ui
 				/* File Association */
 				NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
 				
+				//System Gestures
+				removeSystemGestures();
 				
 				//3D Touch Management
 				setup3DTouch();
@@ -183,6 +187,12 @@ package ui
 			{	
 				Trace.myTrace("interfaceController.as", "Error initializing database!");
 			}
+		}
+		
+		private static function removeSystemGestures():void
+		{
+			//Completely remove ability to defer system gestures so users don't have to swipe twice to close Spike
+			SystemGestures.service.setDeferredScreenEdges(ScreenEdges.NONE);
 		}
 		
 		private static function onSettingsChanged(event:SettingsServiceEvent):void 
