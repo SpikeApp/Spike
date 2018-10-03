@@ -485,6 +485,7 @@ package services.bluetooth
 				SpikeANE.forgetMiaoMiaoPeripheral();
 				
 				if (CGMBlueToothDevice.isMiaoMiao()) {
+					SpikeANE.startScanDeviceMiaoMiao();
 					addMiaoMiaoEventListeners();
 				} else if ((CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) && useSpikeANEForG5G6) {
 					addG5G6EventListeners();
