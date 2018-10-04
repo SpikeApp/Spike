@@ -6,6 +6,8 @@ FIX: Workaround for the need to swipe twice from the screen bottom on iPhone X o
 FIX: Small bug fixes for alarms snooze times saved to database to persist after Spike restarts. (Miguel)
 FIX: Fix for phone needed to be restarted the first time the user tries to connect to a MiaoMiao device. (Johan)
 FIX: Fix for default insulin not always being displayed first when adding treatments. (Sascha)
+FIX: New sensors starts uploaded to Nightscout would not persist after 24/48h. All should be fixed now. (Miguel)
+FIX: Treatments deleted by Masters or directly in Nightscout were not being remove from Spike's main chart until Spike was restarted. All is fixed now. (Miguel) 
 
 2.5.3
 ENHANCEMENT: Full iPhone Xr & Xs Max support. Spike is now compatible with all new iPhone and Apple Watch models. (Miguel)
