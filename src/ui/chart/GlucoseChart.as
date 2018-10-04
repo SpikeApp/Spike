@@ -1018,7 +1018,7 @@ package ui.chart
 		
 		public function updateExternallyDeletedTreatment(treatment:Treatment):void
 		{
-			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !isHistoricalData)
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || isHistoricalData)
 				return;
 			
 			if (treatment != null)
