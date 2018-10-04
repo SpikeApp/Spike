@@ -122,21 +122,21 @@ package ui.screens.display.menu
 			setupRenderFactory();
 			
 			var menuItems:Array = [];
-			if (Constants.isPortrait) menuItems.push( { label: "", accessory: logoContainer, selectable: false } );
-			menuItems.push( { screen: Screens.GLUCOSE_CHART, label: ModelLocator.resourceManagerInstance.getString('mainmenu','graph_menu_item'), icon: graphIconTexture, selectable: true } );
+			if (Constants.isPortrait) menuItems.push( { label: "", accessory: logoContainer, selectable: false, index: menuItems.length } );
+			menuItems.push( { screen: Screens.GLUCOSE_CHART, label: ModelLocator.resourceManagerInstance.getString('mainmenu','graph_menu_item'), icon: graphIconTexture, selectable: true, index: menuItems.length } );
 			if (!CGMBlueToothDevice.isFollower())
 			{
-				menuItems.push( { screen: Screens.SENSOR_STATUS, label: ModelLocator.resourceManagerInstance.getString('mainmenu','sensor_menu_item'), icon: sensorIconTexture, selectable: true } );
-				menuItems.push( { screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture, selectable: true } );
+				menuItems.push( { screen: Screens.SENSOR_STATUS, label: ModelLocator.resourceManagerInstance.getString('mainmenu','sensor_menu_item'), icon: sensorIconTexture, selectable: true, index: menuItems.length } );
+				menuItems.push( { screen: Screens.TRANSMITTER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','transmitter_menu_item'), icon: transmitterIconTexture, selectable: true, index: menuItems.length } );
 			}
-			menuItems.push( { screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture, selectable: true } );
+			menuItems.push( { screen: Screens.SETTINGS_MAIN, label: ModelLocator.resourceManagerInstance.getString('mainmenu','settings_menu_item'), icon: settingsIconTexture, selectable: true, index: menuItems.length } );
 			if (!CGMBlueToothDevice.isFollower())
-				menuItems.push( { screen: Screens.HISTORY, label: ModelLocator.resourceManagerInstance.getString('mainmenu','history_menu_item'), icon: historyIconTexture, selectable: true } );
-			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture, selectable: true } );
-			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture, selectable: true } );
-			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture, selectable: true } );
+				menuItems.push( { screen: Screens.HISTORY, label: ModelLocator.resourceManagerInstance.getString('mainmenu','history_menu_item'), icon: historyIconTexture, selectable: true, index: menuItems.length } );
+			menuItems.push( { screen: Screens.HELP, label: ModelLocator.resourceManagerInstance.getString('mainmenu','help_menu_item'), icon: helpIconTexture, selectable: true, index: menuItems.length } );
+			menuItems.push( { screen: Screens.SETTINGS_BUG_REPORT, label: ModelLocator.resourceManagerInstance.getString('mainmenu','bug_report_menu_item'), icon: bugReportIconTexture, selectable: true, index: menuItems.length } );
+			menuItems.push( { screen: Screens.DISCLAIMER, label: ModelLocator.resourceManagerInstance.getString('mainmenu','disclaimer_menu_item'), icon: disclaimerIconTexture, selectable: true, index: menuItems.length } );
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "")
-				menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture, selectable: true } );
+				menuItems.push( { screen: Screens.DONATE, label: ModelLocator.resourceManagerInstance.getString('mainmenu','donate_menu_item'), icon: donateIconTexture, selectable: true, index: menuItems.length } );
 			
 			dataProvider = new ListCollection(menuItems);
 			
@@ -218,9 +218,7 @@ package ui.screens.display.menu
 			if (!initialStart)
 			{
 				removeEventListener( Event.CHANGE, onMenuChanged );
-				selectedIndex = !Constants.isPortrait ? previousSelectedIndex - 1 : previousSelectedIndex + 1;
-				addEventListener( Event.CHANGE, onMenuChanged );
-				
+				selectedIndex = !Constants.isPortrait ? selectedItem.index - 1 : selectedItem.index + 1;
 				previousSelectedIndex = selectedIndex;
 			}
 			else

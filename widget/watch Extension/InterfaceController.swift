@@ -609,10 +609,10 @@ class InterfaceController: WKInterfaceController
         let high:Double=Double(bgth-miny)/Double(maxy-miny)
         
         //create string for google chart api
-        let band1="&chm=r,FFFFFF,0,"+String(format:"%.2f",high-0.01)+","+String(format:"%.3f",high)
-        let band2="|r,FFFFFF,0,"+String(format:"%.2f",(low))+","+String(format:"%.3f",low+0.01)
+        let band1="&chm=r,FFFFFF,0,"+String(format:"%.2f",high-0.003)+","+String(format:"%.3f",high)
+        let band2="|r,FFFFFF,0,"+String(format:"%.2f",(low))+","+String(format:"%.3f",low+0.003)
         let h:String=String(stringInterpolationSegment: 100.0/Double(hours))
-        let hourlyverticals="&chg="+h+",0"
+        let hourlyverticals="&chg="+h+",0,4,0"
         
         if (mmol == false)
         {
@@ -624,6 +624,9 @@ class InterfaceController: WKInterfaceController
             let mmolmaxy = Double(maxy) / 18.0182
             google="https://chart.googleapis.com/chart?cht=s:nda&chxt=y&chxr=0,"+String(format:"%.1f",mmolminy)+","+String(format:"%.1f",mmolmaxy)+"&chs=180x100"+"&chf=bg,s,000000&chls=3&chd=t:"+xg+"|"+yg+"|20"+pc+"&chof=png&chxs=0,FFFFFF"+band1+band2+hourlyverticals
         }
+        
+        print("GOOGLE")
+        print(google)
 
         return google
     }
