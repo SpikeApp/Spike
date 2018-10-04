@@ -819,6 +819,11 @@ package services
 								continue;
 							}
 							
+							if (isNaN(NSFollowReading.sgv) || NSFollowReading.sgv < 38)
+							{
+								continue;
+							}
+							
 							if (NSFollowReadingTime >= timeOfFirstBgReadingToDowload) 
 							{
 								var bgReading:FollowerBgReading = new FollowerBgReading
