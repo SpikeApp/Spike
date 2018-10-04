@@ -11,6 +11,7 @@ FIX: Fix for default insulin not always being displayed first when adding treatm
 FIX: New sensors starts uploaded to Nightscout would not persist after 24/48h. All should be fixed now. (Miguel)
 FIX: Treatments deleted by Masters or directly in Nightscout were not being remove from Spike's main chart until Spike was restarted. All is fixed now. (Miguel) 
 FIX: Fixes a bug that would incorrectly select the active main menu button after rotating the device. (Miguel)
+FIX: Fixes an issue in speech where positive deltas where incorrectly spoken when using certain voices bundled with iOS. (Miguel)
 
 2.5.3
 ENHANCEMENT: Full iPhone Xr & Xs Max support. Spike is now compatible with all new iPhone and Apple Watch models. (Miguel)

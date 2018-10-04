@@ -64,7 +64,7 @@ package utils
 		
 		public static function calculateLatestDelta(trimWhiteSpace:Boolean = false, textToSpeechEnabled:Boolean = false):String
 		{
-			var delta:String = "uknown";	
+			var delta:String = "unknown";	
 			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length >= 2)
 			{
 				var lastBgReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1] as BgReading;

@@ -143,8 +143,11 @@ package ui.chart
 						
 					if ( glucoseDifference % 1 == 0 && (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 						glucoseDifferenceOutput += ".0";
-						
-					slopeOutput = "+ " + glucoseDifferenceOutput;
+					
+					if (!textToSpeechEnabled)
+						slopeOutput = "+ " + glucoseDifferenceOutput;
+					else
+						slopeOutput = "+" + glucoseDifferenceOutput;
 				}
 				else
 				{
