@@ -1,5 +1,6 @@
 3.0.0
 FEATURE: Ability to set a quiet time for App Center updates in-app popups. If device is in quiet time Spike will not warn you if a new App Center update is available. Configure the quiet time in settings -> maintenance. (Miguel) 
+FEATURE: Added Danish, Finnish, Noreweigan and Swedish languages to the speech functionality. Available in settings -> speech. (Miguel)
 ENHANCEMENT: Spike will now respect the override system volume when previewing alert sounds in settings -> alert types. (Miguel)
 FIX: The Pebble endpoint on Spike's internal server now returns the sgv value always in mg/dL. (Miguel)
 FIX: Workaround for the need to swipe twice from the screen bottom on iPhone X or above to close Spike. (Miguel)

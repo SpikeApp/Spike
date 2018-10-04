@@ -133,6 +133,22 @@ package services
 			{
 				ModelLocator.resourceManagerInstance.localeChain = ["de_DE","en_US"];
 			}
+			else if(speechLanguageCode == "da-DK")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["da_DK","en_US"];
+			}
+			else if(speechLanguageCode == "fi-FI")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["fi_FI","en_US"];
+			}
+			else if(speechLanguageCode == "no-NO")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["no_NO","en_US"];
+			}
+			else if(speechLanguageCode == "sv-SE")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["sv_SE","en_US"];
+			}
 		}
 		
 		public static function sayText(text:String, language:String = "en-US"):void 
