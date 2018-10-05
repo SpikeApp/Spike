@@ -11,8 +11,6 @@ package treatments
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
@@ -76,6 +74,11 @@ package treatments
 	import utils.GlucoseHelper;
 	import utils.TimeSpan;
 	import utils.Trace;
+	
+	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("profilesettingsscreen")]
+	[ResourceBundle("chartscreen")]
 
 	public class BolusWizard
 	{
@@ -307,12 +310,12 @@ package treatments
 			bwMainContainer.width = contentWidth;
 			
 			//Title
-			bwTitle = LayoutFactory.createLabel("Bolus Calculator", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			bwTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','bolus_wizard_settings_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			bwTitle.width = contentWidth;
 			bwMainContainer.addChild(bwTitle);
 			
 			//Final Calculations Label
-			finalCalculationsLabel = LayoutFactory.createLabel("Final Calculations", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+			finalCalculationsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','final_calculations_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
 			finalCalculationsLabel.width = contentWidth;
 			finalCalculationsLabel.paddingTop = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_SUGGESTION_COMPONENTS_ON_TOP) == "true" ? 0 : 15;
 			finalCalculationsLabel.paddingBottom = 5;
@@ -336,7 +339,7 @@ package treatments
 			bwFinalCalculatedInsulinContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
 			bwFinalCalculationsContainer.addChild(bwFinalCalculatedInsulinContainer);
 			
-			bwFinalCalculatedInsulinLabel = LayoutFactory.createLabel("Insulin", HorizontalAlign.CENTER);
+			bwFinalCalculatedInsulinLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label'), HorizontalAlign.CENTER);
 			bwFinalCalculatedInsulinLabel.wordWrap = true;
 			bwFinalCalculatedInsulinContainer.addChild(bwFinalCalculatedInsulinLabel);
 			
@@ -347,7 +350,7 @@ package treatments
 			bwFinalCalculatedCarbsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 5);
 			bwFinalCalculationsContainer.addChild(bwFinalCalculatedCarbsContainer);
 			
-			bwFinalCalculatedCarbsLabel = LayoutFactory.createLabel("Carbs", HorizontalAlign.CENTER);
+			bwFinalCalculatedCarbsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), HorizontalAlign.CENTER);
 			bwFinalCalculatedCarbsLabel.wordWrap = true;
 			bwFinalCalculatedCarbsContainer.addChild(bwFinalCalculatedCarbsLabel);
 			
@@ -390,7 +393,7 @@ package treatments
 			bwGlucoseCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwGlucoseLabelContainer.addChild(bwGlucoseCheck);
 			
-			bwGlucoseLabel = LayoutFactory.createLabel("Blood Glucose");
+			bwGlucoseLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','blood_glucose_label'));
 			bwGlucoseLabel.wordWrap = true;
 			bwGlucoseLabelContainer.addChild(bwGlucoseLabel);
 			
@@ -415,7 +418,7 @@ package treatments
 			bwCarbsCheck.addEventListener(Event.CHANGE, onShowHideCarbExtras);
 			bwCarbsLabelContainer.addChild(bwCarbsCheck);
 			
-			bwCarbsLabel = LayoutFactory.createLabel("Carbs");
+			bwCarbsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'));
 			bwCarbsLabel.wordWrap = true;
 			bwCarbsLabelContainer.addChild(bwCarbsLabel);
 			
@@ -437,12 +440,12 @@ package treatments
 			bwFoodsContainer.width = contentWidth;
 			bwMainContainer.addChild(bwFoodsContainer);
 			
-			bwFoodsLabel = LayoutFactory.createLabel("Foods");
+			bwFoodsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','foods_label'));
 			bwFoodsLabel.wordWrap = true;
 			bwFoodsLabel.paddingLeft = 25;
 			bwFoodsContainer.addChild(bwFoodsLabel);
 			
-			bwFoodLoaderButton = LayoutFactory.createButton("Load Foods");
+			bwFoodLoaderButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','load_foods_button_label'));
 			bwFoodLoaderButton.addEventListener(Event.TRIGGERED, onShowFoodManager);
 			bwFoodsContainer.addChild(bwFoodLoaderButton);
 			
@@ -456,7 +459,7 @@ package treatments
 			bwCarbsOffsetContainer.width = contentWidth;
 			bwMainContainer.addChild(bwCarbsOffsetContainer);
 			
-			bwCarbsOffsetLabel = LayoutFactory.createLabel("Carbs Offset (Min)");
+			bwCarbsOffsetLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','carbs_offset_in_minutes_label'));
 			bwCarbsOffsetLabel.wordWrap = true;
 			bwCarbsOffsetLabel.paddingLeft = 25;
 			bwCarbsOffsetContainer.addChild(bwCarbsOffsetLabel);
@@ -472,7 +475,7 @@ package treatments
 			bwCarbTypeContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwMainContainer.addChild(bwCarbTypeContainer);
 			
-			bwCarbTypeLabel = LayoutFactory.createLabel("Carb Type");
+			bwCarbTypeLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','carbs_type_label'));
 			bwCarbTypeLabel.wordWrap = true;
 			bwCarbTypeLabel.paddingLeft = 25;
 			bwCarbTypeContainer.addChild(bwCarbTypeLabel);
@@ -511,7 +514,7 @@ package treatments
 			bwInsulinTypeContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwMainContainer.addChild(bwInsulinTypeContainer);
 			
-			bwInsulinTypeLabel = LayoutFactory.createLabel("Insulin Type");
+			bwInsulinTypeLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','insulin_type_label'));
 			bwInsulinTypeLabel.wordWrap = true;
 			bwInsulinTypeContainer.addChild(bwInsulinTypeLabel);
 			
@@ -610,7 +613,7 @@ package treatments
 			bwTrendContainer.addChild(bwTrendCheck);
 			
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
-			bwTrendLabel = LayoutFactory.createLabel("Trend" + " " + currentTrendArrow);
+			bwTrendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " " + currentTrendArrow);
 			bwTrendLabel.wordWrap = true;
 			bwTrendContainer.addChild(bwTrendLabel);
 			
@@ -678,7 +681,7 @@ package treatments
 			bwIOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwIOBLabelContainer.addChild(bwIOBCheck);
 			
-			bwIOBLabel = LayoutFactory.createLabel("IOB");
+			bwIOBLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','iob_label'));
 			bwIOBLabel.wordWrap = true;
 			bwIOBLabelContainer.addChild(bwIOBLabel);
 			
@@ -703,7 +706,7 @@ package treatments
 			bwCOBCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwCOBLabelContainer.addChild(bwCOBCheck);
 			
-			bwCOBLabel = LayoutFactory.createLabel("COB");
+			bwCOBLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','cob_label'));
 			bwCOBLabel.wordWrap = true;
 			bwCOBLabelContainer.addChild(bwCOBLabel);
 			
@@ -726,7 +729,7 @@ package treatments
 			bwExerciseCheck.addEventListener(Event.CHANGE, onShowHideExerciseAdjustment);
 			bwExerciseLabelContainer.addChild(bwExerciseCheck);
 			
-			bwExerciseLabel = LayoutFactory.createLabel("Exercise Adjustment");
+			bwExerciseLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','exercise_adjustment'));
 			bwExerciseLabel.wordWrap = true;
 			bwExerciseLabelContainer.addChild(bwExerciseLabel);
 			
@@ -737,7 +740,7 @@ package treatments
 			bwExerciseTimeContainer.width = contentWidth;
 			bwExerciseSettingsContainer.addChild(bwExerciseTimeContainer);
 			
-			bwExerciseTimeLabel = LayoutFactory.createLabel("Time");
+			bwExerciseTimeLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','time_label'));
 			bwExerciseTimeLabel.wordWrap = true;
 			bwExerciseTimeLabel.paddingLeft = 25;
 			bwExerciseTimeContainer.addChild(bwExerciseTimeLabel);
@@ -748,8 +751,8 @@ package treatments
 			bwExerciseTimePicker.dataProvider = new ArrayCollection
 				(
 					[
-						{ label: "Before Exercise" },	
-						{ label: "After Exercise" }	
+						{ label: ModelLocator.resourceManagerInstance.getString('treatments','before_exercise_label') },	
+						{ label: ModelLocator.resourceManagerInstance.getString('treatments','after_exercise_label') }	
 					]
 				);
 			bwExerciseTimePicker.selectedIndex = 0;
@@ -762,7 +765,7 @@ package treatments
 			bwExerciseIntensityContainer.width = contentWidth;
 			bwExerciseSettingsContainer.addChild(bwExerciseIntensityContainer);
 			
-			bwExerciseIntensityLabel = LayoutFactory.createLabel("Intensity");
+			bwExerciseIntensityLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_label'));
 			bwExerciseIntensityLabel.wordWrap = true;
 			bwExerciseIntensityLabel.paddingLeft = 25;
 			bwExerciseIntensityContainer.addChild(bwExerciseIntensityLabel);
@@ -773,9 +776,9 @@ package treatments
 			bwExerciseIntensityPicker.dataProvider = new ArrayCollection
 				(
 					[
-						{ label: "Low" },	
-						{ label: "Moderate" },	
-						{ label: "High" }	
+						{ label: ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_low_label') },	
+						{ label: ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_moderate_label') },	
+						{ label: ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_high_label') }	
 					]
 				);
 			bwExerciseIntensityPicker.selectedIndex = 0;
@@ -788,7 +791,7 @@ package treatments
 			bwExerciseDurationContainer.width = contentWidth;
 			bwExerciseSettingsContainer.addChild(bwExerciseDurationContainer);
 			
-			bwExerciseDurationLabel = LayoutFactory.createLabel("Duration");
+			bwExerciseDurationLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_label'));
 			bwExerciseDurationLabel.wordWrap = true;
 			bwExerciseDurationLabel.paddingLeft = 25;
 			bwExerciseDurationContainer.addChild(bwExerciseDurationLabel);
@@ -799,13 +802,13 @@ package treatments
 			bwExerciseDurationPicker.dataProvider = new ArrayCollection
 				(
 					[
-						{ label: "15 min" },	
-						{ label: "30 min" },	
-						{ label: "45 min" },	
-						{ label: "60 min" },	
-						{ label: "90 min" },	
-						{ label: "120 min" },	
-						{ label: "180 min" }	
+						{ label: "15" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') },	
+						{ label: "30" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') },	
+						{ label: "45" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') },	
+						{ label: "60" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') },	
+						{ label: "90" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') },	
+						{ label: "120" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') },	
+						{ label: "180" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') }	
 					]
 				);
 			bwExerciseDurationPicker.selectedIndex = 0;
@@ -818,7 +821,7 @@ package treatments
 			bwExerciseAmountContainer.width = contentWidth;
 			bwExerciseSettingsContainer.addChild(bwExerciseAmountContainer);
 			
-			bwExerciseAmountLabel = LayoutFactory.createLabel("Reduction (%)");
+			bwExerciseAmountLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','exercise_reduction_label'));
 			bwExerciseAmountLabel.wordWrap = true;
 			bwExerciseAmountLabel.paddingLeft = 25;
 			bwExerciseAmountContainer.addChild(bwExerciseAmountLabel);
@@ -841,14 +844,14 @@ package treatments
 			bwSicknessCheck.addEventListener(Event.CHANGE, onShowHideSicknessAdjustment);
 			bwSicknessLabelContainer.addChild(bwSicknessCheck);
 			
-			bwSicknessLabel = LayoutFactory.createLabel("Sickness Adjustment");
+			bwSicknessLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','sickness_adjustment_label'));
 			bwSicknessLabel.wordWrap = true;
 			bwSicknessLabelContainer.addChild(bwSicknessLabel);
 			
 			bwSicknessAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwSicknessAmountContainer.width = contentWidth;
 			
-			bwSicknessAmountLabel = LayoutFactory.createLabel("Increase (%)");
+			bwSicknessAmountLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','sickness_increase_label'));
 			bwSicknessAmountLabel.wordWrap = true;
 			bwSicknessAmountLabel.paddingLeft = 25;
 			bwSicknessAmountContainer.addChild(bwSicknessAmountLabel);
@@ -874,14 +877,14 @@ package treatments
 			bwOtherCorrectionCheck.addEventListener(Event.CHANGE, performCalculations);
 			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionCheck);
 			
-			bwOtherCorrectionLabel = LayoutFactory.createLabel("Extra Correction");
+			bwOtherCorrectionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','extra_correction_label'));
 			bwOtherCorrectionLabel.wordWrap = true;
 			bwOtherCorrectionLabelContainer.addChild(bwOtherCorrectionLabel);
 			
 			bwOtherCorrectionAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 			bwOtherCorrectionAmountContainer.width = contentWidth;
 			
-			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel("Amount (g/U)");
+			bwOtherCorrectionAmountLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','extra_correction_amount_label'));
 			bwOtherCorrectionAmountLabel.wordWrap = true;
 			bwOtherCorrectionAmountLabel.paddingLeft = 25;
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountLabel);
@@ -906,7 +909,7 @@ package treatments
 			bwExtendedBolusReminderCheck.addEventListener(Event.CHANGE, onShowHideExtendedBolusReminder);
 			bwExtendedBolusReminderLabelContainer.addChild(bwExtendedBolusReminderCheck);
 			
-			bwExtendedBolusReminderLabel = LayoutFactory.createLabel("Extended Bolus Reminder");
+			bwExtendedBolusReminderLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_reminder_label'));
 			bwExtendedBolusReminderLabel.wordWrap = true;
 			bwExtendedBolusReminderLabelContainer.addChild(bwExtendedBolusReminderLabel);
 			
@@ -1008,7 +1011,7 @@ package treatments
 			bwInstructionsContainer.width = contentWidth;
 			bwMainContainer.addChild(bwInstructionsContainer);
 			
-			instructionsButton = LayoutFactory.createButton("INSTRUCTIONS");
+			instructionsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_button_label').toUpperCase());
 			instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsButtonTriggered);
 			bwInstructionsContainer.addChild(instructionsButton);
 			
@@ -1089,7 +1092,7 @@ package treatments
 			//Current Trend
 			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
 			//var currentTrendArrow:String = "\u2198";
-			bwTrendLabel.text = "Trend" + " " + currentTrendArrow;
+			bwTrendLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " " + currentTrendArrow;
 			currentTrendCorrection = 0;
 			currentTrendCorrectionUnit = "U";
 			if (currentTrendArrow != "")
@@ -1191,12 +1194,12 @@ package treatments
 			missedSettingsContainer.width = contentWidth;
 			
 			if (missedSettingsTitle != null) missedSettingsTitle.removeFromParent(true);
-			missedSettingsTitle = LayoutFactory.createLabel("Bolus Calculator", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			missedSettingsTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','bolus_wizard_settings_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			missedSettingsTitle.width = contentWidth;
 			missedSettingsContainer.addChild(missedSettingsTitle);
 			
 			if (missedSettingsLabel != null) missedSettingsLabel.removeFromParent(true);
-			missedSettingsLabel = LayoutFactory.createLabel("Profile not configured!", HorizontalAlign.CENTER);
+			missedSettingsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','profile_not_configured_label'), HorizontalAlign.CENTER);
 			missedSettingsLabel.wordWrap = true;
 			missedSettingsLabel.width = contentWidth;
 			missedSettingsContainer.addChild(missedSettingsLabel);
@@ -1210,13 +1213,13 @@ package treatments
 			missedSettingsCancelButton.addEventListener(Event.TRIGGERED, onCloseConfigureCallout);
 			missedSettingsActionsContainer.addChild(missedSettingsCancelButton);
 			
-			missedSettingsConfigureButton = LayoutFactory.createButton("CONFIGURE");
+			missedSettingsConfigureButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','configure_button_label').toUpperCase());
 			missedSettingsConfigureButton.addEventListener(Event.TRIGGERED, onPerformConfiguration);
 			missedSettingsActionsContainer.addChild(missedSettingsConfigureButton);
 			
 			if (instructionsButton == null)
 			{
-				instructionsButton = LayoutFactory.createButton("INSTRUCTIONS");
+				instructionsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_button_label').toUpperCase());
 				instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsButtonTriggered);
 			}
 			missedSettingsContainer.addChild(instructionsButton);
@@ -1394,22 +1397,14 @@ package treatments
 			record.roundingcorrection = roundingcorrection;
 			record.carbsneeded = carbsPrecision == 1 ? Math.ceil(carbsneeded) : roundTo(-total * ic, carbsPrecision);
 			
-			
 			var outcome:Number = record.bg - (iob * isf) + (record.insulincob * isf) + (record.insulincarbs * isf) - (useUserDefinedSettings ? record.insulin * isf : 0);
-			//var outcomePreInsulinCarbs:Number = record.bg - (iob * isf) + (record.insulincob * isf) - (useUserDefinedSettings ? record.insulin * isf : 0);
-			
-			trace(ObjectUtil.toString(record));
 			
 			var isInTarget:Boolean = (record.othercorrection === 0 && record.trendCorrection === 0 && record.carbs === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0) || Math.abs(outcome - targetBG) <= acceptedMargin;
 			var formattedTarget:Number = isMgDl ? Number(currentProfile.targetGlucoseRates) : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10;
 			var formattedErrorMargin:Number = isMgDl ? acceptedMargin : Math.round(BgReading.mgdlToMmol(acceptedMargin) * 10) / 10;
-			var formattedISF:Number = isMgDl ? isf : Math.round(BgReading.mgdlToMmol(isf) * 10) / 10;
+			var formattedISF:Number = isMgDl ? isf : Math.round(BgReading.mgdlToMmol(isf) * 10) / 10;			
 			
-			
-			trace("isInTarget", isInTarget);
-			
-			
-			bwSuggestionLabel.text = "BG Target" + ": " +  formattedTarget + ", " + "ISF" + ": " + formattedISF + ", " + "I:C" + ": " + ic;
+			bwSuggestionLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','target_glucose_label') + ": " +  formattedTarget + ", " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_sensitivity_factor_short_label') + ": " + formattedISF + ", " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_to_carb_ratio_short_label') + ": " + ic;
 			
 			if (useUserDefinedSettings)
 			{
@@ -1430,21 +1425,17 @@ package treatments
 			
 			function displayInTarget():void
 			{
-				trace("displayInTarget");
-				
 				bgIsWithinTarget = true;
 				
-				bwSuggestionLabel.text += suggestionsLineSpacing + "Projected outcome: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
+				bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','projected_outcome_label') + ": " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
 				if (outcome == targetBG)
-					bwSuggestionLabel.text += suggestionsLineSpacing + "Blood glucose in target";
+					bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_in_target_label');
 				else
-					bwSuggestionLabel.text += suggestionsLineSpacing + "Blood glucose in target or within " + formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit() + " difference";
+					bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_in_target_or_close_label').replace("{margin_error_do_not_translate_this_word}", formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit());
 			}
 			
 			function displayCarbsNeeded():void
 			{
-				trace("displayCarbsNeeded");
-				
 				bgIsWithinTarget = false;
 				
 				//var insulinToCoverCarbs:Number = (record.carbsneeded + record.carbs) / ic;
@@ -1453,34 +1444,29 @@ package treatments
 				var outcomeWithCarbsTreatment:Number = outcome + bgImpact;
 				outcomeWithCarbsTreatment = isMgDl ? Math.round(outcomeWithCarbsTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithCarbsTreatment) * 10) / 10;
 				
-				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
-				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome with calculated treatment: " + outcomeWithCarbsTreatment;
+				bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_outcome_without_extra_treatment') + ": " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
+				bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_outcome_with_calculated_treatment') + ": " + outcomeWithCarbsTreatment;
 				
 				if (!useUserDefinedSettings)
 				{
 					if (record.carbs <= 0)
-						bwSuggestionLabel.text += suggestionsLineSpacing + "Carbs needed: " + record.carbsneeded + "g";
+						bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','carbs_needed') + ": " + record.carbsneeded + "g";
 					else
-						bwSuggestionLabel.text += suggestionsLineSpacing + "Extra carbs needed: " + record.carbsneeded + "g";
+						bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','extra_carbs_needed') + ": " + record.carbsneeded + "g";
 					
-					bwSuggestionLabel.text += suggestionsLineSpacing + "Insulin equivalent: " + record.insulin + "U";
+					bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','insulin_equivalent') + ": " + record.insulin + "U";
 				}
 				
 				if (Math.abs(formattedTarget - outcomeWithCarbsTreatment) > formattedErrorMargin)
-					bwSuggestionLabel.text += suggestionsLineSpacing + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
+					bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','carbs_needed').replace("{glucose_target_do_not_translate_this_word}", formattedTarget + GlucoseHelper.getGlucoseUnit()).replace("{margin_error_do_not_translate_this_word}", formattedErrorMargin + GlucoseHelper.getGlucoseUnit());
 			}
 			
 			function displayInsulinNeeded():void
 			{
-				trace("displayInsulinNeeded");
-				
 				bgIsWithinTarget = false;
 				
 				//Calculate outcome
 				var outcomeWithInsulinTreatment:Number = outcome - (record.insulin * exerciseMultiplier * sicknessMultiplier * isf) - (record.insulincarbs * exerciseMultiplier * sicknessMultiplier * isf) + (record.trendCorrection * exerciseMultiplier * sicknessMultiplier * isf);
-				
-				
-				trace("outcomeWithInsulinTreatment", outcomeWithInsulinTreatment);
 				
 				if (record.carbs > 0)
 				{
@@ -1493,26 +1479,23 @@ package treatments
 				outcomeWithInsulinTreatment = isMgDl ? Math.round(outcomeWithInsulinTreatment) : Math.round(BgReading.mgdlToMmol(outcomeWithInsulinTreatment) * 10) / 10;
 				
 				//Update Suggestion Label
-				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome without extra treatments: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
-				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome with calculated treatment: " + outcomeWithInsulinTreatment;
+				bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_outcome_without_extra_treatment') + ": " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
+				bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_outcome_with_calculated_treatment') + ": " + outcomeWithInsulinTreatment;
 				if (record.insulin > 0 && !useUserDefinedSettings)
-					bwSuggestionLabel.text += suggestionsLineSpacing + "Insulin needed: " + record.insulin + "U";
+					bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','insulin_needed') + ": " + record.insulin + "U";
 				if (Math.abs(formattedTarget - outcomeWithInsulinTreatment) > formattedErrorMargin)
-					bwSuggestionLabel.text += suggestionsLineSpacing + "Current parameters will not allow reaching the desired glucose target of " + formattedTarget + GlucoseHelper.getGlucoseUnit() + " or within " + formattedErrorMargin + GlucoseHelper.getGlucoseUnit() + " difference.";
+					bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','carbs_needed').replace("{glucose_target_do_not_translate_this_word}", formattedTarget + GlucoseHelper.getGlucoseUnit()).replace("{margin_error_do_not_translate_this_word}", formattedErrorMargin + GlucoseHelper.getGlucoseUnit());
 			}
 			
 			function displayUserDefinedSettings():void
 			{
-				trace("displayUserDefinedSettings");
-				
 				if (isInTarget && outcome == targetBG)
-					bwSuggestionLabel.text += suggestionsLineSpacing + "Blood glucose in target";
+					bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_in_target_label');
 				else if (isInTarget)
-					bwSuggestionLabel.text += suggestionsLineSpacing + "Blood glucose in target or within " + formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit() + " difference";
+					bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_in_target_or_close_label').replace("{margin_error_do_not_translate_this_word}", formattedErrorMargin + " " + GlucoseHelper.getGlucoseUnit());
 				
-				bwSuggestionLabel.text += suggestionsLineSpacing + "Outcome with calculated treatment: " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
-				bwSuggestionLabel.text += suggestionsLineSpacing + "Calculator is in manual mode. Critical data like glucose, trend, IOB and COB will not be automatically updated until you set insulin and carbs to their suggested values." + "\n" + "(" + "Insulin: " + suggestedInsulin + "U" + ", " + "Carbs: " + suggestedCarbs + "g" + ").";
-				
+				bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','glucose_outcome_with_calculated_treatment') + ": " + (isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10);
+				bwSuggestionLabel.text += suggestionsLineSpacing + ModelLocator.resourceManagerInstance.getString('treatments','calculator_in_manual_mode').replace("{insulin_do_not_translate_this_word}", suggestedInsulin).replace("{carbs_do_not_translate_this_word}", suggestedCarbs);
 			}
 			
 			//Update Final Calculation Components
@@ -1660,7 +1643,7 @@ package treatments
 				//Update foods label
 				if (addedFoods > 0)
 				{
-					bwFoodsLabel.text = "Foods" + " " + "(" + addedFoods + ")";
+					bwFoodsLabel.text = ModelLocator.resourceManagerInstance.getString('treatments','foods_label') + " " + "(" + addedFoods + ")";
 					bwFoodsLabel.validate();
 					bwFoodLoaderButton.validate();
 					bwFoodsContainer.validate();
@@ -2198,12 +2181,12 @@ package treatments
 			{
 				AlertManager.showActionAlert
 					(
-						"Disclaimer",
-						"PLEASE READ CAREFULLY AND FULLY!\nThe bolus calculatord provides information and content that has been assembled with the greatest of care and to the very best of our knowledge from internal and external sources. We nevertheless wish to emphasize that the bolus calculatord is only to be used to provide you with information and to build awareness but it cannot replace consultation with a healthcare professional. It should be used for research purposes only! Under no circumstances does Spike issue medical therapy recommendations or medical advice of any kind. For questions on the therapy and the settings that best apply to you (ISF, I:C, etc.), we recommend contacting a healthcare professional. No content - no matter whether provided by Spike itself, our cooperation partners, or users - can be understood as supplementing or replacing information from a healthcare professional.\n\nBolus proposal provided by the calculator is solely a proposal. Always compare the proposed amount with the way you are actually feeling, and adjust the recommended bolus dosage accordingly. Always consult your healthcare professional before changing your diabetes therapy.\n\nThe calculator settings must be defined by a healthcare professional. Do not make or change the settings without the supervision of and consultancy from a healthcare professional. Wrong settings always lead to a wrong bolus proposal.\n\nIt is important to make the correct selection for your Insulin-to-Carbohydrate ratio (I:C) and Insulin Sensitivity Factor (ISF). If the selected I:C and/or ISF are wrong, all bolus dosage proposals will be wrong.\n\nUse of the bolus calculator requires an understanding of the use of rapid-acting insulin. Misuse or misunderstanding of the calculation, or the suggested bolus may lead to inappropriate insulin calculation.\n\nThe calculator cannot account for all the factors that may affect your required insulin dosage. The factors include incorrectly entered data (e.g. wrong BG), incorrect settings, and un-logged insulin or other data. Always compare the proposal with you current condition.\n\nThe calculator cannot account for unusual changes in your metabolism resulting from, e.g. extreme dieting. Always compare the proposal with you current condition.\n\nMake sure that the data you provide for the calculator is correct. Wrong data leads to wrong bolus proposals.\n\nDo not change your treatment based on a single calculation result that does not match how you feel, or if you believe that the proposal is incorrect.\n\nThe calculator for the calculation of insulin dosage proposals for rapid-acting insulin only. Do not use the calculator to calculate proposals for intermediate-acting insulin or for long-lasting (basal) insulin.\n\nThe calculator cannot account for instabilities related to your basal insulin treatment. Do not use the calculator, if your basal insulin treatment is not in balance or otherwise under control.\n\nBy agreeing to the terms above indicates that you have read them and have agreed. All calculations must be confirmed before use. The suggested results are not a substitute for clinical judgment. Neither the author nor any other party involved in the preparation or publication of Spike and the bolus calculator shall be liable for use or misuse.\n\nWe strongly advise against using the bolus calculator if your sensor is giving inaccurate readings. This tends to happen during the first 24-48h after insertion or when the sensor is approaching end-of-life.\n\nThe bolus calculator is a research tool only and in no circumstances should be used in a real world scenario.",
+						ModelLocator.resourceManagerInstance.getString('treatments','disclaimer_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','disclaimer_body_label'),
 						Number.NaN,
 						[
-							{ label: "CANCEL" },
-							{ label: "I AGREE", triggered: disclaimerAccepted }
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','agree_alert_button_label'), triggered: disclaimerAccepted }
 						],
 						HorizontalAlign.JUSTIFY
 					);
@@ -2420,9 +2403,9 @@ package treatments
 					
 					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 						.setId(NotificationService.ID_FOR_EXTENDED_BOLUS_ALERT)
-						.setAlert("Extended Bolus Reminder")
-						.setTitle("Extended Bolus Reminder")
-						.setBody("This is a reminder for your extended bolus.")
+						.setAlert(ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_reminder_label'))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_reminder_label'))
+						.setBody(ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_reminder_notification_body'))
 						.enableVibration(true)
 						.enableLights(true)
 						.setSound(soundFile)
@@ -2445,8 +2428,8 @@ package treatments
 			{
 				AlertManager.showSimpleAlert
 					(
-						"Warning",
-						"In order to add treatments you first need to configure your insulins. To do so, please press the Configure Insulins button."
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','missing_insulins_label')
 					);
 			}
 		}
