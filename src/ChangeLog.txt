@@ -37,6 +37,7 @@ FEATURE: Extended profile in Spike with ability to use different profiles for di
 5) User now has the option to display the current BG target of the active profile in the main chart using a new horizontal dashed line. This line can have a different color to be more visible. Change it in settings -> chart.
 
 FEATURE: Ability to show/hide glucose threshold lines on the main chart (urgent low, low, target, high, urgent high). Options availabe in settings -> chart. (Miguel)
+FEATURE: Ability to change glucose line thickness when the main chart is set to line. Change it in settings -> chart. (Miguel)
 ENHANCEMENT: Improvements to Spike's internal COB algorithm to be more in sync with Nightscout's algorithm. This also makes Spike's COB algorithm behave better when multiple carb treatments are stacked. Spike and Nightscout COB algorithms will only be in sync for treatments that use a carb type with an absorption delay of 20 minutes. This is because Nightscout only supports that absorption delay while Spike supports multiple absorption delays (fast, medium and slow available in Settings -> Treatments -> Profile). You might notice a small difference of up to 0.5 in the COB result between Spike and Nightscout, this is due to the fact that Spike refreshes COB calculations at different paces than Nightscout. It's strongly advised that all users set a ISF and I:C in Settings -> Treatments -> Profile to make calculations more accurate. (Miguel)
 FIX: The Pebble endpoint on Spike's internal server now returns the sgv value always in mg/dL. (Miguel)
 

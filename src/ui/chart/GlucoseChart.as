@@ -155,6 +155,7 @@ package ui.chart
 		private var displayLowLine:Boolean;
 		private var displayUrgentLowLine:Boolean;
 		private var targetLineColor:uint;
+		private var glucoseLineThickness:Number = 1;
 		
 		//Display Objects
 		private var glucoseTimelineContainer:Sprite;
@@ -367,6 +368,7 @@ package ui.chart
 			userTimeAgoFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
 			userAxisFontMultiplier = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE));
 			yAxisMargin += (legendTextSize * userAxisFontMultiplier) - legendTextSize;
+			glucoseLineThickness = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS));
 			
 			//Scale
 			fixedSize = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SCALE_MODE_DYNAMIC) == "false";
@@ -709,7 +711,7 @@ package ui.chart
 			{
 				var line:SpikeLine = new SpikeLine();
 				line.touchable = false;
-				line.lineStyle(1, 0xFFFFFF, 1);
+				line.lineStyle(chartType == SCROLLER_CHART && glucoseLineThickness > 1 ? glucoseLineThickness / 2 : glucoseLineThickness, 0xFFFFFF, 1);
 				
 				if(chartType == MAIN_CHART)
 				{
@@ -816,7 +818,7 @@ package ui.chart
 						}
 						
 						//Style
-						line.lineStyle(1, glucoseMarker.color, 1);
+						line.lineStyle(chartType == SCROLLER_CHART && glucoseLineThickness > 1 ? glucoseLineThickness / 2 : glucoseLineThickness, glucoseMarker.color, 1);
 						var currentColor:uint = glucoseMarker.color
 						var previousColor:uint;
 							
@@ -2297,7 +2299,7 @@ package ui.chart
 			{
 				var line:SpikeLine = new SpikeLine();
 				line.touchable = false;
-				line.lineStyle(1, 0xFFFFFF, 1);
+				line.lineStyle(chartType == SCROLLER_CHART && glucoseLineThickness > 1 ? glucoseLineThickness / 2 : glucoseLineThickness, 0xFFFFFF, 1);
 				
 				if(chartType == MAIN_CHART)
 				{
@@ -2438,12 +2440,11 @@ package ui.chart
 						}
 						
 						//Style
-						line.lineStyle(1, glucoseMarker.color, 1);
 						var currentColor:uint = glucoseMarker.color
 						var previousColor:uint;
 						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-						line.lineStyle(1, glucoseMarker.color, 1);
+						line.lineStyle(chartType == SCROLLER_CHART && glucoseLineThickness > 1 ? glucoseLineThickness / 2 : glucoseLineThickness, glucoseMarker.color, 1);
 						if(i > 0)
 						{
 							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
@@ -2593,7 +2594,7 @@ package ui.chart
 					}
 					
 					//Style
-					line.lineStyle(1, glucoseMarker.color, 1);
+					line.lineStyle(chartType == SCROLLER_CHART && glucoseLineThickness > 1 ? glucoseLineThickness / 2 : glucoseLineThickness, glucoseMarker.color, 1);
 					var currentColor:uint = glucoseMarker.color
 					var previousColor:uint;
 					
