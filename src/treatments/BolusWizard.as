@@ -1217,11 +1217,14 @@ package treatments
 			missedSettingsConfigureButton.addEventListener(Event.TRIGGERED, onPerformConfiguration);
 			missedSettingsActionsContainer.addChild(missedSettingsConfigureButton);
 			
-			if (instructionsButton == null)
+			if (instructionsButton != null)
 			{
-				instructionsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_button_label').toUpperCase());
-				instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsButtonTriggered);
+				instructionsButton.removeFromParent();
+				instructionsButton.removeEventListeners();
+				instructionsButton.dispose();
 			}
+			instructionsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_button_label').toUpperCase());
+			instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsButtonTriggered);
 			missedSettingsContainer.addChild(instructionsButton);
 			
 			setCalloutPositionHelper();
