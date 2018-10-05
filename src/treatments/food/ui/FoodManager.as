@@ -32,9 +32,6 @@ package treatments.food.ui
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
-	import feathers.controls.text.TextBlockTextRenderer;
-	import feathers.controls.text.TextFieldTextRenderer;
-	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
@@ -44,6 +41,8 @@ package treatments.food.ui
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
+	
+	import model.ModelLocator;
 	
 	import starling.animation.Transitions;
 	import starling.core.Starling;
@@ -68,6 +67,8 @@ package treatments.food.ui
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.UniqueId;
+	
+	[ResourceBundle("foodmanager")]
 
 	public class FoodManager extends LayoutGroup
 	{
@@ -191,7 +192,7 @@ package treatments.food.ui
 			addChild(mainContentContainer);
 			
 			//Title
-			title = LayoutFactory.createLabel("Food Manager", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			title = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('foodmanager','food_manager_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			title.width = width;
 			mainContentContainer.addChild(title);
 			
@@ -206,8 +207,8 @@ package treatments.food.ui
 			databaseAPISelector.dataProvider = new ArrayCollection
 			(
 				[
-					{ label: "Favorites" },
-					{ label: "Recipes" },
+					{ label: ModelLocator.resourceManagerInstance.getString('foodmanager','favourites_label') },
+					{ label: ModelLocator.resourceManagerInstance.getString('foodmanager','recipes_label') },
 					{ label: "FatSecret" },
 					{ label: "Open Food Facts" },
 					{ label: "USDA" },
@@ -224,18 +225,18 @@ package treatments.food.ui
 			mainContentContainer.addChild(searchContainer);
 			
 			searchInput = LayoutFactory.createTextInput(false, false, width/2, HorizontalAlign.CENTER, false, false, false, false, true);
-			searchInput.prompt = "Search Food";
+			searchInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','search_food_label');
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOOD_MANAGER_SEARCH_AS_I_TYPE) == "true")
 				searchInput.addEventListener(Event.CHANGE, onSearchInputChanged);
 			searchContainer.addChild(searchInput);
 			
-			searchButton = LayoutFactory.createButton("Go");
+			searchButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','go_button_label'));
 			searchButton.paddingLeft = searchButton.paddingRight = 15;
 			searchButton.validate();
 			searchButton.addEventListener(starling.events.Event.TRIGGERED, onPerformSearch);
 			searchContainer.addChild(searchButton);
 			
-			scanButton = LayoutFactory.createButton("Scan");
+			scanButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','scan_button_label'));
 			scanButton.paddingLeft = scanButton.paddingRight = 15;
 			scanButton.validate();
 			scanButton.addEventListener(starling.events.Event.TRIGGERED, onScan);
@@ -393,7 +394,7 @@ package treatments.food.ui
 				return item;
 			};
 			
-			saveRecipe = LayoutFactory.createButton("Save as Recipe");
+			saveRecipe = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','save_as_recipe_label'));
 			saveRecipe.pivotX = 48;
 			saveRecipe.addEventListener(Event.TRIGGERED, onSaveRecipe);
 			
@@ -408,7 +409,7 @@ package treatments.food.ui
 			foodDetailsTitleContainer.width = width;
 			foodDetailsContainer.addChild(foodDetailsTitleContainer);
 			
-			foodDetailsTitle = LayoutFactory.createLabel("Nutrition Facts", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			foodDetailsTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('foodmanager','nutrition_facts_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			foodDetailsTitle.touchable = false;
 			foodDetailsTitle.paddingTop = foodDetailsTitle.paddingBottom = 10;
 			foodDetailsTitleContainer.addChild(foodDetailsTitle);
@@ -432,7 +433,7 @@ package treatments.food.ui
 			foodAmountInput.addEventListener(Event.CHANGE, onFoodAmountChanged);
 			addFoodContainer.addChild(foodAmountInput);
 			
-			addFoodButton = LayoutFactory.createButton("Add");
+			addFoodButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label'));
 			addFoodButton.paddingLeft = addFoodButton.paddingRight = 12;
 			addFoodButton.height = 32;
 			addFoodButton.addEventListener(starling.events.Event.TRIGGERED, onAddFoodOrRecipe);
@@ -443,7 +444,7 @@ package treatments.food.ui
 			substractFiberCheck.paddingTop = 3;
 			
 			//Link Component
-			foodLink = LayoutFactory.createButton("Go", true);
+			foodLink = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','go_button_label'), true);
 			foodLink.paddingLeft = foodLink.paddingRight = 4;
 			foodLink.height = 27;
 			foodLink.addEventListener(Event.TRIGGERED, onFoodLinkTriggered);
@@ -472,19 +473,19 @@ package treatments.food.ui
 			foodServingSizePickerList.selectedIndex = -1;
 			
 			nutritionFacts = new NutritionFacts(width);
-			nutritionFacts.setServingsTitle("Serving Size");
-			nutritionFacts.setServingsListTitle("Serving Size");
+			nutritionFacts.setServingsTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','serving_size_label'));
+			nutritionFacts.setServingsListTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','serving_size_label'));
 			nutritionFacts.setServingsListComponent(foodServingSizePickerList);
-			nutritionFacts.setCarbsTitle("Carbs");
-			nutritionFacts.setFiberTitle("Fiber");
-			nutritionFacts.setProteinsTitle("Proteins");
-			nutritionFacts.setFatsTitle("Fats");
-			nutritionFacts.setCaloriesTitle("Calories");
-			nutritionFacts.setSubtractFiberTitle(fiberPrecision == 1 ? "Subtract Whole Fiber" : "Subtract Half Fiber");
+			nutritionFacts.setCarbsTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','carbs_label'));
+			nutritionFacts.setFiberTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','fiber_label'));
+			nutritionFacts.setProteinsTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','proteins_label'));
+			nutritionFacts.setFatsTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','fats_label'));
+			nutritionFacts.setCaloriesTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','calories_label'));
+			nutritionFacts.setSubtractFiberTitle(fiberPrecision == 1 ? ModelLocator.resourceManagerInstance.getString('foodmanager','subtract_whole_fiber') : ModelLocator.resourceManagerInstance.getString('foodmanager','subtract_half_fiber'));
 			nutritionFacts.setSubtractFiberComponent(substractFiberCheck);
-			nutritionFacts.setLinkTitle("Link");
+			nutritionFacts.setLinkTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','link_button_label'));
 			nutritionFacts.setLinkComponent(foodLink);
-			nutritionFacts.setAmountTitle("Amount");
+			nutritionFacts.setAmountTitle(ModelLocator.resourceManagerInstance.getString('foodmanager','amount_label'));
 			nutritionFacts.setAmountComponent(addFoodContainer);
 			foodDetailsContainer.addChild(nutritionFacts);
 			
@@ -499,11 +500,11 @@ package treatments.food.ui
 			actionsContainer.width = width;
 			mainActionsContainer.addChild(actionsContainer);
 			
-			finishButton = LayoutFactory.createButton("FINISH");
+			finishButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','finish_button_label').toUpperCase());
 			finishButton.addEventListener(starling.events.Event.TRIGGERED, onCompleteFoodManager);
 			actionsContainer.addChild(finishButton);
 			
-			instructionsButton = LayoutFactory.createButton("INSTRUCTIONS");
+			instructionsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_button_label'));
 			instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsTriggered);
 			mainActionsContainer.addChild(instructionsButton);
 			
@@ -676,11 +677,11 @@ package treatments.food.ui
 				if (cartTotals != null) cartTotals.removeFromParent(true);
 				cartTotals = new CartTotalsSection(cartWidth);
 				cartTotals.width = cartWidth;
-				cartTotals.title.text = "Cart Totals";
+				cartTotals.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','cart_totals_label');
 				cartTotals.title.width = cartWidth;
 				cartTotals.title.validate();
 				cartTotals.value.wordWrap = true;
-				cartTotals.value.text = "Protein: " + (totalProteins == 0 && totalProteinsNaN ? "N/A" : totalProteins + "g") + "\n" + "Carbs: " + (totalCarbs == 0 && totalCarbsNaN ? "N/A" : totalCarbs + "g") + (totalFiberToSubstract != 0 ? " (-" + totalFiberToSubstract + "g fiber)" : "") + "\n" + "Fiber: " + (totalFiber == 0 && totalFiberNaN ? "N/A" : totalFiber + "g") + "\n" + "Fats: " + (totalFats == 0 && totalFatsNaN ? "N/A" : totalFats + "g") + "\n" + "Calories: " + (totalCalories == 0 && totalCaloriesNaN ? "N/A" : totalCalories + "Kcal");
+				cartTotals.value.text = ModelLocator.resourceManagerInstance.getString('foodmanager','proteins_label') + ": " + (totalProteins == 0 && totalProteinsNaN ? ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') : totalProteins + "g") + "\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','carbs_label') + ": " + (totalCarbs == 0 && totalCarbsNaN ? ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') : totalCarbs + "g") + (totalFiberToSubstract != 0 ? " (-" + totalFiberToSubstract + "g " + ModelLocator.resourceManagerInstance.getString('foodmanager','fiber_label').toLocaleLowerCase() + ")" : "") + "\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','fiber_label') + ": " + (totalFiber == 0 && totalFiberNaN ? ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') : totalFiber + "g") + "\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','fats_label') + ": " + (totalFats == 0 && totalFatsNaN ? ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') : totalFats + "g") + "\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','calories_label') + ": " + (totalCalories == 0 && totalCaloriesNaN ? ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') : totalCalories + "Kcal");
 				cartTotals.value.width = cartWidth;
 				cartTotals.value.validate();
 					
@@ -703,7 +704,7 @@ package treatments.food.ui
 			var options:ScannerOptions = new ScannerOptions();
 			options.camera = ScannerOptions.CAMERA_REAR;
 			options.torchMode = ScannerOptions.TORCH_AUTO;
-			options.cancelLabel = "CANCEL";
+			options.cancelLabel = ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase();
 			options.colour = 0x0086FF;
 			options.textColour = 0xEEEEEE;
 			options.singleResult = true;
@@ -725,12 +726,12 @@ package treatments.food.ui
 				mainContentContainer.addChildAt(foodDetailsContainer, detailsIndex);
 			}
 			
-			nutritionFacts.setServingsValue(!isNaN(Number(selectedRecipe.servingSize)) ? selectedRecipe.servingSize + " " + (selectedRecipe.servingUnit != null && selectedRecipe.servingUnit != "" && selectedRecipe.servingUnit != "undefined" ? selectedRecipe.servingUnit : "" ) : "N/A" );
-			nutritionFacts.setCarbsValue(!isNaN(selectedRecipe.totalCarbs) ? String(selectedRecipe.totalCarbs) + "g" : "N/A" );
-			nutritionFacts.setFiberValue(!isNaN(selectedRecipe.totalFiber) ? String(selectedRecipe.totalFiber) + "g" : "N/A" );
-			nutritionFacts.setProteinsValue(!isNaN(selectedRecipe.totalProteins) ? String(selectedRecipe.totalProteins) + "g" : "N/A" );
-			nutritionFacts.setFatsValue(!isNaN(selectedRecipe.totalFats) ? String(selectedRecipe.totalFats) + "g" : "N/A" );
-			nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? Math.round(selectedRecipe.totalCalories) + "Kcal" : "N/A" );
+			nutritionFacts.setServingsValue(!isNaN(Number(selectedRecipe.servingSize)) ? selectedRecipe.servingSize + " " + (selectedRecipe.servingUnit != null && selectedRecipe.servingUnit != "" && selectedRecipe.servingUnit != "undefined" ? selectedRecipe.servingUnit : "" ) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setCarbsValue(!isNaN(selectedRecipe.totalCarbs) ? String(selectedRecipe.totalCarbs) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setFiberValue(!isNaN(selectedRecipe.totalFiber) ? String(selectedRecipe.totalFiber) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setProteinsValue(!isNaN(selectedRecipe.totalProteins) ? String(selectedRecipe.totalProteins) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setFatsValue(!isNaN(selectedRecipe.totalFats) ? String(selectedRecipe.totalFats) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? Math.round(selectedRecipe.totalCalories) + "Kcal" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
 			
 			nutritionFacts.isRecipe();
 			
@@ -775,7 +776,7 @@ package treatments.food.ui
 			if (!skipServingUpdate)
 			{
 				if (selectedFood.note == "")
-					nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" );
+					nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
 				else
 				{
 					var servingOptions:Array;
@@ -786,26 +787,26 @@ package treatments.food.ui
 					} 
 					catch(error:Error) 
 					{
-						nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" );
+						nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
 					}
 					
 					if (servingOptions != null)
 					{
-						servingOptions.unshift( { label: !isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" } );
+						servingOptions.unshift( { label: !isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') } );
 						foodServingSizePickerList.dataProvider = new ArrayCollection(servingOptions);
 						foodServingSizePickerList.invalidate();
 						nutritionFacts.setServingsListComponent(foodServingSizePickerList);
 					}
 					else
-						nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : "N/A" );
+						nutritionFacts.setServingsValue(!isNaN(selectedFood.servingSize) ? selectedFood.servingSize + (selectedFood.servingUnit != null && selectedFood.servingUnit != "" && selectedFood.servingUnit != "undefined" ? selectedFood.servingUnit : "" ) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
 				}
 			}
 			
-			nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(selectedFood.carbs * globalMultiplier * 100) / 100) + "g" : "N/A" );
-			nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(selectedFood.fiber * globalMultiplier * 100) / 100) + "g" : "N/A" );
-			nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(selectedFood.proteins * globalMultiplier * 100) / 100) + "g" : "N/A" );
-			nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(selectedFood.fats * globalMultiplier * 100) / 100) + "g" : "N/A" );
-			nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? (Math.round(selectedFood.kcal * globalMultiplier)) + "Kcal" : "N/A" );
+			nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(selectedFood.carbs * globalMultiplier * 100) / 100) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(selectedFood.fiber * globalMultiplier * 100) / 100) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(selectedFood.proteins * globalMultiplier * 100) / 100) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(selectedFood.fats * globalMultiplier * 100) / 100) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+			nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? (Math.round(selectedFood.kcal * globalMultiplier)) + "Kcal" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
 			
 			nutritionFacts.isFood();
 			
@@ -847,11 +848,11 @@ package treatments.food.ui
 						amount = (amount * selectedFood.servingSize);
 					}
 					
-					nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.carbs * globalMultiplier) * 100) / 100) + "g" : "N/A" );
-					nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fiber * globalMultiplier) * 100) / 100) + "g" : "N/A" );
-					nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.proteins * globalMultiplier) * 100) / 100) + "g" : "N/A" );
-					nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fats * globalMultiplier) * 100) / 100) + "g" : "N/A" );
-					nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.kcal * globalMultiplier))) + "Kcal" : "N/A" );
+					nutritionFacts.setCarbsValue(!isNaN(selectedFood.carbs) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.carbs * globalMultiplier) * 100) / 100) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+					nutritionFacts.setFiberValue(!isNaN(selectedFood.fiber) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fiber * globalMultiplier) * 100) / 100) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+					nutritionFacts.setProteinsValue(!isNaN(selectedFood.proteins) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.proteins * globalMultiplier) * 100) / 100) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+					nutritionFacts.setFatsValue(!isNaN(selectedFood.fats) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.fats * globalMultiplier) * 100) / 100) + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+					nutritionFacts.setCaloriesValue(!isNaN(selectedFood.kcal) ? String(Math.round(((amount / selectedFood.servingSize) * selectedFood.kcal * globalMultiplier))) + "Kcal" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
 				}
 			}
 			else if (currentMode == RECIPES_MODE)
@@ -862,11 +863,11 @@ package treatments.food.ui
 				{
 					selectedRecipe.performCalculations(amount);
 					
-					nutritionFacts.setCarbsValue(!isNaN(selectedRecipe.totalCarbs) ? selectedRecipe.totalCarbs + "g" : "N/A" );
-					nutritionFacts.setFiberValue(!isNaN(selectedRecipe.totalFiber) ? selectedRecipe.totalFiber + "g" : "N/A" );
-					nutritionFacts.setProteinsValue(!isNaN(selectedRecipe.totalProteins) ? selectedRecipe.totalProteins + "g" : "N/A" );
-					nutritionFacts.setFatsValue(!isNaN(selectedRecipe.totalFats) ? selectedRecipe.totalFats + "g" : "N/A" );
-					nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? Math.round(selectedRecipe.totalCalories) + "Kcal" : "N/A" );
+					nutritionFacts.setCarbsValue(!isNaN(selectedRecipe.totalCarbs) ? selectedRecipe.totalCarbs + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+					nutritionFacts.setFiberValue(!isNaN(selectedRecipe.totalFiber) ? selectedRecipe.totalFiber + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+					nutritionFacts.setProteinsValue(!isNaN(selectedRecipe.totalProteins) ? selectedRecipe.totalProteins + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+					nutritionFacts.setFatsValue(!isNaN(selectedRecipe.totalFats) ? selectedRecipe.totalFats + "g" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
+					nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? Math.round(selectedRecipe.totalCalories) + "Kcal" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
 				}
 			}
 		}
@@ -1006,15 +1007,12 @@ package treatments.food.ui
 		{
 			try
 			{
-				//if (preloader != null && preloader.visible == false && preloader.parent != null)
-				//{
-					preloader.visible = false;
-					preloader.removeFromParent();
-					basketPreloaderContainer.readjustLayout();
-					basketPreloaderContainer.validate();
-					basketSprite.y += 5;
-					(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
-				//}
+				preloader.visible = false;
+				preloader.removeFromParent();
+				basketPreloaderContainer.readjustLayout();
+				basketPreloaderContainer.validate();
+				basketSprite.y += 5;
+				(actionsContainer.layout as HorizontalLayout).paddingTop = 4;
 			} 
 			catch(error:Error) {}
 		}
@@ -1123,7 +1121,7 @@ package treatments.food.ui
 			{
 				currentMode = FAVORITES_MODE;
 				searchContainer.addChild(scanButton);
-				searchInput.prompt = "Search Food";
+				searchInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','search_food_label');
 				searchInput.text = "";
 				showAddFavorite();
 				getInitialFavorites();
@@ -1132,7 +1130,7 @@ package treatments.food.ui
 			{
 				currentMode = RECIPES_MODE;
 				searchContainer.removeChild(scanButton);
-				searchInput.prompt = "Search Recipe";
+				searchInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','search_recipe_label');
 				searchInput.text = "";
 				hideAddFavorite();
 				getInitialRecipes();
@@ -1141,21 +1139,21 @@ package treatments.food.ui
 			{
 				currentMode = FATSECRET_MODE;
 				searchContainer.addChild(scanButton);
-				searchInput.prompt = "Search Food";
+				searchInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','search_food_label');
 				hideAddFavorite();
 			}
 			else if (databaseAPISelector.selectedIndex == 3)
 			{
 				currentMode = OPENFOODFACTS_MODE;
 				searchContainer.addChild(scanButton);
-				searchInput.prompt = "Search Food";
+				searchInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','search_food_label');
 				hideAddFavorite();
 			}
 			else if (databaseAPISelector.selectedIndex == 4)
 			{
 				currentMode = USDA_MODE;
 				searchContainer.addChild(scanButton);
-				searchInput.prompt = "Search Food";
+				searchInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','search_food_label');
 				hideAddFavorite();
 			}
 		}
@@ -1424,7 +1422,7 @@ package treatments.food.ui
 			removeFoodEventListeners();
 			hidePreloader();
 			
-			foodResultsList.dataProvider = new ArrayCollection( [ { label: "No results!" } ] );
+			foodResultsList.dataProvider = new ArrayCollection( [ { label: ModelLocator.resourceManagerInstance.getString('foodmanager','no_search_results_label') } ] );
 		}
 		
 		private function onServerError (e:FoodEvent):void
@@ -1434,7 +1432,7 @@ package treatments.food.ui
 			
 			AlertManager.showSimpleAlert
 				(
-					"Warning",
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
 					e.errorMessage
 				);
 		}
@@ -1494,17 +1492,17 @@ package treatments.food.ui
 			var contentContainer:LayoutGroup = new LayoutGroup();
 			contentContainer.layout = contentLayout;
 			var recipeNameTextInput:TextInput = LayoutFactory.createTextInput(false, false, 250, HorizontalAlign.CENTER, false, false, false, true, true);
-			recipeNameTextInput.prompt = "Name";
+			recipeNameTextInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','name_label');
 			recipeNameTextInput.addEventListener(Event.CHANGE, onRecipeNameChanged);
 			contentContainer.addChild(recipeNameTextInput);
 			
 			var servingsContent:LayoutGroup = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
 			var recipeServingSizeTextInput:TextInput = LayoutFactory.createTextInput(false, false, 120, HorizontalAlign.CENTER, true, false, false, true, true);
-			recipeServingSizeTextInput.prompt = "Serving Size";
+			recipeServingSizeTextInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','serving_size_label');
 			recipeServingSizeTextInput.addEventListener(Event.CHANGE, onRecipeServingSizeChanged);
 			servingsContent.addChild(recipeServingSizeTextInput);
 			var recipeServingUnitTextInput:TextInput = LayoutFactory.createTextInput(false, false, 120, HorizontalAlign.CENTER, false, false, false, true, true);
-			recipeServingUnitTextInput.prompt = "Serving Unit";
+			recipeServingUnitTextInput.prompt = ModelLocator.resourceManagerInstance.getString('foodmanager','serving_unit_label');
 			recipeServingUnitTextInput.addEventListener(Event.CHANGE, onRecipeServingUnitChanged);
 			servingsContent.addChild(recipeServingUnitTextInput);
 			contentContainer.addChild(servingsContent);
@@ -1515,9 +1513,9 @@ package treatments.food.ui
 			//contentContainer.addChild(notesTextInput);
 			
 			var actionsContainer:LayoutGroup = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 10);
-			var cancelButton:Button = LayoutFactory.createButton("Cancel");
+			var cancelButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label'));
 			cancelButton.addEventListener(Event.TRIGGERED, onCancelRecipe);
-			var saveButton:Button = LayoutFactory.createButton("Save");
+			var saveButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','save_button_label'));
 			saveButton.isEnabled = false;
 			saveButton.addEventListener(Event.TRIGGERED, onSaveRecipe);
 			actionsContainer.addChild(cancelButton);
@@ -1525,7 +1523,7 @@ package treatments.food.ui
 			
 			contentContainer.addChild(actionsContainer);
 			
-			var recipePopup:Alert = Alert.show("", "Add Recipe", null, contentContainer, true, false);
+			var recipePopup:Alert = Alert.show("", ModelLocator.resourceManagerInstance.getString('foodmanager','add_recipe_label'), null, contentContainer, true, false);
 			recipePopup.validate();
 			recipePopup.x = ((Constants.stageWidth - recipePopup.width) / 2) + 5;
 			recipePopup.y = 70;
