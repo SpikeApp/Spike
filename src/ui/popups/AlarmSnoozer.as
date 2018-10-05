@@ -175,12 +175,12 @@ package ui.popups
 			actionButtonsContainer.addChild(cancelButton);
 			
 			//All Button
-			var allButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"all_button_label").toUpperCase());
+			var allButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"all_button_label").toUpperCase());
 			allButton.addEventListener(Event.TRIGGERED, onAll);
 			actionButtonsContainer.addChild(allButton);
 			
 			//This Button
-			var okButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"this_button_label").toUpperCase());
+			var okButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"this_button_label").toUpperCase());
 			okButton.addEventListener(Event.TRIGGERED, onThis);
 			actionButtonsContainer.addChild(okButton);
 			

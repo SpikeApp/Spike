@@ -4,6 +4,7 @@ FEATURE: Added Danish, Finnish, Noreweigan and Swedish languages to the speech f
 FEATURE: Ability to snooze all alarms from the popup that appears after a single alarm is fired. (Miguel)
 ENHANCEMENT: Spike will now respect the override system volume when previewing alert sounds in settings -> alert types. (Miguel)
 ENHANCEMENT: Some enhancements to the chart layout in Spike's Apple Watch app. (Miguel)
+ENHANCEMENT: Glucose values in the readings screen (three dots menu -> readings) now also display delta. (Miguel)
 FIX: The Pebble endpoint on Spike's internal server now returns the sgv value always in mg/dL. (Miguel)
 FIX: Workaround for the need to swipe twice from the screen bottom on iPhone X or above to close Spike. (Miguel)
 FIX: Small bug fixes for alarms snooze times saved to database to persist after Spike restarts. (Miguel)

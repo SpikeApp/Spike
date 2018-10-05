@@ -28,6 +28,7 @@ package ui.screens.display.readings
 	import starling.textures.SubTexture;
 	import starling.textures.Texture;
 	
+	import ui.chart.GlucoseFactory;
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
@@ -187,13 +188,42 @@ package ui.screens.display.readings
 				var glucoseValueNumber:Number = Number(glucoseValue);
 				var glucoseTime:Date = new Date(reading.timestamp);
 				
+				
+				//Delta
+				var glucoseValueProperties:Object = GlucoseFactory.getGlucoseOutput(reading.calculatedValue);
+				var glucoseValueFormatted:Number = glucoseValueProperties.glucoseValueFormatted;
+				var previousGlucoseValueFormatted:Number;
+				var previousGlucoseValue:Number;
+				if (i > 0)
+				{
+					previousGlucoseValue = readingsList[i-1].calculatedValue;
+					var previousGlucoseValueProperties:Object = GlucoseFactory.getGlucoseOutput(previousGlucoseValue);
+					previousGlucoseValueFormatted = previousGlucoseValueProperties.glucoseValueFormatted;
+				}
+				
+				var slopeOutput:String = "";
+				
+				if (i > 0)
+				{
+					var finalSlopeOutput:String = GlucoseFactory.getGlucoseSlope
+					(
+						previousGlucoseValue,
+						previousGlucoseValueFormatted,
+						reading.calculatedValue,
+						glucoseValueFormatted,
+						true
+					);
+					
+					slopeOutput += "(" + (Number(finalSlopeOutput) == 0 ? "0" : finalSlopeOutput) + ")";
+				}
+				
 				//Row label
 				var timeFormatted:String;
 				if (dateFormat.slice(0,2) == "24")
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseTime.getHours(), glucoseTime.getMinutes(), TimeSpan.TIME_FORMAT_24H);
 				else
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseTime.getHours(), glucoseTime.getMinutes(), TimeSpan.TIME_FORMAT_12H);
-				var label:String = timeFormatted + "  -  " + glucoseValue;
+				var label:String = timeFormatted + "  -  " + glucoseValue + " " + slopeOutput;
 				
 				//Row icon (changes color depending of value of glucose reading
 				var icon:RenderTexture;
