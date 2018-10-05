@@ -80,7 +80,7 @@ package ui.screens.display.settings.treatments
 		{
 			//Urgent High Color Picker
 			suggestionsColorPicker = new ColorPicker(20, suggestionsColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.BOTTOM);
-			suggestionsColorPicker.name = "usuggestionsColor";
+			suggestionsColorPicker.name = "suggestionsColor";
 			suggestionsColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
 			suggestionsColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
 			suggestionsColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
@@ -100,9 +100,9 @@ package ui.screens.display.settings.treatments
 			
 			//Set Colors Data
 			var data:Array = [];
-			data.push( { label: "Suggestions Font Color", accessory: suggestionsColorPicker } );
-			data.push( { label: "Suggestions At The Top", accessory: suggestionsOnTopCheck } );
-			data.push( { label: "Remove Space Between Suggestions", accessory: noSpaceBetweenSuggestionsCheck } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','suggestions_font_color_label'), accessory: suggestionsColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','suggestions_at_the_top_label'), accessory: suggestionsOnTopCheck } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','no_suggestions_spaces_label'), accessory: noSpaceBetweenSuggestionsCheck } );
 			data.push( { label: "", accessory: resetColors } );
 			
 			dataProvider = new ArrayCollection(data);
@@ -155,7 +155,7 @@ package ui.screens.display.settings.treatments
 		{
 			var currentTargetName:String = (e.currentTarget as ColorPicker).name;
 			
-			if(currentTargetName == "usuggestionsColor")
+			if(currentTargetName == "suggestionsColor")
 			{
 				if(suggestionsColorPicker.value != suggestionsColorValue)
 				{
