@@ -145,7 +145,7 @@ package ui.screens.display.treatments
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: canAddTreatments, id: 2 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: canAddTreatments, id: 3 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: canAddTreatments, id: 4 } );
-				menuData.push( { label: "Bolus Calculator", icon: bolusWizardImage, selectable: canAddTreatments, id: 5 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','bolus_wizard_settings_label'), icon: bolusWizardImage, selectable: canAddTreatments, id: 5 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: canAddTreatments, id: 6 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: canAddTreatments, id: 7 } );
 			}
