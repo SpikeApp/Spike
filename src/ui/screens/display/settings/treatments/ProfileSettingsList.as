@@ -22,6 +22,8 @@ package ui.screens.display.settings.treatments
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
@@ -113,7 +115,7 @@ package ui.screens.display.settings.treatments
 			modeLabel.width = width;
 			
 			//ADD Button
-			addProfileButton = LayoutFactory.createButton("Add");
+			addProfileButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label'));
 			addProfileButton.addEventListener(Event.TRIGGERED, onAddProfile);
 			
 			//Actions Container
@@ -123,12 +125,12 @@ package ui.screens.display.settings.treatments
 			actionsContainer.layout = actionsLayout;
 			
 			//CANCEL Button
-			cancelProfileButton = LayoutFactory.createButton("Cancel");
+			cancelProfileButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label'));
 			cancelProfileButton.addEventListener(Event.TRIGGERED, onCancelProfile);
 			actionsContainer.addChild(cancelProfileButton);
 			
 			//SAVE Button
-			saveProfileButton = LayoutFactory.createButton("Save");
+			saveProfileButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','save_button_label'));
 			saveProfileButton.addEventListener(Event.TRIGGERED, onSaveProfile);
 			actionsContainer.addChild(saveProfileButton);
 			
@@ -163,17 +165,17 @@ package ui.screens.display.settings.treatments
 			guidesContainer.width = width;
 			
 			//I:C Guide Button
-			ICGuideButton = LayoutFactory.createButton("I:C Guide");
+			ICGuideButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_carb_ratio_guide_label'));
 			ICGuideButton.addEventListener(Event.TRIGGERED, onICGuide);
 			guidesContainer.addChild(ICGuideButton);
 			
 			//ISF Guide Button
-			ISFGuideButton = LayoutFactory.createButton("ISF Guide");
+			ISFGuideButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_sensitivity_factor_guide_label'));
 			ISFGuideButton.addEventListener(Event.TRIGGERED, onISFGuide);
 			guidesContainer.addChild(ISFGuideButton);
 			
 			//Glossary
-			glossaryLabel = LayoutFactory.createLabel("ISF (Insulin Sensitivity Factor): How much one unit of insulin lowers your blood glucose. For example, if your Insulin Sensitivity Factor is 50, one unit of insulin lowers your blood glucose by 50 mg/dL. Spike also supports Insulin Sensitivity Factor in mmol/L. If Spike is set to mmol/L, an Insulin Sensitivity Factor of 2.5 means that one unit of insulin lowers your blood glucose by 2.5 mmol/L.\n\nI:C (Insulin-to-Carbohydrate Ratio): Number of grams of carbohydrate covered by one unit of insulin. For example, if your Insulin-to-Carbohydrate Ratio is 15, then you need to deliver one unit of insulin to cover every fifteen grams of carbohydrate you eat.\n\nTo determine your ISF and I:C please read the guides below.\n\nTarget BG: The blood glucose level (mg/dL or mmol/L) you're aiming at, the one you want to stay at most of the time.\n\nTrends: The amount of insulin or carbs needed to make an upward or downward trend arrow flat. Upward trend arrows need insulin and downward trend arrows need carbohydrates.", HorizontalAlign.JUSTIFY);
+			glossaryLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','isf_ic_trend_bgtarget_description_label'), HorizontalAlign.JUSTIFY);
 			glossaryLabel.wordWrap = true;
 			glossaryLabel.width = width;
 			glossaryLabel.paddingTop = glossaryLabel.paddingBottom = 10;
@@ -204,33 +206,33 @@ package ui.screens.display.settings.treatments
 					var profileDate:Date = ProfileManager.getProfileDate(profile);
 					
 					//Data
-					data.push( { label: "Start Time: " + TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", ISF: " + (unit == "mgdl" ? profile.insulinSensitivityFactors : Math.round(BgReading.mgdlToMmol(Number(profile.insulinSensitivityFactors)) * 10) / 10) + "," + "\n" + "I:C: " + profile.insulinToCarbRatios + ", Target BG: " + (unit == "mgdl" ? profile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(profile.targetGlucoseRates)) * 10) / 10) + "\n" + "Trends: " + "\u2197 " + profile.trend45Up + "U" + " | " + "\u2191 " + profile.trend90Up + "U" + " | " + "\u2191\u2191 " + profile.trendDoubleUp + "U" + " | " + "\u2198 " + profile.trend45Down + "g" + " | " + "\u2193 " + profile.trend90Down + "g" + " | " + "\u2193\u2193 " + profile.trendDoubleDown + "g", accessory: profileAccessory, profile: profile  } );
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','start_time_label') + ": " + TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_sensitivity_factor_short_label') + " : " + (unit == "mgdl" ? profile.insulinSensitivityFactors : Math.round(BgReading.mgdlToMmol(Number(profile.insulinSensitivityFactors)) * 10) / 10) + "," + "\n" + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_to_carb_ratio_short_label') + ": " + profile.insulinToCarbRatios + ", " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','target_glucose_label') + ": " + (unit == "mgdl" ? profile.targetGlucoseRates : Math.round(BgReading.mgdlToMmol(Number(profile.targetGlucoseRates)) * 10) / 10) + "\n" + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trends_label') + ": " + "\u2197 " + profile.trend45Up + "U" + " | " + "\u2191 " + profile.trend90Up + "U" + " | " + "\u2191\u2191 " + profile.trendDoubleUp + "U" + " | " + "\u2198 " + profile.trend45Down + "g" + " | " + "\u2193 " + profile.trend90Down + "g" + " | " + "\u2193\u2193 " + profile.trendDoubleDown + "g", accessory: profileAccessory, profile: profile  } );
 					validProfile = true;
 				}
 			}
 			
 			if (!validProfile && !editMode && !addMode)
 			{
-				data.push( { label: "Please add configuration..." } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','add_configuration_label') } );
 			}
 			
 			//Add Components
 			if (addMode || editMode)
 			{
-				if (addMode) modeLabel.text = "Add Profile";	
-				else if (editMode)modeLabel.text = "Edit Profile";
+				if (addMode) modeLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','add_profile_label');	
+				else if (editMode)modeLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','edit_profile_label');
 				
 				data.push( { label: "", accessory:  modeLabel} );
-				data.push( { label: "Start Time", accessory: profileStartTime } );
-				data.push( { label: "ISF", accessory: ISFStepper } );
-				data.push( { label: "I:C", accessory: ICStepper } );
-				data.push( { label: "Target BG", accessory: targetBGStepper } );
-				data.push( { label: "Trend \u2197 - Units Of Insulin", accessory: trend45UpStepper } );
-				data.push( { label: "Trend \u2191 - Units Of Insulin", accessory: trend90UpStepper } );
-				data.push( { label: "Trend \u2191\u2191 - Units Of Insulin", accessory: trendDoubleUpStepper } );
-				data.push( { label: "Trend \u2198 - Grams Of Carbs", accessory: trend45DownStepper } );
-				data.push( { label: "Trend \u2193 - Grams Of Carbs", accessory: trend90DownStepper } );
-				data.push( { label: "Trend \u2193\u2193 - Grams Of Carbs", accessory: trendDoubleDownStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','start_time_label'), accessory: profileStartTime } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_sensitivity_factor_short_label'), accessory: ISFStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_to_carb_ratio_short_label'), accessory: ICStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','target_glucose_label'), accessory: targetBGStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " \u2197" + " - " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','units_of_insulin_label'), accessory: trend45UpStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " \u2191" + " - " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','units_of_insulin_label'), accessory: trend90UpStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " \u2191\u2191" + " - " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','units_of_insulin_label'), accessory: trendDoubleUpStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " \u2198" + " - " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','grams_of_carbs_label'), accessory: trend45DownStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " \u2193" + " - " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','grams_of_carbs_label'), accessory: trend90DownStepper } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " \u2193\u2193" + " - " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','grams_of_carbs_label'), accessory: trendDoubleDownStepper } );
 			}
 			
 			if (!addMode && !editMode)
@@ -488,8 +490,8 @@ package ui.screens.display.settings.treatments
 			{
 				AlertManager.showSimpleAlert
 					(
-						"Warning",
-						"Can't delete profile! There needs to be at least one profile that starts at 00:00"
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','cant_delete_profile_label') + " " + TimeSpan.formatHoursMinutes(0, 0, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H)
 					);
 				
 				return;
@@ -497,12 +499,12 @@ package ui.screens.display.settings.treatments
 			
 			AlertManager.showActionAlert
 			(
-				"Warning",
-				"Are you sure you want to delete this profile?\n\nThis can not be undone!",
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+				ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','delete_profile_confirmation_label'),
 				Number.NaN,
 				[
-					{ label: "Cancel" },
-					{ label: "Yes", triggered: deleteProfile }
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','yes_uppercase').toUpperCase(), triggered: deleteProfile }
 				]
 			);
 			
@@ -524,8 +526,8 @@ package ui.screens.display.settings.treatments
 			{
 				AlertManager.showSimpleAlert
 				(
-					"Warning",
-					"Profile start time already in use. Please select a different time."
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','conflicting_profile_label')
 				);
 				
 				return;
