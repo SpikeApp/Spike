@@ -624,9 +624,6 @@ class InterfaceController: WKInterfaceController
             let mmolmaxy = Double(maxy) / 18.0182
             google="https://chart.googleapis.com/chart?cht=s:nda&chxt=y&chxr=0,"+String(format:"%.1f",mmolminy)+","+String(format:"%.1f",mmolmaxy)+"&chs=180x100"+"&chf=bg,s,000000&chls=3&chd=t:"+xg+"|"+yg+"|20"+pc+"&chof=png&chxs=0,FFFFFF"+band1+band2+hourlyverticals
         }
-        
-        print("GOOGLE")
-        print(google)
 
         return google
     }
