@@ -43,6 +43,7 @@ package ui.screens.display.settings.chart
 		private var pieInRangeColorPicker:ColorPicker;
 		private var pieLowColorPicker:ColorPicker;
 		private var rawColorPicker:ColorPicker;
+		private var targetBGLineColorPicker:ColorPicker;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -62,6 +63,7 @@ package ui.screens.display.settings.chart
 		private var pieInRangeColorValue:uint;
 		private var pieLowColorValue:uint;
 		private var rawColorValue:uint;
+		private var targetBGColorValue:uint;
 		
 		public function ColorSettingsList(parentDisplayObject:PanelScreen)
 		{
@@ -109,6 +111,7 @@ package ui.screens.display.settings.chart
 			pieLowColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_LOW_COLOR));
 			rawColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR));
 			displayRawComponent = CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6();
+			targetBGColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TARGET_LINE_COLOR));
 		}
 		
 		private function setupContent():void
@@ -215,6 +218,15 @@ package ui.screens.display.settings.chart
 			axisColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 			colorPickers.push(axisColorPicker);
 			
+			//Target BG Line Color Picker
+			targetBGLineColorPicker = new ColorPicker(20, targetBGColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			targetBGLineColorPicker.name = "targetBGLineColor";
+			targetBGLineColorPicker.pivotX = 3;
+			targetBGLineColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			targetBGLineColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			targetBGLineColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			colorPickers.push(targetBGLineColorPicker);
+			
 			//Chart Font Color Picker
 			chartFontColorPicker = new ColorPicker(20, chartFontColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
 			chartFontColorPicker.name = "chartFontColor";
@@ -259,6 +271,7 @@ package ui.screens.display.settings.chart
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_low_color_title'), accessory: pieLowColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','old_data_title'), accessory: oldDataColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_title'), accessory: axisColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','target_glucose_line_color'), accessory: targetBGLineColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_font_title'), accessory: chartFontColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_title'), accessory: axisFontColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_chart_font_title'), accessory: pieChartFontColorPicker } );
@@ -310,6 +323,9 @@ package ui.screens.display.settings.chart
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR) != String(rawColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR, String(rawColorValue));
+			
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TARGET_LINE_COLOR) != String(targetBGColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_TARGET_LINE_COLOR, String(targetBGColorValue));
 			
 			needsSave = false;
 		}
@@ -365,6 +381,10 @@ package ui.screens.display.settings.chart
 			//Axis Color Picker
 			axisColorPicker.setColor(0xEEEEEE);
 			axisColorValue = 0xEEEEEE;
+			
+			//Target BG Line & Font Color Picker
+			targetBGLineColorPicker.setColor(0xEEEEEE);
+			targetBGColorValue = 0xEEEEEE;
 			
 			//Chart Font Color Picker
 			chartFontColorPicker.setColor(0xEEEEEE);
@@ -487,6 +507,14 @@ package ui.screens.display.settings.chart
 				if(axisColorPicker.value != axisColorValue)
 				{
 					axisColorValue = axisColorPicker.value;
+					needsSave = true;
+				}
+			}
+			else if(currentTargetName == "targetBGLineColor")
+			{
+				if(targetBGLineColorPicker.value != targetBGColorValue)
+				{
+					targetBGColorValue = targetBGLineColorPicker.value;
 					needsSave = true;
 				}
 			}
@@ -651,6 +679,15 @@ package ui.screens.display.settings.chart
 				pieChartFontColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				pieChartFontColorPicker.dispose();
 				pieChartFontColorPicker = null;
+			}
+			
+			if(targetBGLineColorPicker != null)
+			{
+				targetBGLineColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				targetBGLineColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				targetBGLineColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				targetBGLineColorPicker.dispose();
+				targetBGLineColorPicker = null;
 			}
 			
 			if(resetColors != null)

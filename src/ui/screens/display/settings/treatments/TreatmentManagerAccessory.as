@@ -14,7 +14,7 @@ package ui.screens.display.settings.treatments
 	import utils.Constants;
 	import utils.DeviceInfo;
 	
-	public class InsulinManagerAccessory extends Sprite
+	public class TreatmentManagerAccessory extends Sprite
 	{	
 		/* Constants */
 		public static const DELETE:String = "delete";
@@ -29,7 +29,7 @@ package ui.screens.display.settings.treatments
 		private var editButtonTexture:Texture;
 		private var editButtonIcon:Image;
 		
-		public function InsulinManagerAccessory()
+		public function TreatmentManagerAccessory()
 		{
 			super();
 			

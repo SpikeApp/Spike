@@ -61,6 +61,8 @@ package ui.screens.display.settings.treatments
 		private var emailConfigurationFiles:Button;
 		private var loadInstructions:Button;
 		private var pumpUserEnabled:Check;
+		private var bolusWizardIconImage:Image;
+		private var foodManagerIconImage:Image;
 		
 		/* Internal Variables */
 		public var needsSave:Boolean = false;
@@ -127,6 +129,8 @@ package ui.screens.display.settings.treatments
 			/* Icons */
 			chevronIconTexture = MaterialDeepGreyAmberMobileThemeIcons.chevronRightTexture;
 			profileIconImage = new Image(chevronIconTexture);
+			bolusWizardIconImage = new Image(chevronIconTexture);
+			foodManagerIconImage = new Image(chevronIconTexture);
 			
 			/* Enable/Disable Switch */
 			treatmentsEnabled = LayoutFactory.createToggleSwitch(treatmentsEnabledValue);
@@ -224,7 +228,11 @@ package ui.screens.display.settings.treatments
 			var data:Array = [];
 			
 			if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+			{
 				data.push({ screen: Screens.SETTINGS_PROFILE, label: ModelLocator.resourceManagerInstance.getString('treatments',"profile_menu_label"), accessory: profileIconImage, selectable: true });
+				data.push({ screen: Screens.SETTINGS_BOLUS_WIZARD, label: ModelLocator.resourceManagerInstance.getString('treatments',"bolus_wizard_settings_label"), accessory: bolusWizardIconImage, selectable: true });
+				data.push({ screen: Screens.SETTINGS_FOOD_MANAGER, label: ModelLocator.resourceManagerInstance.getString('treatments',"food_manager_label"), accessory: foodManagerIconImage, selectable: true });
+			}
 			data.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"enabled"), accessory: treatmentsEnabled, selectable: false });
 			if (treatmentsEnabledValue)
 			{
@@ -473,6 +481,22 @@ package ui.screens.display.settings.treatments
 					profileIconImage.texture.dispose();
 				profileIconImage.dispose();
 				profileIconImage = null;
+			}
+			
+			if (bolusWizardIconImage != null)
+			{
+				if (bolusWizardIconImage.texture != null)
+					bolusWizardIconImage.texture.dispose();
+				bolusWizardIconImage.dispose();
+				bolusWizardIconImage = null;
+			}
+			
+			if (foodManagerIconImage != null)
+			{
+				if (foodManagerIconImage.texture != null)
+					foodManagerIconImage.texture.dispose();
+				foodManagerIconImage.dispose();
+				foodManagerIconImage = null;
 			}
 			
 			if (treatmentsEnabled != null)

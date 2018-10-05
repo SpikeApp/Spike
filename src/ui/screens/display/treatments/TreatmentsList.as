@@ -1,5 +1,7 @@
 package ui.screens.display.treatments
 {
+	import flash.system.System;
+	
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
@@ -16,10 +18,12 @@ package ui.screens.display.treatments
 	
 	import services.CalibrationService;
 	
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
+	import treatments.BolusWizard;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -49,6 +53,8 @@ package ui.screens.display.treatments
 		private var mealImage:Image;
 		private var treatmentsTexture:Texture;
 		private var treatmentsImage:Image;
+		private var bolusWizardTexture:Texture;
+		private var bolusWizardImage:Image;
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
@@ -108,6 +114,8 @@ package ui.screens.display.treatments
 				bgCheckImage = new Image(bgCheckTexture);
 				noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
 				noteImage = new Image(noteTexture);
+				bolusWizardTexture = MaterialDeepGreyAmberMobileThemeIcons.bolusWizardTexture;
+				bolusWizardImage = new Image(bolusWizardTexture);
 			}
 			if (treatmentsEnabled)
 			{
@@ -137,12 +145,13 @@ package ui.screens.display.treatments
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: canAddTreatments, id: 2 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: canAddTreatments, id: 3 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: canAddTreatments, id: 4 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: canAddTreatments, id: 5 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: canAddTreatments, id: 6 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','bolus_wizard_settings_label'), icon: bolusWizardImage, selectable: canAddTreatments, id: 5 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: canAddTreatments, id: 6 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: canAddTreatments, id: 7 } );
 			}
 			if (treatmentsEnabled)
 			{
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canSeeTreatments, id: 7 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canSeeTreatments, id: 8 } );
 			}
 			
 			dataProvider = new ListCollection(menuData);
@@ -204,11 +213,11 @@ package ui.screens.display.treatments
 			{
 				factoryIDFunction = function( item:Object, index:int ):String
 				{
-					if(index === 0)
+					if(index === 0 && !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						return "calibration-item";
-					else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6)
+					else if(index == 0 || index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 7)
 						return "treatment-item";
-					else if(index == 6)
+					else if(index == 8)
 						return "treatment-list-item";
 					
 					return "default-item";
@@ -260,19 +269,25 @@ package ui.screens.display.treatments
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_MEAL_BOLUS);
 			}
-			else if(treatmentID == 5) //BG Check
+			else if(treatmentID == 5) //Bolus Wizard
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				BolusWizard.display();
+			}
+			else if(treatmentID == 6) //BG Check
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_GLUCOSE_CHECK);
 			}
-			else if(treatmentID == 6) //Note
+			else if(treatmentID == 7) //Note
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_NOTE);
 			}
-			else if(treatmentID == 7) //All Treatments
+			else if(treatmentID == 8) //Treatments Manager
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
@@ -286,6 +301,16 @@ package ui.screens.display.treatments
 		override public function dispose():void
 		{
 			removeEventListener( Event.CHANGE, onMenuChanged );
+			
+			if (dataProvider != null)
+			{
+				dataProvider.dispose( function( item:Object ):void
+				{
+					var icon:DisplayObject = DisplayObject(item.icon);
+					if (icon != null)
+						icon.dispose();
+				});
+			}
 			
 			if (calibrationTexture != null)
 			{
@@ -385,7 +410,22 @@ package ui.screens.display.treatments
 				treatmentsImage = null;
 			}
 			
+			if (bolusWizardTexture != null)
+			{
+				bolusWizardTexture.dispose();
+				bolusWizardTexture = null;
+			}
+			
+			if (bolusWizardImage != null)
+			{
+				bolusWizardImage.dispose();
+				bolusWizardImage = null;
+			}
+			
 			super.dispose();
+			
+			System.pauseForGCIfCollectionImminent(0);
+			System.gc();
 		}
 	}
 }

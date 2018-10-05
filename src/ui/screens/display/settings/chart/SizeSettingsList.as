@@ -27,6 +27,7 @@ package ui.screens.display.settings.chart
 		private var glucoseDisplayFontSize:Slider;
 		private var timeAgoDisplayFontSize:Slider;
 		private var axisFontSize:Slider;
+		private var glucoseLineThickness:NumericStepper;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -34,6 +35,7 @@ package ui.screens.display.settings.chart
 		private var glucoseFontSizeValue:Number;
 		private var timeAgoFontSizeValue:Number;
 		private var axisFontSizeValue:Number;
+		private var glucoseLineThicknessValue:Number;
 		
 		public function SizeSettingsList()
 		{
@@ -64,6 +66,9 @@ package ui.screens.display.settings.chart
 			/* Controls */
 			glucoseMarkerRadius = LayoutFactory.createNumericStepper(1, 5, 3);
 			glucoseMarkerRadius.validate();
+			
+			glucoseLineThickness = LayoutFactory.createNumericStepper(1, 3, 1);
+			glucoseLineThickness.validate();
 			
 			glucoseDisplayFontSize = new Slider();
 			glucoseDisplayFontSize.minimum = 0;
@@ -99,6 +104,7 @@ package ui.screens.display.settings.chart
 			dataProvider = new ArrayCollection(
 			[
 				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_marker_radius'), accessory: glucoseMarkerRadius },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_line_thickness'), accessory: glucoseLineThickness },
 				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_font_size'), accessory: glucoseDisplayFontSize },
 				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','time_ago_font_size'), accessory: timeAgoDisplayFontSize },
 				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_size'), accessory: axisFontSize }
@@ -112,9 +118,11 @@ package ui.screens.display.settings.chart
 			glucoseFontSizeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_BG_FONT_SIZE));
 			timeAgoFontSizeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
 			axisFontSizeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE));
+			glucoseLineThicknessValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS));
 			
 			/* Set Control's Sizes */
 			glucoseMarkerRadius.value = glucoseMarkerRadiusValue;
+			glucoseLineThickness.value = glucoseLineThicknessValue;
 			
 			if (glucoseFontSizeValue == 0.8)
 				glucoseDisplayFontSize.value = 0;
@@ -139,6 +147,7 @@ package ui.screens.display.settings.chart
 			
 			/* Set Event Listeners */
 			glucoseMarkerRadius.addEventListener(Event.CHANGE, onSizeChange);
+			glucoseLineThickness.addEventListener(Event.CHANGE, onSizeChange);
 			glucoseDisplayFontSize.addEventListener(Event.CHANGE, onSizeChange);
 			timeAgoDisplayFontSize.addEventListener(Event.CHANGE, onSizeChange);
 			axisFontSize.addEventListener(Event.CHANGE, onSizeChange);
@@ -158,6 +167,9 @@ package ui.screens.display.settings.chart
 			if (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE)) != axisFontSizeValue)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE, String(axisFontSizeValue));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS) != String(glucoseLineThicknessValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS, String(glucoseLineThicknessValue));
+			
 			needsSave = false;
 		}
 		
@@ -168,6 +180,8 @@ package ui.screens.display.settings.chart
 		{
 			if (glucoseMarkerRadius.value != glucoseMarkerRadiusValue)
 				glucoseMarkerRadiusValue = glucoseMarkerRadius.value;
+			
+			glucoseLineThicknessValue = glucoseLineThickness.value;
 			
 			if (glucoseDisplayFontSize.value == 0)
 				glucoseFontSizeValue = 0.8;
@@ -234,6 +248,13 @@ package ui.screens.display.settings.chart
 				glucoseMarkerRadius.removeEventListener(Event.CHANGE, onSizeChange);
 				glucoseMarkerRadius.dispose();
 				glucoseMarkerRadius = null;
+			}
+			
+			if (glucoseLineThickness != null)
+			{
+				glucoseLineThickness.removeEventListener(Event.CHANGE, onSizeChange);
+				glucoseLineThickness.dispose();
+				glucoseLineThickness = null;
 			}
 			
 			if(glucoseDisplayFontSize != null)

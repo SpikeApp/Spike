@@ -261,6 +261,7 @@ package ui.screens.display.settings.maintenance
 				profileAsObject.carbsAbsorptionRate = profile.carbsAbsorptionRate;
 				profileAsObject.basalRates = profile.basalRates;
 				profileAsObject.targetGlucoseRates = profile.targetGlucoseRates;
+				profileAsObject.trendCorrections = profile.trendCorrections;
 				profileAsObject.timestamp = profile.timestamp;
 				
 				allProfiles.push(profileAsObject);
@@ -706,6 +707,7 @@ package ui.screens.display.settings.maintenance
 									profileAsObject.carbsAbsorptionRate != null &&
 									profileAsObject.basalRates != null &&
 									profileAsObject.targetGlucoseRates != null &&
+									profileAsObject.trendCorrections != null &&
 									profileAsObject.timestamp != null
 								)
 								{
@@ -719,6 +721,7 @@ package ui.screens.display.settings.maintenance
 											profileAsObject.carbsAbsorptionRate,
 											profileAsObject.basalRates,
 											profileAsObject.targetGlucoseRates,
+											profileAsObject.trendCorrections,
 											profileAsObject.timestamp
 										);
 									

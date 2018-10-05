@@ -2,6 +2,7 @@ package treatments
 {
 	import database.CommonSettings;
 	
+	import utils.TimeSpan;
 	import utils.UniqueId;
 
 	public class Treatment
@@ -33,6 +34,7 @@ package treatments
 		public var needsAdjustment:Boolean = false;
 		public var carbDelayTime:Number = 20;
 		public var basalDuration:Number = 0;
+		public var activityContrib:Number = Number.NaN;
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = Number.NaN, basalDuration:Number = 0)
 		{
@@ -58,80 +60,39 @@ package treatments
 		
 		public function calculateIOB(time:Number):Number
 		{
-			if (insulinAmount == 0 || time < timestamp) //If it's not an insulin treatment or requested time is before treatment time
+			activityContrib = 0;
+			
+			if (insulinAmount == 0 || time < timestamp || time - (dia * 60 * 60 * 1000) > timestamp + TimeSpan.TIME_10_MINUTES)//If it's not an insulin treatment or requested time is before treatment time
+			{
 				return 0;
+			}
 			
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
 			var iob:Number;
+			var activity:Number;
+			var isf:Number = Number(ProfileManager.getProfileByTime(new Date().valueOf()).insulinSensitivityFactors);
 			
 			if (minAgo < INSULIN_PEAK) 
 			{
 				var x1:Number = minAgo / 5 + 1;
 				iob = insulinAmount * (1 - 0.001852 * x1 * x1 + 0.001852 * x1);
-			} else if (minAgo < 180) 
+				if (!isNaN(isf))
+					activity = isf * insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
+			} 
+			else if (minAgo < 180) 
 			{
 				var x2:Number = (minAgo - 75) / 5;
 				iob = insulinAmount * (0.001323 * x2 * x2 - 0.054233 * x2 + 0.55556);
+				if (!isNaN(isf))
+					activity = isf * insulinAmount * (2 / dia / 60 - (minAgo - INSULIN_PEAK) * 2 / dia / 60 / (60 * 3 - INSULIN_PEAK));
 			}
 			
 			if (iob < 0.001 || isNaN(iob)) iob = 0;
 			
-			return iob;
-		}
-		
-		private function COBxDrip(lastDecayedBy:Number, time:Number):CobCalc
-		{
-			var delay:int = 20; // minutes till carbs start decaying
-			var delayms:Number = delay * 60 * 1000;
+			if (!isNaN(isf))
+				activityContrib = activity;
 			
-			if (carbs > 0)
-			{
-				var thisCobCalc:CobCalc = new CobCalc();
-				thisCobCalc.carbTime = this.timestamp;
-				
-				// no previous carb treatment? Set to our start time
-				if (lastDecayedBy == 0) 
-				{
-					lastDecayedBy = thisCobCalc.carbTime;
-				}
-				
-				var carbs_hr:Number = 30; //30g per hour
-				var carbs_min:Number = carbs_hr / 60;
-				var carbs_ms:Number = carbs_min / (60 * 1000);
-				
-				thisCobCalc.decayedBy = thisCobCalc.carbTime; // initially set to start time for this treatment
-				
-				var minutesleft:Number = (lastDecayedBy - thisCobCalc.carbTime) / 1000 / 60;
-				var how_long_till_carbs_start_ms:Number = (lastDecayedBy - thisCobCalc.carbTime);
-				thisCobCalc.decayedBy += (Math.max(delay, minutesleft) + carbs / carbs_min) * 60 * 1000;
-				
-				if (delay > minutesleft) 
-				{
-					thisCobCalc.initialCarbs = carbs;
-				} 
-				else 
-				{
-					thisCobCalc.initialCarbs = carbs + minutesleft * carbs_min;
-				}
-				
-				var startDecay:Number = thisCobCalc.carbTime + (delay * 60 * 1000);
-				
-				if (time < lastDecayedBy || time > startDecay) 
-				{
-					thisCobCalc.isDecaying = 1;
-				} 
-				else 
-				{
-					thisCobCalc.isDecaying = 0;
-				}
-				
-				
-				return thisCobCalc;
-			} 
-			else 
-			{
-				return null;
-			}
+			return iob;
 		}
 		
 		public function calculateCOB(lastDecayedBy:Number, time:Number):CobCalc
@@ -196,6 +157,5 @@ package treatments
 			_dia = value;
 			this.insulinScaleFactor = 3 / _dia;
 		}
-
 	}
 }

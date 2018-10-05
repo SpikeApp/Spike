@@ -370,5 +370,6 @@
 		<extensionID>com.distriqt.Scanner</extensionID>
 		<extensionID>com.distriqt.SystemGestures</extensionID>
     	<extensionID>com.spike-app.spike.AirNativeExtension</extensionID>
+    <extensionID>com.distriqt.SystemGestures</extensionID>
     </extensions>
 </application>

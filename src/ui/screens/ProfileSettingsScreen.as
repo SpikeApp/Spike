@@ -17,6 +17,7 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.treatments.CarbsSettingsList;
+	import ui.screens.display.settings.treatments.ProfileSettingsList;
 	import ui.screens.display.settings.treatments.InsulinsSettingsList;
 	
 	import utils.Constants;
@@ -31,6 +32,8 @@ package ui.screens
 		private var insulinsLabel:Label;
 		private var carbsLabel:Label;
 		private var carbsSettings:CarbsSettingsList;
+		private var profileSettings:ProfileSettingsList;
+		private var profileLabel:Label;
 		
 		public function ProfileSettingsScreen() 
 		{
@@ -76,9 +79,17 @@ package ui.screens
 			carbsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','carbs_label'), true);
 			screenRenderer.addChild(carbsLabel);
 			
-			//Insulins Settings
+			//Carbs Settings
 			carbsSettings = new CarbsSettingsList();
 			screenRenderer.addChild(carbsSettings);
+			
+			//ISF Section Label
+			profileLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_sensitivity_factor_short_label') + " / " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_to_carb_ratio_short_label') + " / " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','target_glucose_label') + " / " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trends_label'), true);
+			screenRenderer.addChild(profileLabel);
+			
+			//ISF Settings
+			profileSettings = new ProfileSettingsList();
+			screenRenderer.addChild(profileSettings);
 		}
 		
 		/**
@@ -108,11 +119,13 @@ package ui.screens
 			{
 				if (insulinsLabel != null) insulinsLabel.paddingLeft = 30;
 				if (carbsLabel != null) carbsLabel.paddingLeft = 30;
+				if (profileLabel != null) carbsLabel.paddingLeft = 30;
 			}
 			else
 			{
 				if (insulinsLabel != null) insulinsLabel.paddingLeft = 0;
 				if (carbsLabel != null) carbsLabel.paddingLeft = 0;
+				if (profileLabel != null) carbsLabel.paddingLeft = 0;
 			}
 			
 			setupHeaderSize();
@@ -149,6 +162,20 @@ package ui.screens
 				carbsSettings.removeFromParent();
 				carbsSettings.dispose();
 				carbsSettings = null;
+			}
+			
+			if (profileLabel != null)
+			{
+				profileLabel.removeFromParent();
+				profileLabel.dispose();
+				profileLabel = null;
+			}
+			
+			if (profileSettings != null)
+			{
+				profileSettings.removeFromParent();
+				profileSettings.dispose();
+				profileSettings = null;
 			}
 			
 			super.dispose();

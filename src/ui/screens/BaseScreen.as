@@ -143,9 +143,13 @@ package ui.screens
 				iphone4DummyMarker.y = globalpoint.y + 15;
 				Starling.current.stage.addChild(iphone4DummyMarker);
 				callout = Callout.show( treatmentsList, iphone4DummyMarker );
+				callout.addEventListener(Event.CLOSE, onCloseCallOut);
 			}
 			else
+			{
 				callout = Callout.show( treatmentsList, treatmentsButton );
+				callout.addEventListener(Event.CLOSE, onCloseCallOut);
+			}
 		}
 		
 		protected function onMoreButtonTriggered():void 
@@ -153,18 +157,26 @@ package ui.screens
 			extraOptionsList = new ExtraOptionsList();
 			extraOptionsList.addEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
 			callout = Callout.show( extraOptionsList, moreButton );
+			callout.addEventListener(Event.CLOSE, onCloseCallOut);
 			
 			Callout.stagePaddingRight = -5
 		}
 		
 		private function onCloseCallOut(e:Event):void
 		{
+			disposeOnScreenComponents();
+			
 			if (callout != null)
 			{
-				callout.close();
+				callout.removeFromParent();
+				callout.removeEventListener(Event.CLOSE, onCloseCallOut);
+				callout.disposeContent = true;
 				callout.dispose();
 				callout = null;
 			}
+			
+			System.pauseForGCIfCollectionImminent(0);
+			System.gc();
 		}
 		
 		private function toggleMenu():void 
@@ -181,15 +193,33 @@ package ui.screens
 		/**
 		 * Utility
 		 */
-		override public function dispose():void
+		private function disposeOnScreenComponents():void
 		{
-			if (callout != null)
+			if (treatmentsList != null)
 			{
-				callout.removeFromParent();
-				callout.dispose();
-				callout = null;
+				treatmentsList.removeEventListener(TreatmentsList.CLOSE, onCloseCallOut);
+				treatmentsList.removeFromParent();
+				treatmentsList.dispose();
+				treatmentsList = null;
 			}
 			
+			if (extraOptionsList != null)
+			{
+				extraOptionsList.removeEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
+				extraOptionsList.removeFromParent();
+				extraOptionsList.dispose();
+				extraOptionsList = null;
+			}
+			
+			if (iphone4DummyMarker != null)
+			{
+				iphone4DummyMarker.removeFromParent(true);
+				iphone4DummyMarker = null;
+			}
+		}
+		
+		override public function dispose():void
+		{
 			if (menuButtonTexture != null)
 			{
 				menuButtonTexture.dispose();
@@ -283,9 +313,19 @@ package ui.screens
 				iphone4DummyMarker = null;
 			}
 			
-			System.pauseForGCIfCollectionImminent(0);
+			if (callout != null)
+			{
+				callout.removeEventListener(Event.CLOSE, onCloseCallOut);
+				callout.removeFromParent();
+				callout.disposeContent = true;
+				callout.dispose();
+				callout = null;
+			}
 			
 			super.dispose();
+			
+			System.pauseForGCIfCollectionImminent(0);
+			System.gc();
 		}
 	}
 }

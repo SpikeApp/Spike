@@ -88,13 +88,14 @@ package treatments
 							dbProfile.carbsabsorptionrate,
 							dbProfile.basalrates,
 							dbProfile.targetglucoserates,
+							dbProfile.trendcorrections,
 							Number(dbProfile.lastmodifiedtimestamp)
 						);
 						
 						profilesList.push(profile);
 						profilesMap[dbProfile.id] = profile;
 					}
-					profilesList.sortOn(["name"], Array.CASEINSENSITIVE);
+					profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
 					
 					Trace.myTrace("ProfileManager.as", "Got profile from database!");
 				}
@@ -123,6 +124,7 @@ package treatments
 					"",
 					"",
 					30,
+					"",
 					"",
 					"",
 					new Date().valueOf()
@@ -283,6 +285,9 @@ package treatments
 			
 			//Update Database
 			Database.updateProfileSynchronous(profile);
+			
+			//Sort profile list by time
+			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
 		}
 		
 		public static function insertProfile(profile:Profile):void
@@ -298,6 +303,36 @@ package treatments
 			
 			//Sort profile list by time
 			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+		}
+		
+		public static function deleteProfile(profile:Profile):void
+		{
+			Trace.myTrace("ProfileManager.as", "deleteProfile called!");
+			
+			if (profilesMap[profile.ID] != null)
+			{
+				//Find Profile
+				for (var i:int = 0; i < profilesList.length; i++) 
+				{
+					var userProfile:Profile = profilesList[i];
+					if (userProfile.ID == profile.ID)
+					{
+						Trace.myTrace("ProfileManager.as", "Deleting profile... Name: " + profile.name + ", Time: " + profile.time);
+						
+						//Profile found. Remove it from Spike.
+						profilesList.removeAt(i);
+						profilesMap[profile.ID] = null;
+						
+						//Delete from database
+						Database.deleteProfileSynchronous(userProfile);
+						
+						//Sort profile list by time
+						profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+						
+						break;
+					}
+				}
+			}
 		}
 		
 		public static function addNightscoutCarbAbsorptionRate(rate:Number):void
@@ -338,6 +373,40 @@ package treatments
 				carbType = "slow";
 			
 			return carbType;
+		}
+		
+		public static function getProfileByTime(requestedTimestamp:Number):Profile
+		{
+			var currentProfile:Profile;
+			
+			for(var i:int = profilesList.length - 1 ; i >= 0; i--)
+			{
+				var profile:Profile = profilesList[i] as Profile;
+				var profileDate:Date = getProfileDate(profile);
+				var profileTimestamp:Number = profileDate.valueOf();
+				
+				if (requestedTimestamp >= profileTimestamp)
+				{
+					currentProfile = profile;
+					break;
+				}
+			}
+			
+			return currentProfile;
+		}
+		
+		public static function getProfileDate(profile:Profile):Date
+		{
+			var profileDividedTime:Array = profile.time.split(":");
+			var profileHour:Number = Number(profileDividedTime[0]);
+			var profileMinutes:Number = Number(profileDividedTime[1]);
+			var profileDate:Date = new Date();
+			profileDate.hours = profileHour;
+			profileDate.minutes = profileMinutes;
+			profileDate.seconds = 0;
+			profileDate.milliseconds = 0;
+			
+			return profileDate;
 		}
 	}
 }

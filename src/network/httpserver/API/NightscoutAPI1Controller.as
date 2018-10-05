@@ -23,6 +23,8 @@ package network.httpserver.API
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
+	import ui.screens.display.settings.treatments.TreatmentManagerAccessory;
+	
 	import utils.SpikeJSON;
 	import utils.TimeSpan;
 	import utils.Trace;
@@ -476,14 +478,42 @@ package network.httpserver.API
 			var upperSpikeProfile:Object = {};
 			var spikeProfile:Object = {};
 			spikeProfile.dia = ProfileManager.getInsulin(ProfileManager.getDefaultInsulinID()).dia;
-			spikeProfile.carbratio = [ { time: "00:00", value: "30", timeAsSeconds: "0" } ];
+			spikeProfile.carbratio = [];
+			spikeProfile.sens = [];
+			spikeProfile["target_low"] = [];
+			spikeProfile["target_high"] = [];
+			
+			var userProfiles:Array = ProfileManager.profilesList;
+			for (var i:int = 0; i < userProfiles.length; i++) 
+			{
+				var profile:Profile = userProfiles[i];
+				if (profile.time != "" && profile.insulinSensitivityFactors != "" && profile.insulinToCarbRatios != "" && profile.targetGlucoseRates != "")
+				{
+					//Date
+					var profileDate:Date = ProfileManager.getProfileDate(profile);
+					
+					//Data
+					if (i == 0)
+					{
+						spikeProfile.carbratio.push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.insulinToCarbRatios), timeAsSeconds: "0" } );
+						spikeProfile.sens.push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.insulinSensitivityFactors), timeAsSeconds: "0" } );
+						spikeProfile["target_low"].push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.targetGlucoseRates), timeAsSeconds: "0" } );
+						spikeProfile["target_high"].push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.targetGlucoseRates), timeAsSeconds: "0" } );
+					}
+					else
+					{
+						spikeProfile.carbratio.push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.insulinToCarbRatios) } );
+						spikeProfile.sens.push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.insulinSensitivityFactors) } );
+						spikeProfile["target_low"].push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.targetGlucoseRates) } );
+						spikeProfile["target_high"].push( { time: TimeSpan.formatHoursMinutes(profileDate.hours, profileDate.minutes, TimeSpan.TIME_FORMAT_24H), value: String(profile.targetGlucoseRates) } );
+					}
+				}
+			}
+			
 			spikeProfile["carbs_hr"] = String(ProfileManager.getCarbAbsorptionRate());
 			spikeProfile.delay = "20";
-			spikeProfile.sens = [ { time: "00:00", value: "10", timeAsSeconds: "0" } ];
 			spikeProfile.timezone = "Europe/Lisbon";
 			spikeProfile.basal = [ { time: "00:00", value: "0.5", timeAsSeconds: "0" } ];
-			spikeProfile["target_low"] = [ { time: "00:00", value: "0", timeAsSeconds: "0" } ];
-			spikeProfile["target_high"] = [ { time: "00:00", value: "0", timeAsSeconds: "0" } ];
 			spikeProfile.startDate = nsFormatter.format(0);
 			spikeProfile.units = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mg/dl" : "mmol";
 			

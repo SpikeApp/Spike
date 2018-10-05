@@ -105,6 +105,7 @@ package services
 		public static const ID_FOR_G5_RESET_DONE:int = 24;
 		public static const ID_FOR_FAST_RISE_ALERT:int = 25;
 		public static const ID_FOR_FAST_DROP_ALERT:int = 26;
+		public static const ID_FOR_EXTENDED_BOLUS_ALERT:int = 27;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";

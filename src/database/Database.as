@@ -28,6 +28,8 @@ package database
 	import treatments.Insulin;
 	import treatments.Profile;
 	import treatments.Treatment;
+	import treatments.food.Food;
+	import treatments.food.Recipe;
 	
 	import utils.TimeSpan;
 	import utils.Trace;
@@ -174,11 +176,59 @@ package database
 			"carbsabsorptionrate REAL, " +
 			"basalrates STRING, " +
 			"targetglucoserates STRING, " +
+			"trendcorrections STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_HEALTHKIT_TREATMENTS:String = "CREATE TABLE IF NOT EXISTS healthkittreatments(" +
 			"id STRING PRIMARY KEY," +
 			"timestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_FOODS:String = "CREATE TABLE IF NOT EXISTS foods(" +
+			"id STRING PRIMARY KEY," +
+			"name STRING, " +
+			"brand STRING, " +
+			"proteins STRING, " +
+			"carbs STRING, " +
+			"fiber STRING, " +
+			"fats STRING, " +
+			"calories STRING, " +
+			"servingsize STRING, " +
+			"servingunit STRING, " +
+			"link STRING, " +
+			"barcode STRING, " +
+			"source STRING, " +
+			"notes STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_RECIPES_LIST:String = "CREATE TABLE IF NOT EXISTS recipeslist(" +
+			"id STRING PRIMARY KEY," +
+			"name STRING, " +
+			"servingsize STRING, " +
+			"servingunit STRING, " +
+			"notes STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_RECIPES_FOODS:String = "CREATE TABLE IF NOT EXISTS recipesfoods(" +
+			"recipeid STRING," +
+			"foodid STRING," +
+			"name STRING, " +
+			"brand STRING, " +
+			"proteins STRING, " +
+			"carbs STRING, " +
+			"fiber STRING, " +
+			"substractfiber STRING, " +
+			"fats STRING, " +
+			"calories STRING, " +
+			"servingsize STRING, " +
+			"servingunit STRING, " +
+			"recipeservingsize STRING, " +
+			"recipeservingunit STRING, " +
+			"link STRING, " +
+			"barcode STRING, " +
+			"source STRING, " +
+			"notes STRING, " +
+			"defaultunit STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
 		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
@@ -690,7 +740,7 @@ package database
 				function checkPerformed(se:SQLEvent):void 
 				{
 					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
-					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkPerformed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkError);
 					sqlStatement.clearParameters();
 					
 					createProfilesTable();
@@ -723,7 +773,32 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				createHealthKitTreatmentsTable();
+				
+				sqlStatement.clearParameters();
+				
+				//Check if table needs to be updated for new Spike format #1
+				sqlStatement.text = "SELECT trendcorrections FROM profiles";
+				sqlStatement.addEventListener(SQLEvent.RESULT,checkProfilesPerformed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkProfilesError);
+				sqlStatement.execute();
+				
+				function checkProfilesPerformed(se:SQLEvent):void 
+				{
+					sqlStatement.removeEventListener(SQLEvent.RESULT,checkProfilesPerformed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkProfilesError);
+					sqlStatement.clearParameters();
+					
+					createHealthKitTreatmentsTable();
+				}
+				
+				function checkProfilesError(see:SQLErrorEvent):void 
+				{
+					if (debugMode) trace("Database.as : trendcorrections column not found in profiles table (old version of Spike). Updating table...");
+					sqlStatement.clearParameters();
+					sqlStatement.clearParameters();
+					sqlStatement.text = "ALTER TABLE profiles ADD COLUMN trendcorrections STRING;";
+					sqlStatement.execute();
+				}
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -744,7 +819,7 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				finishedCreatingTables();
+				createFoodsTable();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -752,6 +827,69 @@ package database
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				dispatchInformation('failed_to_create_healthkittreatments_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createFoodsTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_FOODS;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createRecipesListTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create foods table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_foods_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createRecipesListTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_RECIPES_LIST;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createRecipesFoodsTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create recipes list table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_recipes_list_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createRecipesFoodsTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_RECIPES_FOODS;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				finishedCreatingTables();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create recipes foods table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_recipes_foods_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -2420,6 +2558,7 @@ package database
 				text += "carbsabsorptionrate, ";
 				text += "basalrates, ";
 				text += "targetglucoserates, ";
+				text += "trendcorrections, ";
 				text += "lastmodifiedtimestamp) ";
 				text += "VALUES (";
 				text += "'" + profile.ID + "', ";
@@ -2430,6 +2569,7 @@ package database
 				text += profile.carbsAbsorptionRate + ", ";
 				text += "'" + profile.basalRates + "', ";
 				text += "'" + profile.targetGlucoseRates + "', ";
+				text += "'" + profile.trendCorrections + "', ";
 				text += profile.timestamp + ")";
 				
 				insertRequest.text = text;
@@ -2468,6 +2608,7 @@ package database
 					"carbsabsorptionrate = " + profile.carbsAbsorptionRate + ", " +
 					"basalrates = '" + profile.basalRates + "', " +
 					"targetglucoserates = '" + profile.targetGlucoseRates + "', " +
+					"trendcorrections = '" + profile.trendCorrections + "', " +
 					"lastmodifiedtimestamp = " + profile.timestamp + " " +
 					"WHERE id = '" + profile.ID + "'";
 				updateRequest.execute();
@@ -2679,6 +2820,523 @@ package database
 			}
 		}
 		
+		/**
+		 * Get foods by name synchronously
+		 */
+		public static function getFavoriteFoodSynchronous(foodName:String, page:int):Object {
+			
+			var returnObject:Object = {};
+			var foodsList:Array = new Array();
+			var foodBatchAmount:int = 50;
+			var foodOffSet:int = (page - 1) * foodBatchAmount;
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery += "SELECT *, ";
+				sqlQuery += "(SELECT COUNT(id) FROM foods WHERE name LIKE '%" + foodName + "%') AS `totalRecords` ";
+				sqlQuery += "FROM foods WHERE name LIKE '%" + foodName + "%' ORDER BY name COLLATE NOCASE ASC LIMIT " + foodBatchAmount + " OFFSET " + foodOffSet;
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+				{
+					returnObject.foodsList = result.data;
+					returnObject.totalRecords = result.data[0]["totalRecords"] != null ? int(result.data[0]["totalRecords"]) : 0;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnObject;
+			}
+		}
+		
+		/**
+		 * Get foods by barcode synchronously
+		 */
+		public static function getFavoriteFoodByBarcodeSynchronous(barCode:String):Array {
+			
+			var foodsList:Array = new Array();
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text = "SELECT * FROM foods WHERE barcode LIKE '%" + barCode + "%'";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+				{
+					foodsList = result.data;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return foodsList;
+			}
+		}
+		
+		/**
+		 * inserts a food in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertFoodSynchronous(food:Food):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO foods (";
+				text += "id, ";
+				text += "name, ";
+				text += "brand, ";
+				text += "proteins, ";
+				text += "carbs, ";
+				text += "fiber, ";
+				text += "fats, ";
+				text += "calories, ";
+				text += "servingsize, ";
+				text += "servingunit, ";
+				text += "link, ";
+				text += "barcode, ";
+				text += "source, ";
+				text += "notes, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + food.id + "', ";
+				text += "'" + food.name.replace(/'/g, "''") + "', ";
+				text += "'" + food.brand.replace(/'/g, "''") + "', ";
+				text += "'" + food.proteins + "', ";
+				text += "'" + food.carbs + "', ";
+				text += "'" + food.fiber + "', ";
+				text += "'" + food.fats + "', ";
+				text += "'" + food.kcal + "', ";
+				text += "'" + food.servingSize + "', ";
+				text += "'" + food.servingUnit.replace(/'/g, "''") + "', ";
+				text += "'" + food.link + "', ";
+				text += "'" + food.barcode + "', ";
+				text += "'" + food.source + "', ";
+				text += "'" + food.note + "', ";
+				text += food.timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * updates a food in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function updateFoodSynchronous(food:Food):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE foods SET " +
+					"id = '" + food.id + "', " +
+					"name = '" + food.name.replace(/'/g, "''") + "', " +
+					"brand = '" + food.brand.replace(/'/g, "''") + "', " +
+					"proteins = '" + food.proteins + "', " +
+					"carbs = '" + food.carbs + "', " +
+					"fiber = '" + food.fiber + "', " +
+					"fats = '" + food.fats + "', " +
+					"calories = '" + food.kcal + "', " +
+					"servingsize = '" + food.servingSize + "', " +
+					"servingunit = '" + food.servingUnit.replace(/'/g, "''") + "', " +
+					"link = '" + food.link + "', " +
+					"barcode = '" + food.barcode + "', " +
+					"source = '" + food.source + "', " +
+					"source = '" + food.note + "', " +
+					"lastmodifiedtimestamp = " + food.timestamp + " " +
+					"WHERE id = '" + food.id + "'";
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Deletes a food in the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteFoodSynchronous(food:Food):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from foods WHERE id = " + "'" + food.id + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Checks if food is saved in Database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function isFoodFavoriteSynchronous(food:Food):Boolean 
+		{
+			var foodFound:Boolean = false;
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery +=	"SELECT id FROM foods WHERE id = '" + food.id + "'";
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				
+				if (result.data != null && result.data is Array && result.data.length > 0)
+				{
+					foodFound = true;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_food_is_favourite', error.message + " - " + error.details);
+				return foodFound;
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_food_is_favourite',other.getStackTrace().toString());
+				return foodFound;
+			} finally {
+				if (conn.connected) conn.close();
+				return foodFound;
+			}
+		}
+		
+		/**
+		 * inserts a recipe in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertRecipeSynchronous(recipe:Recipe):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				
+				var text:String;
+				
+				//Add Recipe
+				text = "INSERT INTO recipeslist (";
+				text += "id, ";
+				text += "name, ";
+				text += "servingsize, ";
+				text += "servingunit, ";
+				text += "notes, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + recipe.id + "', ";
+				text += "'" + recipe.name + "', ";
+				text += "'" + recipe.servingSize + "', ";
+				text += "'" + recipe.servingUnit.replace(/'/g, "''") + "', ";
+				text += "'" + recipe.notes + "', ";
+				text += recipe.timestamp + ")";
+				insertRequest.text = text;
+				insertRequest.execute();
+				
+				//Add Foods
+				for (var i:int = 0; i < recipe.foods.length; i++) 
+				{
+					var food:Food = recipe.foods[i];
+					text = "INSERT INTO recipesfoods (";
+					text += "recipeid, ";
+					text += "foodid, ";
+					text += "name, ";
+					text += "brand, ";
+					text += "proteins, ";
+					text += "carbs, ";
+					text += "fiber, ";
+					text += "substractfiber, ";
+					text += "fats, ";
+					text += "calories, ";
+					text += "servingsize, ";
+					text += "servingunit, ";
+					text += "recipeservingsize, ";
+					text += "recipeservingunit, ";
+					text += "link, ";
+					text += "barcode, ";
+					text += "source, ";
+					text += "notes, ";
+					text += "defaultunit, ";
+					text += "lastmodifiedtimestamp) ";
+					text += "VALUES (";
+					text += "'" + recipe.id + "', ";
+					text += "'" + food.id + "', ";
+					text += "'" + food.name.replace(/'/g, "''") + "', ";
+					text += "'" + food.brand.replace(/'/g, "''") + "', ";
+					text += "'" + food.proteins + "', ";
+					text += "'" + food.carbs + "', ";
+					text += "'" + food.fiber + "', ";
+					text += "'" + food.substractFiber + "', ";
+					text += "'" + food.fats + "', ";
+					text += "'" + food.kcal + "', ";
+					text += "'" + food.servingSize + "', ";
+					text += "'" + food.servingUnit.replace(/'/g, "''") + "', ";
+					text += "'" + recipe.servingSize + "', ";
+					text += "'" + recipe.servingUnit.replace(/'/g, "''") + "', ";
+					text += "'" + food.link + "', ";
+					text += "'" + food.barcode + "', ";
+					text += "'" + food.source + "', ";
+					text += "'" + food.note + "', ";
+					text += "'" + food.defaultUnit + "', ";
+					text += food.timestamp + ")";
+					
+					insertRequest.text = text;
+					insertRequest.execute();
+				}
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_recipe_or_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Get recipes by name synchronously
+		 */
+		public static function getRecipesSynchronous(recipeName:String, page:int):Object {
+			
+			var returnObject:Object = {};
+			var recipesList:Array = [];
+			var recipeBatchAmount:int = 50;
+			var recipeOffSet:int = (page - 1) * recipeBatchAmount;
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery += "SELECT *, ";
+				sqlQuery += "(SELECT COUNT(id) FROM recipeslist WHERE name LIKE '%" + recipeName + "%') AS `totalRecords` ";
+				sqlQuery += "FROM recipeslist WHERE name LIKE '%" + recipeName + "%' ORDER BY name COLLATE NOCASE ASC LIMIT " + recipeBatchAmount + " OFFSET " + recipeOffSet;
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				
+				if (result.data != null && result.data is Array)
+				{
+					returnObject.totalRecords = result.data[0]["totalRecords"] != null ? int(result.data[0]["totalRecords"]) : 0;
+					
+					var foundRecipesList:Array = result.data;
+					var numRecipes:int = foundRecipesList.length;
+					
+					for (var i:int = 0; i < numRecipes; i++) 
+					{
+						var tempRecipe:Object = foundRecipesList[i] as Object;
+						var recipesFoods:Array = [];
+						
+						var recipe:Recipe = new Recipe
+						(
+							tempRecipe.id,
+							tempRecipe.name,
+							tempRecipe.servingsize,
+							tempRecipe.servingunit,
+							recipesFoods,
+							tempRecipe.lastmodifiedtimestamp,
+							tempRecipe.notes
+						);
+						
+						//Query database for foods belonging to this recipe
+						var recipeSQLQuery:String = "SELECT * FROM recipesfoods WHERE recipeid LIKE '%" + tempRecipe.id + "%' ORDER BY name COLLATE NOCASE ASC";
+						getRequest.text = recipeSQLQuery;
+						getRequest.execute();
+						var recipeResult:SQLResult = getRequest.getResult();
+						
+						if (recipeResult.data != null && recipeResult.data is Array)
+						{
+							var tempRecipesFoodsList:Array = recipeResult.data;
+							var numRecipeFoods:int = tempRecipesFoodsList.length;
+							
+							for (var j:int = 0; j < numRecipeFoods; j++) 
+							{
+								var tempFood:Object = tempRecipesFoodsList[j] as Object;
+								var food:Food = new Food
+								(
+									tempFood.foodid,
+									tempFood.name,
+									Number(tempFood.proteins),
+									Number(tempFood.carbs),
+									Number(tempFood.fats),
+									Number(tempFood.calories),
+									Number(tempFood.servingsize),
+									tempFood.servingunit,
+									tempFood.lastmodifiedtimestamp,
+									Number(tempFood.fiber),
+									tempFood.brand,
+									tempFood.link,
+									tempFood.source,
+									tempFood.barcode,
+									tempFood.substractfiber == "true" ? true : false,
+									Number(tempFood.recipeservingsize),
+									tempFood.recipeservingunit,
+									tempFood.notes,
+									tempFood.defaultunit == "true" ? true : false
+								);
+								
+								recipesFoods.push(food);
+							}
+						}
+						
+						recipe.performCalculations();
+						recipesList.push(recipe);
+					}
+					
+					returnObject.recipesList = recipesList;
+				}
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_recipes', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_recipes',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnObject;
+			}
+		}
+		
+		/**
+		 * Checks if a recipe is saved in Database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function isRecipeFavoriteSynchronous(recipe:Recipe):Boolean 
+		{
+			var recipeFound:Boolean = false;
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery +=	"SELECT id FROM recipeslist WHERE id = '" + recipe.id + "'";
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				
+				if (result.data != null && result.data is Array && result.data.length > 0)
+				{
+					recipeFound = true;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_recipe_is_favourite', error.message + " - " + error.details);
+				return recipeFound;
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_recipe_is_favourite',other.getStackTrace().toString());
+				return recipeFound;
+			} finally {
+				if (conn.connected) conn.close();
+				return recipeFound;
+			}
+		}
+		
+		/**
+		 * Deletes a recipe and all it's foods from the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteRecipeSynchronous(recipe:Recipe):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from recipeslist WHERE id = " + "'" + recipe.id + "'";
+				deleteRequest.execute();
+				deleteRequest.text = "DELETE from recipesfoods WHERE recipeid = " + "'" + recipe.id + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_recipe_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Spike Settings
+		 */
 		public static function updateCommonSetting(settingId:int,newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
 			if (newValue == null || newValue == "") newValue = "-";
 			try {
