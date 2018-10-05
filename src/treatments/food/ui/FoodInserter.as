@@ -11,6 +11,8 @@ package treatments.food.ui
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
+	import model.ModelLocator;
+	
 	import starling.events.Event;
 	
 	import treatments.food.Food;
@@ -18,6 +20,9 @@ package treatments.food.ui
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.UniqueId;
+	
+	[ResourceBundle("foodmanager")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class FoodInserter extends LayoutGroup
 	{
@@ -71,7 +76,7 @@ package treatments.food.ui
 		private function createContent():void
 		{
 			//Title
-			title = LayoutFactory.createLabel("New Food", HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			title = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('foodmanager','new_food_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			title.paddingTop = 0;
 			title.paddingBottom = 5;
 			title.width = width;
@@ -86,7 +91,7 @@ package treatments.food.ui
 			nameInputText.height = 30;
 			nameInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			nameContainer = new NutritionFactsSectionWithAction(width);
-			nameContainer.title.text = "Name";
+			nameContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','name_label');
 			nameContainer.setComponent(nameInputText);
 			nameRowContainer.addChild(nameContainer);
 			
@@ -99,7 +104,7 @@ package treatments.food.ui
 			brandInputText.height = 30;
 			brandInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			brandContainer = new NutritionFactsSectionWithAction(width);
-			brandContainer.title.text = "Brand";
+			brandContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','brand_label');
 			brandContainer.setComponent(brandInputText);
 			brandRowContainer.addChild(brandContainer);
 			
@@ -113,7 +118,7 @@ package treatments.food.ui
 			servingUnitInputText.height = 30;
 			servingUnitInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			servingUnitContainer = new NutritionFactsSectionWithAction((width - 10) / 2);
-			servingUnitContainer.title.text = "Serving Unit";
+			servingUnitContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','serving_unit_label');
 			servingUnitContainer.setComponent(servingUnitInputText);
 			linkRowContainer.addChild(servingUnitContainer);
 			
@@ -122,7 +127,7 @@ package treatments.food.ui
 			linkInputText.height = 30;
 			linkInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			linkContainer = new NutritionFactsSectionWithAction((width - 10) / 2);
-			linkContainer.title.text = "Link";
+			linkContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','link_label');
 			linkContainer.setComponent(linkInputText);
 			linkRowContainer.addChild(linkContainer);
 			
@@ -135,7 +140,7 @@ package treatments.food.ui
 			servingSizeInputText.height = 30;
 			servingSizeInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			servingSizeContainer = new NutritionFactsSectionWithAction(width / 3);
-			servingSizeContainer.title.text = "Serving Size";
+			servingSizeContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','serving_size_label');
 			servingSizeContainer.setComponent(servingSizeInputText);
 			firstRowContainer.addChild(servingSizeContainer);
 			
@@ -143,7 +148,7 @@ package treatments.food.ui
 			carbsInputText.height = 30;
 			carbsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			carbsContainer = new NutritionFactsSectionWithAction(width / 3);
-			carbsContainer.title.text = "Carbs";
+			carbsContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','carbs_label');
 			carbsContainer.setComponent(carbsInputText);
 			firstRowContainer.addChild(carbsContainer);
 			
@@ -151,7 +156,7 @@ package treatments.food.ui
 			fiberInputText.height = 30;
 			fiberInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			fiberContainer = new NutritionFactsSectionWithAction(width / 3);
-			fiberContainer.title.text = "Fiber";
+			fiberContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','fiber_label');
 			fiberContainer.setComponent(fiberInputText);
 			firstRowContainer.addChild(fiberContainer);
 			
@@ -164,7 +169,7 @@ package treatments.food.ui
 			proteinsInputText.height = 30;
 			proteinsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			proteinsContainer = new NutritionFactsSectionWithAction(width / 3);
-			proteinsContainer.title.text = "Proteins";
+			proteinsContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','proteins_label');
 			proteinsContainer.setComponent(proteinsInputText);
 			secondRowContainer.addChild(proteinsContainer);
 			
@@ -172,7 +177,7 @@ package treatments.food.ui
 			fatsInputText.height = 30;
 			fatsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			fatsContainer = new NutritionFactsSectionWithAction(width / 3);
-			fatsContainer.title.text = "Fats";
+			fatsContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','fats_label');
 			fatsContainer.setComponent(fatsInputText);
 			secondRowContainer.addChild(fatsContainer);
 			
@@ -180,7 +185,7 @@ package treatments.food.ui
 			caloriesInputText.height = 30;
 			caloriesInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			caloriesContainer = new NutritionFactsSectionWithAction(width / 3);
-			caloriesContainer.title.text = "Calories";
+			caloriesContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','calories_label');
 			caloriesContainer.setComponent(caloriesInputText);
 			secondRowContainer.addChild(caloriesContainer);
 			
@@ -191,11 +196,11 @@ package treatments.food.ui
 			actionsRowContainer.width = width;
 			addChild(actionsRowContainer);
 			
-			cancelButton = LayoutFactory.createButton("CANCEL");
+			cancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','cancel_button_label').toUpperCase());
 			cancelButton.addEventListener(Event.TRIGGERED, onCancel);
 			actionsRowContainer.addChild(cancelButton);
 			
-			saveButton = LayoutFactory.createButton("SAVE");
+			saveButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','save_button_label').toUpperCase());
 			saveButton.isEnabled = false;
 			saveButton.addEventListener(Event.TRIGGERED, onSave);
 			actionsRowContainer.addChild(saveButton);
