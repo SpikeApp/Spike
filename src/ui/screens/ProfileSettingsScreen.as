@@ -84,7 +84,7 @@ package ui.screens
 			screenRenderer.addChild(carbsSettings);
 			
 			//ISF Section Label
-			profileLabel = LayoutFactory.createSectionLabel("ISF / I:C / Target BG", true);
+			profileLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_sensitivity_factor_short_label') + " / " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_to_carb_ratio_short_label') + " / " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','target_glucose_label') + " / " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trends_label'), true);
 			screenRenderer.addChild(profileLabel);
 			
 			//ISF Settings
