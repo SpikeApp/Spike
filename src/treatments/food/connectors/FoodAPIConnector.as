@@ -23,11 +23,15 @@ package treatments.food.connectors
 	
 	import events.FoodEvent;
 	
+	import model.ModelLocator;
+	
 	import treatments.food.Food;
 	import treatments.food.Recipe;
 	
 	import utils.SpikeJSON;
 	import utils.UniqueId;
+	
+	[ResourceBundle("foodmanager")]
 	
 	public class FoodAPIConnector extends EventDispatcher
 	{
@@ -69,7 +73,7 @@ package treatments.food.connectors
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','no_internet_connection')) );
 				return;
 			}
 			
@@ -111,7 +115,7 @@ package treatments.food.connectors
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','no_internet_connection')) );
 				return;
 			}
 			
@@ -153,7 +157,7 @@ package treatments.food.connectors
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','no_internet_connection')) );
 				return;
 			}
 			
@@ -194,7 +198,7 @@ package treatments.food.connectors
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','no_internet_connection')) );
 				return;
 			}
 			
@@ -224,7 +228,7 @@ package treatments.food.connectors
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','no_internet_connection')) );
 				return;
 			}
 			
@@ -245,7 +249,7 @@ package treatments.food.connectors
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','no_internet_connection')) );
 				return;
 			}
 			
@@ -274,7 +278,7 @@ package treatments.food.connectors
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "There's no internet connction!") );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','no_internet_connection')) );
 				return;
 			}
 			
@@ -488,7 +492,7 @@ package treatments.food.connectors
 					data.push
 					(
 						{
-							label: recipeObject.name + (recipeObject.notes != "" ? "\n<font face=\"Roboto\">" + recipeObject.notes + "</font>" : ""),
+							label: recipeObject.name + (recipeObject.notes != "" ? "\n" + recipeObject.notes : ""),
 							recipe: recipeObject
 						}
 					);
@@ -925,7 +929,7 @@ package treatments.food.connectors
 				} 
 				catch(error:Error) 
 				{
-					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','error_label') + ": " + error.message + "\n\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','server_response_label') + ": " + response) );
 				}
 			}
 			else if (currentMode == OPENFOODFACTS_MODE)
@@ -966,25 +970,6 @@ package treatments.food.connectors
 								var offLink:String = unprocessedOFFFood.url != null ? String(unprocessedOFFFood.url) : "";
 								var offServingSize:Number = 100;
 								var offServingUnit:String = "g/ml";
-								/*var offCategories:Array = unprocessedOFFFood.categories_hierarchy != null && unprocessedOFFFood.categories_hierarchy is Array ? unprocessedOFFFood.categories_hierarchy : [];
-								for (var j:int = 0; j < offCategories.length; j++) 
-								{
-									var offCategory:String = String(offCategories[j]);
-									if (offCategory.indexOf("beverage") != -1)
-									{
-										offServingUnit = "ml";
-										break;
-									}
-								}*/
-								/*if (unprocessedOFFFood.nutrition_data_per != null)
-								{
-									if (String(unprocessedOFFFood.nutrition_data_per).indexOf("100") != -1)
-									{
-										offServingUnit = StringUtil.trim(String(unprocessedOFFFood.nutrition_data_per).replace("100", ""));
-									}
-								}*/
-								
-								
 								var offBarCode:String = unprocessedOFFFood.code != null ? String(unprocessedOFFFood.code) : "";
 								var offNote:String = "";
 								
@@ -1075,7 +1060,7 @@ package treatments.food.connectors
 				} 
 				catch(error:Error) 
 				{
-					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','error_label') + ": " + error.message + "\n\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','server_response_label') + ": " + response) );
 				}
 			}
 			else if (currentMode == USDA_SEARCH_MODE)
@@ -1161,7 +1146,7 @@ package treatments.food.connectors
 				} 
 				catch(error:Error) 
 				{
-					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','error_label') + ": " + error.message + "\n\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','server_response_label') + ": " + response) );
 				}
 			}
 			else if (currentMode == USDA_REPORT_MODE)
@@ -1311,7 +1296,7 @@ package treatments.food.connectors
 				} 
 				catch(error:Error) 
 				{
-					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+					_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','error_label') + ": " + error.message + "\n\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','server_response_label') + ": " + response) );
 				}
 			}
 			
@@ -1345,7 +1330,7 @@ package treatments.food.connectors
 			} 
 			catch(error:Error) 
 			{
-				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, "Error: " + error.message + "\n\n" + "Server Response: " + response) );
+				_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, ModelLocator.resourceManagerInstance.getString('foodmanager','error_label') + ": " + error.message + "\n\n" + ModelLocator.resourceManagerInstance.getString('foodmanager','server_response_label') + ": " + response) );
 			}
 		}
 		
@@ -1356,7 +1341,7 @@ package treatments.food.connectors
 			loader.removeEventListener(IOErrorEvent.IO_ERROR, onAPIError);
 			loader = null;
 			
-			var errorMessage:String = e.text.indexOf("2032") == -1 ? e.text : "Error connecting to service!\nTry again later.";
+			var errorMessage:String = e.text.indexOf("2032") == -1 ? e.text : ModelLocator.resourceManagerInstance.getString('foodmanager','error_connecting_to_food_service_label');
 			
 			_instance.dispatchEvent( new FoodEvent(FoodEvent.FOOD_SERVER_ERROR, false, false, null, null, null, null, errorMessage) );
 		}
