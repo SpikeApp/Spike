@@ -1091,7 +1091,7 @@ package treatments
 			
 			//Current Trend
 			var canUpdateTrend:Boolean = true;
-			if (CGMBlueToothDevice.isMiaoMiao() && ModelLocator.bgReadings.length >= 2)
+			if ((CGMBlueToothDevice.isMiaoMiao() || CGMBlueToothDevice.isFollower()) && ModelLocator.bgReadings.length >= 2)
 			{
 				var lastBgReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1];
 				var previousBgReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 2];
