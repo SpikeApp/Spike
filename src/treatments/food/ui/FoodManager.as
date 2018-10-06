@@ -129,6 +129,7 @@ package treatments.food.ui
 		private var foodServingSizePickerList:PickerList;
 		private var instructionsButton:Button;
 		private var mainActionsContainer:LayoutGroup;
+		private var editfavoriteButton:Button;
 		
 		//PROPERTIES
 		public var cartList:Array;
@@ -424,6 +425,11 @@ package treatments.food.ui
 			unfavoriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
 			unfavoriteButton.addEventListener(Event.TRIGGERED, onRemoveFoodOrRecipeAsFavorite);
 			
+			editfavoriteButton = new Button();
+			editfavoriteButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.editTexture);
+			editfavoriteButton.styleNameList.add(Button.ALTERNATE_STYLE_NAME_QUIET_BUTTON);
+			editfavoriteButton.addEventListener(Event.TRIGGERED, onEditFavorite);
+			
 			//Add Food Components
 			addFoodContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
 			
@@ -504,7 +510,7 @@ package treatments.food.ui
 			finishButton.addEventListener(starling.events.Event.TRIGGERED, onCompleteFoodManager);
 			actionsContainer.addChild(finishButton);
 			
-			instructionsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_button_label'));
+			instructionsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','instructions_button_label').toUpperCase());
 			instructionsButton.addEventListener(Event.TRIGGERED, onInstructionsTriggered);
 			mainActionsContainer.addChild(instructionsButton);
 			
@@ -538,6 +544,8 @@ package treatments.food.ui
 		
 		private function onServingChanged(e:Event):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			if (activeFood != null)
 			{
 				if (foodServingSizePickerList.selectedItem.multiplier != null)
@@ -559,6 +567,8 @@ package treatments.food.ui
 		
 		private function getInitialFavorites():void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 			
@@ -567,6 +577,8 @@ package treatments.food.ui
 		
 		private function getInitialRecipes():void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
 			
@@ -592,6 +604,8 @@ package treatments.food.ui
 		
 		private function populateBasketList():void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			var cartData:Array = [];
 			var totalProteins:Number = 0;
 			var totalProteinsNaN:Boolean = false;
@@ -695,6 +709,8 @@ package treatments.food.ui
 		
 		private function scanFood():void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			Scanner.service.addEventListener( ScannerEvent.CODE_FOUND, onBarcodeFound );
 			Scanner.service.addEventListener( ScannerEvent.CANCELLED, onScanCanceled );
 			
@@ -734,6 +750,9 @@ package treatments.food.ui
 			nutritionFacts.setCaloriesValue(!isNaN(selectedRecipe.totalCalories) ? Math.round(selectedRecipe.totalCalories) + "Kcal" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') );
 			
 			nutritionFacts.isRecipe();
+			
+			foodDetailsTitleContainer.x = 0;
+			editfavoriteButton.removeFromParent();
 			
 			if (Database.isRecipeFavoriteSynchronous(selectedRecipe))
 			{
@@ -821,6 +840,9 @@ package treatments.food.ui
 			substractFiberCheck.isEnabled = isNaN(selectedFood.fiber) ? false : true;
 			addFoodButton.isEnabled = !isNaN(selectedFood.carbs) ? true : false;
 			
+			foodDetailsTitleContainer.x = 0;
+			editfavoriteButton.removeFromParent();
+			
 			if (Database.isFoodFavoriteSynchronous(selectedFood))
 			{
 				//Food is a favorite
@@ -833,10 +855,21 @@ package treatments.food.ui
 				foodDetailsTitleContainer.addChild(favoriteButton);
 				unfavoriteButton.removeFromParent();
 			}
+			
+			if (currentMode == FAVORITES_MODE)
+			{
+				foodDetailsTitleContainer.addChild(editfavoriteButton);
+				foodDetailsTitleContainer.validate();
+				editfavoriteButton.x -= 22;
+				foodDetailsContainer.validate();
+				foodDetailsTitleContainer.x = 20;
+			}
 		}
 		
 		private function updateFoodDetails(amount:Number):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			if (currentMode != RECIPES_MODE)
 			{
 				var selectedFood:Food = activeFood;
@@ -874,6 +907,8 @@ package treatments.food.ui
 		
 		private function updatePagination(paginationProperties:Object):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			currentPage = paginationProperties.pageNumber;
 			totalPages = paginationProperties.totalPages;
 			
@@ -959,6 +994,8 @@ package treatments.food.ui
 		
 		private function resetComponents(resetPagination:Boolean = true, dontClearSearchResults:Boolean = false):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			if (!dontClearSearchResults)
 			{
 				foodResultsList.dataProvider = new ArrayCollection([]);
@@ -1019,6 +1056,8 @@ package treatments.food.ui
 		
 		private function showAddFavorite():void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			addFavorite.visible = true;
 			var suggestedIndex:int = basketPreloaderContainer.getChildIndex(basketSprite);
 			basketPreloaderContainer.addChildAt(addFavorite, suggestedIndex);
@@ -1031,6 +1070,8 @@ package treatments.food.ui
 		
 		private function hideAddFavorite():void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			addFavorite.visible = false;
 			addFavorite.removeFromParent();
 			basketPreloaderContainer.readjustLayout();
@@ -1040,6 +1081,8 @@ package treatments.food.ui
 		
 		private function removeFoodInserter():void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			if (foodInserter != null && foodInserter.parent != null)
 			{
 				foodInserter.removeEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
@@ -1196,6 +1239,8 @@ package treatments.food.ui
 		
 		private function onFoodOrRecipeSelected(e:Event):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			if (foodResultsList.selectedItem != null)
 			{
 				foodAmountInput.text = "";
@@ -1267,6 +1312,8 @@ package treatments.food.ui
 				return;
 			}*/
 			
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			if (activeFood != null && currentMode != RECIPES_MODE)
 			{
 				Database.insertFoodSynchronous(activeFood);
@@ -1275,6 +1322,12 @@ package treatments.food.ui
 				
 				if (currentMode == FAVORITES_MODE)
 				{
+					foodDetailsTitleContainer.addChild(editfavoriteButton);
+					foodDetailsTitleContainer.validate();
+					editfavoriteButton.x -= 22;
+					foodDetailsContainer.validate();
+					foodDetailsTitleContainer.x = 20;
+					
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 					FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 					
@@ -1300,9 +1353,12 @@ package treatments.food.ui
 		
 		private function onRemoveFoodOrRecipeAsFavorite(e:Event):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			if (activeFood != null && currentMode != RECIPES_MODE)
 			{
 				Database.deleteFoodSynchronous(activeFood);
+				editfavoriteButton.removeFromParent();
 				unfavoriteButton.removeFromParent();
 				foodDetailsTitleContainer.addChild(favoriteButton);
 				
@@ -1336,6 +1392,7 @@ package treatments.food.ui
 			//Reset variables
 			removeFoodEventListeners();
 			hidePreloader();
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
 			
 			//Clear/reset components, unless a special contition has been met
 			if (!dontClearSearchResults)
@@ -1383,6 +1440,7 @@ package treatments.food.ui
 			//Reset variables
 			removeFoodEventListeners();
 			hidePreloader();
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
 			
 			//Clear/reset components
 			if (!dontClearSearchResults)
@@ -1406,6 +1464,8 @@ package treatments.food.ui
 		
 		private function onFoodDetailsReceived(e:FoodEvent):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			var food:Food = e.food;
 			
 			removeFoodEventListeners();
@@ -1419,6 +1479,7 @@ package treatments.food.ui
 		
 		private function onFoodOrRecipeNotFound (e:FoodEvent):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
 			removeFoodEventListeners();
 			hidePreloader();
 			
@@ -1427,6 +1488,7 @@ package treatments.food.ui
 		
 		private function onServerError (e:FoodEvent):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
 			removeFoodEventListeners();
 			hidePreloader();
 			
@@ -1443,6 +1505,8 @@ package treatments.food.ui
 			
 			if(touch != null && touch.phase == TouchPhase.BEGAN) 
 			{
+				if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+				
 				foodDetailsContainer.removeFromParent();
 				
 				if (foodInserter != null) foodInserter.removeFromParent(true);
@@ -1456,8 +1520,26 @@ package treatments.food.ui
 			}
 		}
 		
+		private function onEditFavorite(e:Event):void
+		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
+			foodDetailsContainer.removeFromParent();
+			
+			if (foodInserter != null) foodInserter.removeFromParent(true);
+			foodInserter = new FoodInserter(width, activeFood);
+			foodInserter.addEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
+			var favoriteIndex:int = mainContentContainer.getChildIndex(mainActionsContainer);
+			mainContentContainer.addChildAt(foodInserter, favoriteIndex);
+			actionsContainer.removeChild(finishButton);
+			addFavorite.alpha = 0.2;
+			addFavorite.removeEventListener(TouchEvent.TOUCH, onAddManualFavorite);
+		}
+		
 		private function onAddManualFavoriteComplete(e:Event):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			foodInserter.removeEventListener(Event.COMPLETE, onAddManualFavoriteComplete);
 			foodInserter.removeFromParent();
 			foodInserter.dispose();
@@ -1478,6 +1560,8 @@ package treatments.food.ui
 		
 		private function onSaveRecipe(e:Event):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			//Variables
 			var recipeName:String = "";
 			var recipeServingSize:String = "";
@@ -1742,6 +1826,8 @@ package treatments.food.ui
 		
 		private function onFoodAmountChanged(e:Event):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			addFoodButton.isEnabled = foodAmountInput.text != null && foodAmountInput.text.length > 0 ? true : false;
 			
 			if(foodAmountInput != null && activeFood != null && currentMode != RECIPES_MODE)
@@ -1776,6 +1862,8 @@ package treatments.food.ui
 		
 		private function onAddFoodOrRecipe(e:starling.events.Event):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			addFoodButton.isEnabled = false;
 			
 			if (currentMode != RECIPES_MODE)
@@ -1834,6 +1922,8 @@ package treatments.food.ui
 		
 		private function onBasketCalloutClosed(e:Event):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			for(var i:int = deleteButtonsList.length - 1 ; i >= 0; i--) 
 			{
 				var button:Button = deleteButtonsList[i].button;
@@ -1932,6 +2022,8 @@ package treatments.food.ui
 		
 		private function onBarcodeFound( event:ScannerEvent ):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			//Remove scanner events
 			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, onBarcodeFound );
 			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, onScanCanceled );
@@ -1983,6 +2075,8 @@ package treatments.food.ui
 		
 		private function onScanCanceled( event:ScannerEvent ):void
 		{
+			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
 			//Remove scanner events
 			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, onBarcodeFound );
 			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, onScanCanceled );
@@ -2256,6 +2350,14 @@ package treatments.food.ui
 				unfavoriteButton.removeFromParent();
 				unfavoriteButton.dispose();
 				unfavoriteButton = null;
+			}
+			
+			if (editfavoriteButton != null)
+			{
+				editfavoriteButton.removeEventListener(Event.TRIGGERED, onEditFavorite);
+				editfavoriteButton.removeFromParent();
+				editfavoriteButton.dispose();
+				editfavoriteButton = null;
 			}
 			
 			if (foodAmountInput != null)

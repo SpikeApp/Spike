@@ -26,6 +26,9 @@ package treatments.food.ui
 	
 	public class FoodInserter extends LayoutGroup
 	{
+		private const ADD_MODE:String = "addMode";
+		private const EDIT_MODE:String = "editMode";
+		
 		private var firstRowContainer:LayoutGroup;
 		private var secondRowContainer:LayoutGroup;
 		private var servingSizeContainer:NutritionFactsSectionWithAction;
@@ -56,11 +59,22 @@ package treatments.food.ui
 		private var cancelButton:Button;
 		private var saveButton:Button;
 		
-		public function FoodInserter(width:Number)
+		private var activeFood:Food;
+		private var mode:String;
+		
+		public function FoodInserter(width:Number, food:Food = null)
 		{
 			super();
 			
 			this.width = width;
+			
+			if (food == null)
+				mode = ADD_MODE
+			else
+			{
+				activeFood = food;
+				mode = EDIT_MODE;
+			}
 			
 			createProperties();
 			createContent();
@@ -76,7 +90,7 @@ package treatments.food.ui
 		private function createContent():void
 		{
 			//Title
-			title = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('foodmanager','new_food_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			title = LayoutFactory.createLabel(mode == ADD_MODE ? ModelLocator.resourceManagerInstance.getString('foodmanager','new_food_label') : ModelLocator.resourceManagerInstance.getString('foodmanager','edit_food_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
 			title.paddingTop = 0;
 			title.paddingBottom = 5;
 			title.width = width;
@@ -89,6 +103,7 @@ package treatments.food.ui
 			
 			nameInputText = LayoutFactory.createTextInput(false, false, width, HorizontalAlign.CENTER, false, false, false, true, true);
 			nameInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) nameInputText.text = activeFood.name;
 			nameInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			nameContainer = new NutritionFactsSectionWithAction(width);
 			nameContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','name_label');
@@ -102,6 +117,7 @@ package treatments.food.ui
 			
 			brandInputText = LayoutFactory.createTextInput(false, false, width, HorizontalAlign.CENTER, false, false, false, true, true);
 			brandInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) brandInputText.text = activeFood.brand;
 			brandInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			brandContainer = new NutritionFactsSectionWithAction(width);
 			brandContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','brand_label');
@@ -116,6 +132,7 @@ package treatments.food.ui
 			servingUnitInputText = LayoutFactory.createTextInput(false, false, (width - 10) / 2, HorizontalAlign.CENTER);
 			servingUnitInputText.paddingLeft = servingUnitInputText.paddingRight = 0;
 			servingUnitInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) servingUnitInputText.text = activeFood.servingUnit;
 			servingUnitInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			servingUnitContainer = new NutritionFactsSectionWithAction((width - 10) / 2);
 			servingUnitContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','serving_unit_label');
@@ -125,6 +142,7 @@ package treatments.food.ui
 			linkInputText = LayoutFactory.createTextInput(false, false, (width - 10) / 2, HorizontalAlign.CENTER);
 			linkInputText.paddingLeft = linkInputText.paddingRight = 0;
 			linkInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) linkInputText.text = activeFood.link;
 			linkInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			linkContainer = new NutritionFactsSectionWithAction((width - 10) / 2);
 			linkContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','link_label');
@@ -138,6 +156,7 @@ package treatments.food.ui
 			
 			servingSizeInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
 			servingSizeInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) servingSizeInputText.text = String(activeFood.servingSize);
 			servingSizeInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			servingSizeContainer = new NutritionFactsSectionWithAction(width / 3);
 			servingSizeContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','serving_size_label');
@@ -146,6 +165,7 @@ package treatments.food.ui
 			
 			carbsInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
 			carbsInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) carbsInputText.text = String(activeFood.carbs);
 			carbsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			carbsContainer = new NutritionFactsSectionWithAction(width / 3);
 			carbsContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','carbs_label');
@@ -154,6 +174,7 @@ package treatments.food.ui
 			
 			fiberInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
 			fiberInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) fiberInputText.text = String(activeFood.fiber);
 			fiberInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			fiberContainer = new NutritionFactsSectionWithAction(width / 3);
 			fiberContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','fiber_label');
@@ -167,6 +188,7 @@ package treatments.food.ui
 			
 			proteinsInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
 			proteinsInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) proteinsInputText.text = String(activeFood.proteins);
 			proteinsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			proteinsContainer = new NutritionFactsSectionWithAction(width / 3);
 			proteinsContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','proteins_label');
@@ -175,6 +197,7 @@ package treatments.food.ui
 			
 			fatsInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
 			fatsInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) fatsInputText.text = String(activeFood.fats);
 			fatsInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			fatsContainer = new NutritionFactsSectionWithAction(width / 3);
 			fatsContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','fats_label');
@@ -183,6 +206,7 @@ package treatments.food.ui
 			
 			caloriesInputText = LayoutFactory.createTextInput(false, false, 60, HorizontalAlign.CENTER, true);
 			caloriesInputText.height = 30;
+			if (mode == EDIT_MODE && activeFood != null) caloriesInputText.text = String(activeFood.kcal);
 			caloriesInputText.addEventListener(Event.CHANGE, onValuesChanged);
 			caloriesContainer = new NutritionFactsSectionWithAction(width / 3);
 			caloriesContainer.title.text = ModelLocator.resourceManagerInstance.getString('foodmanager','calories_label');
@@ -196,12 +220,12 @@ package treatments.food.ui
 			actionsRowContainer.width = width;
 			addChild(actionsRowContainer);
 			
-			cancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','cancel_button_label').toUpperCase());
+			cancelButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase());
 			cancelButton.addEventListener(Event.TRIGGERED, onCancel);
 			actionsRowContainer.addChild(cancelButton);
 			
-			saveButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('foodmanager','save_button_label').toUpperCase());
-			saveButton.isEnabled = false;
+			saveButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','save_button_label').toUpperCase());
+			saveButton.isEnabled = mode == ADD_MODE ? false : true;
 			saveButton.addEventListener(Event.TRIGGERED, onSave);
 			actionsRowContainer.addChild(saveButton);
 		}
@@ -211,6 +235,8 @@ package treatments.food.ui
 		 */
 		private function onValuesChanged(e:Event):void
 		{
+			
+			
 			if (nameInputText.text != "" && servingSizeInputText.text != "" && servingUnitInputText.text != "" && carbsInputText.text != "")
 				saveButton.isEnabled = true;
 			else
@@ -219,27 +245,48 @@ package treatments.food.ui
 		
 		private function onSave(e:Event):void
 		{
-			//Create Food
-			var food:Food = new Food
-			(
-				UniqueId.createEventId(),
-				nameInputText.text,
-				proteinsInputText.text != "" ? Number(proteinsInputText.text) : Number.NaN,
-				carbsInputText.text != "" ? Number(carbsInputText.text) : Number.NaN,
-				fatsInputText.text != "" ? Number(fatsInputText.text) : Number.NaN,
-				caloriesInputText.text != "" ? Number(caloriesInputText.text) : Number.NaN,
-				servingSizeInputText.text != "" ? Number(servingSizeInputText.text) : Number.NaN,
-				servingUnitInputText.text,
-				new Date().valueOf(),
-				fiberInputText.text != "" ? Number(fiberInputText.text) : Number.NaN,
-				brandInputText.text,
-				linkInputText.text,
-				"User",
-				""
-			);
+			if (mode == ADD_MODE)
+			{
+				//Create Food
+				var food:Food = new Food
+				(
+					UniqueId.createEventId(),
+					nameInputText.text,
+					proteinsInputText.text != "" ? Number(proteinsInputText.text) : Number.NaN,
+					carbsInputText.text != "" ? Number(carbsInputText.text) : Number.NaN,
+					fatsInputText.text != "" ? Number(fatsInputText.text) : Number.NaN,
+					caloriesInputText.text != "" ? Number(caloriesInputText.text) : Number.NaN,
+					servingSizeInputText.text != "" ? Number(servingSizeInputText.text) : Number.NaN,
+					servingUnitInputText.text,
+					new Date().valueOf(),
+					fiberInputText.text != "" ? Number(fiberInputText.text) : Number.NaN,
+					brandInputText.text,
+					linkInputText.text,
+					"User",
+					""
+				);
 			
-			//Save To Database
-			Database.insertFoodSynchronous(food);
+				//Save To Database
+				Database.insertFoodSynchronous(food);
+			}
+			else if (activeFood != null)
+			{
+				activeFood.name = nameInputText.text;
+				activeFood.proteins = proteinsInputText.text != "" ? Number(proteinsInputText.text) : Number.NaN;
+				activeFood.carbs = carbsInputText.text != "" ? Number(carbsInputText.text) : Number.NaN;
+				activeFood.fats = fatsInputText.text != "" ? Number(fatsInputText.text) : Number.NaN;
+				activeFood.kcal = caloriesInputText.text != "" ? Number(caloriesInputText.text) : Number.NaN;
+				activeFood.servingSize = servingSizeInputText.text != "" ? Number(servingSizeInputText.text) : Number.NaN;
+				activeFood.servingUnit = servingUnitInputText.text;
+				activeFood.timestamp = new Date().valueOf();
+				activeFood.fiber = fiberInputText.text != "" ? Number(fiberInputText.text) : Number.NaN;
+				activeFood.brand = brandInputText.text;
+				activeFood.link = linkInputText.text;
+				activeFood.source = "User";
+				activeFood.barcode = "";
+				
+				Database.updateFoodSynchronous(activeFood);
+			}
 			
 			//Finish
 			this.dispatchEventWith(Event.COMPLETE);
