@@ -192,6 +192,8 @@ package model
 				//MultipleMiaoMiaoService.init();
 				if (APPCENTER_MODE)
 					AppCenterService.init();
+				
+				Predictions.init();
 			}
 		}
 		

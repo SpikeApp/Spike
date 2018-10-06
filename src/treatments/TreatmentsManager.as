@@ -86,7 +86,7 @@ package treatments
 		public static var pumpCOB:Number = 0;
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 		private static var foodManager:FoodManager;
-		private static var totalActivity:Number = 0;
+		public static var totalActivity:Number = 0;
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
