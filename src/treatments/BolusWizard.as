@@ -1090,52 +1090,69 @@ package treatments
 			}
 			
 			//Current Trend
-			var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
-			//var currentTrendArrow:String = "\u2198";
-			bwTrendLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " " + currentTrendArrow;
-			currentTrendCorrection = 0;
-			currentTrendCorrectionUnit = "U";
-			if (currentTrendArrow != "")
+			var canUpdateTrend:Boolean = true;
+			if (CGMBlueToothDevice.isMiaoMiao() && ModelLocator.bgReadings.length >= 2)
 			{
-				if (currentTrendArrow == "\u2197")
+				var lastBgReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 1];
+				var previousBgReading:BgReading = ModelLocator.bgReadings[ModelLocator.bgReadings.length - 2];
+				if (previousBgReading != null && lastBgReading != null && lastBgReading.timestamp - previousBgReading.timestamp < TimeSpan.TIME_4_MINUTES)
 				{
-					currentTrendCorrection = currentProfile.trend45Up;
-					currentTrendCorrectionUnit = "U";
-				}
-				else if (currentTrendArrow == "\u2191")
-				{
-					currentTrendCorrection = currentProfile.trend90Up;
-					currentTrendCorrectionUnit = "U";
-				}
-				else if (currentTrendArrow == "\u2191\u2191")
-				{
-					currentTrendCorrection = currentProfile.trendDoubleUp;
-					currentTrendCorrectionUnit = "U";
-				}
-				else if (currentTrendArrow == "\u2198")
-				{
-					currentTrendCorrection = currentProfile.trend45Down;
-					currentTrendCorrectionUnit = "g";
-				}
-				else if (currentTrendArrow == "\u2193")
-				{
-					currentTrendCorrection = currentProfile.trend90Down;
-					currentTrendCorrectionUnit = "g";
-				}
-				else if (currentTrendArrow == "\u2193\u2193")
-				{
-					currentTrendCorrection = currentProfile.trendDoubleDown;
-					currentTrendCorrectionUnit = "g";
+					canUpdateTrend = false;
 				}
 			}
 			
-			bwCurrentTrendLabel.text = currentTrendCorrection + currentTrendCorrectionUnit;
-			bwTrendLabel.validate();
-			bwCurrentTrendLabel.validate();
-			bwTrendContainer.validate();
-			bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
-			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
-			bwTrendCheck.isSelected = currentTrendCorrection != 0 && autoTrend;
+			if (canUpdateTrend)
+			{
+				var currentTrendArrow:String = latestBgReading != null ? latestBgReading.slopeArrow() : "";
+				bwTrendLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','glucose_trend') + " " + currentTrendArrow;
+				currentTrendCorrection = 0;
+				currentTrendCorrectionUnit = "U";
+				if (currentTrendArrow != "")
+				{
+					if (currentTrendArrow == "\u2197")
+					{
+						currentTrendCorrection = currentProfile.trend45Up;
+						currentTrendCorrectionUnit = "U";
+					}
+					else if (currentTrendArrow == "\u2191")
+					{
+						currentTrendCorrection = currentProfile.trend90Up;
+						currentTrendCorrectionUnit = "U";
+					}
+					else if (currentTrendArrow == "\u2191\u2191")
+					{
+						currentTrendCorrection = currentProfile.trendDoubleUp;
+						currentTrendCorrectionUnit = "U";
+					}
+					else if (currentTrendArrow == "\u2198")
+					{
+						currentTrendCorrection = currentProfile.trend45Down;
+						currentTrendCorrectionUnit = "g";
+					}
+					else if (currentTrendArrow == "\u2193")
+					{
+						currentTrendCorrection = currentProfile.trend90Down;
+						currentTrendCorrectionUnit = "g";
+					}
+					else if (currentTrendArrow == "\u2193\u2193")
+					{
+						currentTrendCorrection = currentProfile.trendDoubleDown;
+						currentTrendCorrectionUnit = "g";
+					}
+				}
+				
+				bwCurrentTrendLabel.text = currentTrendCorrection + currentTrendCorrectionUnit;
+				bwTrendLabel.validate();
+				bwCurrentTrendLabel.validate();
+				bwTrendContainer.validate();
+				bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
+				bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
+				bwTrendCheck.isSelected = currentTrendCorrection != 0 && autoTrend;
+			}
+			else
+			{
+				currentTrendCorrection = 0;
+			}
 			
 			//Current IOB
 			currentIOB = TreatmentsManager.getTotalIOB(now);
