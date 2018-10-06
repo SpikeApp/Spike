@@ -422,7 +422,7 @@ package treatments
 			bwCarbsLabel.wordWrap = true;
 			bwCarbsLabelContainer.addChild(bwCarbsLabel);
 			
-			bwCarbsStepper = LayoutFactory.createNumericStepper(0, 500, 0, 0.5);
+			bwCarbsStepper = LayoutFactory.createNumericStepper(0, 500, 0, carbsPrecision);
 			bwCarbsStepper.addEventListener(Event.CHANGE, delayCalculations);
 			bwCarbsStepper.validate();
 			bwCarbsContainer.addChild(bwCarbsStepper);
