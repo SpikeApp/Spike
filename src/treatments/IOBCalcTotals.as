@@ -7,6 +7,8 @@ package treatments
 		public var bolusiob:Number;
 		public var bolusinsulin:Number;
 		public var time:Number;
+		public var lastBolusTime:Number;
+		public var lastTemp:Number;
 		
 		public function IOBCalcTotals(time:Number, activity:Number, iob:Number, bolusiob:Number, bolusinsulin:Number)
 		{
