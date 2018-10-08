@@ -1050,6 +1050,7 @@ package services
 					treatment.note.indexOf("Resume Pump") != -1 ||
 					treatment.note.indexOf("Suspend Pump") != -1 ||
 					treatment.note.indexOf("Profile Switch") != -1 ||
+					treatment.note.indexOf("Combo Bolus") != -1 ||
 					treatment.note.indexOf("Announcement") != -1
 				)
 				{
