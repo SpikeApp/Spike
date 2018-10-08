@@ -24,7 +24,7 @@ package model
 		
 		public static function init():void
 		{
-			setInterval(test, 5000);
+			//setInterval(test, 15000);
 		}
 		
 		private static function test():void
@@ -40,7 +40,8 @@ package model
 			var openAPSCOB:Object = TreatmentsManager.getTotalCOBOpenAPS(now);
 			
 			trace("regularCOB", regularCOB);
-			trace("openAPSCOB", ObjectUtil.toString(openAPSCOB));
+			trace("openAPSCOB", openAPSCOB.mealCOB);
+			trace("openAPSCarbs", openAPSCOB.carbs);
 			
 			return;
 			
@@ -573,10 +574,10 @@ package model
 			
 			
 			trace("COBpredBGs", ObjectUtil.toString(COBpredBGs));
-			//trace("aCOBpredBGs", ObjectUtil.toString(aCOBpredBGs));
-			//trace("IOBpredBGs", ObjectUtil.toString(IOBpredBGs));
-			//trace("UAMpredBGs", ObjectUtil.toString(UAMpredBGs));
-			//trace("ZTpredBGs", ObjectUtil.toString(ZTpredBGs));
+			trace("aCOBpredBGs", ObjectUtil.toString(aCOBpredBGs));
+			trace("IOBpredBGs", ObjectUtil.toString(IOBpredBGs));
+			trace("UAMpredBGs", ObjectUtil.toString(UAMpredBGs));
+			trace("ZTpredBGs", ObjectUtil.toString(ZTpredBGs));
 
 		}
 		

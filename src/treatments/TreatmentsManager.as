@@ -452,7 +452,7 @@ package treatments
 			var bwCarbs:Number = 0;
 			var journalCarbs:Number = 0;
 			var bwFound :Boolean= false;
-			var carbDelay:Number = 20 * 60 * 1000;
+			var carbDelay:Number = 20 * 60 * 1000; //Need to overwrite this to the individual carb delay.
 			var maxCarbs:Number = 0;
 			var mealCarbTime:Number = time;
 			var lastCarbTime:Number = 0;
@@ -493,7 +493,15 @@ package treatments
 						
 						var myCarbsAbsorbed:Number = calcMealCOB(COB_inputs).carbsAbsorbed;
 						var myMealCOB:Number = Math.max(0, carbs - myCarbsAbsorbed);
-						mealCOB = Math.max(mealCOB, myMealCOB);
+						
+						if (!isNaN(myMealCOB))
+						{
+							mealCOB = Math.max(mealCOB, myMealCOB);
+						}
+						else
+						{
+							trace("Bad myMealCOB:",myMealCOB, "mealCOB:",mealCOB, "carbs:",carbs,"myCarbsAbsorbed:",myCarbsAbsorbed);
+						}
 						
 						if (myMealCOB < mealCOB) 
 						{
@@ -517,16 +525,16 @@ package treatments
 			COB_inputs.mealTime = time - (6 * 60 * 60 * 1000);
 			var c:Object = calcMealCOB(COB_inputs);
 			
-			trace("c", ObjectUtil.toString(c.allDeviations));
+			//trace("c", ObjectUtil.toString(c.allDeviations));
 			
 			// if currentDeviation is null or maxDeviation is 0, set mealCOB to 0 for zombie-carb safety
-			if (isNaN(c.currentDeviation) || c.currentDeviation == null) 
+			if (c.currentDeviation == null || isNaN(c.currentDeviation)) 
 			{
 				trace("Warning: setting mealCOB to 0 because currentDeviation is null/undefined");
 				mealCOB = 0;
 			}
 			
-			if (isNaN(c.maxDeviation) || c.maxDeviation == null) 
+			if (c.maxDeviation == null || isNaN(c.maxDeviation)) 
 			{
 				trace("Warning: setting mealCOB to 0 because maxDeviation is 0 or undefined");
 				mealCOB = 0;
@@ -534,7 +542,8 @@ package treatments
 			
 			return {
 				carbs: Math.round( carbs * 1000 ) / 1000,
-				mealCOB: Math.round( mealCOB ),
+				//mealCOB: Math.round( mealCOB ),
+				mealCOB: mealCOB,
 				currentDeviation: Math.round( c.currentDeviation * 100 ) / 100,
 				maxDeviation: Math.round( c.maxDeviation * 100 ) / 100,
 				minDeviation: Math.round( c.minDeviation * 100 ) / 100,
@@ -548,15 +557,11 @@ package treatments
 		
 		private static function calcMealCOB(inputs:Object):Object
 		{
-			var glucose_data:Object = inputs.glucose_data;
-			var iob_inputs:Object = inputs.iob_inputs;
-			var basalprofile:Object = inputs.basalprofile;
+			var glucose_data:Array = inputs.glucose_data;
+			var iob_inputs:Object = inputs.iob_inputs; //Should hold history (treatments) and current profile
 			var profile:Profile = inputs.iob_inputs.profile;
-			var mealTime:Number =inputs.mealTime;
+			var mealTime:Number = inputs.mealTime;
 			var ciTime:Number = inputs.ciTime != null ? inputs.ciTime : Number.NaN;
-			
-			// get treatments from pumphistory once, not every time we get_iob()
-			//var treatments = find_insulin(inputs.iob_inputs);
 			
 			var avgDeltas:Array = [];
 			var bgis:Array = [];
@@ -565,12 +570,13 @@ package treatments
 			var carbsAbsorbed:Number = 0;
 			var bucketed_data:Array = [];
 			bucketed_data[0] = { glucose: glucose_data[0].calculatedValue, timestamp: glucose_data[0].timestamp, date: glucose_data[0].timestamp };
+			
 			var j:Number = 0;
 			var foundPreMealBG:Boolean = false;
 			var lastbgi:Number = 0;
 			var i:int;
 			
-			if (glucose_data[0] == null || isNaN((glucose_data[0] as BgReading).calculatedValue) || (glucose_data[0] as BgReading).calculatedValue < 39) 
+			if (bucketed_data[0] == null || isNaN(bucketed_data[0].glucose) || bucketed_data[0].glucose < 39) 
 			{
 				lastbgi = -1;
 			}
@@ -578,11 +584,22 @@ package treatments
 			var bgTime:Number;
 			
 			var glucoseDataLength:int = glucose_data.length;
-			for (i = 1; i < glucoseDataLength; ++i) 
+			for (i = 1; i < glucoseDataLength; ++i) //218
 			{
 				var bgReading:BgReading = glucose_data[i];
-				bgTime = bgReading.timestamp;
 				var lastbgTime:Number;
+				
+				if (bgReading == null)
+					continue;
+				
+				if (!isNaN(bgReading.timestamp))
+				{
+					bgTime = bgReading.timestamp;
+				}
+				else
+				{
+					trace("Could not determine BG time");
+				}
 				
 				if (isNaN(bgReading.calculatedValue) || bgReading.calculatedValue < 39) 
 				{
@@ -592,7 +609,7 @@ package treatments
 				
 				// only consider BGs for 6h after a meal for calculating COB
 				var hoursAfterMeal:Number = (bgTime - mealTime) / (60 * 60 * 1000);
-				if (hoursAfterMeal > 6 || foundPreMealBG) 
+				if (hoursAfterMeal > 6) //This should be 6
 				{
 					continue;
 				} 
@@ -604,21 +621,21 @@ package treatments
 				//console.error(glucose_data[i].glucose, bgTime, Math.round(hoursAfterMeal*100)/100, bucketed_data[bucketed_data.length-1].display_time);
 				// only consider last ~45m of data in CI mode
 				// this allows us to calculate deviations for the last ~30m
-				if (isNaN(ciTime)) {
-					var hoursAgo:Number = (ciTime - bgTime) / (45 * 60 * 1000);
+				
+				//trace("ciTime", ciTime);
+				
+				if (!isNaN(ciTime)) 
+				{
+					var hoursAgo:Number = (ciTime - bgTime) / (60 * 60 * 1000);
 					if (hoursAgo > 1 || hoursAgo < 0) 
 					{
 						continue;
 					}
 				}
 				
-				if (!isNaN(bucketed_data[bucketed_data.length-1].timestamp)) 
+				if (!isNaN(bucketed_data[bucketed_data.length-1].date)) 
 				{
-					lastbgTime = bucketed_data[bucketed_data.length-1].timestamp;
-				} 
-				else if ((lastbgi >= 0) && !isNaN(glucose_data[lastbgi].timestamp)) 
-				{
-					lastbgTime = glucose_data[lastbgi].timestamp;
+					lastbgTime = bucketed_data[bucketed_data.length-1].date;
 				} 
 				else if ((lastbgi >= 0) && !isNaN(glucose_data[lastbgi].timestamp)) 
 				{
@@ -629,12 +646,15 @@ package treatments
 					trace("Could not determine last BG time"); 
 				}
 				
+				//trace("I'm IN");
+				
 				var elapsed_minutes:Number = (bgTime - lastbgTime)/(60*1000);
 				//console.error(bgTime, lastbgTime, elapsed_minutes);
 				if(Math.abs(elapsed_minutes) > 8) 
 				{
 					// interpolate missing data points
-					var lastbg:Number = glucose_data[lastbgi].glucose;
+					var lastbg:Number = glucose_data[lastbgi].calculatedValue;
+					
 					// cap interpolation at a maximum of 4h
 					elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
 					//console.error(elapsed_minutes);
@@ -645,7 +665,7 @@ package treatments
 						j++;
 						bucketed_data[j] = [];
 						bucketed_data[j].date = previousbgTime;
-						var gapDelta:Number = glucose_data[i].glucose - lastbg;
+						var gapDelta:Number = glucose_data[i].calculatedValue - lastbg;
 						//console.error(gapDelta, lastbg, elapsed_minutes);
 						var previousbg:Number = lastbg + (5/elapsed_minutes * gapDelta);
 						bucketed_data[j].glucose = Math.round(previousbg);
@@ -656,14 +676,15 @@ package treatments
 						lastbgTime = previousbgTime;
 					}
 					
-				} else if(Math.abs(elapsed_minutes) > 2) 
+				} 
+				else if(Math.abs(elapsed_minutes) > 2) 
 				{
 					j++;
-					bucketed_data[j] = { glucose: glucose_data[i].calculatedValue, timestamp: glucose_data[i].timestamp, date: bgTime };
+					bucketed_data[j] = { glucose: glucose_data[i].calculatedValue, timestamp: bgTime, date: bgTime };
 				} 
 				else 
 				{
-					bucketed_data[j].glucose = (bucketed_data[j].glucose + glucose_data[i].glucose)/2;
+					bucketed_data[j].glucose = (bucketed_data[j].glucose + glucose_data[i].calculatedValue) / 2;
 				}
 				
 				lastbgi = i;
@@ -676,6 +697,7 @@ package treatments
 			var minDeviation:Number = 999;
 			var allDeviations:Array = [];
 			//console.error(bucketed_data);
+			
 			for (i = 0; i < bucketed_data.length-3; ++i) 
 			{
 				bgTime = bucketed_data[i].date;
@@ -691,7 +713,7 @@ package treatments
 					bg = bucketed_data[i].glucose;
 					if ( bg < 39 || bucketed_data[i+3].glucose < 39) 
 					{
-						trace("!");
+						//trace("!");
 						continue;
 					}
 					avgDelta = (bg - bucketed_data[i+3].glucose)/3;
@@ -702,7 +724,7 @@ package treatments
 					trace("Could not find glucose data"); 
 				}
 				
-				//avgDelta = avgDelta.toFixed(2);
+				avgDelta = Math.round(avgDelta * 100) / 100;
 				iob_inputs.clock=bgTime;
 				//iob_inputs.profile.current_basal = basal.basalLookup(basalprofile, bgTime);
 				//console.log(JSON.stringify(iob_inputs.profile));
@@ -715,10 +737,11 @@ package treatments
 				//bgi = bgi.toFixed(2);
 				//console.error(delta);
 				
-				trace("delta", delta);
-				trace("bgi", bgi);
+				//trace("delta", delta);
+				//trace("bgi", bgi);
 				
 				var deviation:Number = delta - bgi;
+				deviation = Math.round(deviation * 100) / 100;
 				//deviation = deviation.toFixed(2);
 				//if (deviation < 0 && deviation > -2) { console.error("BG: "+bg+", avgDelta: "+avgDelta+", BGI: "+bgi+", deviation: "+deviation); }
 				// calculate the deviation right now, for use in min_5m
@@ -730,7 +753,8 @@ package treatments
 						//console.error("currentDeviation:",currentDeviation,avgDelta,bgi);
 						allDeviations.push(Math.round(currentDeviation));
 					}
-				} else if (ciTime > bgTime) 
+				} 
+				else if (ciTime > bgTime) 
 				{
 					var avgDeviation:Number = Math.round((avgDelta-bgi)*1000)/1000;
 					var deviationSlope:Number = (avgDeviation-currentDeviation)/(bgTime-ciTime)*1000*60*5;
@@ -764,7 +788,7 @@ package treatments
 				}
 			}
 			if(maxDeviation>0) {
-				//console.error("currentDeviation:",currentDeviation,"maxDeviation:",maxDeviation,"slopeFromMaxDeviation:",slopeFromMaxDeviation);
+				trace("currentDeviation:",currentDeviation,"maxDeviation:",maxDeviation,"slopeFromMaxDeviation:",slopeFromMaxDeviation);
 			}
 			
 			var output:Object = {
