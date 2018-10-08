@@ -212,7 +212,7 @@ package treatments
 			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, lastCalibration.uniqueId);
 		}
 		
-		public static function getTotalIOB(time:Number):Number
+		public static function getTotalIOBNightscout(time:Number):Number
 		{
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
@@ -229,7 +229,7 @@ package treatments
 					var treatment:Treatment = treatmentsList[i];
 					if (treatment != null && (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS))
 					{
-						totalIOB += treatment.calculateIOB(time);
+						totalIOB += treatment.calculateIOBNightscout(time);
 						totalActivity += !isNaN(treatment.activityContrib) ? treatment.activityContrib : 0;
 					}
 				}
@@ -241,6 +241,101 @@ package treatments
 				totalIOB = 0;
 			
 			return totalIOB;
+		}
+		
+		public static function getTotalIOBOpenAPS(time:Number, curve:String):IOBCalcTotals
+		{
+			var now:Number = time;
+			var profile:Profile = ProfileManager.getProfileByTime(now);
+			var dia:Number = 3; //We set a default DIA of 3 but this will be overriden by each individual DIA
+			var peak:Number = 0;
+			var iob:Number = 0;
+			var bolusiob:Number = 0;
+			var bolusinsulin:Number = 0;
+			var activity:Number = 0;
+			
+			var curveDefaults:Object = {};
+			curveDefaults["bilinear"] = 
+			{
+				requireLongDia: false,
+				peak: 75 // not really used, but prevents having to check later
+			};
+			curveDefaults["rapid-acting"] = 
+			{
+				requireLongDia: true,
+				peak: 75,
+				tdMin: 300
+			};
+			curveDefaults["ultra-rapid"] = 
+			{
+				requireLongDia: true,
+				peak: 55,
+				tdMin: 300
+			};
+			
+			if (profile.insulinCurve != "")
+				curve = profile.insulinCurve.toLowerCase();
+			
+			if (!(curve in curveDefaults))
+			{
+				Trace.myTrace("TreatmentsManager.as", 'Unsupported curve function: "' + curve + '". Supported curves: "bilinear", "rapid-acting" (Novolog, Novorapid, Humalog, Apidra) and "ultra-rapid" (Fiasp). Defaulting to "rapid-acting".');
+				curve = 'rapid-acting';
+			}
+			
+			var defaults:Object = curveDefaults[curve];
+			
+			peak = defaults.peak;
+			
+			var numberOfTreatments:int = treatmentsList.length;
+			for (var i:int = 0; i < numberOfTreatments; i++) 
+			{
+				var treatment:Treatment = treatmentsList[i];
+				
+				if (treatment.timestamp < now && treatment.insulinAmount > 0) //Check if treatment is valid and contains insulin otherwise skip it.
+				{
+					dia = treatment.dia;
+					/*if (defaults.requireLongDia && dia < 5) 
+					{
+						// Force minimum of 5 hour DIA when default requires a Long DIA.
+						//Trace.myTrace("TreatmentsManager.as", "Insulin curve requires DIA of 5 hours or more with the new curves. Current DIA is: " + dia + ".  Defaulting to 5 hours.");
+						dia = 5;
+					}*/
+					
+					var dia_ago:Number = now - (dia * 60 * 60 * 1000);
+					
+					if (treatment.timestamp > dia_ago)
+					{
+						var tIOB:IOBCalc = treatment.calculateIOBOpenAPS(time, curve, dia, peak, profile);
+						
+						if (tIOB != null && !isNaN(tIOB.iobContrib)) 
+						{ 
+							iob += tIOB.iobContrib; 
+						}
+						
+						if (tIOB != null && !isNaN(tIOB.activityContrib)) 
+						{ 
+							activity += tIOB.activityContrib; 
+						}
+						
+						if (tIOB != null && !isNaN(tIOB.iobContrib)) 
+						{
+							bolusiob += tIOB.iobContrib;
+							bolusinsulin += treatment.insulinAmount;
+						}
+					}
+				}
+			}
+			
+			var results:IOBCalcTotals = new IOBCalcTotals
+			(
+				time,
+				Math.round(activity * 10000) / 10000,
+				Math.round(iob * 1000) / 1000,
+				Math.round(bolusiob * 1000) / 1000,
+				Math.round(bolusinsulin * 1000) / 1000
+			);
+			
+			return results;
 		}
 		
 		public static function setPumpIOB(value:Number):void
@@ -299,11 +394,11 @@ package treatments
 								var actStart:Number = 0;
 								if (true)//(lastDecayedBy != 0)
 								{
-									getTotalIOB(lastDecayedBy);
+									getTotalIOBNightscout(lastDecayedBy);
 									actStart = totalActivity;
 								}
 								
-								getTotalIOB(cCalc.decayedBy);
+								getTotalIOBNightscout(cCalc.decayedBy);
 								var actEnd:Number = totalActivity;
 								
 								var avgActivity:Number = (actStart + actEnd) / 2;
@@ -340,6 +435,18 @@ package treatments
 				totalCOB = 0;
 			
 			return Math.round(totalCOB * 10) / 10;
+		}
+		
+		public static function getLastCarbTreatment():Treatment
+		{
+			for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+			{
+				var treatment:Treatment = treatmentsList[i];
+				if (treatment.carbs > 0)
+					return treatment;
+			}
+			
+			return null;
 		}
 		
 		public static function setPumpCOB(value:Number):void
@@ -2119,7 +2226,7 @@ package treatments
 			{
 				var treatment:Treatment = treatmentsList[i];
 				
-				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS) && treatment.calculateIOB(now) > 0)
+				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS) && treatment.calculateIOBNightscout(now) > 0)
 				{
 					activeTotalInsulin += treatment.insulinAmount;
 					if (treatment.timestamp < firstTreatmentTimestamp)
@@ -2167,12 +2274,12 @@ package treatments
 							var actStart:Number = 0;
 							if (lastDecayedBy != 0)
 							{
-								getTotalIOB(lastDecayedBy);
+								getTotalIOBNightscout(lastDecayedBy);
 								actStart = totalActivity;
 							}
 							
 							
-							getTotalIOB(cCalc.decayedBy);
+							getTotalIOBNightscout(cCalc.decayedBy);
 							var actEnd:Number = totalActivity;
 							
 							var avgActivity:Number = (actStart + actEnd) / 2;

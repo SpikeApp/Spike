@@ -493,7 +493,7 @@ package services
 		private static function triggerIOB():void
 		{
 			var info:Object = {};
-			info.value1 = GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()));
+			info.value1 = GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOBNightscout(new Date().valueOf()));
 			info.value2 = "";
 			info.value3 = "";
 			
@@ -521,7 +521,7 @@ package services
 		private static function triggerIOBCOB():void
 		{
 			var info:Object = {};
-			info.value1 = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()));
+			info.value1 = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOBNightscout(new Date().valueOf()));
 			info.value2 = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
 			info.value3 = "";
 			

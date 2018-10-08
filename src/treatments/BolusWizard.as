@@ -668,7 +668,7 @@ package treatments
 			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
 			
 			//Current IOB
-			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
+			currentIOB = TreatmentsManager.getTotalIOBNightscout(new Date().valueOf());
 			
 			bwIOBContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwIOBContainer.width = contentWidth;
@@ -1155,7 +1155,7 @@ package treatments
 			}
 			
 			//Current IOB
-			currentIOB = TreatmentsManager.getTotalIOB(now);
+			currentIOB = TreatmentsManager.getTotalIOBNightscout(now);
 			//currentIOB = 0.72;
 			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(currentIOB);
 			bwCurrentIOBLabel.validate();
