@@ -222,9 +222,7 @@ package treatments
 			}
 			else if (algorithm == "openaps")
 			{
-				var curve:String = "bilinear";
-				
-				return getTotalIOBOpenAPS(time, curve);
+				return getTotalIOBOpenAPS(time, "bilinear");
 			}
 			
 			return getTotalIOBNightscout(time); //Deafults to Nightscout
@@ -386,6 +384,22 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):CobCalcTotals 
 		{
+			var algorith:String = "openaps";
+			
+			if (algorith == "nightscout")
+			{
+				return getTotalCOBNightscout(time);
+			}
+			else if (algorith == "openaps")
+			{
+				return getTotalCOBOpenAPS(time);
+			}
+			
+			return getTotalCOBNightscout(time); //Default to Nightscout
+		}
+		
+		public static function getTotalCOBNightscout(time:Number):CobCalcTotals
+		{
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
@@ -489,7 +503,7 @@ package treatments
 			return results;
 		}
 		
-		public static function getTotalCOBOpenAPS(time:Number):Object
+		public static function getTotalCOBOpenAPS(time:Number):CobCalcTotals
 		{
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
@@ -589,19 +603,21 @@ package treatments
 				mealCOB = 0;
 			}
 			
-			return {
-				carbs: Math.round( carbs * 1000 ) / 1000,
-				mealCOB: Math.round(mealCOB * 10) / 10,
-				carbsAbsorbed: carbsAbsorbed,
-				currentDeviation: Math.round( c.currentDeviation * 100 ) / 100,
-				maxDeviation: Math.round( c.maxDeviation * 100 ) / 100,
-				minDeviation: Math.round( c.minDeviation * 100 ) / 100,
-				slopeFromMaxDeviation: Math.round( c.slopeFromMaxDeviation * 1000 ) / 1000,
-				slopeFromMinDeviation: Math.round( c.slopeFromMinDeviation * 1000 ) / 1000,
-				lastCarbTime: lastCarbTime
-				//allDeviations: c.allDeviations,
-				//bwFound: bwFound
-			};
+			var results:CobCalcTotals = new CobCalcTotals
+				(
+					time,
+					Math.round(mealCOB * 10) / 10,
+					Math.round( carbs * 1000 ) / 1000,
+					lastCarbTime,
+					carbsAbsorbed,
+					Math.round( c.currentDeviation * 100 ) / 100,
+					Math.round( c.maxDeviation * 100 ) / 100,
+					Math.round( c.minDeviation * 100 ) / 100,
+					Math.round( c.slopeFromMaxDeviation * 1000 ) / 1000,
+					Math.round( c.slopeFromMinDeviation * 1000 ) / 1000
+				);
+			
+			return results;
 		}
 		
 		private static function calcMealCOB(inputs:Object):Object

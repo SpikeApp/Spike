@@ -25,7 +25,7 @@ package model
 		
 		public static function init():void
 		{
-			setInterval(test, 15000);
+			//setInterval(test, 15000);
 		}
 		
 		private static function test():void
