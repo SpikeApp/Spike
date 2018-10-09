@@ -1,5 +1,6 @@
 package model
 {
+	import flash.utils.getTimer;
 	import flash.utils.setInterval;
 	
 	import mx.utils.ObjectUtil;
@@ -24,7 +25,7 @@ package model
 		
 		public static function init():void
 		{
-			//setInterval(test, 15000);
+			setInterval(test, 15000);
 		}
 		
 		private static function test():void
@@ -37,11 +38,13 @@ package model
 			var i:int;
 			
 			var regularCOB:Number = TreatmentsManager.getTotalCOB(now);
+			
+			var timer:Number = getTimer();
 			var openAPSCOB:Object = TreatmentsManager.getTotalCOBOpenAPS(now);
+			trace("took:", (getTimer() - timer) / 1000 + "sec");
 			
 			trace("regularCOB", regularCOB);
-			trace("openAPSCOB", openAPSCOB.mealCOB);
-			trace("openAPSCarbs", openAPSCOB.carbs);
+			trace("openAPSCOB", ObjectUtil.toString(openAPSCOB));
 			
 			return;
 			
@@ -50,7 +53,7 @@ package model
 			trace("rapid-acting", ObjectUtil.toString(TreatmentsManager.getTotalIOBOpenAPS(new Date().valueOf(), "rapid-acting")));
 			trace("ultra-rapid", ObjectUtil.toString(TreatmentsManager.getTotalIOBOpenAPS(new Date().valueOf(), "ultra-rapid")));
 			
-			var regularIOB:Number = TreatmentsManager.getTotalIOBNightscout(new Date().valueOf());
+			var regularIOB:Number = TreatmentsManager.getTotalIOB(new Date().valueOf());
 			trace("Regular IOB", regularIOB);
 			trace("Regular Activity", TreatmentsManager.totalActivity);
 			

@@ -8,8 +8,6 @@ package treatments
 	import flash.text.SoftKeyboardType;
 	import flash.utils.Dictionary;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -47,7 +45,6 @@ package treatments
 	import feathers.layout.VerticalLayout;
 	
 	import model.ModelLocator;
-	import model.Predictions;
 	
 	import services.CalibrationService;
 	import services.NightscoutService;
@@ -89,7 +86,6 @@ package treatments
 		public static var pumpCOB:Number = 0;
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 		private static var foodManager:FoodManager;
-		public static var totalActivity:Number = 0;
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -215,14 +211,17 @@ package treatments
 			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, lastCalibration.uniqueId);
 		}
 		
-		public static function getTotalIOBNightscout(time:Number):Number
+		public static function getTotalIOB(time:Number):IOBCalcTotals
 		{
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
-				return pumpIOB;
+			{
+				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN);
+			}
 			
 			var totalIOB:Number = 0;
-			totalActivity = 0;
+			var totalActivity:Number = 0;
+			var bolusInsulin:Number = 0;
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
@@ -230,20 +229,32 @@ package treatments
 				for (var i:int = 0; i < loopLength; i++) 
 				{
 					var treatment:Treatment = treatmentsList[i];
-					if (treatment != null && (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS))
+					if (treatment != null && treatment.insulinAmount > 0)
 					{
-						totalIOB += treatment.calculateIOBNightscout(time);
-						totalActivity += !isNaN(treatment.activityContrib) ? treatment.activityContrib : 0;
+						var treatmentIOBCalc:IOBCalc = treatment.calculateIOBNightscout(time);
+						totalIOB += treatmentIOBCalc.iobContrib;
+						totalActivity += treatmentIOBCalc.activityContrib;
+						if (treatmentIOBCalc.iobContrib > 0)
+							bolusInsulin += treatment.insulinAmount;
 					}
 				}
 			}
 			
-			totalIOB = Math.floor(totalIOB * 100) / 100;
-			
 			if (isNaN(totalIOB))
 				totalIOB = 0;
+			else
+				totalIOB = Math.floor(totalIOB * 100) / 100;
 			
-			return totalIOB;
+			var results:IOBCalcTotals = new IOBCalcTotals
+			(
+				time,
+				totalActivity,
+				totalIOB,
+				totalIOB,
+				bolusInsulin
+			);
+			
+			return results;
 		}
 		
 		public static function getTotalIOBOpenAPS(time:Number, curve:String):IOBCalcTotals
@@ -370,7 +381,6 @@ package treatments
 			
 			var isDecaying:Number = 0;
 			var lastDecayedBy:Number = 0;
-			totalActivity = 0;
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
@@ -397,12 +407,10 @@ package treatments
 								var actStart:Number = 0;
 								if (true)//(lastDecayedBy != 0)
 								{
-									getTotalIOBNightscout(lastDecayedBy);
-									actStart = totalActivity;
+									actStart = getTotalIOB(lastDecayedBy).activity;
 								}
 								
-								getTotalIOBNightscout(cCalc.decayedBy);
-								var actEnd:Number = totalActivity;
+								var actEnd:Number = getTotalIOB(cCalc.decayedBy).activity;
 								
 								var avgActivity:Number = (actStart + actEnd) / 2;
 								var delayedCarbs:Number = ( avgActivity *  liverSensRatio / isf ) * ic;
@@ -465,13 +473,14 @@ package treatments
 			
 			var COB_inputs:Object = 
 			{
-				glucose_data: ModelLocator.bgReadings,
+				glucose_data: ModelLocator.bgReadings.concat().reverse(),
 				iob_inputs: iob_inputs,
 				mealTime: mealCarbTime
 			};
 			
 			var mealCOB:Number = 0;
 			var carbsToRemove:Number = 0;
+			var carbsAbsorbed:Number = 0;
 			
 			var numberOfTreatments:int = treatmentsList.length;
 			for (var i:int = 0; i < numberOfTreatments; i++) 
@@ -492,6 +501,7 @@ package treatments
 						lastCarbTime = Math.max(lastCarbTime, treatmentTime);
 						
 						var myCarbsAbsorbed:Number = calcMealCOB(COB_inputs).carbsAbsorbed;
+						carbsAbsorbed += myCarbsAbsorbed;
 						var myMealCOB:Number = Math.max(0, carbs - myCarbsAbsorbed);
 						
 						if (!isNaN(myMealCOB))
@@ -525,8 +535,6 @@ package treatments
 			COB_inputs.mealTime = time - (6 * 60 * 60 * 1000);
 			var c:Object = calcMealCOB(COB_inputs);
 			
-			//trace("c", ObjectUtil.toString(c.allDeviations));
-			
 			// if currentDeviation is null or maxDeviation is 0, set mealCOB to 0 for zombie-carb safety
 			if (c.currentDeviation == null || isNaN(c.currentDeviation)) 
 			{
@@ -543,13 +551,14 @@ package treatments
 			return {
 				carbs: Math.round( carbs * 1000 ) / 1000,
 				//mealCOB: Math.round( mealCOB ),
-				mealCOB: mealCOB,
+				mealCOB: Math.round(mealCOB * 10) / 10,
+				carbsAbsorbed: carbsAbsorbed,
 				currentDeviation: Math.round( c.currentDeviation * 100 ) / 100,
 				maxDeviation: Math.round( c.maxDeviation * 100 ) / 100,
 				minDeviation: Math.round( c.minDeviation * 100 ) / 100,
 				slopeFromMaxDeviation: Math.round( c.slopeFromMaxDeviation * 1000 ) / 1000,
 				slopeFromMinDeviation: Math.round( c.slopeFromMinDeviation * 1000 ) / 1000,
-				allDeviations: c.allDeviations,
+				//allDeviations: c.allDeviations,
 				lastCarbTime: lastCarbTime,
 				bwFound: bwFound
 			};
@@ -587,21 +596,23 @@ package treatments
 			for (i = 1; i < glucoseDataLength; ++i) //218
 			{
 				var bgReading:BgReading = glucose_data[i];
+				var bgCalculatedValue:Number = bgReading.calculatedValue;
+				var spikeBgTime:Number = bgReading.timestamp;
 				var lastbgTime:Number;
 				
 				if (bgReading == null)
 					continue;
 				
-				if (!isNaN(bgReading.timestamp))
+				if (!isNaN(spikeBgTime))
 				{
-					bgTime = bgReading.timestamp;
+					bgTime = spikeBgTime;
 				}
 				else
 				{
 					trace("Could not determine BG time");
 				}
 				
-				if (isNaN(bgReading.calculatedValue) || bgReading.calculatedValue < 39) 
+				if (isNaN(bgCalculatedValue) || bgCalculatedValue < 39) 
 				{
 					// Skip reading
 					continue;
@@ -613,6 +624,10 @@ package treatments
 				{
 					continue;
 				} 
+				else if (foundPreMealBG)
+				{
+					break;
+				}
 				else if (hoursAfterMeal < 0) 
 				{
 					//console.error("Found pre-meal BG:",glucose_data[i].glucose, bgTime, Math.round(hoursAfterMeal*100)/100);
@@ -2652,7 +2667,7 @@ package treatments
 			{
 				var treatment:Treatment = treatmentsList[i];
 				
-				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS) && treatment.calculateIOBNightscout(now) > 0)
+				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS) && treatment.calculateIOBNightscout(now).iobContrib > 0)
 				{
 					activeTotalInsulin += treatment.insulinAmount;
 					if (treatment.timestamp < firstTreatmentTimestamp)
@@ -2700,13 +2715,10 @@ package treatments
 							var actStart:Number = 0;
 							if (lastDecayedBy != 0)
 							{
-								getTotalIOBNightscout(lastDecayedBy);
-								actStart = totalActivity;
+								actStart = getTotalIOB(lastDecayedBy).activity;
 							}
 							
-							
-							getTotalIOBNightscout(cCalc.decayedBy);
-							var actEnd:Number = totalActivity;
+							var actEnd:Number = getTotalIOB(cCalc.decayedBy).activity;
 							
 							var avgActivity:Number = (actStart + actEnd) / 2;
 							var delayedCarbs:Number = ( avgActivity *  liverSensRatio / isf ) * ic;

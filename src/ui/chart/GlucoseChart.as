@@ -922,7 +922,7 @@ package ui.chart
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
-				IOBPill.setValue(GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOBNightscout(time)));
+				IOBPill.setValue(GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(time).iob));
 				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
 			
@@ -3558,7 +3558,7 @@ package ui.chart
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 				return;
 			
-			if (TreatmentsManager.getTotalIOBNightscout(new Date().valueOf()) <= 0)
+			if (TreatmentsManager.getTotalIOB(new Date().valueOf()).iob <= 0)
 				return;
 			
 			var touch:Touch = e.getTouch(stage);
@@ -3630,13 +3630,13 @@ package ui.chart
 			var firstTreatmentTimestamp:Number = info.timestamp;
 			var dataPoints:Array = new Array();
 			var pointInTime:Number = firstTreatmentTimestamp;
-			var dataPoint:Number = type == "insulin" ? TreatmentsManager.getTotalIOBNightscout(pointInTime) : TreatmentsManager.getTotalCOB(pointInTime);
+			var dataPoint:Number = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime).iob : TreatmentsManager.getTotalCOB(pointInTime);
 			dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
 			
 			while (dataPoint >= 0)
 			{
 				pointInTime += TimeSpan.TIME_2_MINUTES_30_SECONDS;
-				dataPoint = type == "insulin" ? TreatmentsManager.getTotalIOBNightscout(pointInTime) : TreatmentsManager.getTotalCOB(pointInTime);
+				dataPoint = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime).iob : TreatmentsManager.getTotalCOB(pointInTime);
 				dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
 				
 				if (dataPoint == 0)

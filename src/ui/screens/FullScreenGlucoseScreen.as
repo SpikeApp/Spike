@@ -208,7 +208,7 @@ package ui.screens
 			
 			/* IOB/COB Display Label */
 			var now:Number = new Date().valueOf();
-			IOBCOBDisplay = GraphLayoutFactory.createChartStatusText(timeAgoColor != 0 ? "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOBNightscout(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) : "", timeAgoColor, infoFontSize, Align.CENTER, false, Constants.stageWidth);
+			IOBCOBDisplay = GraphLayoutFactory.createChartStatusText(timeAgoColor != 0 ? "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) : "", timeAgoColor, infoFontSize, Align.CENTER, false, Constants.stageWidth);
 			var IOBCOBLayoutData:AnchorLayoutData = new AnchorLayoutData();
 			if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				IOBCOBLayoutData.bottom = 10;
@@ -258,7 +258,7 @@ package ui.screens
 			/* IOB / COB Display Label */
 			var now:Number = new Date().valueOf();
 			IOBCOBDisplay.fontStyles.color = timeAgoColor;
-			IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOBNightscout(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+			IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
 		}
 		
 		private function calculateValues():void
@@ -423,7 +423,7 @@ package ui.screens
 			{
 				var now:Number = new Date().valueOf();
 				IOBCOBDisplay.fontStyles.color = timeAgoColor;
-				IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOBNightscout(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+				IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
 			}
 		}
 		
@@ -622,7 +622,7 @@ package ui.screens
 			{
 				var now:Number = new Date().valueOf();
 				IOBCOBDisplay.fontStyles.color = timeAgoColor;
-				IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOBNightscout(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+				IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
 			}
 		}
 		

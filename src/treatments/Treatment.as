@@ -34,7 +34,6 @@ package treatments
 		public var needsAdjustment:Boolean = false;
 		public var carbDelayTime:Number = 20;
 		public var basalDuration:Number = 0;
-		public var activityContrib:Number = Number.NaN;
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = Number.NaN, basalDuration:Number = 0)
 		{
@@ -61,18 +60,16 @@ package treatments
 		/**
 		 * IOB Calculation Algorithms (Nightscout & OpenAPS)
 		 */
-		public function calculateIOBNightscout(time:Number):Number
+		public function calculateIOBNightscout(time:Number):IOBCalc
 		{
-			activityContrib = 0;
-			
 			if (insulinAmount == 0 || time < timestamp || time - (dia * 60 * 60 * 1000) > timestamp + TimeSpan.TIME_10_MINUTES)//If it's not an insulin treatment or requested time is before treatment time
 			{
-				return 0;
+				return new IOBCalc(0, 0);
 			}
 			
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
-			var iob:Number;
-			var activity:Number;
+			var iob:Number = 0;
+			var activity:Number = 0;
 			var isf:Number = Number(ProfileManager.getProfileByTime(new Date().valueOf()).insulinSensitivityFactors);
 			
 			if (minAgo < INSULIN_PEAK) 
@@ -92,10 +89,13 @@ package treatments
 			
 			if (iob < 0.001 || isNaN(iob)) iob = 0;
 			
-			if (!isNaN(isf))
-				activityContrib = activity;
+			var result:IOBCalc = new IOBCalc
+			(
+				activity,
+				iob
+			);
 			
-			return iob;
+			return result;
 		}
 		
 		public function calculateIOBOpenAPS(time:Number, curve:String, dia:Number, peak:Number, profile:Profile):IOBCalc
