@@ -402,6 +402,7 @@ package treatments
 			bwGlucoseStepper.validate();
 			bwCurrentGlucoseContainer.addChild(bwGlucoseStepper);
 			
+			bwGlucoseLabel.width = contentWidth - bwGlucoseLabel.x - bwGlucoseStepper.width - 12;
 			bwCurrentGlucoseContainer.validate();
 			bwGlucoseStepper.x = contentWidth - bwGlucoseStepper.width + 12;
 			
@@ -427,9 +428,7 @@ package treatments
 			bwCarbsStepper.validate();
 			bwCarbsContainer.addChild(bwCarbsStepper);
 			
-			bwCarbsLabel.validate();
-			bwCarbsStepper.validate();
-			bwCarbsLabelContainer.validate();
+			bwCarbsLabel.width = contentWidth - bwCarbsLabel.x - bwCarbsStepper.width - 12;
 			bwCarbsContainer.validate();
 			bwCarbsStepper.x = contentWidth - bwCarbsStepper.width + 12;
 			
@@ -451,6 +450,7 @@ package treatments
 			
 			bwFoodsLabel.validate();
 			bwFoodLoaderButton.validate();
+			bwFoodsLabel.width = contentWidth - bwFoodsLabel.x - bwFoodLoaderButton.width - 12;
 			bwFoodsContainer.validate();
 			bwFoodLoaderButton.x = contentWidth - bwFoodLoaderButton.width;
 			
@@ -468,6 +468,7 @@ package treatments
 			bwCarbsOffsetStepper.validate();
 			bwCarbsOffsetContainer.addChild(bwCarbsOffsetStepper);
 			
+			bwCarbsOffsetLabel.width = contentWidth - bwCarbsOffsetLabel.x - bwCarbsOffsetStepper.width - 12;
 			bwCarbsOffsetContainer.validate();
 			bwCarbsOffsetStepper.x = contentWidth - bwCarbsOffsetStepper.width + 12;
 			
@@ -507,6 +508,7 @@ package treatments
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
 			
 			bwCarbTypePicker.validate();
+			bwCarbTypeLabel.width = contentWidth - bwCarbTypeLabel.x - bwCarbTypePicker.width - 12;
 			bwCarbTypeContainer.validate();
 			bwCarbTypePicker.x = contentWidth - bwCarbTypePicker.width + 1;
 			
@@ -597,6 +599,7 @@ package treatments
 				}
 				
 				bwInsulinTypePicker.validate();
+				bwInsulinTypeLabel.width = contentWidth - bwInsulinTypeLabel.x - bwInsulinTypePicker.width - 12;
 				bwInsulinTypeContainer.validate();
 				bwInsulinTypePicker.x = contentWidth - bwInsulinTypePicker.width + 1;
 			}
@@ -663,6 +666,7 @@ package treatments
 			bwTrendContainer.addChild(bwCurrentTrendLabel);
 			
 			bwCurrentTrendLabel.validate();
+			bwTrendLabel.width = contentWidth - bwTrendLabel.x - 80;
 			bwTrendContainer.validate();
 			bwCurrentTrendLabel.x = contentWidth - bwCurrentTrendLabel.width;
 			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
@@ -689,6 +693,7 @@ package treatments
 			bwIOBContainer.addChild(bwCurrentIOBLabel);
 			
 			bwCurrentIOBLabel.validate();
+			bwIOBLabel.width = contentWidth - bwIOBLabel.x - 80;
 			bwIOBContainer.validate();
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
@@ -714,6 +719,7 @@ package treatments
 			bwCOBContainer.addChild(bwCurrentCOBLabel);
 			
 			bwCurrentCOBLabel.validate();
+			bwCOBLabel.width = contentWidth - bwCOBLabel.x - 80;
 			bwCOBContainer.validate();
 			bwCurrentCOBLabel.x = contentWidth - bwCurrentCOBLabel.width;
 			
@@ -759,6 +765,7 @@ package treatments
 			bwExerciseTimePicker.addEventListener(Event.CHANGE, onExerciseTimeChanged);
 			bwExerciseTimeContainer.addChild(bwExerciseTimePicker);
 			bwExerciseTimePicker.validate();
+			bwExerciseTimeLabel.width = contentWidth - bwExerciseTimeLabel.x - bwExerciseTimePicker.width - 12;
 			bwExerciseTimePicker.x = contentWidth - bwExerciseTimePicker.width;
 			
 			bwExerciseIntensityContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
@@ -785,6 +792,7 @@ package treatments
 			bwExerciseIntensityPicker.addEventListener(Event.CHANGE, onExerciseIntensityChanged);
 			bwExerciseIntensityContainer.addChild(bwExerciseIntensityPicker);
 			bwExerciseIntensityPicker.validate();
+			bwExerciseIntensityLabel.width = contentWidth - bwExerciseIntensityLabel.x - bwExerciseIntensityPicker.width - 12;
 			bwExerciseIntensityPicker.x = contentWidth - bwExerciseIntensityPicker.width;
 			
 			bwExerciseDurationContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
@@ -815,6 +823,7 @@ package treatments
 			bwExerciseDurationPicker.addEventListener(Event.CHANGE, onExerciseDurationChanged);
 			bwExerciseDurationContainer.addChild(bwExerciseDurationPicker);
 			bwExerciseDurationPicker.validate();
+			bwExerciseDurationLabel.width = contentWidth - bwExerciseDurationLabel.x - bwExerciseDurationPicker.width - 12;
 			bwExerciseDurationPicker.x = contentWidth - bwExerciseDurationPicker.width;
 			
 			bwExerciseAmountContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
@@ -829,6 +838,7 @@ package treatments
 			bwExerciseAmountStepper = LayoutFactory.createNumericStepper(0, 100, Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_EXERCISE_BEFORE_LOW_15MIN)), 1);
 			bwExerciseAmountStepper.addEventListener(Event.CHANGE, onExerciseAdjustmentChanged);
 			bwExerciseAmountStepper.validate();
+			bwExerciseAmountLabel.width = contentWidth - bwExerciseAmountLabel.x - bwExerciseAmountStepper.width - 12;
 			bwExerciseAmountContainer.addChild(bwExerciseAmountStepper);
 			bwExerciseAmountStepper.x = contentWidth - bwExerciseAmountStepper.width + 12;
 			
@@ -861,6 +871,7 @@ package treatments
 			bwSicknessAmountStepper.validate();
 			bwSicknessAmountContainer.addChild(bwSicknessAmountStepper);
 			
+			bwSicknessLabel.width = contentWidth - bwSicknessLabel.x - bwSicknessAmountStepper.width - 12;
 			bwSicknessContainer.validate();
 			bwSicknessAmountStepper.x = contentWidth - bwSicknessAmountStepper.width + 12;
 			
@@ -894,6 +905,7 @@ package treatments
 			bwOtherCorrectionAmountStepper.validate();
 			bwOtherCorrectionAmountContainer.addChild(bwOtherCorrectionAmountStepper);
 			
+			bwOtherCorrectionLabel.width = contentWidth - bwOtherCorrectionLabel.x - bwOtherCorrectionAmountStepper.width - 12;
 			bwOtherCorrectionContainer.validate();
 			bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
 			
