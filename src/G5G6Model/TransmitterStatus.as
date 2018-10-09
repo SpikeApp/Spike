@@ -13,7 +13,7 @@ package G5G6Model
 		public static const RESIST_BAD_G5:int = 1400;
 		public static const RESIST_NOTICE_G5:int = 1000;
 		public static const RESIST_NORMAL_G5:int = 750
-		public static const RESIST_BAD_G6:int = 1500;
+		public static const RESIST_BAD_G6:int = 1450;
 		public static const RESIST_NOTICE_G6:int = 1300;
 		public static const RESIST_NORMAL_G6:int = 1200
 		
