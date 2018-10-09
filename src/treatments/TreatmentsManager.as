@@ -519,6 +519,7 @@ package treatments
 			var maxCarbs:Number = 0;
 			var mealCarbTime:Number = time;
 			var lastCarbTime:Number = 0;
+			var i:int = 0
 			
 			var iob_inputs:Object = 
 			{
@@ -526,9 +527,28 @@ package treatments
 				history: treatmentsList
 			};
 			
+			// We make a copy of all readings and remove the ones that arrived after the desired COB time.
+			// This makes the OpenAPS COB algorithm compatible with retro values.
+			// If then reverse the array so the last reading comes first. This is to make it compatible with how OpenAPS expects the data to be fed.
+			var availableReadings:Array = ModelLocator.bgReadings.concat();
+			for(i = availableReadings.length - 1 ; i >= 0; i--)
+			{
+				var readingCandidate:BgReading = availableReadings[i];
+				if (readingCandidate != null)
+				{
+					if (readingCandidate.timestamp > time)
+					{
+						availableReadings.pop();
+					}
+					else
+						break;
+				}
+			}
+			availableReadings.reverse();
+			
 			var COB_inputs:Object = 
 			{
-				glucose_data: ModelLocator.bgReadings.concat().reverse(),
+				glucose_data: availableReadings,
 				iob_inputs: iob_inputs,
 				mealTime: mealCarbTime
 			};
@@ -538,7 +558,7 @@ package treatments
 			var carbsAbsorbed:Number = 0;
 			
 			var numberOfTreatments:int = treatmentsList.length;
-			for (var i:int = 0; i < numberOfTreatments; i++) 
+			for (i = 0; i < numberOfTreatments; i++) 
 			{
 				var treatment:Treatment = treatmentsList[i];
 				var now:Number = time;
@@ -857,9 +877,6 @@ package treatments
 					//console.error("carbsAbsorbed:",carbsAbsorbed,"absorbed:",absorbed,"bgTime:",bgTime,"BG:",bucketed_data[i].glucose)
 					carbsAbsorbed += absorbed;
 				}
-			}
-			if(maxDeviation>0) {
-				trace("currentDeviation:",currentDeviation,"maxDeviation:",maxDeviation,"slopeFromMaxDeviation:",slopeFromMaxDeviation);
 			}
 			
 			var output:Object = {
