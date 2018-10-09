@@ -9,14 +9,16 @@ package treatments
 		public var time:Number;
 		public var lastBolusTime:Number;
 		public var lastTemp:Number;
+		public var firstInsulinTreatmentTime:Number;
 		
-		public function IOBCalcTotals(time:Number, activity:Number, iob:Number, bolusiob:Number, bolusinsulin:Number)
+		public function IOBCalcTotals(time:Number, activity:Number, iob:Number, bolusiob:Number, bolusinsulin:Number, firstInsulinTreatmentTime:Number)
 		{
 			this.time = time;
 			this.activity = activity;
 			this.iob = iob;
 			this.bolusiob = bolusiob;
 			this.bolusinsulin = bolusinsulin;
+			this.firstInsulinTreatmentTime = firstInsulinTreatmentTime;
 		}
 	}
 }

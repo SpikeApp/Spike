@@ -214,7 +214,7 @@ package treatments
 		public static function getTotalIOB(time:Number):IOBCalcTotals
 		{
 			//var algorithm:String = "nightscout";
-			var algorithm:String = "openaps";
+			var algorithm:String = "nightscout";
 			
 			if (algorithm == "nightscout")
 			{
@@ -233,12 +233,13 @@ package treatments
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
-				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN);
+				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN, Number.NaN);
 			}
 			
 			var totalIOB:Number = 0;
 			var totalActivity:Number = 0;
 			var bolusInsulin:Number = 0;
+			var firstInsulinTreatmentTime:Number = time;
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
@@ -252,7 +253,14 @@ package treatments
 						totalIOB += treatmentIOBCalc.iobContrib;
 						totalActivity += treatmentIOBCalc.activityContrib;
 						if (treatmentIOBCalc.iobContrib > 0)
+						{
 							bolusInsulin += treatment.insulinAmount;
+							
+							if (treatment.timestamp < firstInsulinTreatmentTime)
+							{
+								firstInsulinTreatmentTime = treatment.timestamp;
+							}
+						}
 					}
 				}
 			}
@@ -268,7 +276,8 @@ package treatments
 					totalActivity,
 					totalIOB,
 					totalIOB,
-					bolusInsulin
+					bolusInsulin,
+					firstInsulinTreatmentTime
 				);
 			
 			return results;
@@ -284,6 +293,7 @@ package treatments
 			var bolusiob:Number = 0;
 			var bolusinsulin:Number = 0;
 			var activity:Number = 0;
+			var firstInsulinTreatmentTime:Number = time;
 			
 			var curveDefaults:Object = {};
 			curveDefaults["bilinear"] = 
@@ -338,20 +348,30 @@ package treatments
 					{
 						var tIOB:IOBCalc = treatment.calculateIOBOpenAPS(time, curve, dia, peak, profile);
 						
-						if (tIOB != null && !isNaN(tIOB.iobContrib)) 
-						{ 
-							iob += tIOB.iobContrib; 
-						}
-						
-						if (tIOB != null && !isNaN(tIOB.activityContrib)) 
-						{ 
-							activity += tIOB.activityContrib; 
-						}
-						
-						if (tIOB != null && !isNaN(tIOB.iobContrib)) 
+						if (tIOB != null)
 						{
-							bolusiob += tIOB.iobContrib;
-							bolusinsulin += treatment.insulinAmount;
+							if (!isNaN(tIOB.iobContrib))
+							{
+								iob += tIOB.iobContrib;
+								bolusiob += tIOB.iobContrib;
+								bolusinsulin += treatment.insulinAmount;
+								
+								if (tIOB.iobContrib > 0 && treatment.timestamp < firstInsulinTreatmentTime)
+								{
+									firstInsulinTreatmentTime = treatment.timestamp;
+								}
+							}
+							
+							if (!isNaN(tIOB.activityContrib))
+							{
+								activity += tIOB.activityContrib;
+							}
+							
+							if (!isNaN(tIOB.iobContrib)) 
+							{
+								bolusiob += tIOB.iobContrib;
+								bolusinsulin += treatment.insulinAmount;
+							}
 						}
 					}
 				}
@@ -363,7 +383,8 @@ package treatments
 				Math.round(activity * 10000) / 10000,
 				Math.round(iob * 1000) / 1000,
 				Math.round(bolusiob * 1000) / 1000,
-				Math.round(bolusinsulin * 1000) / 1000
+				Math.round(bolusinsulin * 1000) / 1000,
+				firstInsulinTreatmentTime
 			);
 			
 			return results;
@@ -384,7 +405,7 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):CobCalcTotals 
 		{
-			var algorith:String = "openaps";
+			var algorith:String = "nightscout";
 			
 			if (algorith == "nightscout")
 			{
