@@ -10,9 +10,12 @@ package G5G6Model
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB_G5:int = 290;
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6:int = 290;
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB_G6:int = 270;
-		public static const RESIST_BAD_G5_G6:int = 1400;
-		public static const RESIST_NOTICE_G5_G6:int = 1000;
-		public static const RESIST_NORMAL_G5_G6:int = 750
+		public static const RESIST_BAD_G5:int = 1400;
+		public static const RESIST_NOTICE_G5:int = 1000;
+		public static const RESIST_NORMAL_G5:int = 750
+		public static const RESIST_BAD_G6:int = 1500;
+		public static const RESIST_NOTICE_G6:int = 1300;
+		public static const RESIST_NORMAL_G6:int = 1200
 		
 		private var _batteryLevel:String;
 
