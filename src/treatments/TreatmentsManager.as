@@ -230,7 +230,7 @@ package treatments
 		
 		public static function getTotalIOBNightscout(time:Number):IOBCalcTotals
 		{
-			//OpenAPS/Loop Support. Return value fetched from NS.
+			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
 				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN, Number.NaN);
@@ -265,10 +265,7 @@ package treatments
 				}
 			}
 			
-			if (isNaN(totalIOB))
-				totalIOB = 0;
-			else
-				totalIOB = Math.floor(totalIOB * 100) / 100;
+			totalIOB = isNaN(totalIOB) ? 0 : Math.floor(totalIOB * 100) / 100;
 			
 			var results:IOBCalcTotals = new IOBCalcTotals
 				(
@@ -285,6 +282,12 @@ package treatments
 		
 		public static function getTotalIOBOpenAPS(time:Number, curve:String):IOBCalcTotals
 		{
+			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN, Number.NaN);
+			}
+			
 			var now:Number = time;
 			var profile:Profile = ProfileManager.getProfileByTime(now);
 			var dia:Number = 3; //We set a default DIA of 3 but this will be overriden by each individual DIA
@@ -440,6 +443,7 @@ package treatments
 			var lastDecayedBy:Number = 0;
 			var lastCarbTime:Number = time;
 			var activeCarbs:Number = 0;
+			var firstCarbTime:Number = time;
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
@@ -496,6 +500,11 @@ package treatments
 								{
 									lastCarbTime = treatment.timestamp;
 									activeCarbs = treatment.carbs;
+									
+									if (treatment.timestamp < firstCarbTime)
+									{
+										firstCarbTime = treatment.timestamp;
+									}
 								}
 							} 
 							else 
@@ -518,6 +527,7 @@ package treatments
 					totalCOB,
 					activeCarbs,
 					lastCarbTime,
+					firstCarbTime,
 					activeCarbs - totalCOB
 				);
 			
@@ -540,6 +550,7 @@ package treatments
 			var maxCarbs:Number = 0;
 			var mealCarbTime:Number = time;
 			var lastCarbTime:Number = 0;
+			var firstActiveCarbTreatmentTime:Number = time;
 			var i:int = 0
 			
 			var iob_inputs:Object = 
@@ -603,6 +614,12 @@ package treatments
 						if (!isNaN(myMealCOB))
 						{
 							mealCOB = Math.max(mealCOB, myMealCOB);
+							
+							if (myMealCOB > 0 && treatment.timestamp < firstActiveCarbTreatmentTime)
+							{
+								firstActiveCarbTreatmentTime = treatment.timestamp;
+							}
+								
 						}
 						else
 						{
@@ -650,6 +667,7 @@ package treatments
 					Math.round(mealCOB * 10) / 10,
 					Math.round( carbs * 1000 ) / 1000,
 					lastCarbTime,
+					firstActiveCarbTreatmentTime,
 					carbsAbsorbed,
 					Math.round( c.currentDeviation * 100 ) / 100,
 					Math.round( c.maxDeviation * 100 ) / 100,

@@ -12,12 +12,14 @@ package treatments
 		public var minDeviation:Number;
 		public var slopeFromMaxDeviation:Number;
 		public var slopeFromMinDeviation:Number;
+		public var firstCarbTime:Number;
 		
 		public function CobCalcTotals(time:Number, 
 									  cob:Number, 
 									  carbs:Number = Number.NaN, 
 									  lastCarbTime:Number = Number.NaN, 
-									  carbsAbsorbed:Number = Number.NaN, 
+									  firstCarbTime:Number = Number.NaN,
+									  carbsAbsorbed:Number = Number.NaN,
 									  currentDeviation:Number = Number.NaN, 
 									  maxDeviation:Number = Number.NaN, 
 									  minDeviation:Number = Number.NaN, 
@@ -35,6 +37,7 @@ package treatments
 			this.minDeviation = minDeviation;
 			this.slopeFromMaxDeviation = slopeFromMaxDeviation;
 			this.slopeFromMinDeviation = slopeFromMinDeviation;
+			this.firstCarbTime = firstCarbTime;
 		}
 	}
 }

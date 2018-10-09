@@ -56,6 +56,8 @@ package ui.chart
 	import starling.utils.Align;
 	import starling.utils.SystemUtil;
 	
+	import treatments.CobCalcTotals;
+	import treatments.IOBCalcTotals;
 	import treatments.Insulin;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
@@ -3558,9 +3560,6 @@ package ui.chart
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 				return;
 			
-			if (TreatmentsManager.getTotalIOB(new Date().valueOf()).iob <= 0)
-				return;
-			
 			var touch:Touch = e.getTouch(stage);
 			
 			if(touch != null && touch.phase == TouchPhase.BEGAN) 
@@ -3568,6 +3567,9 @@ package ui.chart
 				disposeAbsorptionCurves();
 				
 				var graphData:Object = getAbsorptionCurve("insulin");
+				if (graphData == null)
+					return;
+				
 				if (insulinCurve != null) insulinCurve.removeFromParent(true);
 				insulinCurve = graphData.graph;
 				
@@ -3589,9 +3591,6 @@ package ui.chart
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 				return;
 			
-			if (TreatmentsManager.getTotalCOB(new Date().valueOf()).cob <= 0)
-				return;
-			
 			var touch:Touch = e.getTouch(stage);
 			
 			if(touch != null && touch.phase == TouchPhase.BEGAN) 
@@ -3599,6 +3598,9 @@ package ui.chart
 				disposeAbsorptionCurves();
 				
 				var graphData:Object = getAbsorptionCurve("carbs");
+				if (graphData == null)
+					return;
+				
 				if (carbsCurve != null) carbsCurve.removeFromParent(true);
 				carbsCurve = graphData.graph;
 				
@@ -3624,10 +3626,26 @@ package ui.chart
 			absorptionGraph = new LayoutGroup();
 			absorptionGraph.touchable = false;
 			
+			//Data
+			var initialIOB:IOBCalcTotals;
+			var initialCOB:CobCalcTotals;
+			
+			if (type == "insulin")
+			{
+				initialIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
+				if (initialIOB.iob == 0)
+					return null;
+			}
+			else
+			{
+				initialCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
+				if (initialCOB.cob == 0)
+					return null;
+			}
+			
 			//Data points
-			var info:Object = type == "insulin" ? TreatmentsManager.getTotalActiveInsulin() : TreatmentsManager.getTotalActiveCarbs();
-			var totalTreatmentsData:Number = type == "insulin" ? info.insulin : info.carbs;
-			var firstTreatmentTimestamp:Number = info.timestamp;
+			var totalTreatmentsData:Number = type == "insulin" ? initialIOB.bolusinsulin : initialCOB.carbs;
+			var firstTreatmentTimestamp:Number = type == "insulin" ? initialIOB.firstInsulinTime : initialCOB.firstCarbTime;
 			var dataPoints:Array = new Array();
 			var pointInTime:Number = firstTreatmentTimestamp;
 			var dataPoint:Number = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime).iob : TreatmentsManager.getTotalCOB(pointInTime).cob;
@@ -3809,7 +3827,6 @@ package ui.chart
 			}
 			
 			//Dispose unneded data
-			info = null;
 			if (dataPoints != null)
 			{
 				dataPoints.length = 0;
