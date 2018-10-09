@@ -213,6 +213,25 @@ package treatments
 		
 		public static function getTotalIOB(time:Number):IOBCalcTotals
 		{
+			//var algorithm:String = "nightscout";
+			var algorithm:String = "openaps";
+			
+			if (algorithm == "nightscout")
+			{
+				return getTotalIOBNightscout(time);
+			}
+			else if (algorithm == "openaps")
+			{
+				var curve:String = "bilinear";
+				
+				return getTotalIOBOpenAPS(time, curve);
+			}
+			
+			return getTotalIOBNightscout(time); //Deafults to Nightscout
+		}
+		
+		public static function getTotalIOBNightscout(time:Number):IOBCalcTotals
+		{
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
@@ -246,13 +265,13 @@ package treatments
 				totalIOB = Math.floor(totalIOB * 100) / 100;
 			
 			var results:IOBCalcTotals = new IOBCalcTotals
-			(
-				time,
-				totalActivity,
-				totalIOB,
-				totalIOB,
-				bolusInsulin
-			);
+				(
+					time,
+					totalActivity,
+					totalIOB,
+					totalIOB,
+					bolusInsulin
+				);
 			
 			return results;
 		}

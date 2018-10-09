@@ -198,43 +198,11 @@ package ui.chart
 		
 		public static function formatIOB(IOBValue:Number):String
 		{
-			var value:String = String(IOBValue);
-			var valueLength:int = value.length;
-			var decimalPosition:int = -1;
-			if (value.indexOf(".") != -1)
-				decimalPosition = value.indexOf(".");
-			if (value.indexOf(",") != -1)
-				decimalPosition = value.indexOf(",");
-			
-			if (decimalPosition != -1 && decimalPosition == valueLength - 2)
-				value = value + "0";
-			else if (decimalPosition == -1 && valueLength == 1 && IOBValue != 0)
-				value = value + ".00";
-			else if (IOBValue == 0)
-				value = "0.00";
-			
-			value += "U";
-			
-			return value;
+			return IOBValue.toFixed(2) + "U";
 		}
 		public static function formatCOB(COBValue:Number):String
 		{
-			var value:String = String(COBValue);
-			var valueLength:int = value.length;
-			var decimalPosition:int = -1;
-			if (value.indexOf(".") != -1)
-				decimalPosition = value.indexOf(".");
-			if (value.indexOf(",") != -1)
-				decimalPosition = value.indexOf(",");
-			
-			if (decimalPosition == -1 && COBValue != 0)
-				value = value + ".0";
-			else if (COBValue == 0)
-				value = "0.0";
-			
-			value += "g";
-			
-			return value;
+			return COBValue.toFixed(1) + "g";
 		}
 		
 		public static function getRawGlucose(targetBGReading:BgReading = null, lastestCalibration:Calibration = null):Number 
