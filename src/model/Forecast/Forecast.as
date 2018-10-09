@@ -47,7 +47,7 @@ package model.Forecast
 		private static function PredicBG(minutes:uint):Object
 		{
 			//Define common variables
-			var five_min_blocks:int = minutes / 5;
+			var five_min_blocks:Number = Math.ceil(minutes / 5);
 			var now:Number = new Date().valueOf();
 			var i:int;
 			
@@ -76,24 +76,15 @@ package model.Forecast
 				target_bg = (min_bg + max_bg) / 2;
 			}
 			
-			//var currentIOB:Number = TreatmentsManager.getTotalIOB(now);
-			//var iob_data:Object = { iob: currentIOB, activity: TreatmentsManager.totalActivity };
-			var iob_data:Object = { iob: bilinearIOB.iob, activity: bilinearIOB.activity };
+			var nowIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now);
+			var iob_data:Object = { iob: nowIOB.iob, activity: nowIOB.activity };
 			var iobArray:Array = [iob_data]; //THIS DOESN'T SEEM RIGHT. SHOULD HAVE MORE DATA POINTS?????
 			
-			
-			
-			//60 minutes
-			for (i = 1; i < 36; i++) 
+			for (i = 1; i < five_min_blocks; i++) 
 			{
-				//var tempIOB:Number = TreatmentsManager.getTotalIOB(now + (i * TimeSpan.TIME_5_MINUTES));
-				//var tempActivity:Number = TreatmentsManager.totalActivity;
-				
-				var tempBilinearIOB:Object = TreatmentsManager.getTotalIOBOpenAPS(now + (i * TimeSpan.TIME_5_MINUTES), "bilinear");
-				
-				iobArray.push( { iob: tempBilinearIOB.iob, activity: tempBilinearIOB.activity } );
+				var futureIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now + (i * TimeSpan.TIME_5_MINUTES));
+				iobArray.push( { iob: futureIOB.iob, activity: futureIOB.activity } );
 			}
-			
 			
 			var tick:Number;
 			
