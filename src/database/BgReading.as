@@ -35,7 +35,7 @@ package database
 			return _calibration;
 		}
 		
-		private var _timestamp:Number;//db
+		public var _timestamp:Number;//db
 		
 		/**
 		 * ms sinds 1 jan 1970 
@@ -45,7 +45,7 @@ package database
 			return _timestamp;
 		}
 		
-		private var _rawData:Number;
+		public var _rawData:Number;
 
 		public function set rawData(value:Number):void
 		{
@@ -100,7 +100,7 @@ package database
 			return _calibrationFlag;
 		}
 		
-		private var _calculatedValue:Number;
+		public var _calculatedValue:Number;
 
 		public function set calculatedValue(value:Number):void
 		{
@@ -316,9 +316,9 @@ package database
 				var cntr:int = ModelLocator.bgReadings.length - 1;
 				var itemsAdded:int = 0;
 				while (cntr > -1 && itemsAdded < number) {
-					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
+					var bgReading:BgReading = ModelLocator.bgReadings[cntr];
 					if (bgReading.sensor != null || ignoreSensorId) {
-						if ((ignoreSensorId || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
+						if ((ignoreSensorId || bgReading.sensor.uniqueId == currentSensorId) && bgReading._calculatedValue != 0 && bgReading._rawData != 0) {
 							returnValue.push(bgReading);
 							itemsAdded++;
 						}

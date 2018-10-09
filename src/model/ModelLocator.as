@@ -51,6 +51,7 @@ package model
 	
 	import utils.Constants;
 	import utils.TimeSpan;
+	import model.Forecast.Forecast;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 
@@ -193,7 +194,7 @@ package model
 				if (APPCENTER_MODE)
 					AppCenterService.init();
 				
-				Predictions.init();
+				Forecast.init();
 			}
 		}
 		

@@ -1,13 +1,16 @@
-package model
+package model.Forecast
 {
 	import flash.utils.getTimer;
 	import flash.utils.setInterval;
+	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
+	
+	import starling.utils.SystemUtil;
 	
 	import treatments.IOBCalcTotals;
 	import treatments.Profile;
@@ -17,58 +20,49 @@ package model
 	
 	import utils.TimeSpan;
 
-	public class Predictions
+	public class Forecast
 	{
-		public function Predictions()
+		public function Forecast()
 		{
 		}
 		
 		public static function init():void
 		{
 			//setInterval(test, 15000);
+			
+			setTimeout( function():void 
+			{
+				
+				var timer:int = getTimer();
+				
+				trace("TESTE", ObjectUtil.toString(getLastGlucose()));
+				
+				trace("took", (getTimer() - timer) / 1000);
+				
+			}, 10000 );
+			
+			
 		}
 		
-		private static function test():void
+		private static function PredicBG(minutes:uint):Object
 		{
-			trace("-------------------------------------------------------------------------------------------");
-			trace("-------------------------------------------------------------------------------------------");
-			trace("-------------------------------------------------------------------------------------------");
-			
+			//Define common variables
+			var five_min_blocks:int = minutes / 5;
 			var now:Number = new Date().valueOf();
 			var i:int;
 			
-			var regularCOB:Number = TreatmentsManager.getTotalCOB(now).cob;
-			
-			var timer:Number = getTimer();
-			var openAPSCOB:Object = TreatmentsManager.getTotalCOBOpenAPS(now);
-			trace("took:", (getTimer() - timer) / 1000 + "sec");
-			
-			trace("regularCOB", regularCOB);
-			trace("openAPSCOB", ObjectUtil.toString(openAPSCOB));
-			
-			return;
-			
-			var bilinearIOB:IOBCalcTotals = TreatmentsManager.getTotalIOBOpenAPS(new Date().valueOf(), "bilinear");
-			trace("Bilinear", ObjectUtil.toString(bilinearIOB));
-			trace("rapid-acting", ObjectUtil.toString(TreatmentsManager.getTotalIOBOpenAPS(new Date().valueOf(), "rapid-acting")));
-			trace("ultra-rapid", ObjectUtil.toString(TreatmentsManager.getTotalIOBOpenAPS(new Date().valueOf(), "ultra-rapid")));
-			
-			var regularIOB:Number = TreatmentsManager.getTotalIOB(new Date().valueOf());
-			trace("Regular IOB", regularIOB);
-			trace("Regular Activity", TreatmentsManager.totalActivity);
-			
 			var glucose_status:Object = getLastGlucose();
-			if (glucose_status == null || isNaN(glucose_status.glucose))
+			if (!glucose_status.is_valid)
 			{
-				trace("Not enough glucose data for predictions!");
-				return;
+				// Not enough glucose data for predictions!
+				return null;
 			}
 			
 			var bgTime:Number = glucose_status.date;
-			var minAgo:Number = round( (now - bgTime) / 60 / 1000 ,1);
+			var minAgo:Number = round( (now - bgTime) / TimeSpan.TIME_1_MINUTE ,1);
 			
 			var bg:Number = glucose_status.glucose;
-			var noise:Number = 1; //Need to implement noise, for now we set it to no noise
+			var noise:Number = glucose_status.noise;
 			
 			var currentProfile:Profile = ProfileManager.getProfileByTime(now);
 			var target_bg:Number = Number(currentProfile.targetGlucoseRates);
@@ -87,9 +81,7 @@ package model
 			var iob_data:Object = { iob: bilinearIOB.iob, activity: bilinearIOB.activity };
 			var iobArray:Array = [iob_data]; //THIS DOESN'T SEEM RIGHT. SHOULD HAVE MORE DATA POINTS?????
 			
-			/**
-			 * 
-			 */
+			
 			
 			//60 minutes
 			for (i = 1; i < 36; i++) 
@@ -102,9 +94,6 @@ package model
 				iobArray.push( { iob: tempBilinearIOB.iob, activity: tempBilinearIOB.activity } );
 			}
 			
-			/**
-			 * 
-			 */
 			
 			var tick:Number;
 			
@@ -233,9 +222,7 @@ package model
 			// remainingCIpeak (mg/dL/5m) = remainingCarbs (g) * CSF (mg/dL/g) * 5 (m/5m) * 1h/60m / (remainingCATime/2) (h)
 			var remainingCIpeak:Number = remainingCarbs * csf * 5 / 60 / (remainingCATime/2);
 			
-			/**
-			 * Setting both to default values but will need to correct this by implementing OpenAPS COB algo
-			 */
+			//Setting both to default values but will need to correct this by implementing OpenAPS COB algo
 			var slopeFromMaxDeviation:Number = 0;
 			var slopeFromMinDeviation:Number = 999;
 			
@@ -581,8 +568,12 @@ package model
 			trace("IOBpredBGs", ObjectUtil.toString(IOBpredBGs));
 			trace("UAMpredBGs", ObjectUtil.toString(UAMpredBGs));
 			trace("ZTpredBGs", ObjectUtil.toString(ZTpredBGs));
-
+		
 		}
+		
+		/**
+		 * Helper Functions
+		 */
 		
 		// Rounds value to 'digits' decimal places
 		private static function round(value:Number, digits:Number = 0):Number
@@ -592,88 +583,94 @@ package model
 			return Math.round(value * scale) / scale;
 		}
 		
-		
-		// we expect BG to rise or fall at the rate of BGI,
-		// adjusted by the rate at which BG would need to rise /
-		// fall to get eventualBG to target over 2 hours
+		// We expect BG to rise or fall at the rate of BGI,
+		// Adjusted by the rate at which BG would need to rise / fall to get eventualBG to target over 2 hours
 		private static function calculate_expected_delta(target_bg:Number, eventual_bg:Number, bgi:Number):Number
 		{
 			// (hours * mins_per_hour) / 5 = how many 5 minute periods in 2h = 24
-			var five_min_blocks:Number = (2 * 60) / 5;
+			var five_min_blocks:Number = 24; //(2 * 60) / 5
 			var target_delta:Number = target_bg - eventual_bg;
 			var expectedDelta:Number = round(bgi + (target_delta / five_min_blocks), 1);
 			
 			return expectedDelta;
 		}
 		
+		// Returns latest glucose and delta data (current and averages)
 		private static function getLastGlucose():Object
 		{
-			var glucose_status:Object = {
-					delta: Number.NaN,
-					glucose: Number.NaN,
-					noise: 1,
-					short_avgdelta: Number.NaN,
-					long_avgdelta: Number.NaN,
-					date: new Date().valueOf()
-			};
-			
-			var data:Array = BgReading.latest(16, CGMBlueToothDevice.isFollower());
-			if (data.length == 0)
+			var glucoseList:Array = BgReading.latest(16, CGMBlueToothDevice.isFollower());
+			var numReadings:int = glucoseList.length;
+			if (numReadings == 0)
 			{
-				trace("User has no readings!");
-				
-				return glucose_status;
+				//User has no readings
+				return {
+					delta: 0,
+					glucose: 0,
+					noise: 0,
+					short_avgdelta: 0,
+					long_avgdelta: 0,
+					date: 0
+				};
 			}
 			
-			var nowGlucose:BgReading = data[0];
+			var nowGlucose:BgReading = glucoseList[0];
 			if (nowGlucose == null)
 			{
-				trace("Last reading is invalid!");
-				
-				return glucose_status;
+				//Last BG Reading is invalid
+				return {
+					delta: 0,
+					glucose: 0,
+					noise: 0,
+					short_avgdelta: 0,
+					long_avgdelta: 0,
+					date: 0
+				};
 			}
 			
-			var now:Object = { glucose: nowGlucose.calculatedValue };
-			var now_date:Number = nowGlucose.timestamp;
-			
+			var now:Object = { glucose: nowGlucose._calculatedValue };
+			var now_date:Number = nowGlucose._timestamp;
 			var change:Number;
 			var last_deltas:Array = [];
 			var short_deltas:Array = [];
 			var long_deltas:Array = [];
 			var i:int;
 			
-			for (i = 1; i < data.length; i++) 
+			for (i = 1; i < numReadings; i++) 
 			{
-				var then:BgReading = data[i];
+				var then:BgReading = glucoseList[i];
 				
-				if (then != null && then.calculatedValue > 38) 
+				if (then != null ) 
 				{
-					var then_date:Number = then.timestamp;
-					var avgdelta:Number = 0;
-					var minutesago:Number = Math.round( (now_date - then_date) / (1000 * 60) );;
-					change = now.glucose - then.calculatedValue;
-					avgdelta = change/minutesago * 5;
-					
-					// use the average of all data points in the last 2.5m for all further "now" calculations
-					if (-2 < minutesago && minutesago < 2.5) 
+					var thenGlucose:Number = then._calculatedValue;
+					if (thenGlucose > 38)
 					{
-						now.glucose = ( now.glucose + then.calculatedValue ) / 2;
-						now_date = ( now_date + then_date ) / 2;
-					} 
-					else if (2.5 < minutesago && minutesago < 17.5) // short_deltas are calculated from everything ~5-15 minutes ago
-					{
-						short_deltas.push(avgdelta);
+						var then_date:Number = then._timestamp;
+						var avgdelta:Number = 0;
+						var minutesago:Number = Math.round( (now_date - then_date) / TimeSpan.TIME_1_MINUTE );
+						change = now.glucose - thenGlucose;
+						avgdelta = change/minutesago * 5;
 						
-						// last_deltas are calculated from everything ~5 minutes ago
-						if (2.5 < minutesago && minutesago < 7.5) 
+						// Use the average of all data points in the last 2.5m for all further "now" calculations
+						if (-2 < minutesago && minutesago < 2.5) 
 						{
-							last_deltas.push(avgdelta);
+							now.glucose = ( now.glucose + thenGlucose ) / 2;
+							now_date = ( now_date + then_date ) / 2;
+						} 
+						else if (2.5 < minutesago && minutesago < 17.5) // short_deltas are calculated from everything ~5-15 minutes ago
+						{
+							short_deltas.push(avgdelta);
+							
+							// last_deltas are calculated from everything ~5 minutes ago
+							if (2.5 < minutesago && minutesago < 7.5) 
+							{
+								last_deltas.push(avgdelta);
+							}
+						} 
+						else if (17.5 < minutesago && minutesago < 42.5) 
+						{
+							// long_deltas are calculated from everything ~20-40 minutes ago
+							long_deltas.push(avgdelta);
 						}
-					} 
-					else if (17.5 < minutesago && minutesago < 42.5) 
-					{
-						// long_deltas are calculated from everything ~20-40 minutes ago
-						long_deltas.push(avgdelta);
 					}
 				}
 			}
@@ -682,67 +679,49 @@ package model
 			var short_avgdelta:Number = 0;
 			var long_avgdelta:Number = 0;
 			
-			if (last_deltas.length > 0) 
+			var numLastDeltas:int = last_deltas.length;
+			if (numLastDeltas > 0) 
 			{
-				for (i = 0; i < last_deltas.length; i++) 
+				for (i = 0; i < numLastDeltas; i++) 
 				{
 					last_delta += last_deltas[i];
 				}
 				
-				last_delta = last_delta / last_deltas.length;
+				last_delta = last_delta / numLastDeltas;
 			}
-			if (short_deltas.length > 0)
+			
+			var numShortDeltas:int = short_deltas.length;
+			if (numShortDeltas > 0)
 			{
-				for (i = 0; i < short_deltas.length; i++) 
+				for (i = 0; i < numShortDeltas; i++) 
 				{
 					short_avgdelta += short_deltas[i];
 				}
 				
-				short_avgdelta = short_avgdelta / short_deltas.length;
+				short_avgdelta = short_avgdelta / numShortDeltas;
 			}
-			if (long_deltas.length > 0) 
+			
+			var numLongDeltas:int = long_deltas.length;
+			if (numLongDeltas > 0) 
 			{
-				for (i = 0; i < long_deltas.length; i++) 
+				for (i = 0; i < numLongDeltas; i++) 
 				{
 					long_avgdelta += long_deltas[i];
 				}
 				
-				long_avgdelta = long_avgdelta / long_deltas.length;
+				long_avgdelta = long_avgdelta / numLongDeltas;
 			}
 			
-			glucose_status = {
-					delta: Math.round( last_delta * 100 ) / 100,
-					glucose: Math.round( now.glucose * 100 ) / 100,
-					noise: 1,
-					short_avgdelta: Math.round( short_avgdelta * 100 ) / 100,
-					long_avgdelta: Math.round( long_avgdelta * 100 ) / 100,
-					date: now_date
+			//Populate final calculations and return them as an object
+			return {
+				delta: Math.round( last_delta * 100 ) / 100,
+				glucose: Math.round( now.glucose * 100 ) / 100,
+				noise: 1,
+				short_avgdelta: Math.round( short_avgdelta * 100 ) / 100,
+				long_avgdelta: Math.round( long_avgdelta * 100 ) / 100,
+				date: now_date,
+				is_valid = true
 			};
-			
-			return glucose_status;
 		}
-		
-		
-		
-		/*
-		// we expect BG to rise or fall at the rate of BGI,
-		// adjusted by the rate at which BG would need to rise /
-		// fall to get eventualBG to target over DIA/2 hours
-		private static function calculate_expected_delta(dia:Number, target_bg:Number, eventual_bg:Number, bgi:Number):Number {
-			// (hours * mins_per_hour) / 5 = how many 5 minute periods in dia/2
-			var dia_in_5min_blocks:Number = (dia/2 * 60) / 5;
-			var target_delta:Number  = target_bg- eventual_bg;
-			var expectedDelta:Number = round(bgi + (target_delta / dia_in_5min_blocks), 1);
-			return expectedDelta;
-		}*/
-		
 	}
 }
-
-
-
-
-
-
-
-

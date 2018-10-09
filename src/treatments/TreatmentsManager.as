@@ -214,7 +214,7 @@ package treatments
 		public static function getTotalIOB(time:Number):IOBCalcTotals
 		{
 			//var algorithm:String = "nightscout";
-			var algorithm:String = "nightscout";
+			var algorithm:String = "openaps";
 			
 			if (algorithm == "nightscout")
 			{
@@ -408,7 +408,7 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):CobCalcTotals 
 		{
-			var algorith:String = "nightscout";
+			var algorith:String = "openaps";
 			
 			if (algorith == "nightscout")
 			{
@@ -538,6 +538,7 @@ package treatments
 		{
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+			var openAPSTreatmentsList:Array = treatmentsList.concat().reverse();
 			
 			var currentProfile:Profile = ProfileManager.getProfileByTime(time);
 			
@@ -556,7 +557,7 @@ package treatments
 			var iob_inputs:Object = 
 			{
 				profile: currentProfile,
-				history: treatmentsList
+				history: openAPSTreatmentsList
 			};
 			
 			// We make a copy of all readings and remove the ones that arrived after the desired COB time.
@@ -589,10 +590,10 @@ package treatments
 			var carbsToRemove:Number = 0;
 			var carbsAbsorbed:Number = 0;
 			
-			var numberOfTreatments:int = treatmentsList.length;
+			var numberOfTreatments:int = openAPSTreatmentsList.length;
 			for (i = 0; i < numberOfTreatments; i++) 
 			{
-				var treatment:Treatment = treatmentsList[i];
+				var treatment:Treatment = openAPSTreatmentsList[i];
 				var now:Number = time;
 				
 				// consider carbs from up to 6 hours ago in calculating COB
@@ -708,7 +709,7 @@ package treatments
 			var bgTime:Number;
 			
 			var glucoseDataLength:int = glucose_data.length;
-			for (i = 1; i < glucoseDataLength; ++i) //218
+			for (i = 1; i < glucoseDataLength; ++i)
 			{
 				var bgReading:BgReading = glucose_data[i];
 				var bgCalculatedValue:Number = bgReading.calculatedValue;
@@ -718,16 +719,9 @@ package treatments
 				if (bgReading == null)
 					continue;
 				
-				if (!isNaN(spikeBgTime))
-				{
-					bgTime = spikeBgTime;
-				}
-				else
-				{
-					trace("Could not determine BG time");
-				}
+				bgTime = spikeBgTime;
 				
-				if (isNaN(bgCalculatedValue) || bgCalculatedValue < 39) 
+				if (bgCalculatedValue < 39) 
 				{
 					// Skip reading
 					continue;
@@ -735,7 +729,7 @@ package treatments
 				
 				// only consider BGs for 6h after a meal for calculating COB
 				var hoursAfterMeal:Number = (bgTime - mealTime) / (60 * 60 * 1000);
-				if (hoursAfterMeal > 6) //This should be 6
+				if (hoursAfterMeal > 6)
 				{
 					continue;
 				} 
@@ -952,13 +946,18 @@ package treatments
 			var lastTemp:Object = {};
 			lastTemp.date = 0;
 			
-			var numberOfTreatmets:int = treatmentsList.length;
+			var OpenAPSTreatmentsList:Array = inputs.history;
+			var numberOfTreatmets:int = OpenAPSTreatmentsList.length;
 			for (var i:int = 0; i < numberOfTreatmets; i++) 
 			{
-				var treatment:Treatment = treatmentsList[i];
+				var treatment:Treatment = OpenAPSTreatmentsList[i];
 				
-				if (treatment.insulinAmount > 0) {
-					lastBolusTime = Math.max(lastBolusTime,treatment.timestamp);
+				if (treatment.insulinAmount > 0) 
+				{
+					lastBolusTime = treatment.timestamp;
+					
+					break;
+					//lastBolusTime = Math.max(lastBolusTime,treatment.timestamp);
 				}
 			}
 			
