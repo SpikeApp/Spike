@@ -37,7 +37,7 @@ package model
 			var now:Number = new Date().valueOf();
 			var i:int;
 			
-			var regularCOB:Number = TreatmentsManager.getTotalCOB(now);
+			var regularCOB:Number = TreatmentsManager.getTotalCOB(now).cob;
 			
 			var timer:Number = getTimer();
 			var openAPSCOB:Object = TreatmentsManager.getTotalCOBOpenAPS(now);
@@ -199,7 +199,7 @@ package model
 			var remainingCATime:Number = remainingCATimeMin;
 			
 			var activeCarbs:Object = TreatmentsManager.getTotalActiveCarbs();
-			var currentCOB:Number = TreatmentsManager.getTotalCOB(now);
+			var currentCOB:Number = TreatmentsManager.getTotalCOB(now).cob;
 			var lastCarbTreatment:Treatment = TreatmentsManager.getLastCarbTreatment();
 			
 			if (activeCarbs.carbs > 0 && lastCarbTreatment != null) 

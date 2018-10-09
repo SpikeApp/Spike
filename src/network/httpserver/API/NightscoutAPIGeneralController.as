@@ -190,7 +190,7 @@ package network.httpserver.API
 						bgObject.units_hint = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mgdl" : "mmol";
 						var now:Number = new Date().valueOf();
 						var currentIOB:Number = TreatmentsManager.getTotalIOB(now).iob;
-						var currentCOB:Number = TreatmentsManager.getTotalCOB(now);
+						var currentCOB:Number = TreatmentsManager.getTotalCOB(now).cob;
 						if (currentIOB > 0)
 							bgObject.IOB = currentIOB;
 						if (currentCOB > 0)
@@ -282,7 +282,7 @@ package network.httpserver.API
 									readingObject.urgent_low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)).toString(16).toUpperCase();
 									
 									//Stats
-									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob);
+									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob);
 									if (!lightMode)
 									{
 										var userStats:BasicUserStats = StatsManager.getBasicUserStats();

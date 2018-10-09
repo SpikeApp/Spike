@@ -365,26 +365,31 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.IOB_COB_UPDATED));
 		}
 		
-		public static function getTotalCOB(time:Number):Number 
+		public static function getTotalCOB(time:Number):CobCalcTotals 
 		{
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
-				return pumpCOB;
+			{
+				return new CobCalcTotals
+				(
+					time,
+					pumpCOB
+				);
+			}
 			
 			var carbsAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate();
-			var now:Number = new Date().valueOf();
 			
 			// TODO: figure out the liverSensRatio that gives the most accurate purple line predictions
 			var liverSensRatio:int = 8;
 			var totalCOB:Number = 0;
-			var lastCarbs:Treatment;
-			
 			var isDecaying:Number = 0;
 			var lastDecayedBy:Number = 0;
+			var lastCarbTime:Number = time;
+			var activeCarbs:Number = 0;
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
-				var currentProfile:Profile = ProfileManager.getProfileByTime(now);
+				var currentProfile:Profile = ProfileManager.getProfileByTime(time);
 				var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 				var ic:Number = Number(currentProfile.insulinToCarbRatios);
 				
@@ -395,7 +400,7 @@ package treatments
 				for (var i:int = 0; i < loopLength; i++) 
 				{
 					var treatment:Treatment = treatmentsList[i];
-					if (treatment != null && (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS) && time >= treatment.timestamp)
+					if (treatment != null && treatment.carbs > 0 && time >= treatment.timestamp)
 					{
 						var cCalc:CobCalc = treatment.calculateCOB(lastDecayedBy, time);
 						if (cCalc != null)
@@ -432,6 +437,12 @@ package treatments
 									treatmentCOB = 0;
 								totalCOB += treatmentCOB;
 								isDecaying = cCalc.isDecaying;
+								
+								if (treatmentCOB > 0)
+								{
+									lastCarbTime = treatment.timestamp;
+									activeCarbs = treatment.carbs;
+								}
 							} 
 							else 
 								totalCOB += 0;
@@ -442,10 +453,21 @@ package treatments
 				}
 			}
 			
-			if (totalCOB < 0)
+			if (totalCOB < 0 || isNaN(totalCOB))
 				totalCOB = 0;
+			else
+				totalCOB = Math.round(totalCOB * 10) / 10;
 			
-			return Math.round(totalCOB * 10) / 10;
+			var results:CobCalcTotals = new CobCalcTotals
+				(
+					time,
+					totalCOB,
+					activeCarbs,
+					lastCarbTime,
+					activeCarbs - totalCOB
+				);
+			
+			return results;
 		}
 		
 		public static function getTotalCOBOpenAPS(time:Number):Object
@@ -550,7 +572,6 @@ package treatments
 			
 			return {
 				carbs: Math.round( carbs * 1000 ) / 1000,
-				//mealCOB: Math.round( mealCOB ),
 				mealCOB: Math.round(mealCOB * 10) / 10,
 				carbsAbsorbed: carbsAbsorbed,
 				currentDeviation: Math.round( c.currentDeviation * 100 ) / 100,
@@ -558,9 +579,9 @@ package treatments
 				minDeviation: Math.round( c.minDeviation * 100 ) / 100,
 				slopeFromMaxDeviation: Math.round( c.slopeFromMaxDeviation * 1000 ) / 1000,
 				slopeFromMinDeviation: Math.round( c.slopeFromMinDeviation * 1000 ) / 1000,
+				lastCarbTime: lastCarbTime
 				//allDeviations: c.allDeviations,
-				lastCarbTime: lastCarbTime,
-				bwFound: bwFound
+				//bwFound: bwFound
 			};
 		}
 		

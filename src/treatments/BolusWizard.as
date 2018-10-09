@@ -693,7 +693,7 @@ package treatments
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			//Current COB
-			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
+			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf()).cob;
 			
 			bwCOBContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwCOBContainer.width = contentWidth;
@@ -1163,7 +1163,7 @@ package treatments
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			//Current COB
-			currentCOB = TreatmentsManager.getTotalCOB(now);
+			currentCOB = TreatmentsManager.getTotalCOB(now).cob;
 			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(currentCOB);
 			bwCurrentCOBLabel.validate();
 			bwCOBContainer.validate();

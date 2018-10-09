@@ -507,7 +507,7 @@ package services
 		private static function triggerCOB():void
 		{
 			var info:Object = {};
-			info.value1 = GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
+			info.value1 = GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()).cob);
 			info.value2 = "";
 			info.value3 = "";
 			
@@ -522,7 +522,7 @@ package services
 		{
 			var info:Object = {};
 			info.value1 = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()).iob);
-			info.value2 = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
+			info.value2 = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()).cob);
 			info.value3 = "";
 			
 			for (var i:int = 0; i < makerKeyList.length; i++) 
