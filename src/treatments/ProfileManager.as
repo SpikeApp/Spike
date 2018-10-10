@@ -384,7 +384,7 @@ package treatments
 			var requestedMinutes:Number = requestedDate.minutes;
 			var numberOfProfiles:int = profilesList.length;
 			
-			if (profilesList == 0)
+			if (numberOfProfiles == 0)
 			{
 				createDefaultProfile();
 			}
