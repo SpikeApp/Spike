@@ -58,7 +58,7 @@ package treatments
 			this.basalDuration = basalDuration;
 		}
 		
-		public function calculateIOB(time:Number):Number
+		public function calculateIOB(time:Number, isf:Number):Number
 		{
 			activityContrib = 0;
 			
@@ -70,7 +70,6 @@ package treatments
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
 			var iob:Number;
 			var activity:Number;
-			var isf:Number = Number(ProfileManager.getProfileByTime(new Date().valueOf()).insulinSensitivityFactors);
 			
 			if (minAgo < INSULIN_PEAK) 
 			{

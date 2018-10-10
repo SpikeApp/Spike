@@ -223,13 +223,20 @@ package treatments
 			
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
+				var currentProfile:Profile = ProfileManager.getProfileByTime(time);
+				var isf:Number = Number.NaN;
+				if (currentProfile != null)
+				{
+					isf = Number(currentProfile.insulinSensitivityFactors);
+				}
+				
 				var loopLength:int = treatmentsList.length;
 				for (var i:int = 0; i < loopLength; i++) 
 				{
 					var treatment:Treatment = treatmentsList[i];
 					if (treatment != null && (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS))
 					{
-						totalIOB += treatment.calculateIOB(time);
+						totalIOB += treatment.calculateIOB(time, isf);
 						totalActivity += !isNaN(treatment.activityContrib) ? treatment.activityContrib : 0;
 					}
 				}
@@ -2121,7 +2128,7 @@ package treatments
 			{
 				var treatment:Treatment = treatmentsList[i];
 				
-				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS) && treatment.calculateIOB(now) > 0)
+				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS) && treatment.calculateIOB(now, Number.NaN) > 0)
 				{
 					activeTotalInsulin += treatment.insulinAmount;
 					if (treatment.timestamp < firstTreatmentTimestamp)

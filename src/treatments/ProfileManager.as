@@ -382,28 +382,28 @@ package treatments
 			var requestedDate:Date = new Date(requestedTimestamp);
 			var requestedHours:Number = requestedDate.hours;
 			var requestedMinutes:Number = requestedDate.minutes;
+			var numberOfProfiles:int = profilesList.length;
 			
-			for(var i:int = profilesList.length - 1 ; i >= 0; i--)
+			if (profilesList == 0)
+			{
+				createDefaultProfile();
+			}
+			
+			for(var i:int = numberOfProfiles - 1 ; i >= 0; i--)
 			{
 				var profile:Profile = profilesList[i] as Profile;
-				var profileDate:Date = getProfileDate(profile);
-				var profileHours:Number = profileDate.hours;
-				var profileMinutes:Number = profileDate.minutes;
-				
-				if (requestedHours >= profileHours || (requestedHours == profileHours && requestedMinutes >= profileMinutes))
-				{
-					currentProfile = profile;
-					break;
+				if (profile != null)
+				{	
+					var profileDate:Date = getProfileDate(profile);
+					var profileHours:Number = profileDate.hours;
+					var profileMinutes:Number = profileDate.minutes;
+					
+					if (requestedHours >= profileHours || (requestedHours == profileHours && requestedMinutes >= profileMinutes))
+					{
+						currentProfile = profile;
+						break;
+					}
 				}
-				
-				
-				/*var profileTimestamp:Number = profileDate.valueOf();
-				
-				if (requestedTimestamp >= profileTimestamp)
-				{
-				currentProfile = profile;
-				break;
-				}*/
 			}
 			
 			return currentProfile;
@@ -414,6 +414,13 @@ package treatments
 			var profileDividedTime:Array = profile.time.split(":");
 			var profileHour:Number = Number(profileDividedTime[0]);
 			var profileMinutes:Number = Number(profileDividedTime[1]);
+			
+			if (isNaN(profileHour))
+				profileHour = 0;
+			
+			if (isNaN(profileMinutes))
+				profileMinutes = 0;
+			
 			var profileDate:Date = new Date();
 			profileDate.hours = profileHour;
 			profileDate.minutes = profileMinutes;
