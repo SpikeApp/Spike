@@ -35,7 +35,7 @@ package model
 			{
 				
 				var timer:int = getTimer();
-				var predictions:Object = predicBG(120);
+				var predictions:Object = predicBG(90);
 				trace("took", (getTimer() - timer) / 1000);
 				
 				trace(ObjectUtil.toString(predictions));
