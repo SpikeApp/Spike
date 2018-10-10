@@ -35,17 +35,17 @@ package model
 			{
 				
 				var timer:int = getTimer();
-				
-				trace("TESTE", ObjectUtil.toString(getLastGlucose()));
-				
+				var predictions:Object = predicBG(120);
 				trace("took", (getTimer() - timer) / 1000);
+				
+				trace(ObjectUtil.toString(predictions));
 				
 			}, 10000 );
 			
 			
 		}
 		
-		private static function PredicBG(minutes:uint):Object
+		private static function predicBG(minutes:uint):Object
 		{
 			var glucose_status:Object = getLastGlucose();
 			if (!glucose_status.is_valid)
@@ -55,7 +55,7 @@ package model
 			}
 			
 			//Define common variables
-			var five_min_blocks:Number = Math.ceil(minutes / 5);
+			var five_min_blocks:Number = Math.floor(minutes / 5);
 			var now:Number = new Date().valueOf();
 			var i:int;
 			
@@ -177,13 +177,11 @@ package model
 			}
 			
 			var remainingCATimeMin:Number = 3; // h; duration of expected not-yet-observed carb absorption
-			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
-			var remainingCATime:Number = remainingCATimeMin;
 			
 			// 20 g/h means that anything <= 60g will get a remainingCATimeMin, 80g will get 4h, and 120g 6h
 			// when actual absorption ramps up it will take over from remainingCATime
-			var assumedCarbAbsorptionRate = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
-			var remainingCATime = remainingCATimeMin;
+			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
+			var remainingCATime:Number = remainingCATimeMin;
 			
 			var nowCOB:CobCalcTotals = TreatmentsManager.getTotalCOB(now);
 			if (nowCOB.carbs > 0) 
@@ -218,24 +216,11 @@ package model
 			var remainingCIpeak:Number = remainingCarbs * csf * 5 / 60 / (remainingCATime/2);
 			
 			// calculate peak deviation in last hour, and slope from that to current deviation
-			var slopeFromMaxDeviation = round(nowCOB.slopeFromMaxDeviation,2);
+			var slopeFromMaxDeviation:Number = !isNaN(nowCOB.slopeFromMaxDeviation) ? round(nowCOB.slopeFromMaxDeviation,2) : 0; //Compatibility with Nightscout COB algorithm
 			// calculate lowest deviation in last hour, and slope from that to current deviation
-			var slopeFromMinDeviation = round(meal_data.slopeFromMinDeviation,2);
-			// assume deviations will drop back down at least at 1/3 the rate they ramped up
-			var slopeFromDeviations = Math.min(slopeFromMaxDeviation,-slopeFromMinDeviation/3);
-			
-			//Setting both to default values but will need to correct this by implementing OpenAPS COB algo
-			var slopeFromMaxDeviation:Number = 0;
-			var slopeFromMinDeviation:Number = 999;
-			
-			
-			// calculate peak deviation in last hour, and slope from that to current deviation
-			slopeFromMaxDeviation = round(slopeFromMaxDeviation,2);
-			// calculate lowest deviation in last hour, and slope from that to current deviation
-			var slopeFromMinDeviationber:Number = round(slopeFromMinDeviation,2);
+			var slopeFromMinDeviation:Number = !isNaN(nowCOB.slopeFromMinDeviation) ? round(nowCOB.slopeFromMinDeviation,2) : 999; //Compatibility with Nightscout COB algorithm
 			// assume deviations will drop back down at least at 1/3 the rate they ramped up
 			var slopeFromDeviations:Number = Math.min(slopeFromMaxDeviation,-slopeFromMinDeviation/3);
-			
 			
 			var aci:Number = 10;
 			//5m data points = g * (1U/10g) * (40mg/dL/1U) / (mg/dL/5m)
@@ -247,10 +232,10 @@ package model
 				cid = 0;
 			} else 
 			{
-				cid = Math.min(remainingCATime*60/5/2,Math.max(0, currentCOB * csf / ci ));
+				cid = Math.min(remainingCATime*60/5/2,Math.max(0, nowCOB.cob * csf / ci ));
 			}
 			
-			var acid:Number = Math.max(0, currentCOB * csf / aci );
+			var acid:Number = Math.max(0, nowCOB.cob * csf / aci );
 			// duration (hours) = duration (5m) * 5 / 60 * 2 (to account for linear decay)
 			trace("Carb Impact:",ci,"mg/dL per 5m; CI Duration:",round(cid*5/60*2,1),"hours; remaining CI (~2h peak):",round(remainingCIpeak,1),"mg/dL per 5m");
 			
@@ -295,9 +280,13 @@ package model
 			var UAMpredBG:Number = 0;
 			var insulinPeakTime:Number = 0;
 			var insulinPeak5m:Number = 0;
-		
-			iobArray.forEach(function(iobTick:Object, i:int, theArray:Array):void {
-				//console.error(iobTick);
+			var enableUAM:Boolean = true;
+			
+			var numberOfIOBs:int = iobArray.length;
+			for (i = 0; i < numberOfIOBs; i++) 
+			{
+				var iobTick:Object = iobArray[i];
+				
 				predBGI = round(( -iobTick.activity * sens * 5 ), 2);
 				predZTBGI = round(( -iobTick.activity * sens * 5 ), 2);
 				// for IOBpredBGs, predicted deviation impact drops linearly from current deviation down to zero
@@ -347,7 +336,7 @@ package model
 				if ( UAMpredBG < minUAMGuardBG ) { minUAMGuardBG = round(UAMpredBG); }
 				if ( IOBpredBG < minIOBGuardBG ) { minIOBGuardBG = round(IOBpredBG); }
 				if ( ZTpredBG < minZTGuardBG ) { minZTGuardBG = round(ZTpredBG); }
-					
+				
 				// set minPredBGs starting when currently-dosed insulin activity will peak
 				// look ahead 60m (regardless of insulin type) so as to be less aggressive on slower insulins
 				insulinPeakTime = 60;
@@ -355,90 +344,144 @@ package model
 				//insulinPeakTime = 90;
 				insulinPeak5m = (insulinPeakTime/60)*12;
 				//console.error(insulinPeakTime, insulinPeak5m, profile.insulinPeakTime, profile.curve);
-					
+				
 				// wait 90m before setting minIOBPredBG
 				if ( IOBpredBGs.length > insulinPeak5m && (IOBpredBG < minIOBPredBG) ) { minIOBPredBG = round(IOBpredBG); }
 				if ( IOBpredBG > maxIOBPredBG ) { maxIOBPredBG = IOBpredBG; }
 				// wait 85-105m before setting COB and 60m for UAM minPredBGs
 				if ( (cid || remainingCIpeak > 0) && COBpredBGs.length > insulinPeak5m && (COBpredBG < minCOBPredBG) ) { minCOBPredBG = round(COBpredBG); }
 				if ( (cid || remainingCIpeak > 0) && COBpredBG > maxIOBPredBG ) { maxCOBPredBG = COBpredBG; }
-			});
+				if ( enableUAM && UAMpredBGs.length > 12 && (UAMpredBG < minUAMPredBG) ) { minUAMPredBG = round(UAMpredBG); }
+				if ( enableUAM && UAMpredBG > maxIOBPredBG ) { maxUAMPredBG = UAMpredBG; }
+			}
 			
-			if (currentCOB > 0) {
+			/*if (nowCOB.cob > 0) {
 				trace("predCIs (mg/dL/5m):",predCIs.join(" "));
 				trace("remainingCIs:      ",remainingCIs.join(" "));
-			}
+			}*/
 			
 			var predBGs:Object = {};
-			IOBpredBGs.forEach(function(p:Number, i:int, theArray:Array):void {
-				theArray[i] = round(Math.min(401,Math.max(39,p)));
-			});
-			
-			for (i = IOBpredBGs.length-1; i > 12; i--) 
+			var numberOfIOBPredicts:int = IOBpredBGs.length;
+			for (i = 0; i < numberOfIOBPredicts; i++) 
 			{
-				if (IOBpredBGs[i-1] != IOBpredBGs[i]) { break; }
-				else { IOBpredBGs.pop(); }
+				IOBpredBGs[i] = round(Math.min(401,Math.max(39,IOBpredBGs[i])));
 			}
+			/*for (i = IOBpredBGs.length-1; i > 12; i--) 
+			{
+			if (IOBpredBGs[i-1] != IOBpredBGs[i]) { break; }
+			else { IOBpredBGs.pop(); }
+			}*/
 			
 			predBGs.IOB = IOBpredBGs;
 			lastIOBpredBG = round(IOBpredBGs[IOBpredBGs.length-1]);
-			ZTpredBGs.forEach(function(p:Number, i:int, theArray:Array):void {
-				theArray[i] = round(Math.min(401,Math.max(39,p)));
-			});
-			for (i = ZTpredBGs.length-1; i > 6; i--) {
+			
+			var numberOfZTPredicts:int = ZTpredBGs.length;
+			for (i = 0; i < numberOfZTPredicts; i++) 
+			{
+				ZTpredBGs[i] = round(Math.min(401,Math.max(39,ZTpredBGs[i])));
+			}
+			/*for (i = ZTpredBGs.length-1; i > 6; i--) {
 				// stop displaying ZTpredBGs once they're rising and above target
 				if (ZTpredBGs[i-1] >= ZTpredBGs[i] || ZTpredBGs[i] <= target_bg) { break; }
 				else { ZTpredBGs.pop(); }
-			}
+			}*/
 			
 			predBGs.ZT = ZTpredBGs;
 			lastZTpredBG = round(ZTpredBGs[ZTpredBGs.length-1]);
-			if (currentCOB > 0) {
-				aCOBpredBGs.forEach(function(p:Number, i:int, theArray:Array):void {
-					theArray[i] = round(Math.min(401,Math.max(39,p)));
-				});
-				for (i = aCOBpredBGs.length-1; i > 12; i--) {
+			
+			if (nowCOB.cob > 0) 
+			{
+				var numberOfACOBPredicts:int = aCOBpredBGs.length;
+				for (i = 0; i < numberOfACOBPredicts; i++) 
+				{
+					aCOBpredBGs[i] = round(Math.min(401,Math.max(39,aCOBpredBGs[i])));
+				}
+				
+				/*for (i = aCOBpredBGs.length-1; i > 12; i--) {
 					if (aCOBpredBGs[i-1] != aCOBpredBGs[i]) { break; }
 					else { aCOBpredBGs.pop(); }
-				}
+				}*/
 			}
 			
-			if (currentCOB > 0 && ( ci > 0 || remainingCIpeak > 0 )) {
-				COBpredBGs.forEach(function(p:Number, i:int, theArray:Array):void {
-					theArray[i] = round(Math.min(401,Math.max(39,p)));
-				});
-				for (i = COBpredBGs.length-1; i > 12; i--) {
+			if (nowCOB.cob > 0 && ( ci > 0 || remainingCIpeak > 0 )) 
+			{
+				var numberOfCOBPredicts:int = COBpredBGs.length;
+				for (i = 0; i < numberOfCOBPredicts; i++) 
+				{
+					COBpredBGs[i] = round(Math.min(401,Math.max(39,COBpredBGs[i])));
+				}
+				
+				/*for (i = COBpredBGs.length-1; i > 12; i--) {
 					if (COBpredBGs[i-1] != COBpredBGs[i]) { break; }
 					else { COBpredBGs.pop(); }
-				}
+				}*/
+				
 				predBGs.COB = COBpredBGs;
 				lastCOBpredBG = round(COBpredBGs[COBpredBGs.length-1]);
 				eventualBG = Math.max(eventualBG, round(COBpredBGs[COBpredBGs.length-1]) );
 			}
 			
+			if (ci > 0 || remainingCIpeak > 0) 
+			{
+				if (enableUAM) 
+				{
+					var numberOfUAMPredicts:int = UAMpredBGs.length;
+					for (i = 0; i < numberOfUAMPredicts; i++) 
+					{
+						UAMpredBGs[i] = round(Math.min(401,Math.max(39,UAMpredBGs[i])));
+					}
+					
+					/*for (var i=UAMpredBGs.length-1; i > 12; i--) {
+						if (UAMpredBGs[i-1] != UAMpredBGs[i]) { break; }
+						else { UAMpredBGs.pop(); }
+					}*/
+					
+					predBGs.UAM = UAMpredBGs;
+					lastUAMpredBG=round(UAMpredBGs[UAMpredBGs.length-1]);
+					if (UAMpredBGs[UAMpredBGs.length-1]) 
+					{
+						eventualBG = Math.max(eventualBG, round(UAMpredBGs[UAMpredBGs.length-1]) );
+					}
+				}
+				
+				// set eventualBG based on COB or UAM predBGs
+				predBGs.eventualBG = eventualBG;
+			}
+			
 			trace("UAM Impact:",uci,"mg/dL per 5m; UAM Duration:",UAMduration,"hours");
+			
+			/*
 			
 			minIOBPredBG = Math.max(39,minIOBPredBG);
 			minCOBPredBG = Math.max(39,minCOBPredBG);
 			minUAMPredBG = Math.max(39,minUAMPredBG);
 			minPredBG = round(minIOBPredBG);
 			
-			var fractionCarbsLeft:Number = currentCOB/activeCarbs.carbs;
+			var fractionCarbsLeft:Number = nowCOB.cob / nowCOB.carbs;
 			// if we have COB and UAM is enabled, average both
-			if ( minUAMPredBG < 999 && minCOBPredBG < 999 ) {
+			if ( minUAMPredBG < 999 && minCOBPredBG < 999 ) 
+			{
 				// weight COBpredBG vs. UAMpredBG based on how many carbs remain as COB
 				avgPredBG = round( (1-fractionCarbsLeft)*UAMpredBG + fractionCarbsLeft*COBpredBG );
+			} 
+			else if ( minCOBPredBG < 999 ) 
+			{
 				// if UAM is disabled, average IOB and COB
-			} else if ( minCOBPredBG < 999 ) {
 				avgPredBG = round( (IOBpredBG + COBpredBG)/2 );
+			} 
+			else if ( minUAMPredBG < 999 ) 
+			{
 				// if we have UAM but no COB, average IOB and UAM
-			} else if ( minUAMPredBG < 999 ) {
 				avgPredBG = round( (IOBpredBG + UAMpredBG)/2 );
-			} else {
+			} 
+			else 
+			{
 				avgPredBG = round( IOBpredBG );
 			}
+			
 			// if avgPredBG is below minZTGuardBG, bring it up to that level
-			if ( minZTGuardBG > avgPredBG ) {
+			if ( minZTGuardBG > avgPredBG ) 
+			{
 				avgPredBG = minZTGuardBG;
 			}
 			
@@ -570,7 +613,9 @@ package model
 			trace("IOBpredBGs", ObjectUtil.toString(IOBpredBGs));
 			trace("UAMpredBGs", ObjectUtil.toString(UAMpredBGs));
 			trace("ZTpredBGs", ObjectUtil.toString(ZTpredBGs));
-		
+			*/
+			
+			return predBGs;
 		}
 		
 		/**
@@ -722,7 +767,7 @@ package model
 				short_avgdelta: Math.round( short_avgdelta * 100 ) / 100,
 				long_avgdelta: Math.round( long_avgdelta * 100 ) / 100,
 				date: now_date,
-				is_valid = true
+				is_valid: true
 			};
 		}
 	}
