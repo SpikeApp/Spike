@@ -192,7 +192,8 @@ package ui
 		private static function removeSystemGestures():void
 		{
 			//Completely remove ability to defer system gestures so users don't have to swipe twice to close Spike
-			SystemGestures.service.setDeferredScreenEdges(ScreenEdges.NONE);
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
+				SystemGestures.service.setDeferredScreenEdges(ScreenEdges.NONE);
 		}
 		
 		private static function onSettingsChanged(event:SettingsServiceEvent):void 

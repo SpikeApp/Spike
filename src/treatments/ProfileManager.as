@@ -379,17 +379,31 @@ package treatments
 		{
 			var currentProfile:Profile;
 			
+			var requestedDate:Date = new Date(requestedTimestamp);
+			var requestedHours:Number = requestedDate.hours;
+			var requestedMinutes:Number = requestedDate.minutes;
+			
 			for(var i:int = profilesList.length - 1 ; i >= 0; i--)
 			{
 				var profile:Profile = profilesList[i] as Profile;
 				var profileDate:Date = getProfileDate(profile);
-				var profileTimestamp:Number = profileDate.valueOf();
+				var profileHours:Number = profileDate.hours;
+				var profileMinutes:Number = profileDate.minutes;
 				
-				if (requestedTimestamp >= profileTimestamp)
+				if (requestedHours >= profileHours || (requestedHours == profileHours && requestedMinutes >= profileMinutes))
 				{
 					currentProfile = profile;
 					break;
 				}
+				
+				
+				/*var profileTimestamp:Number = profileDate.valueOf();
+				
+				if (requestedTimestamp >= profileTimestamp)
+				{
+				currentProfile = profile;
+				break;
+				}*/
 			}
 			
 			return currentProfile;

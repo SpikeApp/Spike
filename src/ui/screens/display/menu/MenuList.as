@@ -218,8 +218,19 @@ package ui.screens.display.menu
 			if (!initialStart)
 			{
 				removeEventListener( Event.CHANGE, onMenuChanged );
-				selectedIndex = !Constants.isPortrait ? selectedItem.index - 1 : selectedItem.index + 1;
+				
+				if (selectedItem != null && selectedItem.index != null)
+				{
+					selectedIndex = !Constants.isPortrait ? selectedItem.index - 1 : selectedItem.index + 1;
+				}
+				else
+				{
+					selectedIndex = !Constants.isPortrait ? previousSelectedIndex - 1 : previousSelectedIndex + 1;
+				}
+				
 				previousSelectedIndex = selectedIndex;
+				
+				addEventListener( Event.CHANGE, onMenuChanged );
 			}
 			else
 				initialStart = false;
