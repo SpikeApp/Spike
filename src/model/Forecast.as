@@ -30,9 +30,11 @@ package model
 			
 			setInterval( function():void 
 			{
+			
+				trace("-----------------------------------");
 				
 				var timer:int = getTimer();
-				var predictions:Object = predicBG(150);
+				var predictions:Object = predicBG(120);
 				trace("took", (getTimer() - timer) / 1000);
 				
 				trace(ObjectUtil.toString(predictions));
@@ -54,7 +56,7 @@ package model
 			//Define common variables
 			var five_min_blocks:Number = Math.floor(minutes / 5);
 			var now:Number = new Date().valueOf();
-			var algorithm:String = "nightscout";
+			var algorithm:String = "openaps";
 			var i:int;
 			
 			var bgTime:Number = glucose_status.date;
@@ -79,7 +81,7 @@ package model
 			if (algorithm == "nightscout")
 			{
 				//Nightscout compatibility
-				nowIOB.activity = nowIOB.activity / 20;
+				nowIOB.activity = nowIOB.activity / 22;
 			}
 			
 			var iob_data:Object = { iob: nowIOB.iob, activity: nowIOB.activity };
@@ -91,7 +93,7 @@ package model
 				if (algorithm == "nightscout")
 				{
 					//Nightscout compatibility
-					futureIOB.activity = futureIOB.activity / 20;
+					futureIOB.activity = futureIOB.activity / 22;
 				}
 				
 				iobArray.push( { iob: futureIOB.iob, activity: futureIOB.activity } );

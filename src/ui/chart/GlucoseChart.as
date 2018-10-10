@@ -313,6 +313,11 @@ package ui.chart
 		private var displayRaw:Boolean = false;
 		private var rawColor:uint;
 		
+		//Predictions
+		private var predictionsEnabled:Boolean = true;
+		private var predictionsLengthInMinutes:int = 90;
+		private var predictionsGlucoseDataPoints:Array = [];
+		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
 			//Data
