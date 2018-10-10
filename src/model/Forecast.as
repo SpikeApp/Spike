@@ -1,4 +1,4 @@
-package model.Forecast
+package model
 {
 	import flash.utils.getTimer;
 	import flash.utils.setInterval;
@@ -12,6 +12,7 @@ package model.Forecast
 	
 	import starling.utils.SystemUtil;
 	
+	import treatments.CobCalcTotals;
 	import treatments.IOBCalcTotals;
 	import treatments.Profile;
 	import treatments.ProfileManager;
@@ -46,17 +47,17 @@ package model.Forecast
 		
 		private static function PredicBG(minutes:uint):Object
 		{
-			//Define common variables
-			var five_min_blocks:Number = Math.ceil(minutes / 5);
-			var now:Number = new Date().valueOf();
-			var i:int;
-			
 			var glucose_status:Object = getLastGlucose();
 			if (!glucose_status.is_valid)
 			{
 				// Not enough glucose data for predictions!
 				return null;
 			}
+			
+			//Define common variables
+			var five_min_blocks:Number = Math.ceil(minutes / 5);
+			var now:Number = new Date().valueOf();
+			var i:int;
 			
 			var bgTime:Number = glucose_status.date;
 			var minAgo:Number = round( (now - bgTime) / TimeSpan.TIME_1_MINUTE ,1);
@@ -87,7 +88,6 @@ package model.Forecast
 			}
 			
 			var tick:Number;
-			
 			if (glucose_status.delta > -0.5) 
 				tick = Math.abs(round(glucose_status.delta,0));
 			else
@@ -97,10 +97,14 @@ package model.Forecast
 			var minAvgDelta:Number = Math.min(glucose_status.short_avgdelta, glucose_status.long_avgdelta);
 			var maxDelta:Number = Math.max(glucose_status.delta, glucose_status.short_avgdelta, glucose_status.long_avgdelta);
 			
-			var sens:Number = Number(currentProfile.insulinSensitivityFactors);
-			if (sens == 0)
+			var sens:Number;
+			if (currentProfile.insulinSensitivityFactors != "")
 			{
-				//User has not yet set a profile, let's dfault to 50
+				sens = Number(currentProfile.insulinSensitivityFactors);
+			}
+			else
+			{
+				//User has not yet set a profile, let's dfault it to 50
 				sens = 50;
 			}
 			
@@ -123,26 +127,19 @@ package model.Forecast
 			}
 			
 			// calculate the naive (bolus calculator math) eventual BG based on net IOB and sensitivity
-			var naive_eventualBG:Number = bg;;
-			if (iob_data.iob > 0) 
-			{
-				naive_eventualBG = round( bg - (iob_data.iob * sens) );
-			} 
+			var naive_eventualBG:Number = round( bg - (iob_data.iob * sens) );
 			
 			// and adjust it for the deviation above
 			var eventualBG:Number = naive_eventualBG + deviation;
-			var expectedDelta:Number = calculate_expected_delta(target_bg, eventualBG, bgi);
 			
+			var expectedDelta:Number = calculate_expected_delta(target_bg, eventualBG, bgi);
 			if (isNaN(eventualBG))
 			{
 				trace("Error: could not calculate eventualBG." );
 				
-				return;
+				return null;
 			}
 			
-			trace("eventualBG", eventualBG);
-			
-			// min_bg of 90 -> threshold of 65, 100 -> 70 110 -> 75, and 130 -> 85
 			var threshold:Number = min_bg - 0.5*(min_bg-40);
 			
 			// generate predicted future BGs based on IOB, COB, and current absorption rate
@@ -161,13 +158,18 @@ package model.Forecast
 			var ci:Number = 0;
 			var cid:Number = 0;
 			
+			// calculate current carb absorption rate, and how long to absorb all carbs
+			// CI = current carb impact on BG in mg/dL/5m
 			ci = round((minDelta - bgi),1);
 			var uci:Number = round((minDelta - bgi),1);
 			
 			// ISF (mg/dL/U) / CR (g/U) = CSF (mg/dL/g)
 			var carb_ratio:Number = currentProfile.insulinToCarbRatios != "" ? Number(currentProfile.insulinToCarbRatios) : 10; //If no i:C is set by the user we default to 10
 			var csf:Number = sens / carb_ratio; 
+			
 			var maxCarbAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate(); // g/h; maximum rate to assume carbs will absorb if no CI observed
+			
+			// limit Carb Impact to maxCarbAbsorptionRate * csf in mg/dL per 5m
 			var maxCI:Number = round(maxCarbAbsorptionRate*csf*5/60, 1)
 			if (ci > maxCI) {
 				trace("Limiting carb impact from " + ci + " to " + maxCI + "mg/dL/5m (" + maxCarbAbsorptionRate + "g/h )");
@@ -178,18 +180,20 @@ package model.Forecast
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var activeCarbs:Object = TreatmentsManager.getTotalActiveCarbs();
-			var currentCOB:Number = TreatmentsManager.getTotalCOB(now).cob;
-			var lastCarbTreatment:Treatment = TreatmentsManager.getLastCarbTreatment();
+			// 20 g/h means that anything <= 60g will get a remainingCATimeMin, 80g will get 4h, and 120g 6h
+			// when actual absorption ramps up it will take over from remainingCATime
+			var assumedCarbAbsorptionRate = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
+			var remainingCATime = remainingCATimeMin;
 			
-			if (activeCarbs.carbs > 0 && lastCarbTreatment != null) 
+			var nowCOB:CobCalcTotals = TreatmentsManager.getTotalCOB(now);
+			if (nowCOB.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it
 				// so <= 90g is assumed to take 3h, and 120g=4h
-				remainingCATimeMin = Math.max(remainingCATimeMin, currentCOB / assumedCarbAbsorptionRate);
-				var lastCarbAge:Number = round(( now - lastCarbTreatment.timestamp ) / 60000);
+				remainingCATimeMin = Math.max(remainingCATimeMin, nowCOB.cob / assumedCarbAbsorptionRate);
+				var lastCarbAge:Number = round(( now - nowCOB.lastCarbTime ) / 60000);
 				
-				var fractionCOBAbsorbed:Number = ( activeCarbs.carbs - currentCOB ) / activeCarbs.carbs;
+				var fractionCOBAbsorbed:Number = ( nowCOB.carbs - nowCOB.cob ) / nowCOB.carbs;
 				remainingCATime = remainingCATimeMin + 1.5 * lastCarbAge/60;
 				remainingCATime = round(remainingCATime,1);
 				
@@ -199,19 +203,26 @@ package model.Forecast
 			// calculate the number of carbs absorbed over remainingCATime hours at current CI
 			// CI (mg/dL/5m) * (5m)/5 (m) * 60 (min/hr) * 4 (h) / 2 (linear decay factor) = total carb impact (mg/dL)
 			var totalCI:Number = Math.max(0, ci / 5 * 60 * remainingCATime / 2);
-			// totalCI (mg/dL) / CSF (mg/dL/g) = total carbs absorbed (g)
 			
+			// totalCI (mg/dL) / CSF (mg/dL/g) = total carbs absorbed (g)
 			var totalCA:Number = totalCI / csf;
 			var remainingCarbsCap:Number = 90; // default to 90
 			var remainingCarbsFraction:Number = 1;
 			var remainingCarbsIgnore:Number = 1 - remainingCarbsFraction;
-			var remainingCarbs:Number = Math.max(0, currentCOB - totalCA - activeCarbs.carbs*remainingCarbsIgnore);
+			var remainingCarbs:Number = Math.max(0, nowCOB.cob - totalCA - nowCOB.carbs*remainingCarbsIgnore);
 			remainingCarbs = Math.min(remainingCarbsCap,remainingCarbs);
 			// assume remainingCarbs will absorb in a /\ shaped bilinear curve
 			// peaking at remainingCATime / 2 and ending at remainingCATime hours
 			// area of the /\ triangle is the same as a remainingCIpeak-height rectangle out to remainingCATime/2
 			// remainingCIpeak (mg/dL/5m) = remainingCarbs (g) * CSF (mg/dL/g) * 5 (m/5m) * 1h/60m / (remainingCATime/2) (h)
 			var remainingCIpeak:Number = remainingCarbs * csf * 5 / 60 / (remainingCATime/2);
+			
+			// calculate peak deviation in last hour, and slope from that to current deviation
+			var slopeFromMaxDeviation = round(nowCOB.slopeFromMaxDeviation,2);
+			// calculate lowest deviation in last hour, and slope from that to current deviation
+			var slopeFromMinDeviation = round(meal_data.slopeFromMinDeviation,2);
+			// assume deviations will drop back down at least at 1/3 the rate they ramped up
+			var slopeFromDeviations = Math.min(slopeFromMaxDeviation,-slopeFromMinDeviation/3);
 			
 			//Setting both to default values but will need to correct this by implementing OpenAPS COB algo
 			var slopeFromMaxDeviation:Number = 0;
