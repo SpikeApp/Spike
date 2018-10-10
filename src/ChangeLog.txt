@@ -1,3 +1,14 @@
+3.0.3
+ENHANCEMENT: Reverted back the /Pebble endpoint to also display in mmol as it seems some Pebble watch faces don't do the conversion automatically. (Miguel)
+
+3.0.2
+ENHANCEMENT: Optimizations to the IOB algorithm that will slightly increase overall battery life.
+FIX: One more small fix for the logic behind selecting the current active profile in specific timezones.
+
+3.0.1
+FIX: Addresses an issue that made Spike crash on some devices. Sorry about that! (Miguel)
+FIX: Fixes an issue that might prevent Spike from getting the correct profile on some timezones. (Miguel)
+
 3.0.0
 FEATURE: Bolus Calculator! Spike now comes bundled with a bolus calculator with the following features: (Miguel)
 1) Ability to tell you how much carbs are needed to correct a low.
