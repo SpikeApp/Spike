@@ -277,8 +277,13 @@ package treatments
 			if (treatmentsList != null && treatmentsList.length > 0)
 			{
 				var currentProfile:Profile = ProfileManager.getProfileByTime(now);
-				var isf:Number = Number(currentProfile.insulinSensitivityFactors);
-				var ic:Number = Number(currentProfile.insulinToCarbRatios);
+				var isf:Number = Number.NaN;
+				var ic:Number = Number.NaN;
+				if (currentProfile != null)
+				{
+					isf = Number(currentProfile.insulinSensitivityFactors);
+					ic = Number(currentProfile.insulinToCarbRatios);
+				}
 				
 				//Sort Treatments
 				treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
@@ -297,11 +302,8 @@ package treatments
 							if (decaysin_hr > -10 && !isNaN(isf)) 
 							{
 								var actStart:Number = 0;
-								if (true)//(lastDecayedBy != 0)
-								{
-									getTotalIOB(lastDecayedBy);
-									actStart = totalActivity;
-								}
+								getTotalIOB(lastDecayedBy);
+								actStart = totalActivity;
 								
 								getTotalIOB(cCalc.decayedBy);
 								var actEnd:Number = totalActivity;
