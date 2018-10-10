@@ -10,13 +10,10 @@ package model
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
-	import starling.utils.SystemUtil;
-	
 	import treatments.CobCalcTotals;
 	import treatments.IOBCalcTotals;
 	import treatments.Profile;
 	import treatments.ProfileManager;
-	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
 	import utils.TimeSpan;
@@ -31,11 +28,11 @@ package model
 		{
 			//setInterval(test, 15000);
 			
-			setTimeout( function():void 
+			setInterval( function():void 
 			{
 				
 				var timer:int = getTimer();
-				var predictions:Object = predicBG(90);
+				var predictions:Object = predicBG(150);
 				trace("took", (getTimer() - timer) / 1000);
 				
 				trace(ObjectUtil.toString(predictions));
@@ -57,6 +54,7 @@ package model
 			//Define common variables
 			var five_min_blocks:Number = Math.floor(minutes / 5);
 			var now:Number = new Date().valueOf();
+			var algorithm:String = "nightscout";
 			var i:int;
 			
 			var bgTime:Number = glucose_status.date;
@@ -78,12 +76,24 @@ package model
 			}
 			
 			var nowIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now);
+			if (algorithm == "nightscout")
+			{
+				//Nightscout compatibility
+				nowIOB.activity = nowIOB.activity / 20;
+			}
+			
 			var iob_data:Object = { iob: nowIOB.iob, activity: nowIOB.activity };
 			var iobArray:Array = [iob_data]; //THIS DOESN'T SEEM RIGHT. SHOULD HAVE MORE DATA POINTS?????
 			
 			for (i = 1; i < five_min_blocks; i++) 
 			{
 				var futureIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now + (i * TimeSpan.TIME_5_MINUTES));
+				if (algorithm == "nightscout")
+				{
+					//Nightscout compatibility
+					futureIOB.activity = futureIOB.activity / 20;
+				}
+				
 				iobArray.push( { iob: futureIOB.iob, activity: futureIOB.activity } );
 			}
 			

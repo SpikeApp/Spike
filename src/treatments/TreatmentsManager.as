@@ -214,7 +214,7 @@ package treatments
 		public static function getTotalIOB(time:Number):IOBCalcTotals
 		{
 			//var algorithm:String = "nightscout";
-			var algorithm:String = "openaps";
+			var algorithm:String = "nightscout";
 			
 			if (algorithm == "nightscout")
 			{
@@ -408,7 +408,7 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):CobCalcTotals 
 		{
-			var algorith:String = "openaps";
+			var algorith:String = "nightscout";
 			
 			if (algorith == "nightscout")
 			{
