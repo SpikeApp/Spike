@@ -10,12 +10,17 @@ package ui.chart
 	import flash.system.System;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
+	import flash.utils.clearTimeout;
 	import flash.utils.getTimer;
+	import flash.utils.setTimeout;
+	
+	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
 	import events.SpikeEvent;
@@ -38,6 +43,7 @@ package ui.chart
 	import feathers.motion.Cover;
 	import feathers.motion.Reveal;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import services.CalibrationService;
@@ -70,10 +76,12 @@ package ui.chart
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
 	
+	import utils.BgGraphBuilder;
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
 	import utils.TimeSpan;
+	import utils.UniqueId;
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("treatments")]
@@ -244,6 +252,8 @@ package ui.chart
 		private var displayTreatmentsOnChart:Boolean;
 		private var displayCOBEnabled:Boolean;
 		private var displayIOBEnabled:Boolean;
+		private var totalIOBTimeoutID:int = -1;
+		private var totalCOBTimeoutID:int = -1;
 		
 		//Treatments Display Objects
 		private var treatmentsContainer:Sprite;
@@ -315,8 +325,196 @@ package ui.chart
 		
 		//Predictions
 		private var predictionsEnabled:Boolean = true;
-		private var predictionsLengthInMinutes:int = 90;
-		private var predictionsGlucoseDataPoints:Array = [];
+		private var predictionsLengthInMinutes:int = 60;
+		private var predictionsMainGlucoseDataPoints:Array = [];
+		private var predictionsScrollerGlucoseDataPoints:Array = [];
+		private var predictionsColor:uint = 0xef00e7;
+		private var predictionsDelimiter:SpikeLine;
+		private var activeGlucoseDelimiter:SpikeLine;
+		private var redrawPredictionsTimeoutID:int = -1;
+		private var lastPredictionsRedrawTimestamp:Number = 0;
+		
+		private function redrawPredictions():void
+		{
+			//First validation
+			if (!predictionsEnabled || predictionsMainGlucoseDataPoints.length == 0 || predictionsScrollerGlucoseDataPoints.length == 0 || predictionsDelimiter == null || dummyModeActive || !SystemUtil.isApplicationActive)
+			{
+				//There's no current predictions drawn on the chart so no need to redraw anything
+				return;
+			}
+			
+			//Second validation
+			var now:Number = new Date().valueOf();
+			if (now - lastPredictionsRedrawTimestamp < 500)
+			{
+				//Already redrawn less then 0.5 seccons ago. No need to redraw again.
+				return;
+			}
+			
+			lastPredictionsRedrawTimestamp = now;
+			
+			//Get new predictions
+			var predictionsList:Array = fetchPredictions();
+			
+			//Third validation
+			if (predictionsList == null || predictionsList.length == 0)
+			{
+				//There's no predictions available
+				return;
+			}
+			
+			//Dispose current predictions 
+			disposePredictions();
+			
+			//Draw Predictions
+			drawPredictions(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
+			drawPredictions(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius);
+			
+			//Drawing Logic
+			function drawPredictions(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):void
+			{
+				var chartContainer:Sprite = chartType == MAIN_CHART ? mainChart : scrollerChart;
+				
+				var totalTimestampDifference:Number = lastBGreadingTimeStamp - firstBGReadingTimeStamp;
+				var scaleXFactor:Number;
+				if(chartType == MAIN_CHART)
+				{
+					differenceInMinutesForAllTimestamps = TimeSpan.fromDates(new Date(firstBGReadingTimeStamp), new Date(lastBGreadingTimeStamp)).totalMinutes;
+					if (differenceInMinutesForAllTimestamps > TimeSpan.TIME_ONE_DAY_IN_MINUTES)
+						differenceInMinutesForAllTimestamps = TimeSpan.TIME_ONE_DAY_IN_MINUTES;
+					
+					scaleXFactor = 1/(totalTimestampDifference / (chartWidth * (timelineRange / (TimeSpan.TIME_ONE_DAY_IN_MINUTES / differenceInMinutesForAllTimestamps))));
+				}
+				else if (chartType == SCROLLER_CHART)
+				{
+					scaleXFactor = 1/(totalTimestampDifference / (chartWidth - chartRightMargin));
+				}
+				
+				var scaleYFactor:Number;
+				var sortDataArray:Array = _dataSource.concat().concat(predictionsList);
+				sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
+				var lowestValue:Number;
+				var highestValue:Number;;
+				if (!dummyModeActive)
+				{
+					lowestValue = sortDataArray[0].calculatedValue as Number;
+					highestValue = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+					if (!fixedSize)
+					{
+						lowestGlucoseValue = lowestValue;
+						if (lowestGlucoseValue < 40)
+							lowestGlucoseValue = 40;
+						
+						highestGlucoseValue = highestValue;
+						if (highestGlucoseValue > 400)
+							highestGlucoseValue = 400;
+					}
+					else
+					{
+						lowestGlucoseValue = minAxisValue;
+						if (resizeOutOfBounds && lowestValue < minAxisValue)
+							lowestGlucoseValue = lowestValue;
+						
+						highestGlucoseValue = maxAxisValue;
+						if (resizeOutOfBounds && highestValue > maxAxisValue)
+							highestGlucoseValue = highestValue
+					}
+				}
+				else
+				{
+					lowestGlucoseValue = 40;
+					highestGlucoseValue = 300;
+				}
+				
+				//We find the difference so we can know how big the glucose pseudo graph is
+				var totalGlucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
+				//Now we find a multiplier for the y axis so the glucose graph fits entirely with the chart height
+				scaleYFactor = (chartHeight - (glucoseMarkerRadius*2))/totalGlucoseDifference;
+				
+				var previousXCoordinate:Number = chartType == MAIN_CHART ? mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x : scrollChartGlucoseMarkersList[scrollChartGlucoseMarkersList.length - 1].x;
+				var previousYCoordinate:Number = chartType == MAIN_CHART ? mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].y : scrollChartGlucoseMarkersList[scrollChartGlucoseMarkersList.length - 1].y;
+				var previousGlucoseMarker:GlucoseMarker;
+		
+				//Redraw predictions
+				var predictionsLength:int = predictionsList.length;
+				for (var i:int = 0; i < predictionsLength; i++) 
+				{
+					var glucoseReading:BgReading = predictionsList[i];
+					
+					//Get current glucose value
+					var currentGlucoseValue:Number = glucoseReading.calculatedValue;
+					if(currentGlucoseValue < 40)
+						currentGlucoseValue = 40;
+					else if (currentGlucoseValue > 400)
+						currentGlucoseValue = 400;
+					
+					//Define glucose marker x position
+					var glucoseX:Number;
+					if(i==0)
+					{
+						glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[_dataSource.length-1].timestamp)) * scaleXFactor;
+					}
+					else
+					{
+						glucoseX = (Number(glucoseReading.timestamp) - Number(predictionsList[i-1].timestamp)) * scaleXFactor;
+					}
+					
+					//Define glucose marker y position
+					var glucoseY:Number = chartHeight - (glucoseMarkerRadius * 2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
+					//If glucose is a perfect flat line then display it in the middle
+					if(totalGlucoseDifference == 0) 
+						glucoseY = (chartHeight - (glucoseMarkerRadius*2)) / 2;
+					
+					var glucoseMarker:GlucoseMarker = new GlucoseMarker
+					(
+						{
+							x: previousXCoordinate + glucoseX,
+							y: glucoseY,
+							index: i,
+							radius: glucoseMarkerRadius,
+							bgReading: glucoseReading,
+							glucose: currentGlucoseValue,
+							color: predictionsColor
+						},
+						false,
+						true
+					);
+					
+					//Hide glucose marker if it is out of bounds (fixed size chart);
+					if (glucoseMarker.glucoseValue < lowestGlucoseValue || glucoseMarker.glucoseValue > highestGlucoseValue)
+						glucoseMarker.alpha = 0;
+					else
+						glucoseMarker.alpha = 1;
+					
+					//Set variables for next iteration
+					previousXCoordinate = glucoseMarker.x;
+					previousYCoordinate = glucoseMarker.y;
+					previousGlucoseMarker = glucoseMarker;
+					
+					//Add glucose marker to the timeline
+					chartContainer.addChild(glucoseMarker);
+					
+					if(chartType == MAIN_CHART)
+					{
+						predictionsMainGlucoseDataPoints.push(glucoseMarker);
+					}
+					else if (chartType == SCROLLER_CHART)
+					{
+						predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
+					}
+				}
+			}
+			
+			if(_displayLine)
+			{
+				//Destroy previous lines
+				destroyAllLines();
+				
+				//Draw Lines
+				drawLine(MAIN_CHART);
+				drawLine(SCROLLER_CHART);
+			}
+		}
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
@@ -627,13 +825,23 @@ package ui.chart
 			chartContainer.touchable = false;
 			
 			/**
+			 * Predictions
+			 */
+			clearTimeout(redrawPredictionsTimeoutID);
+			var predictionsList:Array = predictionsEnabled ? fetchPredictions() : [];
+			
+			/**
 			 * Calculation of X Axis scale factor
 			 */
 			//Get first and last timestamp and determine the difference between the two
 			if (!dummyModeActive)
 			{
 				firstBGReadingTimeStamp = Number(_dataSource[0].timestamp);
-				lastBGreadingTimeStamp = !isHistoricalData ? (new Date()).valueOf() : Number(_dataSource[_dataSource.length - 1].timestamp);
+				
+				if (!predictionsEnabled)
+					lastBGreadingTimeStamp = !isHistoricalData ? (new Date()).valueOf() : Number(_dataSource[_dataSource.length - 1].timestamp);
+				else
+					lastBGreadingTimeStamp = predictionsList[predictionsList.length - 1].timestamp;
 			}
 			else
 			{
@@ -662,7 +870,7 @@ package ui.chart
 			 * Calculation of Y Axis scale factor
 			 */
 			//First we determine the maximum and minimum glucose values
-			var sortDataArray:Array = _dataSource.concat();
+			var sortDataArray:Array = predictionsList.length == 0 ? _dataSource.concat() : _dataSource.concat().concat(predictionsList);
 			sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
 			var lowestValue:Number;
 			var highestValue:Number;;
@@ -736,13 +944,26 @@ package ui.chart
 			 * Creation and placement of the glucose values
 			 */
 			//Loop through all available data points
-			var dataLength:int = _dataSource.length;
+			var previousLineX:Number;
+			var previousLineY:Number;
+			var isPrediction:Boolean
+			var index:int;
+			var readingsSource:Array;
+			var predictionsLength:int = predictionsList.length;
+			var realReadingsLength:int = _dataSource.length;
+			var dataLength:int = realReadingsLength + predictionsLength;
+			
 			for(i = 0; i < dataLength; i++)
 			{
-				var glucoseReading:BgReading = _dataSource[i] as BgReading;
+				//var glucoseReading:BgReading = i < realReadingsLength ? _dataSource[i] : predictionsList[i - realReadingsLength];
+				isPrediction = i >= realReadingsLength;
+				index = !isPrediction ? i : i - realReadingsLength;
+				readingsSource = !isPrediction ? _dataSource : predictionsList;
+				
+				var glucoseReading:BgReading = readingsSource[index];
 				
 				//Get current glucose value
-				var currentGlucoseValue:Number = !isRaw ? Number(glucoseReading.calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
+				var currentGlucoseValue:Number = !isRaw || isPrediction ? Number(glucoseReading.calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
 				if(currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
 				else if (currentGlucoseValue > 400)
@@ -753,7 +974,20 @@ package ui.chart
 				if(i==0)
 					glucoseX = !isRaw ? 0 : glucoseMarkerRadius;
 				else
-					glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
+				{
+					if (!isPrediction)
+					{
+						glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
+					}
+					else if (isPrediction && index == 0)
+					{
+						glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[_dataSource.length-1].timestamp)) * scaleXFactor;
+					}
+					else
+					{
+						glucoseX = (Number(glucoseReading.timestamp) - Number(readingsSource[index-1].timestamp)) * scaleXFactor;
+					}
+				}
 				
 				//Define glucose marker y position
 				var glucoseY:Number = chartHeight - (glucoseMarkerRadius * 2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
@@ -764,7 +998,7 @@ package ui.chart
 				
 				// Create Glucose Marker
 				var glucoseMarker:GlucoseMarker;
-				if (!isRaw)
+				if (!isRaw && !isPrediction)
 				{
 					glucoseMarker = new GlucoseMarker
 					(
@@ -779,7 +1013,24 @@ package ui.chart
 						}
 					);
 				}
-				else
+				else if (isPrediction)
+				{
+					glucoseMarker = new GlucoseMarker
+						(
+							{
+								x: previousXCoordinate + glucoseX,
+								y: glucoseY,
+								index: i,
+								radius: glucoseMarkerRadius,
+								bgReading: glucoseReading,
+								glucose: currentGlucoseValue,
+								color: predictionsColor
+							},
+							false,
+							true
+						);
+				}
+				else if (isRaw)
 				{
 					glucoseMarker = new GlucoseMarker
 					(
@@ -842,12 +1093,24 @@ package ui.chart
 								previousColor = previousGlucoseMarker.color;
 						}	
 						
-						if (isNaN(previousColor))
-							line.lineTo(currentLineX, currentLineY);
+						if ((isNaN(previousColor) || isPrediction) && index != 0)
+						{
+							if (!isPrediction)
+							{
+								line.lineTo(currentLineX, currentLineY);
+							}
+							else
+							{
+								line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
+							}
+						}
 						else
-							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
-												
+							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
+						
 						line.moveTo(currentLineX, currentLineY);
+						
+						previousLineX = currentLineX;
+						previousLineY = currentLineY;
 					}
 					//Hide glucose marker
 					glucoseMarker.alpha = 0;
@@ -868,13 +1131,20 @@ package ui.chart
 				//Add glucose marker to the displayObjects array for later reference 
 				if(chartType == MAIN_CHART)
 				{
-					if (!isRaw)
+					if (!isRaw && !isPrediction)
 						mainChartGlucoseMarkersList.push(glucoseMarker);
-					else
+					else if (isRaw && !isPrediction)
 						rawGlucoseMarkersList.push(glucoseMarker);
+					else if (isPrediction)
+						predictionsMainGlucoseDataPoints.push(glucoseMarker);
 				}
 				else if (chartType == SCROLLER_CHART)
-					scrollChartGlucoseMarkersList.push(glucoseMarker);
+				{
+					if (!isPrediction)
+						scrollChartGlucoseMarkersList.push(glucoseMarker);
+					else
+						predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
+				}
 			}
 			
 			//Creat dummy marker in case the current timestamp is bigger than the latest bgreading timestamp
@@ -1125,7 +1395,24 @@ package ui.chart
 				treatmentsMap[treatment.ID] = insulinMarker;
 				
 				if (displayIOBEnabled && !isHistoricalData)
-					calculateTotalIOB(getTimelineTimestamp());
+				{
+					clearTimeout(totalIOBTimeoutID);
+					
+					totalIOBTimeoutID = setTimeout( function():void 
+					{
+						calculateTotalIOB(getTimelineTimestamp());
+					}, 200 );
+					
+					if (predictionsEnabled)
+					{
+						clearTimeout(redrawPredictionsTimeoutID);
+						
+						redrawPredictionsTimeoutID = setTimeout( function():void 
+						{
+							redrawPredictions();
+						}, 250 );
+					}
+				}
 				
 				chartTreatment = insulinMarker;
 			}
@@ -1141,7 +1428,24 @@ package ui.chart
 				treatmentsMap[treatment.ID] = carbsMarker;
 				
 				if (displayCOBEnabled && !isHistoricalData)
-					calculateTotalCOB(getTimelineTimestamp());
+				{
+					clearTimeout(totalCOBTimeoutID);
+					
+					totalCOBTimeoutID = setTimeout( function():void 
+					{
+						calculateTotalCOB(getTimelineTimestamp());
+					}, 200 );
+					
+					if (predictionsEnabled)
+					{
+						clearTimeout(redrawPredictionsTimeoutID);
+						
+						redrawPredictionsTimeoutID = setTimeout( function():void 
+						{
+							redrawPredictions();
+						}, 250 );
+					}
+				}
 				
 				chartTreatment = carbsMarker;
 			}
@@ -1158,9 +1462,33 @@ package ui.chart
 				
 				var timelineTimestamp:Number = getTimelineTimestamp();
 				if (displayIOBEnabled && !isHistoricalData)
-					calculateTotalIOB(timelineTimestamp);
+				{
+					clearTimeout(totalIOBTimeoutID);
+					
+					totalIOBTimeoutID = setTimeout( function():void 
+					{
+						calculateTotalIOB(timelineTimestamp);
+					}, 200 );
+				}
 				if (displayCOBEnabled && !isHistoricalData)
-					calculateTotalCOB(timelineTimestamp);
+				{
+					clearTimeout(totalCOBTimeoutID);
+					
+					totalCOBTimeoutID = setTimeout( function():void 
+					{
+						calculateTotalCOB(timelineTimestamp);
+					}, 200 );
+				}
+				
+				if (predictionsEnabled)
+				{
+					clearTimeout(redrawPredictionsTimeoutID);
+					
+					redrawPredictionsTimeoutID = setTimeout( function():void 
+					{
+						redrawPredictions();
+					}, 250 );
+				}
 				
 				chartTreatment = mealMarker;
 			}
@@ -1367,12 +1695,24 @@ package ui.chart
 					treatmentCallout.close(true);
 					
 					var deleteTreatmentTween:Tween = new Tween(treatment, 0.3, Transitions.EASE_IN_BACK);
-					var deleteX:Number = ((lastBGreadingTimeStamp - firstBGReadingTimeStamp) * mainChartXFactor) + treatment.width + 5;
+					var lastReadingTimestamp:Number;
+					if (!predictionsEnabled || predictionsMainGlucoseDataPoints == null || predictionsMainGlucoseDataPoints.length == 0 || predictionsMainGlucoseDataPoints[predictionsMainGlucoseDataPoints.length - 1] == null)
+					{
+						lastReadingTimestamp = lastBGreadingTimeStamp;
+					}
+					else if (predictionsEnabled)
+					{
+						lastReadingTimestamp = predictionsMainGlucoseDataPoints[predictionsMainGlucoseDataPoints.length - 1].timestamp;
+					}
+					
+					var deleteX:Number = ((lastReadingTimestamp - firstBGReadingTimeStamp) * mainChartXFactor) + treatment.width + 5;
 					deleteTreatmentTween.moveTo(deleteX, treatment.y);
 					deleteTreatmentTween.onComplete = function():void
 					{
 						treatmentsContainer.removeChild(treatment);
 						treatmentsList.removeAt(treatment.index);
+						
+						var treatmentToDelete:Treatment = treatment.treatment;
 						
 						TreatmentsManager.deleteTreatment(treatment.treatment);
 						
@@ -1384,6 +1724,16 @@ package ui.chart
 							calculateTotalIOB(timelineTimestamp);
 						if (displayCOBEnabled)
 							calculateTotalCOB(timelineTimestamp);
+						
+						if (predictionsEnabled && (treatmentToDelete.type == Treatment.TYPE_BOLUS || treatmentToDelete.type == Treatment.TYPE_CARBS_CORRECTION || treatmentToDelete.type == Treatment.TYPE_CORRECTION_BOLUS || treatmentToDelete.type == Treatment.TYPE_MEAL_BOLUS))
+						{
+							clearTimeout(redrawPredictionsTimeoutID);
+							
+							redrawPredictionsTimeoutID = setTimeout( function():void 
+							{
+								redrawPredictions();
+							}, 250 );
+						}
 						
 						deleteTreatmentTween = null;
 					}
@@ -1423,7 +1773,19 @@ package ui.chart
 								calculateTotalCOB(getTimelineTimestamp());
 						}
 						else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION && displayCOBEnabled)
+						{
 							calculateTotalCOB(getTimelineTimestamp());
+						}
+						
+						if (predictionsEnabled && (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS))
+						{
+							clearTimeout(redrawPredictionsTimeoutID);
+							
+							redrawPredictionsTimeoutID = setTimeout( function():void 
+							{
+								redrawPredictions();
+							}, 250 );
+						}
 						
 						//Update database
 						TreatmentsManager.updateTreatment(treatment.treatment);
@@ -1552,7 +1914,7 @@ package ui.chart
 			if (displayLatestBGValue)
 				currentTimelineTimestamp = new Date().valueOf();
 			else
-				currentTimelineTimestamp = firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin) + (mainChartGlucoseMarkerRadius * 2)) / mainChartXFactor);
+				currentTimelineTimestamp = firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0)) + (mainChartGlucoseMarkerRadius * 2)) / mainChartXFactor);
 			
 			return currentTimelineTimestamp;
 		}
@@ -1614,7 +1976,7 @@ package ui.chart
 			var initialTimestamp:Number = new Date(firstDate.fullYear, firstDate.month, firstDate.date, firstDate.hours, 0, 0, 0).valueOf();
 			var lastTimestamp:Number = lastDate.valueOf();
 			
-			while (initialTimestamp <= lastTimestamp + TimeSpan.TIME_1_HOUR) 
+			while (initialTimestamp <= lastTimestamp + TimeSpan.TIME_1_HOUR + (predictionsEnabled ? predictionsLengthInMinutes * TimeSpan.TIME_1_MINUTE : 0)) 
 			{	
 				//Get marker time
 				var markerDate:Date = new Date(initialTimestamp);
@@ -1693,6 +2055,23 @@ package ui.chart
 			glucoseDelimiter.x = _graphWidth - yAxisMargin + glucoseDelimiter.width;
 			glucoseDelimiter.touchable = false;
 			yAxis.addChild(glucoseDelimiter);
+			
+			activeGlucoseDelimiter = glucoseDelimiter;
+			
+			/**
+			 * Predictions Delimiter
+			 */
+			if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0)
+			{
+				if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
+				predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
+				predictionsDelimiter.y = 0 - predictionsDelimiter.width;
+				predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
+				predictionsDelimiter.touchable = false;
+				yAxis.addChild(predictionsDelimiter);
+				
+				activeGlucoseDelimiter = predictionsDelimiter;
+			}
 			
 			/**
 			 * Highest Glucose
@@ -2061,7 +2440,7 @@ package ui.chart
 					currentTimestamp = Number((mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp);
 				}
 				
-				if (_dataSource.length > 288 && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isFollower()) // >24H
+				if (_dataSource.length > 288 && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isFollower() && !predictionsEnabled) // >24H
 				{
 					var difference:int = _dataSource.length - 288;
 					for (var i:int = 0; i < difference; i++) 
@@ -2138,6 +2517,10 @@ package ui.chart
 			//Destroy all previous lines
 			if (_displayLine)
 				destroyAllLines(true);
+			
+			//Destroy predictions
+			if (predictionsEnabled)
+				disposePredictions();
 			
 			//Redraw main chart, raw data points and scroller chart
 			redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, numAddedReadings);
@@ -2227,10 +2610,16 @@ package ui.chart
 				return;
 			
 			/**
+			 * Predictions
+			 */
+			clearTimeout(redrawPredictionsTimeoutID);
+			var predictionsList:Array = predictionsEnabled ? fetchPredictions() : [];
+			
+			/**
 			 * Calculation of X Axis scale factor
 			 */
 			var firstTimeStamp:Number = Number(_dataSource[0].timestamp);
-			var lastTimeStamp:Number = (new Date()).valueOf();
+			var lastTimeStamp:Number = !predictionsEnabled || predictionsList.length == 0 ? new Date().valueOf() : predictionsList[predictionsList.length - 1].timestamp;
 			var totalTimestampDifference:Number = lastTimeStamp - firstTimeStamp;
 			var scaleXFactor:Number;
 			
@@ -2250,7 +2639,7 @@ package ui.chart
 			
 			/* Update values for update timer */
 			firstBGReadingTimeStamp = firstTimeStamp;
-			lastBGreadingTimeStamp = lastTimeStamp;
+			lastBGreadingTimeStamp = new Date().valueOf();
 			
 			/**
 			 * Calculation of Y Axis scale factor
@@ -2259,7 +2648,7 @@ package ui.chart
 			var previousHighestGlucoseValue:Number = highestGlucoseValue;
 			var previousLowestGlucoseValue:Number = lowestGlucoseValue;
 			
-			var sortDataArray:Array = _dataSource.concat();
+			var sortDataArray:Array = predictionsList.length == 0 ? _dataSource.concat() : _dataSource.concat().concat(predictionsList);
 			sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
 			
 			var lowestValue:Number = sortDataArray[0].calculatedValue as Number;
@@ -2321,10 +2710,22 @@ package ui.chart
 			}
 			
 			//Loop through all available data points
-			var dataLength:int = _dataSource.length;
+			var previousLineX:Number;
+			var previousLineY:Number;
+			var isPrediction:Boolean
+			var index:int;
+			var readingsSource:Array;
+			var predictionsLength:int = predictionsList.length;
+			var realReadingsLength:int = _dataSource.length;
+			var dataLength:int = realReadingsLength + predictionsLength;
+			
 			for(i = 0; i < dataLength; i++)
 			{
-				var glucoseReading:BgReading = _dataSource[i] as BgReading;
+				isPrediction = i >= realReadingsLength;
+				index = !isPrediction ? i : i - realReadingsLength;
+				readingsSource = !isPrediction ? _dataSource : predictionsList;
+				
+				var glucoseReading:BgReading = readingsSource[index];
 				
 				var currentGlucoseValue:Number = !isRaw ? Number(glucoseReading.calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
 				if (currentGlucoseValue < 40)
@@ -2333,7 +2734,7 @@ package ui.chart
 					currentGlucoseValue = 400;
 				
 				var glucoseMarker:GlucoseMarker;
-				if(i < dataLength - 1 && chartType == MAIN_CHART)
+				if(i < dataLength - 1 && chartType == MAIN_CHART && !isPrediction)
 					glucoseMarker = !isRaw ? mainChartGlucoseMarkersList[i] : rawGlucoseMarkersList[i];
 				else if(i < dataLength - 1 && chartType == SCROLLER_CHART)
 					glucoseMarker = scrollChartGlucoseMarkersList[i];
@@ -2343,7 +2744,20 @@ package ui.chart
 				if(i==0)
 					glucoseX = !isRaw ? 0 : glucoseMarkerRadius;
 				else
-					glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
+				{
+					if (!isPrediction)
+					{
+						glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
+					}
+					else if (isPrediction && index == 0)
+					{
+						glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[_dataSource.length-1].timestamp)) * scaleXFactor;
+					}
+					else
+					{
+						glucoseX = (Number(glucoseReading.timestamp) - Number(readingsSource[index-1].timestamp)) * scaleXFactor;
+					}
+				}
 				
 				//Define glucose marker y position
 				var glucoseY:Number = chartHeight - (glucoseMarkerRadius*2) - ((currentGlucoseValue - lowestGlucoseValue) * scaleYFactor);
@@ -2352,7 +2766,7 @@ package ui.chart
 				if(totalGlucoseDifference == 0 && !isRaw) 
 					glucoseY = (chartHeight - (glucoseMarkerRadius*2)) / 2;
 				
-				if(i < dataLength - numNewReadings)
+				if(i < realReadingsLength - numNewReadings && !isPrediction)
 				{
 					glucoseMarker.x = previousXCoordinate + glucoseX;
 					glucoseMarker.y = glucoseY;
@@ -2360,7 +2774,7 @@ package ui.chart
 				}
 				else
 				{
-					if (!isRaw)
+					if (!isRaw && !isPrediction)
 					{
 						glucoseMarker = new GlucoseMarker
 						(
@@ -2375,7 +2789,24 @@ package ui.chart
 							}
 						);
 					}
-					else
+					else if (isPrediction)
+					{
+						glucoseMarker = new GlucoseMarker
+							(
+								{
+									x: previousXCoordinate + glucoseX,
+									y: glucoseY,
+									index: i,
+									radius: glucoseMarkerRadius,
+									bgReading: glucoseReading,
+									glucose: currentGlucoseValue,
+									color: predictionsColor
+								},
+								false,
+								true
+							);
+					}
+					else if (isRaw)
 					{
 						glucoseMarker = new GlucoseMarker
 						(
@@ -2400,7 +2831,10 @@ package ui.chart
 							//Add it to the display list
 							mainChart.addChild(glucoseMarker);
 							//Save it in the array for later
-							mainChartGlucoseMarkersList.push(glucoseMarker);
+							if (!isPrediction)
+								mainChartGlucoseMarkersList.push(glucoseMarker);
+							else
+								predictionsMainGlucoseDataPoints.push(glucoseMarker);
 						}
 						else
 						{
@@ -2415,7 +2849,10 @@ package ui.chart
 						//Add it to the display list
 						scrollerChart.addChild(glucoseMarker);
 						//Save it in the array for later
-						scrollChartGlucoseMarkersList.push(glucoseMarker);
+						if (!isPrediction)
+							scrollChartGlucoseMarkersList.push(glucoseMarker);
+						else
+							predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
 					}
 				}
 				
@@ -2464,12 +2901,24 @@ package ui.chart
 								previousColor = previousGlucoseMarker.color;
 						}
 						
-						if (isNaN(previousColor))
-							line.lineTo(currentLineX, currentLineY);
+						if ((isNaN(previousColor) || isPrediction) && index != 0)
+						{
+							if (!isPrediction)
+							{
+								line.lineTo(currentLineX, currentLineY);
+							}
+							else
+							{
+								line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
+							}
+						}
 						else
-							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
 						
 						line.moveTo(currentLineX, currentLineY);
+						
+						previousLineX = currentLineX;
+						previousLineY = currentLineY;
 					}
 					//Hide glucose marker
 					glucoseMarker.alpha = 0;
@@ -2561,19 +3010,53 @@ package ui.chart
 			
 			//Define what chart needs line to be drawns
 			var sourceList:Array;
+			var realReadingsLength:int = 0;
+			var numberOfPredictiveReadings:int = 0;
+			
 			if(chartType == MAIN_CHART)
+			{
 				sourceList = mainChartGlucoseMarkersList;
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && sourceList != null)
+				{
+					realReadingsLength = sourceList.length;
+					
+					var predictiveMainReadingsLength:int = predictionsMainGlucoseDataPoints.length;
+					if (predictiveMainReadingsLength > 0)
+					{
+						sourceList = sourceList.concat(predictionsMainGlucoseDataPoints);
+						numberOfPredictiveReadings = predictiveMainReadingsLength;
+					}
+				}
+			}
 			else if (chartType == SCROLLER_CHART)
+			{
 				sourceList = scrollChartGlucoseMarkersList;
+				if (predictionsEnabled && predictionsScrollerGlucoseDataPoints != null && sourceList != null)
+				{
+					realReadingsLength = sourceList.length;
+					
+					var predictiveScrollerReadingsLength:int = predictionsScrollerGlucoseDataPoints.length;
+					if (predictiveScrollerReadingsLength > 0)
+					{
+						sourceList = sourceList.concat(predictionsScrollerGlucoseDataPoints);
+						numberOfPredictiveReadings = predictiveScrollerReadingsLength;
+					}
+				}
+			}
 			
 			if (sourceList == null || sourceList.length == 0)
 				return;
 			
 			//Loop all markers, draw the line from their positions and also hide the markers
+			var previousLineX:Number;
+			var previousLineY:Number;
 			var previousGlucoseMarker:GlucoseMarker;
 			var dataLength:int = sourceList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
+				var isPrediction:Boolean = i >= realReadingsLength && predictionsEnabled;
+				var index:int = !isPrediction ? i : i - realReadingsLength;
+				
 				var glucoseMarker:GlucoseMarker = sourceList[i];
 				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !CGMBlueToothDevice.isFollower()))
 					continue;
@@ -2618,12 +3101,24 @@ package ui.chart
 							previousColor = previousGlucoseMarker.color;
 					}	
 					
-					if (isNaN(previousColor))
-						line.lineTo(currentLineX, currentLineY);
+					if ((isNaN(previousColor) || isPrediction) && index != 0)
+					{
+						if (!isPrediction)
+						{
+							line.lineTo(currentLineX, currentLineY);
+						}
+						else
+						{
+							line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
+						}
+					}
 					else
 						line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
 					
 					line.moveTo(currentLineX, currentLineY);
+					
+					previousLineX = currentLineX;
+					previousLineY = currentLineY;
 				}
 				//Hide glucose marker
 				glucoseMarker.alpha = 0;
@@ -2648,7 +3143,7 @@ package ui.chart
 			if (currentNumberOfMakers == previousNumberOfMakers && !displayLatestBGValue)
 				return;
 			
-			if (glucoseValueDisplay == null || glucoseTimeAgoPill == null || glucoseSlopePill == null || glucoseDelimiter == null)
+			if (glucoseValueDisplay == null || glucoseTimeAgoPill == null || glucoseSlopePill == null || activeGlucoseDelimiter == null)
 				return;
 			
 			if (!SystemUtil.isApplicationActive)
@@ -2666,7 +3161,7 @@ package ui.chart
 				var nextMarkerGlobalX:Number = nextMarker.x + mainChart.x;
 				var currentMarker:GlucoseMarker = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex] as GlucoseMarker;
 				var currentMarkerGlobalX:Number = currentMarker.x + mainChart.x;
-				var hitTestCurrent:Boolean = currentMarkerGlobalX - currentMarker.width < glucoseDelimiter.x;
+				var hitTestCurrent:Boolean = currentMarkerGlobalX - currentMarker.width < activeGlucoseDelimiter.x;
 				var currentTimestamp:Number = currentMarker.timestamp;
 				var timeSpan:TimeSpan = TimeSpan.fromDates(new Date(currentTimestamp), new Date(nextTimestamp));
 				var differenceInMinutes:Number = timeSpan.totalMinutes;
@@ -2731,7 +3226,7 @@ package ui.chart
 						}
 					}
 				}
-				else if (nextMarkerGlobalX < glucoseDelimiter.x && !hitTestCurrent)
+				else if (nextMarkerGlobalX < activeGlucoseDelimiter.x && !hitTestCurrent)
 				{
 					//Glucose Value Display
 					glucoseValueDisplay.text = nextMarker.glucoseOutput + " " + nextMarker.slopeArrow;
@@ -3010,6 +3505,68 @@ package ui.chart
 			}
 		}
 		
+		private function fetchPredictions():Array
+		{
+			var lastAvailableBgReading:BgReading = _dataSource[_dataSource.length - 1];
+			var now:Number = lastAvailableBgReading != null ? lastAvailableBgReading.timestamp : new Date().valueOf();
+			var finalPredictionsList:Array = [];
+			var unformattedPredictionsList:Array;
+			var predictionsLength:int;
+			var i:int;
+			
+			var unformattedPredictions:Object = Forecast.predicBGs(predictionsLengthInMinutes);
+			
+			if (unformattedPredictions != null && unformattedPredictions.COB != null)
+			{
+				unformattedPredictionsList = unformattedPredictions.COB;
+				unformattedPredictionsList.shift(); //We remove the first prediction because it's = to the latest bg reading so it's not useful to us.
+			}
+			else if (unformattedPredictions != null && unformattedPredictions.IOB != null)
+			{
+				unformattedPredictionsList = unformattedPredictions.IOB;
+				unformattedPredictionsList.shift(); //We remove the first prediction because it's = to the latest bg reading so it's not useful to us.
+			}
+			else
+			{
+				return [];
+			}
+			
+			trace(ObjectUtil.toString(unformattedPredictionsList));
+			predictionsLength =  unformattedPredictionsList.length;
+			for (i = 0; i < predictionsLength; i++) 
+			{
+				var readingTimestamp:Number = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+				var predictionReading:BgReading = new BgReading
+					(
+						readingTimestamp, //timestamp
+						Sensor.getActiveSensor(), //sensor
+						Calibration.last(), //calibration
+						Number.NaN, //raw data
+						Number.NaN, //filtered data
+						Number.NaN, //adge adjusted raw data
+						false, //calibration flag
+						unformattedPredictionsList[i], //calculated value
+						Number.NaN, //filtered calculated value
+						Number.NaN, //calculated value slope
+						Number.NaN, //a
+						Number.NaN, //b
+						Number.NaN, //c
+						Number.NaN, //ra
+						Number.NaN, //rb
+						Number.NaN, //rc
+						Number.NaN, //raw calculated
+						false, //hide slope
+						"", //noise
+						readingTimestamp, //last modified timestamp
+						UniqueId.createEventId() //unique id
+					)
+				
+				finalPredictionsList.push(predictionReading);
+			}
+			
+			return finalPredictionsList;
+		}
+		
 		public function showRaw():void
 		{
 			displayRaw = true;
@@ -3084,15 +3641,30 @@ package ui.chart
 			
 			var sourceList:Array;
 			if(chartType == MAIN_CHART)
+			{
 				sourceList = mainChartGlucoseMarkersList;
+				
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length)
+				{
+					sourceList = sourceList.concat(predictionsMainGlucoseDataPoints);
+				}
+			}
 			else if (chartType == SCROLLER_CHART)
+			{
 				sourceList = scrollChartGlucoseMarkersList;
+				
+				if (predictionsEnabled && predictionsScrollerGlucoseDataPoints != null && predictionsScrollerGlucoseDataPoints.length > 0)
+				{
+					sourceList = sourceList.concat(predictionsScrollerGlucoseDataPoints);
+				}
+			}
 			
+			var isCGMFollower:Boolean = CGMBlueToothDevice.isFollower();
 			var dataLength:int = sourceList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
 				var currentMarker:GlucoseMarker = sourceList[i];
-				if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()))
+				if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || isCGMFollower || predictionsEnabled))
 					currentMarker.alpha = 1;
 				else
 					currentMarker.alpha = 0;
@@ -3234,7 +3806,7 @@ package ui.chart
 				var latestMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1];
 				if (latestMarker == null)
 					return;
-				var latestMarkerGlobalX:Number = latestMarker.x + mainChart.x + (latestMarker.width) - glucoseDelimiter.x;
+				var latestMarkerGlobalX:Number = latestMarker.x + mainChart.x + (latestMarker.width) - activeGlucoseDelimiter.x;
 				var futureTimeStamp:Number = latestMarker.timestamp + (Math.abs(latestMarkerGlobalX) / mainChartXFactor);
 				var nowTimestamp:Number;
 				var isFuture:Boolean = false;
@@ -3329,11 +3901,12 @@ package ui.chart
 						firstAvailableTimestamp= (mainChartGlucoseMarkersList[0] as GlucoseMarker).timestamp;
 					else
 						continue;
-					var currentTimelineTimestamp:Number = firstAvailableTimestamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin) + (mainChartGlucoseMarkerRadius * 2)) / mainChartXFactor);
-					var hitTestCurrent:Boolean = currentMarkerGlobalX - currentMarker.width < glucoseDelimiter.x;
+					
+					var currentTimelineTimestamp:Number = firstAvailableTimestamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0)) + (mainChartGlucoseMarkerRadius * 2)) / mainChartXFactor);
+					var hitTestCurrent:Boolean = currentMarkerGlobalX - currentMarker.width < activeGlucoseDelimiter.x;
 					
 					//Check if the current marker is the one selected by the main chart's delimiter line
-					if ((i == 0 && currentMarkerGlobalX >= glucoseDelimiter.x) || (currentMarkerGlobalX >= glucoseDelimiter.x && previousMarkerGlobalX < glucoseDelimiter.x))
+					if ((i == 0 && currentMarkerGlobalX >= activeGlucoseDelimiter.x) || (currentMarkerGlobalX >= activeGlucoseDelimiter.x && previousMarkerGlobalX < activeGlucoseDelimiter.x))
 					{
 						if (currentMarker.bgReading != null && (currentMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()))
 						{
@@ -4485,8 +5058,40 @@ package ui.chart
 			}
 		}
 		
+		private function disposePredictions():void
+		{
+			var i:int;
+			var glucoseMarker:GlucoseMarker;
+			
+			var mainPredictionsLength:int = predictionsMainGlucoseDataPoints.length;
+			for (i = 0; i < mainPredictionsLength; i++) 
+			{
+				glucoseMarker = predictionsMainGlucoseDataPoints[i];
+				glucoseMarker.removeFromParent();
+				glucoseMarker.dispose();
+				glucoseMarker = null;
+			}
+			
+			var scrollerPredictionsLength:int = predictionsScrollerGlucoseDataPoints.length;
+			for (i = 0; i < scrollerPredictionsLength; i++) 
+			{
+				glucoseMarker = predictionsScrollerGlucoseDataPoints[i];
+				glucoseMarker.removeFromParent();
+				glucoseMarker.dispose();
+				glucoseMarker = null;
+			}
+			
+			predictionsMainGlucoseDataPoints.length = 0;
+			predictionsScrollerGlucoseDataPoints.length = 0;
+		}
+		
 		override public function dispose():void
 		{
+			/* Timeouts */
+			clearTimeout(redrawPredictionsTimeoutID);
+			clearTimeout(totalCOBTimeoutID);
+			clearTimeout(totalIOBTimeoutID);
+			
 			/* Event Listeners */
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCaibrationReceived);
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived);
@@ -4560,6 +5165,9 @@ package ui.chart
 				scrollChartGlucoseMarkersList.length = 0;
 				scrollChartGlucoseMarkersList = null;
 			}
+			
+			//Predictions
+			disposePredictions();
 			
 			//Treatments
 			if (deleteBtn != null)
@@ -4745,6 +5353,13 @@ package ui.chart
 				glucoseDelimiter.removeFromParent();
 				glucoseDelimiter.dispose();
 				glucoseDelimiter = null;
+			}
+			
+			if (predictionsDelimiter != null)
+			{
+				predictionsDelimiter.removeFromParent();
+				predictionsDelimiter.dispose();
+				predictionsDelimiter = null;
 			}
 			
 			if (handPicker != null)

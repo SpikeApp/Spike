@@ -4,9 +4,11 @@ package ui.chart
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
+	import starling.display.DisplayObject;
 	import starling.display.Sprite;
 	
 	import ui.shapes.SpikeNGon;
+	import ui.shapes.SpikeRing;
 	
 	import utils.MathHelper;
 	import utils.TimeSpan;
@@ -32,14 +34,16 @@ package ui.chart
 		private var data:Object;
 		private var dateFormat:String;
 		private var isRaw:Boolean;
+		private var isPrediction:Boolean;
 
 		// Display Objects
-		private var glucoseMarker:SpikeNGon;
+		public var glucoseMarker:*;
 
-        public function GlucoseMarker(data:Object, isRaw:Boolean = false)
+        public function GlucoseMarker(data:Object, isRaw:Boolean = false, isPrediction:Boolean = false)
         {
             this.data = data;
 			this.isRaw = isRaw;
+			this.isPrediction = isPrediction;
 			
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 			
@@ -64,7 +68,7 @@ package ui.chart
 			//Timestamp
 			timestamp = bgReading.timestamp;
 			
-			if (!isRaw)
+			if (!isRaw && !isPrediction)
 			{
 				//Glucose Value (Both internal and external)
 				glucoseValue = bgReading.calculatedValue;
@@ -109,10 +113,15 @@ package ui.chart
 				//Define glucose marker color
 				color = GlucoseFactory.getGlucoseColor(glucoseValue);
 			}
-			else
+			else if (isRaw)
 			{
 				glucoseValue = Number(data.raw);
 				color = data.rawColor;
+			}
+			else if (isPrediction)
+			{
+				glucoseValue = Number(data.glucose);
+				color = data.color;
 			}
 			
 			//Create graphics
@@ -122,8 +131,14 @@ package ui.chart
         //Function to draw the shape
         public function draw():void
         {
-            glucoseMarker = new SpikeNGon(radius, 10, 0, 360, color);
-			glucoseMarker.x = glucoseMarker.y = radius;
+			if (!isPrediction)
+			{
+            	glucoseMarker = new SpikeNGon(radius, 10, 0, 360, color);
+				glucoseMarker.x = glucoseMarker.y = radius;
+			}
+			else
+				glucoseMarker = new SpikeRing(radius / 2, radius, color);
+			
             addChild(glucoseMarker);
         }
 		

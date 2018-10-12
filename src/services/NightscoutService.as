@@ -853,6 +853,7 @@ package services
 								
 								ModelLocator.addBGReading(bgReading);
 								bgReading.findSlope(true);
+								bgReading.calculateNoise();
 								BgReadingsToSend.push(bgReading);
 								newData = true;
 							} 

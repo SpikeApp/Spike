@@ -28,23 +28,23 @@ package model
 		{
 			//setInterval(test, 15000);
 			
-			setInterval( function():void 
+			/*setInterval( function():void 
 			{
 			
 				trace("-----------------------------------");
 				
 				var timer:int = getTimer();
-				var predictions:Object = predicBG(120);
+				var predictions:Object = predicBGs(120);
 				trace("took", (getTimer() - timer) / 1000);
 				
 				trace(ObjectUtil.toString(predictions));
 				
-			}, 10000 );
+			}, 10000 );*/
 			
 			
 		}
 		
-		private static function predicBG(minutes:uint):Object
+		public static function predicBGs(minutes:uint):Object
 		{
 			var glucose_status:Object = getLastGlucose();
 			if (!glucose_status.is_valid)
@@ -54,7 +54,7 @@ package model
 			}
 			
 			//Define common variables
-			var five_min_blocks:Number = Math.floor(minutes / 5);
+			var five_min_blocks:Number = Math.floor(minutes / 5) + 1; //We add one because the first prediction is always the lastes glucose value
 			var now:Number = new Date().valueOf();
 			var algorithm:String = "openaps";
 			var i:int;
@@ -84,12 +84,11 @@ package model
 				nowIOB.activity = nowIOB.activity / 22;
 			}
 			
-			var iob_data:Object = { iob: nowIOB.iob, activity: nowIOB.activity };
-			var iobArray:Array = [iob_data]; //THIS DOESN'T SEEM RIGHT. SHOULD HAVE MORE DATA POINTS?????
+			var iobArray:Array = []; //Will hold all future IOB data points used for calculating predictions
 			
-			for (i = 1; i < five_min_blocks; i++) 
+			for (i = 0; i < five_min_blocks; i++) 
 			{
-				var futureIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now + (i * TimeSpan.TIME_5_MINUTES));
+				var futureIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES));
 				if (algorithm == "nightscout")
 				{
 					//Nightscout compatibility
@@ -98,6 +97,8 @@ package model
 				
 				iobArray.push( { iob: futureIOB.iob, activity: futureIOB.activity } );
 			}
+			
+			var iob_data:Object = iobArray[0];
 			
 			var tick:Number;
 			if (glucose_status.delta > -0.5) 
@@ -376,7 +377,8 @@ package model
 			var numberOfIOBPredicts:int = IOBpredBGs.length;
 			for (i = 0; i < numberOfIOBPredicts; i++) 
 			{
-				IOBpredBGs[i] = round(Math.min(401,Math.max(39,IOBpredBGs[i])));
+				//IOBpredBGs[i] = round(Math.min(401,Math.max(39,IOBpredBGs[i])));
+				IOBpredBGs[i] = Math.min(401,Math.max(39,IOBpredBGs[i]));
 			}
 			/*for (i = IOBpredBGs.length-1; i > 12; i--) 
 			{
@@ -420,7 +422,8 @@ package model
 				var numberOfCOBPredicts:int = COBpredBGs.length;
 				for (i = 0; i < numberOfCOBPredicts; i++) 
 				{
-					COBpredBGs[i] = round(Math.min(401,Math.max(39,COBpredBGs[i])));
+					//COBpredBGs[i] = round(Math.min(401,Math.max(39,COBpredBGs[i])));
+					COBpredBGs[i] = Math.min(401,Math.max(39,COBpredBGs[i]));
 				}
 				
 				/*for (i = COBpredBGs.length-1; i > 12; i--) {
