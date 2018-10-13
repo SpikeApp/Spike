@@ -32,6 +32,7 @@ package ui.popups
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	import utils.TimeSpan;
 
 	[ResourceBundle("globaltranslations")]
@@ -74,6 +75,8 @@ package ui.popups
 			if (snoozeLabels == null) snoozeLabels = labels;
 			selectedSnoozeIndex = selectedIndex;
 			snoozeTitle = title;
+			
+			trace("displaySnoozer called");
 			
 			if (firstRun)
 			{
@@ -162,27 +165,42 @@ package ui.popups
 			mainContainer.addChild(snoozePickerList);
 			
 			/* Action Buttons */
-			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
+			var actionButtonsLayout:VerticalLayout = new VerticalLayout();
+			actionButtonsLayout.horizontalAlign = HorizontalAlign.CENTER;
 			actionButtonsLayout.gap = 10;
 			
 			var actionButtonsContainer:LayoutGroup = new LayoutGroup();
 			actionButtonsContainer.layout = actionButtonsLayout;
 			mainContainer.addChild(actionButtonsContainer);
 			
+			//All Button
+			//var allButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"all_button_label").toUpperCase());
+			var allButton:Button = LayoutFactory.createButton(("Snooze All Alarms").toUpperCase());
+			allButton.addEventListener(Event.TRIGGERED, onAll);
+			actionButtonsContainer.addChild(allButton);
+			
+			var allHighButton:Button = LayoutFactory.createButton(("Snooze All High Alarms").toUpperCase());
+			allHighButton.addEventListener(Event.TRIGGERED, onAll);
+			actionButtonsContainer.addChild(allHighButton);
+			
+			var allLowButton:Button = LayoutFactory.createButton(("Snooze All Low Alarms").toUpperCase());
+			allLowButton.addEventListener(Event.TRIGGERED, onAll);
+			actionButtonsContainer.addChild(allLowButton);
+			
+			//This Alarm
+			//var okButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"this_button_label").toUpperCase());
+			var okButton:Button = LayoutFactory.createButton(("Snooze This Alarm").toUpperCase());
+			okButton.addEventListener(Event.TRIGGERED, onThis);
+			actionButtonsContainer.addChild(okButton);
+			
 			//Cancel Button
 			var cancelButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label").toUpperCase());
 			cancelButton.addEventListener(Event.TRIGGERED, onCancel);
 			actionButtonsContainer.addChild(cancelButton);
 			
-			//All Button
-			var allButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"all_button_label").toUpperCase());
-			allButton.addEventListener(Event.TRIGGERED, onAll);
-			actionButtonsContainer.addChild(allButton);
 			
-			//This Button
-			var okButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"this_button_label").toUpperCase());
-			okButton.addEventListener(Event.TRIGGERED, onThis);
-			actionButtonsContainer.addChild(okButton);
+			
+			
 			
 			/* Callout Position Helper Creation */
 			calculatePositionHelper();
@@ -203,7 +221,22 @@ package ui.popups
 			}
 			
 			positionHelper.x = Constants.stageWidth / 2;
-			positionHelper.y = 70;
+			
+			var yPos:Number = 0;
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				yPos = 10;
+			
+			positionHelper.y = yPos;
 		}
 		
 		public static function closeCallout():void
