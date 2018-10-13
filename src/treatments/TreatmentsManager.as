@@ -82,10 +82,13 @@ package treatments
 		public static var treatmentsMap:Dictionary = new Dictionary();
 		
 		/* Internal Properties */
+		private static const MAX_IOB_COB_CACHED_ITEMS:int = 30;
 		public static var pumpIOB:Number = 0;
 		public static var pumpCOB:Number = 0;
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 		private static var foodManager:FoodManager;
+		private static var IOBCache:Array = [];
+		private static var COBCache:Array = [];
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -213,19 +216,61 @@ package treatments
 		
 		public static function getTotalIOB(time:Number):IOBCalcTotals
 		{
+			//Check cache
+			var numberOfCachedItems:int = IOBCache.length;
+			var numberOfTreatmentsItems:int = treatmentsList.length;
+			
+			if (numberOfCachedItems > MAX_IOB_COB_CACHED_ITEMS)
+			{
+				IOBCache = IOBCache.slice(-MAX_IOB_COB_CACHED_ITEMS); //If number of cached items is bigger than MAX_CACHED_ITEMS we truncate the array removing the older entries.
+				numberOfCachedItems = MAX_IOB_COB_CACHED_ITEMS;
+			}
+			
+			for(var i:int = numberOfCachedItems - 1 ; i >= 0; i--)
+			{
+				var cachedItem:Object = IOBCache[i];
+				if (Math.abs(cachedItem.timestamp - time) < TimeSpan.TIME_1_MINUTE && cachedItem.numTreatments == numberOfTreatmentsItems)
+				{
+					return cachedItem.iobCalc;
+				}
+			}
+			
 			//var algorithm:String = "nightscout";
 			var algorithm:String = "openaps";
 			
+			var result:IOBCalcTotals;
+			
 			if (algorithm == "nightscout")
 			{
-				return getTotalIOBNightscout(time);
+				//Get calculations
+				result = getTotalIOBNightscout(time);
+				
+				//Cache them
+				IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
+				
+				//Return them
+				return result;
 			}
 			else if (algorithm == "openaps")
 			{
-				return getTotalIOBOpenAPS(time, "bilinear");
+				//Get calculations
+				result = getTotalIOBOpenAPS(time, "bilinear");
+				
+				//Cache them
+				IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
+				
+				//Return them
+				return result;
 			}
 			
-			return getTotalIOBNightscout(time); //Deafults to Nightscout
+			//Get calculations
+			result = getTotalIOBNightscout(time); //Defaults to Nightscout if everything else fails
+			
+			//Cache them
+			IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
+			
+			//Return them
+			return result;
 		}
 		
 		public static function getTotalIOBNightscout(time:Number):IOBCalcTotals
@@ -408,18 +453,60 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):CobCalcTotals 
 		{
+			//Check cache
+			var numberOfCachedItems:int = COBCache.length;
+			var numberOfTreatmentItems:int = treatmentsList.length;
+			
+			if (numberOfCachedItems > MAX_IOB_COB_CACHED_ITEMS)
+			{
+				COBCache = COBCache.slice(-MAX_IOB_COB_CACHED_ITEMS); //If number of cached items is bigger than MAX_CACHED_ITEMS we truncate the array removing the older entries.
+				numberOfCachedItems = MAX_IOB_COB_CACHED_ITEMS;
+			}
+			
+			for(var i:int = numberOfCachedItems - 1 ; i >= 0; i--)
+			{
+				var cachedItem:Object = COBCache[i];
+				if (Math.abs(cachedItem.timestamp - time) < TimeSpan.TIME_1_MINUTE && cachedItem.numTreatments == numberOfTreatmentItems)
+				{
+					return cachedItem.cobCalc;
+				}
+			}
+			
+			//No cached data found. Perform real calculations
 			var algorith:String = "openaps";
+			var result:CobCalcTotals;
 			
 			if (algorith == "nightscout")
 			{
-				return getTotalCOBNightscout(time);
+				//Get calculations
+				result = getTotalCOBNightscout(time);
+				
+				//Cache them
+				COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+				
+				//Return them
+				return result;
 			}
 			else if (algorith == "openaps")
 			{
-				return getTotalCOBOpenAPS(time);
+				//Get calculations
+				result = getTotalCOBOpenAPS(time);
+				
+				//Cache them
+				COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+				
+				//Return them
+				return result;
 			}
 			
-			return getTotalCOBNightscout(time); //Default to Nightscout
+			//Get calculations
+			result = getTotalCOBNightscout(time); //If everything else we default to Nightscout
+			
+			//Cache them
+			COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+			
+			//Return them
+			return result;
 		}
 		
 		public static function getTotalCOBNightscout(time:Number):CobCalcTotals

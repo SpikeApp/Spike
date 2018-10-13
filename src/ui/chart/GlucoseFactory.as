@@ -198,11 +198,11 @@ package ui.chart
 		
 		public static function formatIOB(IOBValue:Number):String
 		{
-			return IOBValue.toFixed(2) + "U";
+			return Math.abs(IOBValue).toFixed(2) + "U";
 		}
 		public static function formatCOB(COBValue:Number):String
 		{
-			return COBValue.toFixed(1) + "g";
+			return Math.abs(COBValue).toFixed(1) + "g";
 		}
 		
 		public static function getRawGlucose(targetBGReading:BgReading = null, lastestCalibration:Calibration = null):Number 

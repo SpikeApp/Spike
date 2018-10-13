@@ -5,7 +5,10 @@ package services
 	
 	import flash.events.Event;
 	import flash.utils.Dictionary;
+	import flash.utils.clearInterval;
+	import flash.utils.clearTimeout;
 	import flash.utils.setInterval;
+	import flash.utils.setTimeout;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -22,6 +25,7 @@ package services
 	import model.ModelLocator;
 	
 	import starling.core.Starling;
+	import starling.utils.SystemUtil;
 	
 	import treatments.TreatmentsManager;
 	
@@ -52,6 +56,8 @@ package services
 		private static var historyTimespan:int;
 		private static var widgetHistory:int;
 		private static var glucoseUnit:String;
+		private static var IOBCOBIntervalID:int = -1;
+		private static var IOBCOBTimeoutID:int = -1;
 		
 		/* Objects */
 		private static var months:Array;
@@ -84,7 +90,7 @@ package services
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentRefresh);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onTreatmentRefresh);
 			
-			setInterval(updateTreatments, TimeSpan.TIME_1_MINUTE);
+			IOBCOBIntervalID = setInterval(updateTreatments, TimeSpan.TIME_2_MINUTES_30_SECONDS);
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
@@ -346,7 +352,11 @@ package services
 			if (serviceHalted)
 				return;
 			
-			updateTreatments();
+			clearTimeout(IOBCOBTimeoutID);
+			IOBCOBTimeoutID = setTimeout( function():void 
+			{
+				updateTreatments();
+			}, TimeSpan.TIME_2_SECONDS );
 		}
 		
 		private static function isLowValue(value:String):Boolean
@@ -421,6 +431,10 @@ package services
 			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
 			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob));
+			
+			//Re set update timeout
+			clearInterval(IOBCOBIntervalID);
+			IOBCOBIntervalID = setInterval(updateTreatments, TimeSpan.TIME_2_MINUTES_30_SECONDS);
 		}
 		
 		/**
@@ -436,6 +450,8 @@ package services
 		private static function stopService():void
 		{
 			serviceHalted = true;
+			
+			clearInterval(IOBCOBIntervalID);
 			
 			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived);
