@@ -1,13 +1,17 @@
 package treatments
 {
 	import com.adobe.utils.DateUtil;
+	import com.hurlant.util.Base64;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	import flash.system.System;
 	import flash.text.SoftKeyboardType;
+	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
+	import flash.utils.getTimer;
 	
+	import mx.messaging.channels.AMFChannel;
 	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
@@ -18,7 +22,9 @@ package treatments
 	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
 	import feathers.controls.Button;
@@ -50,6 +56,7 @@ package treatments
 	
 	import services.CalibrationService;
 	import services.NightscoutService;
+	import services.TransmitterService;
 	
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
@@ -90,7 +97,9 @@ package treatments
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 		private static var foodManager:FoodManager;
 		private static var IOBCache:Array = [];
-		private static var COBCache:Dictionary = new Dictionary();
+		private static var COBCache:Object = {};
+		private static var COBCacheTimes:Array = [];
+		private static var lastSavedCachesTimestamp:Number = 0;
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -140,9 +149,139 @@ package treatments
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, saveCachesMaster, false, 10000, true);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, saveCachesFollower, false, 10000, true);
 			
 			//Fetch Data From Database
 			fetchAllTreatmentsFromDatabase();
+			
+			//Fetch IOB/COB Caches
+			fetchIOBCOBCaches();
+		}
+		
+		private static function fetchIOBCOBCaches():void
+		{
+			Trace.myTrace("TreatmentsManager.as", "Fetching IOB/COB caches from database...");
+			
+			var databaseCachesList:Array = Database.getIOBCOBCachesSynchronous();
+			
+			if (databaseCachesList.length == 0)
+			{
+				//Add empty caches
+				Database.insertEmptyIOBCOBCaches();
+			}
+			else
+			{
+				//Unserialize saved caches
+				var databaseCaches:Object = databaseCachesList[0];
+				if (databaseCaches != null && databaseCaches.cob != null && databaseCaches.cobindexes != null && databaseCaches.iob != null && databaseCaches.iobindexes != null)
+				{
+					try
+					{
+						COBCache = Base64.decodeToByteArray(databaseCaches.cob).readObject() as Object;
+						COBCacheTimes = Base64.decodeToByteArray(databaseCaches.cobindexes).readObject() as Array;
+					} 
+					catch(error:Error) 
+					{
+						//Something went wrong try to add default empty caches again and 
+						//Set caches in memory to default values
+						COBCache = {};
+						COBCacheTimes = [];
+						
+						//Add default empty caches to database
+						Database.deleteAllIOBCOBCachesSynchronous();
+						Database.insertEmptyIOBCOBCaches();
+					}
+				}
+				else
+				{
+					//Something went wrong try to add default empty caches again and 
+					//Set caches in memory to default values
+					COBCache = {};
+					COBCacheTimes = [];
+					
+					//Add default empty caches to database
+					Database.deleteAllIOBCOBCachesSynchronous();
+					Database.insertEmptyIOBCOBCaches();
+				}
+			}
+		}
+		
+		private static function saveCachesMaster(e:TransmitterServiceEvent):void
+		{
+			saveIOBCOBCache();
+		}
+		
+		private static function saveCachesFollower(e:FollowerEvent):void
+		{
+			saveIOBCOBCache();
+		}
+		
+		private static function saveIOBCOBCache():void
+		{
+			var now:Number = new Date().valueOf();
+			if (now - lastSavedCachesTimestamp < TimeSpan.TIME_15_MINUTES)
+			{
+				//Only save caches every 15 minutes or so.
+				return;
+			}
+			
+			var numberOfCaches:uint = COBCacheTimes.length;
+			if (numberOfCaches == 0)
+			{
+				//Nothing to save
+				return;
+			}
+			
+			//Sort indexes
+			COBCacheTimes.sort(Array.NUMERIC | Array.DESCENDING);
+			
+			//Define time limit (24h ago)
+			var twentyFourHoursAgo:Number = now - TimeSpan.TIME_24_HOURS;
+			
+			//Loop through all caches and remove the old ones (>24h)
+			for(var i:int = numberOfCaches - 1 ; i >= 0; i--)
+			{
+				var cacheTime:Number = COBCacheTimes[i];
+				
+				if (cacheTime < twentyFourHoursAgo)
+				{
+					//Remove the index
+					COBCacheTimes.pop(); 
+					
+					//Remove the corresponding cache
+					delete COBCache[cacheTime];
+				}
+				else
+				{
+					//We've removed all outdated caches already.
+					break;
+				}
+			}
+			
+			//Serialize Caches
+			
+			//COB
+			var COBCachedBytes:ByteArray = new ByteArray();
+			COBCachedBytes.writeObject(COBCache);
+			var COBCachedBytesString:String = Base64.encodeByteArray(COBCachedBytes);
+			
+			var COBCachedTimesBytes:ByteArray = new ByteArray();
+			COBCachedTimesBytes.writeObject(COBCacheTimes);
+			var COBCachedTimesBytesString:String = Base64.encodeByteArray(COBCachedTimesBytes);
+			
+			//IOB (not yet implemeted)
+			var IOBCachedBytes:ByteArray = new ByteArray();
+			IOBCachedBytes.writeObject({});
+			var IOBCachedBytesString:String = Base64.encodeByteArray(IOBCachedBytes);
+			
+			var IOBCachedTimesBytes:ByteArray = new ByteArray();
+			IOBCachedTimesBytes.writeObject([]);
+			var IOBCachedTimesBytesString:String = Base64.encodeByteArray(IOBCachedTimesBytes);
+			
+			Database.updateIOBCOBCachesSynchronous(IOBCachedBytesString, IOBCachedTimesBytesString, COBCachedBytesString, COBCachedTimesBytesString);
+			
+			Trace.myTrace("TreatmentsManager.as", "Saved IOB/COB caches to database...");
 		}
 		
 		public static function fetchAllTreatmentsFromDatabase():void
@@ -453,61 +592,69 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.IOB_COB_UPDATED));
 		}
 		
-		public static function getTotalCOB(time:Number):CobCalcTotals 
+		public static function getTotalCOB(time:Number):Object 
 		{
+			//Get current algorithm
+			var algorithmCOB:String = "openaps";
 			
-			trace("ALL TREATMENTS", ObjectUtil.toString(treatmentsList));
+			//Sort Treatments
+			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 			
-			var relevantTreatments:Array = treatmentsList.filter(filterFunction);
-			var filterFunction:Function = function(element:Treatment, index:int, arr:Array):Boolean 
+			//Get relevant treatments
+			var carbWindow:Number = time - TimeSpan.TIME_6_HOURS;
+			var relevantTreatmentsHash:String = "";
+			var relevantTreatmentsList:Array = treatmentsList.filter
+			(
+				function (treatment:Treatment, index:int, arr:Array):Boolean 
+				{
+					//Consider treatments that contain carbs/insulin from up to 6 hours ago
+					var validated:Boolean = (treatment.carbs > 0 || treatment.insulinAmount > 0) && treatment.timestamp > carbWindow && treatment.timestamp <= time;
+					
+					if (validated)
+					{
+						relevantTreatmentsHash += treatment.timestamp;
+					}
+					
+					return validated;
+				}
+			);
+			
+			//Check first layer of cache
+			var cachedCOB:Object = COBCache[time];
+			if (cachedCOB != null && cachedCOB.hash == relevantTreatmentsHash && cachedCOB.algorithm == algorithmCOB)
 			{
-				return element.type == (Treatment.TYPE_BOLUS || Treatment.TYPE_CARBS_CORRECTION || Treatment.TYPE_CORRECTION_BOLUS|| Treatment.TYPE_MEAL_BOLUS);
-			};
-			
-			trace("RELEVANT TREATMENTS", ObjectUtil.toString(relevantTreatments));
-			
-			
-			//Check cache
-			/*var numberOfCachedItems:int = COBCache.length;
-			var numberOfTreatmentItems:int = treatmentsList.length;
-			
-			if (numberOfCachedItems > MAX_IOB_COB_CACHED_ITEMS)
+				trace("RETURNING CACHED RESULT!");
+				
+				return cachedCOB.cobCalc;
+			}
+			else
 			{
-				COBCache = COBCache.slice(-MAX_IOB_COB_CACHED_ITEMS); //If number of cached items is bigger than MAX_CACHED_ITEMS we truncate the array removing the older entries.
-				numberOfCachedItems = MAX_IOB_COB_CACHED_ITEMS;
+				trace("performing calculations");
 			}
 			
-			for(var i:int = numberOfCachedItems - 1 ; i >= 0; i--)
-			{
-				var cachedItem:Object = COBCache[i];
-				if (Math.abs(cachedItem.timestamp - time) < TimeSpan.TIME_1_MINUTE && cachedItem.numTreatments == numberOfTreatmentItems)
-				{
-					return cachedItem.cobCalc;
-				}
-			}*/
-			
 			//No cached data found. Perform real calculations
-			var algorith:String = "openaps";
-			var result:CobCalcTotals;
+			var result:Object;
 			
-			if (algorith == "nightscout")
+			if (algorithmCOB == "nightscout")
 			{
 				//Get calculations
 				result = getTotalCOBNightscout(time);
 				
 				//Cache them
-				//COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithmCOB, cobCalc: result };
+				COBCacheTimes.push(time);
 				
 				//Return them
 				return result;
 			}
-			else if (algorith == "openaps")
+			else if (algorithmCOB == "openaps")
 			{
 				//Get calculations
 				result = getTotalCOBOpenAPS(time);
 				
 				//Cache them
-				COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithmCOB, cobCalc: result };
+				COBCacheTimes.push(time);
 				
 				//Return them
 				return result;
@@ -517,22 +664,19 @@ package treatments
 			result = getTotalCOBNightscout(time); //If everything else we default to Nightscout
 			
 			//Cache them
-			COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+			COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithmCOB, cobCalc: result };
+			COBCacheTimes.push(time);
 			
 			//Return them
 			return result;
 		}
 		
-		public static function getTotalCOBNightscout(time:Number):CobCalcTotals
+		public static function getTotalCOBNightscout(time:Number):Object
 		{
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
-				return new CobCalcTotals
-				(
-					time,
-					pumpCOB
-				);
+				return { time: time, cob: pumpCOB };
 			}
 			
 			var carbsAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate();
@@ -551,9 +695,6 @@ package treatments
 				var currentProfile:Profile = ProfileManager.getProfileByTime(time);
 				var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 				var ic:Number = Number(currentProfile.insulinToCarbRatios);
-				
-				//Sort Treatments
-				treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 				
 				var loopLength:int = treatmentsList.length;
 				for (var i:int = 0; i < loopLength; i++) 
@@ -622,23 +763,21 @@ package treatments
 			else
 				totalCOB = Math.round(totalCOB * 10) / 10;
 			
-			var results:CobCalcTotals = new CobCalcTotals
-				(
-					time,
-					totalCOB,
-					activeCarbs,
-					lastCarbTime,
-					firstCarbTime,
-					activeCarbs - totalCOB
-				);
+			var results:Object = 
+			{
+				time: time,
+				cob: totalCOB,
+				carbs: activeCarbs,
+				lastCarbTime: lastCarbTime,
+				firstCarbTime: firstCarbTime,
+				carbsAbsorbed: activeCarbs - totalCOB
+			}
 			
 			return results;
 		}
 		
-		public static function getTotalCOBOpenAPS(time:Number):CobCalcTotals
+		public static function getTotalCOBOpenAPS(time:Number):Object
 		{
-			//Sort Treatments
-			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 			var openAPSTreatmentsList:Array = treatmentsList.concat().reverse();
 			
 			var currentProfile:Profile = ProfileManager.getProfileByTime(time);
@@ -763,20 +902,20 @@ package treatments
 				mealCOB = 0;
 			}
 			
-			var results:CobCalcTotals = new CobCalcTotals
-				(
-					time,
-					Math.round(mealCOB * 10) / 10,
-					Math.round( carbs * 1000 ) / 1000,
-					lastCarbTime,
-					firstActiveCarbTreatmentTime,
-					carbsAbsorbed,
-					Math.round( c.currentDeviation * 100 ) / 100,
-					Math.round( c.maxDeviation * 100 ) / 100,
-					Math.round( c.minDeviation * 100 ) / 100,
-					Math.round( c.slopeFromMaxDeviation * 1000 ) / 1000,
-					Math.round( c.slopeFromMinDeviation * 1000 ) / 1000
-				);
+			var results:Object = 
+			{
+				time: time,
+				cob: Math.round(mealCOB * 10) / 10,
+				carbs: Math.round( carbs * 1000 ) / 1000,
+				lastCarbTime: lastCarbTime,
+				firstCarbTime: firstActiveCarbTreatmentTime,
+				carbsAbsorbed: carbsAbsorbed,
+				currentDeviation: Math.round( c.currentDeviation * 100 ) / 100,
+				maxDeviation: Math.round( c.maxDeviation * 100 ) / 100,
+				minDeviation: Math.round( c.minDeviation * 100 ) / 100,
+				slopeFromMaxDeviation: Math.round( c.slopeFromMaxDeviation * 1000 ) / 1000,
+				slopeFromMinDeviation: Math.round( c.slopeFromMinDeviation * 1000 ) / 1000
+			}
 			
 			return results;
 		}

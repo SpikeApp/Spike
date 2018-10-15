@@ -10,7 +10,6 @@ package model
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
-	import treatments.CobCalcTotals;
 	import treatments.IOBCalcTotals;
 	import treatments.Profile;
 	import treatments.ProfileManager;
@@ -196,7 +195,7 @@ package model
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var nowCOB:CobCalcTotals = TreatmentsManager.getTotalCOB(now);
+			var nowCOB:Object = TreatmentsManager.getTotalCOB(now);
 			if (nowCOB.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it

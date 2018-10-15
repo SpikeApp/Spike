@@ -62,7 +62,6 @@ package ui.chart
 	import starling.utils.Align;
 	import starling.utils.SystemUtil;
 	
-	import treatments.CobCalcTotals;
 	import treatments.IOBCalcTotals;
 	import treatments.Insulin;
 	import treatments.ProfileManager;
@@ -75,8 +74,7 @@ package ui.chart
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
-	
-	import utils.BgGraphBuilder;
+
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
@@ -4228,7 +4226,7 @@ package ui.chart
 			
 			//Data
 			var initialIOB:IOBCalcTotals;
-			var initialCOB:CobCalcTotals;
+			var initialCOB:Object;
 			
 			if (type == "insulin")
 			{
