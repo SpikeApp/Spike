@@ -453,6 +453,8 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):CobCalcTotals 
 		{
+			trace("Requested COB for:", new Date(time));
+			
 			//Check cache
 			var numberOfCachedItems:int = COBCache.length;
 			var numberOfTreatmentItems:int = treatmentsList.length;

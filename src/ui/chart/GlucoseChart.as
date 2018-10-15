@@ -333,6 +333,8 @@ package ui.chart
 		private var activeGlucoseDelimiter:SpikeLine;
 		private var redrawPredictionsTimeoutID:int = -1;
 		private var lastPredictionsRedrawTimestamp:Number = 0;
+		private var algorithmIOBCOB:String = "openaps";
+		private var latestOpenAPSRequestedCOBTimestamp:Number = 0;
 		
 		private function redrawPredictions():void
 		{
@@ -1217,8 +1219,28 @@ package ui.chart
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
-				COBPill.setValue(GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(time).cob));
-				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
+				if (algorithmIOBCOB == "openaps")
+				{
+					//For OpenAPS we ask for COB of the current selected marker timestamp. In between timestamps give exactly the same COB value and waste CPU cycles
+					if (displayLatestBGValue)
+					{
+						time = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp;
+					}
+					else
+						time = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp;
+					
+					if (latestOpenAPSRequestedCOBTimestamp != time)
+					{
+						latestOpenAPSRequestedCOBTimestamp = time;
+						COBPill.setValue(GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(time).cob));
+						SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
+					}
+				}
+				else
+				{
+					COBPill.setValue(GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(time).cob));
+					SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
+				}
 			}
 			
 			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
