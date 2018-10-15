@@ -650,7 +650,7 @@ package treatments
 			else if (algorithmCOB == "openaps")
 			{
 				//Get calculations
-				result = getTotalCOBOpenAPS(time);
+				result = getTotalCOBOpenAPS(time, relevantTreatmentsList.reverse());
 				
 				//Cache them
 				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithmCOB, cobCalc: result };
@@ -776,19 +776,13 @@ package treatments
 			return results;
 		}
 		
-		public static function getTotalCOBOpenAPS(time:Number):Object
+		public static function getTotalCOBOpenAPS(time:Number, treatments:Array):Object
 		{
-			var openAPSTreatmentsList:Array = treatmentsList.concat().reverse();
-			
+			var openAPSTreatmentsList:Array = treatments;
 			var currentProfile:Profile = ProfileManager.getProfileByTime(time);
 			
 			var carbs:Number = 0;
-			var nsCarbs:Number = 0;
-			var bwCarbs:Number = 0;
-			var journalCarbs:Number = 0;
-			var bwFound :Boolean= false;
 			var carbDelay:Number = 20 * 60 * 1000; //Need to overwrite this to the individual carb delay.
-			var maxCarbs:Number = 0;
 			var mealCarbTime:Number = time;
 			var lastCarbTime:Number = 0;
 			var firstActiveCarbTreatmentTime:Number = time;
@@ -834,47 +828,40 @@ package treatments
 			for (i = 0; i < numberOfTreatments; i++) 
 			{
 				var treatment:Treatment = openAPSTreatmentsList[i];
-				var now:Number = time;
-				
-				// consider carbs from up to 6 hours ago in calculating COB
-				var carbWindow:Number = now - (6 * 60 * 60 * 1000);
 				var treatmentTime:Number = treatment.timestamp;
 				
-				if (treatmentTime > carbWindow && treatmentTime <= now) 
+				if (treatment.carbs > 0) 
 				{
-					if (treatment.carbs > 0) 
+					carbs += treatment.carbs;
+					COB_inputs.mealTime = treatmentTime;
+					lastCarbTime = Math.max(lastCarbTime, treatmentTime);
+						
+					var myCarbsAbsorbed:Number = calcMealCOB(COB_inputs).carbsAbsorbed;
+					carbsAbsorbed += myCarbsAbsorbed;
+					var myMealCOB:Number = Math.max(0, carbs - myCarbsAbsorbed);
+						
+					if (!isNaN(myMealCOB))
 					{
-						carbs += treatment.carbs;
-						COB_inputs.mealTime = treatmentTime;
-						lastCarbTime = Math.max(lastCarbTime, treatmentTime);
-						
-						var myCarbsAbsorbed:Number = calcMealCOB(COB_inputs).carbsAbsorbed;
-						carbsAbsorbed += myCarbsAbsorbed;
-						var myMealCOB:Number = Math.max(0, carbs - myCarbsAbsorbed);
-						
-						if (!isNaN(myMealCOB))
-						{
-							mealCOB = Math.max(mealCOB, myMealCOB);
+						mealCOB = Math.max(mealCOB, myMealCOB);
 							
-							if (myMealCOB > 0 && treatment.timestamp < firstActiveCarbTreatmentTime)
-							{
-								firstActiveCarbTreatmentTime = treatment.timestamp;
-							}
+						if (myMealCOB > 0 && treatment.timestamp < firstActiveCarbTreatmentTime)
+						{
+							firstActiveCarbTreatmentTime = treatment.timestamp;
+						}
 								
-						}
-						else
-						{
-							trace("Bad myMealCOB:",myMealCOB, "mealCOB:",mealCOB, "carbs:",carbs,"myCarbsAbsorbed:",myCarbsAbsorbed);
-						}
+					}
+					else
+					{
+						Trace.myTrace("TreatmentsManager.as", "Bad myMealCOB: " + myMealCOB + ", mealCOB: " + mealCOB + ", carbs: " + carbs + ", myCarbsAbsorbed: " + myCarbsAbsorbed);
+					}
 						
-						if (myMealCOB < mealCOB) 
-						{
-							carbsToRemove += treatment.carbs;
-						} 
-						else 
-						{
-							carbsToRemove = 0;
-						}
+					if (myMealCOB < mealCOB) 
+					{
+						carbsToRemove += treatment.carbs;
+					} 
+					else 
+					{
+						carbsToRemove = 0;
 					}
 				}
 			}
@@ -886,19 +873,19 @@ package treatments
 			COB_inputs.ciTime = time;
 			
 			// set mealTime to 6h ago for Deviation calculations
-			COB_inputs.mealTime = time - (6 * 60 * 60 * 1000);
+			COB_inputs.mealTime = time - TimeSpan.TIME_6_HOURS;
 			var c:Object = calcMealCOB(COB_inputs);
 			
 			// if currentDeviation is null or maxDeviation is 0, set mealCOB to 0 for zombie-carb safety
 			if (c.currentDeviation == null || isNaN(c.currentDeviation)) 
 			{
-				trace("Warning: setting mealCOB to 0 because currentDeviation is null/undefined");
+				Trace.myTrace("TreatmentsManager.as", "Warning: Aetting mealCOB to 0 because currentDeviation is null/undefined");
 				mealCOB = 0;
 			}
 			
 			if (c.maxDeviation == null || isNaN(c.maxDeviation)) 
 			{
-				trace("Warning: setting mealCOB to 0 because maxDeviation is 0 or undefined");
+				Trace.myTrace("TreatmentsManager.as", "Warning: Setting mealCOB to 0 because maxDeviation is 0 or undefined");
 				mealCOB = 0;
 			}
 			
@@ -934,7 +921,7 @@ package treatments
 			var deviationSum:Number = 0;
 			var carbsAbsorbed:Number = 0;
 			var bucketed_data:Array = [];
-			bucketed_data[0] = { glucose: glucose_data[0].calculatedValue, timestamp: glucose_data[0].timestamp, date: glucose_data[0].timestamp };
+			bucketed_data[0] = { glucose: glucose_data[0]._calculatedValue, timestamp: glucose_data[0]._timestamp, date: glucose_data[0]._timestamp };
 			
 			var j:Number = 0;
 			var foundPreMealBG:Boolean = false;
@@ -952,8 +939,8 @@ package treatments
 			for (i = 1; i < glucoseDataLength; ++i)
 			{
 				var bgReading:BgReading = glucose_data[i];
-				var bgCalculatedValue:Number = bgReading.calculatedValue;
-				var spikeBgTime:Number = bgReading.timestamp;
+				var bgCalculatedValue:Number = bgReading._calculatedValue;
+				var spikeBgTime:Number = bgReading._timestamp;
 				var lastbgTime:Number;
 				
 				if (bgReading == null)
@@ -968,7 +955,7 @@ package treatments
 				}
 				
 				// only consider BGs for 6h after a meal for calculating COB
-				var hoursAfterMeal:Number = (bgTime - mealTime) / (60 * 60 * 1000);
+				var hoursAfterMeal:Number = (bgTime - mealTime) / TimeSpan.TIME_1_HOUR;
 				if (hoursAfterMeal > 6)
 				{
 					continue;
@@ -982,15 +969,12 @@ package treatments
 					//console.error("Found pre-meal BG:",glucose_data[i].glucose, bgTime, Math.round(hoursAfterMeal*100)/100);
 					foundPreMealBG = true;
 				}
-				//console.error(glucose_data[i].glucose, bgTime, Math.round(hoursAfterMeal*100)/100, bucketed_data[bucketed_data.length-1].display_time);
+				
 				// only consider last ~45m of data in CI mode
 				// this allows us to calculate deviations for the last ~30m
-				
-				//trace("ciTime", ciTime);
-				
 				if (!isNaN(ciTime)) 
 				{
-					var hoursAgo:Number = (ciTime - bgTime) / (60 * 60 * 1000);
+					var hoursAgo:Number = (ciTime - bgTime) / TimeSpan.TIME_1_HOUR;
 					if (hoursAgo > 1 || hoursAgo < 0) 
 					{
 						continue;
@@ -1001,40 +985,34 @@ package treatments
 				{
 					lastbgTime = bucketed_data[bucketed_data.length-1].date;
 				} 
-				else if ((lastbgi >= 0) && !isNaN(glucose_data[lastbgi].timestamp)) 
+				else if ((lastbgi >= 0) && !isNaN(glucose_data[lastbgi]._timestamp)) 
 				{
-					lastbgTime = glucose_data[lastbgi].timestamp;
+					lastbgTime = glucose_data[lastbgi]._timestamp;
 				} 
 				else 
 				{ 
 					trace("Could not determine last BG time"); 
 				}
 				
-				//trace("I'm IN");
-				
-				var elapsed_minutes:Number = (bgTime - lastbgTime)/(60*1000);
-				//console.error(bgTime, lastbgTime, elapsed_minutes);
-				if(Math.abs(elapsed_minutes) > 8) 
+				var elapsed_minutes:Number = (bgTime - lastbgTime) / TimeSpan.TIME_1_MINUTE;
+				if (Math.abs(elapsed_minutes) > 8) 
 				{
 					// interpolate missing data points
 					var lastbg:Number = glucose_data[lastbgi].calculatedValue;
 					
 					// cap interpolation at a maximum of 4h
 					elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
-					//console.error(elapsed_minutes);
 					
 					while(elapsed_minutes > 5) 
 					{
-						var previousbgTime:Number = lastbgTime - (5 * 60 * 1000);
+						var previousbgTime:Number = lastbgTime - TimeSpan.TIME_5_MINUTES;
 						j++;
 						bucketed_data[j] = {};
 						bucketed_data[j].date = previousbgTime;
 						bucketed_data[j].timestamp = previousbgTime;
-						var gapDelta:Number = glucose_data[i].calculatedValue - lastbg;
-						//console.error(gapDelta, lastbg, elapsed_minutes);
+						var gapDelta:Number = glucose_data[i]._calculatedValue - lastbg;
 						var previousbg:Number = lastbg + (5/elapsed_minutes * gapDelta);
 						bucketed_data[j].glucose = Math.round(previousbg);
-						//console.error("Interpolated", bucketed_data[j]);
 						
 						elapsed_minutes = elapsed_minutes - 5;
 						lastbg = previousbg;
@@ -1045,15 +1023,14 @@ package treatments
 				else if(Math.abs(elapsed_minutes) > 2) 
 				{
 					j++;
-					bucketed_data[j] = { glucose: glucose_data[i].calculatedValue, timestamp: bgTime, date: bgTime };
+					bucketed_data[j] = { glucose: glucose_data[i]._calculatedValue, timestamp: bgTime, date: bgTime };
 				} 
 				else 
 				{
-					bucketed_data[j].glucose = (bucketed_data[j].glucose + glucose_data[i].calculatedValue) / 2;
+					bucketed_data[j].glucose = (bucketed_data[j].glucose + glucose_data[i]._calculatedValue) / 2;
 				}
 				
 				lastbgi = i;
-				//console.error(bucketed_data[j].date)
 			}
 			var currentDeviation:Number;
 			var slopeFromMaxDeviation:Number = 0;
@@ -1061,7 +1038,6 @@ package treatments
 			var maxDeviation:Number = 0;
 			var minDeviation:Number = 999;
 			var allDeviations:Array = [];
-			//console.error(bucketed_data);
 			
 			for (i = 0; i < bucketed_data.length-3; ++i) 
 			{
@@ -1069,7 +1045,6 @@ package treatments
 				
 				var sens:Number = Number(ProfileManager.getProfileByTime(bgTime).insulinSensitivityFactors);
 				
-				//console.error(bgTime , bucketed_data[i].glucose, bucketed_data[i].date);
 				var bg:Number;
 				var avgDelta:Number;
 				var delta:Number;
@@ -1078,7 +1053,6 @@ package treatments
 					bg = bucketed_data[i].glucose;
 					if ( bg < 39 || bucketed_data[i+3].glucose < 39) 
 					{
-						//trace("!");
 						continue;
 					}
 					avgDelta = (bg - bucketed_data[i+3].glucose)/3;
@@ -1091,39 +1065,27 @@ package treatments
 				
 				avgDelta = Math.round(avgDelta * 100) / 100;
 				iob_inputs.clock=bgTime;
-				//iob_inputs.profile.current_basal = basal.basalLookup(basalprofile, bgTime);
-				//console.log(JSON.stringify(iob_inputs.profile));
-				//console.error("Before: ", new Date().getTime());
+				
 				var iob:Object = get_iob(iob_inputs, true)[0];
-				//console.error("After: ", new Date().getTime());
-				//console.error(JSON.stringify(iob));
-				
-				var bgi:Number = Math.round(( -iob.activity * sens * 5 )*100)/100;
-				//bgi = bgi.toFixed(2);
-				//console.error(delta);
-				
-				//trace("delta", delta);
-				//trace("bgi", bgi);
+				var bgi:Number = Math.round(( -iob.activity * sens * 5 ) * 100) / 100;
 				
 				var deviation:Number = delta - bgi;
 				deviation = Math.round(deviation * 100) / 100;
-				//deviation = deviation.toFixed(2);
-				//if (deviation < 0 && deviation > -2) { console.error("BG: "+bg+", avgDelta: "+avgDelta+", BGI: "+bgi+", deviation: "+deviation); }
+				
 				// calculate the deviation right now, for use in min_5m
 				if (i == 0) 
 				{ 
-					currentDeviation = Math.round((avgDelta-bgi)*1000)/1000;
+					currentDeviation = Math.round((avgDelta-bgi) * 1000) / 1000;
 					if (ciTime > bgTime) 
 					{
-						//console.error("currentDeviation:",currentDeviation,avgDelta,bgi);
 						allDeviations.push(Math.round(currentDeviation));
 					}
 				} 
 				else if (ciTime > bgTime) 
 				{
-					var avgDeviation:Number = Math.round((avgDelta-bgi)*1000)/1000;
-					var deviationSlope:Number = (avgDeviation-currentDeviation)/(bgTime-ciTime)*1000*60*5;
-					//console.error(avgDeviation,currentDeviation,bgTime,ciTime)
+					var avgDeviation:Number = Math.round((avgDelta-bgi) * 1000) / 1000;
+					var deviationSlope:Number = (avgDeviation-currentDeviation) / (bgTime-ciTime) * TimeSpan.TIME_5_MINUTES;
+					
 					if (avgDeviation > maxDeviation) 
 					{
 						slopeFromMaxDeviation = Math.min(0, deviationSlope);
@@ -1135,20 +1097,19 @@ package treatments
 						minDeviation = avgDeviation;
 					}
 					
-					//console.error("Deviations:",avgDeviation, avgDelta,bgi,bgTime);
 					allDeviations.push(Math.round(avgDeviation));
-					//console.error(allDeviations);
 				}
 				
 				// if bgTime is more recent than mealTime
-				if(bgTime > mealTime) {
+				if(bgTime > mealTime) 
+				{
 					// figure out how many carbs that represents
 					// if currentDeviation is > 2 * min_5m_carbimpact, assume currentDeviation/2 worth of carbs were absorbed
 					// but always assume at least profile.min_5m_carbimpact (3mg/dL/5m by default) absorption
 					var ci:Number = Math.max(deviation, currentDeviation/2, 3);
 					var absorbed:Number = ci * Number(profile.insulinToCarbRatios) / sens;
+					
 					// and add that to the running total carbsAbsorbed
-					//console.error("carbsAbsorbed:",carbsAbsorbed,"absorbed:",absorbed,"bgTime:",bgTime,"BG:",bucketed_data[i].glucose)
 					carbsAbsorbed += absorbed;
 				}
 			}
@@ -1198,7 +1159,6 @@ package treatments
 					lastBolusTime = treatment.timestamp;
 					
 					break;
-					//lastBolusTime = Math.max(lastBolusTime,treatment.timestamp);
 				}
 			}
 			
@@ -1215,16 +1175,10 @@ package treatments
 			for (i=0; i<iStop; i+=5)
 			{
 				var t:Number = clock + i*60000;
-				//console.error(t);
 				var iob:IOBCalcTotals = getTotalIOBOpenAPS(t, "bilinear");
-				//var iobWithZeroTemp:IOBCalcTotals = sum(optsWithZeroTemp, t);
-				//console.error(opts.treatments[opts.treatments.length-1], optsWithZeroTemp.treatments[optsWithZeroTemp.treatments.length-1])
 				iobArray.push(iob);
-				//console.error(iob.iob, iobWithZeroTemp.iob);
-				//console.error(iobArray.length-1, iobArray[iobArray.length-1]);
-				//iobArray[iobArray.length-1].iobWithZeroTemp = iobWithZeroTemp;
 			}
-			//console.error(lastBolusTime);
+			
 			iobArray[0].lastBolusTime = lastBolusTime;
 			iobArray[0].lastTemp = lastTemp;
 			return iobArray;
