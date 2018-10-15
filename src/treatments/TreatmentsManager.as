@@ -8,6 +8,8 @@ package treatments
 	import flash.text.SoftKeyboardType;
 	import flash.utils.Dictionary;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -88,7 +90,7 @@ package treatments
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 		private static var foodManager:FoodManager;
 		private static var IOBCache:Array = [];
-		private static var COBCache:Array = [];
+		private static var COBCache:Dictionary = new Dictionary();
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -453,10 +455,20 @@ package treatments
 		
 		public static function getTotalCOB(time:Number):CobCalcTotals 
 		{
-			trace("Requested COB for:", new Date(time));
+			
+			trace("ALL TREATMENTS", ObjectUtil.toString(treatmentsList));
+			
+			var relevantTreatments:Array = treatmentsList.filter(filterFunction);
+			var filterFunction:Function = function(element:Treatment, index:int, arr:Array):Boolean 
+			{
+				return element.type == (Treatment.TYPE_BOLUS || Treatment.TYPE_CARBS_CORRECTION || Treatment.TYPE_CORRECTION_BOLUS|| Treatment.TYPE_MEAL_BOLUS);
+			};
+			
+			trace("RELEVANT TREATMENTS", ObjectUtil.toString(relevantTreatments));
+			
 			
 			//Check cache
-			var numberOfCachedItems:int = COBCache.length;
+			/*var numberOfCachedItems:int = COBCache.length;
 			var numberOfTreatmentItems:int = treatmentsList.length;
 			
 			if (numberOfCachedItems > MAX_IOB_COB_CACHED_ITEMS)
@@ -472,7 +484,7 @@ package treatments
 				{
 					return cachedItem.cobCalc;
 				}
-			}
+			}*/
 			
 			//No cached data found. Perform real calculations
 			var algorith:String = "openaps";
@@ -484,7 +496,7 @@ package treatments
 				result = getTotalCOBNightscout(time);
 				
 				//Cache them
-				COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+				//COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
 				
 				//Return them
 				return result;
@@ -876,8 +888,9 @@ package treatments
 					{
 						var previousbgTime:Number = lastbgTime - (5 * 60 * 1000);
 						j++;
-						bucketed_data[j] = [];
+						bucketed_data[j] = {};
 						bucketed_data[j].date = previousbgTime;
+						bucketed_data[j].timestamp = previousbgTime;
 						var gapDelta:Number = glucose_data[i].calculatedValue - lastbg;
 						//console.error(gapDelta, lastbg, elapsed_minutes);
 						var previousbg:Number = lastbg + (5/elapsed_minutes * gapDelta);
