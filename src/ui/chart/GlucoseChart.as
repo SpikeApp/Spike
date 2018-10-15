@@ -838,7 +838,7 @@ package ui.chart
 			{
 				firstBGReadingTimeStamp = Number(_dataSource[0].timestamp);
 				
-				if (!predictionsEnabled)
+				if (!predictionsEnabled || predictionsList.length == 0)
 					lastBGreadingTimeStamp = !isHistoricalData ? (new Date()).valueOf() : Number(_dataSource[_dataSource.length - 1].timestamp);
 				else
 					lastBGreadingTimeStamp = predictionsList[predictionsList.length - 1].timestamp;
