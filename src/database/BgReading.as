@@ -899,7 +899,7 @@ package database
 			
 			if (lastBgReadingCalculatedValue > 400) 
 			{
-				_noise = "4";//Heavy
+				_noise = "3";//Medium
 				return; 
 			} 
 			else if (lastBgReadingCalculatedValue  < 40) 
@@ -945,12 +945,14 @@ package database
 				if ((lastDelta > 0) && (y2y1Delta < 0)) 
 				{
 					// switched from positive delta to negative, increase noise impact  
-					y2y1Delta = y2y1Delta * 1.1;
+					//y2y1Delta = y2y1Delta * 1.1;
+					y2y1Delta = y2y1Delta * 1.2;
 				}
 				else if ((lastDelta < 0) && (y2y1Delta > 0)) 
 				{
 					// switched from negative delta to positive, increase noise impact 
-					y2y1Delta = y2y1Delta * 1.2;
+					//y2y1Delta = y2y1Delta * 1.2; ORIGINAL
+					y2y1Delta = y2y1Delta * 1.3; 
 				}
 				
 				sod += Math.sqrt(Math.pow(x2x1Delta, 2) + Math.pow(y2y1Delta, 2));
@@ -970,22 +972,25 @@ package database
 			}
 			
 			//Convert to Nightscout/xDrip format
-			if (internalNoise < 0.35) 
+			//if (internalNoise < 0.35)  ORIGINAL
+			if (internalNoise < 0.2) 
 			{
 				_noise = "1"; //Clean
 				return;
 			} 
-			else if (internalNoise < 0.5) 
+			//else if (internalNoise < 0.5) 
+			else if (internalNoise < 0.35) 
 			{
 				_noise = "2"; //Light
 				return;
 			} 
-			else if (internalNoise < 0.7) 
+			//else if (internalNoise < 0.7) 
+			else if (internalNoise < 0.5) 
 			{
 				_noise = "3"; //Medium
 				return;
 			} 
-			else if (internalNoise >= 0.7) 
+			else if (internalNoise >= 0.5) 
 			{
 				_noise = "4"; //Heavy
 				return;
