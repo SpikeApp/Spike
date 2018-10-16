@@ -1,11 +1,13 @@
 package treatments
 {
 	import com.adobe.utils.DateUtil;
+	import com.hurlant.util.Base64;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	import flash.system.System;
 	import flash.text.SoftKeyboardType;
+	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
@@ -16,7 +18,9 @@ package treatments
 	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
 	import feathers.controls.Button;
@@ -48,6 +52,7 @@ package treatments
 	
 	import services.CalibrationService;
 	import services.NightscoutService;
+	import services.TransmitterService;
 	
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
@@ -87,8 +92,11 @@ package treatments
 		public static var pumpCOB:Number = 0;
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 		private static var foodManager:FoodManager;
-		private static var IOBCache:Array = [];
-		private static var COBCache:Array = [];
+		private static var IOBCache:Object = {};
+		private static var IOBCacheTimes:Array = [];
+		private static var COBCache:Object = {};
+		private static var COBCacheTimes:Array = [];
+		private static var lastSavedCachesTimestamp:Number = 0;
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -138,9 +146,138 @@ package treatments
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, saveCachesMaster, false, 10000, true);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, saveCachesFollower, false, 10000, true);
 			
 			//Fetch Data From Database
 			fetchAllTreatmentsFromDatabase();
+			
+			//Fetch IOB/COB Caches
+			fetchIOBCOBCaches();
+		}
+		
+		private static function fetchIOBCOBCaches():void
+		{
+			Trace.myTrace("TreatmentsManager.as", "Fetching IOB/COB caches from database...");
+			
+			var databaseCachesList:Array = Database.getIOBCOBCachesSynchronous();
+			
+			if (databaseCachesList.length == 0)
+			{
+				//Add empty caches
+				Database.insertEmptyIOBCOBCaches();
+			}
+			else
+			{
+				//Unserialize saved caches
+				var databaseCaches:Object = databaseCachesList[0];
+				if (databaseCaches != null && databaseCaches.cob != null && databaseCaches.cobindexes != null && databaseCaches.iob != null && databaseCaches.iobindexes != null)
+				{
+					try
+					{
+						COBCache = Base64.decodeToByteArray(databaseCaches.cob).readObject() as Object;
+						COBCacheTimes = Base64.decodeToByteArray(databaseCaches.cobindexes).readObject() as Array;
+					} 
+					catch(error:Error) 
+					{
+						//Something went wrong try to add default empty caches again and 
+						//Set caches in memory to default values
+						COBCache = {};
+						COBCacheTimes = [];
+						
+						//Add default empty caches to database
+						Database.deleteAllIOBCOBCachesSynchronous();
+						Database.insertEmptyIOBCOBCaches();
+					}
+				}
+				else
+				{
+					//Something went wrong try to add default empty caches again and 
+					//Set caches in memory to default values
+					COBCache = {};
+					COBCacheTimes = [];
+					
+					//Add default empty caches to database
+					Database.deleteAllIOBCOBCachesSynchronous();
+					Database.insertEmptyIOBCOBCaches();
+				}
+			}
+		}
+		
+		private static function saveCachesMaster(e:TransmitterServiceEvent):void
+		{
+			saveIOBCOBCache();
+		}
+		
+		private static function saveCachesFollower(e:FollowerEvent):void
+		{
+			saveIOBCOBCache();
+		}
+		
+		private static function saveIOBCOBCache():void
+		{
+			var now:Number = new Date().valueOf();
+			if (now - lastSavedCachesTimestamp < TimeSpan.TIME_15_MINUTES)
+			{
+				//Only save caches every 15 minutes or so.
+				return;
+			}
+			
+			var numberOfCaches:uint = COBCacheTimes.length;
+			if (numberOfCaches == 0)
+			{
+				//Nothing to save
+				return;
+			}
+			
+			//Sort indexes
+			COBCacheTimes.sort(Array.NUMERIC | Array.DESCENDING);
+			
+			//Define time limit (24h ago)
+			var twentyFourHoursAgo:Number = now - TimeSpan.TIME_24_HOURS;
+			
+			//Loop through all caches and remove the old ones (>24h)
+			for(var i:int = numberOfCaches - 1 ; i >= 0; i--)
+			{
+				var cacheTime:Number = COBCacheTimes[i];
+				
+				if (cacheTime < twentyFourHoursAgo)
+				{
+					//Remove the index
+					COBCacheTimes.pop(); 
+					
+					//Remove the corresponding cache
+					delete COBCache[cacheTime];
+				}
+				else
+				{
+					//We've removed all outdated caches already.
+					break;
+				}
+			}
+			
+			//Serialize Caches
+			//COB
+			var COBCachedBytes:ByteArray = new ByteArray();
+			COBCachedBytes.writeObject(COBCache);
+			var COBCachedBytesString:String = Base64.encodeByteArray(COBCachedBytes);
+			
+			var COBCachedTimesBytes:ByteArray = new ByteArray();
+			COBCachedTimesBytes.writeObject(COBCacheTimes);
+			var COBCachedTimesBytesString:String = Base64.encodeByteArray(COBCachedTimesBytes);
+			
+			//IOB
+			var IOBCachedBytes:ByteArray = new ByteArray();
+			IOBCachedBytes.writeObject(IOBCache);
+			var IOBCachedBytesString:String = Base64.encodeByteArray(IOBCachedBytes);
+			
+			var IOBCachedTimesBytes:ByteArray = new ByteArray();
+			IOBCachedTimesBytes.writeObject(IOBCacheTimes);
+			var IOBCachedTimesBytesString:String = Base64.encodeByteArray(IOBCachedTimesBytes);
+			
+			Database.updateIOBCOBCachesSynchronous(IOBCachedBytesString, IOBCachedTimesBytesString, COBCachedBytesString, COBCachedTimesBytesString);
+			
+			Trace.myTrace("TreatmentsManager.as", "Saved IOB/COB caches to database...");
 		}
 		
 		public static function fetchAllTreatmentsFromDatabase():void
@@ -214,39 +351,50 @@ package treatments
 			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, lastCalibration.uniqueId);
 		}
 		
-		public static function getTotalIOB(time:Number):IOBCalcTotals
+		public static function getTotalIOB(time:Number):Object
 		{
-			//Check cache
-			var numberOfCachedItems:int = IOBCache.length;
-			var numberOfTreatmentsItems:int = treatmentsList.length;
-			
-			if (numberOfCachedItems > MAX_IOB_COB_CACHED_ITEMS)
-			{
-				IOBCache = IOBCache.slice(-MAX_IOB_COB_CACHED_ITEMS); //If number of cached items is bigger than MAX_CACHED_ITEMS we truncate the array removing the older entries.
-				numberOfCachedItems = MAX_IOB_COB_CACHED_ITEMS;
-			}
-			
-			for(var i:int = numberOfCachedItems - 1 ; i >= 0; i--)
-			{
-				var cachedItem:Object = IOBCache[i];
-				if (Math.abs(cachedItem.timestamp - time) < TimeSpan.TIME_1_MINUTE && cachedItem.numTreatments == numberOfTreatmentsItems)
-				{
-					return cachedItem.iobCalc;
-				}
-			}
-			
-			//var algorithm:String = "nightscout";
 			var algorithm:String = "openaps";
 			
-			var result:IOBCalcTotals;
+			//Sort Treatments
+			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+			
+			//Get relevant treatments
+			var insulinWindow:Number = time - TimeSpan.TIME_8_HOURS;
+			var relevantTreatmentsHash:String = "";
+			var relevantTreatmentsList:Array = treatmentsList.filter
+				(
+					function (treatment:Treatment, index:int, arr:Array):Boolean 
+					{
+						//Consider treatments that contain insulin from up to 8 hours ago
+						var validated:Boolean = treatment != null && treatment.insulinAmount > 0 && treatment.timestamp > insulinWindow && treatment.timestamp <= time;
+						
+						if (validated)
+						{
+							relevantTreatmentsHash += treatment.timestamp + treatment.insulinAmount + treatment.dia + treatment.insulinID;
+						}
+						
+						return validated;
+					}
+				);
+			
+			//Check cache
+			var cachedIOB:Object = IOBCache[time];
+			if (cachedIOB != null && cachedIOB.hash == relevantTreatmentsHash && cachedIOB.algorithm == algorithm)
+			{
+				//We have a cached data point. Return it instead of performing real calulations
+				//return cachedIOB.iobCalc;
+			}
+			
+			var result:Object;
 			
 			if (algorithm == "nightscout")
 			{
 				//Get calculations
-				result = getTotalIOBNightscout(time);
+				result = getTotalIOBNightscout(time, relevantTreatmentsList);
 				
 				//Cache them
-				IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
+				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(time);
 				
 				//Return them
 				return result;
@@ -254,53 +402,61 @@ package treatments
 			else if (algorithm == "openaps")
 			{
 				//Get calculations
-				result = getTotalIOBOpenAPS(time, "bilinear");
+				result = getTotalIOBOpenAPS(time, "bilinear", relevantTreatmentsList.reverse());
+				//result = getTotalIOBOpenAPS(time, "rapid-acting", relevantTreatmentsList.reverse());
+				//result = getTotalIOBOpenAPS(time, "ultra-rapid");
 				
 				//Cache them
-				IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
+				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(time);
 				
 				//Return them
 				return result;
 			}
-			
-			//Get calculations
-			result = getTotalIOBNightscout(time); //Defaults to Nightscout if everything else fails
-			
-			//Cache them
-			IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
-			
-			//Return them
-			return result;
+			else
+			{
+				//Get calculations
+				result = getTotalIOBNightscout(time, relevantTreatmentsList); //Defaults to Nightscout if everything else fails
+				
+				//Cache them
+				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(time);
+				
+				//Return them
+				return result;
+			}
 		}
 		
-		public static function getTotalIOBNightscout(time:Number):IOBCalcTotals
+		public static function getTotalIOBNightscout(time:Number, relevantTreatments:Array):Object
 		{
 			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
-				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN, Number.NaN);
+				return { time: time, activity: 0, iob: pumpIOB, bolusiob: pumpIOB, bolusinsulin: Number.NaN, firstInsulinTime: Number.NaN };
 			}
 			
 			var totalIOB:Number = 0;
 			var totalActivity:Number = 0;
+			var totalActivityOpenAPS:Number = 0;
 			var bolusInsulin:Number = 0;
 			var firstInsulinTreatmentTime:Number = time;
+			var numberOfTreatments:uint = relevantTreatments != null ? relevantTreatments.length : 0;
 			
-			if (treatmentsList != null && treatmentsList.length > 0)
+			if (numberOfTreatments > 0)
 			{
-				var loopLength:int = treatmentsList.length;
-				for (var i:int = 0; i < loopLength; i++) 
+				for (var i:int = 0; i < numberOfTreatments; i++) 
 				{
-					var treatment:Treatment = treatmentsList[i];
-					if (treatment != null && treatment.insulinAmount > 0)
+					var treatment:Treatment = relevantTreatments[i];
+					var treatmentIOBCalc:Object = treatment.calculateIOBNightscout(time);
+					if (treatmentIOBCalc != null)
 					{
-						var treatmentIOBCalc:IOBCalc = treatment.calculateIOBNightscout(time);
 						totalIOB += treatmentIOBCalc.iobContrib;
 						totalActivity += treatmentIOBCalc.activityContrib;
+						totalActivityOpenAPS += treatmentIOBCalc.activityOpenAPS;
 						if (treatmentIOBCalc.iobContrib > 0)
 						{
 							bolusInsulin += treatment.insulinAmount;
-							
+								
 							if (treatment.timestamp < firstInsulinTreatmentTime)
 							{
 								firstInsulinTreatmentTime = treatment.timestamp;
@@ -312,25 +468,26 @@ package treatments
 			
 			totalIOB = isNaN(totalIOB) ? 0 : Math.floor(totalIOB * 100) / 100;
 			
-			var results:IOBCalcTotals = new IOBCalcTotals
-				(
-					time,
-					totalActivity,
-					totalIOB,
-					totalIOB,
-					bolusInsulin,
-					firstInsulinTreatmentTime
-				);
+			var results:Object = 
+			{
+				time: time,
+				activity: totalActivity,
+				activityOpenAPS: totalActivityOpenAPS,
+				iob: totalIOB,
+				bolusiob: totalIOB,
+				bolusinsulin: bolusInsulin,
+				firstInsulinTime: firstInsulinTreatmentTime
+			}
 			
 			return results;
 		}
 		
-		public static function getTotalIOBOpenAPS(time:Number, curve:String):IOBCalcTotals
+		public static function getTotalIOBOpenAPS(time:Number, curve:String, relevantTreatments:Array):Object
 		{
 			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
-				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN, Number.NaN);
+				return { time: time, activity: 0, iob: pumpIOB, bolusiob: pumpIOB, bolusinsulin: Number.NaN, firstInsulinTime: Number.NaN };
 			}
 			
 			var now:Number = time;
@@ -375,12 +532,12 @@ package treatments
 			
 			peak = defaults.peak;
 			
-			var numberOfTreatments:int = treatmentsList.length;
+			var numberOfTreatments:int = relevantTreatments.length;
 			for (var i:int = 0; i < numberOfTreatments; i++) 
 			{
-				var treatment:Treatment = treatmentsList[i];
+				var treatment:Treatment = relevantTreatments[i];
 				
-				if (treatment.timestamp < now && treatment.insulinAmount > 0) //Check if treatment is valid and contains insulin otherwise skip it.
+				if (treatment != null && treatment.timestamp < now && treatment.insulinAmount > 0) //Check if treatment is valid and contains insulin otherwise skip it.
 				{
 					dia = treatment.dia;
 					/*if (defaults.requireLongDia && dia < 5) 
@@ -394,7 +551,7 @@ package treatments
 					
 					if (treatment.timestamp > dia_ago)
 					{
-						var tIOB:IOBCalc = treatment.calculateIOBOpenAPS(time, curve, dia, peak, profile);
+						var tIOB:Object = treatment.calculateIOBOpenAPS(time, curve, dia, peak, profile);
 						
 						if (tIOB != null)
 						{
@@ -425,15 +582,16 @@ package treatments
 				}
 			}
 			
-			var results:IOBCalcTotals = new IOBCalcTotals
-			(
-				time,
-				Math.round(activity * 10000) / 10000,
-				Math.round(iob * 1000) / 1000,
-				Math.round(bolusiob * 1000) / 1000,
-				Math.round(bolusinsulin * 1000) / 1000,
-				firstInsulinTreatmentTime
-			);
+			var results:Object = 
+			{
+				time: time,
+				activity: Math.round(activity * 10000) / 10000,
+				activityOpenAPS: Math.round(activity * 10000) / 10000,
+				iob: Math.round(iob * 1000) / 1000,
+				bolusiob: Math.round(bolusiob * 1000) / 1000,
+				bolusinsulin: Math.round(bolusinsulin * 1000) / 1000,
+				firstInsulinTime: firstInsulinTreatmentTime
+			}
 			
 			return results;
 		}
@@ -451,79 +609,92 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.IOB_COB_UPDATED));
 		}
 		
-		public static function getTotalCOB(time:Number):CobCalcTotals 
+		public static function getTotalCOB(time:Number):Object 
 		{
-			//Check cache
-			var numberOfCachedItems:int = COBCache.length;
-			var numberOfTreatmentItems:int = treatmentsList.length;
+			//Get current algorithm
+			var algorithm:String = "openaps";
 			
-			if (numberOfCachedItems > MAX_IOB_COB_CACHED_ITEMS)
-			{
-				COBCache = COBCache.slice(-MAX_IOB_COB_CACHED_ITEMS); //If number of cached items is bigger than MAX_CACHED_ITEMS we truncate the array removing the older entries.
-				numberOfCachedItems = MAX_IOB_COB_CACHED_ITEMS;
-			}
+			//Sort Treatments
+			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 			
-			for(var i:int = numberOfCachedItems - 1 ; i >= 0; i--)
-			{
-				var cachedItem:Object = COBCache[i];
-				if (Math.abs(cachedItem.timestamp - time) < TimeSpan.TIME_1_MINUTE && cachedItem.numTreatments == numberOfTreatmentItems)
+			//Get relevant treatments
+			var carbWindow:Number = time - TimeSpan.TIME_6_HOURS;
+			var relevantTreatmentsHash:String = "";
+			var relevantTreatmentsList:Array = treatmentsList.filter
+			(
+				function (treatment:Treatment, index:int, arr:Array):Boolean 
 				{
-					return cachedItem.cobCalc;
+					//Consider treatments that contain carbs/insulin from up to 6 hours ago
+					var validated:Boolean = (treatment.carbs > 0 || treatment.insulinAmount > 0) && treatment.timestamp > carbWindow && treatment.timestamp <= time;
+					
+					if (validated)
+					{
+						relevantTreatmentsHash += treatment.timestamp + treatment.insulinAmount + treatment.dia + treatment.insulinID + treatment.carbs + treatment.carbDelayTime;
+					}
+					
+					return validated;
 				}
+			);
+			
+			//Check cache
+			var cachedCOB:Object = COBCache[time];
+			if (cachedCOB != null && cachedCOB.hash == relevantTreatmentsHash && cachedCOB.algorithm == algorithm)
+			{
+				//We have a cached data point. Return it instead of performing real calulations
+				//return cachedCOB.cobCalc;
 			}
 			
 			//No cached data found. Perform real calculations
-			var algorith:String = "openaps";
-			var result:CobCalcTotals;
+			var result:Object;
 			
-			if (algorith == "nightscout")
+			if (algorithm == "nightscout")
 			{
 				//Get calculations
-				result = getTotalCOBNightscout(time);
+				result = getTotalCOBNightscout(time, relevantTreatmentsList);
 				
 				//Cache them
-				COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, cobCalc: result };
+				COBCacheTimes.push(time);
 				
 				//Return them
 				return result;
 			}
-			else if (algorith == "openaps")
+			else if (algorithm == "openaps")
 			{
 				//Get calculations
-				result = getTotalCOBOpenAPS(time);
+				result = getTotalCOBOpenAPS(time, relevantTreatmentsList.reverse());
 				
 				//Cache them
-				COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
+				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, cobCalc: result };
+				COBCacheTimes.push(time);
 				
 				//Return them
 				return result;
 			}
-			
-			//Get calculations
-			result = getTotalCOBNightscout(time); //If everything else we default to Nightscout
-			
-			//Cache them
-			COBCache.push( {timestamp: time, numTreatments: numberOfTreatmentItems, cobCalc: result } );
-			
-			//Return them
-			return result;
+			else
+			{
+				//Get calculations
+				result = getTotalCOBNightscout(time, relevantTreatmentsList); //If everything else we default to Nightscout
+				
+				//Cache them
+				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, cobCalc: result };
+				COBCacheTimes.push(time);
+				
+				//Return them
+				return result;
+			}
 		}
 		
-		public static function getTotalCOBNightscout(time:Number):CobCalcTotals
+		public static function getTotalCOBNightscout(time:Number, relevantTreatments:Array):Object
 		{
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
-				return new CobCalcTotals
-				(
-					time,
-					pumpCOB
-				);
+				return { time: time, cob: pumpCOB };
 			}
 			
 			var carbsAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate();
 			
-			// TODO: figure out the liverSensRatio that gives the most accurate purple line predictions
 			var liverSensRatio:int = 8;
 			var totalCOB:Number = 0;
 			var isDecaying:Number = 0;
@@ -531,21 +702,18 @@ package treatments
 			var lastCarbTime:Number = time;
 			var activeCarbs:Number = 0;
 			var firstCarbTime:Number = time;
+			var numberOfTreatments:int = relevantTreatments.length;
 			
-			if (treatmentsList != null && treatmentsList.length > 0)
+			if (relevantTreatments != null && numberOfTreatments > 0)
 			{
 				var currentProfile:Profile = ProfileManager.getProfileByTime(time);
 				var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 				var ic:Number = Number(currentProfile.insulinToCarbRatios);
 				
-				//Sort Treatments
-				treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
-				
-				var loopLength:int = treatmentsList.length;
-				for (var i:int = 0; i < loopLength; i++) 
+				for (var i:int = 0; i < numberOfTreatments; i++) 
 				{
-					var treatment:Treatment = treatmentsList[i];
-					if (treatment != null && treatment.carbs > 0 && time >= treatment.timestamp)
+					var treatment:Treatment = relevantTreatments[i];
+					if (treatment != null && treatment.carbs > 0)
 					{
 						var cCalc:CobCalc = treatment.calculateCOB(lastDecayedBy, time);
 						if (cCalc != null)
@@ -555,7 +723,7 @@ package treatments
 							if (decaysin_hr > -10 && !isNaN(isf)) 
 							{
 								var actStart:Number = 0;
-								if (true)//(lastDecayedBy != 0)
+								if (lastDecayedBy != 0)
 								{
 									actStart = getTotalIOB(lastDecayedBy).activity;
 								}
@@ -608,34 +776,26 @@ package treatments
 			else
 				totalCOB = Math.round(totalCOB * 10) / 10;
 			
-			var results:CobCalcTotals = new CobCalcTotals
-				(
-					time,
-					totalCOB,
-					activeCarbs,
-					lastCarbTime,
-					firstCarbTime,
-					activeCarbs - totalCOB
-				);
+			var results:Object = 
+			{
+				time: time,
+				cob: totalCOB,
+				carbs: activeCarbs,
+				lastCarbTime: lastCarbTime,
+				firstCarbTime: firstCarbTime,
+				carbsAbsorbed: activeCarbs - totalCOB
+			}
 			
 			return results;
 		}
 		
-		public static function getTotalCOBOpenAPS(time:Number):CobCalcTotals
+		public static function getTotalCOBOpenAPS(time:Number, treatments:Array):Object
 		{
-			//Sort Treatments
-			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
-			var openAPSTreatmentsList:Array = treatmentsList.concat().reverse();
-			
+			var openAPSTreatmentsList:Array = treatments;
 			var currentProfile:Profile = ProfileManager.getProfileByTime(time);
 			
 			var carbs:Number = 0;
-			var nsCarbs:Number = 0;
-			var bwCarbs:Number = 0;
-			var journalCarbs:Number = 0;
-			var bwFound :Boolean= false;
 			var carbDelay:Number = 20 * 60 * 1000; //Need to overwrite this to the individual carb delay.
-			var maxCarbs:Number = 0;
 			var mealCarbTime:Number = time;
 			var lastCarbTime:Number = 0;
 			var firstActiveCarbTreatmentTime:Number = time;
@@ -681,47 +841,40 @@ package treatments
 			for (i = 0; i < numberOfTreatments; i++) 
 			{
 				var treatment:Treatment = openAPSTreatmentsList[i];
-				var now:Number = time;
-				
-				// consider carbs from up to 6 hours ago in calculating COB
-				var carbWindow:Number = now - (6 * 60 * 60 * 1000);
 				var treatmentTime:Number = treatment.timestamp;
 				
-				if (treatmentTime > carbWindow && treatmentTime <= now) 
+				if (treatment.carbs > 0) 
 				{
-					if (treatment.carbs > 0) 
+					carbs += treatment.carbs;
+					COB_inputs.mealTime = treatmentTime;
+					lastCarbTime = Math.max(lastCarbTime, treatmentTime);
+						
+					var myCarbsAbsorbed:Number = calcMealCOB(COB_inputs).carbsAbsorbed;
+					carbsAbsorbed += myCarbsAbsorbed;
+					var myMealCOB:Number = Math.max(0, carbs - myCarbsAbsorbed);
+						
+					if (!isNaN(myMealCOB))
 					{
-						carbs += treatment.carbs;
-						COB_inputs.mealTime = treatmentTime;
-						lastCarbTime = Math.max(lastCarbTime, treatmentTime);
-						
-						var myCarbsAbsorbed:Number = calcMealCOB(COB_inputs).carbsAbsorbed;
-						carbsAbsorbed += myCarbsAbsorbed;
-						var myMealCOB:Number = Math.max(0, carbs - myCarbsAbsorbed);
-						
-						if (!isNaN(myMealCOB))
-						{
-							mealCOB = Math.max(mealCOB, myMealCOB);
+						mealCOB = Math.max(mealCOB, myMealCOB);
 							
-							if (myMealCOB > 0 && treatment.timestamp < firstActiveCarbTreatmentTime)
-							{
-								firstActiveCarbTreatmentTime = treatment.timestamp;
-							}
+						if (myMealCOB > 0 && treatment.timestamp < firstActiveCarbTreatmentTime)
+						{
+							firstActiveCarbTreatmentTime = treatment.timestamp;
+						}
 								
-						}
-						else
-						{
-							trace("Bad myMealCOB:",myMealCOB, "mealCOB:",mealCOB, "carbs:",carbs,"myCarbsAbsorbed:",myCarbsAbsorbed);
-						}
+					}
+					else
+					{
+						Trace.myTrace("TreatmentsManager.as", "Bad myMealCOB: " + myMealCOB + ", mealCOB: " + mealCOB + ", carbs: " + carbs + ", myCarbsAbsorbed: " + myCarbsAbsorbed);
+					}
 						
-						if (myMealCOB < mealCOB) 
-						{
-							carbsToRemove += treatment.carbs;
-						} 
-						else 
-						{
-							carbsToRemove = 0;
-						}
+					if (myMealCOB < mealCOB) 
+					{
+						carbsToRemove += treatment.carbs;
+					} 
+					else 
+					{
+						carbsToRemove = 0;
 					}
 				}
 			}
@@ -733,36 +886,36 @@ package treatments
 			COB_inputs.ciTime = time;
 			
 			// set mealTime to 6h ago for Deviation calculations
-			COB_inputs.mealTime = time - (6 * 60 * 60 * 1000);
+			COB_inputs.mealTime = time - TimeSpan.TIME_6_HOURS;
 			var c:Object = calcMealCOB(COB_inputs);
 			
 			// if currentDeviation is null or maxDeviation is 0, set mealCOB to 0 for zombie-carb safety
 			if (c.currentDeviation == null || isNaN(c.currentDeviation)) 
 			{
-				trace("Warning: setting mealCOB to 0 because currentDeviation is null/undefined");
+				Trace.myTrace("TreatmentsManager.as", "Warning: Aetting mealCOB to 0 because currentDeviation is null/undefined");
 				mealCOB = 0;
 			}
 			
 			if (c.maxDeviation == null || isNaN(c.maxDeviation)) 
 			{
-				trace("Warning: setting mealCOB to 0 because maxDeviation is 0 or undefined");
+				Trace.myTrace("TreatmentsManager.as", "Warning: Setting mealCOB to 0 because maxDeviation is 0 or undefined");
 				mealCOB = 0;
 			}
 			
-			var results:CobCalcTotals = new CobCalcTotals
-				(
-					time,
-					Math.round(mealCOB * 10) / 10,
-					Math.round( carbs * 1000 ) / 1000,
-					lastCarbTime,
-					firstActiveCarbTreatmentTime,
-					carbsAbsorbed,
-					Math.round( c.currentDeviation * 100 ) / 100,
-					Math.round( c.maxDeviation * 100 ) / 100,
-					Math.round( c.minDeviation * 100 ) / 100,
-					Math.round( c.slopeFromMaxDeviation * 1000 ) / 1000,
-					Math.round( c.slopeFromMinDeviation * 1000 ) / 1000
-				);
+			var results:Object = 
+			{
+				time: time,
+				cob: Math.round(mealCOB * 10) / 10,
+				carbs: Math.round( carbs * 1000 ) / 1000,
+				lastCarbTime: lastCarbTime,
+				firstCarbTime: firstActiveCarbTreatmentTime,
+				carbsAbsorbed: carbsAbsorbed,
+				currentDeviation: Math.round( c.currentDeviation * 100 ) / 100,
+				maxDeviation: Math.round( c.maxDeviation * 100 ) / 100,
+				minDeviation: Math.round( c.minDeviation * 100 ) / 100,
+				slopeFromMaxDeviation: Math.round( c.slopeFromMaxDeviation * 1000 ) / 1000,
+				slopeFromMinDeviation: Math.round( c.slopeFromMinDeviation * 1000 ) / 1000
+			}
 			
 			return results;
 		}
@@ -781,7 +934,7 @@ package treatments
 			var deviationSum:Number = 0;
 			var carbsAbsorbed:Number = 0;
 			var bucketed_data:Array = [];
-			bucketed_data[0] = { glucose: glucose_data[0].calculatedValue, timestamp: glucose_data[0].timestamp, date: glucose_data[0].timestamp };
+			bucketed_data[0] = { glucose: glucose_data[0]._calculatedValue, timestamp: glucose_data[0]._timestamp, date: glucose_data[0]._timestamp };
 			
 			var j:Number = 0;
 			var foundPreMealBG:Boolean = false;
@@ -799,8 +952,8 @@ package treatments
 			for (i = 1; i < glucoseDataLength; ++i)
 			{
 				var bgReading:BgReading = glucose_data[i];
-				var bgCalculatedValue:Number = bgReading.calculatedValue;
-				var spikeBgTime:Number = bgReading.timestamp;
+				var bgCalculatedValue:Number = bgReading._calculatedValue;
+				var spikeBgTime:Number = bgReading._timestamp;
 				var lastbgTime:Number;
 				
 				if (bgReading == null)
@@ -815,7 +968,7 @@ package treatments
 				}
 				
 				// only consider BGs for 6h after a meal for calculating COB
-				var hoursAfterMeal:Number = (bgTime - mealTime) / (60 * 60 * 1000);
+				var hoursAfterMeal:Number = (bgTime - mealTime) / TimeSpan.TIME_1_HOUR;
 				if (hoursAfterMeal > 6)
 				{
 					continue;
@@ -829,15 +982,12 @@ package treatments
 					//console.error("Found pre-meal BG:",glucose_data[i].glucose, bgTime, Math.round(hoursAfterMeal*100)/100);
 					foundPreMealBG = true;
 				}
-				//console.error(glucose_data[i].glucose, bgTime, Math.round(hoursAfterMeal*100)/100, bucketed_data[bucketed_data.length-1].display_time);
+				
 				// only consider last ~45m of data in CI mode
 				// this allows us to calculate deviations for the last ~30m
-				
-				//trace("ciTime", ciTime);
-				
 				if (!isNaN(ciTime)) 
 				{
-					var hoursAgo:Number = (ciTime - bgTime) / (60 * 60 * 1000);
+					var hoursAgo:Number = (ciTime - bgTime) / TimeSpan.TIME_1_HOUR;
 					if (hoursAgo > 1 || hoursAgo < 0) 
 					{
 						continue;
@@ -848,20 +998,17 @@ package treatments
 				{
 					lastbgTime = bucketed_data[bucketed_data.length-1].date;
 				} 
-				else if ((lastbgi >= 0) && !isNaN(glucose_data[lastbgi].timestamp)) 
+				else if ((lastbgi >= 0) && !isNaN(glucose_data[lastbgi]._timestamp)) 
 				{
-					lastbgTime = glucose_data[lastbgi].timestamp;
+					lastbgTime = glucose_data[lastbgi]._timestamp;
 				} 
 				else 
 				{ 
 					trace("Could not determine last BG time"); 
 				}
 				
-				//trace("I'm IN");
-				
-				var elapsed_minutes:Number = (bgTime - lastbgTime)/(60*1000);
-				//console.error(bgTime, lastbgTime, elapsed_minutes);
-				if(Math.abs(elapsed_minutes) > 8) 
+				var elapsed_minutes:Number = (bgTime - lastbgTime) / TimeSpan.TIME_1_MINUTE;
+				if (Math.abs(elapsed_minutes) > 8) 
 				{
 					// interpolate missing data points
 					if (glucose_data[lastbgi] != null)
@@ -870,7 +1017,47 @@ package treatments
 						
 						// cap interpolation at a maximum of 4h
 						elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
+						
+						
+					}
+					
+					
+					
+					
+<<<<<<< HEAD
+					
+||||||| merged common ancestors
+					var lastbg:Number = glucose_data[lastbgi].calculatedValue;
+					
+					// cap interpolation at a maximum of 4h
+					elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
+					//console.error(elapsed_minutes);
+					
+					while(elapsed_minutes > 5) 
+=======
+					var lastbg:Number = glucose_data[lastbgi].calculatedValue;
+					
+					// cap interpolation at a maximum of 4h
+					elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
+					
+					while(elapsed_minutes > 5) 
+>>>>>>> predoptimize
+					{
+<<<<<<< HEAD
+						var lastbg:Number = glucose_data[lastbgi].calculatedValue;
+						
+						// cap interpolation at a maximum of 4h
+						elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
 						//console.error(elapsed_minutes);
+||||||| merged common ancestors
+						var previousbgTime:Number = lastbgTime - TimeSpan.TIME_5_MINUTES;
+						j++;
+						bucketed_data[j] = {};
+						bucketed_data[j].date = previousbgTime;
+						bucketed_data[j].timestamp = previousbgTime;
+						var gapDelta:Number = glucose_data[i]._calculatedValue - lastbg;
+						var previousbg:Number = lastbg + (5/elapsed_minutes * gapDelta);
+						bucketed_data[j].glucose = Math.round(previousbg);
 						
 						while(elapsed_minutes > 5) 
 						{
@@ -894,15 +1081,14 @@ package treatments
 				else if(Math.abs(elapsed_minutes) > 2) 
 				{
 					j++;
-					bucketed_data[j] = { glucose: glucose_data[i].calculatedValue, timestamp: bgTime, date: bgTime };
+					bucketed_data[j] = { glucose: glucose_data[i]._calculatedValue, timestamp: bgTime, date: bgTime };
 				} 
 				else 
 				{
-					bucketed_data[j].glucose = (bucketed_data[j].glucose + glucose_data[i].calculatedValue) / 2;
+					bucketed_data[j].glucose = (bucketed_data[j].glucose + glucose_data[i]._calculatedValue) / 2;
 				}
 				
 				lastbgi = i;
-				//console.error(bucketed_data[j].date)
 			}
 			var currentDeviation:Number;
 			var slopeFromMaxDeviation:Number = 0;
@@ -910,7 +1096,6 @@ package treatments
 			var maxDeviation:Number = 0;
 			var minDeviation:Number = 999;
 			var allDeviations:Array = [];
-			//console.error(bucketed_data);
 			
 			for (i = 0; i < bucketed_data.length-3; ++i) 
 			{
@@ -918,7 +1103,6 @@ package treatments
 				
 				var sens:Number = Number(ProfileManager.getProfileByTime(bgTime).insulinSensitivityFactors);
 				
-				//console.error(bgTime , bucketed_data[i].glucose, bucketed_data[i].date);
 				var bg:Number;
 				var avgDelta:Number;
 				var delta:Number;
@@ -927,7 +1111,6 @@ package treatments
 					bg = bucketed_data[i].glucose;
 					if ( bg < 39 || bucketed_data[i+3].glucose < 39) 
 					{
-						//trace("!");
 						continue;
 					}
 					avgDelta = (bg - bucketed_data[i+3].glucose)/3;
@@ -940,39 +1123,27 @@ package treatments
 				
 				avgDelta = Math.round(avgDelta * 100) / 100;
 				iob_inputs.clock=bgTime;
-				//iob_inputs.profile.current_basal = basal.basalLookup(basalprofile, bgTime);
-				//console.log(JSON.stringify(iob_inputs.profile));
-				//console.error("Before: ", new Date().getTime());
+				
 				var iob:Object = get_iob(iob_inputs, true)[0];
-				//console.error("After: ", new Date().getTime());
-				//console.error(JSON.stringify(iob));
-				
-				var bgi:Number = Math.round(( -iob.activity * sens * 5 )*100)/100;
-				//bgi = bgi.toFixed(2);
-				//console.error(delta);
-				
-				//trace("delta", delta);
-				//trace("bgi", bgi);
+				var bgi:Number = Math.round(( -iob.activity * sens * 5 ) * 100) / 100;
 				
 				var deviation:Number = delta - bgi;
 				deviation = Math.round(deviation * 100) / 100;
-				//deviation = deviation.toFixed(2);
-				//if (deviation < 0 && deviation > -2) { console.error("BG: "+bg+", avgDelta: "+avgDelta+", BGI: "+bgi+", deviation: "+deviation); }
+				
 				// calculate the deviation right now, for use in min_5m
 				if (i == 0) 
 				{ 
-					currentDeviation = Math.round((avgDelta-bgi)*1000)/1000;
+					currentDeviation = Math.round((avgDelta-bgi) * 1000) / 1000;
 					if (ciTime > bgTime) 
 					{
-						//console.error("currentDeviation:",currentDeviation,avgDelta,bgi);
 						allDeviations.push(Math.round(currentDeviation));
 					}
 				} 
 				else if (ciTime > bgTime) 
 				{
-					var avgDeviation:Number = Math.round((avgDelta-bgi)*1000)/1000;
-					var deviationSlope:Number = (avgDeviation-currentDeviation)/(bgTime-ciTime)*1000*60*5;
-					//console.error(avgDeviation,currentDeviation,bgTime,ciTime)
+					var avgDeviation:Number = Math.round((avgDelta-bgi) * 1000) / 1000;
+					var deviationSlope:Number = (avgDeviation-currentDeviation) / (bgTime-ciTime) * TimeSpan.TIME_5_MINUTES;
+					
 					if (avgDeviation > maxDeviation) 
 					{
 						slopeFromMaxDeviation = Math.min(0, deviationSlope);
@@ -984,20 +1155,19 @@ package treatments
 						minDeviation = avgDeviation;
 					}
 					
-					//console.error("Deviations:",avgDeviation, avgDelta,bgi,bgTime);
 					allDeviations.push(Math.round(avgDeviation));
-					//console.error(allDeviations);
 				}
 				
 				// if bgTime is more recent than mealTime
-				if(bgTime > mealTime) {
+				if(bgTime > mealTime) 
+				{
 					// figure out how many carbs that represents
 					// if currentDeviation is > 2 * min_5m_carbimpact, assume currentDeviation/2 worth of carbs were absorbed
 					// but always assume at least profile.min_5m_carbimpact (3mg/dL/5m by default) absorption
 					var ci:Number = Math.max(deviation, currentDeviation/2, 3);
 					var absorbed:Number = ci * Number(profile.insulinToCarbRatios) / sens;
+					
 					// and add that to the running total carbsAbsorbed
-					//console.error("carbsAbsorbed:",carbsAbsorbed,"absorbed:",absorbed,"bgTime:",bgTime,"BG:",bucketed_data[i].glucose)
 					carbsAbsorbed += absorbed;
 				}
 			}
@@ -1047,7 +1217,6 @@ package treatments
 					lastBolusTime = treatment.timestamp;
 					
 					break;
-					//lastBolusTime = Math.max(lastBolusTime,treatment.timestamp);
 				}
 			}
 			
@@ -1064,16 +1233,11 @@ package treatments
 			for (i=0; i<iStop; i+=5)
 			{
 				var t:Number = clock + i*60000;
-				//console.error(t);
-				var iob:IOBCalcTotals = getTotalIOBOpenAPS(t, "bilinear");
-				//var iobWithZeroTemp:IOBCalcTotals = sum(optsWithZeroTemp, t);
-				//console.error(opts.treatments[opts.treatments.length-1], optsWithZeroTemp.treatments[optsWithZeroTemp.treatments.length-1])
+				//var iob:Object = getTotalIOBOpenAPS(t, "ultra-rapid", OpenAPSTreatmentsList);
+				var iob:Object = getTotalIOB(t);
 				iobArray.push(iob);
-				//console.error(iob.iob, iobWithZeroTemp.iob);
-				//console.error(iobArray.length-1, iobArray[iobArray.length-1]);
-				//iobArray[iobArray.length-1].iobWithZeroTemp = iobWithZeroTemp;
 			}
-			//console.error(lastBolusTime);
+			
 			iobArray[0].lastBolusTime = lastBolusTime;
 			iobArray[0].lastTemp = lastTemp;
 			return iobArray;

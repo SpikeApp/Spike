@@ -1,17 +1,11 @@
 package model
 {
 	import flash.utils.getTimer;
-	import flash.utils.setInterval;
-	import flash.utils.setTimeout;
-	
-	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
-	import treatments.CobCalcTotals;
-	import treatments.IOBCalcTotals;
 	import treatments.Profile;
 	import treatments.ProfileManager;
 	import treatments.TreatmentsManager;
@@ -77,25 +71,14 @@ package model
 				target_bg = (min_bg + max_bg) / 2;
 			}
 			
-			var nowIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now);
-			if (algorithm == "nightscout")
-			{
-				//Nightscout compatibility
-				nowIOB.activity = nowIOB.activity / 22;
-			}
+			var nowIOB:Object = TreatmentsManager.getTotalIOB(now);
 			
 			var iobArray:Array = []; //Will hold all future IOB data points used for calculating predictions
 			
 			for (i = 0; i < five_min_blocks; i++) 
 			{
-				var futureIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES));
-				if (algorithm == "nightscout")
-				{
-					//Nightscout compatibility
-					futureIOB.activity = futureIOB.activity / 22;
-				}
-				
-				iobArray.push( { iob: futureIOB.iob, activity: futureIOB.activity } );
+				var futureIOB:Object = TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES));
+				iobArray.push( { iob: futureIOB.iob, activityOpenAPS: futureIOB.activityOpenAPS } );
 			}
 			
 			var iob_data:Object = iobArray[0];
@@ -122,7 +105,7 @@ package model
 			}
 			
 			//calculate BG impact: the amount BG "should" be rising or falling based on insulin activity alone
-			var bgi:Number = round(( -iob_data.activity * sens * 5 ), 2);
+			var bgi:Number = round(( -iob_data.activityOpenAPS * sens * 5 ), 2);
 			
 			// project deviations for 30 minutes
 			var deviation:Number = round( 30 / 5 * ( minDelta - bgi ) );
@@ -196,7 +179,7 @@ package model
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var nowCOB:CobCalcTotals = TreatmentsManager.getTotalCOB(now);
+			var nowCOB:Object = TreatmentsManager.getTotalCOB(now);
 			if (nowCOB.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it
@@ -300,8 +283,8 @@ package model
 			{
 				var iobTick:Object = iobArray[i];
 				
-				predBGI = round(( -iobTick.activity * sens * 5 ), 2);
-				predZTBGI = round(( -iobTick.activity * sens * 5 ), 2);
+				predBGI = round(( -iobTick.activityOpenAPS * sens * 5 ), 2);
+				predZTBGI = round(( -iobTick.activityOpenAPS * sens * 5 ), 2);
 				// for IOBpredBGs, predicted deviation impact drops linearly from current deviation down to zero
 				// over 60 minutes (data points every 5m)
 				predDev = ci * ( 1 - Math.min(1,IOBpredBGs.length/(60/5)) );

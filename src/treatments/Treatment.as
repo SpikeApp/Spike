@@ -60,13 +60,16 @@ package treatments
 		/**
 		 * IOB Calculation Algorithms (Nightscout & OpenAPS)
 		 */
-		public function calculateIOBNightscout(time:Number):IOBCalc
+		public function calculateIOBNightscout(time:Number):Object
 		{
-			if (insulinAmount == 0 || time < timestamp || time - (dia * 60 * 60 * 1000) > timestamp + TimeSpan.TIME_10_MINUTES)//If it's not an insulin treatment or requested time is before treatment time
-			{
-				return new IOBCalc(0, 0);
-			}
+			//Open APS Compatibility for predictions
+			const end:Number = 180; // assumed end of insulin activity, in minutes
+			var activityPeak:Number = 2 / (dia * 60);
+			var activityOpenAPS:Number = 0;
+			var slopeUp:Number = activityPeak / INSULIN_PEAK;
+			var slopeDown:Number = -1 * (activityPeak / (end - INSULIN_PEAK));
 			
+			//Nightscout
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
 			var iob:Number = 0;
 			var activity:Number = 0;
@@ -78,6 +81,9 @@ package treatments
 				iob = insulinAmount * (1 - 0.001852 * x1 * x1 + 0.001852 * x1);
 				if (!isNaN(isf))
 					activity = isf * insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
+				
+				//OpenAPS
+				activityOpenAPS = insulinAmount * (slopeUp * minAgo);
 			} 
 			else if (minAgo < 180) 
 			{
@@ -85,20 +91,25 @@ package treatments
 				iob = insulinAmount * (0.001323 * x2 * x2 - 0.054233 * x2 + 0.55556);
 				if (!isNaN(isf))
 					activity = isf * insulinAmount * (2 / dia / 60 - (minAgo - INSULIN_PEAK) * 2 / dia / 60 / (60 * 3 - INSULIN_PEAK));
+				
+				//OpenAPS
+				var minsPastPeak:Number = minAgo - INSULIN_PEAK;
+				activityOpenAPS = insulinAmount * (activityPeak + (slopeDown * minsPastPeak));
 			}
 			
 			if (iob < 0.001 || isNaN(iob)) iob = 0;
 			
-			var result:IOBCalc = new IOBCalc
-			(
-				activity,
-				iob
-			);
+			var result:Object =
+			{
+				activityContrib: activity,
+				activityOpenAPS:  activityOpenAPS,
+				iobContrib: iob
+			}
 			
 			return result;
 		}
 		
-		public function calculateIOBOpenAPS(time:Number, curve:String, dia:Number, peak:Number, profile:Profile):IOBCalc
+		public function calculateIOBOpenAPS(time:Number, curve:String, dia:Number, peak:Number, profile:Profile):Object
 		{
 			// iobCalc returns two variables:
 			//   activityContrib = units of treatment.insulin used in previous minute
@@ -124,11 +135,15 @@ package treatments
 			else 
 			{ 
 				// empty return if treatment doesn't contain insuln
-				return new IOBCalc(0, 0);
+				return { 
+					activityContrib: 0,
+					activityOpenAPS:  0,
+					iobContrib: 0 
+				};
 			}    
 		}
 		
-		private function calculateIOBBilinear(minsAgo:Number, dia:Number):IOBCalc
+		private function calculateIOBBilinear(minsAgo:Number, dia:Number):Object
 		{
 			// No user-specified peak with this model
 			const default_dia:Number = 3 // assumed duration of insulin activity, in hours
@@ -169,16 +184,17 @@ package treatments
 				iobContrib = insulinAmount * ( (0.001323*x2*x2) + (-0.054233*x2) + 0.555560 );
 			}
 			
-			var results:IOBCalc = new IOBCalc
-			(
-				activityContrib,
-				iobContrib
-			);
+			var results:Object = 
+			{ 
+				activityContrib: activityContrib,
+				activityOpenAPS:  activityContrib,
+				iobContrib: iobContrib 
+			};
 			
 			return results;
 		}
 		
-		private function calculateIOBExponential(minsAgo:Number, dia:Number, peak:Number, profile:Profile):IOBCalc 
+		private function calculateIOBExponential(minsAgo:Number, dia:Number, peak:Number, profile:Profile):Object 
 		{
 			// Use custom peak time (in minutes) if value is valid
 			if ( profile.insulinCurve == "rapid-acting" ) 
@@ -223,11 +239,12 @@ package treatments
 				iobContrib = insulinAmount * (1 - S * (1 - a) * ((Math.pow(minsAgo, 2) / (tau * end * (1 - a)) - minsAgo / tau - 1) * Math.exp(-minsAgo / tau) + 1));
 			}
 			
-			var results:IOBCalc = new IOBCalc
-			(
-				activityContrib,
-				iobContrib
-			);
+			var results:Object = 
+			{ 
+				activityContrib: activityContrib,
+				activityOpenAPS:  activityContrib,
+				iobContrib: iobContrib 
+			};
 			
 			return results;
 		}

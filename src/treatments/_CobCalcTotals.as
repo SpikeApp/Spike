@@ -1,6 +1,6 @@
 package treatments
 {
-	public class CobCalcTotals
+	public class _CobCalcTotals
 	{
 		public var time:Number;
 		public var cob:Number;
@@ -14,7 +14,7 @@ package treatments
 		public var slopeFromMinDeviation:Number;
 		public var firstCarbTime:Number;
 		
-		public function CobCalcTotals(time:Number, 
+		public function _CobCalcTotals(time:Number, 
 									  cob:Number, 
 									  carbs:Number = Number.NaN, 
 									  lastCarbTime:Number = Number.NaN, 
