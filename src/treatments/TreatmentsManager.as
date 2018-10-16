@@ -370,7 +370,7 @@ package treatments
 						
 						if (validated)
 						{
-							relevantTreatmentsHash += treatment.timestamp + treatment.insulinAmount;
+							relevantTreatmentsHash += treatment.timestamp + treatment.insulinAmount + treatment.dia + treatment.insulinID;
 						}
 						
 						return validated;
@@ -382,7 +382,7 @@ package treatments
 			if (cachedIOB != null && cachedIOB.hash == relevantTreatmentsHash && cachedIOB.algorithm == algorithm)
 			{
 				//We have a cached data point. Return it instead of performing real calulations
-				return cachedIOB.iobCalc;
+				//return cachedIOB.iobCalc;
 			}
 			
 			var result:Object;
@@ -402,7 +402,9 @@ package treatments
 			else if (algorithm == "openaps")
 			{
 				//Get calculations
-				result = getTotalIOBOpenAPS(time, "bilinear");
+				result = getTotalIOBOpenAPS(time, "bilinear", relevantTreatmentsList.reverse());
+				//result = getTotalIOBOpenAPS(time, "rapid-acting", relevantTreatmentsList.reverse());
+				//result = getTotalIOBOpenAPS(time, "ultra-rapid");
 				
 				//Cache them
 				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
@@ -435,6 +437,7 @@ package treatments
 			
 			var totalIOB:Number = 0;
 			var totalActivity:Number = 0;
+			var totalActivityOpenAPS:Number = 0;
 			var bolusInsulin:Number = 0;
 			var firstInsulinTreatmentTime:Number = time;
 			var numberOfTreatments:uint = relevantTreatments != null ? relevantTreatments.length : 0;
@@ -444,11 +447,12 @@ package treatments
 				for (var i:int = 0; i < numberOfTreatments; i++) 
 				{
 					var treatment:Treatment = relevantTreatments[i];
-					var treatmentIOBCalc:IOBCalc = treatment.calculateIOBNightscout(time);
+					var treatmentIOBCalc:Object = treatment.calculateIOBNightscout(time);
 					if (treatmentIOBCalc != null)
 					{
 						totalIOB += treatmentIOBCalc.iobContrib;
 						totalActivity += treatmentIOBCalc.activityContrib;
+						totalActivityOpenAPS += treatmentIOBCalc.activityOpenAPS;
 						if (treatmentIOBCalc.iobContrib > 0)
 						{
 							bolusInsulin += treatment.insulinAmount;
@@ -468,6 +472,7 @@ package treatments
 			{
 				time: time,
 				activity: totalActivity,
+				activityOpenAPS: totalActivityOpenAPS,
 				iob: totalIOB,
 				bolusiob: totalIOB,
 				bolusinsulin: bolusInsulin,
@@ -477,7 +482,7 @@ package treatments
 			return results;
 		}
 		
-		public static function getTotalIOBOpenAPS(time:Number, curve:String):Object
+		public static function getTotalIOBOpenAPS(time:Number, curve:String, relevantTreatments:Array):Object
 		{
 			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
@@ -527,12 +532,12 @@ package treatments
 			
 			peak = defaults.peak;
 			
-			var numberOfTreatments:int = treatmentsList.length;
+			var numberOfTreatments:int = relevantTreatments.length;
 			for (var i:int = 0; i < numberOfTreatments; i++) 
 			{
-				var treatment:Treatment = treatmentsList[i];
+				var treatment:Treatment = relevantTreatments[i];
 				
-				if (treatment.timestamp < now && treatment.insulinAmount > 0) //Check if treatment is valid and contains insulin otherwise skip it.
+				if (treatment != null && treatment.timestamp < now && treatment.insulinAmount > 0) //Check if treatment is valid and contains insulin otherwise skip it.
 				{
 					dia = treatment.dia;
 					/*if (defaults.requireLongDia && dia < 5) 
@@ -546,7 +551,7 @@ package treatments
 					
 					if (treatment.timestamp > dia_ago)
 					{
-						var tIOB:IOBCalc = treatment.calculateIOBOpenAPS(time, curve, dia, peak, profile);
+						var tIOB:Object = treatment.calculateIOBOpenAPS(time, curve, dia, peak, profile);
 						
 						if (tIOB != null)
 						{
@@ -581,6 +586,7 @@ package treatments
 			{
 				time: time,
 				activity: Math.round(activity * 10000) / 10000,
+				activityOpenAPS: Math.round(activity * 10000) / 10000,
 				iob: Math.round(iob * 1000) / 1000,
 				bolusiob: Math.round(bolusiob * 1000) / 1000,
 				bolusinsulin: Math.round(bolusinsulin * 1000) / 1000,
@@ -623,7 +629,7 @@ package treatments
 					
 					if (validated)
 					{
-						relevantTreatmentsHash += treatment.timestamp + treatment.insulinAmount + treatment.carbs;
+						relevantTreatmentsHash += treatment.timestamp + treatment.insulinAmount + treatment.dia + treatment.insulinID + treatment.carbs + treatment.carbDelayTime;
 					}
 					
 					return validated;
@@ -635,7 +641,7 @@ package treatments
 			if (cachedCOB != null && cachedCOB.hash == relevantTreatmentsHash && cachedCOB.algorithm == algorithm)
 			{
 				//We have a cached data point. Return it instead of performing real calulations
-				return cachedCOB.cobCalc;
+				//return cachedCOB.cobCalc;
 			}
 			
 			//No cached data found. Perform real calculations
@@ -1182,7 +1188,8 @@ package treatments
 			for (i=0; i<iStop; i+=5)
 			{
 				var t:Number = clock + i*60000;
-				var iob:Object = getTotalIOBOpenAPS(t, "bilinear");
+				//var iob:Object = getTotalIOBOpenAPS(t, "ultra-rapid", OpenAPSTreatmentsList);
+				var iob:Object = getTotalIOB(t);
 				iobArray.push(iob);
 			}
 			

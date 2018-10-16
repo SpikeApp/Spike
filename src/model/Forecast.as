@@ -1,10 +1,6 @@
 package model
 {
 	import flash.utils.getTimer;
-	import flash.utils.setInterval;
-	import flash.utils.setTimeout;
-	
-	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -76,24 +72,13 @@ package model
 			}
 			
 			var nowIOB:Object = TreatmentsManager.getTotalIOB(now);
-			if (algorithm == "nightscout")
-			{
-				//Nightscout compatibility
-				nowIOB.activity = nowIOB.activity / 22;
-			}
 			
 			var iobArray:Array = []; //Will hold all future IOB data points used for calculating predictions
 			
 			for (i = 0; i < five_min_blocks; i++) 
 			{
 				var futureIOB:Object = TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES));
-				if (algorithm == "nightscout")
-				{
-					//Nightscout compatibility
-					futureIOB.activity = futureIOB.activity / 22;
-				}
-				
-				iobArray.push( { iob: futureIOB.iob, activity: futureIOB.activity } );
+				iobArray.push( { iob: futureIOB.iob, activityOpenAPS: futureIOB.activityOpenAPS } );
 			}
 			
 			var iob_data:Object = iobArray[0];
@@ -120,7 +105,7 @@ package model
 			}
 			
 			//calculate BG impact: the amount BG "should" be rising or falling based on insulin activity alone
-			var bgi:Number = round(( -iob_data.activity * sens * 5 ), 2);
+			var bgi:Number = round(( -iob_data.activityOpenAPS * sens * 5 ), 2);
 			
 			// project deviations for 30 minutes
 			var deviation:Number = round( 30 / 5 * ( minDelta - bgi ) );
@@ -298,8 +283,8 @@ package model
 			{
 				var iobTick:Object = iobArray[i];
 				
-				predBGI = round(( -iobTick.activity * sens * 5 ), 2);
-				predZTBGI = round(( -iobTick.activity * sens * 5 ), 2);
+				predBGI = round(( -iobTick.activityOpenAPS * sens * 5 ), 2);
+				predZTBGI = round(( -iobTick.activityOpenAPS * sens * 5 ), 2);
 				// for IOBpredBGs, predicted deviation impact drops linearly from current deviation down to zero
 				// over 60 minutes (data points every 5m)
 				predDev = ci * ( 1 - Math.min(1,IOBpredBGs.length/(60/5)) );
