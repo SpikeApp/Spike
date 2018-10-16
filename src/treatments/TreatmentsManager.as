@@ -979,7 +979,6 @@ package treatments
 				}
 				else if (hoursAfterMeal < 0) 
 				{
-					//console.error("Found pre-meal BG:",glucose_data[i].glucose, bgTime, Math.round(hoursAfterMeal*100)/100);
 					foundPreMealBG = true;
 				}
 				
@@ -998,7 +997,7 @@ package treatments
 				{
 					lastbgTime = bucketed_data[bucketed_data.length-1].date;
 				} 
-				else if ((lastbgi >= 0) && !isNaN(glucose_data[lastbgi]._timestamp)) 
+				else if ((lastbgi >= 0) && glucose_data[lastbgi] != null && !isNaN(glucose_data[lastbgi]._timestamp)) 
 				{
 					lastbgTime = glucose_data[lastbgi]._timestamp;
 				} 
@@ -1013,71 +1012,28 @@ package treatments
 					// interpolate missing data points
 					if (glucose_data[lastbgi] != null)
 					{
-						var lastbg:Number = glucose_data[lastbgi].calculatedValue;
+						var lastbg:Number = glucose_data[lastbgi]._calculatedValue;
 						
 						// cap interpolation at a maximum of 4h
 						elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
-						
-						
-					}
-					
-					
-					
-					
-<<<<<<< HEAD
-					
-||||||| merged common ancestors
-					var lastbg:Number = glucose_data[lastbgi].calculatedValue;
-					
-					// cap interpolation at a maximum of 4h
-					elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
-					//console.error(elapsed_minutes);
-					
-					while(elapsed_minutes > 5) 
-=======
-					var lastbg:Number = glucose_data[lastbgi].calculatedValue;
-					
-					// cap interpolation at a maximum of 4h
-					elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
-					
-					while(elapsed_minutes > 5) 
->>>>>>> predoptimize
-					{
-<<<<<<< HEAD
-						var lastbg:Number = glucose_data[lastbgi].calculatedValue;
-						
-						// cap interpolation at a maximum of 4h
-						elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
-						//console.error(elapsed_minutes);
-||||||| merged common ancestors
-						var previousbgTime:Number = lastbgTime - TimeSpan.TIME_5_MINUTES;
-						j++;
-						bucketed_data[j] = {};
-						bucketed_data[j].date = previousbgTime;
-						bucketed_data[j].timestamp = previousbgTime;
-						var gapDelta:Number = glucose_data[i]._calculatedValue - lastbg;
-						var previousbg:Number = lastbg + (5/elapsed_minutes * gapDelta);
-						bucketed_data[j].glucose = Math.round(previousbg);
 						
 						while(elapsed_minutes > 5) 
 						{
-							var previousbgTime:Number = lastbgTime - (5 * 60 * 1000);
+							var previousbgTime:Number = lastbgTime - TimeSpan.TIME_5_MINUTES;
 							j++;
-							bucketed_data[j] = [];
+							bucketed_data[j] = {};
 							bucketed_data[j].date = previousbgTime;
-							var gapDelta:Number = glucose_data[i].calculatedValue - lastbg;
-							//console.error(gapDelta, lastbg, elapsed_minutes);
+							bucketed_data[j].timestamp = previousbgTime;
+							var gapDelta:Number = glucose_data[i]._calculatedValue - lastbg;
 							var previousbg:Number = lastbg + (5/elapsed_minutes * gapDelta);
 							bucketed_data[j].glucose = Math.round(previousbg);
-							//console.error("Interpolated", bucketed_data[j]);
 							
 							elapsed_minutes = elapsed_minutes - 5;
 							lastbg = previousbg;
 							lastbgTime = previousbgTime;
 						}
 					}
-					
-				} 
+				}
 				else if(Math.abs(elapsed_minutes) > 2) 
 				{
 					j++;
@@ -1088,8 +1044,9 @@ package treatments
 					bucketed_data[j].glucose = (bucketed_data[j].glucose + glucose_data[i]._calculatedValue) / 2;
 				}
 				
-				lastbgi = i;
+				lastbgi = i;	
 			}
+			
 			var currentDeviation:Number;
 			var slopeFromMaxDeviation:Number = 0;
 			var slopeFromMinDeviation:Number = 999;
