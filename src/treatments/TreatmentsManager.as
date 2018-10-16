@@ -382,7 +382,7 @@ package treatments
 			if (cachedIOB != null && cachedIOB.hash == relevantTreatmentsHash && cachedIOB.algorithm == algorithm)
 			{
 				//We have a cached data point. Return it instead of performing real calulations
-				//return cachedIOB.iobCalc;
+				return cachedIOB.iobCalc;
 			}
 			
 			var result:Object;
@@ -641,7 +641,7 @@ package treatments
 			if (cachedCOB != null && cachedCOB.hash == relevantTreatmentsHash && cachedCOB.algorithm == algorithm)
 			{
 				//We have a cached data point. Return it instead of performing real calulations
-				//return cachedCOB.cobCalc;
+				return cachedCOB.cobCalc;
 			}
 			
 			//No cached data found. Perform real calculations
