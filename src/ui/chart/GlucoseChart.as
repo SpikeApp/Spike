@@ -73,7 +73,7 @@ package ui.chart
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
-
+	
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
@@ -1216,7 +1216,7 @@ package ui.chart
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
-				if (algorithmIOBCOB == "openaps")
+				if (algorithmIOBCOB == "openaps" && Math.abs(time - new Date().valueOf()) > TimeSpan.TIME_1_MINUTE)
 				{
 					//For OpenAPS we ask for COB of the current selected marker timestamp. In between timestamps give exactly the same COB value and waste CPU cycles
 					if (displayLatestBGValue)

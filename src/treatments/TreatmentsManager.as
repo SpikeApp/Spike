@@ -370,7 +370,7 @@ package treatments
 						
 						if (validated)
 						{
-							relevantTreatmentsHash += treatment.timestamp;
+							relevantTreatmentsHash += treatment.timestamp + treatment.insulinAmount;
 						}
 						
 						return validated;
@@ -623,7 +623,7 @@ package treatments
 					
 					if (validated)
 					{
-						relevantTreatmentsHash += treatment.timestamp;
+						relevantTreatmentsHash += treatment.timestamp + treatment.insulinAmount + treatment.carbs;
 					}
 					
 					return validated;
