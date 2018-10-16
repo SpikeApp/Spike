@@ -330,7 +330,7 @@ package ui.chart
 		private var activeGlucoseDelimiter:SpikeLine;
 		private var redrawPredictionsTimeoutID:int = -1;
 		private var lastPredictionsRedrawTimestamp:Number = 0;
-		private var algorithmIOBCOB:String = "nightscout";
+		private var algorithmIOBCOB:String = "openaps";
 		private var latestOpenAPSRequestedCOBTimestamp:Number = 0;
 		
 		private function redrawPredictions():void

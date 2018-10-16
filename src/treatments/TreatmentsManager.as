@@ -353,7 +353,7 @@ package treatments
 		
 		public static function getTotalIOB(time:Number):Object
 		{
-			var algorithm:String = "nightscout";
+			var algorithm:String = "openaps";
 			
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
@@ -366,7 +366,7 @@ package treatments
 					function (treatment:Treatment, index:int, arr:Array):Boolean 
 					{
 						//Consider treatments that contain insulin from up to 8 hours ago
-						var validated:Boolean = treatment.insulinAmount > 0 && treatment.timestamp > insulinWindow && treatment.timestamp <= time;
+						var validated:Boolean = treatment != null && treatment.insulinAmount > 0 && treatment.timestamp > insulinWindow && treatment.timestamp <= time;
 						
 						if (validated)
 						{
@@ -381,8 +381,6 @@ package treatments
 			var cachedIOB:Object = IOBCache[time];
 			if (cachedIOB != null && cachedIOB.hash == relevantTreatmentsHash && cachedIOB.algorithm == algorithm)
 			{
-				trace("returning cached data");
-				
 				//We have a cached data point. Return it instead of performing real calulations
 				return cachedIOB.iobCalc;
 			}
@@ -392,7 +390,7 @@ package treatments
 			if (algorithm == "nightscout")
 			{
 				//Get calculations
-				result = getTotalIOBNightscout(time);
+				result = getTotalIOBNightscout(time, relevantTreatmentsList);
 				
 				//Cache them
 				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
@@ -416,7 +414,7 @@ package treatments
 			else
 			{
 				//Get calculations
-				result = getTotalIOBNightscout(time); //Defaults to Nightscout if everything else fails
+				result = getTotalIOBNightscout(time, relevantTreatmentsList); //Defaults to Nightscout if everything else fails
 				
 				//Cache them
 				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
@@ -427,7 +425,7 @@ package treatments
 			}
 		}
 		
-		public static function getTotalIOBNightscout(time:Number):Object
+		public static function getTotalIOBNightscout(time:Number, relevantTreatments:Array):Object
 		{
 			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
@@ -439,22 +437,22 @@ package treatments
 			var totalActivity:Number = 0;
 			var bolusInsulin:Number = 0;
 			var firstInsulinTreatmentTime:Number = time;
+			var numberOfTreatments:uint = relevantTreatments != null ? relevantTreatments.length : 0;
 			
-			if (treatmentsList != null && treatmentsList.length > 0)
+			if (numberOfTreatments > 0)
 			{
-				var loopLength:int = treatmentsList.length;
-				for (var i:int = 0; i < loopLength; i++) 
+				for (var i:int = 0; i < numberOfTreatments; i++) 
 				{
-					var treatment:Treatment = treatmentsList[i];
-					if (treatment != null && treatment.insulinAmount > 0)
+					var treatment:Treatment = relevantTreatments[i];
+					var treatmentIOBCalc:IOBCalc = treatment.calculateIOBNightscout(time);
+					if (treatmentIOBCalc != null)
 					{
-						var treatmentIOBCalc:IOBCalc = treatment.calculateIOBNightscout(time);
 						totalIOB += treatmentIOBCalc.iobContrib;
 						totalActivity += treatmentIOBCalc.activityContrib;
 						if (treatmentIOBCalc.iobContrib > 0)
 						{
 							bolusInsulin += treatment.insulinAmount;
-							
+								
 							if (treatment.timestamp < firstInsulinTreatmentTime)
 							{
 								firstInsulinTreatmentTime = treatment.timestamp;
