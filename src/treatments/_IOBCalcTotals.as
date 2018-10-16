@@ -1,6 +1,6 @@
 package treatments
 {
-	public class IOBCalcTotals
+	public class _IOBCalcTotals
 	{
 		public var iob:Number;
 		public var activity:Number;
@@ -11,7 +11,7 @@ package treatments
 		public var lastTemp:Number;
 		public var firstInsulinTime:Number;
 		
-		public function IOBCalcTotals(time:Number, activity:Number, iob:Number, bolusiob:Number, bolusinsulin:Number, firstInsulinTime:Number)
+		public function _IOBCalcTotals(time:Number, activity:Number, iob:Number, bolusiob:Number, bolusinsulin:Number, firstInsulinTime:Number)
 		{
 			this.time = time;
 			this.activity = activity;

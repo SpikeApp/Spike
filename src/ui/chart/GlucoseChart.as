@@ -62,7 +62,6 @@ package ui.chart
 	import starling.utils.Align;
 	import starling.utils.SystemUtil;
 	
-	import treatments.IOBCalcTotals;
 	import treatments.Insulin;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
@@ -331,7 +330,7 @@ package ui.chart
 		private var activeGlucoseDelimiter:SpikeLine;
 		private var redrawPredictionsTimeoutID:int = -1;
 		private var lastPredictionsRedrawTimestamp:Number = 0;
-		private var algorithmIOBCOB:String = "openaps";
+		private var algorithmIOBCOB:String = "nightscout";
 		private var latestOpenAPSRequestedCOBTimestamp:Number = 0;
 		
 		private function redrawPredictions():void
@@ -838,7 +837,7 @@ package ui.chart
 			{
 				firstBGReadingTimeStamp = Number(_dataSource[0].timestamp);
 				
-				if (!predictionsEnabled)
+				if (!predictionsEnabled || predictionsList.length == 0)
 					lastBGreadingTimeStamp = !isHistoricalData ? (new Date()).valueOf() : Number(_dataSource[_dataSource.length - 1].timestamp);
 				else
 					lastBGreadingTimeStamp = predictionsList[predictionsList.length - 1].timestamp;
@@ -4225,7 +4224,7 @@ package ui.chart
 			absorptionGraph.touchable = false;
 			
 			//Data
-			var initialIOB:IOBCalcTotals;
+			var initialIOB:Object;
 			var initialCOB:Object;
 			
 			if (type == "insulin")

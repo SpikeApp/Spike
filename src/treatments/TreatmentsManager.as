@@ -9,10 +9,6 @@ package treatments
 	import flash.text.SoftKeyboardType;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
-	import flash.utils.getTimer;
-	
-	import mx.messaging.channels.AMFChannel;
-	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -96,7 +92,8 @@ package treatments
 		public static var pumpCOB:Number = 0;
 		public static var nightscoutTreatmentsLastModifiedHeader:String = "";
 		private static var foodManager:FoodManager;
-		private static var IOBCache:Array = [];
+		private static var IOBCache:Object = {};
+		private static var IOBCacheTimes:Array = [];
 		private static var COBCache:Object = {};
 		private static var COBCacheTimes:Array = [];
 		private static var lastSavedCachesTimestamp:Number = 0;
@@ -260,7 +257,6 @@ package treatments
 			}
 			
 			//Serialize Caches
-			
 			//COB
 			var COBCachedBytes:ByteArray = new ByteArray();
 			COBCachedBytes.writeObject(COBCache);
@@ -270,13 +266,13 @@ package treatments
 			COBCachedTimesBytes.writeObject(COBCacheTimes);
 			var COBCachedTimesBytesString:String = Base64.encodeByteArray(COBCachedTimesBytes);
 			
-			//IOB (not yet implemeted)
+			//IOB
 			var IOBCachedBytes:ByteArray = new ByteArray();
-			IOBCachedBytes.writeObject({});
+			IOBCachedBytes.writeObject(IOBCache);
 			var IOBCachedBytesString:String = Base64.encodeByteArray(IOBCachedBytes);
 			
 			var IOBCachedTimesBytes:ByteArray = new ByteArray();
-			IOBCachedTimesBytes.writeObject([]);
+			IOBCachedTimesBytes.writeObject(IOBCacheTimes);
 			var IOBCachedTimesBytesString:String = Base64.encodeByteArray(IOBCachedTimesBytes);
 			
 			Database.updateIOBCOBCachesSynchronous(IOBCachedBytesString, IOBCachedTimesBytesString, COBCachedBytesString, COBCachedTimesBytesString);
@@ -355,31 +351,43 @@ package treatments
 			TreatmentsManager.addInternalCalibrationTreatment(lastCalibration.bg, lastCalibration.timestamp, lastCalibration.uniqueId);
 		}
 		
-		public static function getTotalIOB(time:Number):IOBCalcTotals
+		public static function getTotalIOB(time:Number):Object
 		{
+			var algorithm:String = "nightscout";
+			
+			//Sort Treatments
+			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+			
+			//Get relevant treatments
+			var insulinWindow:Number = time - TimeSpan.TIME_8_HOURS;
+			var relevantTreatmentsHash:String = "";
+			var relevantTreatmentsList:Array = treatmentsList.filter
+				(
+					function (treatment:Treatment, index:int, arr:Array):Boolean 
+					{
+						//Consider treatments that contain insulin from up to 8 hours ago
+						var validated:Boolean = treatment.insulinAmount > 0 && treatment.timestamp > insulinWindow && treatment.timestamp <= time;
+						
+						if (validated)
+						{
+							relevantTreatmentsHash += treatment.timestamp;
+						}
+						
+						return validated;
+					}
+				);
+			
 			//Check cache
-			var numberOfCachedItems:int = IOBCache.length;
-			var numberOfTreatmentsItems:int = treatmentsList.length;
-			
-			if (numberOfCachedItems > MAX_IOB_COB_CACHED_ITEMS)
+			var cachedIOB:Object = IOBCache[time];
+			if (cachedIOB != null && cachedIOB.hash == relevantTreatmentsHash && cachedIOB.algorithm == algorithm)
 			{
-				IOBCache = IOBCache.slice(-MAX_IOB_COB_CACHED_ITEMS); //If number of cached items is bigger than MAX_CACHED_ITEMS we truncate the array removing the older entries.
-				numberOfCachedItems = MAX_IOB_COB_CACHED_ITEMS;
+				trace("returning cached data");
+				
+				//We have a cached data point. Return it instead of performing real calulations
+				return cachedIOB.iobCalc;
 			}
 			
-			for(var i:int = numberOfCachedItems - 1 ; i >= 0; i--)
-			{
-				var cachedItem:Object = IOBCache[i];
-				if (Math.abs(cachedItem.timestamp - time) < TimeSpan.TIME_1_MINUTE && cachedItem.numTreatments == numberOfTreatmentsItems)
-				{
-					return cachedItem.iobCalc;
-				}
-			}
-			
-			//var algorithm:String = "nightscout";
-			var algorithm:String = "openaps";
-			
-			var result:IOBCalcTotals;
+			var result:Object;
 			
 			if (algorithm == "nightscout")
 			{
@@ -387,7 +395,8 @@ package treatments
 				result = getTotalIOBNightscout(time);
 				
 				//Cache them
-				IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
+				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(time);
 				
 				//Return them
 				return result;
@@ -398,28 +407,32 @@ package treatments
 				result = getTotalIOBOpenAPS(time, "bilinear");
 				
 				//Cache them
-				IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
+				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(time);
 				
 				//Return them
 				return result;
 			}
-			
-			//Get calculations
-			result = getTotalIOBNightscout(time); //Defaults to Nightscout if everything else fails
-			
-			//Cache them
-			IOBCache.push( {timestamp: time, numTreatments: numberOfTreatmentsItems, iobCalc: result } );
-			
-			//Return them
-			return result;
+			else
+			{
+				//Get calculations
+				result = getTotalIOBNightscout(time); //Defaults to Nightscout if everything else fails
+				
+				//Cache them
+				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(time);
+				
+				//Return them
+				return result;
+			}
 		}
 		
-		public static function getTotalIOBNightscout(time:Number):IOBCalcTotals
+		public static function getTotalIOBNightscout(time:Number):Object
 		{
 			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
-				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN, Number.NaN);
+				return { time: time, activity: 0, iob: pumpIOB, bolusiob: pumpIOB, bolusinsulin: Number.NaN, firstInsulinTime: Number.NaN };
 			}
 			
 			var totalIOB:Number = 0;
@@ -453,25 +466,25 @@ package treatments
 			
 			totalIOB = isNaN(totalIOB) ? 0 : Math.floor(totalIOB * 100) / 100;
 			
-			var results:IOBCalcTotals = new IOBCalcTotals
-				(
-					time,
-					totalActivity,
-					totalIOB,
-					totalIOB,
-					bolusInsulin,
-					firstInsulinTreatmentTime
-				);
+			var results:Object = 
+			{
+				time: time,
+				activity: totalActivity,
+				iob: totalIOB,
+				bolusiob: totalIOB,
+				bolusinsulin: bolusInsulin,
+				firstInsulinTime: firstInsulinTreatmentTime
+			}
 			
 			return results;
 		}
 		
-		public static function getTotalIOBOpenAPS(time:Number, curve:String):IOBCalcTotals
+		public static function getTotalIOBOpenAPS(time:Number, curve:String):Object
 		{
 			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
-				return new IOBCalcTotals(time, 0, pumpIOB, pumpIOB, Number.NaN, Number.NaN);
+				return { time: time, activity: 0, iob: pumpIOB, bolusiob: pumpIOB, bolusinsulin: Number.NaN, firstInsulinTime: Number.NaN };
 			}
 			
 			var now:Number = time;
@@ -566,15 +579,15 @@ package treatments
 				}
 			}
 			
-			var results:IOBCalcTotals = new IOBCalcTotals
-			(
-				time,
-				Math.round(activity * 10000) / 10000,
-				Math.round(iob * 1000) / 1000,
-				Math.round(bolusiob * 1000) / 1000,
-				Math.round(bolusinsulin * 1000) / 1000,
-				firstInsulinTreatmentTime
-			);
+			var results:Object = 
+			{
+				time: time,
+				activity: Math.round(activity * 10000) / 10000,
+				iob: Math.round(iob * 1000) / 1000,
+				bolusiob: Math.round(bolusiob * 1000) / 1000,
+				bolusinsulin: Math.round(bolusinsulin * 1000) / 1000,
+				firstInsulinTime: firstInsulinTreatmentTime
+			}
 			
 			return results;
 		}
@@ -595,7 +608,7 @@ package treatments
 		public static function getTotalCOB(time:Number):Object 
 		{
 			//Get current algorithm
-			var algorithmCOB:String = "openaps";
+			var algorithm:String = "openaps";
 			
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
@@ -619,59 +632,56 @@ package treatments
 				}
 			);
 			
-			//Check first layer of cache
+			//Check cache
 			var cachedCOB:Object = COBCache[time];
-			if (cachedCOB != null && cachedCOB.hash == relevantTreatmentsHash && cachedCOB.algorithm == algorithmCOB)
+			if (cachedCOB != null && cachedCOB.hash == relevantTreatmentsHash && cachedCOB.algorithm == algorithm)
 			{
-				trace("RETURNING CACHED RESULT!");
-				
+				//We have a cached data point. Return it instead of performing real calulations
 				return cachedCOB.cobCalc;
-			}
-			else
-			{
-				trace("performing calculations");
 			}
 			
 			//No cached data found. Perform real calculations
 			var result:Object;
 			
-			if (algorithmCOB == "nightscout")
+			if (algorithm == "nightscout")
 			{
 				//Get calculations
-				result = getTotalCOBNightscout(time);
+				result = getTotalCOBNightscout(time, relevantTreatmentsList);
 				
 				//Cache them
-				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithmCOB, cobCalc: result };
+				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, cobCalc: result };
 				COBCacheTimes.push(time);
 				
 				//Return them
 				return result;
 			}
-			else if (algorithmCOB == "openaps")
+			else if (algorithm == "openaps")
 			{
 				//Get calculations
 				result = getTotalCOBOpenAPS(time, relevantTreatmentsList.reverse());
 				
 				//Cache them
-				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithmCOB, cobCalc: result };
+				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, cobCalc: result };
 				COBCacheTimes.push(time);
 				
 				//Return them
 				return result;
 			}
-			
-			//Get calculations
-			result = getTotalCOBNightscout(time); //If everything else we default to Nightscout
-			
-			//Cache them
-			COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithmCOB, cobCalc: result };
-			COBCacheTimes.push(time);
-			
-			//Return them
-			return result;
+			else
+			{
+				//Get calculations
+				result = getTotalCOBNightscout(time, relevantTreatmentsList); //If everything else we default to Nightscout
+				
+				//Cache them
+				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, cobCalc: result };
+				COBCacheTimes.push(time);
+				
+				//Return them
+				return result;
+			}
 		}
 		
-		public static function getTotalCOBNightscout(time:Number):Object
+		public static function getTotalCOBNightscout(time:Number, relevantTreatments:Array):Object
 		{
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
@@ -681,7 +691,6 @@ package treatments
 			
 			var carbsAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate();
 			
-			// TODO: figure out the liverSensRatio that gives the most accurate purple line predictions
 			var liverSensRatio:int = 8;
 			var totalCOB:Number = 0;
 			var isDecaying:Number = 0;
@@ -689,18 +698,18 @@ package treatments
 			var lastCarbTime:Number = time;
 			var activeCarbs:Number = 0;
 			var firstCarbTime:Number = time;
+			var numberOfTreatments:int = relevantTreatments.length;
 			
-			if (treatmentsList != null && treatmentsList.length > 0)
+			if (relevantTreatments != null && numberOfTreatments > 0)
 			{
 				var currentProfile:Profile = ProfileManager.getProfileByTime(time);
 				var isf:Number = Number(currentProfile.insulinSensitivityFactors);
 				var ic:Number = Number(currentProfile.insulinToCarbRatios);
 				
-				var loopLength:int = treatmentsList.length;
-				for (var i:int = 0; i < loopLength; i++) 
+				for (var i:int = 0; i < numberOfTreatments; i++) 
 				{
-					var treatment:Treatment = treatmentsList[i];
-					if (treatment != null && treatment.carbs > 0 && time >= treatment.timestamp)
+					var treatment:Treatment = relevantTreatments[i];
+					if (treatment != null && treatment.carbs > 0)
 					{
 						var cCalc:CobCalc = treatment.calculateCOB(lastDecayedBy, time);
 						if (cCalc != null)
@@ -710,7 +719,7 @@ package treatments
 							if (decaysin_hr > -10 && !isNaN(isf)) 
 							{
 								var actStart:Number = 0;
-								if (true)//(lastDecayedBy != 0)
+								if (lastDecayedBy != 0)
 								{
 									actStart = getTotalIOB(lastDecayedBy).activity;
 								}
@@ -1175,7 +1184,7 @@ package treatments
 			for (i=0; i<iStop; i+=5)
 			{
 				var t:Number = clock + i*60000;
-				var iob:IOBCalcTotals = getTotalIOBOpenAPS(t, "bilinear");
+				var iob:Object = getTotalIOBOpenAPS(t, "bilinear");
 				iobArray.push(iob);
 			}
 			

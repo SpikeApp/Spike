@@ -10,7 +10,6 @@ package model
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
-	import treatments.IOBCalcTotals;
 	import treatments.Profile;
 	import treatments.ProfileManager;
 	import treatments.TreatmentsManager;
@@ -76,7 +75,7 @@ package model
 				target_bg = (min_bg + max_bg) / 2;
 			}
 			
-			var nowIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now);
+			var nowIOB:Object = TreatmentsManager.getTotalIOB(now);
 			if (algorithm == "nightscout")
 			{
 				//Nightscout compatibility
@@ -87,7 +86,7 @@ package model
 			
 			for (i = 0; i < five_min_blocks; i++) 
 			{
-				var futureIOB:IOBCalcTotals = TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES));
+				var futureIOB:Object = TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES));
 				if (algorithm == "nightscout")
 				{
 					//Nightscout compatibility
