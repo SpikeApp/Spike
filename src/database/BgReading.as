@@ -946,13 +946,13 @@ package database
 				{
 					// switched from positive delta to negative, increase noise impact  
 					//y2y1Delta = y2y1Delta * 1.1;
-					y2y1Delta = y2y1Delta * 1.2;
+					y2y1Delta = y2y1Delta * 1.4;
 				}
 				else if ((lastDelta < 0) && (y2y1Delta > 0)) 
 				{
 					// switched from negative delta to positive, increase noise impact 
 					//y2y1Delta = y2y1Delta * 1.2; ORIGINAL
-					y2y1Delta = y2y1Delta * 1.3; 
+					y2y1Delta = y2y1Delta * 1.5; 
 				}
 				
 				sod += Math.sqrt(Math.pow(x2x1Delta, 2) + Math.pow(y2y1Delta, 2));
@@ -973,13 +973,13 @@ package database
 			
 			//Convert to Nightscout/xDrip format
 			//if (internalNoise < 0.35)  ORIGINAL
-			if (internalNoise < 0.2) 
+			if (internalNoise < 0.15) 
 			{
 				_noise = "1"; //Clean
 				return;
 			} 
 			//else if (internalNoise < 0.5) 
-			else if (internalNoise < 0.35) 
+			else if (internalNoise < 0.3) 
 			{
 				_noise = "2"; //Light
 				return;
