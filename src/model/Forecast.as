@@ -50,7 +50,7 @@ package model
 			//Define common variables
 			var five_min_blocks:Number = Math.floor(minutes / 5) + 1; //We add one because the first prediction is always the lastes glucose value
 			var now:Number = new Date().valueOf();
-			var algorithm:String = "openaps";
+			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
 			var i:int;
 			
 			var bgTime:Number = glucose_status.date;

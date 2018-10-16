@@ -353,7 +353,7 @@ package treatments
 		
 		public static function getTotalIOB(time:Number):Object
 		{
-			var algorithm:String = "openaps";
+			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);;
 			
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
@@ -429,6 +429,8 @@ package treatments
 		
 		public static function getTotalIOBNightscout(time:Number, relevantTreatments:Array):Object
 		{
+			trace("getTotalIOBNightscout");
+			
 			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
@@ -484,6 +486,8 @@ package treatments
 		
 		public static function getTotalIOBOpenAPS(time:Number, curve:String, relevantTreatments:Array):Object
 		{
+			trace("getTotalIOBOpenAPS");
+			
 			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
@@ -612,7 +616,7 @@ package treatments
 		public static function getTotalCOB(time:Number):Object 
 		{
 			//Get current algorithm
-			var algorithm:String = "openaps";
+			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);;
 			
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
@@ -687,6 +691,8 @@ package treatments
 		
 		public static function getTotalCOBNightscout(time:Number, relevantTreatments:Array):Object
 		{
+			trace("getTotalCOBNightscout")
+			
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
@@ -791,6 +797,8 @@ package treatments
 		
 		public static function getTotalCOBOpenAPS(time:Number, treatments:Array):Object
 		{
+			trace("getTotalCOBOpenAPS");
+			
 			var openAPSTreatmentsList:Array = treatments;
 			var currentProfile:Profile = ProfileManager.getProfileByTime(time);
 			

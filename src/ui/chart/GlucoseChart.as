@@ -330,11 +330,14 @@ package ui.chart
 		private var activeGlucoseDelimiter:SpikeLine;
 		private var redrawPredictionsTimeoutID:int = -1;
 		private var lastPredictionsRedrawTimestamp:Number = 0;
-		private var algorithmIOBCOB:String = "openaps";
+		private var algorithmIOBCOB:String;
 		private var latestOpenAPSRequestedCOBTimestamp:Number = 0;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
+			//Algorithm
+			algorithmIOBCOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
+			
 			//Data
 			this.isHistoricalData = isHistoricalData;
 			if (CGMBlueToothDevice.isFollower()) NUM_MINUTES_MISSED_READING_GAP = 7;

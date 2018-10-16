@@ -610,6 +610,11 @@ package database
 		  * Chart Settings #7
 		  */
 		 public static const COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS:int = 257;
+		 
+		 /**
+		 * Predictions
+		 */
+		 public static const COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM:int = 258;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -870,6 +875,7 @@ package database
 			 "false",//COMMON_SETTING_BOLUS_WIZARD_SUGGESTION_COMPONENTS_ON_TOP
 			 "false",//COMMON_SETTING_BOLUS_WIZARD_NO_SPACE_BETWEEN_SUGGESTIONS
 			 "1",//COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS
+			 "nightscout" //COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM
 		 ];
 
 		 public function CommonSettings()
