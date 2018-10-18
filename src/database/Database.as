@@ -166,6 +166,8 @@ package database
 			"name STRING, " +
 			"dia REAL, " +
 			"type STRING, " +
+			"curve STRING, " +
+			"peak REAL, " +
 			"isdefault STRING, " +
 			"ishidden STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
@@ -740,22 +742,65 @@ package database
 				
 				sqlStatement.clearParameters();
 				
-				//Check if table needs to be updated for new Spike format
+				//Check if table needs to be updated for new Spike format #1
 				sqlStatement.text = "SELECT ishidden FROM insulins";
-				sqlStatement.addEventListener(SQLEvent.RESULT,checkPerformed);
-				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkError);
+				sqlStatement.addEventListener(SQLEvent.RESULT,check1Performed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,check1Error);
 				sqlStatement.execute();
 				
-				function checkPerformed(se:SQLEvent):void 
+				function check1Performed(se:SQLEvent):void 
 				{
-					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
-					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkError);
+					sqlStatement.removeEventListener(SQLEvent.RESULT,check1Performed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check1Error);
 					sqlStatement.clearParameters();
 					
-					createProfilesTable();
+					//Check if table needs to be updated for new Spike format #2
+					sqlStatement.text = "SELECT curve FROM insulins";
+					sqlStatement.addEventListener(SQLEvent.RESULT,check2Performed);
+					sqlStatement.addEventListener(SQLErrorEvent.ERROR,check2Error);
+					sqlStatement.execute();
+					
+					function check2Performed(se:SQLEvent):void 
+					{
+						sqlStatement.removeEventListener(SQLEvent.RESULT,check2Performed);
+						sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check2Error);
+						sqlStatement.clearParameters();
+						
+						//Check if table needs to be updated for new Spike format #3
+						sqlStatement.text = "SELECT peak FROM insulins";
+						sqlStatement.addEventListener(SQLEvent.RESULT,check3Performed);
+						sqlStatement.addEventListener(SQLErrorEvent.ERROR,check3Error);
+						sqlStatement.execute();
+						
+						function check3Performed(se:SQLEvent):void 
+						{
+							sqlStatement.removeEventListener(SQLEvent.RESULT,check3Performed);
+							sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check3Error);
+							sqlStatement.clearParameters();
+							
+							//All checks performed. Continue with next table
+							createProfilesTable();
+						}
+						
+						function check3Error(see:SQLErrorEvent):void 
+						{
+							if (debugMode) trace("Database.as : peak column not found in insulins table (old version of Spike). Updating table...");
+							sqlStatement.clearParameters();
+							sqlStatement.text = "ALTER TABLE insulins ADD COLUMN peak REAL;";
+							sqlStatement.execute();
+						}
+					}
+					
+					function check2Error(see:SQLErrorEvent):void 
+					{
+						if (debugMode) trace("Database.as : curve column not found in insulins table (old version of Spike). Updating table...");
+						sqlStatement.clearParameters();
+						sqlStatement.text = "ALTER TABLE insulins ADD COLUMN curve STRING;";
+						sqlStatement.execute();
+					}
 				}
 				
-				function checkError(see:SQLErrorEvent):void 
+				function check1Error(see:SQLErrorEvent):void 
 				{
 					if (debugMode) trace("Database.as : ishidden column not found in insulins table (old version of Spike). Updating table...");
 					sqlStatement.clearParameters();
@@ -2451,6 +2496,8 @@ package database
 				text += "name, ";
 				text += "dia, ";
 				text += "type, ";
+				text += "curve, ";
+				text += "peak, ";
 				text += "isdefault, ";
 				text += "ishidden, ";
 				text += "lastmodifiedtimestamp) ";
@@ -2459,6 +2506,8 @@ package database
 				text += "'" + insulin.name + "', ";
 				text += insulin.dia + ", ";
 				text += "'" + insulin.type + "', ";
+				text += "'" + insulin.curve + "', ";
+				text += insulin.peak + ", ";
 				text += "'" + insulin.isDefault + "', ";
 				text += "'" + insulin.isHidden + "', ";
 				text += insulin.timestamp + ")";
@@ -2495,6 +2544,8 @@ package database
 					"name = '" + insulin.name + "', " +
 					"dia = " + insulin.dia + ", " +
 					"type = '" + insulin.type + "', " +
+					"curve = '" + insulin.curve + "', " +
+					"peak = " + insulin.peak + ", " +
 					"isdefault = '" + insulin.isDefault + "', " +
 					"ishidden = '" + insulin.isHidden + "', " +
 					"lastmodifiedtimestamp = " + insulin.timestamp + " " +

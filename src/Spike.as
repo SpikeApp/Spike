@@ -80,7 +80,7 @@ package
 			starling.enableErrorChecking = false;
 			starling.skipUnchangedFrames = true;
 			starling.antiAliasing = 6;
-			Starling.current.showStatsAt("right", "bottom");
+			//Starling.current.showStatsAt("right", "bottom");
 			//Starling.current.showStatsAt("left", "bottom");
 			scaler = new ScreenDensityScaleFactorManager( starling );
 			

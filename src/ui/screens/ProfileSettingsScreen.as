@@ -76,7 +76,7 @@ package ui.screens
 			
 			//Algorithms Settings
 			algorithmsSetting = new AlgorithmSettingsList();
-			algorithmsSetting.addEventListener(Event.CLOSE, onAlgorithmDetailsClosed);
+			algorithmsSetting.addEventListener(Event.CLOSE, onResetVerticalScroll);
 			screenRenderer.addChild(algorithmsSetting);
 			
 			//Insulins Section Label
@@ -85,6 +85,7 @@ package ui.screens
 			
 			//Insulins Settings
 			insulinsSettings = new InsulinsSettingsList();
+			insulinsSettings.addEventListener(Event.CLOSE, onResetVerticalScroll);
 			screenRenderer.addChild(insulinsSettings);
 			
 			//Carbs Section Label
@@ -107,7 +108,7 @@ package ui.screens
 		/**
 		 * Event Handlers
 		 */
-		private function onAlgorithmDetailsClosed(e:Event):void
+		private function onResetVerticalScroll(e:Event):void
 		{
 			verticalScrollPosition = 0;
 		}
@@ -164,7 +165,7 @@ package ui.screens
 			
 			if (algorithmsSetting != null)
 			{
-				algorithmsSetting.removeEventListener(Event.CLOSE, onAlgorithmDetailsClosed);
+				algorithmsSetting.removeEventListener(Event.CLOSE, onResetVerticalScroll);
 				algorithmsSetting.removeFromParent();
 				algorithmsSetting.dispose();
 				algorithmsSetting = null;
@@ -179,6 +180,7 @@ package ui.screens
 			
 			if (insulinsSettings != null)
 			{
+				insulinsSettings.removeEventListener(Event.CLOSE, onResetVerticalScroll);
 				insulinsSettings.removeFromParent();
 				insulinsSettings.dispose();
 				insulinsSettings = null;
