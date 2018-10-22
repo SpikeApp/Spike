@@ -402,9 +402,7 @@ package treatments
 			else if (algorithm == "openaps")
 			{
 				//Get calculations
-				result = getTotalIOBOpenAPS(time, "bilinear", relevantTreatmentsList.reverse());
-				//result = getTotalIOBOpenAPS(time, "rapid-acting", relevantTreatmentsList.reverse());
-				//result = getTotalIOBOpenAPS(time, "ultra-rapid");
+				result = getTotalIOBOpenAPS(time, relevantTreatmentsList.reverse());
 				
 				//Cache them
 				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
@@ -439,7 +437,7 @@ package treatments
 			
 			var totalIOB:Number = 0;
 			var totalActivity:Number = 0;
-			var totalActivityOpenAPS:Number = 0;
+			var totalActivityForecast:Number = 0;
 			var bolusInsulin:Number = 0;
 			var firstInsulinTreatmentTime:Number = time;
 			var numberOfTreatments:uint = relevantTreatments != null ? relevantTreatments.length : 0;
@@ -454,7 +452,7 @@ package treatments
 					{
 						totalIOB += treatmentIOBCalc.iobContrib;
 						totalActivity += treatmentIOBCalc.activityContrib;
-						totalActivityOpenAPS += treatmentIOBCalc.activityOpenAPS;
+						totalActivityForecast += treatmentIOBCalc.activityForecast;
 						if (treatmentIOBCalc.iobContrib > 0)
 						{
 							bolusInsulin += treatment.insulinAmount;
@@ -474,7 +472,7 @@ package treatments
 			{
 				time: time,
 				activity: totalActivity,
-				activityOpenAPS: totalActivityOpenAPS,
+				activityForecast: totalActivityForecast,
 				iob: totalIOB,
 				bolusiob: totalIOB,
 				bolusinsulin: bolusInsulin,
@@ -484,7 +482,7 @@ package treatments
 			return results;
 		}
 		
-		public static function getTotalIOBOpenAPS(time:Number, curve:String, relevantTreatments:Array):Object
+		public static function getTotalIOBOpenAPS(time:Number, relevantTreatments:Array):Object
 		{
 			trace("getTotalIOBOpenAPS");
 			
@@ -495,46 +493,11 @@ package treatments
 			}
 			
 			var now:Number = time;
-			var profile:Profile = ProfileManager.getProfileByTime(now);
-			var dia:Number = 3; //We set a default DIA of 3 but this will be overriden by each individual DIA
-			var peak:Number = 0;
 			var iob:Number = 0;
 			var bolusiob:Number = 0;
 			var bolusinsulin:Number = 0;
 			var activity:Number = 0;
 			var firstInsulinTreatmentTime:Number = time;
-			
-			var curveDefaults:Object = {};
-			curveDefaults["bilinear"] = 
-			{
-				requireLongDia: false,
-				peak: 75 // not really used, but prevents having to check later
-			};
-			curveDefaults["rapid-acting"] = 
-			{
-				requireLongDia: true,
-				peak: 75,
-				tdMin: 300
-			};
-			curveDefaults["ultra-rapid"] = 
-			{
-				requireLongDia: true,
-				peak: 55,
-				tdMin: 300
-			};
-			
-			if (profile.insulinCurve != "")
-				curve = profile.insulinCurve.toLowerCase();
-			
-			if (!(curve in curveDefaults))
-			{
-				Trace.myTrace("TreatmentsManager.as", 'Unsupported curve function: "' + curve + '". Supported curves: "bilinear", "rapid-acting" (Novolog, Novorapid, Humalog, Apidra) and "ultra-rapid" (Fiasp). Defaulting to "rapid-acting".');
-				curve = 'rapid-acting';
-			}
-			
-			var defaults:Object = curveDefaults[curve];
-			
-			peak = defaults.peak;
 			
 			var numberOfTreatments:int = relevantTreatments.length;
 			for (var i:int = 0; i < numberOfTreatments; i++) 
@@ -543,19 +506,12 @@ package treatments
 				
 				if (treatment != null && treatment.timestamp < now && treatment.insulinAmount > 0) //Check if treatment is valid and contains insulin otherwise skip it.
 				{
-					dia = treatment.dia;
-					/*if (defaults.requireLongDia && dia < 5) 
-					{
-						// Force minimum of 5 hour DIA when default requires a Long DIA.
-						//Trace.myTrace("TreatmentsManager.as", "Insulin curve requires DIA of 5 hours or more with the new curves. Current DIA is: " + dia + ".  Defaulting to 5 hours.");
-						dia = 5;
-					}*/
-					
-					var dia_ago:Number = now - (dia * 60 * 60 * 1000);
+					var dia:Number = treatment.dia;
+					var dia_ago:Number = now - (dia * TimeSpan.TIME_1_HOUR);
 					
 					if (treatment.timestamp > dia_ago)
 					{
-						var tIOB:Object = treatment.calculateIOBOpenAPS(time, curve, dia, peak, profile);
+						var tIOB:Object = treatment.calculateIOBOpenAPS(time);
 						
 						if (tIOB != null)
 						{
@@ -590,7 +546,7 @@ package treatments
 			{
 				time: time,
 				activity: Math.round(activity * 10000) / 10000,
-				activityOpenAPS: Math.round(activity * 10000) / 10000,
+				activityForecast: Math.round(activity * 10000) / 10000,
 				iob: Math.round(iob * 1000) / 1000,
 				bolusiob: Math.round(bolusiob * 1000) / 1000,
 				bolusinsulin: Math.round(bolusinsulin * 1000) / 1000,
@@ -2655,6 +2611,8 @@ package treatments
 				var treatmentNote:String = "";
 				var treatmentInsulinName:String = "";
 				var treatmentInsulinDIA:Number = Number.NaN;
+				var treatmentInsulinPeak:Number = Number.NaN;
+				var treatmentInsulinCurve:String = "bilinear";
 				var treatmentCarbDelayTime:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME));
 				
 				if (treatmentTimestamp < firstReadingTimestamp)
@@ -2674,14 +2632,49 @@ package treatments
 				{
 					//It's a treatment from Spike Master
 					treatmentInsulinID = String(nsTreatment.insulinID);
+					var localInsulin:Insulin = ProfileManager.getInsulin(treatmentInsulinID);
+					treatmentInsulinName = nsTreatment.insulinName != null ? nsTreatment.insulinName : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
+					treatmentInsulinDIA = nsTreatment.dia != null ? nsTreatment.dia : ProfileManager.getInsulin("000000").dia;
+					treatmentInsulinPeak = nsTreatment.insulinPeak != null ? nsTreatment.insulinPeak : 75;
+					treatmentInsulinCurve = nsTreatment.insulinCurve != null ? String(nsTreatment.insulinCurve) : "bilinear";
 					
-					if (ProfileManager.getInsulin(treatmentInsulinID) == null)
+					if (localInsulin == null)
 					{
-						//Let's create this insulin in memory
-						treatmentInsulinName = nsTreatment.insulinName != null ? nsTreatment.insulinName : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
-						treatmentInsulinDIA = nsTreatment.dia != null ? nsTreatment.dia : ProfileManager.getInsulin("000000").dia;
+						//Let's create this insulin
+						ProfileManager.addInsulin(treatmentInsulinName, treatmentInsulinDIA, nsTreatment.insulinType == null ? "Unknown" : String(nsTreatment.insulinType), false, treatmentInsulinID, true, true, treatmentInsulinCurve, treatmentInsulinPeak);
+					}
+					else
+					{
+						//Check if insulin needs to be updated
+						var needsDBUpdate:Boolean = false;
+						if (localInsulin.dia != treatmentInsulinDIA)
+						{
+							localInsulin.dia == treatmentInsulinDIA;
+							needsDBUpdate = true;
+						}
 						
-						ProfileManager.addInsulin(treatmentInsulinName, treatmentInsulinDIA, nsTreatment.insulinType == null ? "Unknown" : String(nsTreatment.insulinType), false, treatmentInsulinID, true, true);
+						if (localInsulin.name != treatmentInsulinName)
+						{
+							localInsulin.name == treatmentInsulinName;
+							needsDBUpdate = true;
+						}
+						
+						if (localInsulin.peak != treatmentInsulinPeak)
+						{
+							localInsulin.peak == treatmentInsulinPeak;
+							needsDBUpdate = true;
+						}
+						
+						if (localInsulin.curve != treatmentInsulinCurve)
+						{
+							localInsulin.curve == treatmentInsulinCurve;
+							needsDBUpdate = true;
+						}
+						
+						if (needsDBUpdate)
+						{
+							ProfileManager.updateInsulin(localInsulin);
+						}
 					}
 				}
 				

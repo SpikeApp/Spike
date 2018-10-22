@@ -911,6 +911,8 @@ package services
 				newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");	
 				newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";	
 				newTreatment["insulinID"] = treatment.insulinID;	
+				newTreatment["insulinPeak"] = usedInsulin.peak;	
+				newTreatment["insulinCurve"] = usedInsulin.curve;	
 			}
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 			{
@@ -935,6 +937,8 @@ package services
 				newTreatment["carbs"] = treatment.carbs;
 				newTreatment["carbDelayTime"] = treatment.carbDelayTime;
 				newTreatment["insulinID"] = treatment.insulinID;
+				newTreatment["insulinPeak"] = usedInsulin.peak;	
+				newTreatment["insulinCurve"] = usedInsulin.curve;	
 			}
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{

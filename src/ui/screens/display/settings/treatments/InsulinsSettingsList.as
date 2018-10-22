@@ -542,11 +542,11 @@ package ui.screens.display.settings.treatments
 			insulinTypesPicker.selectedIndex = selectedInsulinTypeIndex;
 			insulinPeak.value = insulin.peak;
 			
-			if (insulin.dia == 6 && insulin.peak == 75)
+			if (insulin.dia == 5 && insulin.peak == 75)
 			{
 				insulinCurvePresetsPicker.selectedIndex = 0;
 			}
-			else if (insulin.dia == 6 && insulin.peak == 50)
+			else if (insulin.dia == 5 && insulin.peak == 50)
 			{
 				insulinCurvePresetsPicker.selectedIndex = 1;
 			}
@@ -556,7 +556,7 @@ package ui.screens.display.settings.treatments
 			}
 			else if (insulin.dia == 5 && insulin.peak == 45)
 			{
-				insulinCurvePresetsPicker.selectedIndex = 2;
+				insulinCurvePresetsPicker.selectedIndex = 3;
 			}
 			else
 			{

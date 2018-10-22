@@ -62,16 +62,10 @@ package treatments
 		 */
 		public function calculateIOBNightscout(time:Number):Object
 		{
-			//Open APS Compatibility for predictions
-			const end:Number = 180; // assumed end of insulin activity, in minutes
-			var activityPeak:Number = 2 / (dia * 60);
-			var activityOpenAPS:Number = 0;
-			var slopeUp:Number = activityPeak / INSULIN_PEAK;
-			var slopeDown:Number = -1 * (activityPeak / (end - INSULIN_PEAK));
-			
 			//Nightscout
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
 			var iob:Number = 0;
+			var activityForecast:Number = 0;
 			var activity:Number = 0;
 			var isf:Number = Number(ProfileManager.getProfileByTime(new Date().valueOf()).insulinSensitivityFactors);
 			
@@ -79,22 +73,19 @@ package treatments
 			{
 				var x1:Number = minAgo / 5 + 1;
 				iob = insulinAmount * (1 - 0.001852 * x1 * x1 + 0.001852 * x1);
-				if (!isNaN(isf))
-					activity = isf * insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
+				activityForecast = isf * insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
 				
-				//OpenAPS
-				activityOpenAPS = insulinAmount * (slopeUp * minAgo);
+				if (!isNaN(isf))
+					activity = isf * activityForecast;
 			} 
 			else if (minAgo < 180) 
 			{
 				var x2:Number = (minAgo - 75) / 5;
 				iob = insulinAmount * (0.001323 * x2 * x2 - 0.054233 * x2 + 0.55556);
-				if (!isNaN(isf))
-					activity = isf * insulinAmount * (2 / dia / 60 - (minAgo - INSULIN_PEAK) * 2 / dia / 60 / (60 * 3 - INSULIN_PEAK));
+				activityForecast = insulinAmount * (2 / dia / 60 - (minAgo - INSULIN_PEAK) * 2 / dia / 60 / (60 * 3 - INSULIN_PEAK));
 				
-				//OpenAPS
-				var minsPastPeak:Number = minAgo - INSULIN_PEAK;
-				activityOpenAPS = insulinAmount * (activityPeak + (slopeDown * minsPastPeak));
+				if (!isNaN(isf))
+					activity = isf * activityForecast;
 			}
 			
 			if (iob < 0.001 || isNaN(iob)) iob = 0;
@@ -102,14 +93,14 @@ package treatments
 			var result:Object =
 			{
 				activityContrib: activity,
-				activityOpenAPS:  activityOpenAPS,
+				activityForecast:  activityForecast,
 				iobContrib: iob
 			}
 			
 			return result;
 		}
 		
-		public function calculateIOBOpenAPS(time:Number, curve:String, dia:Number, peak:Number, profile:Profile):Object
+		public function calculateIOBOpenAPS(time:Number):Object
 		{
 			// iobCalc returns two variables:
 			//   activityContrib = units of treatment.insulin used in previous minute
@@ -121,23 +112,25 @@ package treatments
 			//   An exponential insulin action curve (which takes both a dia and a peak parameter)
 			// (which functional form to use is specified in the user's profile)
 			
-			if (insulinAmount > 0) //Check if treatment has insulin
+			var insulin:Insulin = ProfileManager.getInsulin(insulinID);
+			if (insulin != null) //Check if treatment has insulin
 			{
 				// Calc minutes since bolus (minsAgo)
 				var bolusTime:Number = timestamp;
 				var minsAgo:Number = Math.round((time - bolusTime) / 1000 / 60);
+				var curve:String = insulin.curve;
 				
 				if (curve == 'bilinear') 
 					return calculateIOBBilinear(minsAgo, dia);
 				else 
-					return calculateIOBExponential(minsAgo, dia, peak, profile);
+					return calculateIOBExponential(minsAgo, dia, insulin.peak);
 			} 
 			else 
 			{ 
 				// empty return if treatment doesn't contain insuln
 				return { 
 					activityContrib: 0,
-					activityOpenAPS:  0,
+					activityForecast:  0,
 					iobContrib: 0 
 				};
 			}    
@@ -145,6 +138,8 @@ package treatments
 		
 		private function calculateIOBBilinear(minsAgo:Number, dia:Number):Object
 		{
+			trace("calculateIOBBilinear");
+			
 			// No user-specified peak with this model
 			const default_dia:Number = 3 // assumed duration of insulin activity, in hours
 			const peak:Number = 75;      // assumed peak insulin activity, in minutes
@@ -187,43 +182,18 @@ package treatments
 			var results:Object = 
 			{ 
 				activityContrib: activityContrib,
-				activityOpenAPS:  activityContrib,
+				activityForecast:  activityContrib,
 				iobContrib: iobContrib 
 			};
 			
 			return results;
 		}
 		
-		private function calculateIOBExponential(minsAgo:Number, dia:Number, peak:Number, profile:Profile):Object 
+		private function calculateIOBExponential(minsAgo:Number, dia:Number, peak:Number):Object 
 		{
-			// Use custom peak time (in minutes) if value is valid
-			if ( profile.insulinCurve == "rapid-acting" ) 
-			{
-				//Recommended for use with Apidra, Humalog, Novolog, and Novorapid insulin
-				if (profile.useCustomInsulinPeakTime === true && !isNaN(profile.insulinPeakTime)) 
-				{
-					peak = profile.insulinPeakTime;
-				} 
-				else 
-				{
-					peak = 75;
-				}
-			} 
-			else if ( profile.insulinCurve == "ultra-rapid" ) 
-			{
-				//Recommended for use with Fiasp insulin.
-				if (profile.useCustomInsulinPeakTime === true && !isNaN(profile.insulinPeakTime)) 
-				{
-					peak = profile.insulinPeakTime;
-				} 
-				else 
-				{
-					peak = 55;
-				}
-			} 
+			trace("calculateIOBExponential");
 			
 			var end:Number = dia * 60;  // end of insulin activity, in minutes
-			
 			var activityContrib:Number = 0;  
 			var iobContrib:Number = 0;       
 			
@@ -242,7 +212,7 @@ package treatments
 			var results:Object = 
 			{ 
 				activityContrib: activityContrib,
-				activityOpenAPS:  activityContrib,
+				activityForecast:  activityContrib,
 				iobContrib: iobContrib 
 			};
 			

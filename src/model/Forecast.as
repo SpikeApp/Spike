@@ -16,26 +16,7 @@ package model
 	{
 		public function Forecast()
 		{
-		}
-		
-		public static function init():void
-		{
-			//setInterval(test, 15000);
-			
-			/*setInterval( function():void 
-			{
-			
-				trace("-----------------------------------");
-				
-				var timer:int = getTimer();
-				var predictions:Object = predicBGs(120);
-				trace("took", (getTimer() - timer) / 1000);
-				
-				trace(ObjectUtil.toString(predictions));
-				
-			}, 10000 );*/
-			
-			
+			throw new Error("Forecast is not meant to be instantiated!");
 		}
 		
 		public static function predicBGs(minutes:uint):Object
@@ -78,7 +59,7 @@ package model
 			for (i = 0; i < five_min_blocks; i++) 
 			{
 				var futureIOB:Object = TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES));
-				iobArray.push( { iob: futureIOB.iob, activityOpenAPS: futureIOB.activityOpenAPS } );
+				iobArray.push( { iob: futureIOB.iob, activityForecast: futureIOB.activityForecast } );
 			}
 			
 			var iob_data:Object = iobArray[0];
@@ -105,7 +86,7 @@ package model
 			}
 			
 			//calculate BG impact: the amount BG "should" be rising or falling based on insulin activity alone
-			var bgi:Number = round(( -iob_data.activityOpenAPS * sens * 5 ), 2);
+			var bgi:Number = round(( -iob_data.activityForecast * sens * 5 ), 2);
 			
 			// project deviations for 30 minutes
 			var deviation:Number = round( 30 / 5 * ( minDelta - bgi ) );
@@ -283,8 +264,8 @@ package model
 			{
 				var iobTick:Object = iobArray[i];
 				
-				predBGI = round(( -iobTick.activityOpenAPS * sens * 5 ), 2);
-				predZTBGI = round(( -iobTick.activityOpenAPS * sens * 5 ), 2);
+				predBGI = round(( -iobTick.activityForecast * sens * 5 ), 2);
+				predZTBGI = round(( -iobTick.activityForecast * sens * 5 ), 2);
 				// for IOBpredBGs, predicted deviation impact drops linearly from current deviation down to zero
 				// over 60 minutes (data points every 5m)
 				predDev = ci * ( 1 - Math.min(1,IOBpredBGs.length/(60/5)) );
