@@ -73,7 +73,7 @@ package treatments
 			{
 				var x1:Number = minAgo / 5 + 1;
 				iob = insulinAmount * (1 - 0.001852 * x1 * x1 + 0.001852 * x1);
-				activityForecast = isf * insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
+				activityForecast = insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
 				
 				if (!isNaN(isf))
 					activity = isf * activityForecast;
