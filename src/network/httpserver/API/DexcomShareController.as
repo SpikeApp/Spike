@@ -71,6 +71,18 @@ package network.httpserver.API
 				if (params.maxCount != null)	
 					numReadings = int(params.maxCount);
 				
+				var includeCollector:Boolean = false;
+				if (params.include_collector != null && params.include_collector == "true")
+				{
+					includeCollector = true;
+				}
+				
+				var collector:String = null;
+				if (includeCollector)
+				{
+					collector = CGMBlueToothDevice.deviceType();
+				}
+				
 				var dexcomReadingsList:Array = BgReading.latest(numReadings, CGMBlueToothDevice.isFollower());
 				var dexcomReadingsCollection:Array = [];
 				
@@ -80,7 +92,7 @@ package network.httpserver.API
 					if (bgReading == null || bgReading.calculatedValue == 0)
 						continue;
 					
-					dexcomReadingsCollection.push(createGlucoseReading(bgReading));
+					dexcomReadingsCollection.push(createGlucoseReading(bgReading, collector));
 				}
 				
 				//response = JSON.stringify(dexcomReadingsCollection);
@@ -144,7 +156,7 @@ package network.httpserver.API
 			return responseJSON;
 		}
 		
-		private static function createGlucoseReading(glucoseReading:BgReading):Object
+		private static function createGlucoseReading(glucoseReading:BgReading, collector:String = null):Object
 		{
 			var newReading:Object = new Object();
 			newReading.DT = toDateString(glucoseReading.timestamp);
@@ -152,6 +164,8 @@ package network.httpserver.API
 			newReading.Trend = glucoseReading.getSlopeOrdinal();
 			newReading.Value = Math.round(glucoseReading.calculatedValue);
 			newReading.WT = toDateString(glucoseReading.timestamp - TimeSpan.TIME_5_SECONDS);
+			if (collector != null)
+				newReading.Collector = collector;
 			
 			return newReading;
 		}

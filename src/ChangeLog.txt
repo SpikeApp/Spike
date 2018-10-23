@@ -1,5 +1,6 @@
 3.0.3
 ENHANCEMENT: Reverted back the /Pebble endpoint to also display in mmol as it seems some Pebble watch faces don't do the conversion automatically. (Miguel)
+ENHANCEMENT: Upgraded Spike's internal Dexcom Share server to add compatibility with new Loop versions. (Miguel)
 
 3.0.2
 ENHANCEMENT: Optimizations to the IOB algorithm that will slightly increase overall battery life.
