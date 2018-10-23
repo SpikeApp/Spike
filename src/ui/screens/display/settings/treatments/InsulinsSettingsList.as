@@ -35,7 +35,7 @@ package ui.screens.display.settings.treatments
 	
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
-	import ui.shapes.SpikeIACurve;
+	import ui.shapes.SpikeInsulinActivityCurve;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -60,7 +60,7 @@ package ui.screens.display.settings.treatments
 		private var diaGuideButton:Button;
 		private var insulinCurvePicker:PickerList;
 		private var insulinPeak:NumericStepper;
-		private var insulinCurveGraph:SpikeIACurve;
+		private var insulinCurveGraph:SpikeInsulinActivityCurve;
 		private var insulinCurveContainer:LayoutGroup;
 		private var insulinCurvePresetsPicker:PickerList;
 		private var xAxisLegend:Label;
@@ -331,7 +331,7 @@ package ui.screens.display.settings.treatments
 			{
 				if (selectedInsulinCurve == "exponential")
 				{
-					insulinCurveGraph = new SpikeIACurve(SpikeIACurve.EXPONENTIAL_OPENAPS_MODEL, insulinDIA.value, insulinPeak.value);
+					insulinCurveGraph = new SpikeInsulinActivityCurve(SpikeInsulinActivityCurve.EXPONENTIAL_OPENAPS_MODEL, insulinDIA.value, insulinPeak.value);
 					insulinCurveContainer.addChildAt(insulinCurveGraph, 0);
 					insulinCurveContainer.readjustLayout();
 					insulinCurveContainer.validate();
@@ -339,7 +339,7 @@ package ui.screens.display.settings.treatments
 				}
 				else if (selectedInsulinCurve == "bilinear")
 				{
-					insulinCurveGraph = new SpikeIACurve(SpikeIACurve.BILINEAR_OPENAPS_MODEL, insulinDIA.value);
+					insulinCurveGraph = new SpikeInsulinActivityCurve(SpikeInsulinActivityCurve.BILINEAR_OPENAPS_MODEL, insulinDIA.value);
 					insulinCurveContainer.addChildAt(insulinCurveGraph, 0);
 					insulinCurveContainer.readjustLayout();
 					insulinCurveContainer.validate();
@@ -348,7 +348,7 @@ package ui.screens.display.settings.treatments
 			}
 			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "nightscout")
 			{
-				insulinCurveGraph = new SpikeIACurve(SpikeIACurve.NIGHTSCOUT_MODEL, insulinDIA.value);
+				insulinCurveGraph = new SpikeInsulinActivityCurve(SpikeInsulinActivityCurve.NIGHTSCOUT_MODEL, insulinDIA.value);
 				insulinCurveContainer.addChildAt(insulinCurveGraph, 0);
 				insulinCurveContainer.readjustLayout();
 				insulinCurveContainer.validate();

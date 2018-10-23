@@ -72,6 +72,7 @@ package ui.chart
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
+	import ui.shapes.SpikeInsulinActivityCurve;
 	import ui.shapes.SpikeLine;
 	
 	import utils.Constants;
@@ -293,21 +294,10 @@ package ui.chart
 		private var spikeMasterTransmitterBatteryPill:ChartTreatmentPill;
 		
 		//Absorption curves
-		private var absorptionGraph:LayoutGroup;
-		private var curve:SpikeLine;
-		private var yAxisCurve:SpikeLine;
-		private var xAxisCurve:SpikeLine;
-		private var firstCurveLabel:Label;
-		private var nowCurveLabel:Label;
-		private var nowCurveMarker:SpikeLine;
-		private var lastCurveLabel:Label;
-		private var highestCurveLabel:Label;
-		private var middleCurveLabel:Label;
-		private var lowestCurveLabel:Label;
-		private var carbsCurve:LayoutGroup;
-		private var carbsCurveCallout:Callout;
-		private var insulinCurve:LayoutGroup;
 		private var insulinCurveCallout:Callout;
+		private var iobActivityCurve:IOBActivityCurve;
+		private var carbsCurveCallout:Callout;
+		private var cobCurve:COBCurve;
 		
 		//Historial Data
 		private var isHistoricalData:Boolean;
@@ -4213,22 +4203,39 @@ package ui.chart
 			
 			if(touch != null && touch.phase == TouchPhase.BEGAN) 
 			{
+				//Dispose previous curves
 				disposeAbsorptionCurves();
 				
-				var graphData:Object = getAbsorptionCurve("insulin");
-				if (graphData == null)
+				//Validate. If there's no active IOB then don't display curves
+				var currentIOB:Number = TreatmentsManager.getTotalIOB(new Date().valueOf()).iob;
+				if (currentIOB <= 0)
 					return;
 				
-				if (insulinCurve != null) insulinCurve.removeFromParent(true);
-				insulinCurve = graphData.graph;
+				//Generate IOB/Activity Curves
+				iobActivityCurve = new IOBActivityCurve();
+				iobActivityCurve.validate();
 				
-				if (insulinCurveCallout != null) insulinCurveCallout.removeFromParent(true);
-				insulinCurveCallout = Callout.show(insulinCurve, IOBPill, null, true);
-				insulinCurveCallout.paddingLeft += graphData.padding - 5;
+				//Create IOB/Activity Callout
+				insulinCurveCallout = Callout.show(iobActivityCurve, IOBPill, null, true);
+				insulinCurveCallout.paddingLeft += Math.abs(iobActivityCurve.leftPadding) - 5;
 				insulinCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
 				Callout.stagePaddingRight = 1;
 				
-				graphData = null;
+				//Final callout size/position adjustments
+				var iobCalloutPointOfOrigin:Number = IOBPill.localToGlobal(new Point(0, 0)).y + IOBPill.height;
+				var iobCurveContentOriginalHeight:Number = iobActivityCurve.height + 60;
+				var suggestedIOBCurveCalloutHeight:Number = Constants.stageHeight - iobCalloutPointOfOrigin;
+				var finalCalloutHeight:Number = iobCurveContentOriginalHeight > suggestedIOBCurveCalloutHeight ?  suggestedIOBCurveCalloutHeight : iobCurveContentOriginalHeight;
+				
+				insulinCurveCallout.height = finalCalloutHeight;
+				iobActivityCurve.height = finalCalloutHeight - 50;
+				iobActivityCurve.maxHeight = finalCalloutHeight - 50;
+				
+				if (finalCalloutHeight != iobCurveContentOriginalHeight)
+				{
+					(iobActivityCurve.layout as VerticalLayout).paddingRight = 10;
+					insulinCurveCallout.paddingRight = 10;
+				}
 			}
 		}
 		
@@ -4244,250 +4251,45 @@ package ui.chart
 			
 			if(touch != null && touch.phase == TouchPhase.BEGAN) 
 			{
+				//Dispose previous curves
 				disposeAbsorptionCurves();
 				
-				var graphData:Object = getAbsorptionCurve("carbs");
-				if (graphData == null)
+				//Validate. If there's no active COB then don't display curves
+				var currentCOB:Number = TreatmentsManager.getTotalCOB(new Date().valueOf()).cob;
+				if (currentCOB <= 0)
 					return;
 				
-				if (carbsCurve != null) carbsCurve.removeFromParent(true);
-				carbsCurve = graphData.graph;
+				//Generate COB Curve
+				cobCurve = new COBCurve();
+				cobCurve.validate();
 				
-				if (carbsCurveCallout != null) carbsCurveCallout.removeFromParent(true);
-				carbsCurveCallout = Callout.show(carbsCurve, COBPill, null, true);
-				carbsCurveCallout.paddingLeft += graphData.padding - 5;
+				//Create IOB/Activity Callout
+				carbsCurveCallout = Callout.show(cobCurve, COBPill, null, true);
+				carbsCurveCallout.paddingLeft += Math.abs(cobCurve.leftPadding) - 5;
 				carbsCurveCallout.addEventListener(starling.events.Event.CLOSE, onCurveCalloutClosed);
 				Callout.stagePaddingRight = 1;
 				
-				graphData = null;
+				//Final callout size/position adjustments
+				var cobCalloutPointOfOrigin:Number = COBPill.localToGlobal(new Point(0, 0)).y + COBPill.height;
+				var cobCurveContentOriginalHeight:Number = cobCurve.height + 60;
+				var suggestedCOBCurveCalloutHeight:Number = Constants.stageHeight - cobCalloutPointOfOrigin;
+				var finalCalloutHeight:Number = cobCurveContentOriginalHeight > suggestedCOBCurveCalloutHeight ?  suggestedCOBCurveCalloutHeight : cobCurveContentOriginalHeight;
+				
+				carbsCurveCallout.height = finalCalloutHeight;
+				cobCurve.height = finalCalloutHeight - 50;
+				cobCurve.maxHeight = finalCalloutHeight - 50;
+				
+				if (finalCalloutHeight != cobCurveContentOriginalHeight)
+				{
+					(cobCurve.layout as VerticalLayout).paddingRight = 10;
+					carbsCurveCallout.paddingRight = 10;
+				}
 			}
 		}
 		
 		private function onCurveCalloutClosed(e:starling.events.Event):void
 		{
 			disposeAbsorptionCurves();
-		}
-		
-		private function getAbsorptionCurve(type:String):Object
-		{
-			//Graphics container
-			if (absorptionGraph != null) absorptionGraph.removeFromParent(true);
-			absorptionGraph = new LayoutGroup();
-			absorptionGraph.touchable = false;
-			
-			//Data
-			var initialIOB:Object;
-			var initialCOB:Object;
-			
-			if (type == "insulin")
-			{
-				initialIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
-				if (initialIOB.iob == 0)
-					return null;
-			}
-			else
-			{
-				initialCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
-				if (initialCOB.cob == 0)
-					return null;
-			}
-			
-			//Data points
-			var totalTreatmentsData:Number = type == "insulin" ? initialIOB.bolusinsulin : initialCOB.carbs;
-			var firstTreatmentTimestamp:Number = type == "insulin" ? initialIOB.firstInsulinTime : initialCOB.firstCarbTime;
-			var dataPoints:Array = new Array();
-			var pointInTime:Number = firstTreatmentTimestamp;
-			var dataPoint:Number = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime).iob : TreatmentsManager.getTotalCOB(pointInTime).cob;
-			dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
-			
-			while (dataPoint >= 0)
-			{
-				pointInTime += TimeSpan.TIME_2_MINUTES_30_SECONDS;
-				dataPoint = type == "insulin" ? TreatmentsManager.getTotalIOB(pointInTime).iob : TreatmentsManager.getTotalCOB(pointInTime).cob;
-				dataPoints.push( { timestamp: pointInTime, dataPoint: dataPoint } );
-				
-				if (dataPoint == 0)
-					break;
-			}
-			
-			//Calculators
-			var leftPadding:Number = 0;
-			var firstTimestamp:Number = dataPoints[0].timestamp;
-			var lastTimestamp:Number = dataPoints[dataPoints.length - 1].timestamp;
-			var totalTimestampDifference:Number = lastTimestamp - firstTimestamp;
-			var sortedData:Array = dataPoints.concat();
-			sortedData.sortOn(["dataPoint"], Array.NUMERIC);
-			var highestDataPoint:Number = sortedData[sortedData.length -1].dataPoint;
-			var lowestDataPoint:Number = sortedData[0].dataPoint;
-			var totalDataDifference:Number = highestDataPoint - lowestDataPoint;
-			
-			//YAXIS LABELS
-			//Highest value
-			if (highestCurveLabel != null) highestCurveLabel.removeFromParent(true);
-			highestCurveLabel = LayoutFactory.createLabel(String(highestDataPoint) + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
-			highestCurveLabel.touchable = false;
-			highestCurveLabel.validate();
-			highestCurveLabel.x = -highestCurveLabel.width - 7;
-			highestCurveLabel.y = -highestCurveLabel.height / 4.5;
-			absorptionGraph.addChild(highestCurveLabel);
-			if (highestCurveLabel.x < leftPadding) leftPadding = highestCurveLabel.x;
-			
-			//Middle value
-			var middleValue:Number = Math.round((highestDataPoint / 2) * 100) / 100;
-			if (middleCurveLabel != null) middleCurveLabel.removeFromParent(true);
-			middleCurveLabel = LayoutFactory.createLabel(String(middleValue) + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
-			middleCurveLabel.touchable = false;
-			middleCurveLabel.validate();
-			middleCurveLabel.x = -middleCurveLabel.width - 7;
-			absorptionGraph.addChild(middleCurveLabel);
-			if (middleCurveLabel.x < leftPadding) leftPadding = middleCurveLabel.x;
-			
-			//Lowest value
-			if (lowestCurveLabel != null) lowestCurveLabel.removeFromParent(true);
-			lowestCurveLabel = LayoutFactory.createLabel("0" + (type == "insulin" ? "U" : "g"), HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
-			lowestCurveLabel.touchable = false;
-			lowestCurveLabel.validate();
-			lowestCurveLabel.x = -lowestCurveLabel.width - 7;
-			absorptionGraph.addChild(lowestCurveLabel);
-			if (lowestCurveLabel.x < leftPadding) leftPadding = lowestCurveLabel.x;
-			
-			//Absorption Curve 
-			var graphWidth:Number = Constants.isPortrait ? Constants.stageWidth - Math.abs(leftPadding) - 35 : Constants.stageHeight - Math.abs(leftPadding) - 35;
-			var graphHeight:Number = graphWidth / 3;
-			var scaleXFactor:Number = 1 / (totalTimestampDifference / graphWidth);
-			var scaleYFactor:Number = graphHeight / totalDataDifference;
-			
-			middleCurveLabel.y = (graphHeight / 2) - (middleCurveLabel.height / 2);
-			lowestCurveLabel.y = graphHeight - lowestCurveLabel.height + (lowestCurveLabel.height / 4.5);
-			
-			if (curve != null) curve.removeFromParent(true);
-			curve = new SpikeLine();
-			curve.touchable = false;
-			curve.lineStyle(1.5, type == "insulin" ? uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)) : uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR)));
-			var previousXCoordinate:Number = 0;
-			
-			var dataLength:int = dataPoints.length;
-			for(var i:int = 0; i < dataLength; i++)
-			{
-				var currentDataPointValue:Number = dataPoints[i].dataPoint;
-				
-				//Define data point x position
-				var dataX:Number;
-				if(i==0) dataX = 0;
-				else dataX = (Number(dataPoints[i].timestamp) - Number(dataPoints[i-1].timestamp)) * scaleXFactor;
-				
-				dataX = previousXCoordinate + dataX;
-				
-				//Define glucose marker y position
-				var dataY:Number = graphHeight - ((currentDataPointValue - lowestDataPoint) * scaleYFactor);
-				
-				if (i == 0)
-					curve.moveTo(dataX, dataY);
-				else
-				{
-					curve.lineTo(dataX, dataY);
-					curve.moveTo(dataX, dataY);
-				}
-				
-				previousXCoordinate = dataX;
-			}
-			
-			absorptionGraph.addChild(curve);
-			
-			//Draw Axis
-			if (yAxisCurve != null) yAxisCurve.removeFromParent(true);
-			yAxisCurve = GraphLayoutFactory.createVerticalLine(graphHeight, 1.5, lineColor);
-			yAxisCurve.touchable = false;
-			absorptionGraph.addChild(yAxisCurve);
-			
-			if (xAxisCurve != null) xAxisCurve.removeFromParent(true);
-			xAxisCurve = GraphLayoutFactory.createHorizontalLine(graphWidth, 1.5, lineColor);
-			xAxisCurve.touchable = false;
-			xAxisCurve.y = yAxisCurve.y + yAxisCurve.height;
-			absorptionGraph.addChild(xAxisCurve);
-			
-			//Draw X Labels
-			var dateFormat:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
-			
-			//First Timestamo
-			var firstDate:Date = new Date(firstTreatmentTimestamp);
-			var timeFormatted:String = "";
-			if (dateFormat.slice(0,2) == "24")
-				timeFormatted = TimeSpan.formatHoursMinutes(firstDate.getHours(), firstDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
-			else
-				timeFormatted = TimeSpan.formatHoursMinutes(firstDate.getHours(), firstDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
-			
-			if (firstCurveLabel != null) firstCurveLabel.removeFromParent(true);
-			firstCurveLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
-			firstCurveLabel.touchable = false;
-			firstCurveLabel.validate();
-			firstCurveLabel.x = 0;
-			firstCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
-			absorptionGraph.addChild(firstCurveLabel);
-			var firstLabelBounds:Rectangle = firstCurveLabel.bounds;
-			
-			//Now
-			var now:Number = new Date().valueOf();
-			
-			if (nowCurveLabel != null) nowCurveLabel.removeFromParent(true);
-			nowCurveLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
-			nowCurveLabel.touchable = false;
-			nowCurveLabel.validate();
-			nowCurveLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowCurveLabel.width / 2);
-			nowCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
-			absorptionGraph.addChild(nowCurveLabel);
-			
-			if (nowCurveMarker != null) nowCurveMarker.removeFromParent(true);
-			nowCurveMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, lineColor);
-			nowCurveMarker.touchable = false;
-			nowCurveMarker.x = ((now - firstTreatmentTimestamp) * scaleXFactor);
-			nowCurveMarker.y = 0;
-			absorptionGraph.addChild(nowCurveMarker);
-			
-			var nowLabelBounds:Rectangle = nowCurveLabel.bounds;
-			
-			if (nowLabelBounds.intersects(firstLabelBounds))
-			{
-				nowCurveLabel.removeFromParent(true);
-				nowCurveLabel = null;
-			}
-			
-			//Last timestamp
-			var lastDate:Date = new Date(lastTimestamp);
-			var lastTimeFormatted:String = "";
-			if (dateFormat.slice(0,2) == "24")
-				lastTimeFormatted = TimeSpan.formatHoursMinutes(lastDate.getHours(), lastDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
-			else
-				lastTimeFormatted = TimeSpan.formatHoursMinutes(lastDate.getHours(), lastDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
-			
-			if (lastCurveLabel != null) lastCurveLabel.removeFromParent(true);
-			lastCurveLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
-			lastCurveLabel.touchable = false;
-			lastCurveLabel.validate();
-			lastCurveLabel.x = xAxisCurve.width - lastCurveLabel.width;
-			lastCurveLabel.y = xAxisCurve.y + xAxisCurve.height + 4;
-			absorptionGraph.addChild(lastCurveLabel);
-			
-			if (nowCurveLabel != null)
-			{
-				var latestLabelBounds:Rectangle = lastCurveLabel.bounds;
-				if (latestLabelBounds.intersects(nowLabelBounds))
-					nowCurveLabel.removeFromParent(true);
-			}
-			
-			//Dispose unneded data
-			if (dataPoints != null)
-			{
-				dataPoints.length = 0;
-				dataPoints = null;
-			}
-			if (sortedData != null)
-			{
-				sortedData.length = 0;
-				sortedData = null;
-			}
-			
-			return { graph: absorptionGraph, padding: Math.abs(leftPadding) };
 		}
 		
 		private function onDisplayMoreInfo(e:starling.events.TouchEvent):void
@@ -5021,95 +4823,18 @@ package ui.chart
 		
 		private function disposeAbsorptionCurves():void
 		{
-			if (lowestCurveLabel != null)
+			if (iobActivityCurve != null)
 			{
-				lowestCurveLabel.removeFromParent();
-				lowestCurveLabel.dispose();
-				lowestCurveLabel = null;
+				iobActivityCurve.removeFromParent();
+				iobActivityCurve.dispose();
+				iobActivityCurve = null;
 			}
 			
-			if (middleCurveLabel != null)
+			if (cobCurve != null)
 			{
-				middleCurveLabel.removeFromParent();
-				middleCurveLabel.dispose();
-				middleCurveLabel = null;
-			}
-			
-			if (highestCurveLabel != null)
-			{
-				highestCurveLabel.removeFromParent();
-				highestCurveLabel.dispose();
-				highestCurveLabel = null;
-			}
-			
-			if (lastCurveLabel != null)
-			{
-				lastCurveLabel.removeFromParent();
-				lastCurveLabel.dispose();
-				lastCurveLabel = null;
-			}
-			
-			if (nowCurveMarker != null)
-			{
-				nowCurveMarker.removeFromParent();
-				nowCurveMarker.dispose();
-				nowCurveMarker = null;
-			}
-			
-			if (nowCurveLabel != null)
-			{
-				nowCurveLabel.removeFromParent();
-				nowCurveLabel.dispose();
-				nowCurveLabel = null;
-			}
-			
-			if (firstCurveLabel != null)
-			{
-				firstCurveLabel.removeFromParent();
-				firstCurveLabel.dispose();
-				firstCurveLabel = null;
-			}
-			
-			if (xAxisCurve != null)
-			{
-				xAxisCurve.removeFromParent();
-				xAxisCurve.dispose();
-				xAxisCurve = null;
-			}
-			
-			if (yAxisCurve != null)
-			{
-				yAxisCurve.removeFromParent();
-				yAxisCurve.dispose();
-				yAxisCurve = null;
-			}
-			
-			if (curve != null)
-			{
-				curve.removeFromParent();
-				curve.dispose();
-				curve = null;
-			}
-			
-			if (absorptionGraph != null)
-			{
-				absorptionGraph.removeFromParent();
-				absorptionGraph.dispose();
-				absorptionGraph = null;
-			}
-			
-			if (carbsCurve != null)
-			{
-				carbsCurve.removeFromParent();
-				carbsCurve.dispose();
-				carbsCurve = null;
-			}
-			
-			if (insulinCurve != null)
-			{
-				insulinCurve.removeFromParent();
-				insulinCurve.dispose();
-				insulinCurve = null;
+				cobCurve.removeFromParent();
+				cobCurve.dispose();
+				cobCurve = null;
 			}
 			
 			if (carbsCurveCallout != null)

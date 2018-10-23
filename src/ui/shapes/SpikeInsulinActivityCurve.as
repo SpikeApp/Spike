@@ -13,7 +13,7 @@ package ui.shapes
 	/**
 	 * Plots insulin activity curve for OpenAPS bilinear and exponential as well as Nightscout bilinear
 	 */
-	public class SpikeIACurve extends Sprite
+	public class SpikeInsulinActivityCurve extends Sprite
 	{
 		//Constants
 		public static const EXPONENTIAL_OPENAPS_MODEL:String = "exponentialOpenAPSModel";
@@ -26,7 +26,7 @@ package ui.shapes
 		private var xAxisLine:SpikeLine;
 		private var yAxisLine:SpikeLine;
 		
-		public function SpikeIACurve(type:String, dia:Number, peak:Number = Number.NaN)
+		public function SpikeInsulinActivityCurve(type:String, dia:Number = Number.NaN, peak:Number = Number.NaN)
 		{
 			if (type == EXPONENTIAL_OPENAPS_MODEL)
 			{

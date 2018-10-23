@@ -572,7 +572,7 @@ package treatments
 		public static function getTotalCOB(time:Number):Object 
 		{
 			//Get current algorithm
-			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);;
+			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
 			
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
