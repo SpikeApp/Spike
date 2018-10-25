@@ -327,6 +327,8 @@ package ui.chart
 		private var predictedBGImpact:Number = Number.NaN;
 		private var predictedDeviation:Number = Number.NaN;
 		private var predictedCarbImpact:Number = Number.NaN;
+		private var predictedTimeUntilHigh:Number = Number.NaN;
+		private var predictedTimeUntilLow:Number = Number.NaN;
 		private var predictionsPill:ChartTreatmentPill;
 		private var predictionsContainer:ScrollContainer;
 		private var predictionsCallout:Callout;
@@ -342,6 +344,8 @@ package ui.chart
 		private var predictionsIOBCOBPill:ChartComponentPill;
 		private var predictionsTimeFramePill:ChartComponentPill;
 		private var predictionsLengthPicker:PickerList;
+		private var predictedTimeUntilHighPill:ChartTreatmentPill;
+		private var predictedTimeUntilLowPill:ChartTreatmentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
@@ -914,7 +918,7 @@ package ui.chart
 						var currentLineX:Number;
 						var currentLineY:Number;
 						
-						if(i < dataLength -1)
+						if(i < dataLength -1 || isPrediction)
 						{
 							currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
@@ -995,6 +999,16 @@ package ui.chart
 					else
 						predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
 				}
+			}
+			
+			//Predictions line fix
+			if (_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
+			{
+				//Add an extra line
+				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
+				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
+				line.moveTo(extraPredictionLineX, extraPredictionLineY);
+				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY);
 			}
 			
 			//Creat dummy marker in case the current timestamp is bigger than the latest bgreading timestamp
@@ -2762,7 +2776,7 @@ package ui.chart
 						var currentLineX:Number;
 						var currentLineY:Number;
 						
-						if(i < dataLength -1)
+						if(i < dataLength -1 || isPrediction)
 						{
 							currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
@@ -2822,6 +2836,16 @@ package ui.chart
 				//Update variables for next iteration
 				previousXCoordinate = previousXCoordinate + glucoseX;
 				previousGlucoseMarker = glucoseMarker;
+			}
+			
+			//Predictions line fix
+			if (_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
+			{
+				//Add an extra line
+				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
+				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
+				line.moveTo(extraPredictionLineX, extraPredictionLineY);
+				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY);
 			}
 			
 			if(chartType == MAIN_CHART && !isRaw)
@@ -2962,7 +2986,7 @@ package ui.chart
 					var currentLineX:Number;
 					var currentLineY:Number;
 					
-					if(i < dataLength -1)
+					if(i < dataLength -1 || isPrediction)
 					{
 						currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
 						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
@@ -3003,7 +3027,9 @@ package ui.chart
 						}
 					}
 					else
+					{
 						line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+					}
 					
 					line.moveTo(currentLineX, currentLineY);
 					
@@ -3013,6 +3039,16 @@ package ui.chart
 				//Hide glucose marker
 				glucoseMarker.alpha = 0;
 				previousGlucoseMarker = glucoseMarker;
+			}
+			
+			//Predictions line fix
+			if (_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
+			{
+				//Add an extra line
+				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
+				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
+				line.moveTo(extraPredictionLineX, extraPredictionLineY);
+				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY);
 			}
 			
 			//Add line to display list
@@ -3412,6 +3448,9 @@ package ui.chart
 			var unformattedPredictionsList:Array;
 			var predictionsLength:int;
 			var i:int;
+			var currentReadingValue:Number;
+			predictedTimeUntilHigh = Number.NaN;
+			predictedTimeUntilLow = Number.NaN;
 			
 			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes);
 			
@@ -3420,16 +3459,26 @@ package ui.chart
 			if (unformattedPredictions != null && unformattedPredictions.COB != null)
 			{
 				unformattedPredictionsList = unformattedPredictions.COB;
-				unformattedPredictionsList.shift(); //We remove the first prediction because it's = to the latest bg reading so it's not useful to us.
+				currentReadingValue = unformattedPredictionsList.shift(); //We remove the first prediction because it's = to the latest bg reading so it's not useful to us.
 			}
 			else if (unformattedPredictions != null && unformattedPredictions.IOB != null)
 			{
 				unformattedPredictionsList = unformattedPredictions.IOB;
-				unformattedPredictionsList.shift(); //We remove the first prediction because it's = to the latest bg reading so it's not useful to us.
+				currentReadingValue = unformattedPredictionsList.shift(); //We remove the first prediction because it's = to the latest bg reading so it's not useful to us.
 			}
 			else
 			{
 				return [];
+			}
+			
+			//First check of glucose thresholds
+			if (currentReadingValue >= glucoseHigh)
+			{
+				predictedTimeUntilHigh = 0;
+			}
+			else if (currentReadingValue <= glucoseLow)
+			{
+				predictedTimeUntilLow = 0;
 			}
 			
 			//trace(ObjectUtil.toString(unformattedPredictionsList));
@@ -3437,6 +3486,7 @@ package ui.chart
 			for (i = 0; i < predictionsLength; i++) 
 			{
 				var readingTimestamp:Number = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+				var predictedCalculatedValue:Number = unformattedPredictionsList[i];
 				var predictionReading:BgReading = new BgReading
 					(
 						readingTimestamp, //timestamp
@@ -3446,7 +3496,7 @@ package ui.chart
 						Number.NaN, //filtered data
 						Number.NaN, //adge adjusted raw data
 						false, //calibration flag
-						unformattedPredictionsList[i], //calculated value
+						predictedCalculatedValue, //calculated value
 						Number.NaN, //filtered calculated value
 						Number.NaN, //calculated value slope
 						Number.NaN, //a
@@ -3463,6 +3513,17 @@ package ui.chart
 					)
 				
 				finalPredictionsList.push(predictionReading);
+				
+				//Check if high or low thresholds will be reached
+				if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+				{
+					predictedTimeUntilHigh = readingTimestamp - now;
+				}
+				
+				if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
+				{
+					predictedTimeUntilLow = readingTimestamp - now;
+				}
 			}
 			
 			//Update predictions pill
@@ -3695,15 +3756,6 @@ package ui.chart
 			predictionsEnablerPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), predictionsEnableSwitch);
 			predictionsContainer.addChild(predictionsEnablerPill);
 			
-			//IOB/COB Toggle
-			if (predictionsIOBCOBCheck != null) predictionsIOBCOBCheck.dispose();
-			predictionsIOBCOBCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true");
-			predictionsIOBCOBCheck.paddingTop = predictionsIOBCOBCheck.paddingBottom = 3;
-			predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
-			if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.dispose();
-			predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
-			predictionsContainer.addChild(predictionsIOBCOBPill);
-			
 			//Length
 			if (predictionsLengthPicker != null) predictionsLengthPicker.dispose();
 			var currentPredictionsLength:Number;
@@ -3820,18 +3872,39 @@ package ui.chart
 			predictionsTimeFramePill.addEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
 			predictionsContainer.addChild(predictionsTimeFramePill);
 			
+			//IOB/COB Toggle
+			if (predictionsIOBCOBCheck != null) predictionsIOBCOBCheck.dispose();
+			predictionsIOBCOBCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true");
+			predictionsIOBCOBCheck.paddingTop = predictionsIOBCOBCheck.paddingBottom = 3;
+			predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
+			if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.dispose();
+			predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
+			predictionsContainer.addChild(predictionsIOBCOBPill);
+			
+			//Predictions Output
 			if (predictionsEnabled)
 			{
-				var outcome:Number = Forecast.predictOutcome();
-				if (!isNaN(outcome))
+				//Time Until High
+				if (!isNaN(predictedTimeUntilHigh) && predictedTimeUntilHigh != 0)
 				{
-					if (predictedNaiveEventualBGPill != null) predictedNaiveEventualBGPill.dispose();
-					predictedNaiveEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'));
-					predictedNaiveEventualBGPill.setValue(String(outcome));
-					predictedNaiveEventualBGPill.touchable = false;
-					predictionsContainer.addChild(predictedNaiveEventualBGPill);
+					if (predictedTimeUntilHighPill != null) predictedTimeUntilHighPill.dispose();
+					predictedTimeUntilHighPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predicted_time_until_high_label'));
+					predictedTimeUntilHighPill.setValue(TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilHigh * TimeSpan.TIME_1_MINUTE, false));
+					predictedTimeUntilHighPill.touchable = false;
+					predictionsContainer.addChild(predictedTimeUntilHighPill);
 				}
 				
+				//Time Until Low
+				if (!isNaN(predictedTimeUntilLow) && predictedTimeUntilLow != 0)
+				{
+					if (predictedTimeUntilLowPill != null) predictedTimeUntilLowPill.dispose();
+					predictedTimeUntilLowPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predicted_time_until_low_label'));
+					predictedTimeUntilLowPill.setValue(TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilLow * TimeSpan.TIME_1_MINUTE, false));
+					predictedTimeUntilLowPill.touchable = false;
+					predictionsContainer.addChild(predictedTimeUntilLowPill);
+				}
+				
+				//Eventual BG
 				if (!isNaN(predictedEventualBG))
 				{
 					if (predictedEventualBGPill != null) predictedEventualBGPill.dispose();
@@ -3841,6 +3914,7 @@ package ui.chart
 					predictionsContainer.addChild(predictedEventualBGPill);
 				}
 				
+				//Predicted Deviation
 				if (!isNaN(predictedDeviation))
 				{
 					if (predictedDeviationPill != null) predictedDeviationPill.dispose();
@@ -3850,6 +3924,7 @@ package ui.chart
 					predictionsContainer.addChild(predictedDeviationPill);
 				}
 				
+				//Glucose Velocity
 				var glucoseVelocity:Number = GlucoseFactory.getGlucoseVelocity();
 				if (!isNaN(glucoseVelocity))
 				{
@@ -3860,6 +3935,18 @@ package ui.chart
 					predictionsContainer.addChild(glucoseVelocityPill);
 				}
 				
+				//Treatments Outcome
+				var outcome:Number = Forecast.predictOutcome();
+				if (!isNaN(outcome))
+				{
+					if (predictedNaiveEventualBGPill != null) predictedNaiveEventualBGPill.dispose();
+					predictedNaiveEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'));
+					predictedNaiveEventualBGPill.setValue(String(outcome));
+					predictedNaiveEventualBGPill.touchable = false;
+					predictionsContainer.addChild(predictedNaiveEventualBGPill);
+				}
+				
+				//BG Impact
 				if (!isNaN(predictedBGImpact))
 				{
 					if (predictedBgImpactPill != null) predictedBgImpactPill.dispose();
@@ -3869,6 +3956,7 @@ package ui.chart
 					predictionsContainer.addChild(predictedBgImpactPill);
 				}
 				
+				//Carb Impact
 				if (!isNaN(predictedCarbImpact))
 				{
 					if (predictedCarbImpactPill != null) predictedCarbImpactPill.dispose();
@@ -4148,6 +4236,20 @@ package ui.chart
 				predictedCarbImpactPill.removeFromParent();
 				predictedCarbImpactPill.dispose();
 				predictedCarbImpactPill = null;
+			}
+			
+			if (predictedTimeUntilHighPill != null)
+			{
+				predictedTimeUntilHighPill.removeFromParent();
+				predictedTimeUntilHighPill.dispose();
+				predictedTimeUntilHighPill = null;
+			}
+			
+			if (predictedTimeUntilLowPill != null)
+			{
+				predictedTimeUntilLowPill.removeFromParent();
+				predictedTimeUntilLowPill.dispose();
+				predictedTimeUntilLowPill = null;
 			}
 			
 			if (predictionsEnableSwitch != null)
