@@ -6,15 +6,12 @@ package ui.chart
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
-	import flash.geom.Rectangle;
 	import flash.system.System;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
 	import flash.utils.clearTimeout;
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
-	
-	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -28,13 +25,18 @@ package ui.chart
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
+	import feathers.controls.Check;
 	import feathers.controls.DateTimeMode;
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.PickerList;
 	import feathers.controls.ScrollContainer;
+	import feathers.controls.ToggleSwitch;
+	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.core.FeathersControl;
+	import feathers.data.ArrayCollection;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
@@ -72,7 +74,6 @@ package ui.chart
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
-	import ui.shapes.SpikeInsulinActivityCurve;
 	import ui.shapes.SpikeLine;
 	
 	import utils.Constants;
@@ -311,22 +312,55 @@ package ui.chart
 		private var rawColor:uint;
 		
 		//Predictions
-		private var predictionsEnabled:Boolean = true;
+		private var predictionsEnabled:Boolean;
 		private var predictionsLengthInMinutes:int = 60;
 		private var predictionsMainGlucoseDataPoints:Array = [];
 		private var predictionsScrollerGlucoseDataPoints:Array = [];
-		private var predictionsColor:uint = 0xef00e7;
+		private var predictionsColor:uint = 0xEF00E7;
 		private var predictionsDelimiter:SpikeLine;
 		private var activeGlucoseDelimiter:SpikeLine;
 		private var redrawPredictionsTimeoutID:int = -1;
 		private var lastPredictionsRedrawTimestamp:Number = 0;
 		private var algorithmIOBCOB:String;
 		private var latestOpenAPSRequestedCOBTimestamp:Number = 0;
+		private var predictedEventualBG:Number = Number.NaN;
+		private var predictedBGImpact:Number = Number.NaN;
+		private var predictedDeviation:Number = Number.NaN;
+		private var predictedCarbImpact:Number = Number.NaN;
+		private var predictionsPill:ChartTreatmentPill;
+		private var predictionsContainer:ScrollContainer;
+		private var predictionsCallout:Callout;
+		private var predictedEventualBGPill:ChartTreatmentPill;
+		private var predictedNaiveEventualBGPill:ChartTreatmentPill;
+		private var predictedBgImpactPill:ChartTreatmentPill;
+		private var predictedDeviationPill:ChartTreatmentPill;
+		private var predictedCarbImpactPill:ChartTreatmentPill;
+		private var predictionsEnableSwitch:ToggleSwitch;
+		private var predictionsEnablerPill:ChartComponentPill;
+		private var glucoseVelocityPill:ChartTreatmentPill;
+		private var predictionsIOBCOBCheck:Check;
+		private var predictionsIOBCOBPill:ChartComponentPill;
+		private var predictionsTimeFramePill:ChartComponentPill;
+		private var predictionsLengthPicker:PickerList;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
 			//Algorithm
 			algorithmIOBCOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
+			
+			//Predictions
+			predictionsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true";
+			predictionsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_COLOR));
+			if (timelineRange == TIMELINE_1H)
+				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
+			else if (timelineRange == TIMELINE_3H)
+				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_3_HOURS));
+			else if (timelineRange == TIMELINE_6H)
+				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_6_HOURS));
+			else if (timelineRange == TIMELINE_12H)
+				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_12_HOURS));
+			else if (timelineRange == TIMELINE_24H)
+				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_24_HOURS));
 			
 			//Data
 			this.isHistoricalData = isHistoricalData;
@@ -1066,9 +1100,19 @@ package ui.chart
 		
 		private function repositionTreatmentPills():void
 		{
+			if (predictionsPill != null)
+			{
+				predictionsPill.x = _graphWidth - predictionsPill.width -glucoseStatusLabelsMargin - 2;
+				predictionsPill.visible = true;
+			}
+			
 			if (displayIOBEnabled && IOBPill != null)
 			{
-				IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+				if (predictionsPill != null)
+					IOBPill.x = predictionsPill.x - IOBPill.width - 6;
+				else
+					IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
+				
 				IOBPill.visible = true;
 			}
 			
@@ -1076,6 +1120,8 @@ package ui.chart
 			{
 				if (displayIOBEnabled)
 					COBPill.x = IOBPill.x - COBPill.width - 6;
+				else if (predictionsPill != null)
+					COBPill.x = predictionsPill.x - COBPill.width - 6;
 				else
 					COBPill.x = _graphWidth - COBPill.width -glucoseStatusLabelsMargin - 2;
 				
@@ -1088,6 +1134,8 @@ package ui.chart
 					infoPill.x = COBPill.x - infoPill.width - 6;
 				else if (displayIOBEnabled && IOBPill != null)
 					infoPill.x = IOBPill.x - infoPill.width - 6;
+				else if (predictionsPill != null)
+					infoPill.x = predictionsPill.x - infoPill.width - 6;
 				else
 					infoPill.x = _graphWidth - infoPill.width -glucoseStatusLabelsMargin - 2;
 				
@@ -3258,7 +3306,6 @@ package ui.chart
 				{
 					IOBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_IOB);
 					IOBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
-					//IOBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
 					IOBPill.x = _graphWidth - IOBPill.width -glucoseStatusLabelsMargin - 2;
 					IOBPill.setValue("0.00U");
 					
@@ -3274,7 +3321,6 @@ package ui.chart
 				{
 					COBPill = new ChartTreatmentPill(ChartTreatmentPill.TYPE_COB);
 					COBPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
-					//COBPill.y += ((1.2/userTimeAgoFontMultiplier) - 1) * (Constants.deviceModel != DeviceInfo.IPAD_PRO_105 && Constants.deviceModel != DeviceInfo.IPAD_PRO_129 && Constants.deviceModel != DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 ? 18 : 65);
 					COBPill.setValue("0.0g");
 					
 					if (mainChartGlucoseMarkersList == null || mainChartGlucoseMarkersList.length == 0 || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled)
@@ -3291,11 +3337,19 @@ package ui.chart
 			{
 				infoPill = new ChartTreatmentPill(" + ");
 				infoPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
-				infoPill.setValue("info");
+				infoPill.setValue(ModelLocator.resourceManagerInstance.getString('chartscreen','info_pill_title'));
 				infoPill.visible = false;
 				infoPill.addEventListener(TouchEvent.TOUCH, onDisplayMoreInfo);
 				addChild(infoPill);
 			}
+			
+			//Predictions pill
+			predictionsPill = new ChartTreatmentPill("Predict", false);
+			predictionsPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
+			predictionsPill.setValue("Off");
+			predictionsPill.visible = false;
+			predictionsPill.addEventListener(TouchEvent.TOUCH, onDisplayMorePredictions);
+			addChild(predictionsPill);
 			
 			glucoseTimeAgoPill.setValue("", "", chartFontColor);
 		}
@@ -3359,7 +3413,9 @@ package ui.chart
 			var predictionsLength:int;
 			var i:int;
 			
-			var unformattedPredictions:Object = Forecast.predicBGs(predictionsLengthInMinutes);
+			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes);
+			
+			//trace(ObjectUtil.toString(unformattedPredictions));
 			
 			if (unformattedPredictions != null && unformattedPredictions.COB != null)
 			{
@@ -3376,7 +3432,7 @@ package ui.chart
 				return [];
 			}
 			
-			trace(ObjectUtil.toString(unformattedPredictionsList));
+			//trace(ObjectUtil.toString(unformattedPredictionsList));
 			predictionsLength =  unformattedPredictionsList.length;
 			for (i = 0; i < predictionsLength; i++) 
 			{
@@ -3408,6 +3464,17 @@ package ui.chart
 				
 				finalPredictionsList.push(predictionReading);
 			}
+			
+			//Update predictions pill
+			predictionsPill.isPredictive = true;
+			predictionsPill.setValue(String(Math.round(finalPredictionsList[finalPredictionsList.length - 1].calculatedValue)), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+			repositionTreatmentPills();
+			
+			//Update Useful Properties
+			predictedEventualBG = unformattedPredictions.eventualBG != null ? unformattedPredictions.eventualBG : Number.NaN;
+			predictedBGImpact = unformattedPredictions.bgImpact != null ? unformattedPredictions.bgImpact : Number.NaN;
+			predictedDeviation = unformattedPredictions.predictedDeviation != null ? unformattedPredictions.predictedDeviation : Number.NaN;
+			predictedCarbImpact = unformattedPredictions.carbImpact != null ? unformattedPredictions.carbImpact : Number.NaN;
 			
 			return finalPredictionsList;
 		}
@@ -3591,6 +3658,559 @@ package ui.chart
 				//Draw Lines
 				drawLine(MAIN_CHART);
 				drawLine(SCROLLER_CHART);
+			}
+		}
+		
+		private function onDisplayMorePredictions(e:starling.events.TouchEvent):void
+		{
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				refreshPredictionsCallout()
+			}
+		}
+		
+		private function refreshPredictionsCallout():void
+		{
+			var predictionsLayout:VerticalLayout = new VerticalLayout();
+			predictionsLayout.horizontalAlign = HorizontalAlign.CENTER;
+			predictionsLayout.gap = 6;
+			if (predictionsContainer != null) predictionsContainer.removeFromParent(true);
+			predictionsContainer = new ScrollContainer();
+			predictionsContainer.layout = predictionsLayout;
+			
+			if (predictionsCallout != null) predictionsCallout.dispose();
+			predictionsCallout = Callout.show(predictionsContainer, predictionsPill, null, true);
+			predictionsCallout.addEventListener(starling.events.Event.CLOSE, onPredictionsCalloutClosed);
+			
+			//ON/OFF Toggle
+			if (predictionsEnableSwitch != null) predictionsEnableSwitch.dispose();
+			predictionsEnableSwitch = LayoutFactory.createToggleSwitch(predictionsEnabled);
+			predictionsEnableSwitch.addEventListener(starling.events.Event.CHANGE, onPredictionsSwitchChanged);
+			if (predictionsEnablerPill != null) predictionsEnablerPill.dispose();
+			predictionsEnablerPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), predictionsEnableSwitch);
+			predictionsContainer.addChild(predictionsEnablerPill);
+			
+			//IOB/COB Toggle
+			if (predictionsIOBCOBCheck != null) predictionsIOBCOBCheck.dispose();
+			predictionsIOBCOBCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true");
+			predictionsIOBCOBCheck.paddingTop = predictionsIOBCOBCheck.paddingBottom = 3;
+			predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
+			if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.dispose();
+			predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
+			predictionsContainer.addChild(predictionsIOBCOBPill);
+			
+			//Length
+			if (predictionsLengthPicker != null) predictionsLengthPicker.dispose();
+			var currentPredictionsLength:Number;
+			var predictionsListSelectedIndex:int;
+			predictionsLengthPicker = LayoutFactory.createPickerList();
+			predictionsLengthPicker.labelField = "label";
+			predictionsLengthPicker.popUpContentManager = new DropDownPopUpContentManager();
+			var lengthData:Array = [];
+			if (timelineRange == TIMELINE_1H)
+			{
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_15_min_duration_label'), id: 15 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_20_min_duration_label'), id: 20 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_25_min_duration_label'), id: 25 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
+				
+				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
+				if (currentPredictionsLength == 15)
+					predictionsListSelectedIndex = 0;
+				else if (currentPredictionsLength == 20)
+					predictionsListSelectedIndex = 1;
+				else if (currentPredictionsLength == 25)
+					predictionsListSelectedIndex = 2;
+				else if (currentPredictionsLength == 30)
+					predictionsListSelectedIndex = 3;
+			}
+			else if (timelineRange == TIMELINE_3H)
+			{
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_30_min_duration_label'), id: 90 } );
+				
+				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_3_HOURS));
+				if (currentPredictionsLength == 30)
+					predictionsListSelectedIndex = 0;
+				else if (currentPredictionsLength == 60)
+					predictionsListSelectedIndex = 1;
+				else if (currentPredictionsLength == 90)
+					predictionsListSelectedIndex = 2;
+			}
+			else if (timelineRange == TIMELINE_6H)
+			{
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_30_min_duration_label'), id: 90 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hour_30_min_duration_label'), id: 150 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
+				
+				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_6_HOURS));
+				if (currentPredictionsLength == 30)
+					predictionsListSelectedIndex = 0;
+				else if (currentPredictionsLength == 60)
+					predictionsListSelectedIndex = 1;
+				else if (currentPredictionsLength == 90)
+					predictionsListSelectedIndex = 2;
+				else if (currentPredictionsLength == 120)
+					predictionsListSelectedIndex = 3;
+				else if (currentPredictionsLength == 150)
+					predictionsListSelectedIndex = 4;
+				else if (currentPredictionsLength == 180)
+					predictionsListSelectedIndex = 5;
+			}
+			else if (timelineRange == TIMELINE_12H)
+			{
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_4_hours_duration_label'), id: 240 } );
+				
+				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_12_HOURS));
+				if (currentPredictionsLength == 60)
+					predictionsListSelectedIndex = 0;
+				else if (currentPredictionsLength == 120)
+					predictionsListSelectedIndex = 1;
+				else if (currentPredictionsLength == 180)
+					predictionsListSelectedIndex = 2;
+				else if (currentPredictionsLength == 240)
+					predictionsListSelectedIndex = 3;
+			}
+			else if (timelineRange == TIMELINE_24H)
+			{
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
+				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_4_hours_duration_label'), id: 240 } );
+				
+				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_24_HOURS));
+				if (currentPredictionsLength == 60)
+					predictionsListSelectedIndex = 0;
+				else if (currentPredictionsLength == 120)
+					predictionsListSelectedIndex = 1;
+				else if (currentPredictionsLength == 180)
+					predictionsListSelectedIndex = 2;
+				else if (currentPredictionsLength == 240)
+					predictionsListSelectedIndex = 3;
+			}
+			
+			predictionsLengthPicker.dataProvider = new ArrayCollection(lengthData);
+			predictionsLengthPicker.selectedIndex = predictionsListSelectedIndex;
+			predictionsLengthPicker.buttonFactory = function():Button
+			{
+				var button:Button = new Button();
+				button.height = 21;
+				
+				return button;
+			};
+			
+			predictionsLengthPicker.addEventListener(starling.events.Event.CHANGE, onPredictionsTimeFrameChanged);
+			predictionsLengthPicker.addEventListener(starling.events.Event.OPEN, onPredictionsTimeFrameOpened);
+			predictionsLengthPicker.addEventListener(starling.events.Event.CLOSE, onPredictionsTimeFrameClosed);
+			
+			if (predictionsTimeFramePill != null) predictionsTimeFramePill.dispose();
+			predictionsTimeFramePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_label'), predictionsLengthPicker, 6, true);
+			predictionsTimeFramePill.addEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
+			predictionsContainer.addChild(predictionsTimeFramePill);
+			
+			if (predictionsEnabled)
+			{
+				var outcome:Number = Forecast.predictOutcome();
+				if (!isNaN(outcome))
+				{
+					if (predictedNaiveEventualBGPill != null) predictedNaiveEventualBGPill.dispose();
+					predictedNaiveEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'));
+					predictedNaiveEventualBGPill.setValue(String(outcome));
+					predictedNaiveEventualBGPill.touchable = false;
+					predictionsContainer.addChild(predictedNaiveEventualBGPill);
+				}
+				
+				if (!isNaN(predictedEventualBG))
+				{
+					if (predictedEventualBGPill != null) predictedEventualBGPill.dispose();
+					predictedEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_blood_glucose'));
+					predictedEventualBGPill.setValue(String(predictedEventualBG));
+					predictedEventualBGPill.touchable = false;
+					predictionsContainer.addChild(predictedEventualBGPill);
+				}
+				
+				if (!isNaN(predictedDeviation))
+				{
+					if (predictedDeviationPill != null) predictedDeviationPill.dispose();
+					predictedDeviationPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_predicted_deviation'));
+					predictedDeviationPill.setValue(String(predictedDeviation));
+					predictedDeviationPill.touchable = false;
+					predictionsContainer.addChild(predictedDeviationPill);
+				}
+				
+				var glucoseVelocity:Number = GlucoseFactory.getGlucoseVelocity();
+				if (!isNaN(glucoseVelocity))
+				{
+					if (glucoseVelocityPill != null) glucoseVelocityPill.dispose();
+					glucoseVelocityPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_velocity'));
+					glucoseVelocityPill.setValue(String(glucoseVelocity));
+					glucoseVelocityPill.touchable = false;
+					predictionsContainer.addChild(glucoseVelocityPill);
+				}
+				
+				if (!isNaN(predictedBGImpact))
+				{
+					if (predictedBgImpactPill != null) predictedBgImpactPill.dispose();
+					predictedBgImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_impact'));
+					predictedBgImpactPill.setValue(String(predictedBGImpact));
+					predictedBgImpactPill.touchable = false;
+					predictionsContainer.addChild(predictedBgImpactPill);
+				}
+				
+				if (!isNaN(predictedCarbImpact))
+				{
+					if (predictedCarbImpactPill != null) predictedCarbImpactPill.dispose();
+					predictedCarbImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_carb_impact'));
+					predictedCarbImpactPill.setValue(String(predictedCarbImpact));
+					predictedCarbImpactPill.touchable = false;
+					predictionsContainer.addChild(predictedCarbImpactPill);
+				}
+			}
+			
+			//Final callout size/position adjustments
+			predictionsContainer.validate();
+			var predictionsCalloutPointOfOrigin:Number = predictionsPill.localToGlobal(new Point(0, 0)).y + predictionsPill.height;
+			var predictionsContentOriginalHeight:Number = predictionsContainer.height + 60;
+			var suggestedPredictionsCalloutHeight:Number = Constants.stageHeight - predictionsCalloutPointOfOrigin - 5;
+			var finalCalloutHeight:Number = predictionsContentOriginalHeight > suggestedPredictionsCalloutHeight ?  suggestedPredictionsCalloutHeight : predictionsContentOriginalHeight;
+			
+			predictionsCallout.height = finalCalloutHeight;
+			predictionsContainer.height = finalCalloutHeight - 50;
+			predictionsContainer.maxHeight = finalCalloutHeight - 50;
+		}
+		
+		private function onPredictionsTimeFrameChanged(e:starling.events.Event):void
+		{
+			if (predictionsLengthPicker != null && predictionsLengthPicker.selectedItem != null && predictionsLengthPicker.selectedItem.id != null)
+			{
+				predictionsLengthInMinutes = predictionsLengthPicker.selectedItem.id;
+				
+				if (timelineRange == TIMELINE_1H)
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR, String(predictionsLengthInMinutes), true, false);
+				}
+				else if (timelineRange == TIMELINE_3H)
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_3_HOURS, String(predictionsLengthInMinutes), true, false);
+				}
+				else if (timelineRange == TIMELINE_6H)
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_6_HOURS, String(predictionsLengthInMinutes), true, false);
+				}
+				else if (timelineRange == TIMELINE_12H)
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_12_HOURS, String(predictionsLengthInMinutes), true, false);
+				}
+				else if (timelineRange == TIMELINE_24H)
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_24_HOURS, String(predictionsLengthInMinutes), true, false);
+				}
+				
+				//Dispose all predictions
+				disposePredictions();
+				
+				//Redraw main and scroller charts
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0);
+				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0);
+				
+				//Redraw predictions delimitter
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0)
+				{
+					if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
+					predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
+					predictionsDelimiter.y = 0 - predictionsDelimiter.width;
+					predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
+					predictionsDelimiter.touchable = false;
+					yAxis.addChild(predictionsDelimiter);
+					
+					activeGlucoseDelimiter = predictionsDelimiter;
+				}
+				
+				//Redraw raw markers if needed
+				if (displayRaw)
+				{
+					hideRaw();
+					showRaw();
+				}
+				
+				//Adjust Main Chart and Picker Position
+				if (displayLatestBGValue)
+				{
+					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+				}
+				
+				//Reposition treatments
+				manageTreatments();
+				
+				//Redraw timeline
+				drawTimeline();
+			}
+		}
+		
+		private function onPredictionTimeFramePillUpdated(e:starling.events.Event):void
+		{
+			if (predictionsCallout != null && predictionsContainer != null)
+			{
+				predictionsContainer.validate();
+				predictionsCallout.invalidate();
+				predictionsCallout.validate();
+			}
+		}
+		
+		private function onPredictionsTimeFrameOpened(e:starling.events.Event):void
+		{
+			if (predictionsCallout != null)
+			{
+				predictionsCallout.closeOnTouchBeganOutside = false;
+				predictionsCallout.closeOnTouchEndedOutside = false;
+			}
+		}
+		
+		private function onPredictionsTimeFrameClosed(e:starling.events.Event):void
+		{
+			if (predictionsCallout != null)
+			{
+				predictionsCallout.closeOnTouchBeganOutside = true;
+				predictionsCallout.closeOnTouchEndedOutside = true;
+			}
+		}
+		
+		private function onPredictionsCalloutClosed(e:starling.events.Event):void
+		{
+			if (predictionsCallout != null) predictionsCallout.dispose();
+			
+			disposePredictionsPills();
+		}
+		
+		private function onPredictionsIOBCOBChanged(e:starling.events.Event):void
+		{
+			if (predictionsIOBCOBCheck != null)
+			{
+				//Save new setting to database
+				var predictionsIOBCOBEnabled:Boolean = predictionsIOBCOBCheck.isSelected;
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB, String(predictionsIOBCOBEnabled), true, false);
+				
+				//Redraw Predictions
+				redrawPredictions();
+			}
+		}
+		
+		private function onPredictionsSwitchChanged(e:starling.events.Event):void
+		{
+			//Update internal variables
+			predictionsEnabled = predictionsEnableSwitch.isSelected;
+			
+			//Update Database
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED, String(predictionsEnabled), true, false);
+			
+			//Redraw the predictions callout
+			if (predictionsCallout != null)
+				predictionsCallout.close(true);
+			
+			refreshPredictionsCallout();
+			
+			//Dispose all predictions
+			disposePredictions();
+			
+			//Redraw main and scroller chart
+			if (!predictionsEnabled)
+			{
+				//Redraw predictions pill
+				predictionsPill.isPredictive = false;
+				predictionsPill.setValue("Off", "Predict");
+				repositionTreatmentPills();
+				
+				//Dispose predictions chart delimiter
+				if (predictionsDelimiter != null)
+				{
+					predictionsDelimiter.removeFromParent();
+					predictionsDelimiter.dispose();
+					predictionsDelimiter = null;
+					activeGlucoseDelimiter = glucoseDelimiter;
+				}
+				
+				//Redraw main chart
+				var lastMainGlucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList.pop();
+				if (lastMainGlucoseMarker != null)
+				{
+					lastMainGlucoseMarker.removeFromParent();
+					lastMainGlucoseMarker.dispose();
+					lastMainGlucoseMarker = null;
+				}
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 1);
+				
+				//Redraw scroller chart
+				var lastScrollerGlucoseMarker:GlucoseMarker = scrollChartGlucoseMarkersList.pop();
+				if (lastScrollerGlucoseMarker != null)
+				{
+					lastScrollerGlucoseMarker.removeFromParent();
+					lastScrollerGlucoseMarker.dispose();
+					lastScrollerGlucoseMarker = null;
+				}
+				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 1);
+			}
+			else
+			{
+				//Adjust predictions pill
+				predictionsPill.isPredictive = true;
+				
+				//Redraw main and scroller charts
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0);
+				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0);
+				
+				//Redraw predictions delimitter
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0)
+				{
+					if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
+					predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
+					predictionsDelimiter.y = 0 - predictionsDelimiter.width;
+					predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
+					predictionsDelimiter.touchable = false;
+					yAxis.addChild(predictionsDelimiter);
+					
+					activeGlucoseDelimiter = predictionsDelimiter;
+				}
+			}
+			
+			//Redraw raw markers if needed
+			if (displayRaw)
+			{
+				hideRaw();
+				showRaw();
+			}
+			
+			//Adjust Main Chart and Picker Position
+			if (displayLatestBGValue)
+			{
+				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+			}
+			
+			//Reposition treatments
+			manageTreatments();
+			
+			//Redraw timeline
+			drawTimeline();
+		}
+		
+		private function disposePredictionsPills():void
+		{
+			if (predictedEventualBGPill != null)
+			{
+				predictedEventualBGPill.removeFromParent();
+				predictedEventualBGPill.dispose();
+				predictedEventualBGPill = null;
+			}
+			
+			if (predictedNaiveEventualBGPill != null)
+			{
+				predictedNaiveEventualBGPill.removeFromParent();
+				predictedNaiveEventualBGPill.dispose();
+				predictedNaiveEventualBGPill = null;
+			}
+			
+			if (predictedBgImpactPill != null)
+			{
+				predictedBgImpactPill.removeFromParent();
+				predictedBgImpactPill.dispose();
+				predictedBgImpactPill = null;
+			}
+			
+			if (predictedDeviationPill != null)
+			{
+				predictedDeviationPill.removeFromParent();
+				predictedDeviationPill.dispose();
+				predictedDeviationPill = null;
+			}
+			
+			if (glucoseVelocityPill != null)
+			{
+				glucoseVelocityPill.removeFromParent();
+				glucoseVelocityPill.dispose();
+				glucoseVelocityPill = null;
+			}
+			
+			if (predictedCarbImpactPill != null)
+			{
+				predictedCarbImpactPill.removeFromParent();
+				predictedCarbImpactPill.dispose();
+				predictedCarbImpactPill = null;
+			}
+			
+			if (predictionsEnableSwitch != null)
+			{
+				predictionsEnableSwitch.removeEventListener(starling.events.Event.CHANGE, onPredictionsSwitchChanged);
+				predictionsEnableSwitch.removeFromParent();
+				predictionsEnableSwitch.dispose();
+				predictionsEnableSwitch = null;
+			}
+			
+			if (predictionsEnablerPill != null)
+			{
+				predictionsEnablerPill.removeFromParent();
+				predictionsEnablerPill.dispose();
+				predictionsEnablerPill = null;
+			}
+			
+			if (predictionsLengthPicker != null)
+			{
+				predictionsLengthPicker.removeEventListener(starling.events.Event.CHANGE, onPredictionsTimeFrameChanged);
+				predictionsLengthPicker.removeEventListener(starling.events.Event.OPEN, onPredictionsTimeFrameOpened);
+				predictionsLengthPicker.removeEventListener(starling.events.Event.CLOSE, onPredictionsTimeFrameClosed);
+				predictionsLengthPicker.removeEventListeners();
+				predictionsLengthPicker.removeFromParent();
+				predictionsLengthPicker.dispose();
+				predictionsLengthPicker = null;
+			}
+			
+			if (predictionsTimeFramePill != null)
+			{
+				predictionsTimeFramePill.removeEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
+				predictionsTimeFramePill.removeFromParent();
+				predictionsTimeFramePill.dispose();
+				predictionsTimeFramePill = null;
+			}
+			
+			if (predictionsIOBCOBCheck != null)
+			{
+				predictionsIOBCOBCheck.removeEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
+				predictionsIOBCOBCheck.removeFromParent();
+				predictionsIOBCOBCheck.dispose();
+				predictionsIOBCOBCheck = null;
+			}
+			
+			if (predictionsIOBCOBPill != null)
+			{
+				predictionsIOBCOBPill.removeFromParent();
+				predictionsIOBCOBPill.dispose();
+				predictionsIOBCOBPill = null;
+			}
+			
+			if (predictionsContainer != null)
+			{
+				predictionsContainer.removeFromParent();
+				predictionsContainer.dispose();
+				predictionsContainer = null;
+			}
+			
+			if (predictionsCallout != null)
+			{
+				predictionsCallout.removeFromParent();
+				predictionsCallout.dispose();
+				predictionsCallout = null;
 			}
 		}
 		
@@ -4937,6 +5557,7 @@ package ui.chart
 			
 			//Predictions
 			disposePredictions();
+			disposePredictionsPills();
 			
 			//Treatments
 			if (deleteBtn != null)
@@ -5014,6 +5635,14 @@ package ui.chart
 			{
 				treatmentCallout.dispose();
 				treatmentCallout = null;
+			}
+			
+			if (predictionsPill != null)
+			{
+				predictionsPill.removeEventListener(TouchEvent.TOUCH, onDisplayMorePredictions);
+				predictionsPill.removeFromParent();
+				predictionsPill.dispose();
+				predictionsPill = null;
 			}
 			
 			if (IOBPill != null)

@@ -329,7 +329,7 @@ package ui.chart
 			nowIOBTimeLabel.y = xIOBAxisLine.y + xIOBAxisLine.height + 4;
 			IOBContainer.addChild(nowIOBTimeLabel);
 			
-			nowIOBValueLabel = LayoutFactory.createLabel(String(Math.round(currentIOB * 100) / 100) + "U", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, false, 0xEEEEEE);
+			nowIOBValueLabel = LayoutFactory.createLabel(String(Math.round(currentIOB * 100) / 100) + "U", HorizontalAlign.LEFT, VerticalAlign.TOP, 9, false, 0xEEEEEE);
 			nowIOBValueLabel.touchable = false;
 			nowIOBValueLabel.validate();
 			nowIOBValueLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowIOBValueLabel.width / 2);
@@ -357,7 +357,7 @@ package ui.chart
 			nowActivityTimeLabel.y = xActivityAxisLine.y + xActivityAxisLine.height + 4;
 			activityContainer.addChild(nowActivityTimeLabel);
 			
-			nowActivityValueLabel = LayoutFactory.createLabel(String(Math.round(currentActivity * 1000) / 1000) + "U", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, false, 0xEEEEEE);
+			nowActivityValueLabel = LayoutFactory.createLabel(String(Math.round(currentActivity * 1000) / 1000) + "U", HorizontalAlign.LEFT, VerticalAlign.TOP, 9, false, 0xEEEEEE);
 			nowActivityValueLabel.touchable = false;
 			nowActivityValueLabel.validate();
 			nowActivityValueLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowActivityValueLabel.width / 2);
@@ -440,15 +440,15 @@ package ui.chart
 			}
 			
 			//Graph Legends
-			iobAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','iob_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 8);
+			iobAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','iob_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 9);
 			iobAxisLegend.wordWrap = true;
 			iobAxisLegend.paddingTop = -5;
-			iobAxisLegend.paddingBottom += 18;
+			iobAxisLegend.paddingBottom += 19;
 			
-			activityAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_activity_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 8);
+			activityAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_activity_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 9);
 			activityAxisLegend.wordWrap = true;
 			activityAxisLegend.paddingTop = -5;
-			activityAxisLegend.paddingBottom += 18;
+			activityAxisLegend.paddingBottom += 19;
 			
 			//Add Objects to Display List
 			mainContainer.addChild(iobGraphTitle);

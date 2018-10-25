@@ -1,7 +1,5 @@
 package model
 {
-	import flash.utils.getTimer;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
@@ -19,7 +17,10 @@ package model
 			throw new Error("Forecast is not meant to be instantiated!");
 		}
 		
-		public static function predicBGs(minutes:uint):Object
+		/**
+		 * Glucose Predictions
+		 */
+		public static function predictBGs(minutes:uint):Object
 		{
 			var glucose_status:Object = getLastGlucose();
 			if (!glucose_status.is_valid)
@@ -31,58 +32,50 @@ package model
 			//Define common variables
 			var five_min_blocks:Number = Math.floor(minutes / 5) + 1; //We add one because the first prediction is always the lastes glucose value
 			var now:Number = new Date().valueOf();
-			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
 			var i:int;
+			var status:String = "";
 			
 			var bgTime:Number = glucose_status.date;
 			var minAgo:Number = round( (now - bgTime) / TimeSpan.TIME_1_MINUTE ,1);
 			
 			var bg:Number = glucose_status.glucose;
-			var noise:Number = glucose_status.noise;
 			
 			var currentProfile:Profile = ProfileManager.getProfileByTime(now);
-			var target_bg:Number = Number(currentProfile.targetGlucoseRates);
+			var target_bg:Number = currentProfile != null ? Number(currentProfile.targetGlucoseRates) : Number.NaN;
 			var min_bg:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
 			var max_bg:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
 			
-			if (target_bg == 0 || currentProfile.targetGlucoseRates == "")
+			if (isNaN(target_bg) || target_bg == 0 || currentProfile.targetGlucoseRates == "")
 			{
-				trace("No profile set, let's set Target BG to the average of high and low thresholds");
-				
 				target_bg = (min_bg + max_bg) / 2;
+				status += "No default profile set!. Setting BG target to the average of high and low thresholds: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? target_bg : Math.round(BgReading.mgdlToMmol(target_bg) * 10) / 10) + "\n"
 			}
 			
-			var nowIOB:Object = TreatmentsManager.getTotalIOB(now);
-			
 			var iobArray:Array = []; //Will hold all future IOB data points used for calculating predictions
-			
 			for (i = 0; i < five_min_blocks; i++) 
 			{
-				var futureIOB:Object = TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES));
+				var futureIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" ? TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES)) : { iob: 0, activityForecast: 0 };
 				iobArray.push( { iob: futureIOB.iob, activityForecast: futureIOB.activityForecast } );
 			}
 			
-			var iob_data:Object = iobArray[0];
+			var currentIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" ? TreatmentsManager.getTotalIOB(now) : { iob: 0, activityForecast: 0 };
 			
-			var tick:Number;
-			if (glucose_status.delta > -0.5) 
-				tick = Math.abs(round(glucose_status.delta,0));
-			else
-				tick = round(glucose_status.delta,0);
+			var iob_data:Object = { iob: currentIOB.iob, activityForecast: currentIOB.activityForecast };
 			
 			var minDelta:Number = Math.min(glucose_status.delta, glucose_status.short_avgdelta);
 			var minAvgDelta:Number = Math.min(glucose_status.short_avgdelta, glucose_status.long_avgdelta);
 			var maxDelta:Number = Math.max(glucose_status.delta, glucose_status.short_avgdelta, glucose_status.long_avgdelta);
 			
 			var sens:Number;
-			if (currentProfile.insulinSensitivityFactors != "")
+			if (currentProfile != null && currentProfile.insulinSensitivityFactors != "")
 			{
 				sens = Number(currentProfile.insulinSensitivityFactors);
 			}
 			else
 			{
-				//User has not yet set a profile, let's dfault it to 50
+				//User has not yet set a profile, let's default it to 50
 				sens = 50;
+				status += "No ISF has been set. Defaulting to: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 50 : Math.round(BgReading.mgdlToMmol(50) * 10) / 10) + "\n";
 			}
 			
 			//calculate BG impact: the amount BG "should" be rising or falling based on insulin activity alone
@@ -112,9 +105,9 @@ package model
 			var expectedDelta:Number = calculate_expected_delta(target_bg, eventualBG, bgi);
 			if (isNaN(eventualBG))
 			{
-				trace("Error: could not calculate eventualBG." );
+				status += "Error: Could not correctly calculate eventual BG.\n";
 				
-				return null;
+				eventualBG = bg;
 			}
 			
 			var threshold:Number = min_bg - 0.5*(min_bg-40);
@@ -141,7 +134,17 @@ package model
 			var uci:Number = round((minDelta - bgi),1);
 			
 			// ISF (mg/dL/U) / CR (g/U) = CSF (mg/dL/g)
-			var carb_ratio:Number = currentProfile.insulinToCarbRatios != "" ? Number(currentProfile.insulinToCarbRatios) : 10; //If no i:C is set by the user we default to 10
+			var carb_ratio:Number;
+			if (currentProfile != null && currentProfile.insulinToCarbRatios != "")
+			{
+				carb_ratio = Number(currentProfile.insulinToCarbRatios);
+			}
+			else
+			{
+				status += "Can't determine I:C. Defaulting to 10";
+				carb_ratio = 10; //If no i:C is set by the user we default to 10
+			}
+			
 			var csf:Number = sens / carb_ratio; 
 			
 			var maxCarbAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate(); // g/h; maximum rate to assume carbs will absorb if no CI observed
@@ -149,7 +152,7 @@ package model
 			// limit Carb Impact to maxCarbAbsorptionRate * csf in mg/dL per 5m
 			var maxCI:Number = round(maxCarbAbsorptionRate*csf*5/60, 1)
 			if (ci > maxCI) {
-				trace("Limiting carb impact from " + ci + " to " + maxCI + "mg/dL/5m (" + maxCarbAbsorptionRate + "g/h )");
+				status += "Limiting carb impact from " + ci + " to " + maxCI + "mg/dL/5m (" + maxCarbAbsorptionRate + "g/h )" + "\n";
 				ci = maxCI;
 			}
 			
@@ -160,7 +163,7 @@ package model
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var nowCOB:Object = TreatmentsManager.getTotalCOB(now);
+			var nowCOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" ? TreatmentsManager.getTotalCOB(now) : { cob: 0, carbs: 0 };
 			if (nowCOB.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it
@@ -172,7 +175,7 @@ package model
 				remainingCATime = remainingCATimeMin + 1.5 * lastCarbAge/60;
 				remainingCATime = round(remainingCATime,1);
 				
-				trace("Last carbs",lastCarbAge,"minutes ago; remainingCATime:",remainingCATime,"hours;",round(fractionCOBAbsorbed*100)+"% carbs absorbed");
+				status += "Last carbs: " + lastCarbAge + " minutes ago; remainingCATime: " + remainingCATime + " hours; " + round(fractionCOBAbsorbed*100) + "% carbs absorbed." + "\n";
 			}
 			
 			// calculate the number of carbs absorbed over remainingCATime hours at current CI
@@ -214,7 +217,7 @@ package model
 			
 			var acid:Number = Math.max(0, nowCOB.cob * csf / aci );
 			// duration (hours) = duration (5m) * 5 / 60 * 2 (to account for linear decay)
-			trace("Carb Impact:",ci,"mg/dL per 5m; CI Duration:",round(cid*5/60*2,1),"hours; remaining CI (~2h peak):",round(remainingCIpeak,1),"mg/dL per 5m");
+			status += "Carb Impact: " + ci + "mg/dL per 5m; CI Duration: " + round(cid*5/60*2,1) + "hours; remaining CI (~2h peak): " + round(remainingCIpeak,1)+ "mg/dL per 5m" + "\n";
 			
 			
 			var minIOBPredBG:Number = 999;
@@ -427,9 +430,9 @@ package model
 				predBGs.eventualBG = eventualBG;
 			}
 			
-			trace("UAM Impact:",uci,"mg/dL per 5m; UAM Duration:",UAMduration,"hours");
+			//trace("UAM Impact:",uci,"mg/dL per 5m; UAM Duration:",UAMduration,"hours");
 			
-			/*
+			
 			
 			minIOBPredBG = Math.max(39,minIOBPredBG);
 			minCOBPredBG = Math.max(39,minCOBPredBG);
@@ -464,9 +467,8 @@ package model
 				avgPredBG = minZTGuardBG;
 			}
 			
-			
 			// if we have both minCOBGuardBG and minUAMGuardBG, blend according to fractionCarbsLeft
-			var enableUAM:Boolean = false //We set to false because this is not relevant to Spike
+
 			if ( (cid || remainingCIpeak > 0) ) {
 				if ( enableUAM ) {
 					minGuardBG = fractionCarbsLeft*minCOBGuardBG + (1-fractionCarbsLeft)*minUAMGuardBG;
@@ -500,7 +502,7 @@ package model
 			minZTUAMPredBG = round(minZTUAMPredBG);
 			
 			// if any carbs have been entered recently
-			if (activeCarbs.carbs) {
+			if (nowCOB.carbs) {
 				
 				// if UAM is disabled, use max of minIOBPredBG, minCOBPredBG
 				if ( ! enableUAM && minCOBPredBG < 999 ) {
@@ -523,14 +525,15 @@ package model
 			// make sure minPredBG isn't higher than avgPredBG
 			minPredBG = Math.min( minPredBG, avgPredBG );
 			
-			trace("minPredBG: "+minPredBG+" minIOBPredBG: "+minIOBPredBG+" minZTGuardBG: "+minZTGuardBG);
+			/*trace("minPredBG: "+minPredBG+" minIOBPredBG: "+minIOBPredBG+" minZTGuardBG: "+minZTGuardBG);
 			if (minCOBPredBG < 999) {
 				trace(" minCOBPredBG: "+minCOBPredBG);
 			}
 			if (minUAMPredBG < 999) {
 				trace(" minUAMPredBG: "+minUAMPredBG);
 			}
-			trace(" avgPredBG:",avgPredBG,"COB:",currentCOB,"/",activeCarbs.carbs);
+			trace(" avgPredBG:",avgPredBG,"COB:",currentCOB,"/",activeCarbs.carbs); */
+			
 			// But if the COB line falls off a cliff, don't trust UAM too much:
 			// use maxCOBPredBG if it's been set and lower than minPredBG
 			if ( maxCOBPredBG > bg ) {
@@ -547,7 +550,7 @@ package model
 			// calculate how long until COB (or IOB) predBGs drop below min_bg
 			var minutesAboveMinBG:Number = 240;
 			var minutesAboveThreshold:Number = 240;
-			if (currentCOB > 0 && ( ci > 0 || remainingCIpeak > 0 )) {
+			if (nowCOB.cob > 0 && ( ci > 0 || remainingCIpeak > 0 )) {
 				for (i = 0; i<COBpredBGs.length; i++) {
 					//console.error(COBpredBGs[i], min_bg);
 					if ( COBpredBGs[i] < min_bg ) {
@@ -580,26 +583,35 @@ package model
 			}
 			
 			if ( minutesAboveThreshold < 240 || minutesAboveMinBG < 60 ) {
-				trace("BG projected to remain above", threshold,"for",minutesAboveThreshold,"minutes");
+				status += "BG projected to remain above " + threshold + " for " + minutesAboveThreshold + " minutes." + "\n";
 			}
 			
+			// calculate 30m low-temp required to get projected BG up to target
+			// multiply by 2 to low-temp faster for increased hypo safety
+			var insulinReq:Number = 2 * Math.min(0, (eventualBG - target_bg) / sens);
+			insulinReq = round( insulinReq , 2);
 			
+			// calculate naiveInsulinReq based on naive_eventualBG
+			var naiveInsulinReq:Number = Math.min(0, (naive_eventualBG - target_bg) / sens);
+			naiveInsulinReq = round( naiveInsulinReq , 2);
 			
+			if (minDelta < 0 && minDelta > expectedDelta) {
+				// if we're barely falling, newinsulinReq should be barely negative
+				var newinsulinReq:Number = round(( insulinReq * (minDelta / expectedDelta) ), 2);
+				//console.error("Increasing insulinReq from " + insulinReq + " to " + newinsulinReq);
+				insulinReq = newinsulinReq;
+			}
 			
-			
-			trace("COBpredBGs", ObjectUtil.toString(COBpredBGs));
-			trace("aCOBpredBGs", ObjectUtil.toString(aCOBpredBGs));
-			trace("IOBpredBGs", ObjectUtil.toString(IOBpredBGs));
-			trace("UAMpredBGs", ObjectUtil.toString(UAMpredBGs));
-			trace("ZTpredBGs", ObjectUtil.toString(ZTpredBGs));
-			*/
+			//Add relevant info
+			predBGs.bgImpact = bgi;
+			predBGs.carbImpact = ci;
+			predBGs.status = status;
+			predBGs.predictedDeviation = deviation;
+			predBGs.eventualBG = eventualBG;
+			predBGs.naiveEventualBG = naive_eventualBG;
 			
 			return predBGs;
 		}
-		
-		/**
-		 * Helper Functions
-		 */
 		
 		// Rounds value to 'digits' decimal places
 		private static function round(value:Number, digits:Number = 0):Number
@@ -632,7 +644,6 @@ package model
 				return {
 					delta: 0,
 					glucose: 0,
-					noise: 0,
 					short_avgdelta: 0,
 					long_avgdelta: 0,
 					date: 0
@@ -646,7 +657,6 @@ package model
 				return {
 					delta: 0,
 					glucose: 0,
-					noise: 0,
 					short_avgdelta: 0,
 					long_avgdelta: 0,
 					date: 0
@@ -742,12 +752,55 @@ package model
 			return {
 				delta: Math.round( last_delta * 100 ) / 100,
 				glucose: Math.round( now.glucose * 100 ) / 100,
-				noise: 1,
 				short_avgdelta: Math.round( short_avgdelta * 100 ) / 100,
 				long_avgdelta: Math.round( long_avgdelta * 100 ) / 100,
 				date: now_date,
 				is_valid: true
 			};
+		}
+		
+		/**
+		 * Predicted Treatmets Outcome
+		 */
+		public static function predictOutcome():Number
+		{
+			//Common properties
+			var now:Number = new Date().valueOf();
+			var isMgDl:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true";
+			var insulinPrecision:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BOLUS_WIZARD_INSULIN_PRECISION));
+			
+			//Get active profile
+			var currentProfile:Profile = ProfileManager.getProfileByTime(now);
+			
+			//Latest glucose
+			var latestGlucose:BgReading = BgReading.lastWithCalculatedValue();
+			
+			//Validation
+			if (latestGlucose == null || currentProfile == null || currentProfile.insulinSensitivityFactors == "" || currentProfile.insulinToCarbRatios == "" || currentProfile.targetGlucoseRates == "")
+			{
+				//We don't have enough profile/glucose data. 
+				return Number.NaN;
+			}
+			
+			//Calculation Variables
+			var targetBG:Number = Number(currentProfile.targetGlucoseRates);
+			var isf:Number = Number(currentProfile.insulinSensitivityFactors);
+			var ic:Number = Number(currentProfile.insulinToCarbRatios);
+			var bg:Number = Math.round(latestGlucose._calculatedValue);
+			var iob:Number = TreatmentsManager.getTotalIOB(now).iob;
+			var cob:Number = TreatmentsManager.getTotalCOB(now).cob;;
+			var insulincob:Number = Math.round(roundTo(cob / ic, insulinPrecision) * 100) / 100;
+			
+			//Projected Outcome
+			var outcome:Number = bg - (iob * isf) + (insulincob * isf);
+			outcome = isMgDl ? Math.round(outcome) : Math.round(BgReading.mgdlToMmol(outcome) * 10) / 10;
+			
+			return outcome;
+		}
+		
+		private static function roundTo (x:Number, step:Number):Number
+		{
+			return Math.round(x / step) * step;
 		}
 	}
 }

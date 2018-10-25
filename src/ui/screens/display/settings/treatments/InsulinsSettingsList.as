@@ -2,6 +2,7 @@ package ui.screens.display.settings.treatments
 {
 	import com.adobe.utils.StringUtil;
 	
+	import flash.display.StageOrientation;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
@@ -32,6 +33,8 @@ package ui.screens.display.settings.treatments
 	
 	import treatments.Insulin;
 	import treatments.ProfileManager;
+	import treatments.Treatment;
+	import treatments.TreatmentsManager;
 	
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
@@ -336,6 +339,18 @@ package ui.screens.display.settings.treatments
 					insulinCurveContainer.readjustLayout();
 					insulinCurveContainer.validate();
 					insulinCurveGraph.x = 30;
+					
+					if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+					{
+						if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						{
+							insulinCurveGraph.x += 25;
+						}
+						else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						{
+							insulinCurveGraph.x += 35;
+						}
+					}
 				}
 				else if (selectedInsulinCurve == "bilinear")
 				{
@@ -344,6 +359,18 @@ package ui.screens.display.settings.treatments
 					insulinCurveContainer.readjustLayout();
 					insulinCurveContainer.validate();
 					insulinCurveGraph.x = 30;
+					
+					if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+					{
+						if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						{
+							insulinCurveGraph.x += 25;
+						}
+						else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						{
+							insulinCurveGraph.x += 35;
+						}
+					}
 				}
 			}
 			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "nightscout")
@@ -353,6 +380,18 @@ package ui.screens.display.settings.treatments
 				insulinCurveContainer.readjustLayout();
 				insulinCurveContainer.validate();
 				insulinCurveGraph.x = 30;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						insulinCurveGraph.x += 25;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						insulinCurveGraph.x += 35;
+					}
+				}
 			}
 		}
 		
@@ -651,7 +690,21 @@ package ui.screens.display.settings.treatments
 					}
 				}
 				
+				//Update Database
 				ProfileManager.updateInsulin(insulinToEdit);
+				
+				//Update all previous treatments
+				var numberOfTreatments:uint = TreatmentsManager.treatmentsList.length;
+				for (var j:int = 0; j < numberOfTreatments; j++) 
+				{
+					var treatment:Treatment = TreatmentsManager.treatmentsList[j];
+					if (treatment != null && treatment.insulinAmount > 0 && treatment.insulinID == insulinToEdit.ID)
+					{
+						treatment.dia = insulinDIA.value;
+						TreatmentsManager.updateTreatment(treatment);
+					}
+				}
+				
 			}
 			
 			//Reset Modes

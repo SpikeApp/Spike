@@ -138,8 +138,6 @@ package treatments
 		
 		private function calculateIOBBilinear(minsAgo:Number, dia:Number):Object
 		{
-			trace("calculateIOBBilinear");
-			
 			// No user-specified peak with this model
 			const default_dia:Number = 3 // assumed duration of insulin activity, in hours
 			const peak:Number = 75;      // assumed peak insulin activity, in minutes
@@ -191,8 +189,6 @@ package treatments
 		
 		private function calculateIOBExponential(minsAgo:Number, dia:Number, peak:Number):Object 
 		{
-			trace("calculateIOBExponential");
-			
 			var end:Number = dia * 60;  // end of insulin activity, in minutes
 			var activityContrib:Number = 0;  
 			var iobContrib:Number = 0;       

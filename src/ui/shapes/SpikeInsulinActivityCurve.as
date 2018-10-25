@@ -1,5 +1,7 @@
 package ui.shapes
 {
+	import flash.display.StageOrientation;
+	
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
@@ -9,6 +11,7 @@ package ui.shapes
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 
 	/**
 	 * Plots insulin activity curve for OpenAPS bilinear and exponential as well as Nightscout bilinear
@@ -48,7 +51,18 @@ package ui.shapes
 		private function plotNightscout(dia:Number):void
 		{
 			//Common variables/constants
-			const DESIRED_WIDTH:int = Constants.stageWidth - 60;
+			var DESIRED_WIDTH:int = Constants.stageWidth - 60;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+			{
+				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+				{
+					DESIRED_WIDTH -= 20;
+				}
+				else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+				{
+					DESIRED_WIDTH -= 30;
+				}
+			}
 			const DESIRED_HEIGHT:int = Constants.stageHeight / 5;
 			const DURATION:Number = dia * 60;
 			var i:int = 0;
@@ -222,7 +236,18 @@ package ui.shapes
 		private function plotOpenAPSBilinear(dia:Number):void
 		{
 			//Common variables/constants
-			const DESIRED_WIDTH:int = Constants.stageWidth - 60;
+			var DESIRED_WIDTH:int = Constants.stageWidth - 60;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+			{
+				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+				{
+					DESIRED_WIDTH -= 20;
+				}
+				else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+				{
+					DESIRED_WIDTH -= 30;
+				}
+			}
 			const DESIRED_HEIGHT:int = Constants.stageHeight / 5;
 			const DURATION:Number = dia * 60;
 			var i:int = 0;
@@ -396,7 +421,18 @@ package ui.shapes
 		private function plotOpenAPSExponential(dia:Number, peak:Number):void
 		{
 			//Common variables/constants
-			const DESIRED_WIDTH:int = Constants.stageWidth - 60;
+			var DESIRED_WIDTH:int = Constants.stageWidth - 60;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+			{
+				if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+				{
+					DESIRED_WIDTH -= 20;
+				}
+				else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+				{
+					DESIRED_WIDTH -= 30;
+				}
+			}
 			const DESIRED_HEIGHT:int = Constants.stageHeight / 5;
 			const TD:Number = dia * 60; //Duration in Minuutes
 			const TP:Number = peak; //Activity peak (in minutes)

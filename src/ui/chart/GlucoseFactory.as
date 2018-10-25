@@ -245,6 +245,90 @@ package ui.chart
 			return raw;
 		}
 		
+		/**
+		 * Velocity
+		 */
+		public static function getGlucoseVelocity():Number
+		{
+			var isMgDl:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true";
+			var v:Number = 0;
+			var n:int = 0;
+			var i:int = 0;
+			
+			var last4Readings:Array = BgReading.latest(4, CGMBlueToothDevice.isFollower());
+			var numberOfAvailableReadings:int = last4Readings.length;
+			
+			if (numberOfAvailableReadings == 4 && (last4Readings[0].timestamp - last4Readings[3].timestamp) / TimeSpan.TIME_1_MINUTE < 15.1) 
+			{
+				n = 4;
+			}
+			else
+			{
+				if (numberOfAvailableReadings == 3 && (last4Readings[0].timestamp - last4Readings[2].timestamp) / TimeSpan.TIME_1_MINUTE < 10.1) 
+				{
+					n = 3;
+				}
+				else
+				{
+					if (numberOfAvailableReadings == 2 && (last4Readings[0].timestamp - last4Readings[1].timestamp) / TimeSpan.TIME_1_MINUTE < 10.1) 
+					{
+						n = 2;
+					}
+					else
+					{
+						n = 0;
+					}
+				}
+			}
+			
+			var xm:Number = 0;
+			var ym:Number = 0;
+			
+			if (n > 0)
+			{
+				for (i = 0; i < n; i++) 
+				{
+					xm = xm + last4Readings[i].timestamp / TimeSpan.TIME_1_MINUTE;
+					ym = ym + last4Readings[i].calculatedValue;
+				}
+				
+				xm = xm / n;
+				ym = ym / n;
+				
+				var c1:Number = 0;
+				var c2:Number = 0;
+				var t:Number = 0;
+				
+				for (i = 0; i < n; i++) 
+				{
+					t = last4Readings[i].timestamp / TimeSpan.TIME_1_MINUTE;
+					c1 = c1 + ((t - xm) * (last4Readings[i].calculatedValue - ym));
+					c2 = c2 + ((t - xm) * (t - xm));
+				}
+				
+				v = c1 / c2;
+			}
+			else
+			{
+				//Not enough data
+				v = Number.NaN;
+			}
+			
+			if (!isNaN(v))
+			{
+				if (isMgDl)
+				{
+					v = Math.round(v * 100) / 100;
+				}
+				else
+				{
+					v = Math.round(BgReading.mgdlToMmol(v) * 1000) / 1000;
+				}
+			}
+			
+			return v;
+		}
+		
 		public static function getSensorAge():String
 		{
 			var sage:String = "N/A";
