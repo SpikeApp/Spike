@@ -347,13 +347,13 @@ package ui.chart
 		private var predictedTimeUntilHighPill:ChartTreatmentPill;
 		private var predictedTimeUntilLowPill:ChartTreatmentPill;
 		
-		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, isHistoricalData:Boolean = false)
+		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
 			//Algorithm
 			algorithmIOBCOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
 			
 			//Predictions
-			predictionsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true";
+			predictionsEnabled = dontDisplayPredictionsPill == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true";
 			predictionsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_COLOR));
 			if (timelineRange == TIMELINE_1H)
 				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
@@ -462,7 +462,7 @@ package ui.chart
 			if (!Constants.isPortrait && userTimeAgoFontMultiplier == 1.2)
 				userTimeAgoFontMultiplier = 1; 
 			
-			createStatusTextDisplays(dontDisplayInfoPill);
+			createStatusTextDisplays(dontDisplayInfoPill, dontDisplayPredictionsPill);
 			
 			var extraPadding:int = 15;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || !Constants.isPortrait)
@@ -3269,7 +3269,7 @@ package ui.chart
 			currentNumberOfMakers == previousNumberOfMakers
 		}
 		
-		private function createStatusTextDisplays(dontDisplayInfoPill:Boolean = false):void
+		private function createStatusTextDisplays(dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false):void
 		{
 			/* Calculate Font Sizes */
 			deviceFontMultiplier = DeviceInfo.getFontMultipier();
@@ -3380,12 +3380,15 @@ package ui.chart
 			}
 			
 			//Predictions pill
-			predictionsPill = new ChartTreatmentPill("Predict", false);
-			predictionsPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
-			predictionsPill.setValue("Off");
-			predictionsPill.visible = false;
-			predictionsPill.addEventListener(TouchEvent.TOUCH, onDisplayMorePredictions);
-			addChild(predictionsPill);
+			if (!dontDisplayPredictionsPill)
+			{
+				predictionsPill = new ChartTreatmentPill("Predict", false);
+				predictionsPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
+				predictionsPill.setValue("Off");
+				predictionsPill.visible = false;
+				predictionsPill.addEventListener(TouchEvent.TOUCH, onDisplayMorePredictions);
+				addChild(predictionsPill);
+			}
 			
 			glucoseTimeAgoPill.setValue("", "", chartFontColor);
 		}
