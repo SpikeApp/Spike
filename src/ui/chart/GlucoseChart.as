@@ -277,8 +277,6 @@ package ui.chart
 		private var basalPill:ChartTreatmentPill;
 		private var rawPill:ChartTreatmentPill;
 		private var upBatteryPill:ChartTreatmentPill;
-		private var outcomePill:ChartTreatmentPill;
-		private var effectPill:ChartTreatmentPill;
 		private var openAPSMomentPill:ChartTreatmentPill;
 		private var pumpBatteryPill:ChartTreatmentPill;
 		private var pumpReservoirPill:ChartTreatmentPill;
@@ -333,7 +331,8 @@ package ui.chart
 		private var predictionsContainer:ScrollContainer;
 		private var predictionsCallout:Callout;
 		private var predictedEventualBGPill:ChartTreatmentPill;
-		private var predictedNaiveEventualBGPill:ChartTreatmentPill;
+		private var predictedTreatmentsOutcomePill:ChartTreatmentPill;
+		private var predictedTreatmentsEffectPill:ChartTreatmentPill;
 		private var predictedBgImpactPill:ChartTreatmentPill;
 		private var predictedDeviationPill:ChartTreatmentPill;
 		private var predictedCarbImpactPill:ChartTreatmentPill;
@@ -3943,11 +3942,25 @@ package ui.chart
 				var outcome:Number = Forecast.predictOutcome();
 				if (!isNaN(outcome))
 				{
-					if (predictedNaiveEventualBGPill != null) predictedNaiveEventualBGPill.dispose();
-					predictedNaiveEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'));
-					predictedNaiveEventualBGPill.setValue(String(outcome));
-					predictedNaiveEventualBGPill.touchable = false;
-					predictionsContainer.addChild(predictedNaiveEventualBGPill);
+					//Outcome
+					if (predictedTreatmentsOutcomePill != null) predictedTreatmentsOutcomePill.dispose();
+					predictedTreatmentsOutcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'));
+					predictedTreatmentsOutcomePill.setValue(String(outcome));
+					predictedTreatmentsOutcomePill.touchable = false;
+					predictionsContainer.addChild(predictedTreatmentsOutcomePill);
+					
+					//Effect
+					var latestReading:BgReading = BgReading.lastWithCalculatedValue();
+					if (latestReading != null)
+					{
+						var effect:Number = outcome - latestReading._calculatedValue;
+						
+						if (predictedTreatmentsEffectPill != null) predictedTreatmentsEffectPill.dispose();
+						predictedTreatmentsEffectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_effect'));
+						predictedTreatmentsEffectPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(effect)) : String(Math.round(BgReading.mgdlToMmol(effect * 10)) / 10));
+						predictedTreatmentsEffectPill.touchable = false;
+						predictionsContainer.addChild(predictedTreatmentsEffectPill);
+					}
 				}
 				
 				//BG Impact
@@ -4207,11 +4220,18 @@ package ui.chart
 				predictedEventualBGPill = null;
 			}
 			
-			if (predictedNaiveEventualBGPill != null)
+			if (predictedTreatmentsOutcomePill != null)
 			{
-				predictedNaiveEventualBGPill.removeFromParent();
-				predictedNaiveEventualBGPill.dispose();
-				predictedNaiveEventualBGPill = null;
+				predictedTreatmentsOutcomePill.removeFromParent();
+				predictedTreatmentsOutcomePill.dispose();
+				predictedTreatmentsOutcomePill = null;
+			}
+			
+			if (predictedTreatmentsEffectPill != null)
+			{
+				predictedTreatmentsEffectPill.removeFromParent();
+				predictedTreatmentsEffectPill.dispose();
+				predictedTreatmentsEffectPill = null;
 			}
 			
 			if (predictedBgImpactPill != null)
@@ -5201,26 +5221,6 @@ package ui.chart
 				infoContainer.addChild(iagePill);
 			}
 			
-			//Blood Glucose Outcome
-			if (outcomePill != null) outcomePill.dispose();
-			if (e.userInfo.outcome != null && !isNaN(e.userInfo.outcome))
-			{
-				outcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_outcome'));
-				outcomePill.setValue(e.userInfo.outcome + " " + GlucoseHelper.getGlucoseUnit());
-				outcomePill.touchable = false;
-				infoContainer.addChild(outcomePill);
-			}
-			
-			//Blood Glucose Effect
-			if (effectPill != null) effectPill.dispose();
-			if (e.userInfo.effect != null && !isNaN(e.userInfo.effect))
-			{
-				effectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_effect'));
-				effectPill.setValue(e.userInfo.effect + " " + GlucoseHelper.getGlucoseUnit());
-				effectPill.touchable = false;
-				infoContainer.addChild(effectPill);
-			}
-			
 			//Basal Rate
 			if (basalPill != null) basalPill.dispose();
 			if (e.userInfo.basal != null && e.userInfo.basal != "" && String(e.userInfo.basal).indexOf("n/a") == -1)
@@ -5421,20 +5421,6 @@ package ui.chart
 				upBatteryPill.removeFromParent();
 				upBatteryPill.dispose();
 				upBatteryPill = null;
-			}
-			
-			if (outcomePill != null)
-			{
-				outcomePill.removeFromParent();
-				outcomePill.dispose();
-				outcomePill = null;
-			}
-			
-			if (effectPill != null)
-			{
-				effectPill.removeFromParent();
-				effectPill.dispose();
-				effectPill = null;
 			}
 			
 			if (openAPSMomentPill != null)

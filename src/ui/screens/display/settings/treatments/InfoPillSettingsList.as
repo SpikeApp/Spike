@@ -33,8 +33,6 @@ package ui.screens.display.settings.treatments
 		private var displayBasalEnabled:Check;
 		private var displayRawEnabled:Check;
 		private var displayUploaderBatteryEnabled:Check;
-		private var displayOutcomeEnabled:Check;
-		private var displayEffectEnabled:Check;
 		private var displayOpenAPSMomentEnabled:Check;
 		private var displayLoopMomentEnabled:Check;
 		private var displayPumpBatteryEnabled:Check;
@@ -52,8 +50,6 @@ package ui.screens.display.settings.treatments
 		private var basalEnabledValue:Boolean;
 		private var rawEnabledValue:Boolean;
 		private var uploaderBatteryEnabledValue:Boolean;
-		private var outcomeEnabledValue:Boolean;
-		private var effectEnabledValue:Boolean;
 		private var openAPSMomentEnabledValue:Boolean;
 		private var loopMomentEnabledValue:Boolean;
 		private var pumpBatteryEnabledValue:Boolean;
@@ -99,8 +95,6 @@ package ui.screens.display.settings.treatments
 			rawEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true";
 			basalEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_ON) == "true";
 			uploaderBatteryEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON) == "true";
-			outcomeEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON) == "true";
-			effectEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON) == "true";
 			openAPSMomentEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON) == "true";
 			loopMomentEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOOP_MOMENT_ON) == "true";
 			pumpBatteryEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_BATTERY_ON) == "true";
@@ -133,14 +127,6 @@ package ui.screens.display.settings.treatments
 			/* Enable/Disable Uploader Battery */
 			displayUploaderBatteryEnabled = LayoutFactory.createCheckMark(uploaderBatteryEnabledValue);
 			displayUploaderBatteryEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
-			
-			/* Enable/Disable Outcome */
-			displayOutcomeEnabled = LayoutFactory.createCheckMark(outcomeEnabledValue);
-			displayOutcomeEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
-			
-			/* Enable/Disable Effect */
-			displayEffectEnabled = LayoutFactory.createCheckMark(effectEnabledValue);
-			displayEffectEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			/* Enable/Disable OpenAPS Moment */
 			displayOpenAPSMomentEnabled = LayoutFactory.createCheckMark(openAPSMomentEnabledValue);
@@ -208,8 +194,6 @@ package ui.screens.display.settings.treatments
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"sensor_age"), accessory: displaySAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"canula_age"), accessory: displayCAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"insulin_age"), accessory: displayIAGEEnabled, selectable: false });
-				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"glucose_outcome"), accessory: displayOutcomeEnabled, selectable: false });
-				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"glucose_effect"), accessory: displayEffectEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"basal_insulin"), accessory: displayBasalEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"openaps_moment"), accessory: displayOpenAPSMomentEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"loop_moment"), accessory: displayLoopMomentEnabled, selectable: false });
@@ -239,12 +223,6 @@ package ui.screens.display.settings.treatments
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON) != String(uploaderBatteryEnabledValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON, String(uploaderBatteryEnabledValue));
-			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON) != String(outcomeEnabledValue))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON, String(outcomeEnabledValue));
-			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON) != String(effectEnabledValue))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON, String(effectEnabledValue));
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON) != String(openAPSMomentEnabledValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON, String(openAPSMomentEnabledValue));
@@ -309,8 +287,6 @@ package ui.screens.display.settings.treatments
 			rawEnabledValue = displayRawEnabled.isSelected;
 			basalEnabledValue = displayBasalEnabled.isSelected;
 			uploaderBatteryEnabledValue = displayUploaderBatteryEnabled.isSelected;
-			outcomeEnabledValue = displayOutcomeEnabled.isSelected;
-			effectEnabledValue = displayEffectEnabled.isSelected;
 			openAPSMomentEnabledValue = displayOpenAPSMomentEnabled.isSelected;
 			loopMomentEnabledValue = displayLoopMomentEnabled.isSelected;
 			pumpBatteryEnabledValue = displayPumpBatteryEnabled.isSelected;
@@ -357,20 +333,6 @@ package ui.screens.display.settings.treatments
 				displayUploaderBatteryEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
 				displayUploaderBatteryEnabled.dispose();
 				displayUploaderBatteryEnabled = null;
-			}
-			
-			if (displayOutcomeEnabled != null)
-			{
-				displayOutcomeEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
-				displayOutcomeEnabled.dispose();
-				displayOutcomeEnabled = null;
-			}
-			
-			if (displayEffectEnabled != null)
-			{
-				displayEffectEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
-				displayEffectEnabled.dispose();
-				displayEffectEnabled = null;
 			}
 			
 			if (displayOpenAPSMomentEnabled != null)
