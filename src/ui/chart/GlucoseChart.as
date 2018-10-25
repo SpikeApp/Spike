@@ -286,6 +286,7 @@ package ui.chart
 		private var cagePill:ChartTreatmentPill;
 		private var loopMomentPill:ChartTreatmentPill;
 		private var sagePill:ChartTreatmentPill;
+		private var sensorNoisePill:ChartTreatmentPill;
 		private var iagePill:ChartTreatmentPill;
 		private var tBatteryPill:ChartTreatmentPill;
 		private var userInfoErrorLabel:Label;
@@ -5088,6 +5089,38 @@ package ui.chart
 						sagePill.touchable = false;
 						infoContainer.addChild(sagePill);
 					}
+					
+					//NOISE
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON) == "true")
+					{
+						var bgReadingsList:Array = BgReading.latest(1, CGMBlueToothDevice.isFollower());
+						if (bgReadingsList != null && bgReadingsList.length > 0)
+						{
+							var latestReading:BgReading = bgReadingsList[0];
+							if (latestReading != null && new Date().valueOf() - latestReading.timestamp < TimeSpan.TIME_16_MINUTES)
+							{
+								var sensorNoiseString:String = "";
+								var sensorNoiseValue:int = latestReading.noiseValue();
+								
+								if (sensorNoiseValue == 1)
+									sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_clean_label');
+								else if (sensorNoiseValue == 2)
+									sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_light_label');
+								else if (sensorNoiseValue == 3)
+									sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_medium_label');
+								else if (sensorNoiseValue == 4)
+									sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_heavy_label');
+								else
+									sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_clean_label');
+								
+								if (sensorNoisePill != null) sensorNoisePill.dispose();
+								sensorNoisePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_label'));
+								sensorNoisePill.setValue(sensorNoiseString);
+								sensorNoisePill.touchable = false;
+								infoContainer.addChild(sensorNoisePill);
+							}
+						}
+					}
 				}
 				
 				var infoPillLowerBounds:Number = infoPill.localToGlobal(new Point(0, 0)).y + infoPill.height;
@@ -5102,19 +5135,34 @@ package ui.chart
 					return;
 				
 				//Get user info
-				if (NightscoutService.serviceActive || NightscoutService.followerModeEnabled)
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_ON) == "true" ||
+					(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true" && CGMBlueToothDevice.isFollower()) ||
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON) == "true" ||
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_BATTERY_ON) == "true" ||
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_RESERVOIR_ON) == "true" ||
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_STATUS_ON) == "true" ||
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_TIME_ON) == "true" ||
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CAGE_ON) == "true" ||
+					(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) == "true" && CGMBlueToothDevice.isFollower()) ||
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON) == "true" || 
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOOP_MOMENT_ON) == "true" ||
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON) == "true"
+					)
 				{
-					//Preloader
-					userInfoPreloader = new MaterialDesignSpinner();
-					userInfoPreloader.color = 0x0086FF;
-					userInfoPreloader.validate();
-					userInfoPreloader.touchable = false;
-					infoContainer.addChild(userInfoPreloader);
-					
-					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved, false, 0, true);
-					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound, false, 0, true);
-					NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError, false, 0, true);
-					NightscoutService.getUserInfo();
+					if (NightscoutService.serviceActive || NightscoutService.followerModeEnabled)
+					{
+						//Preloader
+						userInfoPreloader = new MaterialDesignSpinner();
+						userInfoPreloader.color = 0x0086FF;
+						userInfoPreloader.validate();
+						userInfoPreloader.touchable = false;
+						infoContainer.addChild(userInfoPreloader);
+						
+						NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved, false, 0, true);
+						NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound, false, 0, true);
+						NightscoutService.instance.addEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError, false, 0, true);
+						NightscoutService.getUserInfo();
+					}
 				}
 			}
 		}
@@ -5198,6 +5246,38 @@ package ui.chart
 					sagePill.setValue(e.userInfo.sage);
 					sagePill.touchable = false;
 					infoContainer.addChild(sagePill);
+				}
+				
+				//NOISE
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON) == "true")
+				{
+					var bgReadingsList:Array = BgReading.latest(1, CGMBlueToothDevice.isFollower());
+					if (bgReadingsList != null && bgReadingsList.length > 0)
+					{
+						var latestReading:BgReading = bgReadingsList[0];
+						if (latestReading != null && new Date().valueOf() - latestReading.timestamp < TimeSpan.TIME_16_MINUTES)
+						{
+							var sensorNoiseString:String = "";
+							var sensorNoiseValue:int = latestReading.noiseValue();
+							
+							if (sensorNoiseValue == 1)
+								sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_clean_label');
+							else if (sensorNoiseValue == 2)
+								sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_light_label');
+							else if (sensorNoiseValue == 3)
+								sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_medium_label');
+							else if (sensorNoiseValue == 4)
+								sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_heavy_label');
+							else
+								sensorNoiseString = ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_clean_label');
+							
+							if (sensorNoisePill != null) sensorNoisePill.dispose();
+							sensorNoisePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_noise_label'));
+							sensorNoisePill.setValue(sensorNoiseString);
+							sensorNoisePill.touchable = false;
+							infoContainer.addChild(sensorNoisePill);
+						}
+					}
 				}
 			}
 			
@@ -5481,6 +5561,13 @@ package ui.chart
 				sagePill.removeFromParent();
 				sagePill.dispose();
 				sagePill = null;
+			}
+			
+			if (sensorNoisePill != null)
+			{
+				sensorNoisePill.removeFromParent();
+				sensorNoisePill.dispose();
+				sensorNoisePill = null;
 			}
 			
 			if (iagePill != null)

@@ -846,7 +846,7 @@ package services
 									Number.NaN, //rc
 									Number.NaN, //rawCalculated
 									false, //hideSlope
-									"", //noise
+									NSFollowReading.noise != null ? NSFollowReading.noise : "", //noise
 									NSFollowReadingTime, //lastmodifiedtimestamp
 									NSFollowReading._id //unique id
 								);  
