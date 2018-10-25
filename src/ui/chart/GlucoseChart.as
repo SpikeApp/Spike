@@ -3531,7 +3531,7 @@ package ui.chart
 			
 			//Update predictions pill
 			predictionsPill.isPredictive = true;
-			predictionsPill.setValue(String(Math.round(finalPredictionsList[finalPredictionsList.length - 1].calculatedValue)), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+			predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalPredictionsList[finalPredictionsList.length - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalPredictionsList[finalPredictionsList.length - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
 			repositionTreatmentPills();
 			
 			//Update Useful Properties
@@ -3913,7 +3913,7 @@ package ui.chart
 				{
 					if (predictedEventualBGPill != null) predictedEventualBGPill.dispose();
 					predictedEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_blood_glucose'));
-					predictedEventualBGPill.setValue(String(predictedEventualBG));
+					predictedEventualBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedEventualBG)) : String(Math.round(BgReading.mgdlToMmol(predictedEventualBG * 10)) / 10));
 					predictedEventualBGPill.touchable = false;
 					predictionsContainer.addChild(predictedEventualBGPill);
 				}
@@ -3923,7 +3923,7 @@ package ui.chart
 				{
 					if (predictedDeviationPill != null) predictedDeviationPill.dispose();
 					predictedDeviationPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_predicted_deviation'));
-					predictedDeviationPill.setValue(String(predictedDeviation));
+					predictedDeviationPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedDeviation)) : String(Math.round(BgReading.mgdlToMmol(predictedDeviation * 100)) / 100));
 					predictedDeviationPill.touchable = false;
 					predictionsContainer.addChild(predictedDeviationPill);
 				}
@@ -3955,7 +3955,7 @@ package ui.chart
 				{
 					if (predictedBgImpactPill != null) predictedBgImpactPill.dispose();
 					predictedBgImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_impact'));
-					predictedBgImpactPill.setValue(String(predictedBGImpact));
+					predictedBgImpactPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedBGImpact)) : String(Math.round(BgReading.mgdlToMmol(predictedBGImpact * 100)) / 100));
 					predictedBgImpactPill.touchable = false;
 					predictionsContainer.addChild(predictedBgImpactPill);
 				}
@@ -3965,7 +3965,7 @@ package ui.chart
 				{
 					if (predictedCarbImpactPill != null) predictedCarbImpactPill.dispose();
 					predictedCarbImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_carb_impact'));
-					predictedCarbImpactPill.setValue(String(predictedCarbImpact));
+					predictedCarbImpactPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedCarbImpact)) : String(Math.round(BgReading.mgdlToMmol(predictedCarbImpact * 100)) / 100));
 					predictedCarbImpactPill.touchable = false;
 					predictionsContainer.addChild(predictedCarbImpactPill);
 				}
