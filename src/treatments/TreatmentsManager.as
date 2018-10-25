@@ -2641,31 +2641,31 @@ package treatments
 						var needsDBUpdate:Boolean = false;
 						if (localInsulin.dia != treatmentInsulinDIA)
 						{
-							localInsulin.dia == treatmentInsulinDIA;
+							localInsulin.dia = treatmentInsulinDIA;
 							needsDBUpdate = true;
 						}
 						
 						if (localInsulin.name != treatmentInsulinName)
 						{
-							localInsulin.name == treatmentInsulinName;
+							localInsulin.name = treatmentInsulinName;
 							needsDBUpdate = true;
 						}
 						
 						if (localInsulin.peak != treatmentInsulinPeak)
 						{
-							localInsulin.peak == treatmentInsulinPeak;
+							localInsulin.peak = treatmentInsulinPeak;
 							needsDBUpdate = true;
 						}
 						
 						if (localInsulin.curve != treatmentInsulinCurve)
 						{
-							localInsulin.curve == treatmentInsulinCurve;
+							localInsulin.curve = treatmentInsulinCurve;
 							needsDBUpdate = true;
 						}
 						
 						if (needsDBUpdate)
 						{
-							ProfileManager.updateInsulin(localInsulin);
+							ProfileManager.updateInsulin(localInsulin, true);
 						}
 					}
 				}
