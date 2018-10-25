@@ -1002,7 +1002,7 @@ package ui.chart
 			}
 			
 			//Predictions line fix
-			if (_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
+			if (glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
 			{
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
@@ -2767,7 +2767,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y);
@@ -3042,7 +3042,7 @@ package ui.chart
 			}
 			
 			//Predictions line fix
-			if (_displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
+			if (glucoseMarker != null && _displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
 			{
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
@@ -3862,6 +3862,7 @@ package ui.chart
 			{
 				var button:Button = new Button();
 				button.height = 21;
+				button.paddingLeft = button.paddingRight = 8;
 				
 				return button;
 			};
@@ -3892,7 +3893,7 @@ package ui.chart
 				{
 					if (predictedTimeUntilHighPill != null) predictedTimeUntilHighPill.dispose();
 					predictedTimeUntilHighPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predicted_time_until_high_label'));
-					predictedTimeUntilHighPill.setValue(TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilHigh * TimeSpan.TIME_1_MINUTE, false));
+					predictedTimeUntilHighPill.setValue(TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilHigh / TimeSpan.TIME_1_MINUTE, false));
 					predictedTimeUntilHighPill.touchable = false;
 					predictionsContainer.addChild(predictedTimeUntilHighPill);
 				}
@@ -3902,7 +3903,7 @@ package ui.chart
 				{
 					if (predictedTimeUntilLowPill != null) predictedTimeUntilLowPill.dispose();
 					predictedTimeUntilLowPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predicted_time_until_low_label'));
-					predictedTimeUntilLowPill.setValue(TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilLow * TimeSpan.TIME_1_MINUTE, false));
+					predictedTimeUntilLowPill.setValue(TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilLow / TimeSpan.TIME_1_MINUTE, false));
 					predictedTimeUntilLowPill.touchable = false;
 					predictionsContainer.addChild(predictedTimeUntilLowPill);
 				}
