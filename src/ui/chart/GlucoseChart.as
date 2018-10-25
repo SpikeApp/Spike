@@ -3382,9 +3382,9 @@ package ui.chart
 			//Predictions pill
 			if (!dontDisplayPredictionsPill)
 			{
-				predictionsPill = new ChartTreatmentPill("Predict", false);
+				predictionsPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'), false);
 				predictionsPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
-				predictionsPill.setValue("Off");
+				predictionsPill.setValue(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_off_label'));
 				predictionsPill.visible = false;
 				predictionsPill.addEventListener(TouchEvent.TOUCH, onDisplayMorePredictions);
 				addChild(predictionsPill);
@@ -4122,7 +4122,7 @@ package ui.chart
 			{
 				//Redraw predictions pill
 				predictionsPill.isPredictive = false;
-				predictionsPill.setValue("Off", "Predict");
+				predictionsPill.setValue(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_off_label'), ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
 				repositionTreatmentPills();
 				
 				//Dispose predictions chart delimiter
