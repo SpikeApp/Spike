@@ -355,6 +355,7 @@ package ui.chart
 			//Predictions
 			predictionsEnabled = dontDisplayPredictionsPill == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true";
 			predictionsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_COLOR));
+			
 			if (timelineRange == TIMELINE_1H)
 				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
 			else if (timelineRange == TIMELINE_3H)
@@ -5080,16 +5081,6 @@ package ui.chart
 						infoContainer.addChild(rawPill);
 					}
 					
-					//SAGE
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) == "true")
-					{
-						if (sagePill != null) sagePill.dispose();
-						sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
-						sagePill.setValue(GlucoseFactory.getSensorAge());
-						sagePill.touchable = false;
-						infoContainer.addChild(sagePill);
-					}
-					
 					//NOISE
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON) == "true")
 					{
@@ -5120,6 +5111,16 @@ package ui.chart
 								infoContainer.addChild(sensorNoisePill);
 							}
 						}
+					}
+					
+					//SAGE
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) == "true")
+					{
+						if (sagePill != null) sagePill.dispose();
+						sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
+						sagePill.setValue(GlucoseFactory.getSensorAge());
+						sagePill.touchable = false;
+						infoContainer.addChild(sagePill);
 					}
 				}
 				
@@ -5238,16 +5239,6 @@ package ui.chart
 					infoContainer.addChild(rawPill);
 				}
 				
-				//SAGE
-				if (sagePill != null) sagePill.dispose();
-				if (e.userInfo.sage != null && e.userInfo.sage != "" && String(e.userInfo.sage).indexOf("n/a") == -1)
-				{
-					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
-					sagePill.setValue(e.userInfo.sage);
-					sagePill.touchable = false;
-					infoContainer.addChild(sagePill);
-				}
-				
 				//NOISE
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON) == "true")
 				{
@@ -5278,6 +5269,16 @@ package ui.chart
 							infoContainer.addChild(sensorNoisePill);
 						}
 					}
+				}
+				
+				//SAGE
+				if (sagePill != null) sagePill.dispose();
+				if (e.userInfo.sage != null && e.userInfo.sage != "" && String(e.userInfo.sage).indexOf("n/a") == -1)
+				{
+					sagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','sensor_age'));
+					sagePill.setValue(e.userInfo.sage);
+					sagePill.touchable = false;
+					infoContainer.addChild(sagePill);
 				}
 			}
 			

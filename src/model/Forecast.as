@@ -8,6 +8,8 @@ package model
 	import treatments.ProfileManager;
 	import treatments.TreatmentsManager;
 	
+	import ui.chart.GlucoseChart;
+	
 	import utils.TimeSpan;
 
 	public class Forecast
@@ -801,6 +803,29 @@ package model
 		private static function roundTo (x:Number, step:Number):Number
 		{
 			return Math.round(x / step) * step;
+		}
+		
+		public static function getCurrentPredictionsDuration():Number
+		{
+			var predictionsLengthInMinutes:Number = Number.NaN;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				var timelineRange:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_SELECTED_TIMELINE_RANGE));
+				
+				if (timelineRange == GlucoseChart.TIMELINE_1H)
+					predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
+				else if (timelineRange == GlucoseChart.TIMELINE_3H)
+					predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_3_HOURS));
+				else if (timelineRange == GlucoseChart.TIMELINE_6H)
+					predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_6_HOURS));
+				else if (timelineRange == GlucoseChart.TIMELINE_12H)
+					predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_12_HOURS));
+				else if (timelineRange == GlucoseChart.TIMELINE_24H)
+					predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_24_HOURS));
+			}
+				
+			return predictionsLengthInMinutes;
 		}
 	}
 }

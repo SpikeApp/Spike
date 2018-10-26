@@ -11,6 +11,7 @@ package network.httpserver.API
 	import database.Calibration;
 	import database.CommonSettings;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import network.httpserver.ActionController;
@@ -281,13 +282,43 @@ package network.httpserver.API
 									readingObject.low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR)).toString(16).toUpperCase();
 									readingObject.urgent_low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)).toString(16).toUpperCase();
 									
-									//Stats
+									//Stats / Predictions / Velocity
 									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob);
 									if (!lightMode)
 									{
+										//Stats
 										var userStats:BasicUserStats = StatsManager.getBasicUserStats();
 										readingObject.status_two = "L: " + userStats.percentageLowRounded + "% | " + "R: " + userStats.percentageInRangeRounded + "% | " + "H: " + userStats.percentageHighRounded + "%";
 										readingObject.status_three = "AVG: " + userStats.averageGlucose + GlucoseHelper.getGlucoseUnit() + " | " + "A1C: " + userStats.a1c + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != "true" ? "%" : "m");
+										
+										//Predictions
+										var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+										if (!isNaN(predictionsLengthInMinutes))
+										{
+											var predictionsBGs:Object = Forecast.predictBGs(predictionsLengthInMinutes);
+											var predictionsList:Array;
+											if (predictionsBGs != null && predictionsBGs.COB != null)
+											{
+												predictionsList = predictionsBGs.COB;
+											}
+											else if (predictionsBGs != null && predictionsBGs.IOB != null)
+											{
+												predictionsList = predictionsBGs.IOB;
+											}
+											
+											if (predictionsList != null)
+											{
+												readingObject.predictions_duration = String(predictionsLengthInMinutes);
+												readingObject.predictions_outcome = readingObject.unit == "mgdl" ? String(Math.round(predictionsList[predictionsList.length - 1])) : String(Math.round(BgReading.mgdlToMmol(predictionsList[predictionsList.length - 1] * 10)) / 10);
+											}
+										}
+										
+										//Velocity
+										var glucoseVelocity:Number = GlucoseFactory.getGlucoseVelocity();
+										if (!isNaN(glucoseVelocity))
+										{
+											readingObject.glucose_velocity = String(glucoseVelocity);
+										}
 									}
 								}
 								readingsCollection.push(readingObject);
