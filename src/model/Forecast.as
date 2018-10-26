@@ -53,16 +53,14 @@ package model
 				status += "No default profile set!. Setting BG target to the average of high and low thresholds: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? target_bg : Math.round(BgReading.mgdlToMmol(target_bg) * 10) / 10) + "\n"
 			}
 			
-			var iobArray:Array = []; //Will hold all future IOB data points used for calculating predictions
+			var iobArray:Array = []; //Will hold all present/future IOB data points used for calculating predictions
 			for (i = 0; i < five_min_blocks; i++) 
 			{
-				var futureIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES)) : { iob: 0, activityForecast: 0 };
-				iobArray.push( { iob: futureIOB.iob, activityForecast: futureIOB.activityForecast } );
+				var projectedIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalIOB(now + (i * TimeSpan.TIME_5_MINUTES)) : { iob: 0, activityForecast: 0 };
+				iobArray.push( { iob: projectedIOB.iob, activityForecast: projectedIOB.activityForecast } );
 			}
 			
-			var currentIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalIOB(now) : { iob: 0, activityForecast: 0 };
-			
-			var iob_data:Object = { iob: currentIOB.iob, activityForecast: currentIOB.activityForecast };
+			var iob_data:Object  = iobArray[0];
 			
 			var minDelta:Number = Math.min(glucose_status.delta, glucose_status.short_avgdelta);
 			var minAvgDelta:Number = Math.min(glucose_status.short_avgdelta, glucose_status.long_avgdelta);
@@ -126,6 +124,9 @@ package model
 			ZTpredBGs.push(bg);
 			UAMpredBGs.push(bg);
 			
+			//UAM
+			var enableUAM:Boolean = true;
+			
 			// carb impact and duration are 0 unless changed below
 			var ci:Number = 0;
 			var cid:Number = 0;
@@ -143,13 +144,18 @@ package model
 			}
 			else
 			{
-				status += "Can't determine I:C. Defaulting to 10";
+				status += "Can't determine I:C. Defaulting to 10" + "\n";
 				carb_ratio = 10; //If no i:C is set by the user we default to 10
 			}
 			
 			var csf:Number = sens / carb_ratio; 
 			
 			var maxCarbAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate(); // g/h; maximum rate to assume carbs will absorb if no CI observed
+			if (isNaN(maxCarbAbsorptionRate))
+			{
+				status += "Can't determine carbs absorption rate. Defaulting to 30g/h" + "\n";
+				maxCarbAbsorptionRate = 30;
+			}
 			
 			// limit Carb Impact to maxCarbAbsorptionRate * csf in mg/dL per 5m
 			var maxCI:Number = round(maxCarbAbsorptionRate*csf*5/60, 1)
@@ -165,15 +171,15 @@ package model
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var nowCOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalCOB(now) : { cob: 0, carbs: 0 };
-			if (nowCOB.carbs > 0) 
+			var meal_data:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalCOB(now) : { cob: 0, carbs: 0 };
+			if (meal_data.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it
 				// so <= 90g is assumed to take 3h, and 120g=4h
-				remainingCATimeMin = Math.max(remainingCATimeMin, nowCOB.cob / assumedCarbAbsorptionRate);
-				var lastCarbAge:Number = round(( now - nowCOB.lastCarbTime ) / 60000);
+				remainingCATimeMin = Math.max(remainingCATimeMin, meal_data.cob / assumedCarbAbsorptionRate);
+				var lastCarbAge:Number = round(( now - meal_data.lastCarbTime ) / 60000);
 				
-				var fractionCOBAbsorbed:Number = ( nowCOB.carbs - nowCOB.cob ) / nowCOB.carbs;
+				var fractionCOBAbsorbed:Number = ( meal_data.carbs - meal_data.cob ) / meal_data.carbs;
 				remainingCATime = remainingCATimeMin + 1.5 * lastCarbAge/60;
 				remainingCATime = round(remainingCATime,1);
 				
@@ -189,7 +195,7 @@ package model
 			var remainingCarbsCap:Number = 90; // default to 90
 			var remainingCarbsFraction:Number = 1;
 			var remainingCarbsIgnore:Number = 1 - remainingCarbsFraction;
-			var remainingCarbs:Number = Math.max(0, nowCOB.cob - totalCA - nowCOB.carbs*remainingCarbsIgnore);
+			var remainingCarbs:Number = Math.max(0, meal_data.cob - totalCA - meal_data.carbs*remainingCarbsIgnore);
 			remainingCarbs = Math.min(remainingCarbsCap,remainingCarbs);
 			// assume remainingCarbs will absorb in a /\ shaped bilinear curve
 			// peaking at remainingCATime / 2 and ending at remainingCATime hours
@@ -198,9 +204,9 @@ package model
 			var remainingCIpeak:Number = remainingCarbs * csf * 5 / 60 / (remainingCATime/2);
 			
 			// calculate peak deviation in last hour, and slope from that to current deviation
-			var slopeFromMaxDeviation:Number = !isNaN(nowCOB.slopeFromMaxDeviation) ? round(nowCOB.slopeFromMaxDeviation,2) : 0; //Compatibility with Nightscout COB algorithm
+			var slopeFromMaxDeviation:Number = !isNaN(meal_data.slopeFromMaxDeviation) ? round(meal_data.slopeFromMaxDeviation,2) : 0; //Compatibility with Nightscout COB algorithm
 			// calculate lowest deviation in last hour, and slope from that to current deviation
-			var slopeFromMinDeviation:Number = !isNaN(nowCOB.slopeFromMinDeviation) ? round(nowCOB.slopeFromMinDeviation,2) : 999; //Compatibility with Nightscout COB algorithm
+			var slopeFromMinDeviation:Number = !isNaN(meal_data.slopeFromMinDeviation) ? round(meal_data.slopeFromMinDeviation,2) : 999; //Compatibility with Nightscout COB algorithm
 			// assume deviations will drop back down at least at 1/3 the rate they ramped up
 			var slopeFromDeviations:Number = Math.min(slopeFromMaxDeviation,-slopeFromMinDeviation/3);
 			
@@ -214,10 +220,10 @@ package model
 				cid = 0;
 			} else 
 			{
-				cid = Math.min(remainingCATime*60/5/2,Math.max(0, nowCOB.cob * csf / ci ));
+				cid = Math.min(remainingCATime*60/5/2,Math.max(0, meal_data.cob * csf / ci ));
 			}
 			
-			var acid:Number = Math.max(0, nowCOB.cob * csf / aci );
+			var acid:Number = Math.max(0, meal_data.cob * csf / aci );
 			// duration (hours) = duration (5m) * 5 / 60 * 2 (to account for linear decay)
 			status += "Carb Impact: " + ci + "mg/dL per 5m; CI Duration: " + round(cid*5/60*2,1) + "hours; remaining CI (~2h peak): " + round(remainingCIpeak,1)+ "mg/dL per 5m" + "\n";
 			
@@ -262,7 +268,6 @@ package model
 			var UAMpredBG:Number = 0;
 			var insulinPeakTime:Number = 0;
 			var insulinPeak5m:Number = 0;
-			var enableUAM:Boolean = true;
 			
 			var numberOfIOBs:int = iobArray.length;
 			for (i = 0; i < numberOfIOBs; i++) 
@@ -323,7 +328,7 @@ package model
 				// look ahead 60m (regardless of insulin type) so as to be less aggressive on slower insulins
 				insulinPeakTime = 60;
 				// add 30m to allow for insluin delivery (SMBs or temps)
-				//insulinPeakTime = 90;
+				insulinPeakTime = 90;
 				insulinPeak5m = (insulinPeakTime/60)*12;
 				//console.error(insulinPeakTime, insulinPeak5m, profile.insulinPeakTime, profile.curve);
 				
@@ -336,11 +341,6 @@ package model
 				if ( enableUAM && UAMpredBGs.length > 12 && (UAMpredBG < minUAMPredBG) ) { minUAMPredBG = round(UAMpredBG); }
 				if ( enableUAM && UAMpredBG > maxIOBPredBG ) { maxUAMPredBG = UAMpredBG; }
 			}
-			
-			/*if (nowCOB.cob > 0) {
-				trace("predCIs (mg/dL/5m):",predCIs.join(" "));
-				trace("remainingCIs:      ",remainingCIs.join(" "));
-			}*/
 			
 			var predBGs:Object = {};
 			var numberOfIOBPredicts:int = IOBpredBGs.length;
@@ -372,7 +372,7 @@ package model
 			predBGs.ZT = ZTpredBGs;
 			lastZTpredBG = round(ZTpredBGs[ZTpredBGs.length-1]);
 			
-			if (nowCOB.cob > 0) 
+			if (meal_data.cob > 0) 
 			{
 				var numberOfACOBPredicts:int = aCOBpredBGs.length;
 				for (i = 0; i < numberOfACOBPredicts; i++) 
@@ -386,7 +386,7 @@ package model
 				}*/
 			}
 			
-			if (nowCOB.cob > 0 && ( ci > 0 || remainingCIpeak > 0 )) 
+			if (meal_data.cob > 0 && ( ci > 0 || remainingCIpeak > 0 )) 
 			{
 				var numberOfCOBPredicts:int = COBpredBGs.length;
 				for (i = 0; i < numberOfCOBPredicts; i++) 
@@ -421,27 +421,22 @@ package model
 					}*/
 					
 					predBGs.UAM = UAMpredBGs;
-					lastUAMpredBG=round(UAMpredBGs[UAMpredBGs.length-1]);
+					lastUAMpredBG = round(UAMpredBGs[UAMpredBGs.length-1]);
 					if (UAMpredBGs[UAMpredBGs.length-1]) 
 					{
 						eventualBG = Math.max(eventualBG, round(UAMpredBGs[UAMpredBGs.length-1]) );
 					}
 				}
-				
-				// set eventualBG based on COB or UAM predBGs
-				predBGs.eventualBG = eventualBG;
 			}
 			
 			//trace("UAM Impact:",uci,"mg/dL per 5m; UAM Duration:",UAMduration,"hours");
-			
-			
 			
 			minIOBPredBG = Math.max(39,minIOBPredBG);
 			minCOBPredBG = Math.max(39,minCOBPredBG);
 			minUAMPredBG = Math.max(39,minUAMPredBG);
 			minPredBG = round(minIOBPredBG);
 			
-			var fractionCarbsLeft:Number = nowCOB.cob / nowCOB.carbs;
+			var fractionCarbsLeft:Number = meal_data.cob / meal_data.carbs;
 			// if we have COB and UAM is enabled, average both
 			if ( minUAMPredBG < 999 && minCOBPredBG < 999 ) 
 			{
@@ -470,7 +465,6 @@ package model
 			}
 			
 			// if we have both minCOBGuardBG and minUAMGuardBG, blend according to fractionCarbsLeft
-
 			if ( (cid || remainingCIpeak > 0) ) {
 				if ( enableUAM ) {
 					minGuardBG = fractionCarbsLeft*minCOBGuardBG + (1-fractionCarbsLeft)*minUAMGuardBG;
@@ -504,7 +498,7 @@ package model
 			minZTUAMPredBG = round(minZTUAMPredBG);
 			
 			// if any carbs have been entered recently
-			if (nowCOB.carbs) {
+			if (meal_data.carbs) {
 				
 				// if UAM is disabled, use max of minIOBPredBG, minCOBPredBG
 				if ( ! enableUAM && minCOBPredBG < 999 ) {
@@ -527,14 +521,7 @@ package model
 			// make sure minPredBG isn't higher than avgPredBG
 			minPredBG = Math.min( minPredBG, avgPredBG );
 			
-			/*trace("minPredBG: "+minPredBG+" minIOBPredBG: "+minIOBPredBG+" minZTGuardBG: "+minZTGuardBG);
-			if (minCOBPredBG < 999) {
-				trace(" minCOBPredBG: "+minCOBPredBG);
-			}
-			if (minUAMPredBG < 999) {
-				trace(" minUAMPredBG: "+minUAMPredBG);
-			}
-			trace(" avgPredBG:",avgPredBG,"COB:",currentCOB,"/",activeCarbs.carbs); */
+			status += "avgPredBG: " + avgPredBG + ", COB: " + meal_data.cob + " / " + meal_data.carbs + "\n";
 			
 			// But if the COB line falls off a cliff, don't trust UAM too much:
 			// use maxCOBPredBG if it's been set and lower than minPredBG
@@ -552,7 +539,7 @@ package model
 			// calculate how long until COB (or IOB) predBGs drop below min_bg
 			var minutesAboveMinBG:Number = 240;
 			var minutesAboveThreshold:Number = 240;
-			if (nowCOB.cob > 0 && ( ci > 0 || remainingCIpeak > 0 )) {
+			if (meal_data.cob > 0 && ( ci > 0 || remainingCIpeak > 0 )) {
 				for (i = 0; i<COBpredBGs.length; i++) {
 					//console.error(COBpredBGs[i], min_bg);
 					if ( COBpredBGs[i] < min_bg ) {
@@ -588,6 +575,17 @@ package model
 				status += "BG projected to remain above " + threshold + " for " + minutesAboveThreshold + " minutes." + "\n";
 			}
 			
+			// include at least minutesAboveThreshold worth of zero temps in calculating carbsReq
+			// always include at least 30m worth of zero temp (carbs to 80, low temp up to target)
+			var zeroTempDuration:Number = minutesAboveThreshold;
+			// BG undershoot, minus effect of zero temps until hitting min_bg, converted to grams, minus COB
+			var zeroTempEffect:Number = 0*sens*zeroTempDuration/60;
+			// don't count the last 25% of COB against carbsReq
+			var COBforCarbsReq:Number = Math.max(0, meal_data.cob - 0.25*meal_data.carbs);
+			var carbsReq:Number = (bgUndershoot - zeroTempEffect) / csf - COBforCarbsReq;
+			zeroTempEffect = round(zeroTempEffect);
+			carbsReq = round(carbsReq);
+			
 			// calculate 30m low-temp required to get projected BG up to target
 			// multiply by 2 to low-temp faster for increased hypo safety
 			var insulinReq:Number = 2 * Math.min(0, (eventualBG - target_bg) / sens);
@@ -606,12 +604,17 @@ package model
 			
 			//Add relevant info
 			predBGs.bgImpact = bgi;
-			if (nowCOB.carbs > 0) predBGs.carbImpact = ci;
+			if (meal_data.carbs > 0) predBGs.carbImpact = ci;
 			predBGs.deviation = deviation;
 			predBGs.eventualBG = eventualBG;
 			predBGs.minGuardBG = minGuardBG;
 			predBGs.IOBpredBG = IOBpredBG;
 			predBGs.UAMpredBG = UAMpredBG;
+			predBGs.COBValue = meal_data.cob;
+			predBGs.IOBValue = iob_data.iob;
+			predBGs.status = status;
+			predBGs.carbsReq = carbsReq;
+			predBGs.naiveInsulinReq = naiveInsulinReq;
 			
 			return predBGs;
 		}

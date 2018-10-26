@@ -3466,7 +3466,7 @@ package ui.chart
 			
 			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes);
 			
-			//trace(ObjectUtil.toString(unformattedPredictions));
+			trace(ObjectUtil.toString(unformattedPredictions));
 			
 			if (unformattedPredictions != null && unformattedPredictions.COB != null)
 			{
