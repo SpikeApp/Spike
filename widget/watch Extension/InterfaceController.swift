@@ -21,6 +21,7 @@ var urgentHighColor:String = ""
 var predictionsDuration:String = ""
 var predictionsOutcome:String = ""
 var glucoseVelocity:String = ""
+var offlineTask:DispatchWorkItem?
 let chartEmpty42 = #imageLiteral(resourceName: "chart-empty-42")
 let chartEmpty38 = #imageLiteral(resourceName: "chart-empty-38")
 
@@ -155,6 +156,13 @@ class InterfaceController: WKInterfaceController
         super.didDeactivate()
     }
     
+    func spikeOffline()
+    {
+        self.primarybg.setText("")
+        self.vlabel.setTextColor(UIColor.red)
+        self.vlabel.setText("Spike is offline!")
+    }
+    
     func updateData()
     {
         print("In updateData")
@@ -188,7 +196,10 @@ class InterfaceController: WKInterfaceController
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard error == nil else {
                 print(error!)
-                self.displayError(error: "Spike is offline!")
+                
+                offlineTask = DispatchWorkItem { self.spikeOffline() }
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 8, execute: offlineTask!)
+                
                 return
             }
             guard let data = data else {
@@ -296,6 +307,10 @@ class InterfaceController: WKInterfaceController
                         self.displayError(error: "Data Missing!")
                         return
                     }
+                    
+                    //Cancel any previous offline delayed actions
+                    offlineTask?.cancel()
+                    
                     self.pumpstatus3.setText(statusThree)
                     self.pumpstatus3.setTextColor(UIColor.white)
                     

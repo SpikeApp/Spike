@@ -22,7 +22,7 @@ package model
 		/**
 		 * Glucose Predictions
 		 */
-		public static function predictBGs(minutes:uint):Object
+		public static function predictBGs(minutes:uint, ignoreIOBCOB:Boolean = false):Object
 		{
 			var glucose_status:Object = getLastGlucose();
 			if (!glucose_status.is_valid)
@@ -56,11 +56,11 @@ package model
 			var iobArray:Array = []; //Will hold all future IOB data points used for calculating predictions
 			for (i = 0; i < five_min_blocks; i++) 
 			{
-				var futureIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" ? TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES)) : { iob: 0, activityForecast: 0 };
+				var futureIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalIOB(now + ((i + 1) * TimeSpan.TIME_5_MINUTES)) : { iob: 0, activityForecast: 0 };
 				iobArray.push( { iob: futureIOB.iob, activityForecast: futureIOB.activityForecast } );
 			}
 			
-			var currentIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" ? TreatmentsManager.getTotalIOB(now) : { iob: 0, activityForecast: 0 };
+			var currentIOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalIOB(now) : { iob: 0, activityForecast: 0 };
 			
 			var iob_data:Object = { iob: currentIOB.iob, activityForecast: currentIOB.activityForecast };
 			
@@ -165,7 +165,7 @@ package model
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var nowCOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" ? TreatmentsManager.getTotalCOB(now) : { cob: 0, carbs: 0 };
+			var nowCOB:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalCOB(now) : { cob: 0, carbs: 0 };
 			if (nowCOB.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it
