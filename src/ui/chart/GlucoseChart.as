@@ -3457,7 +3457,7 @@ package ui.chart
 			var lastAvailableBgReading:BgReading = _dataSource[_dataSource.length - 1];
 			var now:Number = lastAvailableBgReading != null ? lastAvailableBgReading.timestamp : new Date().valueOf();
 			var finalPredictionsList:Array = [];
-			var unformattedPredictionsList:Array;
+			var unformattedPredictionsList:Array = [];
 			var predictionsLength:int;
 			var i:int;
 			var currentReadingValue:Number;
@@ -3480,7 +3480,7 @@ package ui.chart
 			}
 			else
 			{
-				return [];
+				return finalPredictionsList;
 			}
 			
 			//First check of glucose thresholds
