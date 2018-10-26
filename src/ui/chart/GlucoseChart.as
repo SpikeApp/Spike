@@ -13,6 +13,8 @@ package ui.chart
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -328,6 +330,9 @@ package ui.chart
 		private var predictedCarbImpact:Number = Number.NaN;
 		private var predictedTimeUntilHigh:Number = Number.NaN;
 		private var predictedTimeUntilLow:Number = Number.NaN;
+		private var predictedMinimumBG:Number = Number.NaN;
+		private var predictedIOBBG:Number = Number.NaN;
+		private var predictedUAMBG:Number = Number.NaN;
 		private var predictionsPill:ChartTreatmentPill;
 		private var predictionsContainer:ScrollContainer;
 		private var predictionsCallout:Callout;
@@ -346,6 +351,9 @@ package ui.chart
 		private var predictionsLengthPicker:PickerList;
 		private var predictedTimeUntilHighPill:ChartTreatmentPill;
 		private var predictedTimeUntilLowPill:ChartTreatmentPill;
+		private var predictedUAMBGPill:ChartTreatmentPill;
+		private var predictedIOBBGPill:ChartTreatmentPill;
+		private var predictedMinimumBGPill:ChartTreatmentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false)
 		{
@@ -3538,8 +3546,11 @@ package ui.chart
 			//Update Useful Properties
 			predictedEventualBG = unformattedPredictions.eventualBG != null ? unformattedPredictions.eventualBG : Number.NaN;
 			predictedBGImpact = unformattedPredictions.bgImpact != null ? unformattedPredictions.bgImpact : Number.NaN;
-			predictedDeviation = unformattedPredictions.predictedDeviation != null ? unformattedPredictions.predictedDeviation : Number.NaN;
+			predictedDeviation = unformattedPredictions.deviation != null ? unformattedPredictions.deviation : Number.NaN;
 			predictedCarbImpact = unformattedPredictions.carbImpact != null ? unformattedPredictions.carbImpact : Number.NaN;
+			predictedMinimumBG = unformattedPredictions.minGuardBG != null ? unformattedPredictions.minGuardBG : Number.NaN;
+			predictedIOBBG = unformattedPredictions.IOBpredBG != null ? unformattedPredictions.IOBpredBG : Number.NaN;
+			predictedUAMBG = unformattedPredictions.UAMpredBG != null ? unformattedPredictions.UAMpredBG : Number.NaN;
 			
 			return finalPredictionsList;
 		}
@@ -3909,26 +3920,6 @@ package ui.chart
 					predictionsContainer.addChild(predictedTimeUntilLowPill);
 				}
 				
-				//Eventual BG
-				if (!isNaN(predictedEventualBG))
-				{
-					if (predictedEventualBGPill != null) predictedEventualBGPill.dispose();
-					predictedEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_blood_glucose'));
-					predictedEventualBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedEventualBG)) : String(Math.round(BgReading.mgdlToMmol(predictedEventualBG * 10)) / 10));
-					predictedEventualBGPill.touchable = false;
-					predictionsContainer.addChild(predictedEventualBGPill);
-				}
-				
-				//Predicted Deviation
-				if (!isNaN(predictedDeviation))
-				{
-					if (predictedDeviationPill != null) predictedDeviationPill.dispose();
-					predictedDeviationPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_predicted_deviation'));
-					predictedDeviationPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedDeviation)) : String(Math.round(BgReading.mgdlToMmol(predictedDeviation * 100)) / 100));
-					predictedDeviationPill.touchable = false;
-					predictionsContainer.addChild(predictedDeviationPill);
-				}
-				
 				//Glucose Velocity
 				var glucoseVelocity:Number = GlucoseFactory.getGlucoseVelocity();
 				if (!isNaN(glucoseVelocity))
@@ -3965,14 +3956,44 @@ package ui.chart
 					}
 				}
 				
-				//BG Impact
-				if (!isNaN(predictedBGImpact))
+				//Eventual BG
+				if (!isNaN(predictedEventualBG))
 				{
-					if (predictedBgImpactPill != null) predictedBgImpactPill.dispose();
-					predictedBgImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_impact'));
-					predictedBgImpactPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedBGImpact)) : String(Math.round(BgReading.mgdlToMmol(predictedBGImpact * 100)) / 100));
-					predictedBgImpactPill.touchable = false;
-					predictionsContainer.addChild(predictedBgImpactPill);
+					if (predictedEventualBGPill != null) predictedEventualBGPill.dispose();
+					predictedEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_blood_glucose'));
+					predictedEventualBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedEventualBG)) : String(Math.round(BgReading.mgdlToMmol(predictedEventualBG * 10)) / 10));
+					predictedEventualBGPill.touchable = false;
+					predictionsContainer.addChild(predictedEventualBGPill);
+				}
+				
+				//UAM BG
+				if (!isNaN(predictedUAMBG))
+				{
+					if (predictedUAMBGPill != null) predictedUAMBGPill.dispose();
+					predictedUAMBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_unannounced_meal_blood_glucose'));
+					predictedUAMBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedUAMBG)) : String(Math.round(BgReading.mgdlToMmol(predictedUAMBG * 10)) / 10));
+					predictedUAMBGPill.touchable = false;
+					predictionsContainer.addChild(predictedUAMBGPill);
+				}
+				
+				//IOB BG
+				if (!isNaN(predictedIOBBG))
+				{
+					if (predictedIOBBGPill != null) predictedIOBBGPill.dispose();
+					predictedIOBBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_iob_blood_glucose'));
+					predictedIOBBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedIOBBG)) : String(Math.round(BgReading.mgdlToMmol(predictedIOBBG * 10)) / 10));
+					predictedIOBBGPill.touchable = false;
+					predictionsContainer.addChild(predictedIOBBGPill);
+				}
+				
+				//Minimum BG
+				if (!isNaN(predictedMinimumBG))
+				{
+					if (predictedMinimumBGPill != null) predictedMinimumBGPill.dispose();
+					predictedMinimumBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_minimum_blood_glucose'));
+					predictedMinimumBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedMinimumBG)) : String(Math.round(BgReading.mgdlToMmol(predictedMinimumBG * 10)) / 10));
+					predictedMinimumBGPill.touchable = false;
+					predictionsContainer.addChild(predictedMinimumBGPill);
 				}
 				
 				//Carb Impact
@@ -3983,6 +4004,26 @@ package ui.chart
 					predictedCarbImpactPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedCarbImpact)) : String(Math.round(BgReading.mgdlToMmol(predictedCarbImpact * 100)) / 100));
 					predictedCarbImpactPill.touchable = false;
 					predictionsContainer.addChild(predictedCarbImpactPill);
+				}
+				
+				//BG Impact
+				if (!isNaN(predictedBGImpact))
+				{
+					if (predictedBgImpactPill != null) predictedBgImpactPill.dispose();
+					predictedBgImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_impact'));
+					predictedBgImpactPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedBGImpact)) : String(Math.round(BgReading.mgdlToMmol(predictedBGImpact * 100)) / 100));
+					predictedBgImpactPill.touchable = false;
+					predictionsContainer.addChild(predictedBgImpactPill);
+				}
+				
+				//Predicted Deviation
+				if (!isNaN(predictedDeviation))
+				{
+					if (predictedDeviationPill != null) predictedDeviationPill.dispose();
+					predictedDeviationPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_deviation'));
+					predictedDeviationPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedDeviation)) : String(Math.round(BgReading.mgdlToMmol(predictedDeviation * 100)) / 100));
+					predictedDeviationPill.touchable = false;
+					predictionsContainer.addChild(predictedDeviationPill);
 				}
 			}
 			
@@ -4220,6 +4261,27 @@ package ui.chart
 				predictedEventualBGPill.removeFromParent();
 				predictedEventualBGPill.dispose();
 				predictedEventualBGPill = null;
+			}
+			
+			if (predictedUAMBGPill != null)
+			{
+				predictedUAMBGPill.removeFromParent();
+				predictedUAMBGPill.dispose();
+				predictedUAMBGPill = null;
+			}
+			
+			if (predictedIOBBGPill != null)
+			{
+				predictedIOBBGPill.removeFromParent();
+				predictedIOBBGPill.dispose();
+				predictedIOBBGPill = null;
+			}
+			
+			if (predictedMinimumBGPill != null)
+			{
+				predictedMinimumBGPill.removeFromParent();
+				predictedMinimumBGPill.dispose();
+				predictedMinimumBGPill = null;
 			}
 			
 			if (predictedTreatmentsOutcomePill != null)

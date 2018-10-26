@@ -132,6 +132,8 @@ class InterfaceController: WKInterfaceController
     override func willActivate()
     {
         // This method is called when watch view controller is about to be visible to user
+        self.vlabel.setTextColor(UIColor.gray)
+        self.vlabel.setText("0")
         super.willActivate()
         updateData()
     }
@@ -175,6 +177,7 @@ class InterfaceController: WKInterfaceController
         self.plabel.setTextColor(gray)
         self.pLabelHolder.setTextColor(gray)
         self.vlabel.setTextColor(gray)
+        self.vlabel.setText("0")
         self.vLabelHolder.setTextColor(gray)
         self.minago.setTextColor(gray)
         self.deltabg.setTextColor(gray)

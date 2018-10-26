@@ -32,7 +32,7 @@ package model
 			}
 			
 			//Define common variables
-			var five_min_blocks:Number = Math.floor(minutes / 5) + 1; //We add one because the first prediction is always the lastes glucose value
+			var five_min_blocks:Number = Math.floor(minutes / 5);
 			var now:Number = new Date().valueOf();
 			var i:int;
 			var status:String = "";
@@ -606,11 +606,12 @@ package model
 			
 			//Add relevant info
 			predBGs.bgImpact = bgi;
-			predBGs.carbImpact = ci;
-			predBGs.status = status;
-			predBGs.predictedDeviation = deviation;
+			if (nowCOB.carbs > 0) predBGs.carbImpact = ci;
+			predBGs.deviation = deviation;
 			predBGs.eventualBG = eventualBG;
-			predBGs.naiveEventualBG = naive_eventualBG;
+			predBGs.minGuardBG = minGuardBG;
+			predBGs.IOBpredBG = IOBpredBG;
+			predBGs.UAMpredBG = UAMpredBG;
 			
 			return predBGs;
 		}
@@ -638,7 +639,7 @@ package model
 		// Returns latest glucose and delta data (current and averages)
 		private static function getLastGlucose():Object
 		{
-			var glucoseList:Array = BgReading.latest(16, CGMBlueToothDevice.isFollower());
+			var glucoseList:Array = BgReading.latest(12, CGMBlueToothDevice.isFollower());
 			var numReadings:int = glucoseList.length;
 			if (numReadings == 0)
 			{
