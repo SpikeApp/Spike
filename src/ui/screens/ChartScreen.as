@@ -201,7 +201,7 @@ package ui.screens
 					chartX = 10;
 			}
 			
-			glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight);
+			glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight, false, false, false, false, false, headerProperties);
 			glucoseChart.x = Math.round(chartX);
 			glucoseChart.y = Math.round(glucoseChartTopPadding);
 			glucoseChart.dataSource = chartData;
@@ -247,7 +247,7 @@ package ui.screens
 				}
 				
 				//Create new chart
-				glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight);
+				glucoseChart = new GlucoseChart(selectedTimelineRange, chartWidth, mainChartHeight, false, false, false, false, false, headerProperties);
 				glucoseChart.x = Math.round(chartX);
 				glucoseChart.y = Math.round(glucoseChartTopPadding);
 				glucoseChart.dataSource = chartData;

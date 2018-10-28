@@ -78,9 +78,11 @@ package ui.chart
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
 	
+	import utils.BgGraphBuilder;
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
+	import utils.MathHelper;
 	import utils.TimeSpan;
 	import utils.UniqueId;
 	
@@ -317,6 +319,7 @@ package ui.chart
 		private var predictionsLengthInMinutes:int = 60;
 		private var predictionsMainGlucoseDataPoints:Array = [];
 		private var predictionsScrollerGlucoseDataPoints:Array = [];
+		private var headerProperties:Object;
 		private var predictionsColor:uint = 0xEF00E7;
 		private var predictionsDelimiter:SpikeLine;
 		private var activeGlucoseDelimiter:SpikeLine;
@@ -333,6 +336,8 @@ package ui.chart
 		private var predictedMinimumBG:Number = Number.NaN;
 		private var predictedIOBBG:Number = Number.NaN;
 		private var predictedUAMBG:Number = Number.NaN;
+		private var predictedCOBBG:Number = Number.NaN;
+		private var lastCalibrationTimestamp:Number = 0;
 		private var predictionsPill:ChartTreatmentPill;
 		private var predictionsContainer:ScrollContainer;
 		private var predictionsCallout:Callout;
@@ -354,9 +359,22 @@ package ui.chart
 		private var predictedUAMBGPill:ChartTreatmentPill;
 		private var predictedIOBBGPill:ChartTreatmentPill;
 		private var predictedMinimumBGPill:ChartTreatmentPill;
+		private var predictionsLegendsContainer:LayoutGroup;
+		private var cobPredictLegendContainer:LayoutGroup;
+		private var cobPredictLegendLabel:Label;
+		private var cobPredictLegendColorQuad:Quad;
+		private var uamPredictLegendContainer:LayoutGroup;
+		private var uamPredictLegendLabel:Label;
+		private var uamPredictLegendColorQuad:Quad;
+		private var iobPredictLegendContainer:LayoutGroup;
+		private var iobPredictLegendLabel:Label;
+		private var iobPredictLegendColorQuad:Quad;
 		
-		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false)
+		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
+			//Header
+			this.headerProperties = headerProperties;
+			
 			//Algorithm
 			algorithmIOBCOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
 			
@@ -780,6 +798,7 @@ package ui.chart
 			var previousXCoordinate:Number = 0;
 			var previousYCoordinate:Number = 0;
 			var previousGlucoseMarker:GlucoseMarker;
+			var lastRealGlucoseMarker:GlucoseMarker;
 			
 			/**
 			 * Creation of the line component
@@ -887,7 +906,7 @@ package ui.chart
 								radius: glucoseMarkerRadius,
 								bgReading: glucoseReading,
 								glucose: currentGlucoseValue,
-								color: predictionsColor
+								color: glucoseReading.rawData
 							},
 							false,
 							true
@@ -918,8 +937,16 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
+					//Define new predictions set
+					var newPredictionSet:Boolean = isPrediction && previousGlucoseMarker != null && previousGlucoseMarker.bgReading.uniqueId.length == 3 && glucoseMarker.bgReading.uniqueId.length == 3 && previousGlucoseMarker.bgReading.uniqueId != glucoseMarker.bgReading.uniqueId;
+					
+					if (!isPrediction && i == realReadingsLength - 1)
+					{
+						lastRealGlucoseMarker = glucoseMarker;
+					}
+					
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.width / 2));
 					else
@@ -956,6 +983,25 @@ package ui.chart
 								previousColor = previousGlucoseMarker.color;
 						}	
 						
+						if (newPredictionSet)
+						{
+							//Add extra line to the beginning
+							if (lastRealGlucoseMarker != null)
+							{
+								line.moveTo(lastRealGlucoseMarker.x + (lastRealGlucoseMarker.width / 2), lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
+								line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
+							}
+							
+							//Add extra line to the end
+							if (previousGlucoseMarker != null)
+							{
+								var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
+								var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
+								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, previousGlucoseMarker.color, previousGlucoseMarker.color);
+							}
+						}
+						
 						if ((isNaN(previousColor) || isPrediction) && index != 0)
 						{
 							if (!isPrediction)
@@ -964,7 +1010,10 @@ package ui.chart
 							}
 							else
 							{
-								line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
+								if (previousGlucoseMarker.color == glucoseMarker.color && !newPredictionSet)
+								{
+									line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
+								}
 							}
 						}
 						else
@@ -980,7 +1029,7 @@ package ui.chart
 				}
 				
 				//Hide markers without sensor
-				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower()) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
+				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower() && !isPrediction) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
 					glucoseMarker.alpha = 0;
 			
 				//Set variables for next iteration
@@ -1011,7 +1060,7 @@ package ui.chart
 			}
 			
 			//Predictions line fix
-			if (glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
+			if (glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
 			{
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
@@ -1061,6 +1110,9 @@ package ui.chart
 			
 			if(chartType == MAIN_CHART && !isRaw)
 				mainChartYFactor = scaleYFactor;
+			
+			//Reporition prediction delimitter
+			reporsitionPredictionDelimitter();
 			
 			return chartContainer;
 		}
@@ -2599,6 +2651,7 @@ package ui.chart
 			var i:int; //common index for loops
 			var previousXCoordinate:Number = 0; //holder for x coordinate of the glucose value to be used by the following one
 			var previousGlucoseMarker:GlucoseMarker;
+			var lastRealGlucoseMarker:GlucoseMarker;
 			
 			/**
 			 * Creation and placement of the glucose values
@@ -2713,7 +2766,7 @@ package ui.chart
 									radius: glucoseMarkerRadius,
 									bgReading: glucoseReading,
 									glucose: currentGlucoseValue,
-									color: predictionsColor
+									color: glucoseReading.rawData
 								},
 								false,
 								true
@@ -2776,8 +2829,14 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
+					var newPredictionSet:Boolean = isPrediction && previousGlucoseMarker != null && previousGlucoseMarker.bgReading.uniqueId.length == 3 && glucoseMarker.bgReading.uniqueId.length == 3 && previousGlucoseMarker.bgReading.uniqueId != glucoseMarker.bgReading.uniqueId;
+					if (!isPrediction && i == realReadingsLength - 1)
+					{
+						lastRealGlucoseMarker = glucoseMarker;
+					}
+					
 					if(i == 0)
 						line.moveTo(glucoseMarker.x, glucoseMarker.y);
 					else
@@ -2814,6 +2873,25 @@ package ui.chart
 								previousColor = previousGlucoseMarker.color;
 						}
 						
+						if (newPredictionSet)
+						{
+							//Add extra line to the beginning
+							if (lastRealGlucoseMarker != null)
+							{
+								line.moveTo(lastRealGlucoseMarker.x + (lastRealGlucoseMarker.width / 2), lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
+								line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
+							}
+							
+							//Add extra line to the end
+							if (previousGlucoseMarker != null)
+							{
+								var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
+								var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
+								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, previousGlucoseMarker.color, previousGlucoseMarker.color);
+							}
+						}
+						
 						if ((isNaN(previousColor) || isPrediction) && index != 0)
 						{
 							if (!isPrediction)
@@ -2822,7 +2900,10 @@ package ui.chart
 							}
 							else
 							{
-								line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
+								if (previousGlucoseMarker.color == glucoseMarker.color && !newPredictionSet)
+								{
+									line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
+								}
 							}
 						}
 						else
@@ -2838,7 +2919,7 @@ package ui.chart
 				}
 				
 				//Hide markers without sensor
-				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower()) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
+				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower() && !isPrediction) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
 					glucoseMarker.alpha = 0;
 				
 				
@@ -2848,7 +2929,7 @@ package ui.chart
 			}
 			
 			//Predictions line fix
-			if (_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
+			if (_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
 			{
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
@@ -2910,167 +2991,9 @@ package ui.chart
 			
 			if(chartType == MAIN_CHART && !isRaw)
 				mainChartYFactor = scaleYFactor;
-		}
-		
-		private function drawLine(chartType:String):void 
-		{
-			if (!SystemUtil.isApplicationActive)
-				return;
 			
-			var line:SpikeLine = new SpikeLine();
-			line.touchable = false;
-			
-			if(chartType == MAIN_CHART)
-			{
-				if (mainChartLine != null) mainChartLine.removeFromParent(true);
-				mainChartLine = line;
-			}
-			else if (chartType == SCROLLER_CHART)
-			{
-				if (scrollerChartLine != null) scrollerChartLine.removeFromParent(true);
-				scrollerChartLine = line;
-			}
-			
-			//Define what chart needs line to be drawns
-			var sourceList:Array;
-			var realReadingsLength:int = 0;
-			var numberOfPredictiveReadings:int = 0;
-			
-			if(chartType == MAIN_CHART)
-			{
-				sourceList = mainChartGlucoseMarkersList;
-				if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && sourceList != null)
-				{
-					realReadingsLength = sourceList.length;
-					
-					var predictiveMainReadingsLength:int = predictionsMainGlucoseDataPoints.length;
-					if (predictiveMainReadingsLength > 0)
-					{
-						sourceList = sourceList.concat(predictionsMainGlucoseDataPoints);
-						numberOfPredictiveReadings = predictiveMainReadingsLength;
-					}
-				}
-			}
-			else if (chartType == SCROLLER_CHART)
-			{
-				sourceList = scrollChartGlucoseMarkersList;
-				if (predictionsEnabled && predictionsScrollerGlucoseDataPoints != null && sourceList != null)
-				{
-					realReadingsLength = sourceList.length;
-					
-					var predictiveScrollerReadingsLength:int = predictionsScrollerGlucoseDataPoints.length;
-					if (predictiveScrollerReadingsLength > 0)
-					{
-						sourceList = sourceList.concat(predictionsScrollerGlucoseDataPoints);
-						numberOfPredictiveReadings = predictiveScrollerReadingsLength;
-					}
-				}
-			}
-			
-			if (sourceList == null || sourceList.length == 0)
-				return;
-			
-			//Loop all markers, draw the line from their positions and also hide the markers
-			var previousLineX:Number;
-			var previousLineY:Number;
-			var previousGlucoseMarker:GlucoseMarker;
-			var dataLength:int = sourceList.length;
-			for (var i:int = 0; i < dataLength; i++) 
-			{
-				var isPrediction:Boolean = i >= realReadingsLength && predictionsEnabled;
-				var index:int = !isPrediction ? i : i - realReadingsLength;
-				
-				var glucoseMarker:GlucoseMarker = sourceList[i];
-				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !CGMBlueToothDevice.isFollower()))
-					continue;
-				
-				var glucoseDifference:Number = highestGlucoseValue - lowestGlucoseValue;
-				
-				if(i == 0)
-				{
-					line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.height/2));
-				}
-				else
-				{
-					var currentLineX:Number;
-					var currentLineY:Number;
-					
-					if(i < dataLength -1 || isPrediction)
-					{
-						currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
-						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
-					}
-					else if (i == dataLength -1)
-					{
-						currentLineX = glucoseMarker.x + (glucoseMarker.width);
-						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
-					}
-					
-					//Style
-					line.lineStyle(chartType == SCROLLER_CHART && glucoseLineThickness > 1 ? glucoseLineThickness / 2 : glucoseLineThickness, glucoseMarker.color, 1);
-					var currentColor:uint = glucoseMarker.color
-					var previousColor:uint;
-					
-					//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
-					if (previousGlucoseMarker != null && glucoseMarker != null)
-					{
-						var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
-						if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
-						{
-							currentColor = oldColor;
-							previousColor = oldColor;
-						}
-						else
-							previousColor = previousGlucoseMarker.color;
-					}	
-					
-					if ((isNaN(previousColor) || isPrediction) && index != 0)
-					{
-						if (!isPrediction)
-						{
-							line.lineTo(currentLineX, currentLineY);
-						}
-						else
-						{
-							line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
-						}
-					}
-					else
-					{
-						line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
-					}
-					
-					line.moveTo(currentLineX, currentLineY);
-					
-					previousLineX = currentLineX;
-					previousLineY = currentLineY;
-				}
-				//Hide glucose marker
-				glucoseMarker.alpha = 0;
-				previousGlucoseMarker = glucoseMarker;
-			}
-			
-			//Predictions line fix
-			if (glucoseMarker != null && _displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower()) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
-			{
-				//Add an extra line
-				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
-				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
-				line.moveTo(extraPredictionLineX, extraPredictionLineY);
-				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY);
-			}
-			
-			//Add line to display list
-			if(chartType == MAIN_CHART && mainChart != null)
-				mainChart.addChild(line);
-			else if(chartType == SCROLLER_CHART && scrollerChart != null)
-				scrollerChart.addChild(line);
-			
-			//Save line references for later use
-			if(chartType == MAIN_CHART && mainChartLineList != null)
-				mainChartLineList.push(line);
-			else if (chartType == SCROLLER_CHART && scrollerChartLineList != null)
-				scrollerChartLineList.push(line);
+			//Reporition prediction delimitter
+			reporsitionPredictionDelimitter();
 		}
 		
 		public function calculateDisplayLabels():void
@@ -3454,36 +3377,104 @@ package ui.chart
 		 */
 		private function fetchPredictions():Array
 		{
+			//Dispose previous header
+			disposePredictionsHeader();
+			
+			//Poperties
+			var maxNumberOfPredictions:Number = Math.floor(predictionsLengthInMinutes / 5);
 			var lastAvailableBgReading:BgReading = _dataSource[_dataSource.length - 1];
 			var now:Number = lastAvailableBgReading != null ? lastAvailableBgReading.timestamp : new Date().valueOf();
-			var finalPredictionsList:Array = [];
-			var unformattedPredictionsList:Array = [];
-			var predictionsLength:int;
-			var i:int;
 			var currentReadingValue:Number;
+			var readingTimestamp:Number;
+			var predictedCalculatedValue:Number;
+			var predictionsFound:Boolean = false;
+			var cobPredictionsEnabled:Boolean = false;
+			var iobPredictionsEnabled:Boolean = false;
+			var uamPredictionsEnabled:Boolean = false;
+			var numDifferentPredictionsDisplayed:uint = 0;
+			
+			var i:int;
 			predictedTimeUntilHigh = Number.NaN;
 			predictedTimeUntilLow = Number.NaN;
 			
-			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes);
+			//Colors
+			var mainPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_COLOR));
+			var cobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
+			var iobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
+			var uamPredictionsColor:uint = 0xC6C6C6;
 			
+			//Prediction's lists
+			var finalTotalPredictionsList:Array = [];
+			var finalIOBPredictionsList:Array = [];
+			var finalCOBPredictionsList:Array = [];
+			var finalUAMPredictionsList:Array = [];
+			var unformattedIOBPredictionsList:Array = [];
+			var unformattedCOBPredictionsList:Array = [];
+			var unformattedUAMPredictionsList:Array = [];
+			
+			//All Predictions
+			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes);
 			trace(ObjectUtil.toString(unformattedPredictions));
 			
-			if (unformattedPredictions != null && unformattedPredictions.COB != null)
+			//Update Useful Properties
+			if (unformattedPredictions != null)
 			{
-				unformattedPredictionsList = unformattedPredictions.COB;
-				currentReadingValue = unformattedPredictionsList.shift(); //We remove the first prediction because it's = to the latest bg reading so it's not useful to us.
-			}
-			else if (unformattedPredictions != null && unformattedPredictions.IOB != null)
-			{
-				unformattedPredictionsList = unformattedPredictions.IOB;
-				currentReadingValue = unformattedPredictionsList.shift(); //We remove the first prediction because it's = to the latest bg reading so it's not useful to us.
-			}
-			else
-			{
-				return finalPredictionsList;
+				predictedEventualBG = unformattedPredictions.eventualBG != null ? unformattedPredictions.eventualBG : Number.NaN;
+				predictedBGImpact = unformattedPredictions.bgImpact != null ? unformattedPredictions.bgImpact : Number.NaN;
+				predictedDeviation = unformattedPredictions.deviation != null ? unformattedPredictions.deviation : Number.NaN;
+				predictedCarbImpact = unformattedPredictions.carbImpact != null ? unformattedPredictions.carbImpact : Number.NaN;
+				predictedMinimumBG = unformattedPredictions.minGuardBG != null ? unformattedPredictions.minGuardBG : Number.NaN;
+				predictedCOBBG = unformattedPredictions.COBpredBG != null ? unformattedPredictions.COBpredBG : Number.NaN;
+				predictedIOBBG = unformattedPredictions.IOBpredBG != null ? unformattedPredictions.IOBpredBG : Number.NaN;
+				predictedUAMBG = unformattedPredictions.UAMpredBG != null ? unformattedPredictions.UAMpredBG : Number.NaN;
+				var currentIOB:Number = unformattedPredictions.IOBValue != null ? unformattedPredictions.IOBValue : Number.NaN;
+				var currentCOB:Number = unformattedPredictions.COBValue != null ? unformattedPredictions.COBValue : Number.NaN;
 			}
 			
-			//First check of glucose thresholds
+			var preferredPrediction:String = "";
+			
+			//COB Predictions
+			if (unformattedPredictions != null && unformattedPredictions.COB != null)
+			{
+				unformattedCOBPredictionsList = unformattedPredictions.COB;
+				currentReadingValue = unformattedCOBPredictionsList.shift(); //Remove first element
+				if (preferredPrediction == "" || new Date().valueOf() - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS) preferredPrediction = "COB";
+				predictionsFound = true;
+				cobPredictionsEnabled = true;
+				numDifferentPredictionsDisplayed++;
+			}
+			
+			//UAM Predictions
+			if (unformattedPredictions != null && unformattedPredictions.UAM != null)
+			{
+				unformattedUAMPredictionsList = unformattedPredictions.UAM;
+				currentReadingValue = unformattedUAMPredictionsList.shift(); //Remove first element
+				if (preferredPrediction == "") preferredPrediction = "UAM";
+				predictionsFound = true;
+				uamPredictionsEnabled = true;
+				numDifferentPredictionsDisplayed++;
+			}
+			
+			//IOB Predictions
+			if (unformattedPredictions != null && unformattedPredictions.IOB != null)
+			{
+				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
+				unformattedIOBPredictionsList = unformattedPredictions.IOB;
+				currentReadingValue = unformattedIOBPredictionsList.shift(); //Remove first element
+				if (preferredPrediction == "" || (!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 5) || new Date().valueOf() - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS || (currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 5)) preferredPrediction = "IOB";
+				predictionsFound = true;
+				iobPredictionsEnabled = true;
+				numDifferentPredictionsDisplayed++;
+			}
+			
+			//Validate
+			if (!predictionsFound)
+			{
+				//If no predictions are available return an empty array
+				return finalTotalPredictionsList;
+			}
+			
+			//First glucose thresholds check
 			if (currentReadingValue >= glucoseHigh)
 			{
 				predictedTimeUntilHigh = 0;
@@ -3493,18 +3484,113 @@ package ui.chart
 				predictedTimeUntilLow = 0;
 			}
 			
-			//trace(ObjectUtil.toString(unformattedPredictionsList));
-			predictionsLength =  unformattedPredictionsList.length;
-			for (i = 0; i < predictionsLength; i++) 
+			//Loop through COB predictions (priority #1)
+			var cobPredictionsLength:uint =  unformattedCOBPredictionsList.length;
+			for (i = 0; i < cobPredictionsLength; i++) 
 			{
-				var readingTimestamp:Number = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
-				var predictedCalculatedValue:Number = unformattedPredictionsList[i];
-				var predictionReading:BgReading = new BgReading
+				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+				predictedCalculatedValue = unformattedCOBPredictionsList[i];
+				var cobPredictionReading:BgReading = new BgReading
+				(
+					readingTimestamp, //timestamp
+					null, //sensor
+					null, //calibration
+					preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor, //raw data
+					Number.NaN, //filtered data
+					Number.NaN, //adge adjusted raw data
+					false, //calibration flag
+					predictedCalculatedValue, //calculated value
+					Number.NaN, //filtered calculated value
+					Number.NaN, //calculated value slope
+					Number.NaN, //a
+					Number.NaN, //b
+					Number.NaN, //c
+					Number.NaN, //ra
+					Number.NaN, //rb
+					Number.NaN, //rc
+					Number.NaN, //raw calculated
+					false, //hide slope
+					"", //noise
+					readingTimestamp, //last modified timestamp
+					"COB" //unique id
+				);
+				
+				//Check if high or low thresholds will be reached
+				if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+				{
+					predictedTimeUntilHigh = readingTimestamp - now;
+				}
+				
+				if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
+				{
+					predictedTimeUntilLow = readingTimestamp - now;
+				}
+				
+				//Add to prediction's list
+				finalCOBPredictionsList.push(cobPredictionReading);
+			}
+			
+			//Loop through UAM predictions (priority #2)
+			var uamPredictionsLength:uint =  unformattedUAMPredictionsList.length;
+			for (i = 0; i < uamPredictionsLength; i++) 
+			{
+				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+				predictedCalculatedValue = unformattedUAMPredictionsList[i];
+				var uamPredictionReading:BgReading = new BgReading
+				(
+					readingTimestamp, //timestamp
+					null, //sensor
+					null, //calibration
+					preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor, //raw data
+					Number.NaN, //filtered data
+					Number.NaN, //adge adjusted raw data
+					false, //calibration flag
+					predictedCalculatedValue, //calculated value
+					Number.NaN, //filtered calculated value
+					Number.NaN, //calculated value slope
+					Number.NaN, //a
+					Number.NaN, //b
+					Number.NaN, //c
+					Number.NaN, //ra
+					Number.NaN, //rb
+					Number.NaN, //rc
+					Number.NaN, //raw calculated
+					false, //hide slope
+					"", //noise
+					readingTimestamp, //last modified timestamp
+					"UAM" //unique id
+				);
+				
+				//Check if high or low thresholds will be reached	
+				if (finalCOBPredictionsList.length == 0)
+				{
+					if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+					{
+						predictedTimeUntilHigh = readingTimestamp - now;
+					}
+					
+					if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
+					{
+						predictedTimeUntilLow = readingTimestamp - now;
+					}
+				}
+				
+				//Add to prediction's list
+				finalUAMPredictionsList.push(uamPredictionReading);
+			}
+			
+			//Loop through IOB predictions (priority #3)
+			var iobPredictionsLength:uint =  unformattedIOBPredictionsList.length;
+			for (i = 0; i < iobPredictionsLength; i++) 
+			{
+				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+				predictedCalculatedValue = unformattedIOBPredictionsList[i];
+				var iobPredictionReading:BgReading = new BgReading
 					(
 						readingTimestamp, //timestamp
-						Sensor.getActiveSensor(), //sensor
-						Calibration.last(), //calibration
-						Number.NaN, //raw data
+						null, //sensor
+						null, //calibration
+						preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor, //raw data
 						Number.NaN, //filtered data
 						Number.NaN, //adge adjusted raw data
 						false, //calibration flag
@@ -3521,38 +3607,193 @@ package ui.chart
 						false, //hide slope
 						"", //noise
 						readingTimestamp, //last modified timestamp
-						UniqueId.createEventId() //unique id
+						"IOB" //unique id
 					)
 				
-				finalPredictionsList.push(predictionReading);
-				
 				//Check if high or low thresholds will be reached
-				if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+				if (finalCOBPredictionsList.length == 0 && finalUAMPredictionsList.length == 0)
 				{
-					predictedTimeUntilHigh = readingTimestamp - now;
+					if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+					{
+						predictedTimeUntilHigh = readingTimestamp - now;
+					}
+					
+					if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
+					{
+						predictedTimeUntilLow = readingTimestamp - now;
+					}
 				}
 				
-				if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
-				{
-					predictedTimeUntilLow = readingTimestamp - now;
-				}
+				//Add to prediction's list
+				finalIOBPredictionsList.push(iobPredictionReading);
+			}
+			
+			//Truncate predictions if needed
+			if (finalCOBPredictionsList.length > maxNumberOfPredictions)
+			{
+				finalCOBPredictionsList = finalCOBPredictionsList.slice(0, maxNumberOfPredictions);
+			}
+			
+			if (finalIOBPredictionsList.length > maxNumberOfPredictions)
+			{
+				finalIOBPredictionsList = finalIOBPredictionsList.slice(0, maxNumberOfPredictions);
+			}
+			
+			if (finalUAMPredictionsList.length > maxNumberOfPredictions)
+			{
+				finalUAMPredictionsList = finalUAMPredictionsList.slice(0, maxNumberOfPredictions);
 			}
 			
 			//Update predictions pill
 			predictionsPill.isPredictive = true;
-			predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalPredictionsList[finalPredictionsList.length - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalPredictionsList[finalPredictionsList.length - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+			if (preferredPrediction == "COB")
+			{
+				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalCOBPredictionsList[finalCOBPredictionsList.length - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalCOBPredictionsList[finalCOBPredictionsList.length - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+			}
+			else if (preferredPrediction == "UAM")
+			{
+				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalUAMPredictionsList[finalUAMPredictionsList.length - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalUAMPredictionsList[finalUAMPredictionsList.length - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+			}
+			else
+			{
+				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalIOBPredictionsList[finalIOBPredictionsList.length - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalIOBPredictionsList[finalIOBPredictionsList.length - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+			}
 			repositionTreatmentPills();
 			
-			//Update Useful Properties
-			predictedEventualBG = unformattedPredictions.eventualBG != null ? unformattedPredictions.eventualBG : Number.NaN;
-			predictedBGImpact = unformattedPredictions.bgImpact != null ? unformattedPredictions.bgImpact : Number.NaN;
-			predictedDeviation = unformattedPredictions.deviation != null ? unformattedPredictions.deviation : Number.NaN;
-			predictedCarbImpact = unformattedPredictions.carbImpact != null ? unformattedPredictions.carbImpact : Number.NaN;
-			predictedMinimumBG = unformattedPredictions.minGuardBG != null ? unformattedPredictions.minGuardBG : Number.NaN;
-			predictedIOBBG = unformattedPredictions.IOBpredBG != null ? unformattedPredictions.IOBpredBG : Number.NaN;
-			predictedUAMBG = unformattedPredictions.UAMpredBG != null ? unformattedPredictions.UAMpredBG : Number.NaN;
+			//Update header
+			if (headerProperties != null)
+			{
+				predictionsLegendsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 0);
+				
+				if (cobPredictionsEnabled)
+				{
+					var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
+					cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
+					cobPredictLegendLabel.validate();
+					cobPredictLegendColorQuad = new Quad(20, cobPredictLegendLabel.height * 0.65, cobColor);
+					cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
+					cobPredictLegendContainer.addChild(cobPredictLegendLabel);
+					if (preferredPrediction == "COB")
+						predictionsLegendsContainer.addChildAt(cobPredictLegendContainer, 0);
+					else
+						predictionsLegendsContainer.addChild(cobPredictLegendContainer);
+				}
+				
+				if (uamPredictionsEnabled)
+				{
+					var uamColor:uint = preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor;
+					uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+					uamPredictLegendLabel = LayoutFactory.createLabel("UAM", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
+					uamPredictLegendLabel.validate();
+					uamPredictLegendColorQuad = new Quad(20, uamPredictLegendLabel.height * 0.65, uamColor);
+					uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
+					uamPredictLegendContainer.addChild(uamPredictLegendLabel);
+					if (preferredPrediction == "UAM")
+						predictionsLegendsContainer.addChildAt(uamPredictLegendContainer, 0);
+					else
+						predictionsLegendsContainer.addChild(uamPredictLegendContainer);
+				}
+				
+				if (iobPredictionsEnabled)
+				{
+					var iobColor:uint = preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor;
+					iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+					iobPredictLegendLabel = LayoutFactory.createLabel("IOB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
+					iobPredictLegendLabel.validate();
+					iobPredictLegendColorQuad = new Quad(20, iobPredictLegendLabel.height * 0.65, iobColor);
+					iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
+					iobPredictLegendContainer.addChild(iobPredictLegendLabel);
+					if (preferredPrediction == "IOB")
+						predictionsLegendsContainer.addChildAt(iobPredictLegendContainer, 0);
+					else
+						predictionsLegendsContainer.addChild(iobPredictLegendContainer);
+				}
+				
+				headerProperties.centerItems = new <DisplayObject>[
+					predictionsLegendsContainer
+				];
+			}
 			
-			return finalPredictionsList;
+			//Join all predictions
+			finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+			finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+			finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+			
+			return finalTotalPredictionsList;
+		}
+		
+		private function disposePredictionsHeader():void
+		{
+			if (cobPredictLegendLabel != null)
+			{
+				cobPredictLegendLabel.removeFromParent();
+				cobPredictLegendLabel.dispose();
+				cobPredictLegendLabel = null;
+			}
+			
+			if (cobPredictLegendColorQuad != null)
+			{
+				cobPredictLegendColorQuad.removeFromParent();
+				cobPredictLegendColorQuad.dispose();
+				cobPredictLegendColorQuad = null;
+			}
+			
+			if (cobPredictLegendContainer != null)
+			{
+				cobPredictLegendContainer.removeFromParent();
+				cobPredictLegendContainer.dispose();
+				cobPredictLegendContainer = null;
+			}
+			
+			if (uamPredictLegendLabel != null)
+			{
+				uamPredictLegendLabel.removeFromParent();
+				uamPredictLegendLabel.dispose();
+				uamPredictLegendLabel = null;
+			}
+			
+			if (uamPredictLegendColorQuad != null)
+			{
+				uamPredictLegendColorQuad.removeFromParent();
+				uamPredictLegendColorQuad.dispose();
+				uamPredictLegendColorQuad = null;
+			}
+			
+			if (uamPredictLegendContainer != null)
+			{
+				uamPredictLegendContainer.removeFromParent();
+				uamPredictLegendContainer.dispose();
+				uamPredictLegendContainer = null;
+			}
+			
+			if (iobPredictLegendLabel != null)
+			{
+				iobPredictLegendLabel.removeFromParent();
+				iobPredictLegendLabel.dispose();
+				iobPredictLegendLabel = null;
+			}
+			
+			if (iobPredictLegendColorQuad != null)
+			{
+				iobPredictLegendColorQuad.removeFromParent();
+				iobPredictLegendColorQuad.dispose();
+				iobPredictLegendColorQuad = null;
+			}
+			
+			if (iobPredictLegendContainer != null)
+			{
+				iobPredictLegendContainer.removeFromParent();
+				iobPredictLegendContainer.dispose();
+				iobPredictLegendContainer = null;
+			}
+			
+			if (predictionsLegendsContainer != null)
+			{
+				predictionsLegendsContainer.removeFromParent();
+				predictionsLegendsContainer.dispose();
+				predictionsLegendsContainer = null;
+			}
 		}
 		
 		private function redrawPredictions():void
@@ -3581,6 +3822,45 @@ package ui.chart
 			if (predictionsList == null || predictionsList.length == 0)
 			{
 				//There's no predictions available
+				return;
+			}
+			
+			//Check if lowest or highest glucose value have changed
+			var predictionsSorted:Array = predictionsList.concat();
+			predictionsSorted.sort(Array.NUMERIC);
+			
+			var predictionLowestValue:Number = predictionsSorted[0];
+			var predictionHighestValue:Number = predictionsSorted[predictionsSorted.length - 1];
+			
+			if (predictionLowestValue < lowestGlucoseValue || predictionHighestValue > highestGlucoseValue)
+			{
+				//Dispose all predictions
+				disposePredictions();
+				
+				//Redraw main and scroller charts
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0);
+				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0);
+				
+				//Redraw raw markers if needed
+				if (displayRaw)
+				{
+					hideRaw();
+					showRaw();
+				}
+				
+				//Adjust Main Chart and Picker Position
+				if (displayLatestBGValue)
+				{
+					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+				}
+				
+				//Reposition treatments
+				manageTreatments();
+				
+				//Redraw timeline
+				drawTimeline();
+				
 				return;
 			}
 			
@@ -3695,7 +3975,7 @@ package ui.chart
 								radius: glucoseMarkerRadius,
 								bgReading: glucoseReading,
 								glucose: currentGlucoseValue,
-								color: predictionsColor
+								color: glucoseReading.rawData
 							},
 							false,
 							true
@@ -3724,6 +4004,8 @@ package ui.chart
 						predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
 					}
 				}
+				
+				reporsitionPredictionDelimitter();
 			}
 			
 			if(_displayLine)
@@ -3734,6 +4016,23 @@ package ui.chart
 				//Draw Lines
 				drawLine(MAIN_CHART);
 				drawLine(SCROLLER_CHART);
+			}
+		}
+		
+		private function reporsitionPredictionDelimitter():void
+		{
+			if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0)
+			{
+				if (predictionsDelimiter == null)
+				{
+					predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
+					predictionsDelimiter.y = 0 - predictionsDelimiter.width;
+					predictionsDelimiter.touchable = false;
+					yAxis.addChild(predictionsDelimiter);
+				}
+				
+				predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
+				activeGlucoseDelimiter = predictionsDelimiter;
 			}
 		}
 		
@@ -3926,7 +4225,7 @@ package ui.chart
 				{
 					if (glucoseVelocityPill != null) glucoseVelocityPill.dispose();
 					glucoseVelocityPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_velocity'));
-					glucoseVelocityPill.setValue(String(glucoseVelocity));
+					glucoseVelocityPill.setValue(MathHelper.formatNumberToStringWithPrefix(glucoseVelocity));
 					glucoseVelocityPill.touchable = false;
 					predictionsContainer.addChild(glucoseVelocityPill);
 				}
@@ -3950,7 +4249,7 @@ package ui.chart
 						
 						if (predictedTreatmentsEffectPill != null) predictedTreatmentsEffectPill.dispose();
 						predictedTreatmentsEffectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_effect'));
-						predictedTreatmentsEffectPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(effect)) : String(Math.round(BgReading.mgdlToMmol(effect * 10)) / 10));
+						predictedTreatmentsEffectPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(effect)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(effect * 10)) / 10));
 						predictedTreatmentsEffectPill.touchable = false;
 						predictionsContainer.addChild(predictedTreatmentsEffectPill);
 					}
@@ -4001,7 +4300,7 @@ package ui.chart
 				{
 					if (predictedCarbImpactPill != null) predictedCarbImpactPill.dispose();
 					predictedCarbImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_carb_impact'));
-					predictedCarbImpactPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedCarbImpact)) : String(Math.round(BgReading.mgdlToMmol(predictedCarbImpact * 100)) / 100));
+					predictedCarbImpactPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(predictedCarbImpact)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(predictedCarbImpact * 100)) / 100));
 					predictedCarbImpactPill.touchable = false;
 					predictionsContainer.addChild(predictedCarbImpactPill);
 				}
@@ -4011,7 +4310,7 @@ package ui.chart
 				{
 					if (predictedBgImpactPill != null) predictedBgImpactPill.dispose();
 					predictedBgImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_impact'));
-					predictedBgImpactPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedBGImpact)) : String(Math.round(BgReading.mgdlToMmol(predictedBGImpact * 100)) / 100));
+					predictedBgImpactPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(predictedBGImpact)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(predictedBGImpact * 100)) / 100));
 					predictedBgImpactPill.touchable = false;
 					predictionsContainer.addChild(predictedBgImpactPill);
 				}
@@ -4021,7 +4320,7 @@ package ui.chart
 				{
 					if (predictedDeviationPill != null) predictedDeviationPill.dispose();
 					predictedDeviationPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_deviation'));
-					predictedDeviationPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedDeviation)) : String(Math.round(BgReading.mgdlToMmol(predictedDeviation * 100)) / 100));
+					predictedDeviationPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(predictedDeviation)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(predictedDeviation * 100)) / 100));
 					predictedDeviationPill.touchable = false;
 					predictionsContainer.addChild(predictedDeviationPill);
 				}
@@ -4172,6 +4471,7 @@ package ui.chart
 			
 			//Dispose all predictions
 			disposePredictions();
+			disposePredictionsHeader();
 			
 			//Redraw main and scroller chart
 			if (!predictionsEnabled)
@@ -4499,6 +4799,195 @@ package ui.chart
 				disposeLine(MAIN_CHART);
 				disposeLine(SCROLLER_CHART);
 			}
+		}
+		
+		private function drawLine(chartType:String):void 
+		{
+			if (!SystemUtil.isApplicationActive)
+				return;
+			
+			var line:SpikeLine = new SpikeLine();
+			line.touchable = false;
+			
+			if(chartType == MAIN_CHART)
+			{
+				if (mainChartLine != null) mainChartLine.removeFromParent(true);
+				mainChartLine = line;
+			}
+			else if (chartType == SCROLLER_CHART)
+			{
+				if (scrollerChartLine != null) scrollerChartLine.removeFromParent(true);
+				scrollerChartLine = line;
+			}
+			
+			//Define what chart needs line to be drawns
+			var sourceList:Array;
+			var realReadingsLength:int = 0;
+			var numberOfPredictiveReadings:int = 0;
+			
+			if(chartType == MAIN_CHART)
+			{
+				sourceList = mainChartGlucoseMarkersList;
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && sourceList != null)
+				{
+					realReadingsLength = sourceList.length;
+					
+					var predictiveMainReadingsLength:int = predictionsMainGlucoseDataPoints.length;
+					if (predictiveMainReadingsLength > 0)
+					{
+						sourceList = sourceList.concat(predictionsMainGlucoseDataPoints);
+						numberOfPredictiveReadings = predictiveMainReadingsLength;
+					}
+				}
+			}
+			else if (chartType == SCROLLER_CHART)
+			{
+				sourceList = scrollChartGlucoseMarkersList;
+				if (predictionsEnabled && predictionsScrollerGlucoseDataPoints != null && sourceList != null)
+				{
+					realReadingsLength = sourceList.length;
+					
+					var predictiveScrollerReadingsLength:int = predictionsScrollerGlucoseDataPoints.length;
+					if (predictiveScrollerReadingsLength > 0)
+					{
+						sourceList = sourceList.concat(predictionsScrollerGlucoseDataPoints);
+						numberOfPredictiveReadings = predictiveScrollerReadingsLength;
+					}
+				}
+			}
+			
+			if (sourceList == null || sourceList.length == 0)
+				return;
+			
+			//Loop all markers, draw the line from their positions and also hide the markers
+			var previousLineX:Number;
+			var previousLineY:Number;
+			var previousGlucoseMarker:GlucoseMarker;
+			var lastRealGlucoseMarker:GlucoseMarker;
+			var dataLength:int = sourceList.length;
+			for (var i:int = 0; i < dataLength; i++) 
+			{
+				var isPrediction:Boolean = i >= realReadingsLength && predictionsEnabled;
+				var index:int = !isPrediction ? i : i - realReadingsLength;
+				
+				var glucoseMarker:GlucoseMarker = sourceList[i];
+				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !CGMBlueToothDevice.isFollower() && !isPrediction))
+					continue;
+				
+				var newPredictionSet:Boolean = isPrediction && previousGlucoseMarker != null && previousGlucoseMarker.bgReading.uniqueId.length == 3 && glucoseMarker.bgReading.uniqueId.length == 3 && previousGlucoseMarker.bgReading.uniqueId != glucoseMarker.bgReading.uniqueId;
+				
+				if (!isPrediction && i == realReadingsLength - 1)
+				{
+					lastRealGlucoseMarker = glucoseMarker;
+				}
+				
+				if(i == 0)
+				{
+					line.moveTo(glucoseMarker.x, glucoseMarker.y + (glucoseMarker.height/2));
+				}
+				else
+				{
+					var currentLineX:Number;
+					var currentLineY:Number;
+					
+					if(i < dataLength -1 || isPrediction)
+					{
+						currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
+						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
+					}
+					else if (i == dataLength -1)
+					{
+						currentLineX = glucoseMarker.x + (glucoseMarker.width);
+						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
+					}
+					
+					//Style
+					line.lineStyle(chartType == SCROLLER_CHART && glucoseLineThickness > 1 ? glucoseLineThickness / 2 : glucoseLineThickness, glucoseMarker.color, 1);
+					var currentColor:uint = glucoseMarker.color
+					var previousColor:uint;
+					
+					//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
+					if (previousGlucoseMarker != null && glucoseMarker != null)
+					{
+						var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
+						if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
+						{
+							currentColor = oldColor;
+							previousColor = oldColor;
+						}
+						else
+							previousColor = previousGlucoseMarker.color;
+					}
+					
+					if (newPredictionSet)
+					{
+						//Add extra line to the beginning
+						if (lastRealGlucoseMarker != null)
+						{
+							line.moveTo(lastRealGlucoseMarker.x + (lastRealGlucoseMarker.width / 2), lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
+							line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
+						}
+						
+						//Add extra line to the end
+						if (previousGlucoseMarker != null)
+						{
+							var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
+							var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
+							line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+							line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, previousGlucoseMarker.color, previousGlucoseMarker.color);
+						}
+					}
+					
+					if ((isNaN(previousColor) || isPrediction) && index != 0)
+					{
+						if (!isPrediction)
+						{
+							line.lineTo(currentLineX, currentLineY);
+						}
+						else
+						{
+							if (previousGlucoseMarker.color == glucoseMarker.color && !newPredictionSet)
+							{
+								line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
+							}
+						}
+					}
+					else
+					{
+						line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+					}
+					
+					line.moveTo(currentLineX, currentLineY);
+					
+					previousLineX = currentLineX;
+					previousLineY = currentLineY;
+				}
+				//Hide glucose marker
+				glucoseMarker.alpha = 0;
+				previousGlucoseMarker = glucoseMarker;
+			}
+			
+			//Predictions line fix
+			if (glucoseMarker != null && _displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
+			{
+				//Add an extra line
+				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
+				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
+				line.moveTo(extraPredictionLineX, extraPredictionLineY);
+				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY);
+			}
+			
+			//Add line to display list
+			if(chartType == MAIN_CHART && mainChart != null)
+				mainChart.addChild(line);
+			else if(chartType == SCROLLER_CHART && scrollerChart != null)
+				scrollerChart.addChild(line);
+			
+			//Save line references for later use
+			if(chartType == MAIN_CHART && mainChartLineList != null)
+				mainChartLineList.push(line);
+			else if (chartType == SCROLLER_CHART && scrollerChartLineList != null)
+				scrollerChartLineList.push(line);
 		}
 		
 		private function disposeLine(chartType:String):void
@@ -5800,6 +6289,7 @@ package ui.chart
 			//Predictions
 			disposePredictions();
 			disposePredictionsPills();
+			disposePredictionsHeader();
 			
 			//Treatments
 			if (deleteBtn != null)

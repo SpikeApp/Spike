@@ -10,6 +10,7 @@ package model
 	
 	import ui.chart.GlucoseChart;
 	
+	import utils.BgGraphBuilder;
 	import utils.TimeSpan;
 
 	public class Forecast
@@ -369,7 +370,7 @@ package model
 				else { ZTpredBGs.pop(); }
 			}*/
 			
-			predBGs.ZT = ZTpredBGs;
+			//predBGs.ZT = ZTpredBGs;
 			lastZTpredBG = round(ZTpredBGs[ZTpredBGs.length-1]);
 			
 			if (meal_data.cob > 0) 
@@ -608,6 +609,7 @@ package model
 			predBGs.deviation = deviation;
 			predBGs.eventualBG = eventualBG;
 			predBGs.minGuardBG = minGuardBG;
+			predBGs.COBpredBG = COBpredBG;
 			predBGs.IOBpredBG = IOBpredBG;
 			predBGs.UAMpredBG = UAMpredBG;
 			predBGs.COBValue = meal_data.cob;
@@ -617,6 +619,107 @@ package model
 			predBGs.naiveInsulinReq = naiveInsulinReq;
 			
 			return predBGs;
+		}
+		
+		public static function getLastPredictiveBG(duration:Number = Number.NaN):Number
+		{
+			var finalPrediction:Number =  Number.NaN;
+			var predictionsDuration:Number = isNaN(duration) ? getCurrentPredictionsDuration() : duration;
+			var predictionData:Object = predictBGs(predictionsDuration);
+			if (predictionData == null)
+			{
+				return finalPrediction;
+			}
+			
+			var maxNumberOfPredictions:Number = Math.floor(predictionsDuration / 5);
+			var	predictedIOBBG:Number = predictionData.IOBpredBG != null ? predictionData.IOBpredBG : Number.NaN;
+			var	predictedUAMBG:Number = predictionData.UAMpredBG != null ? predictionData.UAMpredBG : Number.NaN;
+			var currentIOB:Number = predictionData.IOBValue != null ? predictionData.IOBValue : Number.NaN;
+			var currentCOB:Number = predictionData.COBValue != null ? predictionData.COBValue : Number.NaN;
+			var predictionsFound:Boolean = false;
+			var preferredPrediction:String = "";
+			
+			//COB Predictions
+			if (predictionData.COB != null)
+			{
+				predictionData.COB.shift();
+				
+				if (predictionData.COB.length > maxNumberOfPredictions)
+				{
+					predictionData.COB = predictionData.COB.slice(0, maxNumberOfPredictions);
+				}
+				
+				if (preferredPrediction == "") 
+				{
+					preferredPrediction = "COB";
+				}
+				
+				predictionsFound = true;
+			}
+			
+			//UAM Predictions
+			if (predictionData.UAM != null)
+			{
+				predictionData.UAM.shift();
+				
+				if (predictionData.UAM.length > maxNumberOfPredictions)
+				{
+					predictionData.UAM = predictionData.UAM.slice(0, maxNumberOfPredictions);
+				}
+				
+				if (preferredPrediction == "") 
+				{
+					preferredPrediction = "UAM";
+				}
+				
+				predictionsFound = true;
+			}
+			
+			//IOB Predictions
+			if (predictionData.IOB != null)
+			{
+				predictionData.IOB.shift();
+				
+				if (predictionData.IOB.length > maxNumberOfPredictions)
+				{
+					predictionData.IOB = predictionData.IOB.slice(0, maxNumberOfPredictions);
+				}
+				
+				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
+				
+				if (preferredPrediction == "" || 
+					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 5) || 
+					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 5)
+				) 
+				{
+					preferredPrediction = "IOB";
+				}
+				
+				predictionsFound = true;
+			}
+			
+			//Validate
+			if (!predictionsFound)
+			{
+				//If no predictions are available return an empty array
+				return finalPrediction;
+			}
+			
+			//Check which prediction to return
+			if (preferredPrediction == "COB")
+			{
+				finalPrediction = predictionData.COB[predictionData.COB.length - 1];
+			}
+			else if (preferredPrediction == "UAM")
+			{
+				finalPrediction = predictionData.UAM[predictionData.UAM.length - 1];
+			}
+			else if (preferredPrediction == "IOB")
+			{
+				finalPrediction = predictionData.IOB[predictionData.IOB.length - 1];
+			}
+			
+			return finalPrediction;
 		}
 		
 		// Rounds value to 'digits' decimal places

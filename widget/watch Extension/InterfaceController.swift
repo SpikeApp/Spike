@@ -133,7 +133,7 @@ class InterfaceController: WKInterfaceController
     {
         // This method is called when watch view controller is about to be visible to user
         self.vlabel.setTextColor(UIColor.gray)
-        self.vlabel.setText("0")
+        self.vlabel.setText("")
         super.willActivate()
         updateData()
     }

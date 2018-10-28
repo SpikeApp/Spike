@@ -295,22 +295,22 @@ package network.httpserver.API
 										var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
 										if (!isNaN(predictionsLengthInMinutes))
 										{
-											var predictionsBGs:Object = Forecast.predictBGs(predictionsLengthInMinutes);
-											var predictionsList:Array;
-											if (predictionsBGs != null && predictionsBGs.COB != null)
-											{
-												predictionsList = predictionsBGs.COB;
-											}
-											else if (predictionsBGs != null && predictionsBGs.IOB != null)
-											{
-												predictionsList = predictionsBGs.IOB;
-											}
-											
-											if (predictionsList != null)
+											var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+											if (isNaN(currentPrediction))
 											{
 												readingObject.predictions_duration = String(predictionsLengthInMinutes);
-												readingObject.predictions_outcome = readingObject.unit == "mgdl" ? String(Math.round(predictionsList[predictionsList.length - 1])) : String(Math.round(BgReading.mgdlToMmol(predictionsList[predictionsList.length - 1] * 10)) / 10);
+												readingObject.predictions_outcome = readingObject.unit == "mgdl" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10);
 											}
+											else
+											{
+												readingObject.predictions_duration = String(predictionsLengthInMinutes);
+												readingObject.predictions_outcome = "N/A";
+											}
+										}
+										else
+										{
+											readingObject.predictions_duration = "";
+											readingObject.predictions_outcome = "N/A";
 										}
 										
 										//Velocity
