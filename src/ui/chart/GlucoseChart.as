@@ -3414,7 +3414,7 @@ package ui.chart
 			
 			//All Predictions
 			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes);
-			trace(ObjectUtil.toString(unformattedPredictions));
+			//trace(ObjectUtil.toString(unformattedPredictions));
 			
 			//Update Useful Properties
 			if (unformattedPredictions != null)
@@ -3827,10 +3827,10 @@ package ui.chart
 			
 			//Check if lowest or highest glucose value have changed
 			var predictionsSorted:Array = predictionsList.concat();
-			predictionsSorted.sort(Array.NUMERIC);
+			predictionsSorted.sortOn(["calculatedValue"], Array.NUMERIC);
 			
-			var predictionLowestValue:Number = predictionsSorted[0];
-			var predictionHighestValue:Number = predictionsSorted[predictionsSorted.length - 1];
+			var predictionLowestValue:Number = predictionsSorted[0].calculatedValue;
+			var predictionHighestValue:Number = predictionsSorted[predictionsSorted.length - 1].calculatedValue;
 			
 			if (predictionLowestValue < lowestGlucoseValue || predictionHighestValue > highestGlucoseValue)
 			{
@@ -4021,7 +4021,7 @@ package ui.chart
 		
 		private function reporsitionPredictionDelimitter():void
 		{
-			if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0)
+			if (predictionsEnabled && yAxis != null && predictionsMainGlucoseDataPoints.length > 0)
 			{
 				if (predictionsDelimiter == null)
 				{

@@ -296,7 +296,7 @@ package network.httpserver.API
 										if (!isNaN(predictionsLengthInMinutes))
 										{
 											var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
-											if (isNaN(currentPrediction))
+											if (!isNaN(currentPrediction))
 											{
 												readingObject.predictions_duration = String(predictionsLengthInMinutes);
 												readingObject.predictions_outcome = readingObject.unit == "mgdl" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10);
