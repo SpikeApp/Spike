@@ -2565,6 +2565,18 @@ package ui.chart
 			if (displayCOBEnabled)
 				calculateTotalCOB(timelineTimestamp);
 			
+			//Timeline
+			if (timelineActive && timelineContainer != null)
+				timelineContainer.x = mainChart.x;
+			
+			//Treatments
+			if (treatmentsActive && treatmentsContainer != null)
+				treatmentsContainer.x = mainChart.x;
+			
+			//Raw
+			if (displayRaw && rawDataContainer != null)
+				rawDataContainer.x = mainChart.x;
+			
 			return true;
 		}
 		
@@ -3675,7 +3687,7 @@ package ui.chart
 				{
 					var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
 					cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 || currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8 * userAxisFontMultiplier, true);
+					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 || currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
 					cobPredictLegendLabel.validate();
 					cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.65, cobPredictLegendLabel.height * 0.65, cobColor);
 					cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
@@ -3690,7 +3702,7 @@ package ui.chart
 				{
 					var uamColor:uint = preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor;
 					uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					uamPredictLegendLabel = LayoutFactory.createLabel("UEG", HorizontalAlign.LEFT, VerticalAlign.TOP, 8 * userAxisFontMultiplier, true);
+					uamPredictLegendLabel = LayoutFactory.createLabel("UEG", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
 					uamPredictLegendLabel.validate();
 					uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.65, uamPredictLegendLabel.height * 0.65, uamColor);
 					uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
@@ -3705,7 +3717,7 @@ package ui.chart
 				{
 					var iobColor:uint = preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor;
 					iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					iobPredictLegendLabel = LayoutFactory.createLabel("IOB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8 * userAxisFontMultiplier, true);
+					iobPredictLegendLabel = LayoutFactory.createLabel("IOB", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
 					iobPredictLegendLabel.validate();
 					iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.65, iobPredictLegendLabel.height * 0.65, iobColor);
 					iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
@@ -3880,6 +3892,18 @@ package ui.chart
 				
 				//Reposition treatments
 				manageTreatments();
+				
+				//Timeline
+				if (timelineActive && timelineContainer != null)
+					timelineContainer.x = mainChart.x;
+				
+				//Treatments
+				if (treatmentsActive && treatmentsContainer != null)
+					treatmentsContainer.x = mainChart.x;
+				
+				//Raw
+				if (displayRaw && rawDataContainer != null)
+					rawDataContainer.x = mainChart.x;
 				
 				return;
 			}
@@ -4069,6 +4093,18 @@ package ui.chart
 					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
 					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 				}
+				
+				//Timeline
+				if (timelineActive && timelineContainer != null)
+					timelineContainer.x = mainChart.x;
+				
+				//Treatments
+				if (treatmentsActive && treatmentsContainer != null)
+					treatmentsContainer.x = mainChart.x;
+				
+				//Raw
+				if (displayRaw && rawDataContainer != null)
+					rawDataContainer.x = mainChart.x;
 			}
 		}
 		
@@ -4440,6 +4476,18 @@ package ui.chart
 				
 				//Reposition treatments
 				manageTreatments();
+				
+				//Timeline
+				if (timelineActive && timelineContainer != null)
+					timelineContainer.x = mainChart.x;
+				
+				//Treatments
+				if (treatmentsActive && treatmentsContainer != null)
+					treatmentsContainer.x = mainChart.x;
+				
+				//Raw
+				if (displayRaw && rawDataContainer != null)
+					rawDataContainer.x = mainChart.x;
 			}
 		}
 		
@@ -4588,6 +4636,18 @@ package ui.chart
 			
 			//Reposition treatments
 			manageTreatments();
+			
+			//Timeline
+			if (timelineActive && timelineContainer != null)
+				timelineContainer.x = mainChart.x;
+			
+			//Treatments
+			if (treatmentsActive && treatmentsContainer != null)
+				treatmentsContainer.x = mainChart.x;
+			
+			//Raw
+			if (displayRaw && rawDataContainer != null)
+				rawDataContainer.x = mainChart.x;
 		}
 		
 		private function disposePredictionsPills():void
