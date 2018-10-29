@@ -2,10 +2,12 @@ package model
 {
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
+	import database.Calibration;
 	import database.CommonSettings;
 	
 	import treatments.Profile;
 	import treatments.ProfileManager;
+	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
 	import ui.chart.GlucoseChart;
@@ -23,7 +25,7 @@ package model
 		/**
 		 * Glucose Predictions
 		 */
-		public static function predictBGs(minutes:uint, ignoreIOBCOB:Boolean = false):Object
+		public static function predictBGs(minutes:uint, forceNewIOBCOB:Boolean = false, ignoreIOBCOB:Boolean = false):Object
 		{
 			var glucose_status:Object = getLastGlucose();
 			if (!glucose_status.is_valid)
@@ -34,12 +36,10 @@ package model
 			
 			//Define common variables
 			var five_min_blocks:Number = Math.floor(minutes / 5);
-			var now:Number = new Date().valueOf();
+			var currentTime:Number = new Date().valueOf();
+			var now:Number = currentTime - glucose_status.date < TimeSpan.TIME_16_MINUTES  && !forceNewIOBCOB ? glucose_status.date : currentTime;
 			var i:int;
 			var status:String = "";
-			
-			var bgTime:Number = glucose_status.date;
-			var minAgo:Number = round( (now - bgTime) / TimeSpan.TIME_1_MINUTE ,1);
 			
 			var bg:Number = glucose_status.glucose;
 			
@@ -625,10 +625,14 @@ package model
 		{
 			var finalPrediction:Number =  Number.NaN;
 			var predictionsDuration:Number = isNaN(duration) ? getCurrentPredictionsDuration() : duration;
-			var predictionData:Object = predictBGs(predictionsDuration);
+			var now:Number = new Date().valueOf();
+			var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
+			var lastBgReading:BgReading = BgReading.lastWithCalculatedValue();
+			var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
+			var predictionData:Object = predictBGs(predictionsDuration, lastTreatmentIsCarbs);
 			if (predictionData == null)
 			{
-				return finalPrediction;
+				return Number.NaN;
 			}
 			
 			var maxNumberOfPredictions:Number = Math.floor(predictionsDuration / 5);
@@ -638,6 +642,7 @@ package model
 			var currentCOB:Number = predictionData.COBValue != null ? predictionData.COBValue : Number.NaN;
 			var predictionsFound:Boolean = false;
 			var preferredPrediction:String = "";
+			var lastCalibration:Calibration = Calibration.last();
 			
 			//COB Predictions
 			if (predictionData.COB != null)
@@ -649,7 +654,7 @@ package model
 					predictionData.COB = predictionData.COB.slice(0, maxNumberOfPredictions);
 				}
 				
-				if (preferredPrediction == "") 
+				if (preferredPrediction == "" || (lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS)) 
 				{
 					preferredPrediction = "COB";
 				}
@@ -686,10 +691,10 @@ package model
 				}
 				
 				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
-				
 				if (preferredPrediction == "" || 
-					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 5) || 
-					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 5)
+					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 5 && preferredPrediction != "COB") || 
+					(lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS && preferredPrediction != "COB") ||
+					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 5 && preferredPrediction != "COB")
 				) 
 				{
 					preferredPrediction = "IOB";
@@ -701,8 +706,8 @@ package model
 			//Validate
 			if (!predictionsFound)
 			{
-				//If no predictions are available return an empty array
-				return finalPrediction;
+				//If no predictions are available return not a number
+				return Number.NaN;
 			}
 			
 			//Check which prediction to return

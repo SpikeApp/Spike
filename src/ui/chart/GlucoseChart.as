@@ -13,13 +13,10 @@ package ui.chart
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
-	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
 	import events.SpikeEvent;
@@ -84,7 +81,6 @@ package ui.chart
 	import utils.GlucoseHelper;
 	import utils.MathHelper;
 	import utils.TimeSpan;
-	import utils.UniqueId;
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("treatments")]
@@ -369,6 +365,8 @@ package ui.chart
 		private var iobPredictLegendContainer:LayoutGroup;
 		private var iobPredictLegendLabel:Label;
 		private var iobPredictLegendColorQuad:Quad;
+		private var currentTotalIOB:Number = 0;
+		private var currentTotalCOB:Number = 0;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -1124,12 +1122,14 @@ package ui.chart
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
-				IOBPill.setValue(GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(time).iob));
+				currentTotalIOB = TreatmentsManager.getTotalIOB(time).iob;
+				IOBPill.setValue(GlucoseFactory.formatIOB(currentTotalIOB));
 				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
 			
 			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
 			{
+				currentTotalIOB = 0;
 				IOBPill.setValue(GlucoseFactory.formatIOB(0));
 				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
@@ -1155,19 +1155,22 @@ package ui.chart
 					if (latestOpenAPSRequestedCOBTimestamp != time)
 					{
 						latestOpenAPSRequestedCOBTimestamp = time;
-						COBPill.setValue(GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(time).cob));
+						currentTotalCOB = TreatmentsManager.getTotalCOB(time).cob;
+						COBPill.setValue(GlucoseFactory.formatCOB(currentTotalCOB));
 						SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 					}
 				}
 				else
 				{
-					COBPill.setValue(GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(time).cob));
+					currentTotalCOB = TreatmentsManager.getTotalCOB(time).cob;
+					COBPill.setValue(GlucoseFactory.formatCOB(currentTotalCOB));
 					SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 				}
 			}
 			
 			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
 			{
+				currentTotalCOB = 0;
 				COBPill.setValue(GlucoseFactory.formatCOB(0));
 				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
@@ -1720,7 +1723,6 @@ package ui.chart
 							estimatedGlucoseValue = treatment.treatment.glucoseEstimated;
 						treatment.treatment.timestamp = movedTimestamp;
 						treatment.treatment.glucoseEstimated = estimatedGlucoseValue;
-						manageTreatments(true);
 						
 						treatmentCallout.close(true);
 						
@@ -1748,6 +1750,9 @@ package ui.chart
 						
 						//Update database
 						TreatmentsManager.updateTreatment(treatment.treatment);
+						
+						//Reposition Treatments
+						manageTreatments(true);
 					}
 				}
 			}
@@ -1935,7 +1940,7 @@ package ui.chart
 			var initialTimestamp:Number = new Date(firstDate.fullYear, firstDate.month, firstDate.date, firstDate.hours, 0, 0, 0).valueOf();
 			var lastTimestamp:Number = lastDate.valueOf();
 			
-			while (initialTimestamp <= lastTimestamp + TimeSpan.TIME_1_HOUR + (predictionsEnabled ? predictionsLengthInMinutes * TimeSpan.TIME_1_MINUTE : 0)) 
+			while (initialTimestamp <= lastTimestamp + TimeSpan.TIME_2_HOURS + (predictionsEnabled ? predictionsLengthInMinutes * TimeSpan.TIME_1_MINUTE : 0)) 
 			{	
 				//Get marker time
 				var markerDate:Date = new Date(initialTimestamp);
@@ -2563,7 +2568,7 @@ package ui.chart
 			return true;
 		}
 		
-		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int, isRaw:Boolean = false):void
+		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int, isRaw:Boolean = false, forcePredictionsCOBRefresh:Boolean = false):void
 		{
 			if (!SystemUtil.isApplicationActive)
 				return;
@@ -2572,7 +2577,7 @@ package ui.chart
 			 * Predictions
 			 */
 			clearTimeout(redrawPredictionsTimeoutID);
-			var predictionsList:Array = predictionsEnabled ? fetchPredictions() : [];
+			var predictionsList:Array = predictionsEnabled ? fetchPredictions(forcePredictionsCOBRefresh) : [];
 			
 			if (predictionsEnabled && predictionsList.length == 0 && predictionsMainGlucoseDataPoints.length > 0)
 			{
@@ -3375,7 +3380,7 @@ package ui.chart
 		/**
 		 * Predictions
 		 */
-		private function fetchPredictions():Array
+		private function fetchPredictions(forceNewIOBCOB:Boolean = false):Array
 		{
 			//Dispose previous header
 			disposePredictionsHeader();
@@ -3383,7 +3388,8 @@ package ui.chart
 			//Poperties
 			var maxNumberOfPredictions:Number = Math.floor(predictionsLengthInMinutes / 5);
 			var lastAvailableBgReading:BgReading = _dataSource[_dataSource.length - 1];
-			var now:Number = lastAvailableBgReading != null ? lastAvailableBgReading.timestamp : new Date().valueOf();
+			var nowTimestamp:Number = new Date().valueOf();
+			var now:Number = lastAvailableBgReading != null ? lastAvailableBgReading.timestamp : nowTimestamp;
 			var currentReadingValue:Number;
 			var readingTimestamp:Number;
 			var predictedCalculatedValue:Number;
@@ -3413,7 +3419,7 @@ package ui.chart
 			var unformattedUAMPredictionsList:Array = [];
 			
 			//All Predictions
-			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes);
+			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes, forceNewIOBCOB);
 			//trace(ObjectUtil.toString(unformattedPredictions));
 			
 			//Update Useful Properties
@@ -3438,7 +3444,7 @@ package ui.chart
 			{
 				unformattedCOBPredictionsList = unformattedPredictions.COB;
 				currentReadingValue = unformattedCOBPredictionsList.shift(); //Remove first element
-				if (preferredPrediction == "" || new Date().valueOf() - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS) preferredPrediction = "COB";
+				if (preferredPrediction == "" || nowTimestamp - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS) preferredPrediction = "COB";
 				predictionsFound = true;
 				cobPredictionsEnabled = true;
 				numDifferentPredictionsDisplayed++;
@@ -3461,7 +3467,7 @@ package ui.chart
 				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
 				unformattedIOBPredictionsList = unformattedPredictions.IOB;
 				currentReadingValue = unformattedIOBPredictionsList.shift(); //Remove first element
-				if (preferredPrediction == "" || (!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 5) || new Date().valueOf() - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS || (currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 5)) preferredPrediction = "IOB";
+				if (preferredPrediction == "" || (!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 5 && preferredPrediction != "COB") || (nowTimestamp - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS && preferredPrediction != "COB") || (currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 5 && preferredPrediction != "COB")) preferredPrediction = "IOB";
 				predictionsFound = true;
 				iobPredictionsEnabled = true;
 				numDifferentPredictionsDisplayed++;
@@ -3669,9 +3675,9 @@ package ui.chart
 				{
 					var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
 					cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
+					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 || currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
 					cobPredictLegendLabel.validate();
-					cobPredictLegendColorQuad = new Quad(20, cobPredictLegendLabel.height * 0.65, cobColor);
+					cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.65, cobPredictLegendLabel.height * 0.65, cobColor);
 					cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
 					cobPredictLegendContainer.addChild(cobPredictLegendLabel);
 					if (preferredPrediction == "COB")
@@ -3686,7 +3692,7 @@ package ui.chart
 					uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 					uamPredictLegendLabel = LayoutFactory.createLabel("UAM", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
 					uamPredictLegendLabel.validate();
-					uamPredictLegendColorQuad = new Quad(20, uamPredictLegendLabel.height * 0.65, uamColor);
+					uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.65, uamPredictLegendLabel.height * 0.65, uamColor);
 					uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
 					uamPredictLegendContainer.addChild(uamPredictLegendLabel);
 					if (preferredPrediction == "UAM")
@@ -3701,7 +3707,7 @@ package ui.chart
 					iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 					iobPredictLegendLabel = LayoutFactory.createLabel("IOB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
 					iobPredictLegendLabel.validate();
-					iobPredictLegendColorQuad = new Quad(20, iobPredictLegendLabel.height * 0.65, iobColor);
+					iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.65, iobPredictLegendLabel.height * 0.65, iobColor);
 					iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
 					iobPredictLegendContainer.addChild(iobPredictLegendLabel);
 					if (preferredPrediction == "IOB")
@@ -3815,8 +3821,13 @@ package ui.chart
 			
 			lastPredictionsRedrawTimestamp = now;
 			
+			//Get last treatment
+			var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
+			var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
+			var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
+			
 			//Get new predictions
-			var predictionsList:Array = fetchPredictions();
+			var predictionsList:Array = fetchPredictions(lastTreatmentIsCarbs);
 			
 			//Third validation
 			if (predictionsList == null || predictionsList.length == 0)
@@ -3832,14 +3843,20 @@ package ui.chart
 			var predictionLowestValue:Number = predictionsSorted[0].calculatedValue;
 			var predictionHighestValue:Number = predictionsSorted[predictionsSorted.length - 1].calculatedValue;
 			
-			if (predictionLowestValue < lowestGlucoseValue || predictionHighestValue > highestGlucoseValue)
+			var realReadingsSorted:Array = _dataSource.concat();
+			realReadingsSorted.sortOn(["calculatedValue"], Array.NUMERIC);
+			
+			var realReadingsLowestValue:Number = realReadingsSorted[0].calculatedValue;
+			var realReadingsHighestValue:Number = realReadingsSorted[realReadingsSorted.length - 1].calculatedValue;
+			
+			if (predictionLowestValue < lowestGlucoseValue || predictionHighestValue > highestGlucoseValue || realReadingsLowestValue > lowestGlucoseValue || realReadingsHighestValue < highestGlucoseValue)
 			{
-				//Dispose all predictions
+				//Dispose previous predictions
 				disposePredictions();
 				
 				//Redraw main and scroller charts
-				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0);
-				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0);
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0, false, lastTreatmentIsCarbs);
+				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0, false, lastTreatmentIsCarbs);
 				
 				//Redraw raw markers if needed
 				if (displayRaw)
@@ -3855,11 +3872,14 @@ package ui.chart
 					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 				}
 				
-				//Reposition treatments
-				manageTreatments();
-				
 				//Redraw timeline
 				drawTimeline();
+				
+				//Reposition delimitter
+				reporsitionPredictionDelimitter();
+				
+				//Reposition treatments
+				manageTreatments();
 				
 				return;
 			}
@@ -4004,8 +4024,6 @@ package ui.chart
 						predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
 					}
 				}
-				
-				reporsitionPredictionDelimitter();
 			}
 			
 			if(_displayLine)
@@ -4017,11 +4035,14 @@ package ui.chart
 				drawLine(MAIN_CHART);
 				drawLine(SCROLLER_CHART);
 			}
+			
+			//Reposition delimitter
+			reporsitionPredictionDelimitter();
 		}
 		
 		private function reporsitionPredictionDelimitter():void
 		{
-			if (predictionsEnabled && yAxis != null && predictionsMainGlucoseDataPoints.length > 0)
+			if (predictionsEnabled && yAxis != null && handPicker != null && mainChart != null && predictionsMainGlucoseDataPoints.length > 0)
 			{
 				if (predictionsDelimiter == null)
 				{
@@ -4033,6 +4054,21 @@ package ui.chart
 				
 				predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
 				activeGlucoseDelimiter = predictionsDelimiter;
+				
+				//Adjust Main Chart and Picker Position
+				if (_graphWidth - (handPicker.x + handPicker.width) <= _graphWidth / 67)
+				{
+					//Hand picker is almost at the end of the screen (less or equal than 1.5% of the screen width), probably the user left it there unintentionaly.
+					//Let's put the handpicker at the end of the screen and make sure we display the latest glucose value
+					handPicker.x = _graphWidth - handPicker.width;
+					displayLatestBGValue = true;
+				}
+				
+				if (displayLatestBGValue)
+				{
+					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+				}
 			}
 		}
 		
@@ -4399,11 +4435,11 @@ package ui.chart
 					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 				}
 				
-				//Reposition treatments
-				manageTreatments();
-				
 				//Redraw timeline
 				drawTimeline();
+				
+				//Reposition treatments
+				manageTreatments();
 			}
 		}
 		
@@ -4547,11 +4583,11 @@ package ui.chart
 				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 			}
 			
-			//Reposition treatments
-			manageTreatments();
-			
 			//Redraw timeline
 			drawTimeline();
+			
+			//Reposition treatments
+			manageTreatments();
 		}
 		
 		private function disposePredictionsPills():void

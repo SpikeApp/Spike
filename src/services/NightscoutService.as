@@ -962,8 +962,11 @@ package services
 			
 			for (var i:int = 0; i < arrayToDelete.length; i++) 
 			{
-				var nsTreatment:Object = arrayToDelete[i] as Object;
-				if (nsTreatment != null && nsTreatment["_id"] != null && nsTreatment["_id"] == treatment.ID)
+				var nsTreatment:Object = arrayToDelete[i];
+				if (nsTreatment == null || !nsTreatment.hasOwnProperty("_id") || nsTreatment is Treatment)
+					continue;
+				
+				if (nsTreatment["_id"] == treatment.ID)
 				{
 					arrayToDelete.removeAt(i);
 					nsTreatment = null;

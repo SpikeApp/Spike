@@ -3084,6 +3084,27 @@ package treatments
 			
 			return carbTypeName;
 		}
+		
+		public static function getLastTreatment():Treatment
+		{
+			var treatment:Treatment;
+			
+			if (treatmentsList != null)
+			{
+				var numberOfTreatments:uint = treatmentsList.length;
+				
+				if (numberOfTreatments > 0)
+				{
+					//Sort Treatments
+					treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+					
+					//Get last treatment
+					treatment = treatmentsList[numberOfTreatments - 1];
+				}
+			}
+			
+			return treatment;
+		}
 
 		public static function get instance():TreatmentsManager
 		{
