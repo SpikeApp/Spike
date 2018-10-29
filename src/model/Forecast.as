@@ -605,7 +605,7 @@ package model
 			
 			//Add relevant info
 			predBGs.bgImpact = bgi;
-			if (meal_data.carbs > 0) predBGs.carbImpact = ci;
+			predBGs.carbImpact = ci;
 			predBGs.deviation = deviation;
 			predBGs.eventualBG = eventualBG;
 			predBGs.minGuardBG = minGuardBG;

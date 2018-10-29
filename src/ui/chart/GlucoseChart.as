@@ -3675,7 +3675,7 @@ package ui.chart
 				{
 					var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
 					cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 || currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
+					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 || currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8 * userAxisFontMultiplier, true);
 					cobPredictLegendLabel.validate();
 					cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.65, cobPredictLegendLabel.height * 0.65, cobColor);
 					cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
@@ -3690,7 +3690,7 @@ package ui.chart
 				{
 					var uamColor:uint = preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor;
 					uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					uamPredictLegendLabel = LayoutFactory.createLabel("UAM", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
+					uamPredictLegendLabel = LayoutFactory.createLabel("UEG", HorizontalAlign.LEFT, VerticalAlign.TOP, 8 * userAxisFontMultiplier, true);
 					uamPredictLegendLabel.validate();
 					uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.65, uamPredictLegendLabel.height * 0.65, uamColor);
 					uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
@@ -3705,7 +3705,7 @@ package ui.chart
 				{
 					var iobColor:uint = preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor;
 					iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					iobPredictLegendLabel = LayoutFactory.createLabel("IOB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8, true);
+					iobPredictLegendLabel = LayoutFactory.createLabel("IOB", HorizontalAlign.LEFT, VerticalAlign.TOP, 8 * userAxisFontMultiplier, true);
 					iobPredictLegendLabel.validate();
 					iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.65, iobPredictLegendLabel.height * 0.65, iobColor);
 					iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
