@@ -39,7 +39,7 @@ package model
 			}
 			
 			var currentTime:Number = new Date().valueOf();
-			var now:Number = currentTime - glucose_status.date < TimeSpan.TIME_16_MINUTES  && !forceNewIOBCOB ? glucose_status.date : currentTime;
+			var now:Number = currentTime - glucose_status.date < TimeSpan.TIME_16_MINUTES && !forceNewIOBCOB ? glucose_status.date : currentTime;
 			
 			/**
 			 * Check Cache

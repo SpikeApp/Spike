@@ -22,10 +22,10 @@ package services
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import starling.core.Starling;
-	import starling.utils.SystemUtil;
 	
 	import treatments.TreatmentsManager;
 	
@@ -43,6 +43,7 @@ package services
 	[ResourceBundle("widgetservice")]
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class WidgetService
 	{
@@ -80,10 +81,10 @@ package services
 			
 			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived, false, 150, false);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived, false, 150, false);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, setInitialGraphData);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentRefresh);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentRefresh);
@@ -102,7 +103,14 @@ package services
 				e.data == CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK ||
 				e.data == CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT || 
 				e.data == CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN ||
-				e.data == CommonSettings.COMMON_SETTING_APP_LANGUAGE
+				e.data == CommonSettings.COMMON_SETTING_APP_LANGUAGE ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_3_HOURS ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_6_HOURS ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_12_HOURS ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_24_HOURS ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB
 			)
 			{
 				setInitialGraphData();
@@ -266,6 +274,36 @@ package services
 			//IOB & COB
 			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
 			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob));
+			
+			//Predictions
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+				if (!isNaN(predictionsLengthInMinutes))
+				{
+					var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+					if (!isNaN(currentPrediction))
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10));
+					}
+					else
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+					}
+				}
+				else
+				{
+					SpikeANE.setUserDefaultsData("predictionDuration", "???" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+					SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+				}
+			}
+			else
+			{
+				SpikeANE.setUserDefaultsData("predictionDuration", "");
+				SpikeANE.setUserDefaultsData("predictionOutcome", "-1");
+			}
 			
 			//Translations
 			SpikeANE.setUserDefaultsData("minAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','minute_ago'));
@@ -431,6 +469,36 @@ package services
 			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
 			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob));
+			
+			//Predictions
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+				if (!isNaN(predictionsLengthInMinutes))
+				{
+					var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+					if (!isNaN(currentPrediction))
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10));
+					}
+					else
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+					}
+				}
+				else
+				{
+					SpikeANE.setUserDefaultsData("predictionDuration", "???" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+					SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+				}
+			}
+			else
+			{
+				SpikeANE.setUserDefaultsData("predictionDuration", "");
+				SpikeANE.setUserDefaultsData("predictionOutcome", "-1");
+			}
 			
 			//Re set update timeout
 			clearInterval(IOBCOBIntervalID);
