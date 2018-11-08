@@ -21,6 +21,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
     @IBOutlet var noData: UILabel!
     @IBOutlet var treatmentsLabel: UILabel!
     @IBOutlet var treatmentsConstrain: NSLayoutConstraint!
+    @IBOutlet var predictionsLabel: UILabel!
     
     //IBActions
     @IBAction func openApp(_ sender: Any)
@@ -69,6 +70,8 @@ class TodayViewController: UIViewController, NCWidgetProviding
     var COB:String = "0.00g"
     var IOBString:String = ""
     var COBString:String = ""
+    var predictionsDuration:String = ""
+    var predictionsOutcome:String = ""
     
     //Constants
     let millisecondsInHour = 3600000
@@ -108,7 +111,10 @@ class TodayViewController: UIViewController, NCWidgetProviding
          now = "now"
          openSpike = "open spike"
          IOB = "6.05"
-         COB = "25.4"*/
+         COB = "25.4"
+         predictionsDuration = "1h30m"
+         predictionsOutcome = "101"
+         */
         
         //Widget Properties
         if #available(iOSApplicationExtension 10.0, *)
@@ -195,7 +201,9 @@ class TodayViewController: UIViewController, NCWidgetProviding
             externalData["high"] == nil ||
             externalData["low"] == nil ||
             externalData["IOBString"] == nil ||
-            externalData["COBString"] == nil
+            externalData["COBString"] == nil ||
+            externalData["predictionDuration"] == nil ||
+            externalData["predictionOutcome"] == nil
         {
             print("Missing data in database!")
             noData.text = "Missing data in database!"
@@ -232,6 +240,8 @@ class TodayViewController: UIViewController, NCWidgetProviding
         lowString = (externalData["low"] as? String)!
         IOBString = (externalData["IOBString"] as? String)!
         COBString = (externalData["COBString"] as? String)!
+        predictionsDuration = (externalData["predictionDuration"] as? String)!
+        predictionsOutcome = (externalData["predictionOutcome"] as? String)!
         
         if (externalData["IOB"] != nil)
         {
@@ -370,6 +380,15 @@ class TodayViewController: UIViewController, NCWidgetProviding
             mainView.layoutIfNeeded()
             treatmentsLabel.font = treatmentsLabel.font.withSize(14)
         }
+        
+        var predictValue:String = "";
+        if (predictionsOutcome != "-1")
+        {
+            predictValue = predictionsDuration + ": " + predictionsOutcome
+        }
+        
+        predictionsLabel.text = predictValue
+        predictionsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
     }
     
     /**
