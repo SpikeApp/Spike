@@ -7,11 +7,15 @@ package ui.chart
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.system.System;
+	import flash.text.engine.LineJustification;
+	import flash.text.engine.SpaceJustifier;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
 	import flash.utils.clearTimeout;
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
+	
+	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -28,17 +32,26 @@ package ui.chart
 	import feathers.controls.DateTimeMode;
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.DragGesture;
+	import feathers.controls.Header;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
+	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollContainer;
+	import feathers.controls.ScrollPolicy;
+	import feathers.controls.TextCallout;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
+	import feathers.controls.text.TextBlockTextRenderer;
+	import feathers.controls.text.TextFieldTextRenderer;
 	import feathers.core.FeathersControl;
+	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
+	import feathers.events.FeathersEventType;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.RelativePosition;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.motion.Cover;
@@ -334,6 +347,11 @@ package ui.chart
 		private var predictedUAMBG:Number = Number.NaN;
 		private var predictedCOBBG:Number = Number.NaN;
 		private var lastCalibrationTimestamp:Number = 0;
+		private var currentTotalIOB:Number = 0;
+		private var currentTotalCOB:Number = 0;
+		private var numDifferentPredictionsDisplayed:uint;
+		private var preferredPrediction:String;
+		private var predictionPillExplanationEnabled:Boolean = false;
 		private var predictionsPill:ChartTreatmentPill;
 		private var predictionsContainer:ScrollContainer;
 		private var predictionsCallout:Callout;
@@ -365,8 +383,13 @@ package ui.chart
 		private var iobPredictLegendContainer:LayoutGroup;
 		private var iobPredictLegendLabel:Label;
 		private var iobPredictLegendColorQuad:Quad;
-		private var currentTotalIOB:Number = 0;
-		private var currentTotalCOB:Number = 0;
+		private var iobPredictLegendHitArea:Quad;
+		private var uamPredictLegendHitArea:Quad;
+		private var cobPredictLegendHitArea:Quad;
+		private var predictionExplanationMainContainer:ScrollContainer;
+		private var predictionTitleLabel:Label;
+		private var predictionExplanationLabel:Label;
+		private var predictionExplanationCallout:Callout;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -824,6 +847,8 @@ package ui.chart
 			 * Creation and placement of the glucose values
 			 */
 			//Loop through all available data points
+			var extraEndLineColor:uint;
+			var doublePrevGlucoseReading:BgReading;
 			var previousLineX:Number;
 			var previousLineY:Number;
 			var isPrediction:Boolean
@@ -952,12 +977,12 @@ package ui.chart
 						var currentLineX:Number;
 						var currentLineY:Number;
 						
-						if(i < dataLength -1 || isPrediction)
+						if((i < dataLength -1 || isPrediction) && i != realReadingsLength - 1)
 						{
 							currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						}
-						else if (i == dataLength -1)
+						else if (i == dataLength -1 || i == realReadingsLength - 1)
 						{
 							currentLineX = glucoseMarker.x + (glucoseMarker.width);
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
@@ -986,7 +1011,7 @@ package ui.chart
 							//Add extra line to the beginning
 							if (lastRealGlucoseMarker != null)
 							{
-								line.moveTo(lastRealGlucoseMarker.x + (lastRealGlucoseMarker.width / 2), lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
+								line.moveTo(lastRealGlucoseMarker.x + lastRealGlucoseMarker.width, lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
 								line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
 							}
 							
@@ -995,8 +1020,14 @@ package ui.chart
 							{
 								var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
 								var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
+								extraEndLineColor = previousGlucoseMarker.color;
+								doublePrevGlucoseReading = readingsSource[index - 2];
+								if (doublePrevGlucoseReading != null)
+								{
+									extraEndLineColor = doublePrevGlucoseReading.rawData;
+								}
 								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
-								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, previousGlucoseMarker.color, previousGlucoseMarker.color);
+								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
 							}
 						}
 						
@@ -1008,14 +1039,23 @@ package ui.chart
 							}
 							else
 							{
-								if (previousGlucoseMarker.color == glucoseMarker.color && !newPredictionSet)
+								if (previousGlucoseMarker.bgReading.uniqueId == glucoseMarker.bgReading.uniqueId && !newPredictionSet)
 								{
 									line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
 								}
 							}
 						}
 						else
-							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
+						{
+							//if (!isPrediction)
+							//{
+								line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+								//}
+								//else
+								//{
+								//	line.lineTo(currentLineX, currentLineY);
+								//	}
+						}
 						
 						line.moveTo(currentLineX, currentLineY);
 						
@@ -1063,8 +1103,14 @@ package ui.chart
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
 				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
+				extraEndLineColor = previousGlucoseMarker.color;
+				doublePrevGlucoseReading = readingsSource[index - 2];
+				if (doublePrevGlucoseReading != null)
+				{
+					extraEndLineColor = doublePrevGlucoseReading.rawData;
+				}
 				line.moveTo(extraPredictionLineX, extraPredictionLineY);
-				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY);
+				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			
 			//Creat dummy marker in case the current timestamp is bigger than the latest bgreading timestamp
@@ -2693,6 +2739,8 @@ package ui.chart
 			}
 			
 			//Loop through all available data points
+			var extraEndLineColor:uint;
+			var doublePrevGlucoseReading:BgReading;
 			var previousLineX:Number;
 			var previousLineY:Number;
 			var isPrediction:Boolean
@@ -2861,12 +2909,12 @@ package ui.chart
 						var currentLineX:Number;
 						var currentLineY:Number;
 						
-						if(i < dataLength -1 || isPrediction)
+						if((i < dataLength -1 || isPrediction) && i != realReadingsLength - 1)
 						{
 							currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 						}
-						else if (i == dataLength -1)
+						else if (i == dataLength -1 || i == realReadingsLength - 1)
 						{
 							currentLineX = glucoseMarker.x + (glucoseMarker.width);
 							currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
@@ -2895,7 +2943,7 @@ package ui.chart
 							//Add extra line to the beginning
 							if (lastRealGlucoseMarker != null)
 							{
-								line.moveTo(lastRealGlucoseMarker.x + (lastRealGlucoseMarker.width / 2), lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
+								line.moveTo(lastRealGlucoseMarker.x + lastRealGlucoseMarker.width, lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
 								line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
 							}
 							
@@ -2904,8 +2952,14 @@ package ui.chart
 							{
 								var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
 								var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
+								extraEndLineColor = previousGlucoseMarker.color;
+								doublePrevGlucoseReading = readingsSource[index - 2];
+								if (doublePrevGlucoseReading != null)
+								{
+									extraEndLineColor = doublePrevGlucoseReading.rawData;
+								}
 								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
-								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, previousGlucoseMarker.color, previousGlucoseMarker.color);
+								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
 							}
 						}
 						
@@ -2917,14 +2971,23 @@ package ui.chart
 							}
 							else
 							{
-								if (previousGlucoseMarker.color == glucoseMarker.color && !newPredictionSet)
+								if (previousGlucoseMarker.bgReading.uniqueId == glucoseMarker.bgReading.uniqueId && !newPredictionSet)
 								{
 									line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
 								}
 							}
 						}
 						else
-							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
+						{
+							//if (!isPrediction)
+							//{
+								line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
+								//}
+								//else
+								//{
+								//	line.lineTo(currentLineX, currentLineY);
+								//}
+						}
 						
 						line.moveTo(currentLineX, currentLineY);
 						
@@ -2951,8 +3014,14 @@ package ui.chart
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
 				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
+				extraEndLineColor = previousGlucoseMarker.color;
+				doublePrevGlucoseReading = readingsSource[index - 2];
+				if (doublePrevGlucoseReading != null)
+				{
+					extraEndLineColor = doublePrevGlucoseReading.rawData;
+				}
 				line.moveTo(extraPredictionLineX, extraPredictionLineY);
-				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY);
+				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			
 			if(chartType == MAIN_CHART && !isRaw)
@@ -3409,7 +3478,7 @@ package ui.chart
 			var cobPredictionsEnabled:Boolean = false;
 			var iobPredictionsEnabled:Boolean = false;
 			var uamPredictionsEnabled:Boolean = false;
-			var numDifferentPredictionsDisplayed:uint = 0;
+			numDifferentPredictionsDisplayed = 0;
 			
 			var i:int;
 			predictedTimeUntilHigh = Number.NaN;
@@ -3419,7 +3488,7 @@ package ui.chart
 			var mainPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_COLOR));
 			var cobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
 			var iobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
-			var uamPredictionsColor:uint = 0xC6C6C6;
+			var uamPredictionsColor:uint = 0xA0A0A0;
 			
 			//Prediction's lists
 			var finalTotalPredictionsList:Array = [];
@@ -3429,10 +3498,10 @@ package ui.chart
 			var unformattedIOBPredictionsList:Array = [];
 			var unformattedCOBPredictionsList:Array = [];
 			var unformattedUAMPredictionsList:Array = [];
+			preferredPrediction = "";
 			
 			//All Predictions
 			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes, forceNewIOBCOB);
-			//trace(ObjectUtil.toString(unformattedPredictions));
 			
 			//Update Useful Properties
 			if (unformattedPredictions != null)
@@ -3449,23 +3518,10 @@ package ui.chart
 				var currentCOB:Number = unformattedPredictions.COBValue != null ? unformattedPredictions.COBValue : Number.NaN;
 			}
 			
-			var preferredPrediction:String = "";
-			
-			//COB Predictions
-			if (unformattedPredictions != null && unformattedPredictions.COB != null)
-			{
-				unformattedCOBPredictionsList = unformattedPredictions.COB;
-				currentReadingValue = unformattedCOBPredictionsList.shift(); //Remove first element
-				if (preferredPrediction == "" || nowTimestamp - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS) preferredPrediction = "COB";
-				predictionsFound = true;
-				cobPredictionsEnabled = true;
-				numDifferentPredictionsDisplayed++;
-			}
-			
 			//UAM Predictions
 			if (unformattedPredictions != null && unformattedPredictions.UAM != null)
 			{
-				unformattedUAMPredictionsList = unformattedPredictions.UAM;
+				unformattedUAMPredictionsList = unformattedPredictions.UAM.concat();
 				currentReadingValue = unformattedUAMPredictionsList.shift(); //Remove first element
 				if (preferredPrediction == "") preferredPrediction = "UAM";
 				predictionsFound = true;
@@ -3473,13 +3529,39 @@ package ui.chart
 				numDifferentPredictionsDisplayed++;
 			}
 			
+			var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
+			
+			//COB Predictions
+			if (unformattedPredictions != null && unformattedPredictions.COB != null)
+			{
+				unformattedCOBPredictionsList = unformattedPredictions.COB.concat();
+				currentReadingValue = unformattedCOBPredictionsList.shift(); //Remove first element
+				//if (preferredPrediction == "" || ) preferredPrediction = "COB";
+				if (preferredPrediction == "" || 
+					//nowTimestamp - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS ||
+					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
+				)
+				{
+					preferredPrediction = "COB";
+				}
+				predictionsFound = true;
+				cobPredictionsEnabled = true;
+				numDifferentPredictionsDisplayed++;
+			}
+			
 			//IOB Predictions
 			if (unformattedPredictions != null && unformattedPredictions.IOB != null)
 			{
-				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
-				unformattedIOBPredictionsList = unformattedPredictions.IOB;
+				unformattedIOBPredictionsList = unformattedPredictions.IOB.concat();
 				currentReadingValue = unformattedIOBPredictionsList.shift(); //Remove first element
-				if (preferredPrediction == "" || (!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 5 && preferredPrediction != "COB") || (nowTimestamp - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS && preferredPrediction != "COB") || (currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 5 && preferredPrediction != "COB")) preferredPrediction = "IOB";
+				if (preferredPrediction == "" || 
+					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB") || 
+					(nowTimestamp - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS && preferredPrediction != "COB") || 
+					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB")
+				)
+				{
+					preferredPrediction = "IOB";
+				}
 				predictionsFound = true;
 				iobPredictionsEnabled = true;
 				numDifferentPredictionsDisplayed++;
@@ -3503,17 +3585,45 @@ package ui.chart
 			}
 			
 			//Loop through COB predictions (priority #1)
+			var startWithCOBColor:Boolean = true;
 			var cobPredictionsLength:uint =  unformattedCOBPredictionsList.length;
 			for (i = 0; i < cobPredictionsLength; i++) 
 			{
 				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
 				predictedCalculatedValue = unformattedCOBPredictionsList[i];
+				
+				var cobPredColor:uint;
+				if (preferredPrediction == "COB")
+				{
+					cobPredColor = mainPredictionsColor;
+				}
+				else
+				{
+					if (currentIOB > 0 || currentTotalIOB > 0)
+					{
+						if (startWithCOBColor)
+						{
+							cobPredColor = cobPredictionsColor;
+						}
+						else
+						{
+							cobPredColor = iobPredictionsColor;
+						}
+						
+						startWithCOBColor = !startWithCOBColor;
+					}
+					else
+					{
+						cobPredColor = cobPredictionsColor;
+					}
+				}
+				
 				var cobPredictionReading:BgReading = new BgReading
 				(
 					readingTimestamp, //timestamp
 					null, //sensor
 					null, //calibration
-					preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor, //raw data
+					cobPredColor, //raw data
 					Number.NaN, //filtered data
 					Number.NaN, //adge adjusted raw data
 					false, //calibration flag
@@ -3682,31 +3792,78 @@ package ui.chart
 			if (headerProperties != null)
 			{
 				predictionsLegendsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 0);
+				(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft = 40;
 				
 				if (cobPredictionsEnabled)
 				{
+					//Color
 					var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
+					//Legend Container
 					cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+					//Label
 					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 || currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
+					cobPredictLegendLabel.touchable = false;
 					cobPredictLegendLabel.validate();
-					cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.65, cobPredictLegendLabel.height * 0.65, cobColor);
+					//Color Marker
+					cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.6, cobPredictLegendLabel.height * 0.6, cobColor);
+					cobPredictLegendColorQuad.touchable = false;
+					if ((currentIOB > 0 || currentTotalIOB > 0) && preferredPrediction != "COB")
+					{
+						cobPredictLegendColorQuad.setVertexColor(0, cobColor);
+						cobPredictLegendColorQuad.setVertexColor(1, iobPredictionsColor);
+						cobPredictLegendColorQuad.setVertexColor(2, cobColor);
+						cobPredictLegendColorQuad.setVertexColor(3, iobPredictionsColor);
+					}
+					//Add label anc color marker to the container
 					cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
 					cobPredictLegendContainer.addChild(cobPredictLegendLabel);
+					cobPredictLegendContainer.validate();
+					//Hit Area
+					cobPredictLegendHitArea = new Quad(cobPredictLegendContainer.width, cobPredictLegendContainer.height, 0xFF0000);
+					cobPredictLegendHitArea.alpha = 0;
+					cobPredictLegendContainer.addChild(cobPredictLegendHitArea);
+					cobPredictLegendContainer.validate();
+					cobPredictLegendHitArea.x = cobPredictLegendHitArea.y = 0;
+					
+					cobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onCOBPredictionExplanation);
+					
 					if (preferredPrediction == "COB")
 						predictionsLegendsContainer.addChildAt(cobPredictLegendContainer, 0);
 					else
 						predictionsLegendsContainer.addChild(cobPredictLegendContainer);
+					
+					if (currentIOB > 0 || currentTotalIOB > 0)
+					{
+						(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft += 20;
+					}
 				}
 				
 				if (uamPredictionsEnabled)
 				{
+					//Color
 					var uamColor:uint = preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor;
+					//Legend Container
 					uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					uamPredictLegendLabel = LayoutFactory.createLabel("UEG", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
+					//Label
+					uamPredictLegendLabel = LayoutFactory.createLabel("UAG", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
+					uamPredictLegendLabel.touchable = false;
 					uamPredictLegendLabel.validate();
-					uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.65, uamPredictLegendLabel.height * 0.65, uamColor);
+					//Color Marker
+					uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.6, uamPredictLegendLabel.height * 0.6, uamColor);
+					uamPredictLegendColorQuad.touchable = false;
+					//Add label anc color marker to the container
 					uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
 					uamPredictLegendContainer.addChild(uamPredictLegendLabel);
+					uamPredictLegendContainer.validate();
+					//Hit Area
+					uamPredictLegendHitArea = new Quad(uamPredictLegendContainer.width, uamPredictLegendContainer.height, 0xFF0000);
+					uamPredictLegendHitArea.alpha = 0;
+					uamPredictLegendContainer.addChild(uamPredictLegendHitArea);
+					uamPredictLegendContainer.validate();
+					uamPredictLegendHitArea.x = uamPredictLegendHitArea.y = 0;
+					
+					uamPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onUAMPredictionExplanation);
+					
 					if (preferredPrediction == "UAM")
 						predictionsLegendsContainer.addChildAt(uamPredictLegendContainer, 0);
 					else
@@ -3715,13 +3872,30 @@ package ui.chart
 				
 				if (iobPredictionsEnabled)
 				{
+					//Color
 					var iobColor:uint = preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor;
+					//Legend Container
 					iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+					//Label
 					iobPredictLegendLabel = LayoutFactory.createLabel("IOB", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
+					iobPredictLegendLabel.touchable = false;
 					iobPredictLegendLabel.validate();
-					iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.65, iobPredictLegendLabel.height * 0.65, iobColor);
+					//Color Marker
+					iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.6, iobPredictLegendLabel.height * 0.6, iobColor);
+					iobPredictLegendColorQuad.touchable = false;
+					//Add label anc color marker to the container
 					iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
 					iobPredictLegendContainer.addChild(iobPredictLegendLabel);
+					iobPredictLegendContainer.validate();
+					//Hit Area
+					iobPredictLegendHitArea = new Quad(iobPredictLegendContainer.width, iobPredictLegendContainer.height, 0xFF0000);
+					iobPredictLegendHitArea.alpha = 0;
+					iobPredictLegendContainer.addChild(iobPredictLegendHitArea);
+					iobPredictLegendContainer.validate();
+					iobPredictLegendHitArea.x = iobPredictLegendHitArea.y = 0;
+					
+					iobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onIOBPredictionExplanation);
+					
 					if (preferredPrediction == "IOB")
 						predictionsLegendsContainer.addChildAt(iobPredictLegendContainer, 0);
 					else
@@ -3734,11 +3908,428 @@ package ui.chart
 			}
 			
 			//Join all predictions
-			finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
-			finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-			finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+			if (preferredPrediction == "COB")
+			{
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+			}
+			else if (preferredPrediction == "UAM")
+			{
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+			}
+			else if (preferredPrediction == "IOB")
+			{
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+			}
 			
 			return finalTotalPredictionsList;
+		}
+		
+		private function disposePredictionsExplanations(e:starling.events.Event = null):void
+		{
+			if (predictionTitleLabel != null)
+			{
+				predictionTitleLabel.removeFromParent();
+				predictionTitleLabel.dispose();
+				predictionTitleLabel = null;
+			}
+			
+			if (predictionExplanationLabel != null)
+			{
+				predictionExplanationLabel.removeFromParent();
+				predictionExplanationLabel.dispose();
+				predictionExplanationLabel = null;
+			}
+			
+			if (predictionExplanationMainContainer != null)
+			{
+				predictionExplanationMainContainer.removeFromParent();
+				predictionExplanationMainContainer.dispose();
+				predictionExplanationMainContainer = null;
+			}
+			
+			if (predictionExplanationCallout != null)
+			{
+				predictionExplanationCallout.removeEventListener(starling.events.Event.OPEN, onPredictionPillExplanationOpened);
+				predictionExplanationCallout.removeEventListener(starling.events.Event.CLOSE, disposePredictionsExplanations);
+				predictionExplanationCallout.removeFromParent();
+				predictionExplanationCallout.dispose();
+				predictionExplanationCallout = null;
+				
+				if (predictionsCallout != null)
+				{
+					predictionsCallout.closeOnTouchBeganOutside = true;
+					predictionsCallout.closeOnTouchEndedOutside = true;
+				}
+			}
+			
+			if (predictionsCallout != null)
+			{
+				predictionsCallout.closeOnTouchBeganOutside = true;
+				predictionsCallout.closeOnTouchEndedOutside = true;
+			}
+			
+			predictionPillExplanationEnabled = false;
+		}
+		
+		private function onPredictionPillExplanationOpened(e:starling.events.Event = null):void
+		{
+			if (predictionsCallout != null)
+			{
+				predictionsCallout.closeOnTouchBeganOutside = false;
+				predictionsCallout.closeOnTouchEndedOutside = false;
+			}
+			
+			predictionPillExplanationEnabled = true;
+		}
+		
+		private function displayPredictionPillExplanationCallout(pointOfOrigin:DisplayObject, title:String, body:String):void
+		{
+			if (pointOfOrigin == null || title == null || body == null)
+				return;
+				
+			//Dimensions #1
+			var pointOfOriginGlobalX:Number = pointOfOrigin.localToGlobal(new Point(0, 0)).x;
+			var maxWidth:Number = Constants.stageWidth - pointOfOriginGlobalX + pointOfOrigin.width - 10 - 60;
+			
+			//Main Container
+			var predictionExplanationMainLayout:VerticalLayout = new VerticalLayout();
+			predictionExplanationMainLayout.gap = 15;
+			if (predictionExplanationMainContainer != null) predictionExplanationMainContainer.removeFromParent(true);
+			predictionExplanationMainContainer = new ScrollContainer();
+			predictionExplanationMainContainer.layout = predictionExplanationMainLayout;
+			predictionExplanationMainContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
+			
+			//Title
+			if (predictionTitleLabel != null) predictionTitleLabel.removeFromParent(true);
+			predictionTitleLabel = LayoutFactory.createLabel(title, HorizontalAlign.CENTER, VerticalAlign.TOP, 16, true);
+			predictionExplanationMainContainer.addChild(predictionTitleLabel);
+			
+			//Body
+			if (predictionExplanationLabel != null) predictionExplanationLabel.removeFromParent(true);
+			predictionExplanationLabel = LayoutFactory.createLabel(body, HorizontalAlign.JUSTIFY, VerticalAlign.TOP);
+			predictionExplanationLabel.wordWrap = true;
+			predictionExplanationMainContainer.addChild(predictionExplanationLabel);
+			
+			//Callout
+			if (predictionExplanationCallout != null) 
+			{
+				predictionExplanationCallout.removeFromParent(true);
+				if (predictionsCallout != null)
+				{
+					predictionsCallout.closeOnTouchBeganOutside = true;
+					predictionsCallout.closeOnTouchEndedOutside = true;
+				}
+			}
+			predictionExplanationCallout = Callout.show(predictionExplanationMainContainer, pointOfOrigin, new <String>[RelativePosition.LEFT], false);
+			predictionExplanationCallout.closeOnTouchBeganOutside = true;
+			predictionExplanationCallout.closeOnTouchEndedOutside = true;
+			predictionExplanationCallout.disposeOnSelfClose = true;
+			predictionExplanationCallout.validate();
+			predictionExplanationCallout.x += pointOfOrigin.width - 10;
+			
+			var translatedGlobalX:Number = predictionExplanationCallout.x + predictionExplanationCallout.width;
+			var maxGlobalWidth:Number = translatedGlobalX - 60;
+			
+			//Dimensions #2
+			predictionExplanationMainContainer.validate();
+			
+			predictionExplanationMainContainer.maxWidth = maxGlobalWidth;
+			predictionExplanationMainContainer.width = maxGlobalWidth;
+			
+			predictionTitleLabel.maxWidth = maxGlobalWidth;
+			predictionTitleLabel.width = maxGlobalWidth;
+			
+			predictionExplanationLabel.width = maxGlobalWidth;
+			predictionExplanationLabel.maxWidth = maxGlobalWidth;
+			
+			predictionExplanationCallout.validate();
+			predictionExplanationCallout.x += pointOfOrigin.width - 10;
+			predictionExplanationCallout.addEventListener(starling.events.Event.CLOSE, disposePredictionsExplanations);
+			predictionExplanationCallout.addEventListener(starling.events.Event.ADDED, onPredictionPillExplanationOpened);
+			
+			if (predictionExplanationMainContainer.maxVerticalScrollPosition > 0)
+			{
+				//Callout is scrollable
+				predictionExplanationMainContainer.scrollBarDisplayMode = ScrollBarDisplayMode.FIXED_FLOAT;
+				
+				predictionExplanationMainLayout.paddingRight = 10;
+				predictionExplanationCallout.paddingRight = 10;
+				predictionTitleLabel.width -= 10;
+				predictionExplanationLabel.width -= 10;
+			}
+		}
+	
+		private function displayPredictionLegendExplanationCallout(pointOfOrigin:DisplayObject, title:String, body:String):void
+		{
+			//Dimensions #1
+			var calloutWidth:Number = Constants.stageWidth * 0.8;
+			
+			//Main Container
+			var predictionExplanationMainLayout:VerticalLayout = new VerticalLayout();
+			predictionExplanationMainLayout.gap = 15;
+			if (predictionExplanationMainContainer != null) predictionExplanationMainContainer.removeFromParent(true);
+			predictionExplanationMainContainer = new ScrollContainer();
+			predictionExplanationMainContainer.layout = predictionExplanationMainLayout;
+			predictionExplanationMainContainer.width = calloutWidth;
+			predictionExplanationMainContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
+			predictionExplanationMainContainer.scrollBarDisplayMode = ScrollBarDisplayMode.FIXED_FLOAT;
+			
+			//Title
+			if (predictionTitleLabel != null) predictionTitleLabel.removeFromParent(true);
+			predictionTitleLabel = LayoutFactory.createLabel(title, HorizontalAlign.CENTER, VerticalAlign.TOP, 16, true);
+			predictionTitleLabel.width = calloutWidth;
+			predictionExplanationMainContainer.addChild(predictionTitleLabel);
+			
+			//Body
+			if (predictionExplanationLabel != null) predictionExplanationLabel.removeFromParent(true);
+			predictionExplanationLabel = LayoutFactory.createLabel(body, HorizontalAlign.JUSTIFY, VerticalAlign.TOP);
+			predictionExplanationLabel.wordWrap = true;
+			predictionExplanationLabel.width = calloutWidth;
+			predictionExplanationMainContainer.addChild(predictionExplanationLabel);
+			
+			//Dimensions #2
+			predictionExplanationMainContainer.validate();
+			var predictionsCalloutPointOfOrigin:Number = pointOfOrigin.localToGlobal(new Point(0, 0)).y + pointOfOrigin.height;
+			var predictionsContentOriginalHeight:Number = predictionExplanationMainContainer.height + 60;
+			var suggestedPredictionsCalloutHeight:Number = Constants.stageHeight - predictionsCalloutPointOfOrigin - 5;
+			var finalCalloutHeight:Number = predictionsContentOriginalHeight > suggestedPredictionsCalloutHeight ?  suggestedPredictionsCalloutHeight : predictionsContentOriginalHeight;
+			
+			//Callout
+			if (predictionExplanationCallout != null) 
+			{
+				predictionExplanationCallout.removeFromParent(true);
+				
+				if (predictionsCallout != null)
+				{
+					predictionsCallout.closeOnTouchBeganOutside = true;
+					predictionsCallout.closeOnTouchEndedOutside = true;
+				}
+			}
+			predictionExplanationCallout = Callout.show(predictionExplanationMainContainer, pointOfOrigin, new <String>[RelativePosition.BOTTOM], false);
+			predictionExplanationCallout.height = finalCalloutHeight;
+			predictionExplanationMainContainer.height = finalCalloutHeight - 50;
+			predictionExplanationMainContainer.maxHeight = finalCalloutHeight - 50;
+			predictionExplanationCallout.closeOnTouchBeganOutside = true;
+			predictionExplanationCallout.closeOnTouchEndedOutside = true;
+			predictionExplanationCallout.disposeOnSelfClose = true;
+			predictionExplanationCallout.validate();
+			predictionExplanationCallout.x = (Constants.stageWidth - predictionExplanationCallout.width) / 2;
+			predictionExplanationCallout.addEventListener(starling.events.Event.CLOSE, disposePredictionsExplanations);
+			
+			if (finalCalloutHeight != predictionsContentOriginalHeight)
+			{
+				predictionExplanationMainLayout.paddingRight = 10;
+				predictionExplanationCallout.paddingRight = 10;
+				predictionTitleLabel.width -= 10;
+				predictionExplanationLabel.width -= 10;
+			}
+		}
+		
+		private function onPredictionPillExplanation(e:TouchEvent):void
+		{	
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN && e.currentTarget != null) 
+			{
+				if (e.currentTarget === predictionsEnablerPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictionsEnablerPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','enable_disable_predictions_pill_explanation_title'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','enable_disable_predictions_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictionsTimeFramePill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictionsTimeFramePill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_label'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictionsIOBCOBPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictionsIOBCOBPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_iob_cob_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedTimeUntilHighPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedTimeUntilHighPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predicted_time_until_high_label'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_time_until_high_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedTimeUntilLowPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedTimeUntilLowPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predicted_time_until_low_label'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_time_until_low_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedTreatmentsOutcomePill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedTreatmentsOutcomePill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedTreatmentsEffectPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedTreatmentsEffectPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_effect'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_effect_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedUAMBGPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedUAMBGPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_unannounced_glucose_blood_glucose'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_uag_predicted_bg_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedIOBBGPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedIOBBGPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_iob_blood_glucose'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_iob_predicted_bg_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedMinimumBGPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedMinimumBGPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_minimum_blood_glucose'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_minimum_predicted_bg_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedCarbImpactPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedCarbImpactPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_carb_impact'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_carb_impact_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedBgImpactPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedBgImpactPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_impact'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_bg_impact_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedDeviationPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedDeviationPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_deviation'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_deviation_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === glucoseVelocityPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						glucoseVelocityPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_velocity'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_bg_velocity_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedEventualBGPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedEventualBGPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_blood_glucose'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_bg_pill_explanation_body')
+					);
+				}
+			}
+		}
+		
+		private function onIOBPredictionExplanation(e:TouchEvent):void
+		{	
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				displayPredictionLegendExplanationCallout
+				(
+					iobPredictLegendContainer, 
+					ModelLocator.resourceManagerInstance.getString('chartscreen','IOB_prediction_curve_explanation_title'),
+					ModelLocator.resourceManagerInstance.getString('chartscreen','IOB_prediction_curve_explanation_content') + (numDifferentPredictionsDisplayed > 1 && preferredPrediction == "IOB" ? "\n\n" + ModelLocator.resourceManagerInstance.getString('chartscreen','default_prediction_explanation') : "")
+				);
+			}
+		}
+		
+		private function onUAMPredictionExplanation(e:TouchEvent):void
+		{	
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				displayPredictionLegendExplanationCallout
+				(
+					uamPredictLegendContainer, 
+					ModelLocator.resourceManagerInstance.getString('chartscreen','UAG_prediction_curve_explanation_title'),
+					ModelLocator.resourceManagerInstance.getString('chartscreen','UAG_prediction_curve_explanation_content') + (numDifferentPredictionsDisplayed > 1 && preferredPrediction == "UAM" ? "\n\n" + ModelLocator.resourceManagerInstance.getString('chartscreen','default_prediction_explanation') : "")
+				);
+			}
+		}
+		
+		private function onCOBPredictionExplanation(e:TouchEvent):void
+		{	
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				displayPredictionLegendExplanationCallout
+				(
+					cobPredictLegendContainer, 
+					ModelLocator.resourceManagerInstance.getString('chartscreen','COB_prediction_curve_explanation_title'),
+					ModelLocator.resourceManagerInstance.getString('chartscreen','COB_prediction_curve_explanation_content') + (numDifferentPredictionsDisplayed > 1 && preferredPrediction == "COB" ? "\n\n" + ModelLocator.resourceManagerInstance.getString('chartscreen','default_prediction_explanation') : "")
+				);
+			}
 		}
 		
 		private function disposePredictionsHeader():void
@@ -3757,8 +4348,16 @@ package ui.chart
 				cobPredictLegendColorQuad = null;
 			}
 			
+			if (cobPredictLegendHitArea != null)
+			{
+				cobPredictLegendHitArea.removeFromParent();
+				cobPredictLegendHitArea.dispose();
+				cobPredictLegendHitArea = null;
+			}
+			
 			if (cobPredictLegendContainer != null)
 			{
+				cobPredictLegendContainer.removeEventListener(TouchEvent.TOUCH, onCOBPredictionExplanation);
 				cobPredictLegendContainer.removeFromParent();
 				cobPredictLegendContainer.dispose();
 				cobPredictLegendContainer = null;
@@ -3778,8 +4377,16 @@ package ui.chart
 				uamPredictLegendColorQuad = null;
 			}
 			
+			if (uamPredictLegendHitArea != null)
+			{
+				uamPredictLegendHitArea.removeFromParent();
+				uamPredictLegendHitArea.dispose();
+				uamPredictLegendHitArea = null;
+			}
+			
 			if (uamPredictLegendContainer != null)
 			{
+				uamPredictLegendContainer.removeEventListener(TouchEvent.TOUCH, onUAMPredictionExplanation);
 				uamPredictLegendContainer.removeFromParent();
 				uamPredictLegendContainer.dispose();
 				uamPredictLegendContainer = null;
@@ -3799,11 +4406,56 @@ package ui.chart
 				iobPredictLegendColorQuad = null;
 			}
 			
+			if (iobPredictLegendHitArea != null)
+			{
+				iobPredictLegendHitArea.removeFromParent();
+				iobPredictLegendHitArea.dispose();
+				iobPredictLegendHitArea = null;
+			}
+			
 			if (iobPredictLegendContainer != null)
 			{
+				iobPredictLegendContainer.removeEventListener(TouchEvent.TOUCH, onIOBPredictionExplanation);
 				iobPredictLegendContainer.removeFromParent();
 				iobPredictLegendContainer.dispose();
 				iobPredictLegendContainer = null;
+			}
+			
+			if (!predictionPillExplanationEnabled)
+			{
+				if (predictionExplanationLabel != null)
+				{
+					predictionExplanationLabel.removeFromParent();
+					predictionExplanationLabel.dispose();
+					predictionExplanationLabel = null;
+				}
+				
+				if (predictionTitleLabel != null)
+				{
+					predictionTitleLabel.removeFromParent();
+					predictionTitleLabel.dispose();
+					predictionTitleLabel = null;
+				}
+				
+				if (predictionExplanationMainContainer != null)
+				{
+					predictionExplanationMainContainer.removeFromParent();
+					predictionExplanationMainContainer.dispose();
+					predictionExplanationMainContainer = null;
+				}
+				
+				if (predictionExplanationCallout != null)
+				{
+					predictionExplanationCallout.removeFromParent();
+					predictionExplanationCallout.dispose();
+					predictionExplanationCallout = null;
+					
+					if (predictionsCallout != null)
+					{
+						predictionsCallout.closeOnTouchBeganOutside = true;
+						predictionsCallout.closeOnTouchEndedOutside = true;
+					}
+				}
 			}
 			
 			if (predictionsLegendsContainer != null)
@@ -3914,6 +4566,22 @@ package ui.chart
 			//Draw Predictions
 			drawPredictions(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
 			drawPredictions(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius);
+			
+			if(_displayLine)
+			{
+				//Destroy previous lines
+				destroyAllLines();
+				
+				//Draw Lines
+				drawLine(MAIN_CHART);
+				drawLine(SCROLLER_CHART);
+			}
+			
+			//Reposition delimitter
+			reporsitionPredictionDelimitter();
+			
+			//Reposition Treatments
+			manageTreatments();
 			
 			//Drawing Logic
 			function drawPredictions(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):void
@@ -4049,19 +4717,6 @@ package ui.chart
 					}
 				}
 			}
-			
-			if(_displayLine)
-			{
-				//Destroy previous lines
-				destroyAllLines();
-				
-				//Draw Lines
-				drawLine(MAIN_CHART);
-				drawLine(SCROLLER_CHART);
-			}
-			
-			//Reposition delimitter
-			reporsitionPredictionDelimitter();
 		}
 		
 		private function reporsitionPredictionDelimitter():void
@@ -4079,15 +4734,7 @@ package ui.chart
 				predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
 				activeGlucoseDelimiter = predictionsDelimiter;
 				
-				//Adjust Main Chart and Picker Position
-				if (_graphWidth - (handPicker.x + handPicker.width) <= _graphWidth / 67)
-				{
-					//Hand picker is almost at the end of the screen (less or equal than 1.5% of the screen width), probably the user left it there unintentionaly.
-					//Let's put the handpicker at the end of the screen and make sure we display the latest glucose value
-					handPicker.x = _graphWidth - handPicker.width;
-					displayLatestBGValue = true;
-				}
-				
+				//Adjust Main Chart Position
 				if (displayLatestBGValue)
 				{
 					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
@@ -4140,9 +4787,10 @@ package ui.chart
 			predictionsEnableSwitch.addEventListener(starling.events.Event.CHANGE, onPredictionsSwitchChanged);
 			if (predictionsEnablerPill != null) predictionsEnablerPill.dispose();
 			predictionsEnablerPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), predictionsEnableSwitch);
+			predictionsEnablerPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 			predictionsContainer.addChild(predictionsEnablerPill);
 			
-			//Length
+			//Duration
 			if (predictionsLengthPicker != null) predictionsLengthPicker.dispose();
 			var currentPredictionsLength:Number;
 			var predictionsListSelectedIndex:int;
@@ -4257,6 +4905,7 @@ package ui.chart
 			if (predictionsTimeFramePill != null) predictionsTimeFramePill.dispose();
 			predictionsTimeFramePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_label'), predictionsLengthPicker, 6, true);
 			predictionsTimeFramePill.addEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
+			predictionsTimeFramePill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 			predictionsContainer.addChild(predictionsTimeFramePill);
 			
 			//IOB/COB Toggle
@@ -4266,6 +4915,7 @@ package ui.chart
 			predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
 			if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.dispose();
 			predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
+			predictionsIOBCOBPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 			predictionsContainer.addChild(predictionsIOBCOBPill);
 			
 			//Predictions Output
@@ -4276,8 +4926,8 @@ package ui.chart
 				{
 					if (predictedTimeUntilHighPill != null) predictedTimeUntilHighPill.dispose();
 					predictedTimeUntilHighPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predicted_time_until_high_label'));
-					predictedTimeUntilHighPill.setValue(TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilHigh / TimeSpan.TIME_1_MINUTE, false));
-					predictedTimeUntilHighPill.touchable = false;
+					predictedTimeUntilHighPill.setValue("±" + TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilHigh / TimeSpan.TIME_1_MINUTE, false));
+					predictedTimeUntilHighPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedTimeUntilHighPill);
 				}
 				
@@ -4287,7 +4937,7 @@ package ui.chart
 					if (predictedTimeUntilLowPill != null) predictedTimeUntilLowPill.dispose();
 					predictedTimeUntilLowPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predicted_time_until_low_label'));
 					predictedTimeUntilLowPill.setValue(TimeSpan.formatHoursMinutesFromMinutes(predictedTimeUntilLow / TimeSpan.TIME_1_MINUTE, false));
-					predictedTimeUntilLowPill.touchable = false;
+					predictedTimeUntilLowPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedTimeUntilLowPill);
 				}
 				
@@ -4298,7 +4948,7 @@ package ui.chart
 					if (glucoseVelocityPill != null) glucoseVelocityPill.dispose();
 					glucoseVelocityPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_velocity'));
 					glucoseVelocityPill.setValue(MathHelper.formatNumberToStringWithPrefix(glucoseVelocity));
-					glucoseVelocityPill.touchable = false;
+					glucoseVelocityPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(glucoseVelocityPill);
 				}
 				
@@ -4310,7 +4960,7 @@ package ui.chart
 					if (predictedTreatmentsOutcomePill != null) predictedTreatmentsOutcomePill.dispose();
 					predictedTreatmentsOutcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'));
 					predictedTreatmentsOutcomePill.setValue(String(outcome));
-					predictedTreatmentsOutcomePill.touchable = false;
+					predictedTreatmentsOutcomePill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedTreatmentsOutcomePill);
 					
 					//Effect
@@ -4322,7 +4972,7 @@ package ui.chart
 						if (predictedTreatmentsEffectPill != null) predictedTreatmentsEffectPill.dispose();
 						predictedTreatmentsEffectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_effect'));
 						predictedTreatmentsEffectPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(effect)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(effect * 10)) / 10));
-						predictedTreatmentsEffectPill.touchable = false;
+						predictedTreatmentsEffectPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 						predictionsContainer.addChild(predictedTreatmentsEffectPill);
 					}
 				}
@@ -4333,7 +4983,7 @@ package ui.chart
 					if (predictedEventualBGPill != null) predictedEventualBGPill.dispose();
 					predictedEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_blood_glucose'));
 					predictedEventualBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedEventualBG)) : String(Math.round(BgReading.mgdlToMmol(predictedEventualBG * 10)) / 10));
-					predictedEventualBGPill.touchable = false;
+					predictedEventualBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedEventualBGPill);
 				}
 				
@@ -4341,9 +4991,9 @@ package ui.chart
 				if (!isNaN(predictedUAMBG))
 				{
 					if (predictedUAMBGPill != null) predictedUAMBGPill.dispose();
-					predictedUAMBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_unannounced_meal_blood_glucose'));
+					predictedUAMBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_unannounced_glucose_blood_glucose'));
 					predictedUAMBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedUAMBG)) : String(Math.round(BgReading.mgdlToMmol(predictedUAMBG * 10)) / 10));
-					predictedUAMBGPill.touchable = false;
+					predictedUAMBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedUAMBGPill);
 				}
 				
@@ -4353,7 +5003,7 @@ package ui.chart
 					if (predictedIOBBGPill != null) predictedIOBBGPill.dispose();
 					predictedIOBBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_iob_blood_glucose'));
 					predictedIOBBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedIOBBG)) : String(Math.round(BgReading.mgdlToMmol(predictedIOBBG * 10)) / 10));
-					predictedIOBBGPill.touchable = false;
+					predictedIOBBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedIOBBGPill);
 				}
 				
@@ -4363,7 +5013,7 @@ package ui.chart
 					if (predictedMinimumBGPill != null) predictedMinimumBGPill.dispose();
 					predictedMinimumBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_minimum_blood_glucose'));
 					predictedMinimumBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedMinimumBG)) : String(Math.round(BgReading.mgdlToMmol(predictedMinimumBG * 10)) / 10));
-					predictedMinimumBGPill.touchable = false;
+					predictedMinimumBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedMinimumBGPill);
 				}
 				
@@ -4373,7 +5023,7 @@ package ui.chart
 					if (predictedCarbImpactPill != null) predictedCarbImpactPill.dispose();
 					predictedCarbImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_carb_impact'));
 					predictedCarbImpactPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(predictedCarbImpact)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(predictedCarbImpact * 100)) / 100));
-					predictedCarbImpactPill.touchable = false;
+					predictedCarbImpactPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedCarbImpactPill);
 				}
 				
@@ -4383,7 +5033,7 @@ package ui.chart
 					if (predictedBgImpactPill != null) predictedBgImpactPill.dispose();
 					predictedBgImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_impact'));
 					predictedBgImpactPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(predictedBGImpact)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(predictedBGImpact * 100)) / 100));
-					predictedBgImpactPill.touchable = false;
+					predictedBgImpactPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedBgImpactPill);
 				}
 				
@@ -4393,7 +5043,7 @@ package ui.chart
 					if (predictedDeviationPill != null) predictedDeviationPill.dispose();
 					predictedDeviationPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_deviation'));
 					predictedDeviationPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(predictedDeviation)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(predictedDeviation * 100)) / 100));
-					predictedDeviationPill.touchable = false;
+					predictedDeviationPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 					predictionsContainer.addChild(predictedDeviationPill);
 				}
 			}
@@ -4654,6 +5304,7 @@ package ui.chart
 		{
 			if (predictedEventualBGPill != null)
 			{
+				predictedEventualBGPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedEventualBGPill.removeFromParent();
 				predictedEventualBGPill.dispose();
 				predictedEventualBGPill = null;
@@ -4661,6 +5312,7 @@ package ui.chart
 			
 			if (predictedUAMBGPill != null)
 			{
+				predictedUAMBGPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedUAMBGPill.removeFromParent();
 				predictedUAMBGPill.dispose();
 				predictedUAMBGPill = null;
@@ -4668,6 +5320,7 @@ package ui.chart
 			
 			if (predictedIOBBGPill != null)
 			{
+				predictedIOBBGPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedIOBBGPill.removeFromParent();
 				predictedIOBBGPill.dispose();
 				predictedIOBBGPill = null;
@@ -4675,6 +5328,7 @@ package ui.chart
 			
 			if (predictedMinimumBGPill != null)
 			{
+				predictedMinimumBGPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedMinimumBGPill.removeFromParent();
 				predictedMinimumBGPill.dispose();
 				predictedMinimumBGPill = null;
@@ -4682,6 +5336,7 @@ package ui.chart
 			
 			if (predictedTreatmentsOutcomePill != null)
 			{
+				predictedTreatmentsOutcomePill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedTreatmentsOutcomePill.removeFromParent();
 				predictedTreatmentsOutcomePill.dispose();
 				predictedTreatmentsOutcomePill = null;
@@ -4689,6 +5344,7 @@ package ui.chart
 			
 			if (predictedTreatmentsEffectPill != null)
 			{
+				predictedTreatmentsEffectPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedTreatmentsEffectPill.removeFromParent();
 				predictedTreatmentsEffectPill.dispose();
 				predictedTreatmentsEffectPill = null;
@@ -4696,6 +5352,7 @@ package ui.chart
 			
 			if (predictedBgImpactPill != null)
 			{
+				predictedBgImpactPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedBgImpactPill.removeFromParent();
 				predictedBgImpactPill.dispose();
 				predictedBgImpactPill = null;
@@ -4703,6 +5360,7 @@ package ui.chart
 			
 			if (predictedDeviationPill != null)
 			{
+				predictedDeviationPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedDeviationPill.removeFromParent();
 				predictedDeviationPill.dispose();
 				predictedDeviationPill = null;
@@ -4710,6 +5368,7 @@ package ui.chart
 			
 			if (glucoseVelocityPill != null)
 			{
+				glucoseVelocityPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				glucoseVelocityPill.removeFromParent();
 				glucoseVelocityPill.dispose();
 				glucoseVelocityPill = null;
@@ -4717,6 +5376,7 @@ package ui.chart
 			
 			if (predictedCarbImpactPill != null)
 			{
+				predictedCarbImpactPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedCarbImpactPill.removeFromParent();
 				predictedCarbImpactPill.dispose();
 				predictedCarbImpactPill = null;
@@ -4724,6 +5384,7 @@ package ui.chart
 			
 			if (predictedTimeUntilHighPill != null)
 			{
+				predictedTimeUntilHighPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedTimeUntilHighPill.removeFromParent();
 				predictedTimeUntilHighPill.dispose();
 				predictedTimeUntilHighPill = null;
@@ -4731,6 +5392,7 @@ package ui.chart
 			
 			if (predictedTimeUntilLowPill != null)
 			{
+				predictedTimeUntilLowPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictedTimeUntilLowPill.removeFromParent();
 				predictedTimeUntilLowPill.dispose();
 				predictedTimeUntilLowPill = null;
@@ -4746,6 +5408,7 @@ package ui.chart
 			
 			if (predictionsEnablerPill != null)
 			{
+				predictionsEnablerPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictionsEnablerPill.removeFromParent();
 				predictionsEnablerPill.dispose();
 				predictionsEnablerPill = null;
@@ -4764,6 +5427,7 @@ package ui.chart
 			
 			if (predictionsTimeFramePill != null)
 			{
+				predictionsTimeFramePill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictionsTimeFramePill.removeEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
 				predictionsTimeFramePill.removeFromParent();
 				predictionsTimeFramePill.dispose();
@@ -4780,6 +5444,7 @@ package ui.chart
 			
 			if (predictionsIOBCOBPill != null)
 			{
+				predictionsIOBCOBPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictionsIOBCOBPill.removeFromParent();
 				predictionsIOBCOBPill.dispose();
 				predictionsIOBCOBPill = null;
@@ -4956,6 +5621,8 @@ package ui.chart
 				return;
 			
 			//Loop all markers, draw the line from their positions and also hide the markers
+			var extraEndLineColor:uint;
+			var doublePrevGlucoseMarker:GlucoseMarker;
 			var previousLineX:Number;
 			var previousLineY:Number;
 			var previousGlucoseMarker:GlucoseMarker;
@@ -4986,12 +5653,12 @@ package ui.chart
 					var currentLineX:Number;
 					var currentLineY:Number;
 					
-					if(i < dataLength -1 || isPrediction)
+					if((i < dataLength -1 || isPrediction) && i != realReadingsLength - 1)
 					{
 						currentLineX = glucoseMarker.x + (glucoseMarker.width/2);
 						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
 					}
-					else if (i == dataLength -1)
+					else if (i == dataLength -1 || i == realReadingsLength - 1)
 					{
 						currentLineX = glucoseMarker.x + (glucoseMarker.width);
 						currentLineY = glucoseMarker.y + (glucoseMarker.height/2);
@@ -5020,7 +5687,7 @@ package ui.chart
 						//Add extra line to the beginning
 						if (lastRealGlucoseMarker != null)
 						{
-							line.moveTo(lastRealGlucoseMarker.x + (lastRealGlucoseMarker.width / 2), lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
+							line.moveTo(lastRealGlucoseMarker.x + lastRealGlucoseMarker.width, lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
 							line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
 						}
 						
@@ -5029,8 +5696,14 @@ package ui.chart
 						{
 							var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
 							var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
+							extraEndLineColor = previousGlucoseMarker.color;
+							doublePrevGlucoseMarker = sourceList[i - 2];
+							if (doublePrevGlucoseMarker != null)
+							{
+								extraEndLineColor = doublePrevGlucoseMarker.color;
+							}
 							line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
-							line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, previousGlucoseMarker.color, previousGlucoseMarker.color);
+							line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
 						}
 					}
 					
@@ -5042,7 +5715,7 @@ package ui.chart
 						}
 						else
 						{
-							if (previousGlucoseMarker.color == glucoseMarker.color && !newPredictionSet)
+							if (previousGlucoseMarker.bgReading.uniqueId == glucoseMarker.bgReading.uniqueId && !newPredictionSet)
 							{
 								line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
 							}
@@ -5050,7 +5723,14 @@ package ui.chart
 					}
 					else
 					{
-						line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+						//if (!isPrediction)
+						//{
+							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+						//}
+						//else
+						//{
+						//	line.lineTo(currentLineX, currentLineY);
+						//}
 					}
 					
 					line.moveTo(currentLineX, currentLineY);
@@ -5069,8 +5749,14 @@ package ui.chart
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
 				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
+				extraEndLineColor = previousGlucoseMarker.color;
+				doublePrevGlucoseMarker = sourceList[i - 2];
+				if (doublePrevGlucoseMarker != null)
+				{
+					extraEndLineColor = doublePrevGlucoseMarker.color;
+				}
 				line.moveTo(extraPredictionLineX, extraPredictionLineY);
-				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY);
+				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			
 			//Add line to display list
@@ -5603,7 +6289,7 @@ package ui.chart
 				
 				//Validate. If there's no active IOB then don't display curves
 				var currentIOB:Number = TreatmentsManager.getTotalIOB(new Date().valueOf()).iob;
-				if (currentIOB <= 0)
+				if (currentIOB < 0.01)
 					return;
 				
 				//Generate IOB/Activity Curves
@@ -6386,6 +7072,7 @@ package ui.chart
 			disposePredictions();
 			disposePredictionsPills();
 			disposePredictionsHeader();
+			disposePredictionsExplanations();
 			
 			//Treatments
 			if (deleteBtn != null)

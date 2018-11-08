@@ -1,5 +1,7 @@
 package model
 {
+	import flash.utils.ByteArray;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -17,6 +19,8 @@ package model
 
 	public class Forecast
 	{
+		private static var internalCache:Object = {};
+		
 		public function Forecast()
 		{
 			throw new Error("Forecast is not meant to be instantiated!");
@@ -34,10 +38,33 @@ package model
 				return null;
 			}
 			
-			//Define common variables
-			var five_min_blocks:Number = Math.floor(minutes / 5);
 			var currentTime:Number = new Date().valueOf();
 			var now:Number = currentTime - glucose_status.date < TimeSpan.TIME_16_MINUTES  && !forceNewIOBCOB ? glucose_status.date : currentTime;
+			
+			/**
+			 * Check Cache
+			 */
+			
+			//Sort Treatments
+			TreatmentsManager.treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+			
+			//Create cache hash
+			var treatmentsBytes:ByteArray = new ByteArray();
+			treatmentsBytes.writeObject(TreatmentsManager.treatmentsList);
+			var cacheHash:String = treatmentsBytes.toString() + forceNewIOBCOB.toString() + ignoreIOBCOB.toString();
+			
+			//Check cache
+			if (!forceNewIOBCOB)
+			{
+				if (internalCache[now] != null && internalCache[now].cacheHash != null && internalCache[now].cacheHash == cacheHash && internalCache[now].minutes != null && internalCache[now].minutes == minutes)
+				{
+					//Cache found!
+					return internalCache[now];
+				}
+			}
+			
+			//Define common variables
+			var five_min_blocks:Number = Math.floor(minutes / 5);
 			var i:int;
 			var status:String = "";
 			
@@ -617,7 +644,13 @@ package model
 			predBGs.status = status;
 			predBGs.carbsReq = carbsReq;
 			predBGs.naiveInsulinReq = naiveInsulinReq;
+			predBGs.cacheHash = cacheHash;
+			predBGs.minutes = minutes;
 			
+			//Save cache
+			internalCache[now] = predBGs;
+			
+			//Return predictions
 			return predBGs;
 		}
 		
@@ -643,15 +676,19 @@ package model
 			var predictionsFound:Boolean = false;
 			var preferredPrediction:String = "";
 			var lastCalibration:Calibration = Calibration.last();
+			var unformattedIOBPredictionsList:Array = [];
+			var unformattedCOBPredictionsList:Array = [];
+			var unformattedUAMPredictionsList:Array = [];
 			
 			//COB Predictions
 			if (predictionData.COB != null)
 			{
-				predictionData.COB.shift();
+				unformattedCOBPredictionsList = predictionData.COB.concat();
+				unformattedCOBPredictionsList.shift();
 				
-				if (predictionData.COB.length > maxNumberOfPredictions)
+				if (unformattedCOBPredictionsList.length > maxNumberOfPredictions)
 				{
-					predictionData.COB = predictionData.COB.slice(0, maxNumberOfPredictions);
+					unformattedCOBPredictionsList = unformattedCOBPredictionsList.slice(0, maxNumberOfPredictions);
 				}
 				
 				if (preferredPrediction == "" || (lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS)) 
@@ -665,11 +702,12 @@ package model
 			//UAM Predictions
 			if (predictionData.UAM != null)
 			{
-				predictionData.UAM.shift();
+				unformattedUAMPredictionsList = predictionData.UAM.concat();
+				unformattedUAMPredictionsList.shift();
 				
-				if (predictionData.UAM.length > maxNumberOfPredictions)
+				if (unformattedUAMPredictionsList.length > maxNumberOfPredictions)
 				{
-					predictionData.UAM = predictionData.UAM.slice(0, maxNumberOfPredictions);
+					unformattedUAMPredictionsList = unformattedUAMPredictionsList.slice(0, maxNumberOfPredictions);
 				}
 				
 				if (preferredPrediction == "") 
@@ -683,18 +721,19 @@ package model
 			//IOB Predictions
 			if (predictionData.IOB != null)
 			{
-				predictionData.IOB.shift();
+				unformattedIOBPredictionsList = predictionData.IOB.concat();
+				unformattedIOBPredictionsList.shift();
 				
-				if (predictionData.IOB.length > maxNumberOfPredictions)
+				if (unformattedIOBPredictionsList.length > maxNumberOfPredictions)
 				{
-					predictionData.IOB = predictionData.IOB.slice(0, maxNumberOfPredictions);
+					unformattedIOBPredictionsList = unformattedIOBPredictionsList.slice(0, maxNumberOfPredictions);
 				}
 				
 				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
 				if (preferredPrediction == "" || 
-					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 5 && preferredPrediction != "COB") || 
+					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB") || 
 					(lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS && preferredPrediction != "COB") ||
-					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 5 && preferredPrediction != "COB")
+					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB")
 				) 
 				{
 					preferredPrediction = "IOB";
@@ -713,15 +752,15 @@ package model
 			//Check which prediction to return
 			if (preferredPrediction == "COB")
 			{
-				finalPrediction = predictionData.COB[predictionData.COB.length - 1];
+				finalPrediction = unformattedCOBPredictionsList[unformattedCOBPredictionsList.length - 1];
 			}
 			else if (preferredPrediction == "UAM")
 			{
-				finalPrediction = predictionData.UAM[predictionData.UAM.length - 1];
+				finalPrediction = unformattedUAMPredictionsList[unformattedUAMPredictionsList.length - 1];
 			}
 			else if (preferredPrediction == "IOB")
 			{
-				finalPrediction = predictionData.IOB[predictionData.IOB.length - 1];
+				finalPrediction = unformattedIOBPredictionsList[unformattedIOBPredictionsList.length - 1];
 			}
 			
 			return finalPrediction;
