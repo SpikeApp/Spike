@@ -83,6 +83,7 @@ package ui.screens.display.settings.watch
 		private var gapFixCheck:Check;
 		private var displayIOBCheck:Check;
 		private var displayCOBCheck:Check;
+		private var displayPredictionsCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -97,6 +98,7 @@ package ui.screens.display.settings.watch
 		private var gapFixValue:Boolean;
 		private var displayIOBEnabled:Boolean;
 		private var displayCOBEnabled:Boolean;
+		private var displayPredictionsEnabled:Boolean;
 
 		public function WatchSettingsList()
 		{
@@ -138,6 +140,7 @@ package ui.screens.display.settings.watch
 			gapFixValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) == "true";
 			displayIOBEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_IOB_ON) == "true";
 			displayCOBEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON) == "true";
+			displayPredictionsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON) == "true";
 			
 			Trace.myTrace("WatchSettingsList.as", "setupInitialState called! AuthorizationStatus = " + Calendar.service.authorisationStatus());
 		}
@@ -185,6 +188,10 @@ package ui.screens.display.settings.watch
 			//Display COB Toggle
 			displayCOBCheck = LayoutFactory.createCheckMark(displayCOBEnabled);
 			displayCOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+			
+			//Display Predictions Toggle
+			displayPredictionsCheck = LayoutFactory.createCheckMark(displayPredictionsEnabled);
+			displayPredictionsCheck.addEventListener(starling.events.Event.CHANGE, onDisplayPredictionsChanged);
 			
 			//Display Name TextInput
 			displayNameTextInput = LayoutFactory.createTextInput(false, false, Constants.isPortrait ? 140 : 240, HorizontalAlign.RIGHT);
@@ -256,6 +263,7 @@ package ui.screens.display.settings.watch
 						content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','your_name_label'), accessory: displayNameTextInput });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_iob_label'), accessory: displayIOBCheck });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_cob_label'), accessory: displayCOBCheck });
+					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_predictions_label'), accessory: displayPredictionsCheck });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_trend_label'), accessory: displayTrend });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_delta_label'), accessory: displayDelta });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_units_label'), accessory: displayUnits });
@@ -362,6 +370,10 @@ package ui.screens.display.settings.watch
 			//Display COB
 			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON) != String(displayCOBEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON, String(displayCOBEnabled));
+			
+			//Display Predictions
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON) != String(displayPredictionsEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON, String(displayPredictionsEnabled));
 			
 			//Calendar ID
 			if (isDeviceAuthorized && calendarPickerList.selectedIndex != -1)
@@ -476,12 +488,16 @@ package ui.screens.display.settings.watch
 			{
 				displayIOBEnabled = false;
 				displayCOBEnabled = false;
+				displayPredictionsEnabled = false;
 				displayIOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
 				displayCOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayPredictionsCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayPredictionsChanged);
 				displayIOBCheck.isSelected = displayIOBEnabled;
 				displayCOBCheck.isSelected = displayCOBEnabled;
+				displayPredictionsCheck.isSelected = displayPredictionsEnabled;
 				displayIOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
 				displayCOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayPredictionsCheck.addEventListener(starling.events.Event.CHANGE, onDisplayPredictionsChanged);
 			}
 			
 			refreshContent();
@@ -498,8 +514,39 @@ package ui.screens.display.settings.watch
 			if (displayIOBEnabled || displayCOBEnabled)
 			{
 				displayNameEnabled = false;
+				displayPredictionsEnabled = false;
 				displayNameToggle.removeEventListener(starling.events.Event.CHANGE, onDisplayNameChanged);
+				displayPredictionsCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayPredictionsChanged);
 				displayNameToggle.isSelected = displayNameEnabled;
+				displayPredictionsCheck.isSelected = displayPredictionsEnabled;
+				displayNameToggle.addEventListener(starling.events.Event.CHANGE, onDisplayNameChanged);
+				displayPredictionsCheck.addEventListener(starling.events.Event.CHANGE, onDisplayPredictionsChanged);
+			}
+			
+			refreshContent();
+			
+			needsSave = true;
+			
+			save();
+		}
+		
+		private function onDisplayPredictionsChanged(e:starling.events.Event):void
+		{
+			displayPredictionsEnabled = displayPredictionsCheck.isSelected;
+			
+			if (displayPredictionsEnabled)
+			{
+				displayIOBEnabled = false;
+				displayCOBEnabled = false;
+				displayNameEnabled = false;
+				displayIOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayCOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayNameToggle.removeEventListener(starling.events.Event.CHANGE, onDisplayNameChanged);
+				displayIOBCheck.isSelected = displayIOBEnabled;
+				displayCOBCheck.isSelected = displayCOBEnabled;
+				displayNameToggle.isSelected = displayNameEnabled;
+				displayIOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
+				displayCOBCheck.addEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
 				displayNameToggle.addEventListener(starling.events.Event.CHANGE, onDisplayNameChanged);
 			}
 			
@@ -860,6 +907,13 @@ package ui.screens.display.settings.watch
 				displayCOBCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayTreatmentsChanged);
 				displayCOBCheck.dispose();
 				displayCOBCheck = null;
+			}
+			
+			if (displayPredictionsCheck != null)
+			{
+				displayPredictionsCheck.removeEventListener(starling.events.Event.CHANGE, onDisplayPredictionsChanged);
+				displayPredictionsCheck.dispose();
+				displayPredictionsCheck = null;
 			}
 			
 			super.dispose();

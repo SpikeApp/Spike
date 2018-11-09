@@ -573,13 +573,9 @@ package treatments
 				var lastBgReading:BgReading = BgReading.lastWithCalculatedValue();
 				if (lastBgReading != null && new Date().valueOf() - lastBgReading._timestamp < TimeSpan.TIME_11_MINUTES)
 				{
-					trace("adjusting COB time value from " + time + " to " +  lastBgReading._timestamp);
-					
 					time = lastBgReading._timestamp;
 				}
 			}
-			
-			trace("How much is time?", time);
 			
 			//Get current algorithm
 			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
