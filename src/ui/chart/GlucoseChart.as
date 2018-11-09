@@ -339,6 +339,7 @@ package ui.chart
 		private var lastCalibrationTimestamp:Number = 0;
 		private var currentTotalIOB:Number = 0;
 		private var currentTotalCOB:Number = 0;
+		private var predictionsCalloutTimeout:uint = 0;
 		private var numDifferentPredictionsDisplayed:uint;
 		private var preferredPrediction:String;
 		private var predictionPillExplanationEnabled:Boolean = false;
@@ -4069,9 +4070,18 @@ package ui.chart
 			
 			var touch:Touch = e.getTouch(stage);
 			
-			if(touch != null && touch.phase == TouchPhase.BEGAN && predictionExplanationCallout != null) 
+			if(touch != null && touch.phase == TouchPhase.ENDED && predictionExplanationCallout != null) 
 			{
 				predictionExplanationCallout.removeFromParent(true);
+				
+				predictionsCalloutTimeout = setTimeout( function():void 
+				{
+					if (predictionExplanationCallout != null)
+					{
+						predictionsCallout.closeOnTouchBeganOutside = true;
+						predictionsCallout.closeOnTouchEndedOutside = true;
+					}
+				}, 250 );
 			}
 			
 		}
@@ -4968,17 +4978,6 @@ package ui.chart
 					predictionsContainer.addChild(predictedTimeUntilLowPill);
 				}
 				
-				//Glucose Velocity
-				var glucoseVelocity:Number = GlucoseFactory.getGlucoseVelocity();
-				if (!isNaN(glucoseVelocity))
-				{
-					if (glucoseVelocityPill != null) glucoseVelocityPill.dispose();
-					glucoseVelocityPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_velocity'));
-					glucoseVelocityPill.setValue(MathHelper.formatNumberToStringWithPrefix(glucoseVelocity));
-					glucoseVelocityPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-					predictionsContainer.addChild(glucoseVelocityPill);
-				}
-				
 				//Treatments Outcome
 				var outcome:Number = Forecast.predictOutcome();
 				if (!isNaN(outcome))
@@ -5002,6 +5001,17 @@ package ui.chart
 						predictedTreatmentsEffectPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 						predictionsContainer.addChild(predictedTreatmentsEffectPill);
 					}
+				}
+				
+				//Glucose Velocity
+				var glucoseVelocity:Number = GlucoseFactory.getGlucoseVelocity();
+				if (!isNaN(glucoseVelocity))
+				{
+					if (glucoseVelocityPill != null) glucoseVelocityPill.dispose();
+					glucoseVelocityPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_blood_glucose_velocity'));
+					glucoseVelocityPill.setValue(MathHelper.formatNumberToStringWithPrefix(glucoseVelocity));
+					glucoseVelocityPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsContainer.addChild(glucoseVelocityPill);
 				}
 				
 				//Minimum BG
@@ -5535,6 +5545,8 @@ package ui.chart
 				predictionsCallout.dispose();
 				predictionsCallout = null;
 			}
+			
+			clearTimeout(predictionsCalloutTimeout);
 		}
 		
 		private function disposePredictions():void
