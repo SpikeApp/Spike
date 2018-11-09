@@ -3825,7 +3825,7 @@ package ui.chart
 					
 					if (currentIOB > 0 && currentTotalIOB > 0)
 					{
-						(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft += 20;
+						(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft += 30;
 					}
 				}
 				
@@ -3948,6 +3948,7 @@ package ui.chart
 			{
 				predictionExplanationCallout.removeEventListener(starling.events.Event.OPEN, onPredictionPillExplanationOpened);
 				predictionExplanationCallout.removeEventListener(starling.events.Event.CLOSE, disposePredictionsExplanations);
+				predictionExplanationCallout.removeEventListener(TouchEvent.TOUCH, onClosePredictionsExplanation);
 				predictionExplanationCallout.removeFromParent();
 				predictionExplanationCallout.dispose();
 				predictionExplanationCallout = null;
@@ -4055,6 +4056,24 @@ package ui.chart
 				predictionTitleLabel.width -= 10;
 				predictionExplanationLabel.width -= 10;
 			}
+			else
+			{
+				predictionExplanationCallout.addEventListener(TouchEvent.TOUCH, onClosePredictionsExplanation);
+			}
+		}
+		
+		private function onClosePredictionsExplanation(e:TouchEvent):void
+		{	
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN && predictionExplanationCallout != null) 
+			{
+				predictionExplanationCallout.removeFromParent(true);
+			}
+			
 		}
 	
 		private function displayPredictionLegendExplanationCallout(pointOfOrigin:DisplayObject, title:String, body:String):void
@@ -4447,6 +4466,9 @@ package ui.chart
 				
 				if (predictionExplanationCallout != null)
 				{
+					predictionExplanationCallout.removeEventListener(starling.events.Event.OPEN, onPredictionPillExplanationOpened);
+					predictionExplanationCallout.removeEventListener(starling.events.Event.CLOSE, disposePredictionsExplanations);
+					predictionExplanationCallout.removeEventListener(TouchEvent.TOUCH, onClosePredictionsExplanation);
 					predictionExplanationCallout.removeFromParent();
 					predictionExplanationCallout.dispose();
 					predictionExplanationCallout = null;
@@ -4467,7 +4489,7 @@ package ui.chart
 			}
 		}
 		
-		private function redrawPredictions():void
+		private function redrawPredictions(forceIOBCOBRefresh:Boolean = false):void
 		{
 			//First validation
 			if (!predictionsEnabled || predictionsMainGlucoseDataPoints.length == 0 || predictionsScrollerGlucoseDataPoints.length == 0 || predictionsDelimiter == null || dummyModeActive || !SystemUtil.isApplicationActive)
@@ -4492,7 +4514,7 @@ package ui.chart
 			var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
 			
 			//Get new predictions
-			var predictionsList:Array = fetchPredictions(lastTreatmentIsCarbs);
+			var predictionsList:Array = fetchPredictions(lastTreatmentIsCarbs || forceIOBCOBRefresh);
 			
 			//Third validation
 			if (predictionsList == null || predictionsList.length == 0)
@@ -4520,8 +4542,8 @@ package ui.chart
 				disposePredictions();
 				
 				//Redraw main and scroller charts
-				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0, false, lastTreatmentIsCarbs);
-				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0, false, lastTreatmentIsCarbs);
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0, false, lastTreatmentIsCarbs || forceIOBCOBRefresh);
+				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0, false, lastTreatmentIsCarbs || forceIOBCOBRefresh);
 				
 				//Redraw raw markers if needed
 				if (displayRaw)
@@ -5200,7 +5222,7 @@ package ui.chart
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB, String(predictionsIOBCOBEnabled), true, false);
 				
 				//Redraw Predictions
-				redrawPredictions();
+				redrawPredictions(true);
 			}
 		}
 		
@@ -5431,8 +5453,16 @@ package ui.chart
 			
 			if (predictionsEnablerPill != null)
 			{
-				predictionsEnablerPill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsEnablerPill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				if (predictionsEnablerPill.pillBackground != null)
+				{
+					predictionsEnablerPill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				if (predictionsEnablerPill.titleLabel != null)
+				{
+					predictionsEnablerPill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
 				predictionsEnablerPill.removeFromParent();
 				predictionsEnablerPill.dispose();
 				predictionsEnablerPill = null;
@@ -5451,8 +5481,16 @@ package ui.chart
 			
 			if (predictionsTimeFramePill != null)
 			{
-				predictionsTimeFramePill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsTimeFramePill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				if (predictionsTimeFramePill.pillBackground != null)
+				{
+					predictionsTimeFramePill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				if (predictionsTimeFramePill.titleLabel != null)
+				{
+					predictionsTimeFramePill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
 				predictionsTimeFramePill.removeEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
 				predictionsTimeFramePill.removeFromParent();
 				predictionsTimeFramePill.dispose();
@@ -5469,8 +5507,16 @@ package ui.chart
 			
 			if (predictionsIOBCOBPill != null)
 			{
-				predictionsIOBCOBPill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsIOBCOBPill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				if (predictionsIOBCOBPill.pillBackground != null)
+				{
+					predictionsIOBCOBPill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				if (predictionsIOBCOBPill.titleLabel != null)
+				{
+					predictionsIOBCOBPill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
 				predictionsIOBCOBPill.removeFromParent();
 				predictionsIOBCOBPill.dispose();
 				predictionsIOBCOBPill = null;

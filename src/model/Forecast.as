@@ -649,7 +649,10 @@ package model
 			predBGs.minutes = minutes;
 			
 			//Save cache
-			internalCache[now] = predBGs;
+			if (!forceNewIOBCOB)
+			{
+				internalCache[now] = predBGs;
+			}
 			
 			//Return predictions
 			return predBGs;

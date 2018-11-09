@@ -184,6 +184,7 @@ package ui.chart
 		{
 			if (pillBackground != null)
 			{
+				pillBackground.removeEventListeners();
 				pillBackground.removeFromParent();
 				pillBackground.dispose();
 				pillBackground = null;
@@ -198,6 +199,7 @@ package ui.chart
 			
 			if (titleLabel != null)
 			{
+				titleLabel.removeEventListeners();
 				titleLabel.removeFromParent();
 				titleLabel.dispose();
 				titleLabel = null;
