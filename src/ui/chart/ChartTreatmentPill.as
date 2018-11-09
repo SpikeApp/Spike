@@ -122,7 +122,7 @@ package ui.chart
 			titleLabel.validate();
 			
 			//Create Value Label
-			valueLabel = LayoutFactory.createLabel(value, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, isPredictive,  !isPredictive ? treatmentPillColor : uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_COLOR)));	
+			valueLabel = LayoutFactory.createLabel(value, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, isPredictive,  !isPredictive ? treatmentPillColor : uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR)));	
 			valueLabel.validate();
 			
 			//Calculate Dimensions

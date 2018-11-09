@@ -431,10 +431,10 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         var predictValue:String = "";
         if (predictionsOutcome != "-1")
         {
-            predictValue = "  " + predictionsDuration + ": " + predictionsOutcome
+            predictValue = "   " + predictionsDuration + ":" + predictionsOutcome
         }
         
-        treatmentsLabel.text = COBString + ": " + COB + "  " + IOBString + ": " + IOB + predictValue
+        treatmentsLabel.text = COBString + ":" + COB + "   " + IOBString + ":" + IOB + predictValue
         treatmentsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
     }
     

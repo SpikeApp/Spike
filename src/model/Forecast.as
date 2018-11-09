@@ -635,6 +635,7 @@ package model
 			predBGs.carbImpact = ci;
 			predBGs.deviation = deviation;
 			predBGs.eventualBG = eventualBG;
+			predBGs.minPredBG = minPredBG;
 			predBGs.minGuardBG = minGuardBG;
 			predBGs.COBpredBG = COBpredBG;
 			predBGs.IOBpredBG = IOBpredBG;
@@ -671,6 +672,7 @@ package model
 			var maxNumberOfPredictions:Number = Math.floor(predictionsDuration / 5);
 			var	predictedIOBBG:Number = predictionData.IOBpredBG != null ? predictionData.IOBpredBG : Number.NaN;
 			var	predictedUAMBG:Number = predictionData.UAMpredBG != null ? predictionData.UAMpredBG : Number.NaN;
+			var predictedCOBBG:Number = predictionData.COBpredBG != null ? predictionData.COBpredBG : Number.NaN;
 			var currentIOB:Number = predictionData.IOBValue != null ? predictionData.IOBValue : Number.NaN;
 			var currentCOB:Number = predictionData.COBValue != null ? predictionData.COBValue : Number.NaN;
 			var predictionsFound:Boolean = false;
@@ -679,25 +681,6 @@ package model
 			var unformattedIOBPredictionsList:Array = [];
 			var unformattedCOBPredictionsList:Array = [];
 			var unformattedUAMPredictionsList:Array = [];
-			
-			//COB Predictions
-			if (predictionData.COB != null)
-			{
-				unformattedCOBPredictionsList = predictionData.COB.concat();
-				unformattedCOBPredictionsList.shift();
-				
-				if (unformattedCOBPredictionsList.length > maxNumberOfPredictions)
-				{
-					unformattedCOBPredictionsList = unformattedCOBPredictionsList.slice(0, maxNumberOfPredictions);
-				}
-				
-				if (preferredPrediction == "" || (lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS)) 
-				{
-					preferredPrediction = "COB";
-				}
-				
-				predictionsFound = true;
-			}
 			
 			//UAM Predictions
 			if (predictionData.UAM != null)
@@ -713,6 +696,28 @@ package model
 				if (preferredPrediction == "") 
 				{
 					preferredPrediction = "UAM";
+				}
+				
+				predictionsFound = true;
+			}
+			
+			//COB Predictions
+			if (predictionData.COB != null)
+			{
+				unformattedCOBPredictionsList = predictionData.COB.concat();
+				unformattedCOBPredictionsList.shift();
+				
+				if (unformattedCOBPredictionsList.length > maxNumberOfPredictions)
+				{
+					unformattedCOBPredictionsList = unformattedCOBPredictionsList.slice(0, maxNumberOfPredictions);
+				}
+				
+				if (preferredPrediction == "" || 
+					//(lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS) ||
+					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
+				)
+				{
+					preferredPrediction = "COB";
 				}
 				
 				predictionsFound = true;

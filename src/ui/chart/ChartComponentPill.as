@@ -32,9 +32,9 @@ package ui.chart
 		private static var pillHeight:int = 25;
 		
 		/* Display Objects */
-		private var pillBackground:SpikeCanvas;
+		public var pillBackground:SpikeCanvas;
 		private var valueBackground:SpikeCanvas;
-		private var titleLabel:Label;
+		public var titleLabel:Label;
 		
 		public function ChartComponentPill(title:String, component:FeathersControl, extraPadding:int = 0, listenForChangeEvents:Boolean = false)
 		{

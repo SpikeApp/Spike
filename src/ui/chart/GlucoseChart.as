@@ -7,15 +7,11 @@ package ui.chart
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.system.System;
-	import flash.text.engine.LineJustification;
-	import flash.text.engine.SpaceJustifier;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
 	import flash.utils.clearTimeout;
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
-	
-	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -32,22 +28,16 @@ package ui.chart
 	import feathers.controls.DateTimeMode;
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.DragGesture;
-	import feathers.controls.Header;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollContainer;
 	import feathers.controls.ScrollPolicy;
-	import feathers.controls.TextCallout;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
-	import feathers.controls.text.TextBlockTextRenderer;
-	import feathers.controls.text.TextFieldTextRenderer;
 	import feathers.core.FeathersControl;
-	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
-	import feathers.events.FeathersEventType;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
@@ -390,6 +380,7 @@ package ui.chart
 		private var predictionTitleLabel:Label;
 		private var predictionExplanationLabel:Label;
 		private var predictionExplanationCallout:Callout;
+		private var predictedCOBBGPill:ChartTreatmentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -401,7 +392,7 @@ package ui.chart
 			
 			//Predictions
 			predictionsEnabled = dontDisplayPredictionsPill == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true";
-			predictionsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_COLOR));
+			predictionsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR));
 			
 			if (timelineRange == TIMELINE_1H)
 				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
@@ -3485,10 +3476,10 @@ package ui.chart
 			predictedTimeUntilLow = Number.NaN;
 			
 			//Colors
-			var mainPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_COLOR));
+			var mainPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR));
 			var cobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
 			var iobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
-			var uamPredictionsColor:uint = 0xA0A0A0;
+			var uamPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR));
 			
 			//Prediction's lists
 			var finalTotalPredictionsList:Array = [];
@@ -3510,7 +3501,7 @@ package ui.chart
 				predictedBGImpact = unformattedPredictions.bgImpact != null ? unformattedPredictions.bgImpact : Number.NaN;
 				predictedDeviation = unformattedPredictions.deviation != null ? unformattedPredictions.deviation : Number.NaN;
 				predictedCarbImpact = unformattedPredictions.carbImpact != null ? unformattedPredictions.carbImpact : Number.NaN;
-				predictedMinimumBG = unformattedPredictions.minGuardBG != null ? unformattedPredictions.minGuardBG : Number.NaN;
+				predictedMinimumBG = unformattedPredictions.minPredBG != null ? unformattedPredictions.minPredBG : Number.NaN;
 				predictedCOBBG = unformattedPredictions.COBpredBG != null ? unformattedPredictions.COBpredBG : Number.NaN;
 				predictedIOBBG = unformattedPredictions.IOBpredBG != null ? unformattedPredictions.IOBpredBG : Number.NaN;
 				predictedUAMBG = unformattedPredictions.UAMpredBG != null ? unformattedPredictions.UAMpredBG : Number.NaN;
@@ -3528,8 +3519,6 @@ package ui.chart
 				uamPredictionsEnabled = true;
 				numDifferentPredictionsDisplayed++;
 			}
-			
-			var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
 			
 			//COB Predictions
 			if (unformattedPredictions != null && unformattedPredictions.COB != null)
@@ -3552,6 +3541,8 @@ package ui.chart
 			//IOB Predictions
 			if (unformattedPredictions != null && unformattedPredictions.IOB != null)
 			{
+				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
+				
 				unformattedIOBPredictionsList = unformattedPredictions.IOB.concat();
 				currentReadingValue = unformattedIOBPredictionsList.shift(); //Remove first element
 				if (preferredPrediction == "" || 
@@ -3801,13 +3792,13 @@ package ui.chart
 					//Legend Container
 					cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 					//Label
-					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 || currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
+					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 && currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
 					cobPredictLegendLabel.touchable = false;
 					cobPredictLegendLabel.validate();
 					//Color Marker
 					cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.6, cobPredictLegendLabel.height * 0.6, cobColor);
 					cobPredictLegendColorQuad.touchable = false;
-					if ((currentIOB > 0 || currentTotalIOB > 0) && preferredPrediction != "COB")
+					if ((currentIOB > 0 && currentTotalIOB > 0) && preferredPrediction != "COB")
 					{
 						cobPredictLegendColorQuad.setVertexColor(0, cobColor);
 						cobPredictLegendColorQuad.setVertexColor(1, iobPredictionsColor);
@@ -3832,7 +3823,7 @@ package ui.chart
 					else
 						predictionsLegendsContainer.addChild(cobPredictLegendContainer);
 					
-					if (currentIOB > 0 || currentTotalIOB > 0)
+					if (currentIOB > 0 && currentTotalIOB > 0)
 					{
 						(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft += 20;
 					}
@@ -4014,6 +4005,7 @@ package ui.chart
 			if (predictionExplanationLabel != null) predictionExplanationLabel.removeFromParent(true);
 			predictionExplanationLabel = LayoutFactory.createLabel(body, HorizontalAlign.JUSTIFY, VerticalAlign.TOP);
 			predictionExplanationLabel.wordWrap = true;
+			predictionExplanationLabel.paddingBottom = 10;
 			predictionExplanationMainContainer.addChild(predictionExplanationLabel);
 			
 			//Callout
@@ -4140,7 +4132,7 @@ package ui.chart
 			
 			if(touch != null && touch.phase == TouchPhase.BEGAN && e.currentTarget != null) 
 			{
-				if (e.currentTarget === predictionsEnablerPill)
+				if (e.currentTarget === predictionsEnablerPill.pillBackground || e.currentTarget === predictionsEnablerPill.titleLabel)
 				{
 					displayPredictionPillExplanationCallout
 					(
@@ -4149,7 +4141,7 @@ package ui.chart
 						ModelLocator.resourceManagerInstance.getString('chartscreen','enable_disable_predictions_pill_explanation_body')
 					);
 				}
-				else if (e.currentTarget === predictionsTimeFramePill)
+				else if (e.currentTarget === predictionsTimeFramePill.pillBackground || e.currentTarget === predictionsTimeFramePill.titleLabel)
 				{
 					displayPredictionPillExplanationCallout
 					(
@@ -4158,7 +4150,7 @@ package ui.chart
 						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_pill_explanation_body')
 					);
 				}
-				else if (e.currentTarget === predictionsIOBCOBPill)
+				else if (e.currentTarget === predictionsIOBCOBPill.pillBackground || e.currentTarget === predictionsIOBCOBPill.titleLabel)
 				{
 					displayPredictionPillExplanationCallout
 					(
@@ -4219,6 +4211,15 @@ package ui.chart
 						predictedIOBBGPill, 
 						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_iob_blood_glucose'),
 						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_iob_predicted_bg_pill_explanation_body')
+					);
+				}
+				else if (e.currentTarget === predictedCOBBGPill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictedCOBBGPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_cob_blood_glucose'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_cob_predicted_bg_pill_explanation_body')
 					);
 				}
 				else if (e.currentTarget === predictedMinimumBGPill)
@@ -4787,7 +4788,9 @@ package ui.chart
 			predictionsEnableSwitch.addEventListener(starling.events.Event.CHANGE, onPredictionsSwitchChanged);
 			if (predictionsEnablerPill != null) predictionsEnablerPill.dispose();
 			predictionsEnablerPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), predictionsEnableSwitch);
-			predictionsEnablerPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsEnablerPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsEnablerPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			
 			predictionsContainer.addChild(predictionsEnablerPill);
 			
 			//Duration
@@ -4905,7 +4908,8 @@ package ui.chart
 			if (predictionsTimeFramePill != null) predictionsTimeFramePill.dispose();
 			predictionsTimeFramePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_label'), predictionsLengthPicker, 6, true);
 			predictionsTimeFramePill.addEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
-			predictionsTimeFramePill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsTimeFramePill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsTimeFramePill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 			predictionsContainer.addChild(predictionsTimeFramePill);
 			
 			//IOB/COB Toggle
@@ -4915,7 +4919,8 @@ package ui.chart
 			predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
 			if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.dispose();
 			predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
-			predictionsIOBCOBPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsIOBCOBPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsIOBCOBPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 			predictionsContainer.addChild(predictionsIOBCOBPill);
 			
 			//Predictions Output
@@ -4977,14 +4982,14 @@ package ui.chart
 					}
 				}
 				
-				//Eventual BG
-				if (!isNaN(predictedEventualBG))
+				//Minimum BG
+				if (!isNaN(predictedMinimumBG))
 				{
-					if (predictedEventualBGPill != null) predictedEventualBGPill.dispose();
-					predictedEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_blood_glucose'));
-					predictedEventualBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedEventualBG)) : String(Math.round(BgReading.mgdlToMmol(predictedEventualBG * 10)) / 10));
-					predictedEventualBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-					predictionsContainer.addChild(predictedEventualBGPill);
+					if (predictedMinimumBGPill != null) predictedMinimumBGPill.dispose();
+					predictedMinimumBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_minimum_blood_glucose'));
+					predictedMinimumBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedMinimumBG)) : String(Math.round(BgReading.mgdlToMmol(predictedMinimumBG * 10)) / 10));
+					predictedMinimumBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsContainer.addChild(predictedMinimumBGPill);
 				}
 				
 				//UAM BG
@@ -4997,6 +5002,16 @@ package ui.chart
 					predictionsContainer.addChild(predictedUAMBGPill);
 				}
 				
+				//COB BG
+				if (!isNaN(predictedCOBBG))
+				{
+					if (predictedCOBBGPill != null) predictedCOBBGPill.dispose();
+					predictedCOBBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_cob_blood_glucose'));
+					predictedCOBBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedCOBBG)) : String(Math.round(BgReading.mgdlToMmol(predictedCOBBG * 10)) / 10));
+					predictedCOBBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsContainer.addChild(predictedCOBBGPill);
+				}
+				
 				//IOB BG
 				if (!isNaN(predictedIOBBG))
 				{
@@ -5007,14 +5022,14 @@ package ui.chart
 					predictionsContainer.addChild(predictedIOBBGPill);
 				}
 				
-				//Minimum BG
-				if (!isNaN(predictedMinimumBG))
+				//Eventual BG
+				if (!isNaN(predictedEventualBG))
 				{
-					if (predictedMinimumBGPill != null) predictedMinimumBGPill.dispose();
-					predictedMinimumBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_minimum_blood_glucose'));
-					predictedMinimumBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedMinimumBG)) : String(Math.round(BgReading.mgdlToMmol(predictedMinimumBG * 10)) / 10));
-					predictedMinimumBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-					predictionsContainer.addChild(predictedMinimumBGPill);
+					if (predictedEventualBGPill != null) predictedEventualBGPill.dispose();
+					predictedEventualBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_eventual_blood_glucose'));
+					predictedEventualBGPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(predictedEventualBG)) : String(Math.round(BgReading.mgdlToMmol(predictedEventualBG * 10)) / 10));
+					predictedEventualBGPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsContainer.addChild(predictedEventualBGPill);
 				}
 				
 				//Carb Impact
@@ -5326,6 +5341,14 @@ package ui.chart
 				predictedIOBBGPill = null;
 			}
 			
+			if (predictedCOBBGPill != null)
+			{
+				predictedCOBBGPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictedCOBBGPill.removeFromParent();
+				predictedCOBBGPill.dispose();
+				predictedCOBBGPill = null;
+			}
+			
 			if (predictedMinimumBGPill != null)
 			{
 				predictedMinimumBGPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
@@ -5408,7 +5431,8 @@ package ui.chart
 			
 			if (predictionsEnablerPill != null)
 			{
-				predictionsEnablerPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsEnablerPill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsEnablerPill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictionsEnablerPill.removeFromParent();
 				predictionsEnablerPill.dispose();
 				predictionsEnablerPill = null;
@@ -5427,7 +5451,8 @@ package ui.chart
 			
 			if (predictionsTimeFramePill != null)
 			{
-				predictionsTimeFramePill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsTimeFramePill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsTimeFramePill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictionsTimeFramePill.removeEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
 				predictionsTimeFramePill.removeFromParent();
 				predictionsTimeFramePill.dispose();
@@ -5444,7 +5469,8 @@ package ui.chart
 			
 			if (predictionsIOBCOBPill != null)
 			{
-				predictionsIOBCOBPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsIOBCOBPill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsIOBCOBPill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
 				predictionsIOBCOBPill.removeFromParent();
 				predictionsIOBCOBPill.dispose();
 				predictionsIOBCOBPill = null;
