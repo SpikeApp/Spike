@@ -127,11 +127,11 @@ package utils
 			return time;
 		}
 		
-		public static function formatHoursMinutesFromMinutes(minutes:Number, prefixInHours:Boolean = true, prefixInMinutes:Boolean = true):String
+		public static function formatHoursMinutesFromMinutes(minutes:Number, prefixInHours:Boolean = true, prefixInMinutes:Boolean = true, topMinute:Boolean = false):String
 		{
 			var time:String;
-			var h:Number=Math.floor(minutes/60);
-			var m:Number= Math.floor(minutes%60);
+			var h:Number = Math.floor(minutes/60);
+			var m:Number = !topMinute ? Math.floor(minutes%60) : Math.ceil(minutes%60);
 			
 			if (h == 0)
 				time = m<10 && prefixInMinutes?"0"+m.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_abbreviation_label'):m.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_abbreviation_label');
