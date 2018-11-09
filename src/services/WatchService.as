@@ -199,11 +199,11 @@ package services
 				title += "\n";
 				var nowTreatments:Number = new Date().valueOf();
 				if (displayIOBEnabled && displayCOBEnabled)
-					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label').charAt(0) + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments).cob) + " " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label').charAt(0) + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments).iob);
+					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label').charAt(0) + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob) + " " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label').charAt(0) + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments).iob);
 				else if (displayIOBEnabled)
 					title += ModelLocator.resourceManagerInstance.getString('treatments','iob_label') + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments).iob);
 				else if (displayCOBEnabled)
-					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments).cob);
+					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
 			}
 			
 			//Create watch event

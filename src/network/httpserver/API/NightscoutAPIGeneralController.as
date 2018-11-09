@@ -99,8 +99,8 @@ package network.httpserver.API
 					{
 						bgsObject.bgdelta = Number(BgGraphBuilder.unitizedDeltaString(false, false));
 						bgsObject.battery = String(BatteryInfo.getBatteryLevel());
-						bgsObject.iob = String(TreatmentsManager.getTotalIOB(now));
-						bgsObject.cob = TreatmentsManager.getTotalCOB(now);
+						bgsObject.iob = String(TreatmentsManager.getTotalIOB(now).iob);
+						bgsObject.cob = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 						bgsObject.bwp = "0";
 						bgsObject.bwpo = 0;
 					}
@@ -191,7 +191,7 @@ package network.httpserver.API
 						bgObject.units_hint = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mgdl" : "mmol";
 						var now:Number = new Date().valueOf();
 						var currentIOB:Number = TreatmentsManager.getTotalIOB(now).iob;
-						var currentCOB:Number = TreatmentsManager.getTotalCOB(now).cob;
+						var currentCOB:Number = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 						if (currentIOB > 0)
 							bgObject.IOB = currentIOB;
 						if (currentCOB > 0)
@@ -283,7 +283,7 @@ package network.httpserver.API
 									readingObject.urgent_low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)).toString(16).toUpperCase();
 									
 									//Stats / Predictions / Velocity
-									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob);
+									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob);
 									if (!lightMode)
 									{
 										//Stats

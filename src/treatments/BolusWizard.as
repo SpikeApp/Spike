@@ -693,7 +693,7 @@ package treatments
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			//Current COB
-			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf()).cob;
+			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf(), CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 			
 			bwCOBContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwCOBContainer.width = contentWidth;
@@ -1163,7 +1163,7 @@ package treatments
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			//Current COB
-			currentCOB = TreatmentsManager.getTotalCOB(now).cob;
+			currentCOB = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(currentCOB);
 			bwCurrentCOBLabel.validate();
 			bwCOBContainer.validate();

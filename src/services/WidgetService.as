@@ -273,7 +273,7 @@ package services
 			
 			//IOB & COB
 			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
-			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob));
 			
 			//Predictions
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
@@ -376,12 +376,46 @@ package services
 			if (serviceHalted)
 				return;
 			
-			Trace.myTrace("WidgetService.as", "Sending updated IOB and COB values to widget!");
-			
 			var now:Number = new Date().valueOf();
 			
 			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
-			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob));
+		}
+		
+		private static function updatePredictions():void
+		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+				if (!isNaN(predictionsLengthInMinutes))
+				{
+					var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+					if (!isNaN(currentPrediction))
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10));
+					}
+					else
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+					}
+				}
+				else
+				{
+					SpikeANE.setUserDefaultsData("predictionDuration", "???" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+					SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+				}
+			}
+			else
+			{
+				SpikeANE.setUserDefaultsData("predictionDuration", "");
+				SpikeANE.setUserDefaultsData("predictionOutcome", "-1");
+			}
 		}
 		
 		private static function onTreatmentRefresh(e:Event):void
@@ -394,6 +428,7 @@ package services
 			IOBCOBTimeoutID = setTimeout( function():void 
 			{
 				updateTreatments();
+				updatePredictions();
 			}, TimeSpan.TIME_2_SECONDS );
 		}
 		
@@ -468,7 +503,7 @@ package services
 			SpikeANE.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
 			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
 			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
-			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now).cob));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob));
 			
 			//Predictions
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")

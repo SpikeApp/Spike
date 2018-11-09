@@ -6336,7 +6336,7 @@ package ui.chart
 				disposeAbsorptionCurves();
 				
 				//Validate. If there's no active COB then don't display curves
-				var currentCOB:Number = TreatmentsManager.getTotalCOB(new Date().valueOf()).cob;
+				var currentCOB:Number = TreatmentsManager.getTotalCOB(new Date().valueOf(), CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 				if (currentCOB <= 0)
 					return;
 				
