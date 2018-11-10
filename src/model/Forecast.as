@@ -631,6 +631,9 @@ package model
 			}
 			
 			//Add relevant info
+			predBGs.bg = bg;
+			predBGs.isf = sens;
+			predBGs.cr = carb_ratio;
 			predBGs.bgImpact = bgi;
 			predBGs.carbImpact = ci;
 			predBGs.deviation = deviation;
