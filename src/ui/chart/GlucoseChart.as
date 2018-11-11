@@ -4590,6 +4590,9 @@ package ui.chart
 				if (displayRaw && rawDataContainer != null)
 					rawDataContainer.x = mainChart.x;
 				
+				//Update pedictions in Nightscout
+				NightscoutService.uploadPredictions(lastTreatmentIsCarbs || forceIOBCOBRefresh);
+				
 				return;
 			}
 			
@@ -4615,6 +4618,9 @@ package ui.chart
 			
 			//Reposition Treatments
 			manageTreatments();
+			
+			//Update pedictions in Nightscout
+			NightscoutService.uploadPredictions(lastTreatmentIsCarbs || forceIOBCOBRefresh);
 			
 			//Drawing Logic
 			function drawPredictions(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):void
@@ -6351,6 +6357,9 @@ package ui.chart
 				else
 					latestRawMarker.alpha = 1;
 			}
+			
+			//Update pedictions in Nightscout
+			NightscoutService.uploadPredictions(true);
 		}
 		
 		/**

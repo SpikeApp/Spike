@@ -161,6 +161,7 @@ package services
 		private static var lastRemotePebbleSync:Number = 0;
 		private static var pumpUserEnabled:Boolean;
 		private static var phoneBatteryLevel:Number = 0;
+		private static var lastPredictionsUploadTimestamp:Number = 0;
 
 		public function NightscoutService()
 		{
@@ -394,20 +395,20 @@ package services
 		/**
 		 * PREDICTIONS
 		 */
-		private static function uploadPredictions():void
+		public static function uploadPredictions(forceIOBCOBRefresh:Boolean = false):void
 		{
 			Trace.myTrace("NightscoutService.as", "uploadPredictions called");
 			
 			//Validation #1
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !CGMBlueToothDevice.isFollower())
-				return;
-			
-			//Validation #2
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) != "true" || CGMBlueToothDevice.isFollower() || !serviceActive || serviceHalted)
 				return;
 			
+			//Validation #2
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !CGMBlueToothDevice.isFollower())
+				return;
+			
 			//Get Predictions
-			var predictionsData:Object = Forecast.predictBGs(Forecast.getCurrentPredictionsDuration());
+			var predictionsData:Object = Forecast.predictBGs(Forecast.getCurrentPredictionsDuration(), forceIOBCOBRefresh);
 			
 			//Validation #3
 			if (predictionsData == null)
@@ -415,11 +416,17 @@ package services
 			
 			//Format NS predictions JSON
 			var now:Number = new Date().valueOf();
-			var lastBgReading:BgReading = BgReading.lastWithCalculatedValue();
-			if (lastBgReading != null && now - lastBgReading._timestamp < TimeSpan.TIME_6_MINUTES)
+			
+			if (!forceIOBCOBRefresh)
 			{
-				now = lastBgReading._timestamp;
+				var lastBgReading:BgReading = BgReading.lastWithCalculatedValue();
+				if (lastBgReading != null && now - lastBgReading._timestamp < TimeSpan.TIME_6_MINUTES && lastPredictionsUploadTimestamp != lastBgReading._timestamp)
+				{
+					now = lastBgReading._timestamp;
+				}
 			}
+			
+			lastPredictionsUploadTimestamp = now;
 			
 			var formattedNow:String = formatter.format(now).replace("000+0000", "000Z");
 			var currentIOB:Object = TreatmentsManager.getTotalIOB(now);
@@ -436,6 +443,8 @@ package services
 					iobPredictions[i] = Math.round(iobPredictions[i]);
 				}
 				
+				iobPredictions[0] = Number.NaN;
+				
 				predictBGsObject["IOB"] = iobPredictions;
 			}
 			if (predictionsData.COB != null)
@@ -447,6 +456,8 @@ package services
 					cobPredictions[i] = Math.round(cobPredictions[i]);
 				}
 				
+				cobPredictions[0] = Number.NaN;
+				
 				predictBGsObject["COB"] = cobPredictions;
 			}
 			if (predictionsData.UAM != null)
@@ -457,6 +468,8 @@ package services
 				{
 					uamPredictions[i] = Math.round(uamPredictions[i]);
 				}
+				
+				uamPredictions[0] = Number.NaN;
 				
 				predictBGsObject["UAM"] = uamPredictions;
 			}
@@ -529,7 +542,6 @@ package services
 		/**
 		 * BATTERY STATUS
 		 */
-		
 		private static function uploadBatteryStatus():void
 		{
 			Trace.myTrace("NightscoutService.as", "uploadBatteryStatus called");
