@@ -723,7 +723,12 @@ package model
 					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
 				)
 				{
-					preferredPrediction = "COB";
+					if (unformattedUAMPredictionsList.length > 0 && unformattedUAMPredictionsList[0] > unformattedCOBPredictionsList[0])
+					{
+						//Do nothing	
+					}
+					else
+						preferredPrediction = "COB";
 				}
 				
 				predictionsFound = true;
@@ -747,7 +752,12 @@ package model
 					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB")
 				) 
 				{
-					preferredPrediction = "IOB";
+					if (unformattedUAMPredictionsList.length > 0 && unformattedUAMPredictionsList[0] > unformattedIOBPredictionsList[0])
+					{
+						//Do nothing	
+					}
+					else
+						preferredPrediction = "IOB";
 				}
 				
 				predictionsFound = true;

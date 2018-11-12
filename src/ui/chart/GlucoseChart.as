@@ -3565,7 +3565,12 @@ package ui.chart
 					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
 				)
 				{
-					preferredPrediction = "COB";
+					if (unformattedUAMPredictionsList.length > 0 && unformattedUAMPredictionsList[0] > unformattedCOBPredictionsList[0])
+					{
+						//Do nothing	
+					}
+					else
+						preferredPrediction = "COB";
 				}
 				predictionsFound = true;
 				cobPredictionsEnabled = true;
@@ -3585,7 +3590,12 @@ package ui.chart
 					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB")
 				)
 				{
-					preferredPrediction = "IOB";
+					if (unformattedUAMPredictionsList.length > 0 && unformattedUAMPredictionsList[0] > unformattedIOBPredictionsList[0])
+					{
+						//Do nothing	
+					}
+					else
+						preferredPrediction = "IOB";
 				}
 				predictionsFound = true;
 				iobPredictionsEnabled = true;
@@ -5825,7 +5835,28 @@ package ui.chart
 							{
 								extraEndLineColor = doublePrevGlucoseMarker.color;
 							}
-							line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + (doublePrevGlucoseMarker != null ? ((doublePrevGlucoseMarker.y - previousGlucoseMarker.y) / 2) : 0));
+							
+							//Try to calculate y direction of previous line by fetching 2 previous glucose markers
+							var targetGlucoseMarker:GlucoseMarker;
+							if(chartType == MAIN_CHART && index - 2 > 0)
+							{
+								targetGlucoseMarker = predictionsMainGlucoseDataPoints[index - 2];
+							}
+							else if (chartType == SCROLLER_CHART && index - 2 > 0)
+							{
+								targetGlucoseMarker = predictionsScrollerGlucoseDataPoints[index - 2];
+							}
+							
+							//Marker found, add y difference
+							if (targetGlucoseMarker != null)
+							{
+								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 2));
+							}
+							else
+							{
+								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+							}
+							
 							line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
 						}
 					}
