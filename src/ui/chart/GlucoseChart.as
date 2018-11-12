@@ -3836,7 +3836,7 @@ package ui.chart
 					//Legend Container
 					cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 					//Label
-					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 && currentTotalIOB > 0 ? "COB & IOB" : "COB", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
+					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 && currentTotalIOB > 0 ? ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + " & " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label') : ModelLocator.resourceManagerInstance.getString('treatments','cob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
 					cobPredictLegendLabel.touchable = false;
 					cobPredictLegendLabel.validate();
 					//Color Marker
@@ -3880,7 +3880,7 @@ package ui.chart
 					//Legend Container
 					uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 					//Label
-					uamPredictLegendLabel = LayoutFactory.createLabel("UAG", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
+					uamPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','unannounced_glucose_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
 					uamPredictLegendLabel.touchable = false;
 					uamPredictLegendLabel.validate();
 					//Color Marker
@@ -3912,7 +3912,7 @@ package ui.chart
 					//Legend Container
 					iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
 					//Label
-					iobPredictLegendLabel = LayoutFactory.createLabel("IOB", HorizontalAlign.LEFT, VerticalAlign.TOP, 9 * userAxisFontMultiplier, true);
+					iobPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','iob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
 					iobPredictLegendLabel.touchable = false;
 					iobPredictLegendLabel.validate();
 					//Color Marker

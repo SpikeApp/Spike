@@ -281,7 +281,7 @@ package ui.chart
 			}
 			
 			//Graph Legends
-			cobAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','cob_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 8);
+			cobAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','cob_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 8, false, axisFontColor);
 			cobAxisLegend.wordWrap = true;
 			cobAxisLegend.paddingTop = -5;
 			cobAxisLegend.paddingBottom += 18;
@@ -525,12 +525,12 @@ package ui.chart
 			}
 			
 			//Graph Legends
-			cobAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','cob_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 8);
+			cobAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','cob_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 8, false, axisFontColor);
 			cobAxisLegend.wordWrap = true;
 			cobAxisLegend.paddingTop = -5;
 			cobAxisLegend.paddingBottom += 18;
 			
-			oref0ExplanationLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','oref0_algorithm_cob_curve_explanation'), HorizontalAlign.JUSTIFY, VerticalAlign.TOP, 8);
+			oref0ExplanationLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','oref0_algorithm_cob_curve_explanation'), HorizontalAlign.JUSTIFY, VerticalAlign.TOP, 8, false, axisFontColor);
 			oref0ExplanationLegend.wordWrap = true;
 			
 			//Add Objects to Display List

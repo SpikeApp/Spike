@@ -82,6 +82,10 @@ package ui.chart
 			iobGraphTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','iob_curve_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
 			activityGraphTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_activity_curve_title_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
 			
+			//Properties
+			var axisFontColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_COLOR));
+			var lineColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_COLOR));
+			
 			//Data
 			var initialIOBAndActivity:Object = TreatmentsManager.getTotalIOB(new Date().valueOf());
 			var currentIOB:Number = initialIOBAndActivity.iob;
@@ -136,7 +140,7 @@ package ui.chart
 			
 			//YAXIS LABELS
 			//Highest IOB value
-			highestIOBCurveLabel = LayoutFactory.createLabel(String(Math.round(highestIOBDataPoint * 1000) / 1000) + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			highestIOBCurveLabel = LayoutFactory.createLabel(String(Math.round(highestIOBDataPoint * 1000) / 1000) + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			highestIOBCurveLabel.touchable = false;
 			highestIOBCurveLabel.validate();
 			highestIOBCurveLabel.x = -highestIOBCurveLabel.width - 7;
@@ -144,7 +148,7 @@ package ui.chart
 			IOBContainer.addChild(highestIOBCurveLabel);
 			if (highestIOBCurveLabel.x < leftPaddingIOB) leftPaddingIOB = highestIOBCurveLabel.x;
 			
-			highestActivityCurveLabel = LayoutFactory.createLabel(String(Math.round(highestActivityDataPoint * 1000) / 1000) + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			highestActivityCurveLabel = LayoutFactory.createLabel(String(Math.round(highestActivityDataPoint * 1000) / 1000) + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			highestActivityCurveLabel.touchable = false;
 			highestActivityCurveLabel.validate();
 			highestActivityCurveLabel.x = -highestActivityCurveLabel.width - 7;
@@ -154,7 +158,7 @@ package ui.chart
 			
 			//Middle value
 			var middleIOBValue:Number = Math.round((highestIOBDataPoint / 2) * 100) / 100;
-			middleIOBCurveLabel = LayoutFactory.createLabel(String(middleIOBValue) + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			middleIOBCurveLabel = LayoutFactory.createLabel(String(middleIOBValue) + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			middleIOBCurveLabel.touchable = false;
 			middleIOBCurveLabel.validate();
 			middleIOBCurveLabel.x = -middleIOBCurveLabel.width - 7;
@@ -162,7 +166,7 @@ package ui.chart
 			if (middleIOBCurveLabel.x < leftPaddingIOB) leftPaddingIOB = middleIOBCurveLabel.x;
 			
 			var middleActivityValue:Number = highestActivityDataPoint / 2;
-			middleActivityCurveLabel = LayoutFactory.createLabel(String(Math.round(middleActivityValue * 1000) / 1000) + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			middleActivityCurveLabel = LayoutFactory.createLabel(String(Math.round(middleActivityValue * 1000) / 1000) + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			middleActivityCurveLabel.touchable = false;
 			middleActivityCurveLabel.validate();
 			middleActivityCurveLabel.x = -middleActivityCurveLabel.width - 7;
@@ -170,14 +174,14 @@ package ui.chart
 			if (middleActivityCurveLabel.x < leftPaddingActivity) leftPaddingActivity = middleActivityCurveLabel.x;
 			
 			//Lowest value
-			lowestIOBCurveLabel = LayoutFactory.createLabel("0" + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			lowestIOBCurveLabel = LayoutFactory.createLabel("0" + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			lowestIOBCurveLabel.touchable = false;
 			lowestIOBCurveLabel.validate();
 			lowestIOBCurveLabel.x = -lowestIOBCurveLabel.width - 7;
 			IOBContainer.addChild(lowestIOBCurveLabel);
 			if (lowestIOBCurveLabel.x < leftPaddingIOB) leftPaddingIOB = lowestIOBCurveLabel.x;
 			
-			lowestActivityCurveLabel = LayoutFactory.createLabel("0" + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			lowestActivityCurveLabel = LayoutFactory.createLabel("0" + "U", HorizontalAlign.RIGHT, VerticalAlign.TOP, 12, false, axisFontColor);
 			lowestActivityCurveLabel.touchable = false;
 			lowestActivityCurveLabel.validate();
 			lowestActivityCurveLabel.x = -lowestActivityCurveLabel.width - 7;
@@ -273,21 +277,21 @@ package ui.chart
 			
 			//Draw Axis
 			//IOB
-			yIOBAxisLine = GraphLayoutFactory.createVerticalLine(graphHeight, 1.5, 0xEEEEEE);
+			yIOBAxisLine = GraphLayoutFactory.createVerticalLine(graphHeight, 1.5, lineColor);
 			yIOBAxisLine.touchable = false;
 			IOBContainer.addChild(yIOBAxisLine);
 			
-			xIOBAxisLine = GraphLayoutFactory.createHorizontalLine(graphWidth, 1.5, 0xEEEEEE);
+			xIOBAxisLine = GraphLayoutFactory.createHorizontalLine(graphWidth, 1.5, lineColor);
 			xIOBAxisLine.touchable = false;
 			xIOBAxisLine.y = yIOBAxisLine.y + yIOBAxisLine.height;
 			IOBContainer.addChild(xIOBAxisLine);
 			
 			//Activity
-			yActivityAxisLine = GraphLayoutFactory.createVerticalLine(graphHeight, 1.5, 0xEEEEEE);
+			yActivityAxisLine = GraphLayoutFactory.createVerticalLine(graphHeight, 1.5, lineColor);
 			yActivityAxisLine.touchable = false;
 			activityContainer.addChild(yActivityAxisLine);
 			
-			xActivityAxisLine = GraphLayoutFactory.createHorizontalLine(graphWidth, 1.5, 0xEEEEEE);
+			xActivityAxisLine = GraphLayoutFactory.createHorizontalLine(graphWidth, 1.5, lineColor);
 			xActivityAxisLine.touchable = false;
 			xActivityAxisLine.y = yActivityAxisLine.y + yActivityAxisLine.height;
 			activityContainer.addChild(xActivityAxisLine);
@@ -303,7 +307,7 @@ package ui.chart
 			else
 				timeFormatted = TimeSpan.formatHoursMinutes(firstDate.getHours(), firstDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			
-			firstIOBTimeLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			firstIOBTimeLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			firstIOBTimeLabel.touchable = false;
 			firstIOBTimeLabel.validate();
 			firstIOBTimeLabel.x = 0;
@@ -311,7 +315,7 @@ package ui.chart
 			IOBContainer.addChild(firstIOBTimeLabel);
 			var firstIOBTimeLabelBounds:Rectangle = firstIOBTimeLabel.bounds;
 			
-			firstActivityTimeLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			firstActivityTimeLabel = LayoutFactory.createLabel(timeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			firstActivityTimeLabel.touchable = false;
 			firstActivityTimeLabel.validate();
 			firstActivityTimeLabel.x = 0;
@@ -322,21 +326,21 @@ package ui.chart
 			//Now
 			var now:Number = new Date().valueOf();
 			
-			nowIOBTimeLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			nowIOBTimeLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			nowIOBTimeLabel.touchable = false;
 			nowIOBTimeLabel.validate();
 			nowIOBTimeLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowIOBTimeLabel.width / 2);
 			nowIOBTimeLabel.y = xIOBAxisLine.y + xIOBAxisLine.height + 4;
 			IOBContainer.addChild(nowIOBTimeLabel);
 			
-			nowIOBValueLabel = LayoutFactory.createLabel(String(Math.round(currentIOB * 100) / 100) + "U", HorizontalAlign.LEFT, VerticalAlign.TOP, 9, false, 0xEEEEEE);
+			nowIOBValueLabel = LayoutFactory.createLabel(String(Math.round(currentIOB * 100) / 100) + "U", HorizontalAlign.LEFT, VerticalAlign.TOP, 9, false, axisFontColor);
 			nowIOBValueLabel.touchable = false;
 			nowIOBValueLabel.validate();
 			nowIOBValueLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowIOBValueLabel.width / 2);
 			nowIOBValueLabel.y = 0 - nowIOBValueLabel.height - 3;
 			IOBContainer.addChild(nowIOBValueLabel);
 			
-			nowIOBTimeMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, 0xEEEEEE);
+			nowIOBTimeMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, lineColor);
 			nowIOBTimeMarker.touchable = false;
 			nowIOBTimeMarker.x = ((now - firstTreatmentTimestamp) * scaleXFactor);
 			nowIOBTimeMarker.y = 0;
@@ -350,21 +354,21 @@ package ui.chart
 				nowIOBTimeLabel = null;
 			}
 			
-			nowActivityTimeLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			nowActivityTimeLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','now').toUpperCase(), HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			nowActivityTimeLabel.touchable = false;
 			nowActivityTimeLabel.validate();
 			nowActivityTimeLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowActivityTimeLabel.width / 2);
 			nowActivityTimeLabel.y = xActivityAxisLine.y + xActivityAxisLine.height + 4;
 			activityContainer.addChild(nowActivityTimeLabel);
 			
-			nowActivityValueLabel = LayoutFactory.createLabel(String(Math.round(currentActivity * 1000) / 1000) + "U", HorizontalAlign.LEFT, VerticalAlign.TOP, 9, false, 0xEEEEEE);
+			nowActivityValueLabel = LayoutFactory.createLabel(String(Math.round(currentActivity * 1000) / 1000) + "U", HorizontalAlign.LEFT, VerticalAlign.TOP, 9, false, axisFontColor);
 			nowActivityValueLabel.touchable = false;
 			nowActivityValueLabel.validate();
 			nowActivityValueLabel.x = ((now - firstTreatmentTimestamp) * scaleXFactor) - (nowActivityValueLabel.width / 2);
 			nowActivityValueLabel.y = 0 - nowActivityValueLabel.height - 3;
 			activityContainer.addChild(nowActivityValueLabel);
 			
-			nowActivityTimeMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, 0xEEEEEE);
+			nowActivityTimeMarker = GraphLayoutFactory.createVerticalDashedLine(graphHeight, 2, 1, 1, lineColor);
 			nowActivityTimeMarker.touchable = false;
 			nowActivityTimeMarker.x = ((now - firstTreatmentTimestamp) * scaleXFactor);
 			nowActivityTimeMarker.y = 0;
@@ -386,7 +390,7 @@ package ui.chart
 			else
 				lastTimeFormatted = TimeSpan.formatHoursMinutes(lastDate.getHours(), lastDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			
-			lastIOBTimeLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			lastIOBTimeLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			lastIOBTimeLabel.touchable = false;
 			lastIOBTimeLabel.validate();
 			lastIOBTimeLabel.x = xIOBAxisLine.width - lastIOBTimeLabel.width;
@@ -400,7 +404,7 @@ package ui.chart
 					nowIOBTimeLabel.removeFromParent(true);
 			}
 			
-			lastActivityTimeLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, 0xEEEEEE);
+			lastActivityTimeLabel = LayoutFactory.createLabel(lastTimeFormatted, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			lastActivityTimeLabel.touchable = false;
 			lastActivityTimeLabel.validate();
 			lastActivityTimeLabel.x = xActivityAxisLine.width - lastActivityTimeLabel.width;
@@ -440,12 +444,12 @@ package ui.chart
 			}
 			
 			//Graph Legends
-			iobAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','iob_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 9);
+			iobAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','iob_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 9, false, axisFontColor);
 			iobAxisLegend.wordWrap = true;
 			iobAxisLegend.paddingTop = -5;
 			iobAxisLegend.paddingBottom += 19;
 			
-			activityAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_activity_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 9);
+			activityAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_activity_curve_chart_legend_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 9, false, axisFontColor);
 			activityAxisLegend.wordWrap = true;
 			activityAxisLegend.paddingTop = -5;
 			activityAxisLegend.paddingBottom += 19;
