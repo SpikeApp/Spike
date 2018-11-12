@@ -952,7 +952,7 @@ package database
 				{
 					// switched from negative delta to positive, increase noise impact 
 					//y2y1Delta = y2y1Delta * 1.2; ORIGINAL
-					y2y1Delta = y2y1Delta * 1.5; 
+					y2y1Delta = y2y1Delta * 1.4; 
 				}
 				
 				sod += Math.sqrt(Math.pow(x2x1Delta, 2) + Math.pow(y2y1Delta, 2));

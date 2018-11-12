@@ -1018,7 +1018,28 @@ package ui.chart
 								{
 									extraEndLineColor = doublePrevGlucoseReading.rawData;
 								}
-								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+								
+								//Try to calculate y direction of previous line by fetching 2 previous glucose markers
+								var targetGlucoseMarker:GlucoseMarker;
+								if(chartType == MAIN_CHART && index - 2 > 0)
+								{
+									targetGlucoseMarker = predictionsMainGlucoseDataPoints[index - 2];
+								}
+								else if (chartType == SCROLLER_CHART && index - 2 > 0)
+								{
+									targetGlucoseMarker = predictionsScrollerGlucoseDataPoints[index - 2];
+								}
+								
+								//Marker found, add y difference
+								if (targetGlucoseMarker != null)
+								{
+									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 2));
+								}
+								else
+								{
+									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+								}
+								
 								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
 							}
 						}
@@ -1039,14 +1060,7 @@ package ui.chart
 						}
 						else
 						{
-							//if (!isPrediction)
-							//{
-								line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
-								//}
-								//else
-								//{
-								//	line.lineTo(currentLineX, currentLineY);
-								//	}
+							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
 						}
 						
 						line.moveTo(currentLineX, currentLineY);
@@ -1063,9 +1077,12 @@ package ui.chart
 					glucoseMarker.alpha = 0;
 			
 				//Set variables for next iteration
-				previousXCoordinate = glucoseMarker.x;
-				previousYCoordinate = glucoseMarker.y;
-				previousGlucoseMarker = glucoseMarker;
+				if (i < dataLength - 1)
+				{
+					previousXCoordinate = glucoseMarker.x;
+					previousYCoordinate = glucoseMarker.y;
+					previousGlucoseMarker = glucoseMarker;
+				}
 				
 				//Add glucose marker to the timeline
 				chartContainer.addChild(glucoseMarker);
@@ -1101,7 +1118,7 @@ package ui.chart
 				{
 					extraEndLineColor = doublePrevGlucoseReading.rawData;
 				}
-				line.moveTo(extraPredictionLineX, extraPredictionLineY);
+				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 2));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			
@@ -2950,7 +2967,28 @@ package ui.chart
 								{
 									extraEndLineColor = doublePrevGlucoseReading.rawData;
 								}
-								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+								
+								//Try to calculate y direction of previous line by fetching 2 previous glucose markers
+								var targetGlucoseMarker:GlucoseMarker;
+								if(chartType == MAIN_CHART && index - 2 > 0)
+								{
+									targetGlucoseMarker = predictionsMainGlucoseDataPoints[index - 2];
+								}
+								else if (chartType == SCROLLER_CHART && index - 2 > 0)
+								{
+									targetGlucoseMarker = predictionsScrollerGlucoseDataPoints[index - 2];
+								}
+								
+								//Marker found, add y difference
+								if (targetGlucoseMarker != null)
+								{
+									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 2));
+								}
+								else
+								{
+									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+								}
+								
 								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
 							}
 						}
@@ -2971,14 +3009,7 @@ package ui.chart
 						}
 						else
 						{
-							//if (!isPrediction)
-							//{
-								line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
-								//}
-								//else
-								//{
-								//	line.lineTo(currentLineX, currentLineY);
-								//}
+							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
 						}
 						
 						line.moveTo(currentLineX, currentLineY);
@@ -2997,11 +3028,12 @@ package ui.chart
 				
 				//Update variables for next iteration
 				previousXCoordinate = previousXCoordinate + glucoseX;
-				previousGlucoseMarker = glucoseMarker;
+				if (i < dataLength - 1)
+					previousGlucoseMarker = glucoseMarker;
 			}
 			
 			//Predictions line fix
-			if (_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
+			if (_displayLine && !isRaw && previousGlucoseMarker != null && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
 			{
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
@@ -3012,7 +3044,8 @@ package ui.chart
 				{
 					extraEndLineColor = doublePrevGlucoseReading.rawData;
 				}
-				line.moveTo(extraPredictionLineX, extraPredictionLineY);
+				
+				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 2));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			
@@ -5792,7 +5825,7 @@ package ui.chart
 							{
 								extraEndLineColor = doublePrevGlucoseMarker.color;
 							}
-							line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY);
+							line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + (doublePrevGlucoseMarker != null ? ((doublePrevGlucoseMarker.y - previousGlucoseMarker.y) / 2) : 0));
 							line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
 						}
 					}
@@ -5813,14 +5846,7 @@ package ui.chart
 					}
 					else
 					{
-						//if (!isPrediction)
-						//{
-							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
-						//}
-						//else
-						//{
-						//	line.lineTo(currentLineX, currentLineY);
-						//}
+						line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
 					}
 					
 					line.moveTo(currentLineX, currentLineY);
@@ -5830,11 +5856,13 @@ package ui.chart
 				}
 				//Hide glucose marker
 				glucoseMarker.alpha = 0;
-				previousGlucoseMarker = glucoseMarker;
+				
+				if (i < dataLength - 1)
+					previousGlucoseMarker = glucoseMarker;
 			}
 			
 			//Predictions line fix
-			if (glucoseMarker != null && _displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
+			if (glucoseMarker != null && previousGlucoseMarker != null && _displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
 			{
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
@@ -5845,7 +5873,7 @@ package ui.chart
 				{
 					extraEndLineColor = doublePrevGlucoseMarker.color;
 				}
-				line.moveTo(extraPredictionLineX, extraPredictionLineY);
+				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 2));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			
