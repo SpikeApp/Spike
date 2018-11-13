@@ -32,7 +32,7 @@ package model
 		public static function predictBGs(minutes:uint, forceNewIOBCOB:Boolean = false, ignoreIOBCOB:Boolean = false):Object
 		{
 			var glucose_status:Object = getLastGlucose();
-			if (!glucose_status.is_valid)
+			if (glucose_status.is_valid == null || glucose_status.is_valid == false)
 			{
 				// Not enough glucose data for predictions!
 				return null;
@@ -723,12 +723,7 @@ package model
 					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
 				)
 				{
-					if (unformattedUAMPredictionsList.length > 0 && unformattedUAMPredictionsList[0] > unformattedCOBPredictionsList[0])
-					{
-						//Do nothing	
-					}
-					else
-						preferredPrediction = "COB";
+					preferredPrediction = "COB";
 				}
 				
 				predictionsFound = true;
@@ -752,12 +747,7 @@ package model
 					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB")
 				) 
 				{
-					if (unformattedUAMPredictionsList.length > 0 && unformattedUAMPredictionsList[0] > unformattedIOBPredictionsList[0])
-					{
-						//Do nothing	
-					}
-					else
-						preferredPrediction = "IOB";
+					preferredPrediction = "IOB";
 				}
 				
 				predictionsFound = true;
@@ -812,7 +802,7 @@ package model
 		{
 			var glucoseList:Array = BgReading.latest(12, CGMBlueToothDevice.isFollower());
 			var numReadings:int = glucoseList.length;
-			if (numReadings == 0)
+			if (numReadings < 4)
 			{
 				//User has no readings
 				return {
@@ -820,7 +810,8 @@ package model
 					glucose: 0,
 					short_avgdelta: 0,
 					long_avgdelta: 0,
-					date: 0
+					date: 0,
+					is_valid: false
 				};
 			}
 			
@@ -833,7 +824,8 @@ package model
 					glucose: 0,
 					short_avgdelta: 0,
 					long_avgdelta: 0,
-					date: 0
+					date: 0,
+					is_valid: false
 				};
 			}
 			

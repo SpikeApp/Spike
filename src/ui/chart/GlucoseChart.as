@@ -852,8 +852,14 @@ package ui.chart
 			
 			for(i = 0; i < dataLength; i++)
 			{
-				//var glucoseReading:BgReading = i < realReadingsLength ? _dataSource[i] : predictionsList[i - realReadingsLength];
 				isPrediction = i >= realReadingsLength;
+				
+				if (isPrediction && isRaw)
+				{
+					//Don't add raw for predictions
+					break;
+				}
+				
 				index = !isPrediction ? i : i - realReadingsLength;
 				readingsSource = !isPrediction ? _dataSource : predictionsList;
 				
@@ -2762,6 +2768,13 @@ package ui.chart
 			for(i = 0; i < dataLength; i++)
 			{
 				isPrediction = i >= realReadingsLength;
+				
+				if (isPrediction && isRaw)
+				{
+					//Don't add raw for predictions
+					break;
+				}
+				
 				index = !isPrediction ? i : i - realReadingsLength;
 				readingsSource = !isPrediction ? _dataSource : predictionsList;
 				
@@ -3565,12 +3578,7 @@ package ui.chart
 					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
 				)
 				{
-					if (unformattedUAMPredictionsList.length > 0 && unformattedUAMPredictionsList[0] > unformattedCOBPredictionsList[0])
-					{
-						//Do nothing	
-					}
-					else
-						preferredPrediction = "COB";
+					preferredPrediction = "COB";
 				}
 				predictionsFound = true;
 				cobPredictionsEnabled = true;
@@ -3590,12 +3598,7 @@ package ui.chart
 					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB")
 				)
 				{
-					if (unformattedUAMPredictionsList.length > 0 && unformattedUAMPredictionsList[0] > unformattedIOBPredictionsList[0])
-					{
-						//Do nothing	
-					}
-					else
-						preferredPrediction = "IOB";
+					preferredPrediction = "IOB";
 				}
 				predictionsFound = true;
 				iobPredictionsEnabled = true;

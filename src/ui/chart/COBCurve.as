@@ -504,7 +504,7 @@ package ui.chart
 			nowCOBValueLabel.y = 0 - nowCOBValueLabel.height - 2;
 			COBContainer.addChild(nowCOBValueLabel);
 			
-			var elapsedTime:String = TimeSpan.formatHoursMinutesFromMinutes((lastTimestamp - firstTreatmentTimestamp) / TimeSpan.TIME_1_MINUTE, false, true, true);
+			var elapsedTime:String = TimeSpan.formatHoursMinutesFromMinutes((lastTimestamp - firstTreatmentTimestamp) / TimeSpan.TIME_1_MINUTE, false);
 			nowCurveLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','elapsed_time_label') + ": " + elapsedTime, HorizontalAlign.LEFT, VerticalAlign.TOP, 12, false, axisFontColor);
 			nowCurveLabel.touchable = false;
 			nowCurveLabel.validate();
