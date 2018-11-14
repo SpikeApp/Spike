@@ -1,5 +1,13 @@
-3.0.1
+3.0.3
 FIX: The Italian translation had errors, so that the languages were not listed correctly in the speech output settings (e.g. instead of Italian, there was Portuguese). (Sascha)
+
+3.0.2
+ENHANCEMENT: Optimizations to the IOB algorithm that will slightly increase overall battery life. (Miguel)
+FIX: One more small fix for the logic behind selecting the current active profile in specific timezones. (Miguel)
+
+3.0.1
+FIX: Addresses an issue that made Spike crash on some devices. Sorry about that! (Miguel)
+FIX: Fixes an issue that might prevent Spike from getting the correct profile on some timezones. (Miguel)
 
 3.0.0
 FEATURE: Bolus Calculator! Spike now comes bundled with a bolus calculator with the following features: (Miguel)
