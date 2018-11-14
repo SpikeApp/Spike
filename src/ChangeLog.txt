@@ -1,3 +1,6 @@
+3.0.1
+FIX: The Italian translation had errors, so that the languages were not listed correctly in the speech output settings (e.g. instead of Italian, there was Portuguese). (Sascha)
+
 3.0.0
 FEATURE: Bolus Calculator! Spike now comes bundled with a bolus calculator with the following features: (Miguel)
 1) Ability to tell you how much carbs are needed to correct a low.
