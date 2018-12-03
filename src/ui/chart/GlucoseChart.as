@@ -1010,7 +1010,7 @@ package ui.chart
 							if (lastRealGlucoseMarker != null)
 							{
 								line.moveTo(lastRealGlucoseMarker.x + lastRealGlucoseMarker.width, lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
-								line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
+								//line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
 							}
 							
 							//Add extra line to the end
@@ -1066,7 +1066,10 @@ package ui.chart
 						}
 						else
 						{
-							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+							if (!isPrediction && !index == 0)
+							{
+								line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+							}
 						}
 						
 						line.moveTo(currentLineX, currentLineY);
@@ -2086,16 +2089,20 @@ package ui.chart
 			/**
 			 * Predictions Delimiter
 			 */
-			if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0)
+			if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0 && mainChartGlucoseMarkersList.length > 0)
 			{
 				if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 				predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
 				predictionsDelimiter.y = 0 - predictionsDelimiter.width;
-				predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
+				predictionsDelimiter.x = _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
 				predictionsDelimiter.touchable = false;
 				yAxis.addChild(predictionsDelimiter);
 				
 				activeGlucoseDelimiter = predictionsDelimiter;
+			}
+			else
+			{
+				if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 			}
 			
 			/**
@@ -2966,7 +2973,7 @@ package ui.chart
 							if (lastRealGlucoseMarker != null)
 							{
 								line.moveTo(lastRealGlucoseMarker.x + lastRealGlucoseMarker.width, lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
-								line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
+								//line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
 							}
 							
 							//Add extra line to the end
@@ -3022,7 +3029,10 @@ package ui.chart
 						}
 						else
 						{
-							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
+							if (!isPrediction && !index == 0)
+							{
+								line.lineTo(currentLineX, currentLineY, previousColor, currentColor);	
+							}
 						}
 						
 						line.moveTo(currentLineX, currentLineY);
@@ -4806,7 +4816,7 @@ package ui.chart
 		
 		private function reporsitionPredictionDelimitter():void
 		{
-			if (predictionsEnabled && yAxis != null && handPicker != null && mainChart != null && predictionsMainGlucoseDataPoints.length > 0)
+			if (predictionsEnabled && yAxis != null && predictionsMainGlucoseDataPoints.length > 0 && mainChartGlucoseMarkersList.length > 0)
 			{
 				if (predictionsDelimiter == null)
 				{
@@ -4816,7 +4826,8 @@ package ui.chart
 					yAxis.addChild(predictionsDelimiter);
 				}
 				
-				predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
+				predictionsDelimiter.x = _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
+				
 				activeGlucoseDelimiter = predictionsDelimiter;
 				
 				//Adjust Main Chart Position
@@ -4837,6 +4848,10 @@ package ui.chart
 				//Raw
 				if (displayRaw && rawDataContainer != null)
 					rawDataContainer.x = mainChart.x;
+			}
+			else
+			{
+				if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 			}
 		}
 		
@@ -5194,16 +5209,20 @@ package ui.chart
 				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0);
 				
 				//Redraw predictions delimitter
-				if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0)
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0 && mainChartGlucoseMarkersList.length > 0)
 				{
 					if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 					predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
 					predictionsDelimiter.y = 0 - predictionsDelimiter.width;
-					predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
+					predictionsDelimiter.x = _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
 					predictionsDelimiter.touchable = false;
 					yAxis.addChild(predictionsDelimiter);
 					
 					activeGlucoseDelimiter = predictionsDelimiter;
+				}
+				else
+				{
+					if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 				}
 				
 				//Redraw raw markers if needed
@@ -5353,16 +5372,20 @@ package ui.chart
 				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0);
 				
 				//Redraw predictions delimitter
-				if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0)
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0 && mainChartGlucoseMarkersList.length > 0)
 				{
 					if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 					predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
 					predictionsDelimiter.y = 0 - predictionsDelimiter.width;
-					predictionsDelimiter.x = _graphWidth - yAxisMargin - (predictionsDelimiter.width / 2) - (mainChart.width - predictionsMainGlucoseDataPoints[0].x);
+					predictionsDelimiter.x = _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
 					predictionsDelimiter.touchable = false;
 					yAxis.addChild(predictionsDelimiter);
 					
 					activeGlucoseDelimiter = predictionsDelimiter;
+				}
+				else
+				{
+					if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 				}
 			}
 			
@@ -5824,7 +5847,7 @@ package ui.chart
 						if (lastRealGlucoseMarker != null)
 						{
 							line.moveTo(lastRealGlucoseMarker.x + lastRealGlucoseMarker.width, lastRealGlucoseMarker.y + (lastRealGlucoseMarker.height / 2));
-							line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
+							//line.lineTo(currentLineX, currentLineY, lastRealGlucoseMarker.color, glucoseMarker.color);
 						}
 						
 						//Add extra line to the end
@@ -5880,7 +5903,10 @@ package ui.chart
 					}
 					else
 					{
-						line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+						if (!isPrediction && !index == 0)
+						{
+							line.lineTo(currentLineX, currentLineY, previousColor, currentColor);
+						}
 					}
 					
 					line.moveTo(currentLineX, currentLineY);
