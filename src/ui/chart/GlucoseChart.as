@@ -6670,7 +6670,13 @@ package ui.chart
 						if (bgReadingsList != null && bgReadingsList.length > 0)
 						{
 							var latestReading:BgReading = bgReadingsList[0];
-							if (latestReading != null && new Date().valueOf() - latestReading.timestamp < TimeSpan.TIME_16_MINUTES)
+							var selectedMarker:GlucoseMarker = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex];
+							if (selectedMarker != null && !displayLatestBGValue && selectedMarker.bgReading != null)
+							{
+								latestReading = selectedMarker.bgReading;
+							}
+							
+							if (latestReading != null)
 							{
 								var sensorNoiseString:String = "";
 								var sensorNoiseValue:int = latestReading.noiseValue();
@@ -6828,7 +6834,13 @@ package ui.chart
 					if (bgReadingsList != null && bgReadingsList.length > 0)
 					{
 						var latestReading:BgReading = bgReadingsList[0];
-						if (latestReading != null && new Date().valueOf() - latestReading.timestamp < TimeSpan.TIME_16_MINUTES)
+						var selectedMarker:GlucoseMarker = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex];
+						if (selectedMarker != null && !displayLatestBGValue && selectedMarker.bgReading != null)
+						{
+							latestReading = selectedMarker.bgReading;
+						}
+						
+						if (latestReading != null)
 						{
 							var sensorNoiseString:String = "";
 							var sensorNoiseValue:int = latestReading.noiseValue();
