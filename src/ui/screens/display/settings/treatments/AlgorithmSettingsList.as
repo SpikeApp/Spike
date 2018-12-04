@@ -1,12 +1,11 @@
 package ui.screens.display.settings.treatments
 {
-	import com.adobe.utils.StringUtil;
+	import spark.components.richTextEditorClasses.BoldTool;
 	
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Label;
-	import feathers.controls.LayoutGroup;
 	import feathers.controls.PickerList;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
@@ -21,6 +20,10 @@ package ui.screens.display.settings.treatments
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
+	import treatments.Profile;
+	import treatments.ProfileManager;
+	
+	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	
@@ -140,6 +143,38 @@ package ui.screens.display.settings.treatments
 		private function onSettingsChanged(e:Event):void
 		{
 			algorithmValue = defaultAlgorithmPicker.selectedItem.id;
+			
+			if (algorithmValue == "openaps")
+			{
+				//Check if all user profiles are complete
+				var issueFound:Boolean = false;
+				var numberOfProfiles:uint = ProfileManager.profilesList.length;
+				for (var i:int = 0; i < numberOfProfiles; i++) 
+				{
+					var userProfile:Profile = ProfileManager.profilesList[i];
+					if (userProfile != null)
+					{
+						if (userProfile.insulinSensitivityFactors == "" || userProfile.insulinToCarbRatios == "")
+						{
+							issueFound = true;
+						}
+					}
+				}
+				
+				if (issueFound)
+				{
+					//Revert to Nightscout algorithm
+					algorithmValue = "nightscout";
+					defaultAlgorithmPicker.selectedIndex = 0;
+					
+					//Warn user
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','incomplete_profile_warning')
+					);
+				}
+			}
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) != algorithmValue)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM, algorithmValue);
