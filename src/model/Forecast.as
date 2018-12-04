@@ -67,6 +67,7 @@ package model
 			var five_min_blocks:Number = Math.floor(minutes / 5);
 			var i:int;
 			var status:String = "";
+			var incompleteProfile:Boolean = false;
 			
 			var bg:Number = glucose_status.glucose;
 			
@@ -103,6 +104,7 @@ package model
 			{
 				//User has not yet set a profile, let's default it to 50
 				sens = 50;
+				incompleteProfile = true;
 				status += "No ISF has been set. Defaulting to: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 50 : Math.round(BgReading.mgdlToMmol(50) * 10) / 10) + "\n";
 			}
 			
@@ -174,6 +176,7 @@ package model
 			{
 				status += "Can't determine I:C. Defaulting to 10" + "\n";
 				carb_ratio = 10; //If no i:C is set by the user we default to 10
+				incompleteProfile = true;
 			}
 			
 			var csf:Number = sens / carb_ratio; 
@@ -183,6 +186,7 @@ package model
 			{
 				status += "Can't determine carbs absorption rate. Defaulting to 30g/h" + "\n";
 				maxCarbAbsorptionRate = 30;
+				incompleteProfile = true;
 			}
 			
 			// limit Carb Impact to maxCarbAbsorptionRate * csf in mg/dL per 5m
@@ -634,6 +638,7 @@ package model
 			predBGs.bg = bg;
 			predBGs.isf = sens;
 			predBGs.cr = carb_ratio;
+			predBGs.incompleteProfile = incompleteProfile;
 			predBGs.bgImpact = bgi;
 			predBGs.carbImpact = ci;
 			predBGs.deviation = deviation;
