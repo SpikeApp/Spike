@@ -1213,7 +1213,7 @@ package ui.chart
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
-				if (algorithmIOBCOB == "openaps" && Math.abs(time - new Date().valueOf()) > TimeSpan.TIME_1_MINUTE)
+				if (algorithmIOBCOB == "openaps" )
 				{
 					//For OpenAPS we ask for COB of the current selected marker timestamp. In between timestamps give exactly the same COB value and waste CPU cycles
 					if (displayLatestBGValue)
@@ -1226,7 +1226,7 @@ package ui.chart
 					if (latestOpenAPSRequestedCOBTimestamp != time)
 					{
 						latestOpenAPSRequestedCOBTimestamp = time;
-						currentTotalCOB = TreatmentsManager.getTotalCOB(time).cob;
+						currentTotalCOB = TreatmentsManager.getTotalCOB(time, displayLatestBGValue || (mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex] != null && time >= mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp && new Date().valueOf() - mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp < TimeSpan.TIME_5_MINUTES)).cob;
 						COBPill.setValue(GlucoseFactory.formatCOB(currentTotalCOB));
 						SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 					}
@@ -6393,16 +6393,16 @@ package ui.chart
 						break;
 					}
 				}
-			}
-			
-			if (displayLatestBGValue && !isFuture)
-			{
-				calculateDisplayLabels();
-				var now:Number = new Date().valueOf();
-				if (displayIOBEnabled)
-					calculateTotalIOB(now);
-				if (displayCOBEnabled)
-					calculateTotalCOB(now);
+				
+				if (displayLatestBGValue && !isFuture)
+				{
+					calculateDisplayLabels();
+					var now:Number = new Date().valueOf();
+					if (displayIOBEnabled)
+						calculateTotalIOB(now);
+					if (displayCOBEnabled)
+						calculateTotalCOB(now);
+				}
 			}
 		}
 		

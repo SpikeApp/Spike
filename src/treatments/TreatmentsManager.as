@@ -10,8 +10,6 @@ package treatments
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -588,13 +586,26 @@ package treatments
 			//Get relevant treatments
 			var carbWindow:Number = time - TimeSpan.TIME_6_HOURS;
 			var relevantTreatmentsHash:String = "";
+			var relevantCarbTreatments:Boolean = false;
 			var relevantTreatmentsList:Array = treatmentsList.filter
 			(
 				function (treatment:Treatment, index:int, arr:Array):Boolean 
 				{
 					//Consider treatments that contain carbs from up to 6 hours ago and insulin from up to treatment's DIA ago 
-					//var validated:Boolean = (treatment.carbs > 0 || treatment.insulinAmount > 0) && treatment.timestamp > carbWindow && treatment.timestamp <= time;
-					var validated:Boolean = (treatment.carbs > 0 && treatment.timestamp > carbWindow && treatment.timestamp <= time) || (treatment.insulinAmount > 0 && treatment.timestamp >= time - treatment.dia && treatment.timestamp <= time);
+					var validated:Boolean = false
+					
+					var carbsValidated:Boolean = treatment.carbs > 0 && treatment.timestamp > carbWindow && treatment.timestamp <= time; 
+					if (carbsValidated) 
+					{
+						relevantCarbTreatments = true;
+					}
+					
+					var insulinValidated:Boolean = treatment.insulinAmount > 0 && treatment.timestamp >= time - treatment.dia && treatment.timestamp <= time;
+					
+					if (carbsValidated || insulinValidated)
+					{
+						validated = true;
+					}
 					
 					if (validated)
 					{
@@ -604,6 +615,25 @@ package treatments
 					return validated;
 				}
 			);
+			
+			//If no relevant treatments are found, return COB of zero and avoid calculation
+			if (!relevantCarbTreatments)
+			{
+				return {
+					time: time,
+					cob: 0,
+					carbs: 0,
+					lastCarbTime: 0,
+					firstCarbTime: time,
+					carbsAbsorbed: 0,
+					currentDeviation: Number.NaN,
+					maxDeviation: 0,
+					minDeviation: 999,
+					slopeFromMaxDeviation: 0,
+					slopeFromMinDeviation: 999,
+					allDeviations: null
+				};
+			}
 			
 			//Check cache
 			var cachedCOB:Object = COBCache[time];
@@ -811,7 +841,7 @@ package treatments
 					minDeviation: 999,
 					slopeFromMaxDeviation: 0,
 					slopeFromMinDeviation: 999,
-					allDeviations: []
+					allDeviations: null
 				};
 			}
 			
