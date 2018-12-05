@@ -280,6 +280,42 @@ package treatments
 			Trace.myTrace("TreatmentsManager.as", "Saved IOB/COB caches to database...");
 		}
 		
+		public static function clearAllCaches():void
+		{
+			//Clear caches internally
+			IOBCache = {};
+			IOBCacheTimes = [];
+			COBCache = {};
+			COBCacheTimes = [];
+			
+			//Serialize Caches
+			//COB
+			var COBCachedBytes:ByteArray = new ByteArray();
+			COBCachedBytes.writeObject(COBCache);
+			var COBCachedBytesString:String = Base64.encodeByteArray(COBCachedBytes);
+			
+			var COBCachedTimesBytes:ByteArray = new ByteArray();
+			COBCachedTimesBytes.writeObject(COBCacheTimes);
+			var COBCachedTimesBytesString:String = Base64.encodeByteArray(COBCachedTimesBytes);
+			
+			//IOB
+			var IOBCachedBytes:ByteArray = new ByteArray();
+			IOBCachedBytes.writeObject(IOBCache);
+			var IOBCachedBytesString:String = Base64.encodeByteArray(IOBCachedBytes);
+			
+			var IOBCachedTimesBytes:ByteArray = new ByteArray();
+			IOBCachedTimesBytes.writeObject(IOBCacheTimes);
+			var IOBCachedTimesBytesString:String = Base64.encodeByteArray(IOBCachedTimesBytes);
+			
+			//Save them to the database
+			Database.updateIOBCOBCachesSynchronous(IOBCachedBytesString, IOBCachedTimesBytesString, COBCachedBytesString, COBCachedTimesBytesString);
+			
+			//Update internal variables
+			lastSavedCachesTimestamp = new Date().valueOf();
+			
+			Trace.myTrace("TreatmentsManager.as", "All internal caches have been cleared by user request!");
+		}
+		
 		public static function fetchAllTreatmentsFromDatabase():void
 		{
 			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -1222,7 +1258,7 @@ package treatments
 			return output;
 		}
 		
-		public static function calcDeviations(time:Number):Object
+		private static function calcDeviations(time:Number):Object
 		{
 			// We make a copy of all readings and remove the ones that arrived after the desired COB time.
 			// This makes the OpenAPS COB algorithm compatible with retro values.
