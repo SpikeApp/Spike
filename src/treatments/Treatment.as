@@ -59,14 +59,13 @@ package treatments
 		/**
 		 * IOB Calculation Algorithms (Nightscout & OpenAPS)
 		 */
-		public function calculateIOBNightscout(time:Number):Object
+		public function calculateIOBNightscout(time:Number, isf:Number = Number.NaN):Object
 		{
 			//Nightscout
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
 			var iob:Number = 0;
 			var activityForecast:Number = 0;
 			var activity:Number = 0;
-			var isf:Number = Number(ProfileManager.getProfileByTime(new Date().valueOf()).insulinSensitivityFactors);
 			
 			if (minAgo < INSULIN_PEAK) 
 			{
@@ -215,7 +214,7 @@ package treatments
 		}
 		
 		/**
-		 * COB Calculation Algorithms
+		 * COB Nightscout Calculation Algorithm
 		 */
 		public function calculateCOB(lastDecayedBy:Number, time:Number):CobCalc
 		{

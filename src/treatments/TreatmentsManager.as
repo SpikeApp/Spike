@@ -488,7 +488,7 @@ package treatments
 				for (var i:int = 0; i < numberOfTreatments; i++) 
 				{
 					var treatment:Treatment = relevantTreatments[i];
-					var treatmentIOBCalc:Object = treatment.calculateIOBNightscout(time);
+					var treatmentIOBCalc:Object = treatment.calculateIOBNightscout(time, isf);
 					if (treatmentIOBCalc != null)
 					{
 						totalIOB += treatmentIOBCalc.iobContrib;
