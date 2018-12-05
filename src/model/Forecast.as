@@ -47,7 +47,7 @@ package model
 			//Create cache hash
 			var treatmentsBytes:ByteArray = new ByteArray();
 			treatmentsBytes.writeObject(TreatmentsManager.treatmentsList);
-			var cacheHash:String = treatmentsBytes.toString() + forceNewIOBCOB.toString() + ignoreIOBCOB.toString();
+			var cacheHash:String = treatmentsBytes.toString() + forceNewIOBCOB.toString() + ignoreIOBCOB.toString() + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
 			
 			//Check cache
 			if (!forceNewIOBCOB)
