@@ -41,10 +41,6 @@ package model
 			var currentTime:Number = new Date().valueOf();
 			var now:Number = currentTime - glucose_status.date < TimeSpan.TIME_16_MINUTES && !forceNewIOBCOB ? glucose_status.date : currentTime;
 			
-			/**
-			 * Check Cache
-			 */
-			
 			//Sort Treatments
 			TreatmentsManager.treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 			
@@ -203,7 +199,7 @@ package model
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var meal_data:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalCOB(now) : { cob: 0, carbs: 0 };
+			var meal_data:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps", true) : { cob: 0, carbs: 0 };
 			if (meal_data.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it
@@ -236,9 +232,9 @@ package model
 			var remainingCIpeak:Number = remainingCarbs * csf * 5 / 60 / (remainingCATime/2);
 			
 			// calculate peak deviation in last hour, and slope from that to current deviation
-			var slopeFromMaxDeviation:Number = !isNaN(meal_data.slopeFromMaxDeviation) ? round(meal_data.slopeFromMaxDeviation,2) : 0; //Compatibility with Nightscout COB algorithm
+			var slopeFromMaxDeviation:Number = meal_data.slopeFromMaxDeviation == null || !isNaN(meal_data.slopeFromMaxDeviation) ? round(meal_data.slopeFromMaxDeviation,2) : 0; 
 			// calculate lowest deviation in last hour, and slope from that to current deviation
-			var slopeFromMinDeviation:Number = !isNaN(meal_data.slopeFromMinDeviation) ? round(meal_data.slopeFromMinDeviation,2) : 999; //Compatibility with Nightscout COB algorithm
+			var slopeFromMinDeviation:Number = meal_data.slopeFromMinDeviation == null || !isNaN(meal_data.slopeFromMinDeviation) ? round(meal_data.slopeFromMinDeviation,2) : 999;
 			// assume deviations will drop back down at least at 1/3 the rate they ramped up
 			var slopeFromDeviations:Number = Math.min(slopeFromMaxDeviation,-slopeFromMinDeviation/3);
 			
@@ -338,6 +334,8 @@ package model
 				//console.error(predUCIslope, predUCImax);
 				// predicted CI from UAM is the lesser of CI based on deviationSlope or DIA
 				predUCI = Math.min(predUCIslope, predUCImax);
+				
+				
 				if(predUCI>0) {
 					//console.error(UAMpredBGs.length,slopeFromDeviations, predUCI);
 					UAMduration=round((UAMpredBGs.length+1)*5/60,1);

@@ -565,7 +565,7 @@ package treatments
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.IOB_COB_UPDATED));
 		}
 		
-		public static function getTotalCOB(time:Number, useLastBgReadingTimestamp:Boolean = false):Object 
+		public static function getTotalCOB(time:Number, useLastBgReadingTimestamp:Boolean = false, isForPredictions:Boolean = false):Object 
 		{
 			//Adjust time (if needed)
 			if (useLastBgReadingTimestamp)
@@ -616,8 +616,8 @@ package treatments
 				}
 			);
 			
-			//If no relevant treatments are found, return COB of zero and avoid calculation
-			if (!relevantCarbTreatments)
+			//If no relevant treatments are found and COB is not meant for predictions, return COB of zero and avoid calculations
+			if (!relevantCarbTreatments && !isForPredictions)
 			{
 				return {
 					time: time,
@@ -645,11 +645,27 @@ package treatments
 			
 			//No cached data found. Perform real calculations
 			var result:Object;
+			var deviations:Object;
 			
 			if (algorithm == "nightscout")
 			{
 				//Get calculations
 				result = getTotalCOBNightscout(time, relevantTreatmentsList);
+				
+				//Get Deviations
+				if (isForPredictions)
+				{
+					deviations = calcDeviations(time);
+					if (deviations != null)
+					{
+						result.currentDeviation = deviations.currentDeviation;
+						result.maxDeviation = deviations.maxDeviation;
+						result.minDeviation = deviations.minDeviation;
+						result.slopeFromMaxDeviation = deviations.slopeFromMaxDeviation;
+						result.slopeFromMinDeviation = deviations.slopeFromMinDeviation;
+						result.allDeviations = deviations.allDeviations;
+					}
+				}
 				
 				//Cache them
 				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, cobCalc: result };
@@ -674,6 +690,21 @@ package treatments
 			{
 				//Get calculations
 				result = getTotalCOBNightscout(time, relevantTreatmentsList); //If everything else we default to Nightscout
+				
+				//Get Deviations
+				if (isForPredictions)
+				{
+					deviations = calcDeviations(time);
+					if (deviations != null)
+					{
+						result.currentDeviation = deviations.currentDeviation;
+						result.maxDeviation = deviations.maxDeviation;
+						result.minDeviation = deviations.minDeviation;
+						result.slopeFromMaxDeviation = deviations.slopeFromMaxDeviation;
+						result.slopeFromMinDeviation = deviations.slopeFromMinDeviation;
+						result.allDeviations = deviations.allDeviations;
+					}
+				}
 				
 				//Cache them
 				COBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, cobCalc: result };
@@ -1187,6 +1218,272 @@ package treatments
 				slopeFromMinDeviation: slopeFromMinDeviation,
 				allDeviations: allDeviations
 			}
+				
+			return output;
+		}
+		
+		public static function calcDeviations(time:Number):Object
+		{
+			// We make a copy of all readings and remove the ones that arrived after the desired COB time.
+			// This makes the OpenAPS COB algorithm compatible with retro values.
+			// We then reverse the array so the last reading comes first. This is to make it compatible with how OpenAPS expects data to be fed.
+			var availableReadings:Array = ModelLocator.bgReadings.concat();
+			var numAvailableReadings:uint = availableReadings.length;
+			for (i = numAvailableReadings - 1 ; i >= 0; i--)
+			{
+				var readingCandidate:BgReading = availableReadings[i];
+				if (readingCandidate != null)
+				{
+					if (readingCandidate.timestamp > time)
+					{
+						availableReadings.pop();
+					}
+					else
+						break;
+				}
+			}
+			availableReadings.reverse();
+			
+			if (numAvailableReadings == 0 || availableReadings[0] == null)
+			{
+				//No readings or last reading is invalid, return default deviations.
+				return {
+					time: time,
+					currentDeviation: Number.NaN,
+					maxDeviation: 0,
+					minDeviation: 999,
+					slopeFromMaxDeviation: 0,
+					slopeFromMinDeviation: 999,
+					allDeviations: null
+				};
+			}
+			
+			var glucose_data:Array = availableReadings; //BG Readings in descending order
+			var mealTime:Number = time - TimeSpan.TIME_6_HOURS;
+			var ciTime:Number = time;
+			
+			var avgDeltas:Array = [];
+			var bgis:Array = [];
+			var deviations:Array = [];
+			var deviationSum:Number = 0;
+			var bucketed_data:Array = [];
+			bucketed_data[0] = { glucose: glucose_data[0]._calculatedValue, timestamp: glucose_data[0]._timestamp, date: glucose_data[0]._timestamp };
+			
+			var j:Number = 0;
+			var foundPreMealBG:Boolean = false;
+			var lastbgi:Number = 0;
+			var i:int;
+			
+			if (bucketed_data[0] == null || bucketed_data[0].glucose == null || isNaN(bucketed_data[0].glucose) || bucketed_data[0].glucose < 39) 
+			{
+				lastbgi = -1;
+			}
+			
+			var bgTime:Number;
+			
+			var glucoseDataLength:int = glucose_data.length;
+			for (i = 1; i < glucoseDataLength; ++i)
+			{
+				var bgReading:BgReading = glucose_data[i];
+				if (bgReading == null)
+					continue;
+				
+				var bgCalculatedValue:Number = bgReading._calculatedValue;
+				if (isNaN(bgCalculatedValue) || bgCalculatedValue < 39) 
+				{
+					// Skip reading
+					continue;
+				}
+				
+				var spikeBgTime:Number = bgReading._timestamp;
+				var lastbgTime:Number;
+				bgTime = spikeBgTime;
+				
+				// only consider BGs for 6h after a meal for calculating COB
+				var hoursAfterMeal:Number = (bgTime - mealTime) / TimeSpan.TIME_1_HOUR;
+				if (isNaN(hoursAfterMeal) || hoursAfterMeal > 6)
+				{
+					continue;
+				} 
+				else if (foundPreMealBG)
+				{
+					break;
+				}
+				else if (hoursAfterMeal < 0) 
+				{
+					foundPreMealBG = true;
+				}
+				
+				// only consider last ~45m of data in CI mode
+				// this allows us to calculate deviations for the last ~30m
+				if (!isNaN(ciTime)) 
+				{
+					var hoursAgo:Number = (ciTime - bgTime) / TimeSpan.TIME_45_MINUTES;
+					if (hoursAgo > 1 || hoursAgo < 0) 
+					{
+						continue;
+					}
+				}
+				
+				var lastBucketedItem:Object = bucketed_data[bucketed_data.length-1];
+				if (lastBucketedItem != null && lastBucketedItem.date != null && !isNaN(lastBucketedItem.date)) 
+				{
+					lastbgTime = lastBucketedItem.date;
+				} 
+				else if ((lastbgi >= 0) && glucose_data[lastbgi] != null && !isNaN(glucose_data[lastbgi]._timestamp)) 
+				{
+					lastbgTime = glucose_data[lastbgi]._timestamp;
+				} 
+				else 
+				{ 
+					trace("Could not determine last BG time"); 
+					continue;
+				}
+				
+				var elapsed_minutes:Number = (bgTime - lastbgTime) / TimeSpan.TIME_1_MINUTE;
+				if (Math.abs(elapsed_minutes) > 8) 
+				{
+					// interpolate missing data points
+					if (glucose_data[lastbgi] != null)
+					{
+						var lastbg:Number = glucose_data[lastbgi]._calculatedValue;
+						
+						// cap interpolation at a maximum of 4h
+						elapsed_minutes = Math.min(240,Math.abs(elapsed_minutes));
+						
+						while(elapsed_minutes > 5) 
+						{
+							var previousbgTime:Number = lastbgTime - TimeSpan.TIME_5_MINUTES;
+							if (!isNaN(previousbgTime) && glucose_data[i] != null)
+							{
+								j++;
+								bucketed_data[j] = {};
+								bucketed_data[j].date = previousbgTime;
+								bucketed_data[j].timestamp = previousbgTime;
+								var gapDelta:Number = glucose_data[i]._calculatedValue - lastbg;
+								var previousbg:Number = lastbg + (5/elapsed_minutes * gapDelta);
+								bucketed_data[j].glucose = Math.round(previousbg);
+								
+								lastbg = previousbg;
+								lastbgTime = previousbgTime;
+							}
+							
+							elapsed_minutes = elapsed_minutes - 5;
+						}
+					}
+				}
+				else if(Math.abs(elapsed_minutes) > 2) 
+				{
+					if (glucose_data[i] != null)
+					{
+						j++;
+						bucketed_data[j] = { glucose: glucose_data[i]._calculatedValue, timestamp: bgTime, date: bgTime };
+					}
+				} 
+				else 
+				{
+					if (bucketed_data[j] != null && glucose_data[i] != null)
+					{
+						bucketed_data[j].glucose = (bucketed_data[j].glucose + glucose_data[i]._calculatedValue) / 2;
+					}
+				}
+				
+				lastbgi = i;	
+			}
+			
+			var currentDeviation:Number;
+			var slopeFromMaxDeviation:Number = 0;
+			var slopeFromMinDeviation:Number = 999;
+			var maxDeviation:Number = 0;
+			var minDeviation:Number = 999;
+			var allDeviations:Array = [];
+			
+			var buckeredDataLength:uint = bucketed_data.length;
+			for (i = 0; i < buckeredDataLength - 3; ++i) 
+			{
+				bgTime = bucketed_data[i].date;
+				
+				var sens:Number;
+				var tempProfile:Profile = ProfileManager.getProfileByTime(bgTime);
+				if (tempProfile == null)
+				{
+					//Set default insulin sensitivity factor
+					sens = 50;
+				}
+				else
+				{
+					sens = Number(tempProfile.insulinSensitivityFactors);
+					if (isNaN(sens) || sens == 0)
+					{
+						//Set default insulin sensitivity factor
+						sens = 50;
+					}
+				}
+				
+				var bg:Number;
+				var avgDelta:Number;
+				var delta:Number;
+				if (bucketed_data[i] != null && bucketed_data[i].glucose != null && !isNaN(bucketed_data[i].glucose)) 
+				{
+					bg = bucketed_data[i].glucose;
+					if ( bg < 39 || (bucketed_data[i+3] != null && bucketed_data[i+3].glucose < 39) || bucketed_data[i+1] == null || bucketed_data[i+1].glucose == null || isNaN(bucketed_data[i+1].glucose)) 
+					{
+						continue;
+					}
+					avgDelta = (bg - bucketed_data[i+3].glucose) / 3;
+					delta = (bg - bucketed_data[i+1].glucose);
+				} 
+				else 
+				{ 
+					trace("Could not find glucose data"); 
+					continue;
+				}
+				
+				avgDelta = Number(avgDelta.toFixed(2));
+				
+				var iob:Object =  getTotalIOB(bgTime);
+				var bgi:Number = Math.round(( -iob.activityForecast * sens * 5 ) * 100) / 100;
+				
+				var deviation:Number = delta - bgi;
+				deviation = Number(deviation.toFixed(2));
+				
+				// calculate the deviation right now, for use in min_5m
+				if (i == 0) 
+				{ 
+					currentDeviation = Math.round((avgDelta-bgi) * 1000) / 1000;
+					if (ciTime > bgTime) 
+					{
+						allDeviations.push(Math.round(currentDeviation));
+					}
+				} 
+				else if (ciTime > bgTime) 
+				{
+					var avgDeviation:Number = Math.round((avgDelta-bgi) * 1000) / 1000;
+					var deviationSlope:Number = (avgDeviation-currentDeviation) / (bgTime-ciTime) * TimeSpan.TIME_5_MINUTES;
+					
+					if (avgDeviation > maxDeviation) 
+					{
+						slopeFromMaxDeviation = Math.min(0, deviationSlope);
+						maxDeviation = avgDeviation;
+					}
+					if (avgDeviation < minDeviation) 
+					{
+						slopeFromMinDeviation = Math.max(0, deviationSlope);
+						minDeviation = avgDeviation;
+					}
+					
+					allDeviations.push(Math.round(avgDeviation));
+				}
+			}
+			
+			var output:Object = {
+				currentDeviation: Math.round(currentDeviation * 100) / 100,
+				maxDeviation: Math.round(maxDeviation * 100) / 100,
+				minDeviation: Math.round(minDeviation * 100) / 100,
+				slopeFromMaxDeviation: Math.round(slopeFromMaxDeviation * 1000) / 1000,
+				slopeFromMinDeviation: Math.round(slopeFromMinDeviation * 1000) / 1000,
+				allDeviations: allDeviations
+			};
 				
 			return output;
 		}
