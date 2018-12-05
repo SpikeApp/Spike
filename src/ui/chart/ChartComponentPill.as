@@ -1,17 +1,14 @@
 package ui.chart
 {
-	import flash.filters.BitmapFilterQuality;
-	import flash.filters.GlowFilter;
-	
 	import database.CommonSettings;
 	
 	import feathers.controls.Label;
-	import feathers.controls.text.TextFieldTextRenderer;
-	import feathers.core.ITextRenderer;
+	import feathers.core.FeathersControl;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	
 	import starling.display.Sprite;
+	import starling.events.Event;
 	
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeCanvas;
@@ -19,33 +16,35 @@ package ui.chart
 	import utils.Constants;
 	import utils.DeviceInfo;
 	
-	public class ChartTreatmentPill extends Sprite
+	public class ChartComponentPill extends Sprite
 	{
 		/* Constants */
-		public static const TYPE_IOB:String = "IOB";
-		public static const TYPE_COB:String = "COB";
 		private static const PADDING:int = 5;
 		private static const CORNER_RADIUS:int = 4;
 		private static const STROKE_THICKNESS:int = 1;
 		
 		/* Properties */
-		private var type:String;
-		private var value:String = "";
+		private var title:String;
+		private var component:FeathersControl;
 		private var treatmentPillColor:uint;
+		private var extraPadding:int = 0;
 		private static var fontSize:int = 16;
 		private static var pillHeight:int = 25;
-		public var isPredictive:Boolean;
 		
 		/* Display Objects */
-		private var pillBackground:SpikeCanvas;
+		public var pillBackground:SpikeCanvas;
 		private var valueBackground:SpikeCanvas;
-		private var titleLabel:Label;
-		private var valueLabel:Label;
+		public var titleLabel:Label;
 		
-		public function ChartTreatmentPill(type:String, isPredictive:Boolean = false)
+		public function ChartComponentPill(title:String, component:FeathersControl, extraPadding:int = 0, listenForChangeEvents:Boolean = false)
 		{
-			this.type = type;
-			this.isPredictive = isPredictive;
+			this.title = title;
+			this.component = component;
+			if (listenForChangeEvents)
+				this.component.addEventListener(Event.CHANGE, onComponentChanged);
+			this.component.validate();
+			this.extraPadding = extraPadding;
+			this.treatmentPillColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR));
 			
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 			{
@@ -99,35 +98,25 @@ package ui.chart
 			
 			fontSize *= userFontMultiplier;
 			pillHeight *= userFontMultiplier;
-		}
-		
-		public function setValue(value:String, title:String = null):void
-		{
-			this.value = value;
-			if (title != null)
-				type = title;
-			
-			treatmentPillColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_PILL_COLOR));
 			
 			drawPill();
 		}
 		
 		private function drawPill():void
 		{
-			//Discart previous display objects
-			discard();
+			//Size Adjustments
+			if (pillHeight < component.height + PADDING)
+				pillHeight = component.height + PADDING;
+			
+			pillHeight += extraPadding;
 			
 			//Create Title Label
-			titleLabel = LayoutFactory.createLabel(type, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, false,  0x20222a);
+			titleLabel = LayoutFactory.createLabel(title, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, false,  0x20222a);
 			titleLabel.validate();
 			
-			//Create Value Label
-			valueLabel = LayoutFactory.createLabel(value, HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, isPredictive,  !isPredictive ? treatmentPillColor : uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR)));	
-			valueLabel.validate();
-			
 			//Calculate Dimensions
-			var pillWidth:Number = titleLabel.width + (2 * PADDING) + valueLabel.width + (2 * PADDING);
-			var valueBackgroundWidth:Number = valueLabel.width + (2 * PADDING);
+			var pillWidth:Number = titleLabel.width + (2 * PADDING) + component.width + (2 * PADDING);
+			var valueBackgroundWidth:Number = component.width + (2 * PADDING);
 			
 			//Pill Background
 			pillBackground = new SpikeCanvas();
@@ -144,21 +133,27 @@ package ui.chart
 			titleLabel.y = (pillHeight / 2) - (titleLabel.height / 2);
 			titleLabel.width = pillWidth - valueBackgroundWidth;
 			
-			valueLabel.x = pillWidth - valueBackgroundWidth - STROKE_THICKNESS;
-			valueLabel.y = (pillHeight / 2) - (titleLabel.height / 2);
-			valueLabel.width = valueBackgroundWidth;
+			component.x = pillWidth - STROKE_THICKNESS - valueBackgroundWidth + ((valueBackgroundWidth - component.width) / 2);
+			component.y = (pillHeight / 2) - (component.height / 2);
 			
 			//Add Objects to Display List
 			addChild(pillBackground);
 			addChild(valueBackground);
 			addChild(titleLabel);
-			addChild(valueLabel);
+			addChild(component);
 		}
 		
-		public function colorizeLabel(labelColor:uint):void
+		private function onComponentChanged(e:Event):void
 		{
-			if (valueLabel != null && valueLabel.fontStyles != null)
-				valueLabel.fontStyles.color = labelColor;
+			this.component.validate();
+			
+			discard();
+			
+			extraPadding = 0;
+			
+			drawPill();
+			
+			dispatchEventWith(Event.UPDATE);
 		}
 		
 		private function discard():void
@@ -168,13 +163,6 @@ package ui.chart
 				removeChild(titleLabel);
 				titleLabel.dispose();
 				titleLabel = null;
-			}
-			
-			if (valueLabel != null)
-			{
-				removeChild(valueLabel);
-				valueLabel.dispose();
-				valueLabel = null;
 			}
 			
 			if (pillBackground != null)
@@ -196,6 +184,7 @@ package ui.chart
 		{
 			if (pillBackground != null)
 			{
+				pillBackground.removeEventListeners();
 				pillBackground.removeFromParent();
 				pillBackground.dispose();
 				pillBackground = null;
@@ -210,16 +199,18 @@ package ui.chart
 			
 			if (titleLabel != null)
 			{
+				titleLabel.removeEventListeners();
 				titleLabel.removeFromParent();
 				titleLabel.dispose();
 				titleLabel = null;
 			}
 			
-			if (valueLabel != null)
+			if (component != null)
 			{
-				valueLabel.removeFromParent();
-				valueLabel.dispose();
-				valueLabel = null;
+				component.removeEventListener(Event.CHANGE, onComponentChanged);
+				component.removeFromParent();
+				component.dispose();
+				component = null;
 			}
 			
 			super.dispose();

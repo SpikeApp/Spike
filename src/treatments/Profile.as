@@ -19,6 +19,9 @@ package treatments
 		public var trend45Down:Number = 0;
 		public var trend90Down:Number = 0;
 		public var trendDoubleDown:Number = 0;
+		public var insulinCurve:String = "";
+		public var useCustomInsulinPeakTime:Boolean = false;
+		public var insulinPeakTime:Number = Number.NaN;
 		
 		public function Profile(id:String, time:String, name:String, insulinToCarbRatios:String, insulinSensitivityFactors:String, carbsAbsorptionRate:Number, basalRates:String, targetGlucoseRates:String, trendCorrections:String, timestamp:Number)
 		{

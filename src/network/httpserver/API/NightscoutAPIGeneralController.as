@@ -11,6 +11,7 @@ package network.httpserver.API
 	import database.Calibration;
 	import database.CommonSettings;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import network.httpserver.ActionController;
@@ -98,8 +99,8 @@ package network.httpserver.API
 					{
 						bgsObject.bgdelta = Number(BgGraphBuilder.unitizedDeltaString(false, false));
 						bgsObject.battery = String(BatteryInfo.getBatteryLevel());
-						bgsObject.iob = String(TreatmentsManager.getTotalIOB(now));
-						bgsObject.cob = TreatmentsManager.getTotalCOB(now);
+						bgsObject.iob = String(TreatmentsManager.getTotalIOB(now).iob);
+						bgsObject.cob = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 						bgsObject.bwp = "0";
 						bgsObject.bwpo = 0;
 					}
@@ -189,8 +190,8 @@ package network.httpserver.API
 					{
 						bgObject.units_hint = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mgdl" : "mmol";
 						var now:Number = new Date().valueOf();
-						var currentIOB:Number = TreatmentsManager.getTotalIOB(now);
-						var currentCOB:Number = TreatmentsManager.getTotalCOB(now);
+						var currentIOB:Number = TreatmentsManager.getTotalIOB(now).iob;
+						var currentCOB:Number = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 						if (currentIOB > 0)
 							bgObject.IOB = currentIOB;
 						if (currentCOB > 0)
@@ -281,13 +282,43 @@ package network.httpserver.API
 									readingObject.low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR)).toString(16).toUpperCase();
 									readingObject.urgent_low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)).toString(16).toUpperCase();
 									
-									//Stats
-									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now));
+									//Stats / Predictions / Velocity
+									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob);
 									if (!lightMode)
 									{
+										//Stats
 										var userStats:BasicUserStats = StatsManager.getBasicUserStats();
 										readingObject.status_two = "L: " + userStats.percentageLowRounded + "% | " + "R: " + userStats.percentageInRangeRounded + "% | " + "H: " + userStats.percentageHighRounded + "%";
 										readingObject.status_three = "AVG: " + userStats.averageGlucose + GlucoseHelper.getGlucoseUnit() + " | " + "A1C: " + userStats.a1c + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != "true" ? "%" : "m");
+										
+										//Predictions
+										var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+										if (!isNaN(predictionsLengthInMinutes))
+										{
+											var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+											if (!isNaN(currentPrediction))
+											{
+												readingObject.predictions_duration = String(predictionsLengthInMinutes);
+												readingObject.predictions_outcome = readingObject.unit == "mgdl" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10);
+											}
+											else
+											{
+												readingObject.predictions_duration = String(predictionsLengthInMinutes);
+												readingObject.predictions_outcome = "N/A";
+											}
+										}
+										else
+										{
+											readingObject.predictions_duration = "";
+											readingObject.predictions_outcome = "N/A";
+										}
+										
+										//Velocity
+										var glucoseVelocity:Number = GlucoseFactory.getGlucoseVelocity();
+										if (!isNaN(glucoseVelocity))
+										{
+											readingObject.glucose_velocity = String(glucoseVelocity);
+										}
 									}
 								}
 								readingsCollection.push(readingObject);

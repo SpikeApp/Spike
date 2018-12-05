@@ -672,7 +672,7 @@ package treatments
 			bwTrendLabel.x = bwTrendCheck.x + bwTrendCheck.width + 5;
 			
 			//Current IOB
-			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf());
+			currentIOB = TreatmentsManager.getTotalIOB(new Date().valueOf()).iob;
 			
 			bwIOBContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwIOBContainer.width = contentWidth;
@@ -698,7 +698,7 @@ package treatments
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			//Current COB
-			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf());
+			currentCOB = TreatmentsManager.getTotalCOB(new Date().valueOf(), CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 			
 			bwCOBContainer = LayoutFactory.createLayoutGroup("horizontal");
 			bwCOBContainer.width = contentWidth;
@@ -1167,7 +1167,7 @@ package treatments
 			}
 			
 			//Current IOB
-			currentIOB = TreatmentsManager.getTotalIOB(now);
+			currentIOB = TreatmentsManager.getTotalIOB(now).iob;
 			//currentIOB = 0.72;
 			bwCurrentIOBLabel.text = GlucoseFactory.formatIOB(currentIOB);
 			bwCurrentIOBLabel.validate();
@@ -1175,7 +1175,7 @@ package treatments
 			bwCurrentIOBLabel.x = contentWidth - bwCurrentIOBLabel.width;
 			
 			//Current COB
-			currentCOB = TreatmentsManager.getTotalCOB(now);
+			currentCOB = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 			bwCurrentCOBLabel.text = GlucoseFactory.formatCOB(currentCOB);
 			bwCurrentCOBLabel.validate();
 			bwCOBContainer.validate();

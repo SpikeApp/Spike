@@ -20,6 +20,7 @@ package services
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import treatments.TreatmentsManager;
@@ -49,6 +50,7 @@ package services
 		private static var applyGapFix:Boolean;
 		private static var displayCOBEnabled:Boolean;
 		private static var displayIOBEnabled:Boolean;
+		private static var displayPredictionsEnabled:Boolean;
 		
 		public function WatchService()
 		{
@@ -86,6 +88,7 @@ package services
 		{
 			watchComplicationEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_ON) == "true";
 			displayNameEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_NAME_ON) == "true";
+			displayPredictionsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON) == "true";
 			displayNameValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_NAME);
 			calendarID = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_SELECTED_CALENDAR_ID);;
 			displayTrendEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_TREND) == "true";
@@ -101,8 +104,8 @@ package services
 			Trace.myTrace("WatchService.as", "Service activated!");
 			
 			serviceActive = true;
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBloodGlucoseReceived);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBloodGlucoseReceived, false, 160, false);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 160, false);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentsChanged);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentsChanged);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentsChanged);
@@ -199,11 +202,31 @@ package services
 				title += "\n";
 				var nowTreatments:Number = new Date().valueOf();
 				if (displayIOBEnabled && displayCOBEnabled)
-					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label').charAt(0) + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments)) + " " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label').charAt(0) + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments));
+					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label').charAt(0) + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob) + " " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label').charAt(0) + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments).iob);
 				else if (displayIOBEnabled)
-					title += ModelLocator.resourceManagerInstance.getString('treatments','iob_label') + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments));
+					title += ModelLocator.resourceManagerInstance.getString('treatments','iob_label') + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments).iob);
 				else if (displayCOBEnabled)
-					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments));
+					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
+			}
+			
+			if (displayPredictionsEnabled)
+			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+				{
+					var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+					if (!isNaN(predictionsLengthInMinutes))
+					{
+						var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+						if (!isNaN(currentPrediction))
+						{
+							title += "\n" + TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + ": " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10)) + (displayUnitsEnabled ? " " + GlucoseHelper.getGlucoseUnit() : "");
+						}
+						else
+						{
+							title += "\n" + TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+						}
+					}
+				}
 			}
 			
 			//Create watch event
@@ -249,7 +272,8 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS ||
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_IOB_ON ||
-				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON
 			)
 			{
 				getInitialProperties();
@@ -269,7 +293,8 @@ package services
 					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_TREND ||
 					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA ||
 					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA ||
-					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON
+					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON ||
+					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON
 				)
 					onBloodGlucoseReceived(null);
 			}

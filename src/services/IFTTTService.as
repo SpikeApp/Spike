@@ -493,7 +493,7 @@ package services
 		private static function triggerIOB():void
 		{
 			var info:Object = {};
-			info.value1 = GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()));
+			info.value1 = GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()).iob);
 			info.value2 = "";
 			info.value3 = "";
 			
@@ -507,7 +507,7 @@ package services
 		private static function triggerCOB():void
 		{
 			var info:Object = {};
-			info.value1 = GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
+			info.value1 = GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf(), CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
 			info.value2 = "";
 			info.value3 = "";
 			
@@ -520,9 +520,11 @@ package services
 		
 		private static function triggerIOBCOB():void
 		{
+			var now:Number = new Date().valueOf();
+			
 			var info:Object = {};
-			info.value1 = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(new Date().valueOf()));
-			info.value2 = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(new Date().valueOf()));
+			info.value1 = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob);
+			info.value2 = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
 			info.value3 = "";
 			
 			for (var i:int = 0; i < makerKeyList.length; i++) 

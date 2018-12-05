@@ -39,6 +39,7 @@ package services
 	
 	import feathers.layout.HorizontalAlign;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import network.NetworkConnector;
@@ -79,6 +80,7 @@ package services
 		private static const MODE_PEBBLE_GET:String = "pebbleGet";
 		private static const MODE_USER_INFO_GET:String = "userInfoGet";
 		private static const MODE_BATTERY_UPLOAD:String = "batteryUpload";
+		private static const MODE_PREDICTIONS_UPLOAD:String = "predictionsUpload";
 		private static const MAX_SYNC_TIME:Number = TimeSpan.TIME_45_SECONDS; //45 seconds
 		private static const MAX_RETRIES_FOR_TREATMENTS:int = 1;
 		
@@ -159,6 +161,7 @@ package services
 		private static var lastRemotePebbleSync:Number = 0;
 		private static var pumpUserEnabled:Boolean;
 		private static var phoneBatteryLevel:Number = 0;
+		private static var lastPredictionsUploadTimestamp:Number = 0;
 
 		public function NightscoutService()
 		{
@@ -373,9 +376,13 @@ package services
 						getPebbleEndpoint();
 				}
 				
+				//Upload predictions
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) == "true")
+					uploadPredictions();
+				
 				//Upload battery status
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_BATTERY_UPLOADER_ON) == "true")
-					uploadBatteryStatus()
+					uploadBatteryStatus();
 			}
 			else
 			{
@@ -386,9 +393,155 @@ package services
 		}
 		
 		/**
+		 * PREDICTIONS
+		 */
+		public static function uploadPredictions(forceIOBCOBRefresh:Boolean = false):void
+		{
+			Trace.myTrace("NightscoutService.as", "uploadPredictions called");
+			
+			//Validation #1
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) != "true" || CGMBlueToothDevice.isFollower() || !serviceActive || serviceHalted)
+				return;
+			
+			//Validation #2
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !CGMBlueToothDevice.isFollower())
+				return;
+			
+			//Get Predictions
+			var predictionsData:Object = Forecast.predictBGs(Forecast.getCurrentPredictionsDuration(), forceIOBCOBRefresh);
+			
+			//Validation #3
+			if (predictionsData == null)
+				return;
+			
+			//Format NS predictions JSON
+			var now:Number = new Date().valueOf();
+			
+			if (!forceIOBCOBRefresh)
+			{
+				var lastBgReading:BgReading = BgReading.lastWithCalculatedValue();
+				if (lastBgReading != null && now - lastBgReading._timestamp < TimeSpan.TIME_6_MINUTES && lastPredictionsUploadTimestamp != lastBgReading._timestamp)
+				{
+					now = lastBgReading._timestamp;
+				}
+			}
+			
+			lastPredictionsUploadTimestamp = now;
+			
+			var formattedNow:String = formatter.format(now).replace("000+0000", "000Z");
+			var currentIOB:Object = TreatmentsManager.getTotalIOB(now);
+			var currentCOB:Object = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps");
+			var i:int;
+			
+			var predictBGsObject:Object = {};
+			if (predictionsData.IOB != null)
+			{
+				var iobPredictions:Array = predictionsData.IOB.concat();
+				
+				for(i = iobPredictions.length - 1 ; i >= 0; i--)
+				{
+					iobPredictions[i] = Math.round(iobPredictions[i]);
+				}
+				
+				iobPredictions[0] = Number.NaN;
+				
+				predictBGsObject["IOB"] = iobPredictions;
+			}
+			if (predictionsData.COB != null)
+			{
+				var cobPredictions:Array = predictionsData.COB.concat();
+				
+				for(i = cobPredictions.length - 1 ; i >= 0; i--)
+				{
+					cobPredictions[i] = Math.round(cobPredictions[i]);
+				}
+				
+				cobPredictions[0] = Number.NaN;
+				
+				predictBGsObject["COB"] = cobPredictions;
+			}
+			if (predictionsData.UAM != null)
+			{
+				var uamPredictions:Array = predictionsData.UAM.concat();
+				
+				for(i = uamPredictions.length - 1 ; i >= 0; i--)
+				{
+					uamPredictions[i] = Math.round(uamPredictions[i]);
+				}
+				
+				uamPredictions[0] = Number.NaN;
+				
+				predictBGsObject["UAM"] = uamPredictions;
+			}
+			
+			var suggestedObject:Object = {};
+			suggestedObject["bg"] = predictionsData.bg != null ? Math.round(predictionsData.bg) : Number.NaN;
+			suggestedObject["eventualBG"] = predictionsData.eventualBG != null ? predictionsData.eventualBG : Number.NaN;
+			suggestedObject["deliverAt"] = formattedNow;
+			suggestedObject["predBGs"] = predictBGsObject;
+			suggestedObject["COB"] = currentCOB.cob;
+			suggestedObject["IOB"] = currentIOB.iob;
+			suggestedObject["timestamp"] = formattedNow;
+			suggestedObject["reason"] = "COB: " + currentCOB.cob + 
+										(predictionsData.isf != null ? ", ISF: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.isf) : Math.round(BgReading.mgdlToMmol(predictionsData.isf * 10)) / 10) : "") + 	
+										(predictionsData.cr != null ? ", CR: " + predictionsData.cr : "") + 	
+										(predictionsData.bgImpact != null ? ", BGI: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.bgImpact) : Math.round(BgReading.mgdlToMmol(predictionsData.bgImpact * 10)) / 10) : "") + 	
+										(predictionsData.deviation != null ? ", Dev: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.deviation) : Math.round(BgReading.mgdlToMmol(predictionsData.deviation * 10)) / 10) : "") + 
+										(predictionsData.minPredBG != null ? ", minPredBG: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.minPredBG) : Math.round(BgReading.mgdlToMmol(predictionsData.minPredBG * 10)) / 10) : "") + 
+										(predictionsData.eventualBG != null ? ", eventualBG: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.eventualBG) : Math.round(BgReading.mgdlToMmol(predictionsData.eventualBG * 10)) / 10) : "") +
+										(predictionsData.IOBpredBG != null ? ", IOBpredBG: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.IOBpredBG) : Math.round(BgReading.mgdlToMmol(predictionsData.IOBpredBG * 10)) / 10) : "") +
+										(predictionsData.COBpredBG != null ? ", COBpredBG: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.COBpredBG) : Math.round(BgReading.mgdlToMmol(predictionsData.COBpredBG * 10)) / 10) : "") +
+										(predictionsData.UAMpredBG != null ? ", UAMpredBG: " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.UAMpredBG) : Math.round(BgReading.mgdlToMmol(predictionsData.UAMpredBG * 10)) / 10) : "");
+			
+			var openAPSObject:Object = {};
+			openAPSObject["iob"] = {
+				iob: currentIOB.iob,
+					activity: currentIOB.activityForecast,
+					time: formattedNow
+			};
+			openAPSObject["suggested"] = suggestedObject;
+			
+			var predictionsNSObject:Object = {};
+			predictionsNSObject["_id"] = UniqueId.createEventId();
+			predictionsNSObject["device"] = "openaps://" + "Spike " + Constants.deviceModelName;
+			predictionsNSObject["created_at"] = formattedNow;
+			predictionsNSObject["openaps"] = openAPSObject;
+			
+			NetworkConnector.createNSConnector(nightscoutDeviceStatusURL, apiSecret, URLRequestMethod.POST, SpikeJSON.stringify(predictionsNSObject), MODE_PREDICTIONS_UPLOAD, onUploadPredictionsComplete, onConnectionFailed);
+		}
+		
+		private static function onUploadPredictionsComplete(e:Event):void
+		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "onUploadPredictionsComplete called!");
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onUploadBatteryStatusComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
+			loader = null;
+			
+			if (response.indexOf("openaps") != -1)
+			{
+				Trace.myTrace("NightscoutService.as", "Predictions uploaded successfully!");
+			}
+			else
+			{
+				Trace.myTrace("NightscoutService.as", "Error uploading predictions! Response: " + response);
+			}
+		}
+		
+		/**
 		 * BATTERY STATUS
 		 */
-		
 		private static function uploadBatteryStatus():void
 		{
 			Trace.myTrace("NightscoutService.as", "uploadBatteryStatus called");
@@ -846,13 +999,14 @@ package services
 									Number.NaN, //rc
 									Number.NaN, //rawCalculated
 									false, //hideSlope
-									"", //noise
+									NSFollowReading.noise != null ? NSFollowReading.noise : "", //noise
 									NSFollowReadingTime, //lastmodifiedtimestamp
 									NSFollowReading._id //unique id
 								);  
 								
 								ModelLocator.addBGReading(bgReading);
 								bgReading.findSlope(true);
+								bgReading.calculateNoise();
 								BgReadingsToSend.push(bgReading);
 								newData = true;
 							} 
@@ -910,6 +1064,8 @@ package services
 				newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");	
 				newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";	
 				newTreatment["insulinID"] = treatment.insulinID;	
+				newTreatment["insulinPeak"] = usedInsulin.peak;	
+				newTreatment["insulinCurve"] = usedInsulin.curve;	
 			}
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 			{
@@ -934,6 +1090,8 @@ package services
 				newTreatment["carbs"] = treatment.carbs;
 				newTreatment["carbDelayTime"] = treatment.carbDelayTime;
 				newTreatment["insulinID"] = treatment.insulinID;
+				newTreatment["insulinPeak"] = usedInsulin.peak;	
+				newTreatment["insulinCurve"] = usedInsulin.curve;	
 			}
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{
@@ -957,8 +1115,11 @@ package services
 			
 			for (var i:int = 0; i < arrayToDelete.length; i++) 
 			{
-				var nsTreatment:Object = arrayToDelete[i] as Object;
-				if (nsTreatment != null && nsTreatment["_id"] != null && nsTreatment["_id"] == treatment.ID)
+				var nsTreatment:Object = arrayToDelete[i];
+				if (nsTreatment == null || !nsTreatment.hasOwnProperty("_id") || nsTreatment is Treatment)
+					continue;
+				
+				if (nsTreatment["_id"] == treatment.ID)
 				{
 					arrayToDelete.removeAt(i);
 					nsTreatment = null;
@@ -1290,28 +1451,6 @@ package services
 						var basal:String = userInfoProperties.basal != null && userInfoProperties.basal.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_ON) == "true" ? String(userInfoProperties.basal.display) : "";
 						var raw:Number = userInfoProperties.rawbg != null && userInfoProperties.rawbg.mgdl != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true" && !CGMBlueToothDevice.isBlueReader() && !CGMBlueToothDevice.isBluKon() && !CGMBlueToothDevice.isLimitter() && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isTransmiter_PL() ? Number(userInfoProperties.rawbg.mgdl) : Number.NaN;
 						!isNaN(raw) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" ? raw = Math.round((BgReading.mgdlToMmol(raw)) * 10) / 10 : raw = raw;
-						var outcome:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.outcomeDisplay != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON) == "true" ? Number(userInfoProperties.bwp.outcomeDisplay) : Number.NaN;
-						var effect:Number = userInfoProperties.bwp != null && userInfoProperties.bwp.effectDisplay != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON) == "true" ? Number(userInfoProperties.bwp.effectDisplay) : Number.NaN;
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true" && isNightscoutMgDl)
-						{
-							//User is using mmol but Nightscout is on mg/dL. Do conversion.
-							if (!isNaN(outcome))
-								outcome = Math.round((BgReading.mgdlToMmol(outcome)) * 10) / 10;
-							
-							if (!isNaN(effect))
-								effect = Math.round((BgReading.mgdlToMmol(effect)) * 10) / 10;
-						}
-						else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" && !isNightscoutMgDl)
-						{
-							//User is using mg/dL but Nightscout is on mmol/l. Do conversion.
-							if (!isNaN(outcome))
-								outcome = Math.round(BgReading.mmolToMgdl(outcome));
-							
-							if (!isNaN(effect))
-								effect = Math.round(BgReading.mmolToMgdl(effect));
-						}
-						
-						if (!isNaN(currentBG) && !isNaN(outcome) && !isNaN(effect) && outcome < currentBG) effect = -effect;
 						var openAPSLastMoment:Number = userInfoProperties.openaps != null && userInfoProperties.openaps.lastLoopMoment != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON) == "true" ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.openaps.lastLoopMoment), new Date()).minutes : Number.NaN;
 						var pumpBattery:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.battery != null && userInfoProperties.pump.data.battery.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_BATTERY_ON) == "true" ? userInfoProperties.pump.data.battery.display : "";
 						var pumpReservoir:Number =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.reservoir != null && userInfoProperties.pump.data.reservoir.value != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_RESERVOIR_ON) == "true" ? Number(userInfoProperties.pump.data.reservoir.value) : Number.NaN;
@@ -1370,8 +1509,6 @@ package services
 									basal: basal,
 									raw: raw,
 									uploaderBattery: uploaderBattery,
-									outcome: outcome,
-									effect: effect,
 									openAPSLastMoment: openAPSLastMoment,
 									loopLastMoment: loopLastMoment,
 									pumpBattery: pumpBattery,
@@ -2523,6 +2660,10 @@ package services
 			else if (mode == MODE_BATTERY_UPLOAD)
 			{
 				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error uploading battery levels. Error: " + error.message);
+			}
+			else if (mode == MODE_PREDICTIONS_UPLOAD)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error uploading predictions. Error: " + error.message);
 			}
 		}
 		

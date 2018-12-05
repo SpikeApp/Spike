@@ -35,7 +35,7 @@ package database
 			return _calibration;
 		}
 		
-		private var _timestamp:Number;//db
+		public var _timestamp:Number;//db
 		
 		/**
 		 * ms sinds 1 jan 1970 
@@ -45,7 +45,7 @@ package database
 			return _timestamp;
 		}
 		
-		private var _rawData:Number;
+		public var _rawData:Number;
 
 		public function set rawData(value:Number):void
 		{
@@ -100,7 +100,7 @@ package database
 			return _calibrationFlag;
 		}
 		
-		private var _calculatedValue:Number;
+		public var _calculatedValue:Number;
 
 		public function set calculatedValue(value:Number):void
 		{
@@ -316,9 +316,9 @@ package database
 				var cntr:int = ModelLocator.bgReadings.length - 1;
 				var itemsAdded:int = 0;
 				while (cntr > -1 && itemsAdded < number) {
-					var bgReading:BgReading = ModelLocator.bgReadings[cntr] as BgReading;
+					var bgReading:BgReading = ModelLocator.bgReadings[cntr];
 					if (bgReading.sensor != null || ignoreSensorId) {
-						if ((ignoreSensorId || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
+						if ((ignoreSensorId || bgReading.sensor.uniqueId == currentSensorId) && bgReading._calculatedValue != 0 && bgReading._rawData != 0) {
 							returnValue.push(bgReading);
 							itemsAdded++;
 						}
@@ -686,6 +686,7 @@ package database
 			findNewCurve();
 			findNewRawCurve();
 			findSlope();
+			calculateNoise();
 			return this;
 		}
 		
@@ -857,11 +858,153 @@ package database
 			return arrow;
 		}
 		
+		// Calculate the sum of the distance of all points (overallDistance)
+		// Calculate the overall distance between the first and the last point (overallDistance)
+		// Calculate the noise as the following formula: 1 - sod / overallDistance
+		// Noise will get closer to zero as the sum of the individual lines are mostly in a straight or straight moving curve
+		// Noise will get closer to one as the sum of the distance of the individual lines get large
+		// Also add multiplier to get more weight to the latest BG values
+		// Also added weight for points where the delta shifts from pos to neg or neg to pos (peaks/valleys)
+		// the more peaks and valleys, the more noise is amplified
+		public function calculateNoise():void 
+		{
+			//Common variables and constants
+			const MAXRECORDS:int=8;
+			const MINRECORDS:int=4;
+			var internalNoise:Number = 0;
+			
+			//Last 8 readings (if possible)
+			var sgvArr:Array = BgReading.latest(MAXRECORDS, CGMBlueToothDevice.isFollower());
+			
+			//Reverse records (oldest comes first)
+			sgvArr.reverse();
+			
+			//Number of available readings for calculations
+			var n:int = sgvArr.length;
+			
+			//Validation
+			if (n < MINRECORDS)
+			{
+				//Not enough records. Assume no noise
+				_noise = "1"; //Clean
+				return; 
+			}
+			
+			//Get oldest and newest readings as well as bg values
+			var firstBGReading:BgReading = sgvArr[0];
+			var lastBGReading:BgReading = sgvArr[n-1];
+			
+			var firstBgReadingCalculatedValue:Number = firstBGReading._calculatedValue;
+			var lastBgReadingCalculatedValue:Number = lastBGReading._calculatedValue;
+			
+			if (lastBgReadingCalculatedValue > 400) 
+			{
+				_noise = "3";//Medium
+				return; 
+			} 
+			else if (lastBgReadingCalculatedValue  < 40) 
+			{
+				_noise = "2";//Light
+				return;
+			}
+			else if (Math.abs(lastBgReadingCalculatedValue - sgvArr[n-2]._calculatedValue) > 30) 
+			{
+				_noise = "4"; //Glucose change out of range [-30, 30] - setting noise level Heavy
+				return;
+			} 
+			
+			var firstSGV:Number = firstBgReadingCalculatedValue * 1000;
+			var firstTime:Number = firstBGReading._timestamp / 1000 * 30;
+			
+			var lastSGV:Number = lastBgReadingCalculatedValue * 1000;
+			var lastTime:Number = lastBGReading._timestamp / 1000 * 30;
+			
+			//Array that will hold time differences between bg readings
+			var xarr:Array = [];
+			
+			//Common index for iterations
+			var i:int;
+			
+			//Calculate and store time differences
+			for (i = 0; i < n; i++) 
+			{
+				xarr.push(sgvArr[i]._timestamp / 1000 * 30 - firstTime);
+			}
+			
+			//sod = sum of distances
+			var sod:Number = 0;
+			var lastDelta:Number = 0;
+			
+			//Calculate sod
+			for (i = 1; i < n; i++) 
+			{
+				// y2y1Delta adds a multiplier that gives higher priority to the latest BG's
+				var y2y1Delta:Number = (sgvArr[i]._calculatedValue - sgvArr[i-1]._calculatedValue) * 1000 * (1 + i / (n*3));
+				var x2x1Delta:Number = xarr[i] - xarr[i-1];
+				
+				if ((lastDelta > 0) && (y2y1Delta < 0)) 
+				{
+					// switched from positive delta to negative, increase noise impact  
+					//y2y1Delta = y2y1Delta * 1.1;
+					y2y1Delta = y2y1Delta * 1.4;
+				}
+				else if ((lastDelta < 0) && (y2y1Delta > 0)) 
+				{
+					// switched from negative delta to positive, increase noise impact 
+					//y2y1Delta = y2y1Delta * 1.2; ORIGINAL
+					y2y1Delta = y2y1Delta * 1.4; 
+				}
+				
+				sod += Math.sqrt(Math.pow(x2x1Delta, 2) + Math.pow(y2y1Delta, 2));
+			}
+			
+			var overallsod:Number = Math.sqrt(Math.pow(lastSGV - firstSGV, 2) + Math.pow(lastTime - firstTime, 2));
+			
+			//Calculate final noise
+			if (sod == 0) 
+			{
+				_noise = "1" //Assume no noise
+				return;
+			} 
+			else 
+			{
+				internalNoise = 1 - (overallsod/sod);
+			}
+			
+			//Convert to Nightscout/xDrip format
+			//if (internalNoise < 0.35)  ORIGINAL
+			if (internalNoise < 0.15) 
+			{
+				_noise = "1"; //Clean
+				return;
+			} 
+			//else if (internalNoise < 0.5) 
+			else if (internalNoise < 0.3) 
+			{
+				_noise = "2"; //Light
+				return;
+			} 
+			//else if (internalNoise < 0.7) 
+			else if (internalNoise < 0.5) 
+			{
+				_noise = "3"; //Medium
+				return;
+			} 
+			else if (internalNoise >= 0.5) 
+			{
+				_noise = "4"; //Heavy
+				return;
+			}
+			
+			//If everything else fails, assume no noise
+			_noise = "1"; //Clean
+		}
+		
 		public function noiseValue():int {
-			if(noise == null || noise == "") {
+			if(_noise == null || _noise == "") {
 				return 1;
 			} else {
-				return new Number(noise);
+				return int(_noise);
 			}
 		}
 	

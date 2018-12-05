@@ -83,6 +83,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var COB:String = "0.00g"
     var IOBString:String = ""
     var COBString:String = ""
+    var predictionsDuration:String = ""
+    var predictionsOutcome:String = ""
     
     //Constants
     let millisecondsInHour = 3600000
@@ -134,7 +136,10 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
          lineThickness = "2"
          markerRadius = "6"
          IOB = "6.05"
-         COB = "25.4"*/
+         COB = "25.4"
+         predictionsDuration = "1h30m"
+         predictionsOutcome = "101"
+         */
         
         
         //Widget Properties
@@ -237,7 +242,9 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             externalData["high"] == nil ||
             externalData["low"] == nil ||
             externalData["IOBString"] == nil ||
-            externalData["COBString"] == nil
+            externalData["COBString"] == nil ||
+            externalData["predictionDuration"] == nil ||
+            externalData["predictionOutcome"] == nil
         {
             print("Missing data in database!")
             noData.text = "Missing data in database!"
@@ -287,6 +294,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         markerRadius = (externalData["markerRadius"] as? NSString)!
         IOBString = (externalData["IOBString"] as? String)!
         COBString = (externalData["COBString"] as? String)!
+        predictionsDuration = (externalData["predictionDuration"] as? String)!
+        predictionsOutcome = (externalData["predictionOutcome"] as? String)!
         
         if (externalData["IOB"] != nil)
         {
@@ -419,7 +428,13 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         openApp.setTitle(openSpike, for: .normal)
         openApp.setTitleColor(UIColor.colorFromHex(hexString: displayLabelsColor), for: .normal)
         
-        treatmentsLabel.text = COBString + ":" + COB + "   " + IOBString + ":" + IOB
+        var predictValue:String = "";
+        if (predictionsOutcome != "-1")
+        {
+            predictValue = "   " + predictionsDuration + ":" + predictionsOutcome
+        }
+        
+        treatmentsLabel.text = COBString + ":" + COB + "   " + IOBString + ":" + IOB + predictValue
         treatmentsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
     }
     

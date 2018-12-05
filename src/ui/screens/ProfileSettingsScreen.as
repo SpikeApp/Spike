@@ -16,9 +16,10 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
+	import ui.screens.display.settings.treatments.AlgorithmSettingsList;
 	import ui.screens.display.settings.treatments.CarbsSettingsList;
-	import ui.screens.display.settings.treatments.ProfileSettingsList;
 	import ui.screens.display.settings.treatments.InsulinsSettingsList;
+	import ui.screens.display.settings.treatments.ProfileSettingsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -34,6 +35,8 @@ package ui.screens
 		private var carbsSettings:CarbsSettingsList;
 		private var profileSettings:ProfileSettingsList;
 		private var profileLabel:Label;
+		private var algorithmLabel:Label;
+		private var algorithmsSetting:AlgorithmSettingsList;
 		
 		public function ProfileSettingsScreen() 
 		{
@@ -67,12 +70,22 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
+			//Algorithms Section Label
+			algorithmLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','iob_cob_algorithm_label'), true);
+			screenRenderer.addChild(algorithmLabel);
+			
+			//Algorithms Settings
+			algorithmsSetting = new AlgorithmSettingsList();
+			algorithmsSetting.addEventListener(Event.CLOSE, onResetVerticalScroll);
+			screenRenderer.addChild(algorithmsSetting);
+			
 			//Insulins Section Label
 			insulinsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulins_label'), true);
 			screenRenderer.addChild(insulinsLabel);
 			
 			//Insulins Settings
 			insulinsSettings = new InsulinsSettingsList();
+			insulinsSettings.addEventListener(Event.CLOSE, onResetVerticalScroll);
 			screenRenderer.addChild(insulinsSettings);
 			
 			//Carbs Section Label
@@ -95,6 +108,11 @@ package ui.screens
 		/**
 		 * Event Handlers
 		 */
+		private function onResetVerticalScroll(e:Event):void
+		{
+			verticalScrollPosition = 0;
+		}
+		
 		override protected function onBackButtonTriggered(event:Event):void
 		{
 			if (carbsSettings.needsSave)
@@ -117,12 +135,14 @@ package ui.screens
 		{
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
+				if (algorithmLabel != null) algorithmLabel.paddingLeft = 30;
 				if (insulinsLabel != null) insulinsLabel.paddingLeft = 30;
 				if (carbsLabel != null) carbsLabel.paddingLeft = 30;
 				if (profileLabel != null) carbsLabel.paddingLeft = 30;
 			}
 			else
 			{
+				if (algorithmLabel != null) algorithmLabel.paddingLeft = 0;
 				if (insulinsLabel != null) insulinsLabel.paddingLeft = 0;
 				if (carbsLabel != null) carbsLabel.paddingLeft = 0;
 				if (profileLabel != null) carbsLabel.paddingLeft = 0;
@@ -136,6 +156,21 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
+			if (algorithmLabel != null)
+			{
+				algorithmLabel.removeFromParent();
+				algorithmLabel.dispose();
+				algorithmLabel = null;
+			}
+			
+			if (algorithmsSetting != null)
+			{
+				algorithmsSetting.removeEventListener(Event.CLOSE, onResetVerticalScroll);
+				algorithmsSetting.removeFromParent();
+				algorithmsSetting.dispose();
+				algorithmsSetting = null;
+			}
+			
 			if (insulinsLabel != null)
 			{
 				insulinsLabel.removeFromParent();
@@ -145,6 +180,7 @@ package ui.screens
 			
 			if (insulinsSettings != null)
 			{
+				insulinsSettings.removeEventListener(Event.CLOSE, onResetVerticalScroll);
 				insulinsSettings.removeFromParent();
 				insulinsSettings.dispose();
 				insulinsSettings = null;

@@ -2,7 +2,6 @@ package treatments
 {
 	import database.CommonSettings;
 	
-	import utils.TimeSpan;
 	import utils.UniqueId;
 
 	public class Treatment
@@ -34,7 +33,6 @@ package treatments
 		public var needsAdjustment:Boolean = false;
 		public var carbDelayTime:Number = 20;
 		public var basalDuration:Number = 0;
-		public var activityContrib:Number = Number.NaN;
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = Number.NaN, basalDuration:Number = 0)
 		{
@@ -58,42 +56,167 @@ package treatments
 			this.basalDuration = basalDuration;
 		}
 		
-		public function calculateIOB(time:Number, isf:Number):Number
+		/**
+		 * IOB Calculation Algorithms (Nightscout & OpenAPS)
+		 */
+		public function calculateIOBNightscout(time:Number):Object
 		{
-			activityContrib = 0;
-			
-			if (insulinAmount == 0 || time < timestamp || time - (dia * 60 * 60 * 1000) > timestamp + TimeSpan.TIME_10_MINUTES)//If it's not an insulin treatment or requested time is before treatment time
-			{
-				return 0;
-			}
-			
+			//Nightscout
 			var minAgo:Number = insulinScaleFactor * (time - timestamp) / 1000 / 60;
-			var iob:Number;
-			var activity:Number;
+			var iob:Number = 0;
+			var activityForecast:Number = 0;
+			var activity:Number = 0;
+			var isf:Number = Number(ProfileManager.getProfileByTime(new Date().valueOf()).insulinSensitivityFactors);
 			
 			if (minAgo < INSULIN_PEAK) 
 			{
 				var x1:Number = minAgo / 5 + 1;
 				iob = insulinAmount * (1 - 0.001852 * x1 * x1 + 0.001852 * x1);
+				activityForecast = insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
+				
 				if (!isNaN(isf))
-					activity = isf * insulinAmount * (2 / dia / 60 / INSULIN_PEAK) * minAgo;
+					activity = isf * activityForecast;
 			} 
 			else if (minAgo < 180) 
 			{
 				var x2:Number = (minAgo - 75) / 5;
 				iob = insulinAmount * (0.001323 * x2 * x2 - 0.054233 * x2 + 0.55556);
+				activityForecast = insulinAmount * (2 / dia / 60 - (minAgo - INSULIN_PEAK) * 2 / dia / 60 / (60 * 3 - INSULIN_PEAK));
+				
 				if (!isNaN(isf))
-					activity = isf * insulinAmount * (2 / dia / 60 - (minAgo - INSULIN_PEAK) * 2 / dia / 60 / (60 * 3 - INSULIN_PEAK));
+					activity = isf * activityForecast;
 			}
 			
 			if (iob < 0.001 || isNaN(iob)) iob = 0;
 			
-			if (!isNaN(isf))
-				activityContrib = activity;
+			var result:Object =
+				{
+					activityContrib: activity,
+					activityForecast:  activityForecast,
+					iobContrib: iob
+				}
 			
-			return iob;
+			return result;
 		}
 		
+		public function calculateIOBOpenAPS(time:Number):Object
+		{
+			// iobCalc returns two variables:
+			//   activityContrib = units of treatment.insulin used in previous minute
+			//   iobContrib = units of treatment.insulin still remaining at a given point in time
+			// ("Contrib" is used because these are the amounts contributed from pontentially multiple treatment.insulin dosages -- totals are calculated in TreatmentsManager.getTotalIOBOpenAPS() )
+			//
+			// Variables can be calculated using either:
+			//   A bilinear insulin action curve (which only takes duration of insulin activity (dia) as an input parameter) or
+			//   An exponential insulin action curve (which takes both a dia and a peak parameter)
+			// (which functional form to use is specified in the user's profile)
+			
+			var insulin:Insulin = ProfileManager.getInsulin(insulinID);
+			if (insulin != null) //Check if treatment has insulin
+			{
+				// Calc minutes since bolus (minsAgo)
+				var bolusTime:Number = timestamp;
+				var minsAgo:Number = Math.round((time - bolusTime) / 1000 / 60);
+				var curve:String = insulin.curve;
+				
+				if (curve == 'bilinear') 
+					return calculateIOBBilinear(minsAgo, dia);
+				else 
+					return calculateIOBExponential(minsAgo, dia, insulin.peak);
+			} 
+			else 
+			{ 
+				// empty return if treatment doesn't contain insuln
+				return { 
+					activityContrib: 0,
+					activityForecast:  0,
+					iobContrib: 0 
+				};
+			}    
+		}
+		
+		private function calculateIOBBilinear(minsAgo:Number, dia:Number):Object
+		{
+			// No user-specified peak with this model
+			const default_dia:Number = 3 // assumed duration of insulin activity, in hours
+			const peak:Number = 75;      // assumed peak insulin activity, in minutes
+			const end:Number = 180;      // assumed end of insulin activity, in minutes
+			
+			// Scale minsAgo by the ratio of the default dia / the user's dia 
+			// so the calculations for activityContrib and iobContrib work for 
+			// other dia values (while using the constants specified above)
+			var timeScalar:Number = default_dia / dia; 
+			var scaled_minsAgo:Number = timeScalar * minsAgo;
+			
+			
+			var activityContrib:Number = 0;  
+			var iobContrib:Number = 0;       
+			
+			// Calc percent of insulin activity at peak, and slopes up to and down from peak
+			// Based on area of triangle, because area under the insulin action "curve" must sum to 1
+			// (length * height) / 2 = area of triangle (1), therefore height (activityPeak) = 2 / length (which in this case is dia, in minutes)
+			// activityPeak scales based on user's dia even though peak and end remain fixed
+			var activityPeak:Number = 2 / (dia * 60);
+			var slopeUp:Number = activityPeak / peak;
+			var slopeDown:Number = -1 * (activityPeak / (end - peak));
+			
+			if (scaled_minsAgo < peak) 
+			{	
+				activityContrib = insulinAmount * (slopeUp * scaled_minsAgo);
+				
+				var x1:Number = (scaled_minsAgo / 5) + 1;  // scaled minutes since bolus, pre-peak; divided by 5 to work with coefficients estimated based on 5 minute increments
+				iobContrib = insulinAmount * ( (-0.001852*x1*x1) + (0.001852*x1) + 1.000000 );
+			} 
+			else if (scaled_minsAgo < end) 
+			{
+				var minsPastPeak:Number = scaled_minsAgo - peak;
+				activityContrib = insulinAmount * (activityPeak + (slopeDown * minsPastPeak));
+				
+				var x2:Number = ((scaled_minsAgo - peak) / 5);  // scaled minutes past peak; divided by 5 to work with coefficients estimated based on 5 minute increments
+				iobContrib = insulinAmount * ( (0.001323*x2*x2) + (-0.054233*x2) + 0.555560 );
+			}
+			
+			var results:Object = 
+			{ 
+				activityContrib: activityContrib,
+				activityForecast:  activityContrib,
+				iobContrib: iobContrib 
+			};
+			
+			return results;
+		}
+		
+		private function calculateIOBExponential(minsAgo:Number, dia:Number, peak:Number):Object 
+		{
+			var end:Number = dia * 60;  // end of insulin activity, in minutes
+			var activityContrib:Number = 0;  
+			var iobContrib:Number = 0;       
+			
+			if (minsAgo < end) 
+			{
+				// Formula source: https://github.com/LoopKit/Loop/issues/388#issuecomment-317938473
+				// Mapping of original source variable names to those used here:
+				var tau:Number = peak * (1 - peak / end) / (1 - 2 * peak / end);  // time constant of exponential decay
+				var a:Number = 2 * tau / end;                                     // rise time factor
+				var S:Number = 1 / (1 - a + (1 + a) * Math.exp(-end / tau));      // auxiliary scale factor
+				
+				activityContrib = insulinAmount * (S / Math.pow(tau, 2)) * minsAgo * (1 - minsAgo / end) * Math.exp(-minsAgo / tau);
+				iobContrib = insulinAmount * (1 - S * (1 - a) * ((Math.pow(minsAgo, 2) / (tau * end * (1 - a)) - minsAgo / tau - 1) * Math.exp(-minsAgo / tau) + 1));
+			}
+			
+			var results:Object = 
+			{ 
+				activityContrib: activityContrib,
+				activityForecast:  activityContrib,
+				iobContrib: iobContrib 
+			};
+			
+			return results;
+		}
+		
+		/**
+		 * COB Calculation Algorithms
+		 */
 		public function calculateCOB(lastDecayedBy:Number, time:Number):CobCalc
 		{
 			var absorptionRate:int = ProfileManager.getCarbAbsorptionRate();

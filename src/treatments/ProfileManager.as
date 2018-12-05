@@ -49,7 +49,9 @@ package treatments
 							dbInsulin.type,
 							dbInsulin.isdefault == "true" ? true : false,
 							dbInsulin.lastmodifiedtimestamp,
-							dbInsulin.ishidden != null && dbInsulin.ishidden == "true" ? true : false
+							dbInsulin.ishidden != null && dbInsulin.ishidden == "true" ? true : false,
+							dbInsulin.curve != null && dbInsulin.curve != "" ? dbInsulin.curve : "bilinear",
+							dbInsulin.peak != null && !isNaN(dbInsulin.peak) ? Number(dbInsulin.peak) : 75
 						);
 						
 						insulinsList.push(insulin);
@@ -111,7 +113,7 @@ package treatments
 			}
 		}
 		
-		public static function createDefaultProfile():void
+		public static function createDefaultProfile():Profile
 		{
 			profilesList.length = 0;
 			
@@ -136,6 +138,9 @@ package treatments
 			
 			//Save to Database
 			Database.insertProfileSynchronous(defaultProfile);
+			
+			//Return profile
+			return defaultProfile;
 		}
 		
 		public static function getInsulin(ID:String):Insulin
@@ -143,7 +148,7 @@ package treatments
 			return insulinsMap[ID];
 		}
 		
-		public static function addInsulin(name:String, dia:Number, type:String, isDefault:Boolean = false, insulinID:String = null, saveToDatabase:Boolean = true, isHidden:Boolean = false):void
+		public static function addInsulin(name:String, dia:Number, type:String, isDefault:Boolean = false, insulinID:String = null, saveToDatabase:Boolean = true, isHidden:Boolean = false, curve:String = "bilinear", peak:Number = 75):void
 		{
 			Trace.myTrace("ProfileManager.as", "addInsulin called!");
 			
@@ -167,7 +172,9 @@ package treatments
 					type,
 					isDefault,
 					new Date().valueOf(),
-					isHidden
+					isHidden,
+					curve,
+					peak
 				);
 				
 				//Add to Spike
@@ -344,7 +351,7 @@ package treatments
 		
 		public static function getCarbAbsorptionRate():Number
 		{
-			var carbAbsorptionRate:Number = 0;
+			var carbAbsorptionRate:Number = 30;
 			
 			if (!CGMBlueToothDevice.isFollower())
 			{
@@ -405,6 +412,14 @@ package treatments
 					}
 				}
 			}
+				
+			/*var profileTimestamp:Number = profileDate.valueOf();
+				
+			if (requestedTimestamp >= profileTimestamp)
+			{
+				currentProfile = profile;
+				break;
+			}*/
 			
 			return currentProfile;
 		}

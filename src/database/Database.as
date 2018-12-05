@@ -1,5 +1,7 @@
 package database
 {
+	import com.hurlant.util.Base64;
+	
 	import flash.data.SQLConnection;
 	import flash.data.SQLMode;
 	import flash.data.SQLResult;
@@ -9,6 +11,7 @@ package database
 	import flash.events.SQLErrorEvent;
 	import flash.events.SQLEvent;
 	import flash.filesystem.File;
+	import flash.utils.ByteArray;
 	
 	import mx.collections.ArrayCollection;
 	
@@ -163,6 +166,8 @@ package database
 			"name STRING, " +
 			"dia REAL, " +
 			"type STRING, " +
+			"curve STRING, " +
+			"peak REAL, " +
 			"isdefault STRING, " +
 			"ishidden STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
@@ -229,6 +234,12 @@ package database
 			"notes STRING, " +
 			"defaultunit STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_IOB_COB_CACHES:String = "CREATE TABLE IF NOT EXISTS iobcobcaches(" +
+			"cob BLOB," +
+			"cobindexes BLOB," +
+			"iob BLOB," +
+			"iobindexes BLOB)";
 		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
 		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
@@ -731,22 +742,65 @@ package database
 				
 				sqlStatement.clearParameters();
 				
-				//Check if table needs to be updated for new Spike format
+				//Check if table needs to be updated for new Spike format #1
 				sqlStatement.text = "SELECT ishidden FROM insulins";
-				sqlStatement.addEventListener(SQLEvent.RESULT,checkPerformed);
-				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkError);
+				sqlStatement.addEventListener(SQLEvent.RESULT,check1Performed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,check1Error);
 				sqlStatement.execute();
 				
-				function checkPerformed(se:SQLEvent):void 
+				function check1Performed(se:SQLEvent):void 
 				{
-					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
-					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkError);
+					sqlStatement.removeEventListener(SQLEvent.RESULT,check1Performed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check1Error);
 					sqlStatement.clearParameters();
 					
-					createProfilesTable();
+					//Check if table needs to be updated for new Spike format #2
+					sqlStatement.text = "SELECT curve FROM insulins";
+					sqlStatement.addEventListener(SQLEvent.RESULT,check2Performed);
+					sqlStatement.addEventListener(SQLErrorEvent.ERROR,check2Error);
+					sqlStatement.execute();
+					
+					function check2Performed(se:SQLEvent):void 
+					{
+						sqlStatement.removeEventListener(SQLEvent.RESULT,check2Performed);
+						sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check2Error);
+						sqlStatement.clearParameters();
+						
+						//Check if table needs to be updated for new Spike format #3
+						sqlStatement.text = "SELECT peak FROM insulins";
+						sqlStatement.addEventListener(SQLEvent.RESULT,check3Performed);
+						sqlStatement.addEventListener(SQLErrorEvent.ERROR,check3Error);
+						sqlStatement.execute();
+						
+						function check3Performed(se:SQLEvent):void 
+						{
+							sqlStatement.removeEventListener(SQLEvent.RESULT,check3Performed);
+							sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check3Error);
+							sqlStatement.clearParameters();
+							
+							//All checks performed. Continue with next table
+							createProfilesTable();
+						}
+						
+						function check3Error(see:SQLErrorEvent):void 
+						{
+							if (debugMode) trace("Database.as : peak column not found in insulins table (old version of Spike). Updating table...");
+							sqlStatement.clearParameters();
+							sqlStatement.text = "ALTER TABLE insulins ADD COLUMN peak REAL;";
+							sqlStatement.execute();
+						}
+					}
+					
+					function check2Error(see:SQLErrorEvent):void 
+					{
+						if (debugMode) trace("Database.as : curve column not found in insulins table (old version of Spike). Updating table...");
+						sqlStatement.clearParameters();
+						sqlStatement.text = "ALTER TABLE insulins ADD COLUMN curve STRING;";
+						sqlStatement.execute();
+					}
 				}
 				
-				function checkError(see:SQLErrorEvent):void 
+				function check1Error(see:SQLErrorEvent):void 
 				{
 					if (debugMode) trace("Database.as : ishidden column not found in insulins table (old version of Spike). Updating table...");
 					sqlStatement.clearParameters();
@@ -882,7 +936,7 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				finishedCreatingTables();
+				createIOBCOBCachesTable();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -890,6 +944,27 @@ package database
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				dispatchInformation('failed_to_create_recipes_foods_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createIOBCOBCachesTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_IOB_COB_CACHES;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				finishedCreatingTables();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create iobcobcaches table.");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_iobcobcaches_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -2421,6 +2496,8 @@ package database
 				text += "name, ";
 				text += "dia, ";
 				text += "type, ";
+				text += "curve, ";
+				text += "peak, ";
 				text += "isdefault, ";
 				text += "ishidden, ";
 				text += "lastmodifiedtimestamp) ";
@@ -2429,6 +2506,8 @@ package database
 				text += "'" + insulin.name + "', ";
 				text += insulin.dia + ", ";
 				text += "'" + insulin.type + "', ";
+				text += "'" + insulin.curve + "', ";
+				text += insulin.peak + ", ";
 				text += "'" + insulin.isDefault + "', ";
 				text += "'" + insulin.isHidden + "', ";
 				text += insulin.timestamp + ")";
@@ -2465,6 +2544,8 @@ package database
 					"name = '" + insulin.name + "', " +
 					"dia = " + insulin.dia + ", " +
 					"type = '" + insulin.type + "', " +
+					"curve = '" + insulin.curve + "', " +
+					"peak = " + insulin.peak + ", " +
 					"isdefault = '" + insulin.isDefault + "', " +
 					"ishidden = '" + insulin.isHidden + "', " +
 					"lastmodifiedtimestamp = " + insulin.timestamp + " " +
@@ -3331,6 +3412,136 @@ package database
 					conn.close();
 				}
 				dispatchInformation('error_while_deleting_recipe_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Get IOB/COB Caches
+		 */
+		public static function getIOBCOBCachesSynchronous():Array {
+			var returnValue:Array = [];
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text =  "SELECT * FROM iobcobcaches";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_iobcobcaches', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_iobcobcaches',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		/**
+		 * Updates COB/IOB caches<br>
+		 * Synchronous
+		 */
+		public static function updateIOBCOBCachesSynchronous(iob:String, iobIndexes:String, cob:String, cobIndexes:String):void 
+		{
+			try  {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE iobcobcaches SET " +
+					"iob = '" + iob + "'," +
+					"iobindexes = '" + iobIndexes + "'," +
+					"cob = '" + cob + "'," +
+					"cobindexes = '" + cobIndexes + "'"; 
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_iob_cob_caches', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Creates Default cached objects in the database 
+		 */
+		public static function insertEmptyIOBCOBCaches():void 
+		{
+			//Empty dummy object
+			var emptyObject:Object = {};
+			var emptyObjectBytes:ByteArray = new ByteArray();
+			emptyObjectBytes.writeObject(emptyObject);
+			var emptyObjectSerialized:String = Base64.encodeByteArray(emptyObjectBytes);
+			
+			//Empty dummy array
+			var emptyArray:Array = [];
+			var emptyArrayBytes:ByteArray = new ByteArray();
+			emptyArrayBytes.writeObject(emptyArray);
+			var emptyArraySerialized:String = Base64.encodeByteArray(emptyArrayBytes);
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO iobcobcaches (";
+				text += "cob, ";
+				text += "cobindexes, ";
+				text += "iob, ";
+				text += "iobindexes) ";
+				text += "VALUES (";
+				text += "'" + emptyObjectSerialized + "', ";
+				text += "'" + emptyArraySerialized + "', ";
+				text += "'" + emptyObjectSerialized + "', ";
+				text += "'" + emptyArraySerialized + "')";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_empty_iobcobcaches_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Deletes all IOB/COB caches
+		 */
+		public static function deleteAllIOBCOBCachesSynchronous():void 
+		{
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE * from iobcobcaches";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_all_iob_cob_caches_in_db', error.message + " - " + error.details);
 			}
 		}
 		

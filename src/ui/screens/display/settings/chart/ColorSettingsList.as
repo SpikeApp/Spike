@@ -44,6 +44,8 @@ package ui.screens.display.settings.chart
 		private var pieLowColorPicker:ColorPicker;
 		private var rawColorPicker:ColorPicker;
 		private var targetBGLineColorPicker:ColorPicker;
+		private var glucoseDefaultPredictionsColorPicker:ColorPicker;
+		private var glucoseUAMPredictionsColorPicker:ColorPicker;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -64,6 +66,8 @@ package ui.screens.display.settings.chart
 		private var pieLowColorValue:uint;
 		private var rawColorValue:uint;
 		private var targetBGColorValue:uint;
+		private var glucoseDefaultPredictionsColorValue:uint;
+		private var glucoseUAMPredictionsColorValue:uint;
 		
 		public function ColorSettingsList(parentDisplayObject:PanelScreen)
 		{
@@ -112,6 +116,8 @@ package ui.screens.display.settings.chart
 			rawColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR));
 			displayRawComponent = CGMBlueToothDevice.isDexcomG4() || CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6();
 			targetBGColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TARGET_LINE_COLOR));
+			glucoseDefaultPredictionsColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR));
+			glucoseUAMPredictionsColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR));
 		}
 		
 		private function setupContent():void
@@ -172,6 +178,24 @@ package ui.screens.display.settings.chart
 				rawColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				colorPickers.push(rawColorPicker);
 			}
+			
+			//Predictions Default Color Picker
+			glucoseDefaultPredictionsColorPicker = new ColorPicker(20, glucoseDefaultPredictionsColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			glucoseDefaultPredictionsColorPicker.name = "glucoseDefaultPredictionsColor";
+			glucoseDefaultPredictionsColorPicker.pivotX = 3;
+			glucoseDefaultPredictionsColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			glucoseDefaultPredictionsColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			glucoseDefaultPredictionsColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			colorPickers.push(glucoseDefaultPredictionsColorPicker);
+			
+			//Predictions UAM Color Picker
+			glucoseUAMPredictionsColorPicker = new ColorPicker(20, glucoseUAMPredictionsColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
+			glucoseUAMPredictionsColorPicker.name = "glucoseUAMPredictionsColor";
+			glucoseUAMPredictionsColorPicker.pivotX = 3;
+			glucoseUAMPredictionsColorPicker.addEventListener(ColorPicker.CHANGED, onColorChanged);
+			glucoseUAMPredictionsColorPicker.addEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+			glucoseUAMPredictionsColorPicker.addEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+			colorPickers.push(glucoseUAMPredictionsColorPicker);
 			
 			//Pie Chart Hight Color Picker
 			pieHighColorPicker = new ColorPicker(20, pieHighColorValue, _parent, HorizontalAlign.LEFT, VerticalAlign.TOP);
@@ -266,6 +290,8 @@ package ui.screens.display.settings.chart
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','low_title'), accessory: lowColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','urgent_low_title'), accessory: urgentLowColorPicker } );
 			if (displayRawComponent) data.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','raw_glucose'), accessory: rawColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_default_predictions_label'), accessory: glucoseDefaultPredictionsColorPicker } );
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','unannounced_glucose_predictions_label'), accessory: glucoseUAMPredictionsColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_high_color_title'), accessory: pieHighColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_in_range_color_title'), accessory: pieInRangeColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_low_color_title'), accessory: pieLowColorPicker } );
@@ -296,6 +322,12 @@ package ui.screens.display.settings.chart
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR) != String(urgentLowColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR, String(urgentLowColorValue));
+			
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR) != String(glucoseDefaultPredictionsColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR, String(glucoseDefaultPredictionsColorValue));
+			
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR) != String(glucoseUAMPredictionsColorValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR, String(glucoseUAMPredictionsColorValue));
 			
 			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR) != String(oldDataColorValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR, String(oldDataColorValue));
@@ -354,6 +386,14 @@ package ui.screens.display.settings.chart
 			//Urgent Low Color Picker
 			urgentLowColorPicker.setColor(0xFF0000);
 			urgentLowColorValue = 0xFF0000;
+			
+			//Glucose Default Predictions Color Picker
+			glucoseDefaultPredictionsColorPicker.setColor(0xEF00E7);
+			glucoseDefaultPredictionsColorValue = 0xEF00E7;
+			
+			//Glucose UAM Predictions Color Picker
+			glucoseUAMPredictionsColorPicker.setColor(0xA0A0A0);
+			glucoseUAMPredictionsColorValue = 0xA0A0A0;
 			
 			//Raw Color Picker
 			if (displayRawComponent)
@@ -467,6 +507,22 @@ package ui.screens.display.settings.chart
 				if(rawColorPicker.value != rawColorValue)
 				{
 					rawColorValue = rawColorPicker.value;
+					needsSave = true;
+				}
+			}
+			else if(currentTargetName == "glucoseDefaultPredictionsColor")
+			{
+				if(glucoseDefaultPredictionsColorPicker.value != glucoseDefaultPredictionsColorValue)
+				{
+					glucoseDefaultPredictionsColorValue = glucoseDefaultPredictionsColorPicker.value;
+					needsSave = true;
+				}
+			}
+			else if(currentTargetName == "glucoseUAMPredictionsColor")
+			{
+				if(glucoseUAMPredictionsColorPicker.value != glucoseUAMPredictionsColorValue)
+				{
+					glucoseUAMPredictionsColorValue = glucoseUAMPredictionsColorPicker.value;
 					needsSave = true;
 				}
 			}
@@ -607,6 +663,24 @@ package ui.screens.display.settings.chart
 				rawColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
 				rawColorPicker.dispose();
 				rawColorPicker = null;
+			}
+			
+			if(glucoseDefaultPredictionsColorPicker != null)
+			{
+				glucoseDefaultPredictionsColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				glucoseDefaultPredictionsColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				glucoseDefaultPredictionsColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				glucoseDefaultPredictionsColorPicker.dispose();
+				glucoseDefaultPredictionsColorPicker = null;
+			}
+			
+			if(glucoseUAMPredictionsColorPicker != null)
+			{
+				glucoseUAMPredictionsColorPicker.removeEventListener(ColorPicker.CHANGED, onColorChanged);
+				glucoseUAMPredictionsColorPicker.removeEventListener(ColorPicker.PALETTE_OPEN, onColorPaletteOpened);
+				glucoseUAMPredictionsColorPicker.removeEventListener(ColorPicker.PALETTE_CLOSE, onColorPaletteClosed);
+				glucoseUAMPredictionsColorPicker.dispose();
+				glucoseUAMPredictionsColorPicker = null;
 			}
 			
 			if(pieHighColorPicker != null)

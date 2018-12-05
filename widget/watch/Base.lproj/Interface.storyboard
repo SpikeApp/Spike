@@ -48,7 +48,12 @@
                         </group>
                         <group width="1" height="32" alignment="left" id="Mak-4o-hyQ">
                             <items>
-                                <label alignment="left" id="1cw-2v-v8O"/>
+                                <label alignment="left" id="1cw-2v-v8O">
+                                    <fontDescription key="font" type="system" pointSize="12"/>
+                                    <variation key="device=watch38mm">
+                                        <fontDescription key="font" type="system" pointSize="10"/>
+                                    </variation>
+                                </label>
                                 <label alignment="center" text="N/A" textAlignment="center" minimumScaleFactor="0.10000000000000014" id="vGM-hd-W1b">
                                     <fontDescription key="font" type="system" weight="thin" pointSize="33"/>
                                     <variation key="device=watch38mm">
@@ -61,7 +66,12 @@
                                         <fontDescription key="font" type="system" pointSize="26"/>
                                     </variation>
                                 </label>
-                                <label alignment="right" id="oEG-1v-IuD"/>
+                                <label alignment="right" id="oEG-1v-IuD">
+                                    <fontDescription key="font" type="system" pointSize="12"/>
+                                    <variation key="device=watch38mm">
+                                        <fontDescription key="font" type="system" pointSize="10"/>
+                                    </variation>
+                                </label>
                             </items>
                         </group>
                         <group width="1" alignment="left" id="nJH-yY-zdH">
