@@ -740,7 +740,20 @@ package ui.chart
 			 * Predictions
 			 */
 			clearTimeout(redrawPredictionsTimeoutID);
-			var predictionsList:Array = predictionsEnabled ? fetchPredictions() : [];
+			var predictionsList:Array;
+			if (predictionsEnabled)
+			{
+				//Get last treatment
+				var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
+				var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
+				var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
+				
+				predictionsList = fetchPredictions(lastTreatmentIsCarbs)
+			}
+			else
+			{
+				predictionsList = [];
+			}
 			
 			if (predictionsEnabled && predictionsList.length == 0 && predictionsMainGlucoseDataPoints.length > 0)
 			{
@@ -2701,7 +2714,20 @@ package ui.chart
 			 * Predictions
 			 */
 			clearTimeout(redrawPredictionsTimeoutID);
-			var predictionsList:Array = predictionsEnabled ? fetchPredictions(forcePredictionsCOBRefresh) : [];
+			var predictionsList:Array;
+			if (predictionsEnabled)
+			{
+				//Get last treatment
+				var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
+				var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
+				var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
+				
+				predictionsList = fetchPredictions(lastTreatmentIsCarbs)
+			}
+			else
+			{
+				predictionsList = [];
+			}
 			
 			if (predictionsEnabled && predictionsList.length == 0 && predictionsMainGlucoseDataPoints.length > 0)
 			{

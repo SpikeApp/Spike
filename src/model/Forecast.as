@@ -763,7 +763,7 @@ package model
 			var currentIOB:Number = predictionData.IOBValue != null ? predictionData.IOBValue : Number.NaN;
 			if (isNaN(currentIOB))
 			{
-				var globalIOB:Number = TreatmentsManager.getTotalIOB(now);
+				var globalIOB:Number = TreatmentsManager.getTotalIOB(now).iob;
 				if (globalIOB != 0)
 				{
 					currentIOB = globalIOB;
