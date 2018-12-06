@@ -28,7 +28,7 @@ package ui.screens.display.settings.treatments
 	import starling.textures.Texture;
 	
 	import ui.AppInterface;
-	import ui.chart.ColorPicker;
+	import ui.chart.visualcomponents.ColorPicker;
 	import ui.popups.WorkflowConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;

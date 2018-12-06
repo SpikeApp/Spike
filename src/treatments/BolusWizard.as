@@ -63,7 +63,7 @@ package treatments
 	import treatments.food.ui.FoodManager;
 	
 	import ui.AppInterface;
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;

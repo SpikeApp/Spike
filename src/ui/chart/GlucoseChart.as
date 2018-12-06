@@ -84,6 +84,21 @@ package ui.chart
 	import utils.GlucoseHelper;
 	import utils.MathHelper;
 	import utils.TimeSpan;
+	import ui.chart.markers.BGCheckMarker;
+	import ui.chart.markers.CarbsMarker;
+	import ui.chart.markers.GlucoseMarker;
+	import ui.chart.markers.MealMarker;
+	import ui.chart.markers.NoteMarker;
+	import ui.chart.markers.SensorMarker;
+	import ui.chart.markers.InsulinMarker;
+	import ui.chart.pills.ChartComponentPill;
+	import ui.chart.pills.ChartInfoPill;
+	import ui.chart.pills.ChartTreatmentPill;
+	import ui.chart.visualcomponents.COBCurve;
+	import ui.chart.visualcomponents.ChartTreatment;
+	import ui.chart.visualcomponents.IOBActivityCurve;
+	import ui.chart.helpers.GlucoseFactory;
+	import ui.chart.layout.GraphLayoutFactory;
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("treatments")]

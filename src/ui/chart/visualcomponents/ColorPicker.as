@@ -1,4 +1,4 @@
-package  ui.chart 
+package  ui.chart.visualcomponents 
 {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;

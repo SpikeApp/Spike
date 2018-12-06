@@ -1,4 +1,4 @@
-package ui.chart
+package ui.chart.markers
 {
 	import database.CommonSettings;
 	
@@ -13,27 +13,29 @@ package ui.chart
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import ui.chart.visualcomponents.ChartTreatment;
+	import ui.chart.GlucoseChart;
 	
-	public class CarbsMarker extends ChartTreatment
+	public class InsulinMarker extends ChartTreatment
 	{
 		/* Display Objects */
 		private var label:Label;
-		private var carbsMarker:SpikeNGon;
+		private var insulinMarker:SpikeNGon;
 		private var stroke:SpikeNGon;
 		
 		/* Properties */
-		private var fontSize:int = 11;
+		private var fontSize:Number = 11;
 		private var backgroundColor:uint;
 		private var strokeColor:uint;
-		private var initialRadius:Number = 6;
+		private var initialRadius:Number = 8;
 		private var chartTimeline:Number;
 		private var numSides:int = 30;
 		private const strokeThickness:Number = 0.8;
 		
-		public function CarbsMarker(treatment:Treatment, timeline:Number)
+		public function InsulinMarker(treatment:Treatment, timeline:Number)
 		{
 			this.treatment = treatment;
-			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
+			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
 			strokeColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_STROKE_COLOR));
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				numSides = 20;
@@ -45,8 +47,12 @@ package ui.chart
 		
 		private function draw():void
 		{
+			//OpenAPS/Loop support
+			if (treatment.insulinAmount <= 1.2)
+				initialRadius = 6;
+			
 			//Radius
-			this.radius = initialRadius + (treatment.carbs / 6);
+			this.radius = initialRadius + treatment.insulinAmount;
 			if (radius > 15)
 				radius = 15;
 			
@@ -66,6 +72,10 @@ package ui.chart
 				fontSize *= 0.6;
 			}
 			
+			//OpenAPS/Loop support
+			if (treatment.insulinAmount < 1)
+				fontSize -= 1.5;
+			
 			//Stroke
 			stroke = new SpikeNGon(radius + strokeThickness, numSides, 0, 360, strokeColor);
 			stroke.x = radius / 3;
@@ -73,23 +83,30 @@ package ui.chart
 			addChild(stroke);
 			
 			//Background
-			carbsMarker = new SpikeNGon(radius, numSides, 0, 360, backgroundColor);
-			carbsMarker.x = radius / 3;
-			carbsMarker.y = radius + radius/4;
-			addChild(carbsMarker);
+			insulinMarker = new SpikeNGon(radius, numSides, 0, 360, backgroundColor);
+			insulinMarker.x = radius / 3;
+			insulinMarker.y = radius + radius/4;
+			addChild(insulinMarker);
 			
 			//Label
-			label = LayoutFactory.createLabel(treatment.carbs + "g", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
-			label.validate();
+			label = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
+			try
+			{
+				label.validate();
+			} 
+			catch(error:Error) 
+			{
+				label.width = 25;
+			}
 			label.x = radius/3 - (label.width / 2);
 			label.y = radius * 2 + 4;
 			addChild(label);
-		}	
+		}
 		
 		override public function labelUp():void
 		{
 			if (label != null)
-				label.y = -label.height;
+				label.y = -label.height + 4;
 		}
 		
 		override public function labelDown():void
@@ -116,11 +133,11 @@ package ui.chart
 				label = null;
 			}
 			
-			if (carbsMarker != null)
+			if (insulinMarker != null)
 			{
-				carbsMarker.removeFromParent();
-				carbsMarker.dispose();
-				carbsMarker = null;
+				insulinMarker.removeFromParent();
+				insulinMarker.dispose();
+				insulinMarker = null;
 			}
 			
 			if (stroke != null)

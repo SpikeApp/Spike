@@ -35,7 +35,7 @@ package ui.screens.display.treatments
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	import ui.popups.AlertManager;
 	import ui.screens.display.SpikeList;
 	import ui.shapes.SpikeNGon;

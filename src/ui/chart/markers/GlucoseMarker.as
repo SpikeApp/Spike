@@ -1,4 +1,4 @@
-package ui.chart
+package ui.chart.markers
 {
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -12,6 +12,7 @@ package ui.chart
 	
 	import utils.MathHelper;
 	import utils.TimeSpan;
+	import ui.chart.helpers.GlucoseFactory;
 	
 	[ResourceBundle("chartscreen")]
 

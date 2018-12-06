@@ -1,4 +1,4 @@
-package ui.chart
+package ui.chart.layout
 {
     import feathers.controls.Label;
     

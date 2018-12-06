@@ -32,6 +32,7 @@ package ui.chart
 	import ui.shapes.SpikeNGon;
 	
 	import utils.Constants;
+	import ui.chart.visualcomponents.PieDistributionSection;
 	
 	[ResourceBundle("chartscreen")]
 	

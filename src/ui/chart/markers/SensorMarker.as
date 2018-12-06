@@ -1,4 +1,4 @@
-package ui.chart
+package ui.chart.markers
 {
 	import database.CommonSettings;
 	
@@ -8,6 +8,7 @@ package ui.chart
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import ui.chart.visualcomponents.ChartTreatment;
 	
 	public class SensorMarker extends ChartTreatment
 	{

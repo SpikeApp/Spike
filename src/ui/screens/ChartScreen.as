@@ -41,8 +41,8 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.chart.DistributionChart;
 	import ui.chart.GlucoseChart;
-	import ui.chart.GraphLayoutFactory;
-	import ui.chart.PieDistributionSection;
+	import ui.chart.layout.GraphLayoutFactory;
+	import ui.chart.visualcomponents.PieDistributionSection;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
 	

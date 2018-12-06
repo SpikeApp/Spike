@@ -1,4 +1,4 @@
-package ui.chart
+package ui.chart.pills
 {
 	import database.CommonSettings;
 	

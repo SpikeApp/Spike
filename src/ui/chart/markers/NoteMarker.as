@@ -1,4 +1,4 @@
-package ui.chart
+package ui.chart.markers
 {
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -8,6 +8,8 @@ package ui.chart
 	import starling.textures.Texture;
 	
 	import treatments.Treatment;
+	import ui.chart.visualcomponents.ChartTreatment;
+	import ui.chart.GlucoseChart;
 	
 	public class NoteMarker extends ChartTreatment
 	{

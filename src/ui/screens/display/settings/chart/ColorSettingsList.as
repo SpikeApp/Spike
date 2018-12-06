@@ -15,7 +15,7 @@ package ui.screens.display.settings.chart
 	
 	import starling.events.Event;
 	
-	import ui.chart.ColorPicker;
+	import ui.chart.visualcomponents.ColorPicker;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	

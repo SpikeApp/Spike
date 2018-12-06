@@ -24,7 +24,7 @@ package network.httpserver.API
 	import treatments.TreatmentsManager;
 	
 	import ui.InterfaceController;
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	
 	import utils.BatteryInfo;
 	import utils.BgGraphBuilder;

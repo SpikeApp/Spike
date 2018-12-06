@@ -53,8 +53,8 @@ package ui.screens
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
-	import ui.chart.GlucoseFactory;
-	import ui.chart.GraphLayoutFactory;
+	import ui.chart.helpers.GlucoseFactory;
+	import ui.chart.layout.GraphLayoutFactory;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;

@@ -5,7 +5,7 @@ package utils
 	
 	import model.ModelLocator;
 	
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 
 	[ResourceBundle("generalsettingsscreen")]
 	

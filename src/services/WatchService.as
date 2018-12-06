@@ -25,7 +25,7 @@ package services
 	
 	import treatments.TreatmentsManager;
 	
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;

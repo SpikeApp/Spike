@@ -1,4 +1,4 @@
-package ui.chart
+package ui.chart.visualcomponents
 {
 	import flash.geom.Rectangle;
 	
@@ -25,6 +25,7 @@ package ui.chart
 	
 	import utils.Constants;
 	import utils.TimeSpan;
+	import ui.chart.layout.GraphLayoutFactory;
 	
 	public class COBCurve extends ScrollContainer
 	{

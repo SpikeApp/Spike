@@ -19,7 +19,7 @@ package ui.screens.display.settings.widget
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
-	import ui.chart.ColorPicker;
+	import ui.chart.visualcomponents.ColorPicker;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	

@@ -1,4 +1,4 @@
-package ui.chart
+package ui.chart.visualcomponents
 {
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;

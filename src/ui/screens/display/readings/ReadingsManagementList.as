@@ -28,7 +28,7 @@ package ui.screens.display.readings
 	import starling.textures.SubTexture;
 	import starling.textures.Texture;
 	
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
