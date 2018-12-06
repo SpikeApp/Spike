@@ -199,7 +199,7 @@ package model
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var meal_data:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps", true) : { cob: 0, carbs: 0 };
+			var meal_data:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalCOB(now, false, true) : { cob: 0, carbs: 0 };
 			if (meal_data.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it

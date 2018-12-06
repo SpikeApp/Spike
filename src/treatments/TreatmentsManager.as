@@ -988,7 +988,7 @@ package treatments
 			// if currentDeviation is null or maxDeviation is 0, set mealCOB to 0 for zombie-carb safety
 			if (c.currentDeviation == null || isNaN(c.currentDeviation)) 
 			{
-				Trace.myTrace("TreatmentsManager.as", "Warning: Aetting mealCOB to 0 because currentDeviation is null/undefined");
+				Trace.myTrace("TreatmentsManager.as", "Warning: Setting mealCOB to 0 because currentDeviation is null/undefined");
 				mealCOB = 0;
 			}
 			
@@ -1100,7 +1100,7 @@ package treatments
 				} 
 				else 
 				{ 
-					trace("Could not determine last BG time"); 
+					Trace.myTrace("TreatmentsManager.as", "In calcMealCOB, Could not determine last BG time!");
 					continue;
 				}
 				
@@ -1201,7 +1201,7 @@ package treatments
 				} 
 				else 
 				{ 
-					trace("Could not find glucose data"); 
+					Trace.myTrace("TreatmentsManager.as", "In calcMealCOB. Could not find glucose data!");
 					continue;
 				}
 				
@@ -1383,7 +1383,7 @@ package treatments
 				} 
 				else 
 				{ 
-					trace("Could not determine last BG time"); 
+					Trace.myTrace("TreatmentsManager.as", "In calcMealCOB. Could not determine last BG time!");
 					continue;
 				}
 				
@@ -1482,7 +1482,7 @@ package treatments
 				} 
 				else 
 				{ 
-					trace("Could not find glucose data"); 
+					Trace.myTrace("TreatmentsManager.as", "In calcMealCOB. Could not find glucose data!");
 					continue;
 				}
 				

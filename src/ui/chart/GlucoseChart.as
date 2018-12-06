@@ -73,6 +73,21 @@ package ui.chart
 	
 	import ui.AppInterface;
 	import ui.InterfaceController;
+	import ui.chart.helpers.GlucoseFactory;
+	import ui.chart.layout.GraphLayoutFactory;
+	import ui.chart.markers.BGCheckMarker;
+	import ui.chart.markers.CarbsMarker;
+	import ui.chart.markers.GlucoseMarker;
+	import ui.chart.markers.InsulinMarker;
+	import ui.chart.markers.MealMarker;
+	import ui.chart.markers.NoteMarker;
+	import ui.chart.markers.SensorMarker;
+	import ui.chart.pills.ChartComponentPill;
+	import ui.chart.pills.ChartInfoPill;
+	import ui.chart.pills.ChartTreatmentPill;
+	import ui.chart.visualcomponents.COBCurve;
+	import ui.chart.visualcomponents.ChartTreatment;
+	import ui.chart.visualcomponents.IOBActivityCurve;
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
@@ -84,21 +99,6 @@ package ui.chart
 	import utils.GlucoseHelper;
 	import utils.MathHelper;
 	import utils.TimeSpan;
-	import ui.chart.markers.BGCheckMarker;
-	import ui.chart.markers.CarbsMarker;
-	import ui.chart.markers.GlucoseMarker;
-	import ui.chart.markers.MealMarker;
-	import ui.chart.markers.NoteMarker;
-	import ui.chart.markers.SensorMarker;
-	import ui.chart.markers.InsulinMarker;
-	import ui.chart.pills.ChartComponentPill;
-	import ui.chart.pills.ChartInfoPill;
-	import ui.chart.pills.ChartTreatmentPill;
-	import ui.chart.visualcomponents.COBCurve;
-	import ui.chart.visualcomponents.ChartTreatment;
-	import ui.chart.visualcomponents.IOBActivityCurve;
-	import ui.chart.helpers.GlucoseFactory;
-	import ui.chart.layout.GraphLayoutFactory;
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("treatments")]
@@ -1230,6 +1230,9 @@ package ui.chart
 			{
 				if (algorithmIOBCOB == "openaps" )
 				{
+					//Save original time in case we need to revert to it.
+					var originalTime:Number = time;
+					
 					//For OpenAPS we ask for COB of the current selected marker timestamp. In between timestamps give exactly the same COB value and waste CPU cycles
 					if (displayLatestBGValue)
 					{
@@ -1238,11 +1241,24 @@ package ui.chart
 					else
 						time = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp;
 					
-					if (latestOpenAPSRequestedCOBTimestamp != time)
+					var now:Number = new Date().valueOf();
+					var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
+					var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
+					var forceLatestCOB:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp && now - lastTreatment.timestamp <= TimeSpan.TIME_10_SECONDS;
+					
+					if (latestOpenAPSRequestedCOBTimestamp != time || forceLatestCOB)
 					{
-						latestOpenAPSRequestedCOBTimestamp = time;
-						currentTotalCOB = TreatmentsManager.getTotalCOB(time, displayLatestBGValue || (mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex] != null && time >= mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp && new Date().valueOf() - mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp < TimeSpan.TIME_5_MINUTES)).cob;
+						if (forceLatestCOB)
+						{
+							currentTotalCOB = TreatmentsManager.getTotalCOB(originalTime, false, false).cob;
+						}
+						else
+						{
+							currentTotalCOB = TreatmentsManager.getTotalCOB(time, displayLatestBGValue || (mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex] != null && time >= mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp && now - mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp < TimeSpan.TIME_5_MINUTES)).cob;
+						}
+						
 						COBPill.setValue(GlucoseFactory.formatCOB(currentTotalCOB));
+						latestOpenAPSRequestedCOBTimestamp = time;
 						SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 					}
 				}
