@@ -1061,7 +1061,7 @@ package ui.chart
 								//Marker found, add y difference
 								if (targetGlucoseMarker != null)
 								{
-									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 2));
+									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 3));
 								}
 								else
 								{
@@ -1149,7 +1149,7 @@ package ui.chart
 				{
 					extraEndLineColor = doublePrevGlucoseReading.rawData;
 				}
-				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 2));
+				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 3));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			
@@ -3028,7 +3028,7 @@ package ui.chart
 								//Marker found, add y difference
 								if (targetGlucoseMarker != null)
 								{
-									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 2));
+									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 3));
 								}
 								else
 								{
@@ -3094,7 +3094,7 @@ package ui.chart
 					extraEndLineColor = doublePrevGlucoseReading.rawData;
 				}
 				
-				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 2));
+				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 3));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			
@@ -5959,7 +5959,7 @@ package ui.chart
 							//Marker found, add y difference
 							if (targetGlucoseMarker != null)
 							{
-								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 2));
+								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 3));
 							}
 							else
 							{
@@ -6016,7 +6016,7 @@ package ui.chart
 				{
 					extraEndLineColor = doublePrevGlucoseMarker.color;
 				}
-				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 2));
+				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 3));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
 			}
 			

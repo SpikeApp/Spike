@@ -29,7 +29,7 @@ package  ui.chart.visualcomponents
 	public class ColorPicker extends Sprite
 	{
 		//Assets
-		[Embed(source = "../../assets/images/paletteiOS.png")]
+		[Embed(source = "../../../assets/images/paletteiOS.png")]
 		private static const Palette:Class;
 		
 		//Events
