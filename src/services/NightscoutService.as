@@ -434,44 +434,95 @@ package services
 			var i:int;
 			
 			var predictBGsObject:Object = {};
-			if (predictionsData.IOB != null)
+			var iobPredictions:Array;
+			var cobPredictions:Array;
+			var uamPredictions:Array;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED) != "true")
 			{
-				var iobPredictions:Array = predictionsData.IOB.concat();
-				
-				for(i = iobPredictions.length - 1 ; i >= 0; i--)
+				if (predictionsData.IOB != null)
 				{
-					iobPredictions[i] = Math.round(iobPredictions[i]);
+					iobPredictions = predictionsData.IOB.concat();
+					
+					for(i = iobPredictions.length - 1 ; i >= 0; i--)
+					{
+						iobPredictions[i] = Math.round(iobPredictions[i]);
+					}
+					
+					iobPredictions[0] = Number.NaN;
+					
+					predictBGsObject["IOB"] = iobPredictions;
 				}
-				
-				iobPredictions[0] = Number.NaN;
-				
-				predictBGsObject["IOB"] = iobPredictions;
+				if (predictionsData.COB != null)
+				{
+					cobPredictions = predictionsData.COB.concat();
+					
+					for(i = cobPredictions.length - 1 ; i >= 0; i--)
+					{
+						cobPredictions[i] = Math.round(cobPredictions[i]);
+					}
+					
+					cobPredictions[0] = Number.NaN;
+					
+					predictBGsObject["COB"] = cobPredictions;
+				}
+				if (predictionsData.UAM != null)
+				{
+					uamPredictions = predictionsData.UAM.concat();
+					
+					for(i = uamPredictions.length - 1 ; i >= 0; i--)
+					{
+						uamPredictions[i] = Math.round(uamPredictions[i]);
+					}
+					
+					uamPredictions[0] = Number.NaN;
+					
+					predictBGsObject["UAM"] = uamPredictions;
+				}
 			}
-			if (predictionsData.COB != null)
+			else
 			{
-				var cobPredictions:Array = predictionsData.COB.concat();
+				var defaultPrediction:String = Forecast.determineDefaultPredictionCurve(predictionsData);
 				
-				for(i = cobPredictions.length - 1 ; i >= 0; i--)
+				if (defaultPrediction == "UAM")
 				{
-					cobPredictions[i] = Math.round(cobPredictions[i]);
+					uamPredictions = predictionsData.UAM.concat();
+					
+					for(i = uamPredictions.length - 1 ; i >= 0; i--)
+					{
+						uamPredictions[i] = Math.round(uamPredictions[i]);
+					}
+					
+					uamPredictions[0] = Number.NaN;
+					
+					predictBGsObject["UAM"] = uamPredictions;
 				}
-				
-				cobPredictions[0] = Number.NaN;
-				
-				predictBGsObject["COB"] = cobPredictions;
-			}
-			if (predictionsData.UAM != null)
-			{
-				var uamPredictions:Array = predictionsData.UAM.concat();
-				
-				for(i = uamPredictions.length - 1 ; i >= 0; i--)
+				else if (defaultPrediction == "COB")
 				{
-					uamPredictions[i] = Math.round(uamPredictions[i]);
+					cobPredictions = predictionsData.COB.concat();
+					
+					for(i = cobPredictions.length - 1 ; i >= 0; i--)
+					{
+						cobPredictions[i] = Math.round(cobPredictions[i]);
+					}
+					
+					cobPredictions[0] = Number.NaN;
+					
+					predictBGsObject["COB"] = cobPredictions;
 				}
-				
-				uamPredictions[0] = Number.NaN;
-				
-				predictBGsObject["UAM"] = uamPredictions;
+				else if (defaultPrediction == "IOB")
+				{
+					iobPredictions = predictionsData.IOB.concat();
+					
+					for(i = iobPredictions.length - 1 ; i >= 0; i--)
+					{
+						iobPredictions[i] = Math.round(iobPredictions[i]);
+					}
+					
+					iobPredictions[0] = Number.NaN;
+					
+					predictBGsObject["IOB"] = iobPredictions;
+				}
 			}
 			
 			var suggestedObject:Object = {};

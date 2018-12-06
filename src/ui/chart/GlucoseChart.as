@@ -359,6 +359,7 @@ package ui.chart
 		private var preferredPrediction:String;
 		private var predictionPillExplanationEnabled:Boolean = false;
 		private var predictionsIncompleteProfile:Boolean = false;
+		private var singlePredictionCurve:Boolean = true;
 		private var predictionsPill:ChartTreatmentPill;
 		private var predictionsContainer:ScrollContainer;
 		private var predictionsCallout:Callout;
@@ -400,6 +401,10 @@ package ui.chart
 		private var predictedCOBBGPill:ChartTreatmentPill;
 
 		private var incompleteProfileWarningLabel:Label;
+
+		private var predictionsSingleCurveCheck:Check;
+
+		private var predictionsSingleCurvePill:ChartComponentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -412,6 +417,7 @@ package ui.chart
 			//Predictions
 			predictionsEnabled = dontDisplayPredictionsPill == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true";
 			predictionsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR));
+			singlePredictionCurve = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED) == "true";
 			
 			if (timelineRange == TIMELINE_1H)
 				predictionsLengthInMinutes = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
@@ -1244,7 +1250,7 @@ package ui.chart
 					var now:Number = new Date().valueOf();
 					var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
 					var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
-					var forceLatestCOB:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp && now - lastTreatment.timestamp <= TimeSpan.TIME_10_SECONDS;
+					var forceLatestCOB:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
 					
 					if (latestOpenAPSRequestedCOBTimestamp != time || forceLatestCOB)
 					{
@@ -3852,12 +3858,12 @@ package ui.chart
 			{
 				finalCOBPredictionsList = finalCOBPredictionsList.slice(0, maxNumberOfPredictions);
 			}
-			
+				
 			if (finalIOBPredictionsList.length > maxNumberOfPredictions)
 			{
 				finalIOBPredictionsList = finalIOBPredictionsList.slice(0, maxNumberOfPredictions);
 			}
-			
+				
 			if (finalUAMPredictionsList.length > maxNumberOfPredictions)
 			{
 				finalUAMPredictionsList = finalUAMPredictionsList.slice(0, maxNumberOfPredictions);
@@ -3880,7 +3886,7 @@ package ui.chart
 			repositionTreatmentPills();
 			
 			//Update header
-			if (headerProperties != null)
+			if (headerProperties != null && !singlePredictionCurve)
 			{
 				predictionsLegendsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 0);
 				(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft = 40;
@@ -3999,23 +4005,41 @@ package ui.chart
 			}
 			
 			//Join all predictions
-			if (preferredPrediction == "COB")
+			if (!singlePredictionCurve)
 			{
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+				if (preferredPrediction == "COB")
+				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+				}
+				else if (preferredPrediction == "UAM")
+				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+				}
+				else if (preferredPrediction == "IOB")
+				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+				}
 			}
-			else if (preferredPrediction == "UAM")
+			else
 			{
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-			}
-			else if (preferredPrediction == "IOB")
-			{
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
-				finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+				if (preferredPrediction == "COB")
+				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+				}
+				else if (preferredPrediction == "UAM")
+				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+				}
+				else if (preferredPrediction == "IOB")
+				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+				}
 			}
 			
 			return finalTotalPredictionsList;
@@ -4285,6 +4309,17 @@ package ui.chart
 						predictionsIOBCOBPill, 
 						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'),
 						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_iob_cob_pill_explanation_body')
+					
+					);
+				}
+				else if (e.currentTarget === predictionsSingleCurvePill.pillBackground || e.currentTarget === predictionsSingleCurvePill.titleLabel)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictionsSingleCurvePill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','single_prediction_curve_label'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_single_prediction_curve_pill_explanation_body')
+						
 					);
 				}
 				else if (e.currentTarget === predictedTimeUntilHighPill)
@@ -5072,6 +5107,20 @@ package ui.chart
 			
 			widestPreditctionPill = Math.max(widestPreditctionPill, predictionsIOBCOBPill.width);
 			
+			//Single Prediction Curve Toggle
+			if (predictionsSingleCurveCheck != null) predictionsSingleCurveCheck.removeFromParent(true);
+			predictionsSingleCurveCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED) == "true");
+			predictionsSingleCurveCheck.paddingTop = predictionsSingleCurveCheck.paddingBottom = 3;
+			predictionsSingleCurveCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsSingleCurveChanged);
+			
+			if (predictionsSingleCurvePill != null) predictionsSingleCurvePill.removeFromParent(true);
+			predictionsSingleCurvePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','single_prediction_curve_label'), predictionsSingleCurveCheck);
+			predictionsSingleCurvePill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsSingleCurvePill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsContainer.addChild(predictionsSingleCurvePill);
+			
+			widestPreditctionPill = Math.max(widestPreditctionPill, predictionsSingleCurvePill.width);
+			
 			//Predictions Output
 			if (predictionsEnabled)
 			{
@@ -5392,6 +5441,19 @@ package ui.chart
 				
 				//Redraw Predictions
 				redrawPredictions(true);
+			}
+		}
+		
+		private function onPredictionsSingleCurveChanged(e:starling.events.Event):void
+		{
+			if (predictionsIOBCOBCheck != null)
+			{
+				//Save new setting to database
+				singlePredictionCurve = predictionsSingleCurveCheck.isSelected;
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED, String(singlePredictionCurve), true, false);
+				
+				//Redraw Predictions
+				redrawPredictions();
 			}
 		}
 		

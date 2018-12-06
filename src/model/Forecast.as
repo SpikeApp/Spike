@@ -668,7 +668,6 @@ package model
 		{
 			var finalPrediction:Number =  Number.NaN;
 			var predictionsDuration:Number = isNaN(duration) ? getCurrentPredictionsDuration() : duration;
-			var now:Number = new Date().valueOf();
 			var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
 			var lastBgReading:BgReading = BgReading.lastWithCalculatedValue();
 			var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
@@ -679,14 +678,8 @@ package model
 			}
 			
 			var maxNumberOfPredictions:Number = Math.floor(predictionsDuration / 5);
-			var	predictedIOBBG:Number = predictionData.IOBpredBG != null ? predictionData.IOBpredBG : Number.NaN;
-			var	predictedUAMBG:Number = predictionData.UAMpredBG != null ? predictionData.UAMpredBG : Number.NaN;
-			var predictedCOBBG:Number = predictionData.COBpredBG != null ? predictionData.COBpredBG : Number.NaN;
-			var currentIOB:Number = predictionData.IOBValue != null ? predictionData.IOBValue : Number.NaN;
-			var currentCOB:Number = predictionData.COBValue != null ? predictionData.COBValue : Number.NaN;
 			var predictionsFound:Boolean = false;
 			var preferredPrediction:String = "";
-			var lastCalibration:Calibration = Calibration.last();
 			var unformattedIOBPredictionsList:Array = [];
 			var unformattedCOBPredictionsList:Array = [];
 			var unformattedUAMPredictionsList:Array = [];
@@ -701,13 +694,6 @@ package model
 				{
 					unformattedUAMPredictionsList = unformattedUAMPredictionsList.slice(0, maxNumberOfPredictions);
 				}
-				
-				if (preferredPrediction == "") 
-				{
-					preferredPrediction = "UAM";
-				}
-				
-				predictionsFound = true;
 			}
 			
 			//COB Predictions
@@ -720,16 +706,6 @@ package model
 				{
 					unformattedCOBPredictionsList = unformattedCOBPredictionsList.slice(0, maxNumberOfPredictions);
 				}
-				
-				if (preferredPrediction == "" || 
-					//(lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS) ||
-					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
-				)
-				{
-					preferredPrediction = "COB";
-				}
-				
-				predictionsFound = true;
 			}
 			
 			//IOB Predictions
@@ -742,17 +718,12 @@ package model
 				{
 					unformattedIOBPredictionsList = unformattedIOBPredictionsList.slice(0, maxNumberOfPredictions);
 				}
-				
-				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
-				if (preferredPrediction == "" || 
-					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB") || 
-					(lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS && preferredPrediction != "COB") ||
-					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB")
-				) 
-				{
-					preferredPrediction = "IOB";
-				}
-				
+			}
+			
+			//Determine default prediction
+			preferredPrediction = determineDefaultPredictionCurve(predictionData);
+			if (predictionData != "")
+			{
 				predictionsFound = true;
 			}
 			
@@ -778,6 +749,64 @@ package model
 			}
 			
 			return finalPrediction;
+		}
+		
+		public static function determineDefaultPredictionCurve(predictionData:Object):String
+		{
+			var defaultPredictionCurve:String = "";
+			
+			var now:Number = new Date().valueOf();
+			var	predictedIOBBG:Number = predictionData.IOBpredBG != null ? predictionData.IOBpredBG : Number.NaN;
+			var	predictedUAMBG:Number = predictionData.UAMpredBG != null ? predictionData.UAMpredBG : Number.NaN;
+			var predictedCOBBG:Number = predictionData.COBpredBG != null ? predictionData.COBpredBG : Number.NaN;
+			var lastCalibration:Calibration = Calibration.last();
+			var currentIOB:Number = predictionData.IOBValue != null ? predictionData.IOBValue : Number.NaN;
+			if (isNaN(currentIOB))
+			{
+				var globalIOB:Number = TreatmentsManager.getTotalIOB(now);
+				if (globalIOB != 0)
+				{
+					currentIOB = globalIOB;
+				}
+			}
+			
+			//UAM Predictions
+			if (predictionData.UAM != null)
+			{
+				if (defaultPredictionCurve == "") 
+				{
+					defaultPredictionCurve = "UAM";
+				}
+			}
+			
+			//COB Predictions
+			if (predictionData.COB != null)
+			{
+				if (defaultPredictionCurve == "" || 
+					//(lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS) ||
+					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
+				)
+				{
+					defaultPredictionCurve = "COB";
+				}
+			}
+			
+			//IOB Predictions
+			if (predictionData.IOB != null)
+			{
+				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
+				
+				if (defaultPredictionCurve == "" || 
+					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 3 && defaultPredictionCurve != "COB") || 
+					(lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS && defaultPredictionCurve != "COB") ||
+					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && defaultPredictionCurve != "COB")
+				) 
+				{
+					defaultPredictionCurve = "IOB";
+				}
+			}
+			
+			return defaultPredictionCurve;
 		}
 		
 		// Rounds value to 'digits' decimal places
