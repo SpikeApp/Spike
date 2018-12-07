@@ -13,6 +13,8 @@ package ui.chart
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -3960,6 +3962,9 @@ package ui.chart
 			{
 				finalZTPredictionsList = finalZTPredictionsList.slice(0, maxNumberOfPredictions);
 			}
+			
+			trace("AAA");
+			trace(ObjectUtil.toString(finalIOBPredictionsList));
 			
 			//Update predictions pill
 			predictionsPill.isPredictive = true;

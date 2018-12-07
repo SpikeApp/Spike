@@ -1883,7 +1883,7 @@ package services
 								//Curve
 								loopPredictions.IOB = propertiesV2Data.loop.lastPredicted.values;
 								(loopPredictions.IOB as Array).shift();
-								(loopPredictions.IOB as Array).shift();
+								//(loopPredictions.IOB as Array).shift();
 								
 								Forecast.externalLoopAPS = true;
 								Forecast.setAPSPredictions(loopPredictions);
