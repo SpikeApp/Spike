@@ -198,7 +198,14 @@ package ui.chart.helpers
 		
 		public static function formatIOB(IOBValue:Number):String
 		{
-			return Math.abs(IOBValue).toFixed(2) + "U";
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				return IOBValue.toFixed(2) + "U";
+			}
+			else
+			{
+				return Math.abs(IOBValue).toFixed(2) + "U";
+			}
 		}
 		public static function formatCOB(COBValue:Number):String
 		{

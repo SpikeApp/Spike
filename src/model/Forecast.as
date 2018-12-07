@@ -1,11 +1,14 @@
 package model
 {
+	import flash.events.EventDispatcher;
 	import flash.utils.ByteArray;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	
+	import events.PredictionEvent;
 	
 	import treatments.Profile;
 	import treatments.ProfileManager;
@@ -17,13 +20,22 @@ package model
 	import utils.BgGraphBuilder;
 	import utils.TimeSpan;
 
-	public class Forecast
+	public class Forecast extends EventDispatcher
 	{
+		//Instance
+		private static var _instance:Forecast = new Forecast();
+		
+		//Properties
 		private static var internalCache:Object = {};
+		private static var apsPredictions:Object = null;
+		public static var externalLoopAPS:Boolean = false;
 		
 		public function Forecast()
 		{
-			throw new Error("Forecast is not meant to be instantiated!");
+			if (_instance != null) 
+			{
+				throw new Error("Forecast is not meant to be instantiated!");
+			}
 		}
 		
 		/**
@@ -31,6 +43,15 @@ package model
 		 */
 		public static function predictBGs(minutes:uint, forceNewIOBCOB:Boolean = false, ignoreIOBCOB:Boolean = false):Object
 		{
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				return apsPredictions;
+			}
+			else
+			{
+				externalLoopAPS = false;
+			}
+			
 			var glucose_status:Object = getLastGlucose();
 			if (glucose_status.is_valid == null || glucose_status.is_valid == false)
 			{
@@ -199,7 +220,42 @@ package model
 			var assumedCarbAbsorptionRate:Number = 20; // g/h; maximum rate to assume carbs will absorb if no CI observed
 			var remainingCATime:Number = remainingCATimeMin;
 			
-			var meal_data:Object = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false ? TreatmentsManager.getTotalCOB(now, false, true) : { cob: 0, carbs: 0 };
+			//Determine COB
+			var COBObject:Object;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && ignoreIOBCOB == false)
+			{
+				COBObject = TreatmentsManager.getTotalCOB(now, false, true);
+			}
+			else
+			{
+				COBObject = {
+					time: now,
+					cob: 0,
+					carbs: 0,
+					lastCarbTime: 0,
+					firstCarbTime: now,
+					carbsAbsorbed: 0,
+					currentDeviation: Number.NaN,
+					maxDeviation: 0,
+					minDeviation: 999,
+					slopeFromMaxDeviation: 0,
+					slopeFromMinDeviation: 999,
+					allDeviations: null
+				};
+				
+				var deviations:Object = TreatmentsManager.calcDeviations(now);
+				if (deviations != null)
+				{
+					COBObject.currentDeviation = deviations.currentDeviation;
+					COBObject.maxDeviation = deviations.maxDeviation;
+					COBObject.minDeviation = deviations.minDeviation;
+					COBObject.slopeFromMaxDeviation = deviations.slopeFromMaxDeviation;
+					COBObject.slopeFromMinDeviation = deviations.slopeFromMinDeviation;
+					COBObject.allDeviations = deviations.allDeviations;
+				}
+			}
+			
+			var meal_data:Object = COBObject;
 			if (meal_data.carbs > 0) 
 			{
 				// if carbs * assumedCarbAbsorptionRate > remainingCATimeMin, raise it
@@ -753,6 +809,11 @@ package model
 		
 		public static function determineDefaultPredictionCurve(predictionData:Object):String
 		{
+			if (predictionData == null)
+			{
+				return "";
+			}
+			
 			var defaultPredictionCurve:String = "";
 			
 			var now:Number = new Date().valueOf();
@@ -803,6 +864,12 @@ package model
 				{
 					defaultPredictionCurve = "IOB";
 				}
+			}
+			
+			//ZT Predictions
+			if (predictionData.ZT != null && defaultPredictionCurve == "")
+			{
+				defaultPredictionCurve = "ZTM";
 			}
 			
 			return defaultPredictionCurve;
@@ -1022,5 +1089,29 @@ package model
 				
 			return predictionsLengthInMinutes;
 		}
+		
+		/**
+		 * Helpers
+		 */
+		public static function clearAllCaches():void
+		{
+			internalCache = {};
+		}
+		
+		/**
+		 * Getters & Setters
+		 */
+		public static function setAPSPredictions(predictions:Object):void
+		{
+			apsPredictions = predictions;
+			
+			_instance.dispatchEvent(new PredictionEvent(PredictionEvent.APS_RETRIEVED));
+		}
+
+		public static function get instance():Forecast
+		{
+			return _instance;
+		}
+
 	}
 }

@@ -7,6 +7,7 @@ package ui.screens.display.settings.maintenance
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import starling.events.Event;
@@ -90,6 +91,7 @@ package ui.screens.display.settings.maintenance
 			function clearCaches(e:Event):void
 			{
 				TreatmentsManager.clearAllCaches();
+				Forecast.clearAllCaches();
 				
 				AlertManager.showSimpleAlert
 				(

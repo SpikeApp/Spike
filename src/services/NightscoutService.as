@@ -18,6 +18,7 @@ package services
 	import flash.utils.setTimeout;
 	
 	import mx.utils.ObjectUtil;
+	import mx.utils.StringUtil;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -77,7 +78,7 @@ package services
 		private static const MODE_TREATMENT_DELETE:String = "treatmentDelete";
 		private static const MODE_PROFILE_GET:String = "profileGet";
 		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
-		private static const MODE_PEBBLE_GET:String = "pebbleGet";
+		private static const MODE_PROPERTIES_V2_GET:String = "propertiesV2Get";
 		private static const MODE_USER_INFO_GET:String = "userInfoGet";
 		private static const MODE_BATTERY_UPLOAD:String = "batteryUpload";
 		private static const MODE_PREDICTIONS_UPLOAD:String = "predictionsUpload";
@@ -107,7 +108,7 @@ package services
 		private static var nightscoutEventsURL:String;
 		private static var nightscoutTreatmentsURL:String;
 		private static var nightscoutPebbleURL:String;
-		private static var nightscoutUserInfoURL:String;
+		private static var nightscoutPropertiesV2URL:String;
 		private static var credentialsTesterID:String;
 		private static var lastGlucoseReadingsSyncTimeStamp:Number;
 		private static var initialGlucoseReadingsIndex:int = 0;
@@ -147,7 +148,7 @@ package services
 		private static var activeTreatmentsUpload:Array = [];
 		private static var activeTreatmentsDelete:Array = [];
 		private static var retriesForTreatmentsDownload:int = 0;
-		private static var retriesForPebbleDownload:int = 0;
+		private static var retriesForPropertiesV2Download:int = 0;
 		private static var _syncTreatmentsUploadActive:Boolean = false;
 		private static var _syncTreatmentsDeleteActive:Boolean = false;
 		private static var _syncTreatmentsDownloadActive:Boolean = false;
@@ -158,10 +159,11 @@ package services
 		private static var syncPebbleActiveLastChange:Number = (new Date()).valueOf();
 		private static var lastRemoteTreatmentsSync:Number = 0;
 		private static var lastRemoteProfileSync:Number = 0;
-		private static var lastRemotePebbleSync:Number = 0;
+		private static var lastRemotePropertiesV2Sync:Number = 0;
 		private static var pumpUserEnabled:Boolean;
 		private static var phoneBatteryLevel:Number = 0;
 		private static var lastPredictionsUploadTimestamp:Number = 0;
+		private static var propertiesV2Timeout:uint = 0;
 
 		public function NightscoutService()
 		{
@@ -370,10 +372,10 @@ package services
 				//Get remote treatments/IOB-COB
 				if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 				{
-					if (!pumpUserEnabled)
-						getRemoteTreatments();
-					else
-						getPebbleEndpoint();
+					getRemoteTreatments();
+					
+					if (pumpUserEnabled)
+						propertiesV2Timeout = setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_1_MINUTE);
 				}
 				
 				//Upload predictions
@@ -771,10 +773,10 @@ package services
 						ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
 							
 						//Get treatmenents
-						if (!pumpUserEnabled)
-							getRemoteTreatments();
-						else
-							getPebbleEndpoint();
+						getRemoteTreatments();
+						
+						if (pumpUserEnabled)
+							getPropertiesV2Endpoint();
 					}
 				} 
 				catch(error:Error) 
@@ -1081,10 +1083,10 @@ package services
 						//Get remote treatments/pebble
 						if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0 && treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 						{
-							if (!pumpUserEnabled)
-								getRemoteTreatments();
-							else
-								getPebbleEndpoint();
+							getRemoteTreatments();
+							
+							if (pumpUserEnabled)
+								getPropertiesV2Endpoint();
 						}
 					}
 				} 
@@ -1333,10 +1335,10 @@ package services
 				}
 				else
 				{
-					if (!pumpUserEnabled)
-						getRemoteTreatments();
-					else
-						getPebbleEndpoint();
+					getRemoteTreatments();
+					
+					if (pumpUserEnabled)
+						getPropertiesV2Endpoint();
 				}
 			}
 			else
@@ -1465,7 +1467,7 @@ package services
 				return;
 			}
 			
-			NetworkConnector.createNSConnector(nightscoutUserInfoURL, null, URLRequestMethod.GET, null, MODE_USER_INFO_GET, onGetUserInfoComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutPropertiesV2URL, null, URLRequestMethod.GET, null, MODE_USER_INFO_GET, onGetUserInfoComplete, onConnectionFailed);
 		}
 		
 		private static function onGetUserInfoComplete(e:Event):void
@@ -1601,7 +1603,7 @@ package services
 			}
 		}
 		
-		private static function getPebbleEndpoint():void
+		public static function getPropertiesV2Endpoint(forceRefresh:Boolean = false):void
 		{
 			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
 				return;
@@ -1612,7 +1614,7 @@ package services
 				return;
 			}
 			
-			Trace.myTrace("NightscoutService.as", "getPebbleEndpoint called!");
+			Trace.myTrace("NightscoutService.as", "getPropertiesV2Endpoint called!");
 			
 			//Validation
 			if (!isNSProfileSet)
@@ -1638,12 +1640,14 @@ package services
 			
 			var now:Number = new Date().valueOf();
 			
-			if (now - lastRemotePebbleSync < TimeSpan.TIME_30_SECONDS)
+			if (now - lastRemotePropertiesV2Sync < TimeSpan.TIME_2_MINUTES_30_SECONDS && !forceRefresh)
 				return;
 			
-			lastRemotePebbleSync = now;
+			clearTimeout(propertiesV2Timeout);
 			
-			syncPebbleActive = true;
+			lastRemotePropertiesV2Sync = now;
+			
+			syncPropertiesV2Active = true;
 			
 			//API Secret
 			var treatmentAPISecret:String = "";
@@ -1652,7 +1656,271 @@ package services
 			else if (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
 				treatmentAPISecret = apiSecret;
 			
-			NetworkConnector.createNSConnector(nightscoutPebbleURL, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_PEBBLE_GET, onGetPebbleComplete, onConnectionFailed);
+			NetworkConnector.createNSConnector(nightscoutPropertiesV2URL, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_PROPERTIES_V2_GET, onGetPropertiesV2Complete, onConnectionFailed);
+		}
+		
+		private static function onGetPropertiesV2Complete(e:Event):void
+		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled)
+				return;
+			
+			if (!pumpUserEnabled)
+			{
+				getRemoteTreatments();
+				return;
+			}
+			
+			Trace.myTrace("NightscoutService.as", "onGetPropertiesV2Complete called!");
+			
+			syncPropertiesV2Active = false;
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onDownloadGlucoseReadingsComplete);
+			loader = null;
+			
+			//Validate response
+			if (response.indexOf("bgnow") != -1 && response.indexOf("DOCTYPE") == -1)
+			{
+				try
+				{
+					var propertiesV2Data:Object = SpikeJSON.parse(response) as Object;
+					if (propertiesV2Data != null && (propertiesV2Data.iob != null || propertiesV2Data.cob != null || propertiesV2Data.openaps != null || propertiesV2Data.loop != null))
+					{
+						//IOB
+						var previousPumpIOB:Number = TreatmentsManager.pumpIOB;
+						if (propertiesV2Data.iob != null && propertiesV2Data.iob.iob != null)
+						{
+							//IOB found!
+							var pumpIOB:Number = Number(propertiesV2Data.iob.iob);
+							TreatmentsManager.setPumpIOB(pumpIOB);
+						}
+						
+						//COB
+						var previousPumpCOB:Number = TreatmentsManager.pumpCOB;
+						if (propertiesV2Data.cob != null && propertiesV2Data.cob.cob != null)
+						{
+							//COB found
+							var pumpCOB:Number = Number(propertiesV2Data.cob.cob);
+							TreatmentsManager.setPumpCOB(pumpCOB);
+						}
+						
+						//Notify listeners of updated IOB/COB
+						if (previousPumpIOB != pumpIOB || previousPumpCOB != pumpCOB)
+							TreatmentsManager.notifyIOBCOB();
+						
+						//Predictions
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+						{
+							//OpenAPS
+							var openAPSPredictions:Object;
+							if (propertiesV2Data.openaps != null && propertiesV2Data.openaps.lastSuggested != null && propertiesV2Data.openaps.lastSuggested.predBGs != null)
+							{
+								openAPSPredictions = {};
+								
+								//Curves
+								if (propertiesV2Data.openaps.lastSuggested.predBGs.IOB != null && propertiesV2Data.openaps.lastSuggested.predBGs.IOB is Array)
+								{
+									openAPSPredictions.IOB = propertiesV2Data.openaps.lastSuggested.predBGs.IOB;
+									//(openAPSPredictions.IOB as Array).shift();
+								}
+								if (propertiesV2Data.openaps.lastSuggested.predBGs.COB != null && propertiesV2Data.openaps.lastSuggested.predBGs.COB is Array)
+								{
+									openAPSPredictions.COB = propertiesV2Data.openaps.lastSuggested.predBGs.COB;
+									//(openAPSPredictions.COB as Array).shift();
+								}
+								if (propertiesV2Data.openaps.lastSuggested.predBGs.UAM != null && propertiesV2Data.openaps.lastSuggested.predBGs.UAM is Array)
+								{
+									openAPSPredictions.UAM = propertiesV2Data.openaps.lastSuggested.predBGs.UAM;
+									//(openAPSPredictions.UAM as Array).shift();
+								}
+								if (propertiesV2Data.openaps.lastSuggested.predBGs.ZT != null && propertiesV2Data.openaps.lastSuggested.predBGs.ZT is Array)
+								{
+									openAPSPredictions.ZT = propertiesV2Data.openaps.lastSuggested.predBGs.ZT;
+									//(openAPSPredictions.ZT as Array).shift();
+								}
+								
+								//Properties
+								if (propertiesV2Data.openaps.lastSuggested.reason != null && propertiesV2Data.openaps.lastSuggested.reason is String)
+								{
+									var openAPSReasonUnformatted:String = propertiesV2Data.openaps.lastSuggested.reason;
+									openAPSReasonUnformatted = openAPSReasonUnformatted.replace(/;/g, ",").replace(/:/g, "");
+									
+									var openAPSReasonExploded:Array = openAPSReasonUnformatted.split(",");
+									if (openAPSReasonExploded != null)
+									{
+										var numberOfReasons:uint = openAPSReasonExploded.length;
+										if (numberOfReasons > 0)
+										{
+											var reasonProperties:Object = {};
+											
+											for (var i:int = 0; i < numberOfReasons; i++) 
+											{
+												var tempKeyString:String = StringUtil.trim(openAPSReasonExploded[i] as String);
+												
+												if (tempKeyString != null && tempKeyString != "" && tempKeyString.indexOf("Eventual") == -1)
+												{
+													var tempHolder:Array = tempKeyString.split(" ");
+													if (tempHolder != null && tempHolder is Array && tempHolder.length == 2)
+													{
+														reasonProperties[tempHolder[0]] = Number(tempHolder[1]);
+													}
+												}
+											}
+											
+											if (reasonProperties.ISF != null)
+											{
+												openAPSPredictions.isf = reasonProperties.ISF;
+											}
+											
+											if (reasonProperties.CR != null)
+											{
+												openAPSPredictions.cr = reasonProperties.CR;
+											}
+											
+											if (reasonProperties.BGI != null)
+											{
+												openAPSPredictions.bgImpact = reasonProperties.BGI;
+											}
+											
+											if (reasonProperties.Dev != null)
+											{
+												openAPSPredictions.deviation = reasonProperties.Dev;
+											}
+											
+											if (reasonProperties.minPredBG != null)
+											{
+												openAPSPredictions.minPredBG = reasonProperties.minPredBG;
+												
+												if (openAPSPredictions.minPredBG < 20 && !isNightscoutMgDl)
+												{
+													openAPSPredictions.minPredBG = Math.round(BgReading.mmolToMgdl(openAPSPredictions.minPredBG));
+												}
+											}
+											
+											if (reasonProperties.minGuardBG != null)
+											{
+												openAPSPredictions.minGuardBG = reasonProperties.minGuardBG;
+												
+												if (openAPSPredictions.minGuardBG < 20 && !isNightscoutMgDl)
+												{
+													openAPSPredictions.minGuardBG = Math.round(BgReading.mmolToMgdl(openAPSPredictions.minGuardBG));
+												}
+											}
+											
+											if (reasonProperties.COBpredBG != null)
+											{
+												openAPSPredictions.COBpredBG = reasonProperties.COBpredBG;
+												
+												if (openAPSPredictions.COBpredBG < 20 && !isNightscoutMgDl)
+												{
+													openAPSPredictions.COBpredBG = Math.round(BgReading.mmolToMgdl(openAPSPredictions.COBpredBG));
+												}
+											}
+											
+											if (reasonProperties.IOBpredBG != null)
+											{
+												openAPSPredictions.IOBpredBG = reasonProperties.IOBpredBG;
+												
+												if (openAPSPredictions.IOBpredBG < 20 && !isNightscoutMgDl)
+												{
+													openAPSPredictions.IOBpredBG = Math.round(BgReading.mmolToMgdl(openAPSPredictions.IOBpredBG));
+												}
+											}
+											
+											if (reasonProperties.UAMpredBG != null)
+											{
+												openAPSPredictions.UAMpredBG = reasonProperties.UAMpredBG;
+												
+												if (openAPSPredictions.UAMpredBG < 20 && !isNightscoutMgDl)
+												{
+													openAPSPredictions.UAMpredBG = Math.round(BgReading.mmolToMgdl(openAPSPredictions.UAMpredBG));
+												}
+											}
+										}
+									}
+								}
+								
+								if (propertiesV2Data.openaps.lastSuggested.eventualBG != null)
+								{
+									openAPSPredictions.eventualBG = Number(propertiesV2Data.openaps.lastSuggested.eventualBG);
+									
+									if (openAPSPredictions.eventualBG < 20 && !isNightscoutMgDl)
+									{
+										openAPSPredictions.eventualBG = Math.round(BgReading.mmolToMgdl(openAPSPredictions.eventualBG));
+									}
+								}
+								
+								if (propertiesV2Data.openaps.lastSuggested.bg != null)
+								{
+									openAPSPredictions.bg = Number(propertiesV2Data.openaps.lastSuggested.bg);
+									
+									if (openAPSPredictions.bg < 20 && !isNightscoutMgDl)
+									{
+										openAPSPredictions.bg = Math.round(BgReading.mmolToMgdl(openAPSPredictions.bg));
+									}
+								}
+								
+								Forecast.externalLoopAPS = false;
+								Forecast.setAPSPredictions(openAPSPredictions);
+							}
+							
+							//Loop
+							if (openAPSPredictions == null && propertiesV2Data.loop != null && propertiesV2Data.loop.lastPredicted != null && propertiesV2Data.loop.lastPredicted.values != null && propertiesV2Data.loop.lastPredicted.values is Array)
+							{
+								var loopPredictions:Object = {};
+								
+								//Curve
+								loopPredictions.IOB = propertiesV2Data.loop.lastPredicted.values;
+								(loopPredictions.IOB as Array).shift();
+								(loopPredictions.IOB as Array).shift();
+								
+								Forecast.externalLoopAPS = true;
+								Forecast.setAPSPredictions(loopPredictions);
+							}
+						}
+						
+						retriesForPropertiesV2Download = 0;
+					}
+					else
+					{
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPropertiesV2Download < MAX_RETRIES_FOR_TREATMENTS)
+						{
+							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new properties v2 fetch in 30 seconds. Responder: " + response);
+							setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_30_SECONDS);
+							retriesForPropertiesV2Download++;
+						}
+					}
+				} 
+				catch(error:Error) 
+				{
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPropertiesV2Download < MAX_RETRIES_FOR_TREATMENTS)
+					{
+						Trace.myTrace("NightscoutService.as", "SError parsing Nightscout response. Retrying new properties v2 fetch in 30 seconds. Responder: " + response);
+						setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_30_SECONDS);
+						retriesForPropertiesV2Download++;
+					}
+				}
+			}
+			else
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPropertiesV2Download < MAX_RETRIES_FOR_TREATMENTS)
+				{
+					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new properties v2 fetch in 30 seconds. Responder: " + response);
+					setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_30_SECONDS);
+					retriesForPropertiesV2Download++;
+				}
+			}
 		}
 		
 		private static function onGetPebbleComplete(e:Event):void
@@ -1672,7 +1940,7 @@ package services
 			
 			Trace.myTrace("NightscoutService.as", "onGetPebbleComplete called!");
 			
-			syncPebbleActive = false;
+			syncPropertiesV2Active = false;
 			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
@@ -1708,35 +1976,35 @@ package services
 						if (previousPumpIOB != pumpIOB || previousPumpCOB != pumpCOB)
 							TreatmentsManager.notifyIOBCOB();
 						
-						retriesForPebbleDownload = 0;
+						retriesForPropertiesV2Download = 0;
 					}
 					else
 					{
-						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPropertiesV2Download < MAX_RETRIES_FOR_TREATMENTS)
 						{
 							Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new pebble fetch in 30 seconds. Responder: " + response);
-							setTimeout(getPebbleEndpoint, TimeSpan.TIME_30_SECONDS);
-							retriesForPebbleDownload++;
+							setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_30_SECONDS);
+							retriesForPropertiesV2Download++;
 						}
 					}
 				} 
 				catch(error:Error) 
 				{
-					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+					if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPropertiesV2Download < MAX_RETRIES_FOR_TREATMENTS)
 					{
 						Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new pebble fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
-						setTimeout(getPebbleEndpoint, TimeSpan.TIME_30_SECONDS);
-						retriesForPebbleDownload++;
+						setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_30_SECONDS);
+						retriesForPropertiesV2Download++;
 					}
 				}
 			}
 			else
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPropertiesV2Download < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new pebble's fetch in 30 seconds. Responder: " + response);
-					setTimeout(getPebbleEndpoint, TimeSpan.TIME_30_SECONDS);
-					retriesForPebbleDownload++;
+					setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_30_SECONDS);
+					retriesForPropertiesV2Download++;
 				}
 			}
 		}
@@ -2577,8 +2845,8 @@ package services
 			nightscoutPebbleURL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/pebble" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/pebble";
 			if (nightscoutPebbleURL.indexOf('http') == -1) nightscoutPebbleURL = "https://" + nightscoutPebbleURL;
 			
-			nightscoutUserInfoURL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v2/properties" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v2/properties";
-			if (nightscoutUserInfoURL.indexOf('http') == -1) nightscoutUserInfoURL = "https://" + nightscoutUserInfoURL;
+			nightscoutPropertiesV2URL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v2/properties" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v2/properties";
+			if (nightscoutPropertiesV2URL.indexOf('http') == -1) nightscoutPropertiesV2URL = "https://" + nightscoutPropertiesV2URL;
 			
 			nightscoutDeviceStatusURL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/devicestatus.json" : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) + "/api/v1/devicestatus.json";
 			if (nightscoutDeviceStatusURL.indexOf('http') == -1) nightscoutDeviceStatusURL = "https://" + nightscoutDeviceStatusURL;
@@ -2695,13 +2963,13 @@ package services
 					setTimeout(getNightscoutProfile, TimeSpan.TIME_30_SECONDS);
 				}
 			}
-			else if (mode == MODE_PEBBLE_GET)
+			else if (mode == MODE_PROPERTIES_V2_GET)
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPebbleDownload < MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && pumpUserEnabled && retriesForPropertiesV2Download < MAX_RETRIES_FOR_TREATMENTS)
 				{
-					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting pebble endpoint. Retrying in 30 seconds. Error: " + error.message);
-					setTimeout(getPebbleEndpoint, TimeSpan.TIME_30_SECONDS);
-					retriesForPebbleDownload++;
+					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting properties v2 endpoint. Retrying in 30 seconds. Error: " + error.message);
+					setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_30_SECONDS);
+					retriesForPropertiesV2Download++;
 				}
 			}
 			else if (mode == MODE_USER_INFO_GET)
@@ -2823,10 +3091,10 @@ package services
 				//Update remote treatments so the user has updated data when returning to Spike
 				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 				{
-					if (!pumpUserEnabled)
-						getRemoteTreatments();
-					else
-						getPebbleEndpoint();
+					getRemoteTreatments();
+					
+					if (pumpUserEnabled)
+						getPropertiesV2Endpoint();
 				}
 			}
 			else
@@ -2842,10 +3110,10 @@ package services
 			//Update remote treatments so the user has updated data when returning to Spike
 			if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled)
 			{
-				if (!pumpUserEnabled)
-					getRemoteTreatments();
-				else
-					getPebbleEndpoint();
+				getRemoteTreatments();
+				
+				if (pumpUserEnabled)
+					getPropertiesV2Endpoint();
 			}
 		}
 		
@@ -3027,7 +3295,7 @@ package services
 			_syncTreatmentsDownloadActive = value;
 		}
 		
-		public static function get syncPebbleActive():Boolean
+		public static function get syncPropertiesV2Active():Boolean
 		{
 			if (!_syncPebbleActive)
 				return false;
@@ -3044,7 +3312,7 @@ package services
 			return true;
 		}
 		
-		public static function set syncPebbleActive(value:Boolean):void
+		public static function set syncPropertiesV2Active(value:Boolean):void
 		{
 			syncPebbleActiveLastChange = new Date().valueOf();
 			_syncPebbleActive = value;

@@ -19,6 +19,7 @@ package ui.chart
 	import database.CommonSettings;
 	
 	import events.CalibrationServiceEvent;
+	import events.PredictionEvent;
 	import events.SpikeEvent;
 	import events.UserInfoEvent;
 	
@@ -93,7 +94,6 @@ package ui.chart
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
 	
-	import utils.BgGraphBuilder;
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
@@ -399,12 +399,13 @@ package ui.chart
 		private var predictionExplanationLabel:Label;
 		private var predictionExplanationCallout:Callout;
 		private var predictedCOBBGPill:ChartTreatmentPill;
-
 		private var incompleteProfileWarningLabel:Label;
-
 		private var predictionsSingleCurveCheck:Check;
-
 		private var predictionsSingleCurvePill:ChartComponentPill;
+		private var ztPredictLegendContainer:LayoutGroup;
+		private var ztPredictLegendLabel:Label;
+		private var ztPredictLegendColorQuad:Quad;
+		private var ztPredictLegendHitArea:Quad;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -416,6 +417,11 @@ package ui.chart
 			
 			//Predictions
 			predictionsEnabled = dontDisplayPredictionsPill == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true";
+			if (predictionsEnabled && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				Forecast.instance.addEventListener(PredictionEvent.APS_RETRIEVED, onAPSPredictionRetrieved);
+			}
+			
 			predictionsColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR));
 			singlePredictionCurve = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED) == "true";
 			
@@ -3593,13 +3599,14 @@ package ui.chart
 			var lastAvailableBgReading:BgReading = _dataSource[_dataSource.length - 1];
 			var nowTimestamp:Number = new Date().valueOf();
 			var now:Number = lastAvailableBgReading != null ? lastAvailableBgReading.timestamp : nowTimestamp;
-			var currentReadingValue:Number;
+			var currentReadingValue:Number = Number.NaN;
 			var readingTimestamp:Number;
 			var predictedCalculatedValue:Number;
 			var predictionsFound:Boolean = false;
 			var cobPredictionsEnabled:Boolean = false;
 			var iobPredictionsEnabled:Boolean = false;
 			var uamPredictionsEnabled:Boolean = false;
+			var ztPredictionsEnabled:Boolean = false;
 			numDifferentPredictionsDisplayed = 0;
 			
 			var i:int;
@@ -3611,15 +3618,18 @@ package ui.chart
 			var cobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
 			var iobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
 			var uamPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR));
+			var ztPredictionsColor:uint = 0x00d1fe;
 			
 			//Prediction's lists
 			var finalTotalPredictionsList:Array = [];
 			var finalIOBPredictionsList:Array = [];
 			var finalCOBPredictionsList:Array = [];
 			var finalUAMPredictionsList:Array = [];
+			var finalZTPredictionsList:Array = [];
 			var unformattedIOBPredictionsList:Array = [];
 			var unformattedCOBPredictionsList:Array = [];
 			var unformattedUAMPredictionsList:Array = [];
+			var unformattedZTPredictionsList:Array = [];
 			preferredPrediction = "";
 			
 			//All Predictions
@@ -3637,6 +3647,7 @@ package ui.chart
 				predictedIOBBG = unformattedPredictions.IOBpredBG != null ? unformattedPredictions.IOBpredBG : Number.NaN;
 				predictedUAMBG = unformattedPredictions.UAMpredBG != null ? unformattedPredictions.UAMpredBG : Number.NaN;
 				predictionsIncompleteProfile = unformattedPredictions.incompleteProfile != null ? unformattedPredictions.incompleteProfile : false;
+				currentReadingValue = unformattedPredictions.bg != null ? unformattedPredictions.bg : Number.NaN;
 				var currentIOB:Number = unformattedPredictions.IOBValue != null ? unformattedPredictions.IOBValue : Number.NaN;
 				var currentCOB:Number = unformattedPredictions.COBValue != null ? unformattedPredictions.COBValue : Number.NaN;
 			}
@@ -3645,7 +3656,8 @@ package ui.chart
 			if (unformattedPredictions != null && unformattedPredictions.UAM != null)
 			{
 				unformattedUAMPredictionsList = unformattedPredictions.UAM.concat();
-				currentReadingValue = unformattedUAMPredictionsList.shift(); //Remove first element
+				var excludedUAMPrediction:Number = unformattedUAMPredictionsList.shift(); //Remove first element
+				if (isNaN(currentReadingValue)) currentReadingValue = excludedUAMPrediction;
 				
 				predictionsFound = true;
 				uamPredictionsEnabled = true;
@@ -3656,7 +3668,8 @@ package ui.chart
 			if (unformattedPredictions != null && unformattedPredictions.COB != null)
 			{
 				unformattedCOBPredictionsList = unformattedPredictions.COB.concat();
-				currentReadingValue = unformattedCOBPredictionsList.shift(); //Remove first element
+				var excludedCOBPrediction:Number = unformattedCOBPredictionsList.shift(); //Remove first element
+				if (isNaN(currentReadingValue)) currentReadingValue = excludedCOBPrediction;
 				
 				predictionsFound = true;
 				cobPredictionsEnabled = true;
@@ -3667,10 +3680,23 @@ package ui.chart
 			if (unformattedPredictions != null && unformattedPredictions.IOB != null)
 			{
 				unformattedIOBPredictionsList = unformattedPredictions.IOB.concat();
-				currentReadingValue = unformattedIOBPredictionsList.shift(); //Remove first element
+				var excludedIOBPrediction:Number = unformattedIOBPredictionsList.shift(); //Remove first element
+				if (isNaN(currentReadingValue)) currentReadingValue = excludedIOBPrediction;
 				
 				predictionsFound = true;
 				iobPredictionsEnabled = true;
+				numDifferentPredictionsDisplayed++;
+			}
+			
+			//ZT Predictions
+			if (unformattedPredictions != null && unformattedPredictions.ZT != null)
+			{
+				unformattedZTPredictionsList = unformattedPredictions.ZT.concat();
+				var excludedZTPrediction :Number= unformattedZTPredictionsList.shift(); //Remove first element
+				if (isNaN(currentReadingValue)) currentReadingValue = excludedZTPrediction;
+				
+				predictionsFound = true;
+				ztPredictionsEnabled = true;
 				numDifferentPredictionsDisplayed++;
 			}
 			
@@ -3865,6 +3891,55 @@ package ui.chart
 				finalIOBPredictionsList.push(iobPredictionReading);
 			}
 			
+			//Loop through ZT predictions (priority #4)
+			var ztPredictionsLength:uint =  unformattedZTPredictionsList.length;
+			for (i = 0; i < ztPredictionsLength; i++) 
+			{
+				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+				predictedCalculatedValue = unformattedZTPredictionsList[i];
+				var ztPredictionReading:BgReading = new BgReading
+					(
+						readingTimestamp, //timestamp
+						null, //sensor
+						null, //calibration
+						preferredPrediction == "ZTM" ? mainPredictionsColor : ztPredictionsColor, //raw data
+						Number.NaN, //filtered data
+						Number.NaN, //adge adjusted raw data
+						false, //calibration flag
+						predictedCalculatedValue, //calculated value
+						Number.NaN, //filtered calculated value
+						Number.NaN, //calculated value slope
+						Number.NaN, //a
+						Number.NaN, //b
+						Number.NaN, //c
+						Number.NaN, //ra
+						Number.NaN, //rb
+						Number.NaN, //rc
+						Number.NaN, //raw calculated
+						false, //hide slope
+						"", //noise
+						readingTimestamp, //last modified timestamp
+						"ZTM" //unique id
+					);
+				
+				//Check if high or low thresholds will be reached
+				if (finalIOBPredictionsList.length == 0 && finalCOBPredictionsList.length == 0 && finalUAMPredictionsList.length == 0)
+				{
+					if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+					{
+						predictedTimeUntilHigh = readingTimestamp - now;
+					}
+					
+					if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
+					{
+						predictedTimeUntilLow = readingTimestamp - now;
+					}
+				}
+				
+				//Add to prediction's list
+				finalZTPredictionsList.push(ztPredictionReading);
+			}
+			
 			//Truncate predictions if needed
 			if (finalCOBPredictionsList.length > maxNumberOfPredictions)
 			{
@@ -3881,139 +3956,198 @@ package ui.chart
 				finalUAMPredictionsList = finalUAMPredictionsList.slice(0, maxNumberOfPredictions);
 			}
 			
+			if (finalZTPredictionsList.length > maxNumberOfPredictions)
+			{
+				finalZTPredictionsList = finalZTPredictionsList.slice(0, maxNumberOfPredictions);
+			}
+			
 			//Update predictions pill
 			predictionsPill.isPredictive = true;
+			var predictionAvailableDuration:Number = predictionsLengthInMinutes;
+			
 			if (preferredPrediction == "COB")
 			{
-				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalCOBPredictionsList[finalCOBPredictionsList.length - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalCOBPredictionsList[finalCOBPredictionsList.length - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+				var numCOBPredictions:uint = finalCOBPredictionsList.length;
+				predictionAvailableDuration = numCOBPredictions * 5;
+				
+				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			else if (preferredPrediction == "UAM")
 			{
-				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalUAMPredictionsList[finalUAMPredictionsList.length - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalUAMPredictionsList[finalUAMPredictionsList.length - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+				var numUAMPredictions:uint = finalUAMPredictionsList.length;
+				predictionAvailableDuration = numUAMPredictions * 5;
+				
+				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
-			else
+			else if (preferredPrediction == "ZTM")
 			{
-				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalIOBPredictionsList[finalIOBPredictionsList.length - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalIOBPredictionsList[finalIOBPredictionsList.length - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+				var numZTPredictions:uint = finalZTPredictionsList.length;
+				predictionAvailableDuration = numZTPredictions * 5;
+				
+				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalZTPredictionsList[numZTPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalZTPredictionsList[numZTPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
+			else 
+			{
+				var numIOBPredictions:uint = finalIOBPredictionsList.length;
+				predictionAvailableDuration = numIOBPredictions * 5;
+				
+				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
+			}
+			
 			repositionTreatmentPills();
 			
 			//Update header
-			if (headerProperties != null && !singlePredictionCurve)
+			if (!Forecast.externalLoopAPS)
 			{
-				predictionsLegendsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 0);
-				(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft = 40;
-				
-				if (cobPredictionsEnabled)
+				if (headerProperties != null && !singlePredictionCurve)
 				{
-					//Color
-					var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
-					//Legend Container
-					cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					//Label
-					cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 && currentTotalIOB > 0 ? ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + " & " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label') : ModelLocator.resourceManagerInstance.getString('treatments','cob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
-					cobPredictLegendLabel.touchable = false;
-					cobPredictLegendLabel.validate();
-					//Color Marker
-					cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.6, cobPredictLegendLabel.height * 0.6, cobColor);
-					cobPredictLegendColorQuad.touchable = false;
-					if ((currentIOB > 0 && currentTotalIOB > 0) && preferredPrediction != "COB")
+					predictionsLegendsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 0);
+					(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft = 40;
+					
+					if (cobPredictionsEnabled)
 					{
-						cobPredictLegendColorQuad.setVertexColor(0, cobColor);
-						cobPredictLegendColorQuad.setVertexColor(1, iobPredictionsColor);
-						cobPredictLegendColorQuad.setVertexColor(2, cobColor);
-						cobPredictLegendColorQuad.setVertexColor(3, iobPredictionsColor);
+						//Color
+						var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
+						//Legend Container
+						cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+						//Label
+						cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 && currentTotalIOB > 0 ? ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + " & " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label') : ModelLocator.resourceManagerInstance.getString('treatments','cob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
+						cobPredictLegendLabel.touchable = false;
+						cobPredictLegendLabel.validate();
+						//Color Marker
+						cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.6, cobPredictLegendLabel.height * 0.6, cobColor);
+						cobPredictLegendColorQuad.touchable = false;
+						if ((currentIOB > 0 && currentTotalIOB > 0) && preferredPrediction != "COB")
+						{
+							cobPredictLegendColorQuad.setVertexColor(0, cobColor);
+							cobPredictLegendColorQuad.setVertexColor(1, iobPredictionsColor);
+							cobPredictLegendColorQuad.setVertexColor(2, cobColor);
+							cobPredictLegendColorQuad.setVertexColor(3, iobPredictionsColor);
+						}
+						//Add label anc color marker to the container
+						cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
+						cobPredictLegendContainer.addChild(cobPredictLegendLabel);
+						cobPredictLegendContainer.validate();
+						//Hit Area
+						cobPredictLegendHitArea = new Quad(cobPredictLegendContainer.width, cobPredictLegendContainer.height, 0xFF0000);
+						cobPredictLegendHitArea.alpha = 0;
+						cobPredictLegendContainer.addChild(cobPredictLegendHitArea);
+						cobPredictLegendContainer.validate();
+						cobPredictLegendHitArea.x = cobPredictLegendHitArea.y = 0;
+						
+						cobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onCOBPredictionExplanation);
+						
+						if (preferredPrediction == "COB")
+							predictionsLegendsContainer.addChildAt(cobPredictLegendContainer, 0);
+						else
+							predictionsLegendsContainer.addChild(cobPredictLegendContainer);
+						
+						if (currentIOB > 0 && currentTotalIOB > 0)
+						{
+							(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft += 30;
+						}
 					}
-					//Add label anc color marker to the container
-					cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
-					cobPredictLegendContainer.addChild(cobPredictLegendLabel);
-					cobPredictLegendContainer.validate();
-					//Hit Area
-					cobPredictLegendHitArea = new Quad(cobPredictLegendContainer.width, cobPredictLegendContainer.height, 0xFF0000);
-					cobPredictLegendHitArea.alpha = 0;
-					cobPredictLegendContainer.addChild(cobPredictLegendHitArea);
-					cobPredictLegendContainer.validate();
-					cobPredictLegendHitArea.x = cobPredictLegendHitArea.y = 0;
 					
-					cobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onCOBPredictionExplanation);
-					
-					if (preferredPrediction == "COB")
-						predictionsLegendsContainer.addChildAt(cobPredictLegendContainer, 0);
-					else
-						predictionsLegendsContainer.addChild(cobPredictLegendContainer);
-					
-					if (currentIOB > 0 && currentTotalIOB > 0)
+					if (uamPredictionsEnabled)
 					{
-						(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft += 30;
+						//Color
+						var uamColor:uint = preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor;
+						//Legend Container
+						uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+						//Label
+						uamPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','unannounced_glucose_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
+						uamPredictLegendLabel.touchable = false;
+						uamPredictLegendLabel.validate();
+						//Color Marker
+						uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.6, uamPredictLegendLabel.height * 0.6, uamColor);
+						uamPredictLegendColorQuad.touchable = false;
+						//Add label anc color marker to the container
+						uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
+						uamPredictLegendContainer.addChild(uamPredictLegendLabel);
+						uamPredictLegendContainer.validate();
+						//Hit Area
+						uamPredictLegendHitArea = new Quad(uamPredictLegendContainer.width, uamPredictLegendContainer.height, 0xFF0000);
+						uamPredictLegendHitArea.alpha = 0;
+						uamPredictLegendContainer.addChild(uamPredictLegendHitArea);
+						uamPredictLegendContainer.validate();
+						uamPredictLegendHitArea.x = uamPredictLegendHitArea.y = 0;
+						
+						uamPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onUAMPredictionExplanation);
+						
+						if (preferredPrediction == "UAM")
+							predictionsLegendsContainer.addChildAt(uamPredictLegendContainer, 0);
+						else
+							predictionsLegendsContainer.addChild(uamPredictLegendContainer);
 					}
+					
+					if (iobPredictionsEnabled)
+					{
+						//Color
+						var iobColor:uint = preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor;
+						//Legend Container
+						iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+						//Label
+						iobPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','iob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
+						iobPredictLegendLabel.touchable = false;
+						iobPredictLegendLabel.validate();
+						//Color Marker
+						iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.6, iobPredictLegendLabel.height * 0.6, iobColor);
+						iobPredictLegendColorQuad.touchable = false;
+						//Add label anc color marker to the container
+						iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
+						iobPredictLegendContainer.addChild(iobPredictLegendLabel);
+						iobPredictLegendContainer.validate();
+						//Hit Area
+						iobPredictLegendHitArea = new Quad(iobPredictLegendContainer.width, iobPredictLegendContainer.height, 0xFF0000);
+						iobPredictLegendHitArea.alpha = 0;
+						iobPredictLegendContainer.addChild(iobPredictLegendHitArea);
+						iobPredictLegendContainer.validate();
+						iobPredictLegendHitArea.x = iobPredictLegendHitArea.y = 0;
+						
+						iobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onIOBPredictionExplanation);
+						
+						if (preferredPrediction == "IOB")
+							predictionsLegendsContainer.addChildAt(iobPredictLegendContainer, 0);
+						else
+							predictionsLegendsContainer.addChild(iobPredictLegendContainer);
+					}
+					
+					if (ztPredictionsEnabled)
+					{
+						//Color
+						var ztColor:uint = preferredPrediction == "ZTM" ? mainPredictionsColor : ztPredictionsColor;
+						//Legend Container
+						ztPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+						//Label
+						ztPredictLegendLabel = LayoutFactory.createLabel("ZT", HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
+						ztPredictLegendLabel.touchable = false;
+						ztPredictLegendLabel.validate();
+						//Color Marker
+						ztPredictLegendColorQuad = new Quad(ztPredictLegendLabel.height * 0.6, ztPredictLegendLabel.height * 0.6, ztColor);
+						ztPredictLegendColorQuad.touchable = false;
+						//Add label anc color marker to the container
+						ztPredictLegendContainer.addChild(ztPredictLegendColorQuad);
+						ztPredictLegendContainer.addChild(ztPredictLegendLabel);
+						ztPredictLegendContainer.validate();
+						//Hit Area
+						ztPredictLegendHitArea = new Quad(ztPredictLegendContainer.width, ztPredictLegendContainer.height, 0xFF0000);
+						ztPredictLegendHitArea.alpha = 0;
+						ztPredictLegendContainer.addChild(ztPredictLegendHitArea);
+						ztPredictLegendContainer.validate();
+						ztPredictLegendHitArea.x = ztPredictLegendHitArea.y = 0;
+						
+						ztPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onZTPredictionExplanation);
+						
+						if (preferredPrediction == "ZTM")
+							predictionsLegendsContainer.addChildAt(ztPredictLegendContainer, 0);
+						else
+							predictionsLegendsContainer.addChild(ztPredictLegendContainer);
+					}
+					
+					headerProperties.centerItems = new <DisplayObject>[
+						predictionsLegendsContainer
+					];
 				}
-				
-				if (uamPredictionsEnabled)
-				{
-					//Color
-					var uamColor:uint = preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor;
-					//Legend Container
-					uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					//Label
-					uamPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','unannounced_glucose_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
-					uamPredictLegendLabel.touchable = false;
-					uamPredictLegendLabel.validate();
-					//Color Marker
-					uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.6, uamPredictLegendLabel.height * 0.6, uamColor);
-					uamPredictLegendColorQuad.touchable = false;
-					//Add label anc color marker to the container
-					uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
-					uamPredictLegendContainer.addChild(uamPredictLegendLabel);
-					uamPredictLegendContainer.validate();
-					//Hit Area
-					uamPredictLegendHitArea = new Quad(uamPredictLegendContainer.width, uamPredictLegendContainer.height, 0xFF0000);
-					uamPredictLegendHitArea.alpha = 0;
-					uamPredictLegendContainer.addChild(uamPredictLegendHitArea);
-					uamPredictLegendContainer.validate();
-					uamPredictLegendHitArea.x = uamPredictLegendHitArea.y = 0;
-					
-					uamPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onUAMPredictionExplanation);
-					
-					if (preferredPrediction == "UAM")
-						predictionsLegendsContainer.addChildAt(uamPredictLegendContainer, 0);
-					else
-						predictionsLegendsContainer.addChild(uamPredictLegendContainer);
-				}
-				
-				if (iobPredictionsEnabled)
-				{
-					//Color
-					var iobColor:uint = preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor;
-					//Legend Container
-					iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-					//Label
-					iobPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','iob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
-					iobPredictLegendLabel.touchable = false;
-					iobPredictLegendLabel.validate();
-					//Color Marker
-					iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.6, iobPredictLegendLabel.height * 0.6, iobColor);
-					iobPredictLegendColorQuad.touchable = false;
-					//Add label anc color marker to the container
-					iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
-					iobPredictLegendContainer.addChild(iobPredictLegendLabel);
-					iobPredictLegendContainer.validate();
-					//Hit Area
-					iobPredictLegendHitArea = new Quad(iobPredictLegendContainer.width, iobPredictLegendContainer.height, 0xFF0000);
-					iobPredictLegendHitArea.alpha = 0;
-					iobPredictLegendContainer.addChild(iobPredictLegendHitArea);
-					iobPredictLegendContainer.validate();
-					iobPredictLegendHitArea.x = iobPredictLegendHitArea.y = 0;
-					
-					iobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onIOBPredictionExplanation);
-					
-					if (preferredPrediction == "IOB")
-						predictionsLegendsContainer.addChildAt(iobPredictLegendContainer, 0);
-					else
-						predictionsLegendsContainer.addChild(iobPredictLegendContainer);
-				}
-				
-				headerProperties.centerItems = new <DisplayObject>[
-					predictionsLegendsContainer
-				];
 			}
 			
 			//Join all predictions
@@ -4021,21 +4155,31 @@ package ui.chart
 			{
 				if (preferredPrediction == "COB")
 				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
 				}
 				else if (preferredPrediction == "UAM")
 				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
 				}
 				else if (preferredPrediction == "IOB")
 				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+				}
+				else if (preferredPrediction == "ZT")
+				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
 				}
 			}
 			else
@@ -4051,6 +4195,10 @@ package ui.chart
 				else if (preferredPrediction == "IOB")
 				{
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+				}
+				else if (preferredPrediction == "ZT")
+				{
+					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
 				}
 			}
 			
@@ -4508,6 +4656,24 @@ package ui.chart
 			}
 		}
 		
+		private function onZTPredictionExplanation(e:TouchEvent):void
+		{	
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			var touch:Touch = e.getTouch(stage);
+			
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				displayPredictionLegendExplanationCallout
+				(
+					ztPredictLegendContainer, 
+					ModelLocator.resourceManagerInstance.getString('chartscreen','ZT_prediction_curve_explanation_title'),
+					ModelLocator.resourceManagerInstance.getString('chartscreen','ZT_prediction_curve_explanation_content') + (numDifferentPredictionsDisplayed > 1 && preferredPrediction == "ZTM" ? "\n\n" + ModelLocator.resourceManagerInstance.getString('chartscreen','default_prediction_explanation') : "")
+				);
+			}
+		}
+		
 		private function disposePredictionsHeader():void
 		{
 			if (cobPredictLegendLabel != null)
@@ -4597,6 +4763,35 @@ package ui.chart
 				iobPredictLegendContainer = null;
 			}
 			
+			if (ztPredictLegendLabel != null)
+			{
+				ztPredictLegendLabel.removeFromParent();
+				ztPredictLegendLabel.dispose();
+				ztPredictLegendLabel = null;
+			}
+			
+			if (ztPredictLegendColorQuad != null)
+			{
+				ztPredictLegendColorQuad.removeFromParent();
+				ztPredictLegendColorQuad.dispose();
+				ztPredictLegendColorQuad = null;
+			}
+			
+			if (ztPredictLegendHitArea != null)
+			{
+				ztPredictLegendHitArea.removeFromParent();
+				ztPredictLegendHitArea.dispose();
+				ztPredictLegendHitArea = null;
+			}
+			
+			if (ztPredictLegendContainer != null)
+			{
+				ztPredictLegendContainer.removeEventListener(TouchEvent.TOUCH, onZTPredictionExplanation);
+				ztPredictLegendContainer.removeFromParent();
+				ztPredictLegendContainer.dispose();
+				ztPredictLegendContainer = null;
+			}
+			
 			if (!predictionPillExplanationEnabled)
 			{
 				if (predictionExplanationLabel != null)
@@ -4645,18 +4840,21 @@ package ui.chart
 			}
 		}
 		
-		private function redrawPredictions(forceIOBCOBRefresh:Boolean = false):void
+		private function redrawPredictions(forceIOBCOBRefresh:Boolean = false, externalAPSRequest:Boolean = false):void
 		{
 			//First validation
-			if (!predictionsEnabled || predictionsMainGlucoseDataPoints.length == 0 || predictionsScrollerGlucoseDataPoints.length == 0 || predictionsDelimiter == null || dummyModeActive || !SystemUtil.isApplicationActive)
+			if (!externalAPSRequest && !predictionsEnabled)
 			{
-				//There's no current predictions drawn on the chart so no need to redraw anything
-				return;
+				if (!predictionsEnabled || predictionsMainGlucoseDataPoints.length == 0 || predictionsScrollerGlucoseDataPoints.length == 0 || predictionsDelimiter == null || dummyModeActive || !SystemUtil.isApplicationActive)
+				{
+					//There's no current predictions drawn on the chart so no need to redraw anything
+					return;
+				}
 			}
 			
 			//Second validation
 			var now:Number = new Date().valueOf();
-			if (now - lastPredictionsRedrawTimestamp < 500)
+			if (now - lastPredictionsRedrawTimestamp < 500 && !externalAPSRequest)
 			{
 				//Already redrawn less then 0.5 seccons ago. No need to redraw again.
 				return;
@@ -5107,31 +5305,37 @@ package ui.chart
 			widestPreditctionPill = Math.max(widestPreditctionPill, predictionsTimeFramePill.width);
 			
 			//IOB/COB Toggle
-			if (predictionsIOBCOBCheck != null) predictionsIOBCOBCheck.removeFromParent(true);
-			predictionsIOBCOBCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true");
-			predictionsIOBCOBCheck.paddingTop = predictionsIOBCOBCheck.paddingBottom = 3;
-			predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
-			if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.removeFromParent(true);
-			predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
-			predictionsIOBCOBPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-			predictionsIOBCOBPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-			predictionsContainer.addChild(predictionsIOBCOBPill);
-			
-			widestPreditctionPill = Math.max(widestPreditctionPill, predictionsIOBCOBPill.width);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true")
+			{
+				if (predictionsIOBCOBCheck != null) predictionsIOBCOBCheck.removeFromParent(true);
+				predictionsIOBCOBCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true");
+				predictionsIOBCOBCheck.paddingTop = predictionsIOBCOBCheck.paddingBottom = 3;
+				predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
+				if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.removeFromParent(true);
+				predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
+				predictionsIOBCOBPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsIOBCOBPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsContainer.addChild(predictionsIOBCOBPill);
+				
+				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsIOBCOBPill.width);
+			}
 			
 			//Single Prediction Curve Toggle
-			if (predictionsSingleCurveCheck != null) predictionsSingleCurveCheck.removeFromParent(true);
-			predictionsSingleCurveCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED) == "true");
-			predictionsSingleCurveCheck.paddingTop = predictionsSingleCurveCheck.paddingBottom = 3;
-			predictionsSingleCurveCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsSingleCurveChanged);
-			
-			if (predictionsSingleCurvePill != null) predictionsSingleCurvePill.removeFromParent(true);
-			predictionsSingleCurvePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','single_prediction_curve_label'), predictionsSingleCurveCheck);
-			predictionsSingleCurvePill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-			predictionsSingleCurvePill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-			predictionsContainer.addChild(predictionsSingleCurvePill);
-			
-			widestPreditctionPill = Math.max(widestPreditctionPill, predictionsSingleCurvePill.width);
+			if (!Forecast.externalLoopAPS)
+			{
+				if (predictionsSingleCurveCheck != null) predictionsSingleCurveCheck.removeFromParent(true);
+				predictionsSingleCurveCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED) == "true");
+				predictionsSingleCurveCheck.paddingTop = predictionsSingleCurveCheck.paddingBottom = 3;
+				predictionsSingleCurveCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsSingleCurveChanged);
+				
+				if (predictionsSingleCurvePill != null) predictionsSingleCurvePill.removeFromParent(true);
+				predictionsSingleCurvePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','single_prediction_curve_label'), predictionsSingleCurveCheck);
+				predictionsSingleCurvePill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsSingleCurvePill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsContainer.addChild(predictionsSingleCurvePill);
+				
+				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsSingleCurvePill.width);
+			}
 			
 			//Predictions Output
 			if (predictionsEnabled)
@@ -5584,6 +5788,14 @@ package ui.chart
 				rawDataContainer.x = mainChart.x;
 		}
 		
+		private function onAPSPredictionRetrieved(e:PredictionEvent):void
+		{
+			if (!SystemUtil.isApplicationActive || dummyModeActive)
+				return;
+			
+			redrawPredictions(false, true);
+		}
+		
 		private function disposePredictionsPills():void
 		{
 			if (predictedEventualBGPill != null)
@@ -5767,6 +5979,31 @@ package ui.chart
 				predictionsIOBCOBPill.removeFromParent();
 				predictionsIOBCOBPill.dispose();
 				predictionsIOBCOBPill = null;
+			}
+			
+			if (predictionsSingleCurveCheck != null)
+			{
+				predictionsSingleCurveCheck.removeEventListener(starling.events.Event.CHANGE, onPredictionsSingleCurveChanged);
+				predictionsSingleCurveCheck.removeFromParent();
+				predictionsSingleCurveCheck.dispose();
+				predictionsSingleCurveCheck = null;
+			}
+			
+			if (predictionsSingleCurvePill != null)
+			{
+				if (predictionsSingleCurvePill.pillBackground != null)
+				{
+					predictionsSingleCurvePill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				if (predictionsSingleCurvePill.titleLabel != null)
+				{
+					predictionsSingleCurvePill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				predictionsSingleCurvePill.removeFromParent();
+				predictionsSingleCurvePill.dispose();
+				predictionsSingleCurvePill = null;
 			}
 			
 			if (incompleteProfileWarningLabel != null)
@@ -7365,6 +7602,10 @@ package ui.chart
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCaibrationReceived);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground);
 			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved);
+			if (predictionsEnabled && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				Forecast.instance.removeEventListener(PredictionEvent.APS_RETRIEVED, onAPSPredictionRetrieved);
+			}
 			
 			var i:int;
 			

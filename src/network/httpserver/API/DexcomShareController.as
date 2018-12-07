@@ -1,11 +1,15 @@
 package network.httpserver.API
 {
 	import flash.net.URLVariables;
+	import flash.utils.setTimeout;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
+	import database.CommonSettings;
 	
 	import network.httpserver.ActionController;
+	
+	import services.NightscoutService;
 	
 	import utils.SpikeJSON;
 	import utils.TimeSpan;
@@ -112,6 +116,12 @@ package network.httpserver.API
 				response = "[]";
 			}
 			
+			//If it's a Loop user grab IOB/COB/Predictions from NS 15 seconds from now
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				setTimeout(NightscoutService.getPropertiesV2Endpoint, 15000, true);	
+			}
+				
 			return responseSuccess(response);
 		}
 		

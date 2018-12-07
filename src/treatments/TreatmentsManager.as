@@ -1269,7 +1269,7 @@ package treatments
 			return output;
 		}
 		
-		private static function calcDeviations(time:Number):Object
+		public static function calcDeviations(time:Number):Object
 		{
 			// We make a copy of all readings and remove the ones that arrived after the desired COB time.
 			// This makes the OpenAPS COB algorithm compatible with retro values.
