@@ -783,7 +783,6 @@ package model
 			if (predictionData.COB != null)
 			{
 				if (defaultPredictionCurve == "" || 
-					//(lastCalibration != null && now - lastCalibration.timestamp < TimeSpan.TIME_10_SECONDS) ||
 					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
 				)
 				{

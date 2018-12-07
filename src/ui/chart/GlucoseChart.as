@@ -3646,7 +3646,7 @@ package ui.chart
 			{
 				unformattedUAMPredictionsList = unformattedPredictions.UAM.concat();
 				currentReadingValue = unformattedUAMPredictionsList.shift(); //Remove first element
-				if (preferredPrediction == "") preferredPrediction = "UAM";
+				
 				predictionsFound = true;
 				uamPredictionsEnabled = true;
 				numDifferentPredictionsDisplayed++;
@@ -3657,14 +3657,7 @@ package ui.chart
 			{
 				unformattedCOBPredictionsList = unformattedPredictions.COB.concat();
 				currentReadingValue = unformattedCOBPredictionsList.shift(); //Remove first element
-				//if (preferredPrediction == "" || ) preferredPrediction = "COB";
-				if (preferredPrediction == "" || 
-					//nowTimestamp - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS ||
-					(!isNaN(predictedUAMBG) && !isNaN(predictedCOBBG) && predictedCOBBG > predictedUAMBG)
-				)
-				{
-					preferredPrediction = "COB";
-				}
+				
 				predictionsFound = true;
 				cobPredictionsEnabled = true;
 				numDifferentPredictionsDisplayed++;
@@ -3673,22 +3666,15 @@ package ui.chart
 			//IOB Predictions
 			if (unformattedPredictions != null && unformattedPredictions.IOB != null)
 			{
-				var currentDelta:Number = Number(BgGraphBuilder.unitizedDeltaString(false, true));
-				
 				unformattedIOBPredictionsList = unformattedPredictions.IOB.concat();
 				currentReadingValue = unformattedIOBPredictionsList.shift(); //Remove first element
-				if (preferredPrediction == "" || 
-					(!isNaN(predictedUAMBG) && !isNaN(predictedIOBBG) && predictedIOBBG > predictedUAMBG && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB") || 
-					(nowTimestamp - lastCalibrationTimestamp < TimeSpan.TIME_10_SECONDS && preferredPrediction != "COB") || 
-					(currentIOB <= 0 && !isNaN(currentDelta) && currentDelta <= 3 && preferredPrediction != "COB")
-				)
-				{
-					preferredPrediction = "IOB";
-				}
+				
 				predictionsFound = true;
 				iobPredictionsEnabled = true;
 				numDifferentPredictionsDisplayed++;
 			}
+			
+			preferredPrediction = Forecast.determineDefaultPredictionCurve(unformattedPredictions);
 			
 			//Validate
 			if (!predictionsFound)
