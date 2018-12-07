@@ -387,39 +387,40 @@ package treatments
 			var currentProfile:Profile;
 			
 			var requestedDate:Date = new Date(requestedTimestamp);
-			var requestedHours:Number = requestedDate.hours;
-			var requestedMinutes:Number = requestedDate.minutes;
-			var numberOfProfiles:int = profilesList.length;
+			var requestedDateAdjusted:Date = new Date();
+			requestedDateAdjusted.hours = requestedDate.hours;
+			requestedDateAdjusted.minutes = requestedDate.minutes;
+			requestedDateAdjusted.seconds = requestedDate.seconds;
+			requestedDateAdjusted.milliseconds = requestedDate.milliseconds;
+			var requestedTimestampAdjusted:Number = requestedDateAdjusted.valueOf();
 			
+			var numberOfProfiles:int = profilesList.length;
 			if (numberOfProfiles == 0)
 			{
 				createDefaultProfile();
+				numberOfProfiles = profilesList.length;
 			}
 			
-			for(var i:int = numberOfProfiles - 1 ; i >= 0; i--)
+			for (var i:int = numberOfProfiles - 1 ; i >= 0; i--)
 			{
 				var profile:Profile = profilesList[i] as Profile;
 				if (profile != null)
 				{	
 					var profileDate:Date = getProfileDate(profile);
-					var profileHours:Number = profileDate.hours;
-					var profileMinutes:Number = profileDate.minutes;
+					var profileTimestamp:Number = profileDate.valueOf();
 					
-					if (requestedHours >= profileHours || (requestedHours == profileHours && requestedMinutes >= profileMinutes))
+					if (requestedTimestampAdjusted >= profileTimestamp)
 					{
 						currentProfile = profile;
 						break;
 					}
 				}
 			}
-				
-			/*var profileTimestamp:Number = profileDate.valueOf();
-				
-			if (requestedTimestamp >= profileTimestamp)
+			
+			if (currentProfile == null)
 			{
-				currentProfile = profile;
-				break;
-			}*/
+				currentProfile = createDefaultProfile();
+			}
 			
 			return currentProfile;
 		}
