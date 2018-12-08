@@ -3963,34 +3963,31 @@ package ui.chart
 			
 			//Update predictions pill
 			predictionsPill.isPredictive = true;
-			var predictionAvailableDuration:Number = predictionsLengthInMinutes;
+			
+			var predictionAvailableDuration:Number = Math.max(finalCOBPredictionsList.length, finalUAMPredictionsList.length, finalZTPredictionsList.length, finalIOBPredictionsList.length) * 5;
+			if (isNaN(predictionAvailableDuration))
+			{
+				predictionAvailableDuration = predictionsLengthInMinutes;
+			}
 			
 			if (preferredPrediction == "COB")
 			{
 				var numCOBPredictions:uint = finalCOBPredictionsList.length;
-				predictionAvailableDuration = numCOBPredictions * 5;
-				
 				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			else if (preferredPrediction == "UAM")
 			{
 				var numUAMPredictions:uint = finalUAMPredictionsList.length;
-				predictionAvailableDuration = numUAMPredictions * 5;
-				
 				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			else if (preferredPrediction == "ZTM")
 			{
 				var numZTPredictions:uint = finalZTPredictionsList.length;
-				predictionAvailableDuration = numZTPredictions * 5;
-				
 				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalZTPredictionsList[numZTPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalZTPredictionsList[numZTPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			else 
 			{
 				var numIOBPredictions:uint = finalIOBPredictionsList.length;
-				predictionAvailableDuration = numIOBPredictions * 5;
-				
 				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			
