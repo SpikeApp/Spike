@@ -58,6 +58,8 @@ package treatments
 	import starling.display.Image;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import treatments.food.Food;
 	import treatments.food.ui.FoodManager;
@@ -257,6 +259,7 @@ package treatments
 		{
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 		}
 		
 		private static function getInitialSettings():void
@@ -1203,11 +1206,12 @@ package treatments
 			
 			if (bolusWizardCallout != null) bolusWizardCallout.dispose();
 			bolusWizardCallout = Callout.show(bwTotalScrollContainer, calloutPositionHelper);
+			bolusWizardCallout.addEventListener(starling.events.Event.CLOSE, onCloseCallout);
 			bolusWizardCallout.disposeContent = false;
 			bolusWizardCallout.paddingBottom = 15;
 			bolusWizardCallout.paddingRight = 10;
-			bolusWizardCallout.closeOnTouchBeganOutside = false;
-			bolusWizardCallout.closeOnTouchEndedOutside = false;
+			bolusWizardCallout.closeOnTouchBeganOutside = true;
+			bolusWizardCallout.closeOnTouchEndedOutside = true;
 			bolusWizardCallout.height = finalCalloutHeight;
 			bolusWizardCallout.validate();
 			bwWizardScrollContainer.height = finalCalloutHeight - 60;
@@ -2473,14 +2477,63 @@ package treatments
 			disposeComponents();
 		}
 		
+		private static function onStarlingResize(event:ResizeEvent):void 
+		{
+			if (!SystemUtil.isApplicationActive)
+			{
+				SystemUtil.executeWhenApplicationIsActive(onStarlingResize, null);
+				return;
+			}
+			
+			if (calloutPositionHelper != null)
+			{
+				calloutPositionHelper.x = Constants.stageWidth / 2;
+				if (!Constants.isPortrait)
+				{
+					yPos = 0;
+					calloutPositionHelper.y = yPos;
+				}
+				else
+				{
+					if (!isNaN(Constants.headerHeight))
+						yPos = Constants.headerHeight - 10;
+					else
+					{
+						if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
+							yPos = 68;
+						else
+							yPos = Constants.isPortrait ? 98 : 68;
+					}
+					
+					calloutPositionHelper.y = yPos;
+				}
+			}
+			
+			if (bolusWizardCallout != null)
+			{
+				var contentOriginalHeight:Number = bwMainContainer.height + 60;
+				var suggestedCalloutHeight:Number = Constants.stageHeight - yPos - 10;
+				var finalCalloutHeight:Number = contentOriginalHeight > suggestedCalloutHeight ?  suggestedCalloutHeight : contentOriginalHeight;
+				
+				bolusWizardCallout.height = finalCalloutHeight;
+				bolusWizardCallout.validate();
+				bwWizardScrollContainer.height = finalCalloutHeight - 60;
+				bwWizardScrollContainer.maxHeight = finalCalloutHeight - 60;
+				bwTotalScrollContainer.height = finalCalloutHeight - 60;
+				bwTotalScrollContainer.maxHeight = finalCalloutHeight - 60;
+			}
+		}
+		
 		private static function disposeComponents():void
 		{
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceivedMaster);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceivedFollower);
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			if (bolusWizardCallout != null)
 			{
 				bolusWizardCallout.close();
+				bolusWizardCallout.removeEventListener(starling.events.Event.CLOSE, onCloseCallout);
 			}
 			
 			if(bwExtendedBolusSoundAccessoriesList != null && bwExtendedBolusSoundAccessoriesList.length > 0)
