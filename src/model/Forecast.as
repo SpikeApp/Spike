@@ -929,9 +929,36 @@ package model
 			}
 			
 			//ZT Predictions
-			if (predictionData.ZT != null && defaultPredictionCurve == "")
+			if (predictionData.ZT != null)
 			{
-				defaultPredictionCurve = "ZTM";
+				if (defaultPredictionCurve == "")
+				{
+					defaultPredictionCurve = "ZTM";
+				}
+				
+				if (defaultPredictionCurve == "IOB")
+				{
+					if (predictionData.ZT.length > predictionData.IOB.length)
+					{
+						defaultPredictionCurve = "ZTM";
+					}
+				}
+				
+				if (defaultPredictionCurve == "UAM")
+				{
+					if (predictionData.ZT.length > predictionData.UAM.length)
+					{
+						defaultPredictionCurve = "ZTM";
+					}
+				}
+				
+				if (defaultPredictionCurve == "COB")
+				{
+					if (predictionData.ZT.length > predictionData.COB.length)
+					{
+						defaultPredictionCurve = "ZTM";
+					}
+				}
 			}
 			
 			return defaultPredictionCurve;

@@ -4197,7 +4197,7 @@ package ui.chart
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
 				}
-				else if (preferredPrediction == "ZT")
+				else if (preferredPrediction == "ZTM")
 				{
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
@@ -4219,7 +4219,7 @@ package ui.chart
 				{
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
 				}
-				else if (preferredPrediction == "ZT")
+				else if (preferredPrediction == "ZTM")
 				{
 					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
 				}
