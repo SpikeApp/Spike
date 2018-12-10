@@ -15,7 +15,7 @@ package ui.popups
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
-	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	
 	import model.ModelLocator;
@@ -32,6 +32,7 @@ package ui.popups
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	import utils.TimeSpan;
 
 	[ResourceBundle("globaltranslations")]
@@ -161,28 +162,44 @@ package ui.popups
 			snoozePickerList.selectedIndex = selectedSnoozeIndex;
 			mainContainer.addChild(snoozePickerList);
 			
+			/* Actions Label */
+			var actionsLabel:Label = LayoutFactory.createLabel("Select Alarm", HorizontalAlign.CENTER);
+			mainContainer.addChild(actionsLabel);
+			
 			/* Action Buttons */
-			var actionButtonsLayout:HorizontalLayout = new HorizontalLayout();
+			var actionButtonsLayout:VerticalLayout = new VerticalLayout();
+			actionButtonsLayout.horizontalAlign = HorizontalAlign.CENTER;
 			actionButtonsLayout.gap = 10;
 			
 			var actionButtonsContainer:LayoutGroup = new LayoutGroup();
 			actionButtonsContainer.layout = actionButtonsLayout;
 			mainContainer.addChild(actionButtonsContainer);
 			
-			//Cancel Button
-			var cancelButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label").toUpperCase());
-			cancelButton.addEventListener(Event.TRIGGERED, onCancel);
-			actionButtonsContainer.addChild(cancelButton);
-			
 			//All Button
-			var allButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"all_button_label").toUpperCase());
+			var allButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"all_button_label"));
 			allButton.addEventListener(Event.TRIGGERED, onAll);
 			actionButtonsContainer.addChild(allButton);
 			
-			//This Button
-			var okButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"this_button_label").toUpperCase());
-			okButton.addEventListener(Event.TRIGGERED, onThis);
-			actionButtonsContainer.addChild(okButton);
+			var allHighButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"all_high_button_label"));
+			allHighButton.addEventListener(Event.TRIGGERED, onAllHigh);
+			actionButtonsContainer.addChild(allHighButton);
+			
+			var allLowButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"all_low_button_label"));
+			allLowButton.addEventListener(Event.TRIGGERED, onAllLow);
+			actionButtonsContainer.addChild(allLowButton);
+			
+			var bottomRowContainer:LayoutGroup = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.CENTER, VerticalAlign.TOP, 5);
+			mainContainer.addChild(bottomRowContainer);
+			
+			//Cancel Button
+			var cancelButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"cancel_button_label").toUpperCase());
+			cancelButton.addEventListener(Event.TRIGGERED, onCancel);
+			bottomRowContainer.addChild(cancelButton);
+			
+			//This Alarm
+			var thisButton:Button = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('alarmservice',"this_button_label").toUpperCase());
+			thisButton.addEventListener(Event.TRIGGERED, onThis);
+			bottomRowContainer.addChild(thisButton);
 			
 			/* Callout Position Helper Creation */
 			calculatePositionHelper();
@@ -203,7 +220,22 @@ package ui.popups
 			}
 			
 			positionHelper.x = Constants.stageWidth / 2;
-			positionHelper.y = 70;
+			
+			var yPos:Number = 0;
+			if (!isNaN(Constants.headerHeight))
+				yPos = Constants.headerHeight - 10;
+			else
+			{
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
+					yPos = 68;
+				else
+					yPos = Constants.isPortrait ? 98 : 68;
+			}
+			
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+				yPos = 10;
+			
+			positionHelper.y = yPos;
 		}
 		
 		public static function closeCallout():void
@@ -276,6 +308,38 @@ package ui.popups
 			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.CALIBRATION_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
 			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.FAST_DROP_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","fast_drop_alert_notification_alert_text"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
 			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.FAST_RISE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","fast_rise_alert_notification_alert_text"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+		}
+		
+		private static function onAllHigh(e:Event):void
+		{
+			_instance.dispatchEventWith(CLOSED, false, { index: snoozePickerList.selectedIndex });
+			
+			AlarmService.snoozeVeryHighAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeHighAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeFastRiseAlert(snoozePickerList.selectedIndex);
+			
+			SystemUtil.executeWhenApplicationIsActive (closeCallout );
+			
+			//Notify Services (ex: IFTTT)
+			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_HIGH_GLUCOSE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.HIGH_GLUCOSE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.FAST_RISE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","fast_rise_alert_notification_alert_text"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+		}
+		
+		private static function onAllLow(e:Event):void
+		{
+			_instance.dispatchEventWith(CLOSED, false, { index: snoozePickerList.selectedIndex });
+			
+			AlarmService.snoozeLowAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeVeyLowAlert(snoozePickerList.selectedIndex);
+			AlarmService.snoozeFastDropAlert(snoozePickerList.selectedIndex);
+			
+			SystemUtil.executeWhenApplicationIsActive (closeCallout );
+			
+			//Notify Services (ex: IFTTT)
+			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.LOW_GLUCOSE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.URGENT_LOW_GLUCOSE_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
+			AlarmService.instance.dispatchEvent(new AlarmServiceEvent(AlarmServiceEvent.FAST_DROP_SNOOZED, false, false, { type: ModelLocator.resourceManagerInstance.getString("alarmservice","fast_drop_alert_notification_alert_text"), time: AlarmService.snoozeValueMinutes[snoozePickerList.selectedIndex] }));
 		}
 		
 		private static function onCancel(e:Event):void
