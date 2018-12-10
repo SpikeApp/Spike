@@ -16,12 +16,14 @@ package ui.screens.display.readings
 	import feathers.data.ArrayCollection;
 	import feathers.data.ListCollection;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
 	import starling.display.Canvas;
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.RenderTexture;
@@ -40,9 +42,13 @@ package ui.screens.display.readings
 	import utils.TimeSpan;
 	
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("glucosemanagementscreen")]
 
 	public class ReadingsManagementList extends SpikeList 
 	{
+		/* Constants */
+		private const MAX_READINGS:uint = 500;
+		
 		/* Display Objects */
 		private var urgentHighCanvas:Canvas;
 		private var urgentHighTexture:RenderTexture;
@@ -54,6 +60,7 @@ package ui.screens.display.readings
 		private var lowTexture:RenderTexture;
 		private var urgentLowCanvas:Canvas;
 		private var urgentLowTexture:RenderTexture;
+		private var excessReadingsWarningLabel:Label;
 		
 		/* Objects */
 		private var accessoriesList:Array = [];
@@ -178,16 +185,28 @@ package ui.screens.display.readings
 			
 			// Data
 			var dataList:Array = [];
-			var readingsList:Array = ModelLocator.bgReadings;
+			var readingsList:Array = ModelLocator.bgReadings.concat();
+			var numberOfReadings:uint = readingsList.length ;
+			if (numberOfReadings > MAX_READINGS)
+			{
+				//Trim excess readings
+				readingsList = readingsList.slice(0, MAX_READINGS);
+				numberOfReadings = MAX_READINGS;
+				
+				//Add a warning header
+				dataList.push( { label: "", isWarning: true } );
+			}
 			
-			for(var i:int = readingsList.length - 1 ; i >= 0; i--)
+			for(var i:int = numberOfReadings - 1 ; i >= 0; i--)
 			{
 				//Glucose reading properties
 				var reading:BgReading = readingsList[i];
+				if (reading == null)
+					continue;
+				
 				var glucoseValue:String = BgGraphBuilder.unitizedString(reading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 				var glucoseValueNumber:Number = Number(glucoseValue);
 				var glucoseTime:Date = new Date(reading.timestamp);
-				
 				
 				//Delta
 				var glucoseValueProperties:Object = GlucoseFactory.getGlucoseOutput(reading.calculatedValue);
@@ -274,24 +293,38 @@ package ui.screens.display.readings
 						itemRenderer.paddingRight = 30;
 				}
 				
-				itemRenderer.accessoryFunction = function(item:Object):Button
+				itemRenderer.accessoryFunction = function(item:Object):DisplayObject
 				{
-					var deleteButton:Button = accessoryDictionary[ item ];
-					if(!deleteButton)
+					if (item.isWarning)
 					{
-						deleteButton = new Button();
-						var buttonIconTexture:Texture = MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture;
-						var buttonIconImage:Image = new Image(buttonIconTexture);
-						deleteButton.defaultIcon = buttonIconImage;
-						deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
-						deleteButton.pivotX = -5;
-						deleteButton.addEventListener(Event.TRIGGERED, onDeleteReading);
-						accessoryDictionary[ item ] = deleteButton;
-						buttonIconsTextures.push(buttonIconTexture);
-						buttonIconsImages.push(buttonIconImage);
+						if (excessReadingsWarningLabel == null)
+						{
+							excessReadingsWarningLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('glucosemanagementscreen','max_number_of_readings_reached').replace("{MAX_READINGS_DO_NOT_TRANSLATE_THIS_WORD}", String(MAX_READINGS)).replace("{MAX_READINGS_DO_NOT_TRANSLATE_THIS_WORD}", String(MAX_READINGS)), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true, 0xFF0000);
+							excessReadingsWarningLabel.wordWrap = true;
+							excessReadingsWarningLabel.width = width;
+						}
+						
+						return excessReadingsWarningLabel;
 					}
-					
-					return deleteButton;
+					else
+					{
+						var deleteButton:Button = accessoryDictionary[ item ];
+						if(!deleteButton)
+						{
+							deleteButton = new Button();
+							var buttonIconTexture:Texture = MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture;
+							var buttonIconImage:Image = new Image(buttonIconTexture);
+							deleteButton.defaultIcon = buttonIconImage;
+							deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+							deleteButton.pivotX = -5;
+							deleteButton.addEventListener(Event.TRIGGERED, onDeleteReading);
+							accessoryDictionary[ item ] = deleteButton;
+							buttonIconsTextures.push(buttonIconTexture);
+							buttonIconsImages.push(buttonIconImage);
+						}
+						
+						return deleteButton;
+					}
 				}
 				
 				return itemRenderer;
@@ -475,6 +508,13 @@ package ui.screens.display.readings
 						(iconsList[i] as SubTexture).parent.dispose();
 					iconsList[i] = null;
 				}
+			}
+			
+			if (excessReadingsWarningLabel != null)
+			{
+				excessReadingsWarningLabel.removeFromParent();
+				excessReadingsWarningLabel.dispose();
+				excessReadingsWarningLabel = null;
 			}
 			
 			super.dispose();
