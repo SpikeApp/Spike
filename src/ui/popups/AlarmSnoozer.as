@@ -163,7 +163,7 @@ package ui.popups
 			mainContainer.addChild(snoozePickerList);
 			
 			/* Actions Label */
-			var actionsLabel:Label = LayoutFactory.createLabel("Select Alarm", HorizontalAlign.CENTER);
+			var actionsLabel:Label = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('alarmservice',"select_alarm_label"), HorizontalAlign.CENTER);
 			mainContainer.addChild(actionsLabel);
 			
 			/* Action Buttons */
