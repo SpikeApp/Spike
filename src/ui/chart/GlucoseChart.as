@@ -406,6 +406,10 @@ package ui.chart
 		private var ztPredictLegendLabel:Label;
 		private var ztPredictLegendColorQuad:Quad;
 		private var ztPredictLegendHitArea:Quad;
+
+		private var lastPredictionUpdate:Number;
+
+		private var lastPredictionUpdateTimePill:ChartTreatmentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -3530,7 +3534,7 @@ package ui.chart
 			{
 				predictionsPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'), false);
 				predictionsPill.y = glucoseSlopePill.y + glucoseTimeAgoPill.height + pillPadding;
-				predictionsPill.setValue(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_off_label'));
+				predictionsPill.setValue(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true" ? ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') : ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_off_label'));
 				predictionsPill.visible = false;
 				predictionsPill.addEventListener(TouchEvent.TOUCH, onDisplayMorePredictions);
 				addChild(predictionsPill);
@@ -3634,10 +3638,32 @@ package ui.chart
 			
 			//All Predictions
 			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes, forceNewIOBCOB);
+			if (unformattedPredictions == null)
+			{
+				//Reset all prediction variables
+				lastPredictionUpdate = Number.NaN;
+				predictedEventualBG = Number.NaN;
+				predictedBGImpact = Number.NaN;
+				predictedDeviation = Number.NaN;
+				predictedCarbImpact = Number.NaN;
+				predictedMinimumBG = Number.NaN;
+				predictedCOBBG = Number.NaN;
+				predictedIOBBG = Number.NaN;
+				predictedUAMBG = Number.NaN;
+				predictionsIncompleteProfile = false;
+				currentReadingValue = Number.NaN;
+				
+				//Update predictions pill
+				predictionsPill.setValue(ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+				
+				//Return empty array
+				return finalTotalPredictionsList;
+			}
 			
 			//Update Useful Properties
 			if (unformattedPredictions != null)
 			{
+				lastPredictionUpdate = unformattedPredictions.lastUpdate != null ? unformattedPredictions.lastUpdate : Number.NaN;
 				predictedEventualBG = unformattedPredictions.eventualBG != null ? unformattedPredictions.eventualBG : Number.NaN;
 				predictedBGImpact = unformattedPredictions.bgImpact != null ? unformattedPredictions.bgImpact : Number.NaN;
 				predictedDeviation = unformattedPredictions.deviation != null ? unformattedPredictions.deviation : Number.NaN;
@@ -5332,6 +5358,29 @@ package ui.chart
 				predictionsContainer.addChild(predictionsSingleCurvePill);
 				
 				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsSingleCurvePill.width);
+			}
+			
+			//Last Update
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				if (!isNaN(lastPredictionUpdate))
+				{
+					if (lastPredictionUpdateTimePill != null) lastPredictionUpdateTimePill.removeFromParent(true);
+					lastPredictionUpdateTimePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','last_nightscout_prediction_update_label'));
+					
+					var lastUpdateFormated:String = TimeSpan.formatHoursMinutesFromSecondsChart((new Date().valueOf() - lastPredictionUpdate) / 1000, true, true, false);
+					//lastUpdateFormated.replace(" ", "");
+					if (lastUpdateFormated != ModelLocator.resourceManagerInstance.getString('chartscreen','now'))
+					{
+						lastUpdateFormated += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
+					}
+					
+					lastPredictionUpdateTimePill.setValue(lastUpdateFormated);
+					lastPredictionUpdateTimePill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsContainer.addChild(lastPredictionUpdateTimePill);
+					
+					widestPreditctionPill = Math.max(widestPreditctionPill, lastPredictionUpdateTimePill.width);
+				}
 			}
 			
 			//Predictions Output

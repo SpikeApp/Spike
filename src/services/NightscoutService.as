@@ -1871,6 +1871,8 @@ package services
 									}
 								}
 								
+								openAPSPredictions.lastUpdate = new Date().valueOf();
+								
 								Forecast.externalLoopAPS = false;
 								Forecast.setAPSPredictions(openAPSPredictions);
 							}
@@ -1884,6 +1886,8 @@ package services
 								loopPredictions.IOB = propertiesV2Data.loop.lastPredicted.values;
 								(loopPredictions.IOB as Array).shift();
 								//(loopPredictions.IOB as Array).shift();
+								
+								loopPredictions.lastUpdate = new Date().valueOf();
 								
 								Forecast.externalLoopAPS = true;
 								Forecast.setAPSPredictions(loopPredictions);

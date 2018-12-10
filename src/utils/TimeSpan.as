@@ -113,7 +113,7 @@ package utils
 			return(h==0?"":(h<10 && prefixInHours?"0"+h.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label'):h.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label')))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small_abbreviation_label'):m.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small_abbreviation_label'));
 		}
 		
-		public static function formatHoursMinutesFromSecondsChart(secs:Number, prefixInHours:Boolean = true, prefixInMinutes:Boolean = true):String
+		public static function formatHoursMinutesFromSecondsChart(secs:Number, prefixInHours:Boolean = true, prefixInMinutes:Boolean = true, allowWhiteText:Boolean = true):String
 		{
 			var time:String;
 			var h:Number=Math.floor(secs/3600);
@@ -121,7 +121,7 @@ package utils
 			var s:Number=Math.floor((secs%3600)%60);
 			
 			if (h == 0)
-				time = (h==0?"":(h<10 && prefixInHours?"0"+h.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label'):h.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label')))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+" " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_abbreviation_label'):m.toString()+" " + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_abbreviation_label'));
+				time = (h==0?"":(h<10 && prefixInHours?"0"+h.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label'):h.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label')))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+ (allowWhiteText ? " " : "") + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_abbreviation_label'):m.toString()+ (allowWhiteText ? " " : "") + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_abbreviation_label'));
 			else 
 				time = (h==0?"":(h<10 && prefixInHours?"0"+h.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label'):h.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label')))+(m==0 && h==0?ModelLocator.resourceManagerInstance.getString('chartscreen','now'):m<10 && prefixInMinutes?"0"+m.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small_abbreviation_label'):m.toString()+ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small_abbreviation_label'));
 			
