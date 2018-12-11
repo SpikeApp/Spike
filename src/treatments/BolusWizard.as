@@ -2532,8 +2532,8 @@ package treatments
 			
 			if (bolusWizardCallout != null)
 			{
-				bolusWizardCallout.close();
 				bolusWizardCallout.removeEventListener(starling.events.Event.CLOSE, onCloseCallout);
+				bolusWizardCallout.close();
 			}
 			
 			if(bwExtendedBolusSoundAccessoriesList != null && bwExtendedBolusSoundAccessoriesList.length > 0)

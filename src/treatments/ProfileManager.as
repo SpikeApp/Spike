@@ -2,9 +2,13 @@ package treatments
 {
 	import flash.utils.Dictionary;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
+	
+	import ui.popups.AlertManager;
 	
 	import utils.Trace;
 	import utils.UniqueId;
@@ -15,6 +19,7 @@ package treatments
 		private static var insulinsMap:Dictionary = new Dictionary();
 		public static var profilesList:Array = [];
 		private static var profilesMap:Dictionary = new Dictionary();
+		private static var profilesMapByTime:Object = {};
 		private static var nightscoutCarbAbsorptionRate:Number = 0;
 		
 		public function ProfileManager()
@@ -96,6 +101,7 @@ package treatments
 						
 						profilesList.push(profile);
 						profilesMap[dbProfile.id] = profile;
+						profilesMapByTime[profile.time] = profile;
 					}
 					profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
 					
@@ -111,6 +117,89 @@ package treatments
 					createDefaultProfile();
 				}
 			}
+			
+			removeDuplicateProfiles();
+		}
+		
+		private static function removeDuplicateProfiles():void
+		{
+			var tempProfilesList:Object = {};
+			var tempProfilesArray:Array = [];
+			
+			var numberOfRealProfiles:uint = profilesList.length;
+			for (var i:int = 0; i < numberOfRealProfiles; i++) 
+			{
+				var realProfile:Profile = profilesList[i];
+				if (realProfile == null)
+				{
+					continue;
+				}
+				
+				if (tempProfilesList[realProfile.time] == null)
+				{
+					tempProfilesList[realProfile.time] = realProfile;
+				}
+				else
+				{
+					var tempProfile:Profile = tempProfilesList[realProfile.time];
+					if (tempProfile != null)
+					{
+						if 
+						(
+							(realProfile.timestamp >= tempProfile.timestamp && realProfile.insulinSensitivityFactors == "" && tempProfile.insulinSensitivityFactors == "")
+							||
+							(realProfile.timestamp >= tempProfile.timestamp && realProfile.insulinSensitivityFactors != "" && tempProfile.insulinSensitivityFactors != "")
+							||
+							(realProfile.insulinSensitivityFactors != "" && tempProfile.insulinSensitivityFactors == "")
+						)
+						{
+							Database.deleteProfileSynchronous(tempProfile);
+							
+							if (profilesMap[tempProfile.ID])
+							{
+								delete 	profilesMap[tempProfile.ID];
+							}
+							
+							if (profilesMapByTime[tempProfile.time])
+							{
+								delete 	profilesMapByTime[tempProfile.time];
+							}
+							
+							tempProfile = null;
+							
+							tempProfilesList[realProfile.time] = realProfile;
+						}
+						else
+						{
+							Database.deleteProfileSynchronous(realProfile);
+							
+							if (profilesMap[realProfile.ID])
+							{
+								delete 	profilesMap[realProfile.ID];
+							}
+							
+							if (profilesMapByTime[realProfile.time])
+							{
+								delete 	profilesMapByTime[realProfile.time];
+							}
+							
+							realProfile = null;
+						}
+					}
+				}
+			}
+			
+			for (var key:String in tempProfilesList)
+			{
+				var finalProfile:Profile = tempProfilesList[key];
+				if (finalProfile != null && finalProfile is Profile)
+				{
+					tempProfilesArray.push(finalProfile);
+				}
+			}
+			
+			profilesList = tempProfilesArray;
+			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
 		}
 		
 		public static function createDefaultProfile():Profile
@@ -135,6 +224,7 @@ package treatments
 			//Push to memory
 			profilesList.push(defaultProfile);
 			profilesMap[defaultProfile.ID] = defaultProfile;
+			profilesMapByTime[defaultProfile.time] = defaultProfile;
 			
 			//Save to Database
 			Database.insertProfileSynchronous(defaultProfile);
@@ -301,15 +391,27 @@ package treatments
 		{	
 			Trace.myTrace("ProfileManager.as", "insertProfile called!");
 			
-			//Push to memory
-			profilesList.push(profile);
-			profilesMap[profile.ID] = profile;
-			
-			//Save to Database
-			Database.insertProfileSynchronous(profile);
-			
-			//Sort profile list by time
-			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+			if (profilesMapByTime[profile.time] == null)
+			{
+				//Push to memory
+				profilesList.push(profile);
+				profilesMap[profile.ID] = profile;
+				profilesMapByTime[profile.time] = profile;
+				
+				//Save to Database
+				Database.insertProfileSynchronous(profile);
+				
+				//Sort profile list by time
+				profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+			}
+			else
+			{
+				AlertManager.showSimpleAlert
+				(
+					"Warning",
+					"Error creating profile! Found existing profile with the same start time."
+				);
+			}
 		}
 		
 		public static function deleteProfile(profile:Profile):void
@@ -329,6 +431,7 @@ package treatments
 						//Profile found. Remove it from Spike.
 						profilesList.removeAt(i);
 						profilesMap[profile.ID] = null;
+						profilesMapByTime[profile.time] = null;
 						
 						//Delete from database
 						Database.deleteProfileSynchronous(userProfile);

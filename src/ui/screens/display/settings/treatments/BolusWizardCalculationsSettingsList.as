@@ -84,6 +84,7 @@ package ui.screens.display.settings.treatments
 			insulinPrecisionPicker = LayoutFactory.createPickerList();
 			
 			var insulinPrecisionValuesList:ArrayCollection = new ArrayCollection();
+			insulinPrecisionValuesList.push( { label: "0.05" } );
 			insulinPrecisionValuesList.push( { label: "0.1" } );
 			insulinPrecisionValuesList.push( { label: "0.5" } );
 			insulinPrecisionValuesList.push( { label: "1.0" } );
@@ -91,12 +92,14 @@ package ui.screens.display.settings.treatments
 			insulinPrecisionPicker.popUpContentManager = new DropDownPopUpContentManager();
 			insulinPrecisionPicker.dataProvider = insulinPrecisionValuesList;
 			
-			if (insulinPrecisionValue == 0.1)
+			if (insulinPrecisionValue == 0.05)
 				insulinPrecisionPicker.selectedIndex = 0;
-			else if (insulinPrecisionValue == 0.5)
+			else if (insulinPrecisionValue == 0.1)
 				insulinPrecisionPicker.selectedIndex = 1;
-			else if (insulinPrecisionValue == 1)
+			else if (insulinPrecisionValue == 0.5)
 				insulinPrecisionPicker.selectedIndex = 2;
+			else if (insulinPrecisionValue == 1)
+				insulinPrecisionPicker.selectedIndex = 3;
 				
 			insulinPrecisionPicker.itemRendererFactory = function():IListItemRenderer
 			{
