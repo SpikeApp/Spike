@@ -310,6 +310,7 @@ package ui.chart
 		private var userInfoErrorLabel:Label;
 		private var spikeMasterPhoneBatteryPill:ChartTreatmentPill;
 		private var spikeMasterTransmitterBatteryPill:ChartTreatmentPill;
+		private var bagePill:ChartTreatmentPill;
 		
 		//Absorption curves
 		private var insulinCurveCallout:Callout;
@@ -360,6 +361,7 @@ package ui.chart
 		private var predictionPillExplanationEnabled:Boolean = false;
 		private var predictionsIncompleteProfile:Boolean = false;
 		private var singlePredictionCurve:Boolean = true;
+		private var lastPredictionUpdate:Number = Number.NaN;
 		private var predictionsPill:ChartTreatmentPill;
 		private var predictionsContainer:ScrollContainer;
 		private var predictionsCallout:Callout;
@@ -406,9 +408,6 @@ package ui.chart
 		private var ztPredictLegendLabel:Label;
 		private var ztPredictLegendColorQuad:Quad;
 		private var ztPredictLegendHitArea:Quad;
-
-		private var lastPredictionUpdate:Number;
-
 		private var lastPredictionUpdateTimePill:ChartTreatmentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
@@ -7301,6 +7300,16 @@ package ui.chart
 				infoContainer.addChild(iagePill);
 			}
 			
+			//BAGE
+			if (bagePill != null) bagePill.dispose();
+			if (e.userInfo.bage != null && e.userInfo.bage != "" && String(e.userInfo.bage).indexOf("n/a") == -1)
+			{
+				bagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','battery_age'));
+				bagePill.setValue(e.userInfo.bage);
+				bagePill.touchable = false;
+				infoContainer.addChild(bagePill);
+			}
+			
 			//Basal Rate
 			if (basalPill != null) basalPill.dispose();
 			if (e.userInfo.basal != null && e.userInfo.basal != "" && String(e.userInfo.basal).indexOf("n/a") == -1)
@@ -7561,6 +7570,13 @@ package ui.chart
 				sagePill.removeFromParent();
 				sagePill.dispose();
 				sagePill = null;
+			}
+			
+			if (bagePill != null)
+			{
+				bagePill.removeFromParent();
+				bagePill.dispose();
+				bagePill = null;
 			}
 			
 			if (sensorNoisePill != null)

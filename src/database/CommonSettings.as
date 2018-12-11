@@ -635,6 +635,11 @@ package database
 		 public static const COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR:int = 268;
 		 public static const COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON:int = 269;
 		 public static const COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED:int = 270;
+		 
+		 /**
+		  * Info Pill #3
+		  */
+		 public static const COMMON_SETTING_BAGE_ON:int = 271;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -907,7 +912,8 @@ package database
 			 "true", //COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON
 			 "0xA0A0A0", //COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR
 			 "false", //COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON
-			 "false" //COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED
+			 "false", //COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED
+			 "true" //COMMON_SETTING_BAGE_ON
 		 ];
 
 		 public function CommonSettings()

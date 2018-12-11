@@ -44,6 +44,7 @@ package ui.screens.display.settings.treatments
 		private var displayIAGEEnabled:Check;
 		private var displayTransmitterBatteryEnabled:Check;
 		private var displaySensorNoiseEnabled:Check;
+		private var displayBAGEEnabled:Check;
 		
 		/* Internal Variables */
 		public var needsSave:Boolean = false;
@@ -62,6 +63,7 @@ package ui.screens.display.settings.treatments
 		private var iageEnabledValue:Boolean;
 		private var transmitterBatteryEnabledValue:Boolean;
 		private var sensorNoiseEnabledValue:Boolean;
+		private var bageEnabledValue:Boolean;
 		
 		public function InfoPillSettingsList()
 		{
@@ -107,6 +109,7 @@ package ui.screens.display.settings.treatments
 			sageEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) == "true";
 			sensorNoiseEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON) == "true";
 			iageEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON) == "true";
+			bageEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BAGE_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -167,13 +170,13 @@ package ui.screens.display.settings.treatments
 			displaySensorNoiseEnabled = LayoutFactory.createCheckMark(sensorNoiseEnabledValue);
 			displaySensorNoiseEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
 			
-			/* Enable/Disable SAGE */
-			displaySAGEEnabled = LayoutFactory.createCheckMark(sageEnabledValue);
-			displaySAGEEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
-			
 			/* Enable/Disable IAGE */
 			displayIAGEEnabled = LayoutFactory.createCheckMark(iageEnabledValue);
 			displayIAGEEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			/* Enable/Disable BAGE */
+			displayBAGEEnabled = LayoutFactory.createCheckMark(bageEnabledValue);
+			displayBAGEEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			/* Renderer */
 			itemRendererFactory = function():IListItemRenderer 
@@ -206,6 +209,7 @@ package ui.screens.display.settings.treatments
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"sensor_noise_label"), accessory: displaySensorNoiseEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"canula_age"), accessory: displayCAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"insulin_age"), accessory: displayIAGEEnabled, selectable: false });
+				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"battery_age"), accessory: displayBAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"basal_insulin"), accessory: displayBasalEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"openaps_moment"), accessory: displayOpenAPSMomentEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"loop_moment"), accessory: displayLoopMomentEnabled, selectable: false });
@@ -266,6 +270,9 @@ package ui.screens.display.settings.treatments
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON) != String(iageEnabledValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON, String(iageEnabledValue));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BAGE_ON) != String(bageEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BAGE_ON, String(bageEnabledValue));
+			
 			needsSave = false;
 		}
 		
@@ -312,6 +319,7 @@ package ui.screens.display.settings.treatments
 			sageEnabledValue = displaySAGEEnabled.isSelected;
 			sensorNoiseEnabledValue = displaySensorNoiseEnabled.isSelected;
 			iageEnabledValue = displayIAGEEnabled.isSelected;
+			bageEnabledValue = displayBAGEEnabled.isSelected;
 			
 			refreshContent();
 			
@@ -419,6 +427,13 @@ package ui.screens.display.settings.treatments
 				displayIAGEEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
 				displayIAGEEnabled.dispose();
 				displayIAGEEnabled = null;
+			}
+			
+			if (displayBAGEEnabled != null)
+			{
+				displayBAGEEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
+				displayBAGEEnabled.dispose();
+				displayBAGEEnabled = null;
 			}
 			
 			if (displayTransmitterBatteryEnabled != null)

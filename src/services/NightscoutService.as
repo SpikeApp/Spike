@@ -1510,6 +1510,7 @@ package services
 						var pumpStatus:String =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.status != null && userInfoProperties.pump.data.status.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_STATUS_ON) == "true" ? userInfoProperties.pump.data.status.display : "";
 						var pumpTime:Number =  userInfoProperties.pump != null && userInfoProperties.pump.data != null && userInfoProperties.pump.data.clock != null && userInfoProperties.pump.data.clock.value != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_TIME_ON) == "true" ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.pump.data.clock.value), new Date()).minutes : Number.NaN;
 						var cage:String =  userInfoProperties.cage != null && userInfoProperties.cage.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CAGE_ON) == "true" ? userInfoProperties.cage.display : "";
+						var bage:String =  userInfoProperties.bage != null && userInfoProperties.bage.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BAGE_ON) == "true" ? userInfoProperties.bage.display : "";
 						var sage:String =  userInfoProperties.sage != null && userInfoProperties.sage["Sensor Start"] != null && userInfoProperties.sage["Sensor Start"].display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) == "true" ? String(userInfoProperties.sage["Sensor Start"].display) : "";
 						var iage:String =  userInfoProperties.iage != null && userInfoProperties.iage.display != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON) == "true" ? String(userInfoProperties.iage.display) : "";
 						var loopLastMoment:Number =  userInfoProperties.loop != null && userInfoProperties.loop.lastOkMoment != null && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOOP_MOMENT_ON) == "true" ? TimeSpan.fromDates(DateUtil.parseW3CDTF(userInfoProperties.loop.lastOkMoment), new Date()).minutes : Number.NaN;
@@ -1569,6 +1570,7 @@ package services
 									pumpStatus: pumpStatus,
 									pumpTime: pumpTime,
 									cage: cage,
+									bage: bage,
 									sage: sage,
 									iage: iage,
 									spikeMasterPhoneBattery: spikeMasterPhoneBattery,

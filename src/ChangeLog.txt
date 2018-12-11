@@ -1,4 +1,5 @@
 3.0.3
+FEATURE: Added BAGE tp the +Info pill. (Miguel)
 ENHANCEMENT: Reverted back the /Pebble endpoint to also display in mmol as it seems some Pebble watch faces don't do the conversion automatically. (Miguel)
 ENHANCEMENT: Upgraded Spike's internal Dexcom Share server to add compatibility with new Loop versions. (Miguel)
 ENHANCEMENT: Better alarm snoozer popup. When an alarm fires the user now has more options to choose from in the alarm snoozer popup as well as a better layout. (Miguel).
