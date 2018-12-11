@@ -4467,7 +4467,7 @@ package ui.chart
 			
 			if(touch != null && touch.phase == TouchPhase.BEGAN && e.currentTarget != null) 
 			{
-				if (e.currentTarget === predictionsEnablerPill.pillBackground || e.currentTarget === predictionsEnablerPill.titleLabel)
+				if (predictionsEnablerPill != null && (e.currentTarget === predictionsEnablerPill.pillBackground || e.currentTarget === predictionsEnablerPill.titleLabel))
 				{
 					displayPredictionPillExplanationCallout
 					(
@@ -4476,7 +4476,7 @@ package ui.chart
 						ModelLocator.resourceManagerInstance.getString('chartscreen','enable_disable_predictions_pill_explanation_body')
 					);
 				}
-				else if (e.currentTarget === predictionsTimeFramePill.pillBackground || e.currentTarget === predictionsTimeFramePill.titleLabel)
+				else if (predictionsTimeFramePill != null && (e.currentTarget === predictionsTimeFramePill.pillBackground || e.currentTarget === predictionsTimeFramePill.titleLabel))
 				{
 					displayPredictionPillExplanationCallout
 					(
@@ -4485,7 +4485,7 @@ package ui.chart
 						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_pill_explanation_body')
 					);
 				}
-				else if (e.currentTarget === predictionsIOBCOBPill.pillBackground || e.currentTarget === predictionsIOBCOBPill.titleLabel)
+				else if (predictionsIOBCOBPill != null && (e.currentTarget === predictionsIOBCOBPill.pillBackground || e.currentTarget === predictionsIOBCOBPill.titleLabel))
 				{
 					displayPredictionPillExplanationCallout
 					(
@@ -4495,7 +4495,7 @@ package ui.chart
 					
 					);
 				}
-				else if (e.currentTarget === predictionsSingleCurvePill.pillBackground || e.currentTarget === predictionsSingleCurvePill.titleLabel)
+				else if (predictionsSingleCurvePill != null && (e.currentTarget === predictionsSingleCurvePill.pillBackground || e.currentTarget === predictionsSingleCurvePill.titleLabel))
 				{
 					displayPredictionPillExplanationCallout
 					(
@@ -4503,6 +4503,15 @@ package ui.chart
 						ModelLocator.resourceManagerInstance.getString('chartscreen','single_prediction_curve_label'),
 						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_single_prediction_curve_pill_explanation_body')
 						
+					);
+				}
+				else if (e.currentTarget === lastPredictionUpdateTimePill)
+				{
+					displayPredictionPillExplanationCallout
+					(
+						lastPredictionUpdateTimePill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','last_nightscout_prediction_update_label'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','last_nightscout_prediction_update_explanation')
 					);
 				}
 				else if (e.currentTarget === predictedTimeUntilHighPill)
@@ -5844,6 +5853,14 @@ package ui.chart
 		
 		private function disposePredictionsPills():void
 		{
+			if (lastPredictionUpdateTimePill != null)
+			{
+				lastPredictionUpdateTimePill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				lastPredictionUpdateTimePill.removeFromParent();
+				lastPredictionUpdateTimePill.dispose();
+				lastPredictionUpdateTimePill = null;
+			}
+			
 			if (predictedEventualBGPill != null)
 			{
 				predictedEventualBGPill.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
