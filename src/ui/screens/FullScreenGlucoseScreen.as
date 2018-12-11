@@ -543,7 +543,7 @@ package ui.screens
 				maxTextHeight -= maxTextHeight * 0.35;
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
-				maxTextHeight -= 200;
+				maxTextHeight -= maxTextHeight * 0.30;
 			
 			if (isNaN(maxTextWidth) || isNaN(maxTextHeight)) 
 				return;

@@ -825,11 +825,7 @@ package model
 			
 			if (isNaN(currentIOB))
 			{
-				var globalIOB:Number = TreatmentsManager.getTotalIOB(now).iob;
-				if (globalIOB != 0)
-				{
-					currentIOB = globalIOB;
-				}
+				currentIOB = TreatmentsManager.getTotalIOB(now).iob;
 			}
 			
 			//UAM Predictions
@@ -883,9 +879,17 @@ package model
 					}
 				}
 				
-				if (defaultPredictionCurve == "UAM" || defaultPredictionCurve == "COB")
+				if (defaultPredictionCurve == "UAM")
 				{
-					if (isNaN(predictedIOBBG) && !isNaN(predictedUAMBG) && predictionData.IOB.length > 1 && !isNaN(predictionData.IOB[1]) && predictionData.UAM.length > 1 && !isNaN(predictionData.UAM[1]) && predictedIOBBG >= predictedUAMBG && predictionData.IOB[1] >= predictionData.UAM[1])
+					if (!isNaN(predictedIOBBG) && !isNaN(predictedUAMBG) && predictionData.IOB.length > 1 && !isNaN(predictionData.IOB[1]) && predictionData.UAM.length > 1 && !isNaN(predictionData.UAM[1]) && predictedIOBBG >= predictedUAMBG && predictionData.IOB[1] >= predictionData.UAM[1])
+					{
+						defaultPredictionCurve = "IOB";
+					}
+				}
+				
+				if (defaultPredictionCurve == "COB")
+				{
+					if (!isNaN(predictedIOBBG) && !isNaN(predictedCOBBG) && predictionData.IOB.length > 1 && !isNaN(predictionData.IOB[1]) && predictionData.COB.length > 1 && !isNaN(predictionData.COB[1]) && predictedIOBBG >= predictedCOBBG && predictionData.IOB[1] >= predictionData.COB[1])
 					{
 						defaultPredictionCurve = "IOB";
 					}
