@@ -4,7 +4,7 @@ ENHANCEMENT: Reverted back the /Pebble endpoint to also display in mmol as it se
 ENHANCEMENT: Upgraded Spike's internal Dexcom Share server to add compatibility with new Loop versions. (Miguel)
 ENHANCEMENT: Better alarm snoozer popup. When an alarm fires the user now has more options to choose from in the alarm snoozer popup as well as a better layout. (Miguel).
 ENHANCEMENT: Added a warning to the readings screen. If by some reason the user has more than 500 readings in the last 24h, Spike will only display the latest 500 readings. (Miguel)
-FIX: Bolus Calculator popup should now display correctly when switching from portrait to landscape and vice-versa.
+FIX: Bolus Calculator popup should now display correctly when switching from portrait to landscape and vice-versa. (Miguel)
 
 3.0.2
 ENHANCEMENT: Optimizations to the IOB algorithm that will slightly increase overall battery life.
