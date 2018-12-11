@@ -190,7 +190,7 @@ package ui.screens.display.readings
 			if (numberOfReadings > MAX_READINGS)
 			{
 				//Trim excess readings
-				readingsList = readingsList.slice(0, MAX_READINGS);
+				readingsList = readingsList.slice(numberOfReadings - MAX_READINGS);
 				numberOfReadings = MAX_READINGS;
 				
 				//Add a warning header
