@@ -29,6 +29,7 @@ FEATURE: Completely redesigned insulin and absorption curves, the ones available
 FEATURE: Ability to upload prediction curves to Nightscout. For instructions please head over to the WiKi here:
 FEATURE: Sensor noise! Spike can now detect sensor noise (clean, light, medium, heavy). To check the current sensor noise just press the +Info pill on the main chart. To check sensor noise of past glucose readings just scroll back to the desired reading and press the +Info pill. Sensor noise is also uploaded to Nightscout and is available to both masters and followers. (Miguel)
 FEATURE: Also added BAGE to the +Info pill. (Miguel)
+FEATURE: Added Turkish Translation. Special thanks to Mustafa Gülcan. 
 ENHANCEMENT: Some improvements have been made in the connection logic between the dedicated Apple Watch app and the iOS app. (Miguel)
 ENHANCEMENT: Reverted back the /Pebble endpoint to also display in mmol as it seems some Pebble watch faces don't do the conversion automatically. (Miguel)
 ENHANCEMENT: Upgraded Spike's internal Dexcom Share server to add compatibility with new Loop versions. (Miguel)
@@ -37,6 +38,7 @@ ENHANCEMENT: Added a warning to the readings screen. If by some reason the user 
 ENHANCEMENT: Added insulin precision of 0.05U to the Bolus Calculator. Available in Settings > Treatments > Bolus Calculator. (Miguel)
 ENHANCEMENT: When scanning foods, if Spike only returns one hit it will auto select that food from the search results list to speed up the workflow process. (Miguel)
 ENHANCEMENT: Bolus Calculator popup can now be dismissed when pressing anywhere outside. (Miguel)
+ENHNACEMENT: Improvements to the Russian, Norwegian and Italian translations. Special thanks to our beloved translators!
 FIX: Bolus Calculator popup should now display correctly when switching from portrait to landscape and vice-versa. (Miguel)
 FIX: Several small bug fixes in the Bolus Calculator calculation logic to address some bugs reported by users. (Miguel)
 FIX: Many more small fixes and improvements. Too many to list here. (Miguel)
