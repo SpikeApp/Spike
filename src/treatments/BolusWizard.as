@@ -1421,12 +1421,15 @@ package treatments
 			record.ic = ic;
 			record.iob = iob;
 			record.cob = cob;
-			record.insulincob = Math.round(roundTo(insulincob, insulinPrecision) * 100) / 100;
+			//record.insulincob = Math.round(roundTo(insulincob, insulinPrecision) * 100) / 100;
+			record.insulincob = insulincob;
 			record.bg = bg;
-			record.insulinbg = Math.round(roundTo(insulinbg, insulinPrecision) * 100) / 100;
+			//record.insulinbg = Math.round(roundTo(insulinbg, insulinPrecision) * 100) / 100;
+			record.insulinbg = insulinbg;
 			record.bgdiff = bgdiff;
 			record.carbs = carbs;
-			record.insulincarbs = Math.round(roundTo(insulincarbs, insulinPrecision) * 100) / 100;
+			//record.insulincarbs = Math.round(roundTo(insulincarbs, insulinPrecision) * 100) / 100;
+			record.insulincarbs = insulincarbs;
 			record.othercorrection = extraCorrections;
 			record.trendCorrection = trendCorrections;
 			record.insulin = Math.round(roundTo(insulin, insulinPrecision) * 100) / 100;
@@ -1435,7 +1438,12 @@ package treatments
 			
 			var outcome:Number = record.bg - (iob * isf) + (record.insulincob * isf) + (record.insulincarbs * isf) - (useUserDefinedSettings ? record.insulin * isf : 0);
 			
-			var isInTarget:Boolean = (record.othercorrection === 0 && record.trendCorrection === 0 && record.carbs === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0) || Math.abs(outcome - targetBG) <= acceptedMargin;
+			var isInTarget:Boolean = (record.othercorrection === 0 && record.trendCorrection === 0 && record.carbs === 0 && record.carbsneeded === 0 && record.cob === 0 && record.insulin === 0 && record.bg > 0) || Math.abs(outcome - targetBG) <= acceptedMargin;
+			if (isInTarget && Math.abs(outcome - targetBG) > acceptedMargin)
+			{
+				isInTarget = false;
+			}
+			
 			var formattedTarget:Number = isMgDl ? Number(currentProfile.targetGlucoseRates) : Math.round(BgReading.mgdlToMmol(Number(currentProfile.targetGlucoseRates)) * 10) / 10;
 			var formattedErrorMargin:Number = isMgDl ? acceptedMargin : Math.round(BgReading.mgdlToMmol(acceptedMargin) * 10) / 10;
 			var formattedISF:Number = isMgDl ? isf : Math.round(BgReading.mgdlToMmol(isf) * 10) / 10;			
@@ -1450,7 +1458,7 @@ package treatments
 			{
 				displayInTarget();
 			}
-			else if (record.insulin < 0) 
+			else if (record.insulin < 0 || record.carbsneeded) 
 			{
 				displayCarbsNeeded();
 			}
