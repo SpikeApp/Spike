@@ -41,6 +41,7 @@ ENHANCEMENT: Bolus Calculator popup can now be dismissed when pressing anywhere 
 ENHNACEMENT: Improvements to the Russian, Norwegian and Italian translations. Special thanks to our beloved translators!
 FIX: Bolus Calculator popup should now display correctly when switching from portrait to landscape and vice-versa. (Miguel)
 FIX: Several small bug fixes in the Bolus Calculator calculation logic to address some bugs reported by users. (Miguel)
+FIX: The Italian translation had errors, so that the languages were not listed correctly in the speech output settings (e.g. instead of Italian, there was Portuguese). (Sascha)
 FIX: Many more small fixes and improvements. Too many to list here. (Miguel)
 
 3.0.2
