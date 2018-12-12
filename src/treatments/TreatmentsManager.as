@@ -10,6 +10,8 @@ package treatments
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -610,21 +612,47 @@ package treatments
 		
 		public static function getTotalCOB(time:Number, useLastBgReadingTimestamp:Boolean = false, isForPredictions:Boolean = false):Object 
 		{
+			//Sort Treatments
+			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+			
 			//Adjust time (if needed)
 			if (useLastBgReadingTimestamp)
 			{
 				var lastBgReading:BgReading = BgReading.lastWithCalculatedValue();
-				if (lastBgReading != null && new Date().valueOf() - lastBgReading._timestamp < TimeSpan.TIME_11_MINUTES)
+				if (lastBgReading != null)
 				{
-					time = lastBgReading._timestamp;
+					if (new Date().valueOf() - lastBgReading._timestamp < TimeSpan.TIME_11_MINUTES)
+					{
+						var canTrimmTime:Boolean = true;
+						
+						for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+						{
+							var treatment:Treatment = treatmentsList[i];
+							if (treatment != null)
+							{
+								if (treatment.timestamp < lastBgReading._timestamp)
+								{
+									break;
+								}
+								
+								if (treatment.carbs > 0 && treatment.timestamp > lastBgReading._timestamp)
+								{
+									canTrimmTime = false
+									break;
+								}
+							}
+						}
+						
+						if (canTrimmTime)
+						{
+							time = lastBgReading._timestamp;
+						}
+					}
 				}
 			}
 			
 			//Get current algorithm
 			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
-			
-			//Sort Treatments
-			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 			
 			//Get relevant treatments
 			var carbWindow:Number = time - TimeSpan.TIME_6_HOURS;
@@ -3483,6 +3511,38 @@ package treatments
 			}
 			
 			return treatment;
+		}
+		
+		public static function lastTreatmentIsCarb():Boolean
+		{
+			var isLastTreatmentCarb:Boolean = false;
+			
+			var lastBgReading:BgReading = BgReading.lastWithCalculatedValue();
+			if (lastBgReading != null)
+			{
+				//Sort Treatments
+				treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+				
+				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+				{
+					var treatment:Treatment = treatmentsList[i];
+					if (treatment != null)
+					{
+						if (treatment.timestamp < lastBgReading._timestamp)
+						{
+							break;
+						}
+							
+						if (treatment.carbs > 0 && treatment.timestamp > lastBgReading._timestamp)
+						{
+							isLastTreatmentCarb = true;
+							break;
+						}
+					}
+				}
+			}
+			
+			return isLastTreatmentCarb;
 		}
 
 		public static function get instance():TreatmentsManager

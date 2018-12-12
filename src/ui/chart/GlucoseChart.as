@@ -752,10 +752,8 @@ package ui.chart
 			var predictionsList:Array;
 			if (predictionsEnabled)
 			{
-				//Get last treatment
-				var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
-				var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
-				var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
+				//Special case for latest carb treatment
+				var lastTreatmentIsCarbs:Boolean = TreatmentsManager.lastTreatmentIsCarb();
 				
 				predictionsList = fetchPredictions(lastTreatmentIsCarbs)
 			}
@@ -1249,14 +1247,14 @@ package ui.chart
 			}
 		}
 		
-		public function calculateTotalCOB(time:Number):void
+		public function calculateTotalCOB(time:Number, forceNew:Boolean = false):void
 		{
 			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled || isHistoricalData)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
-				if (algorithmIOBCOB == "openaps" )
+				if (algorithmIOBCOB == "openaps" && !forceNew)
 				{
 					//Save original time in case we need to revert to it.
 					var originalTime:Number = time;
@@ -1786,6 +1784,8 @@ package ui.chart
 				{
 					treatmentCallout.close(true);
 					
+					var lastTreatmentIsCarb:Boolean = TreatmentsManager.lastTreatmentIsCarb();
+					
 					var deleteTreatmentTween:Tween = new Tween(treatment, 0.3, Transitions.EASE_IN_BACK);
 					var lastReadingTimestamp:Number;
 					if (!predictionsEnabled || predictionsMainGlucoseDataPoints == null || predictionsMainGlucoseDataPoints.length == 0 || predictionsMainGlucoseDataPoints[predictionsMainGlucoseDataPoints.length - 1] == null)
@@ -1815,7 +1815,7 @@ package ui.chart
 						if (displayIOBEnabled)
 							calculateTotalIOB(timelineTimestamp);
 						if (displayCOBEnabled)
-							calculateTotalCOB(timelineTimestamp);
+							calculateTotalCOB(timelineTimestamp, lastTreatmentIsCarb);
 						
 						if (predictionsEnabled && (treatmentToDelete.type == Treatment.TYPE_BOLUS || treatmentToDelete.type == Treatment.TYPE_CARBS_CORRECTION || treatmentToDelete.type == Treatment.TYPE_CORRECTION_BOLUS || treatmentToDelete.type == Treatment.TYPE_MEAL_BOLUS))
 						{
@@ -2726,10 +2726,8 @@ package ui.chart
 			var predictionsList:Array;
 			if (predictionsEnabled)
 			{
-				//Get last treatment
-				var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
-				var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
-				var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
+				//Special case for latest carb treatment
+				var lastTreatmentIsCarbs:Boolean = TreatmentsManager.lastTreatmentIsCarb();
 				
 				predictionsList = fetchPredictions(lastTreatmentIsCarbs)
 			}
@@ -4893,10 +4891,8 @@ package ui.chart
 			
 			lastPredictionsRedrawTimestamp = now;
 			
-			//Get last treatment
-			var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
-			var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
-			var lastTreatmentIsCarbs:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
+			//Special case for latest carb treatment
+			var lastTreatmentIsCarbs:Boolean = TreatmentsManager.lastTreatmentIsCarb();
 			
 			//Get new predictions
 			var predictionsList:Array = fetchPredictions(lastTreatmentIsCarbs || forceIOBCOBRefresh);
