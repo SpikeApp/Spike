@@ -153,6 +153,7 @@ package treatments.food.ui
 		private var globalMultiplier:Number = 1;
 		private var globalUnit:String = "";	
 		private var accessoryList:Array = [];
+		private var searchBarCodeActive:Boolean = false;
 
 		public function FoodManager(width:Number, containerHeight:Number, loadedFromExternalContainer:Boolean = false)
 		{
@@ -569,6 +570,8 @@ package treatments.food.ui
 		{
 			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
 			
+			searchBarCodeActive = false;
+			
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 			
@@ -578,6 +581,8 @@ package treatments.food.ui
 		private function getInitialRecipes():void
 		{
 			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
+			
+			searchBarCodeActive = false;
 			
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
@@ -593,11 +598,13 @@ package treatments.food.ui
 			{
 				autoSearchTimeoutID = setTimeout( function():void {
 					clearTimeout(autoSearchTimeoutID);
+					searchBarCodeActive = false;
 					onPerformSearch();
 				}, 500 );
 			}
 			else
 			{
+				searchBarCodeActive = false;
 				onPerformSearch();
 			}
 		}
@@ -1209,6 +1216,7 @@ package treatments.food.ui
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPES_SEARCH_RESULT, onRecipesSearchResult);
 			FoodAPIConnector.instance.addEventListener(FoodEvent.RECIPE_NOT_FOUND, onFoodOrRecipeNotFound);
 			resetComponents(resetPagination == true || (e != null && e.currentTarget is Button));
+			searchBarCodeActive = false;
 			
 			if (currentMode == FAVORITES_MODE)
 			{
@@ -1423,6 +1431,14 @@ package treatments.food.ui
 					}
 					
 				}
+				else
+				{
+					if (searchBarCodeActive && e.foodsList.length == 1)
+					{
+						//We only have one result from the food scan. Select that food automatically.
+						foodResultsList.selectedIndex = 0;
+					}
+				}
 			}
 			
 			//Update pagination
@@ -1433,6 +1449,7 @@ package treatments.food.ui
 			
 			//Reset variables
 			dontClearSearchResults = false;
+			searchBarCodeActive = false;
 		}
 		
 		private function onRecipesSearchResult(e:FoodEvent):void
@@ -1482,6 +1499,7 @@ package treatments.food.ui
 			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
 			removeFoodEventListeners();
 			hidePreloader();
+			searchBarCodeActive = false;
 			
 			foodResultsList.dataProvider = new ArrayCollection( [ { label: ModelLocator.resourceManagerInstance.getString('foodmanager','no_search_results_label') } ] );
 		}
@@ -1491,12 +1509,13 @@ package treatments.food.ui
 			if (foodDetailsTitleContainer != null) foodDetailsTitleContainer.x = 0;
 			removeFoodEventListeners();
 			hidePreloader();
+			searchBarCodeActive = false;
 			
 			AlertManager.showSimpleAlert
-				(
-					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-					e.errorMessage
-				);
+			(
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+				e.errorMessage
+			);
 		}
 		
 		private function onAddManualFavorite(e:starling.events.TouchEvent):void
@@ -2049,6 +2068,8 @@ package treatments.food.ui
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOODS_SEARCH_RESULT, onFoodsSearchResult);
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_NOT_FOUND, onFoodOrRecipeNotFound);
 				FoodAPIConnector.instance.addEventListener(FoodEvent.FOOD_SERVER_ERROR, onServerError);
+				
+				searchBarCodeActive = true;
 				
 				if (currentMode == OPENFOODFACTS_MODE)
 				{
