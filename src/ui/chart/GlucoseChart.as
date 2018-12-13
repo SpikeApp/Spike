@@ -7113,7 +7113,7 @@ package ui.chart
 				}
 				
 				var infoPillLowerBounds:Number = infoPill.localToGlobal(new Point(0, 0)).y + infoPill.height;
-				var availableScreenHeight:Number = Constants.stageHeight - infoPillLowerBounds;
+				var availableScreenHeight:Number = Constants.stageHeight - infoPillLowerBounds - 10;
 				
 				if (infoCallout != null) infoCallout.dispose();
 				infoCallout = Callout.show(infoContainer, infoPill, null, true);
