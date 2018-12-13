@@ -1523,7 +1523,7 @@ package ui.chart
 					
 					totalCOBTimeoutID = setTimeout( function():void 
 					{
-						calculateTotalCOB(getTimelineTimestamp());
+						calculateTotalCOB(getTimelineTimestamp(), true);
 					}, 200 );
 					
 					if (predictionsEnabled)
@@ -1566,7 +1566,7 @@ package ui.chart
 					
 					totalCOBTimeoutID = setTimeout( function():void 
 					{
-						calculateTotalCOB(timelineTimestamp);
+						calculateTotalCOB(timelineTimestamp, true);
 					}, 200 );
 				}
 				

@@ -227,9 +227,9 @@ package ui.screens.display.settings.treatments
 			/* Data */
 			var data:Array = [];
 			
+			data.push({ screen: Screens.SETTINGS_PROFILE, label: ModelLocator.resourceManagerInstance.getString('treatments',"profile_menu_label"), accessory: profileIconImage, selectable: true });
 			if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 			{
-				data.push({ screen: Screens.SETTINGS_PROFILE, label: ModelLocator.resourceManagerInstance.getString('treatments',"profile_menu_label"), accessory: profileIconImage, selectable: true });
 				data.push({ screen: Screens.SETTINGS_BOLUS_WIZARD, label: ModelLocator.resourceManagerInstance.getString('treatments',"bolus_wizard_settings_label"), accessory: bolusWizardIconImage, selectable: true });
 				data.push({ screen: Screens.SETTINGS_FOOD_MANAGER, label: ModelLocator.resourceManagerInstance.getString('treatments',"food_manager_label"), accessory: foodManagerIconImage, selectable: true });
 			}

@@ -31,91 +31,88 @@ package treatments
 		{
 			Trace.myTrace("ProfileManager.as", "init called!");
 			
-			if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+			//Common variables
+			var i:int;
+				
+			//Get insulins
+			var dbInsulines:Array = Database.getInsulinsSynchronous();
+			if (dbInsulines != null && dbInsulines.length > 0)
 			{
-				//Common variables
-				var i:int;
-				
-				//Get insulins
-				var dbInsulines:Array = Database.getInsulinsSynchronous();
-				if (dbInsulines != null && dbInsulines.length > 0)
+				for (i = 0; i < dbInsulines.length; i++) 
 				{
-					for (i = 0; i < dbInsulines.length; i++) 
+					var dbInsulin:Object = dbInsulines[i] as Object;
+					if (dbInsulin == null)
+						continue;
+						
+					var insulin:Insulin = new Insulin
+					(
+						dbInsulin.id,
+						dbInsulin.name,
+						dbInsulin.dia,
+						dbInsulin.type,
+						dbInsulin.isdefault == "true" ? true : false,
+						dbInsulin.lastmodifiedtimestamp,
+						dbInsulin.ishidden != null && dbInsulin.ishidden == "true" ? true : false,
+						dbInsulin.curve != null && dbInsulin.curve != "" ? dbInsulin.curve : "bilinear",
+						dbInsulin.peak != null && !isNaN(dbInsulin.peak) ? Number(dbInsulin.peak) : 75
+					);
+						
+					insulinsList.push(insulin);
+					insulinsMap[dbInsulin.id] = insulin;
+						
+					if (insulin.ID == "000000" && !insulin.isHidden) //Hide Nightscout insulin from UI
 					{
-						var dbInsulin:Object = dbInsulines[i] as Object;
-						if (dbInsulin == null)
-							continue;
-						
-						var insulin:Insulin = new Insulin
-						(
-							dbInsulin.id,
-							dbInsulin.name,
-							dbInsulin.dia,
-							dbInsulin.type,
-							dbInsulin.isdefault == "true" ? true : false,
-							dbInsulin.lastmodifiedtimestamp,
-							dbInsulin.ishidden != null && dbInsulin.ishidden == "true" ? true : false,
-							dbInsulin.curve != null && dbInsulin.curve != "" ? dbInsulin.curve : "bilinear",
-							dbInsulin.peak != null && !isNaN(dbInsulin.peak) ? Number(dbInsulin.peak) : 75
-						);
-						
-						insulinsList.push(insulin);
-						insulinsMap[dbInsulin.id] = insulin;
-						
-						if (insulin.ID == "000000" && !insulin.isHidden) //Hide Nightscout insulin from UI
-						{
-							insulin.isHidden = true;
-							updateInsulin(insulin);
-						}
+						insulin.isHidden = true;
+						updateInsulin(insulin);
 					}
-					insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
-					
-					Trace.myTrace("ProfileManager.as", "Got insulns from database!");
 				}
-				else
-					Trace.myTrace("ProfileManager.as", "No insulins stored in database!");
+				insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
+					
+				Trace.myTrace("ProfileManager.as", "Got insulns from database!");
+			}
+			else
+				Trace.myTrace("ProfileManager.as", "No insulins stored in database!");
 				
-				//Get Profiles
-				var dbProfiles:Array = Database.getProfilesSynchronous();
-				if (dbProfiles != null && dbProfiles.length > 0)
+			//Get Profiles
+			var dbProfiles:Array = Database.getProfilesSynchronous();
+			if (dbProfiles != null && dbProfiles.length > 0)
+			{
+				for (i = 0; i < dbProfiles.length; i++) 
 				{
-					for (i = 0; i < dbProfiles.length; i++) 
-					{
-						var dbProfile:Object = dbProfiles[i] as Object;
-						if (dbProfile == null)
-							continue;
+					var dbProfile:Object = dbProfiles[i] as Object;
+					if (dbProfile == null)
+						continue;
 						
-						var profile:Profile = new Profile
-						(
-							dbProfile.id,
-							dbProfile.time,
-							dbProfile.name,
-							dbProfile.insulintocarbratios,
-							dbProfile.insulinsensitivityfactors,
-							dbProfile.carbsabsorptionrate,
-							dbProfile.basalrates,
-							dbProfile.targetglucoserates,
-							dbProfile.trendcorrections,
-							Number(dbProfile.lastmodifiedtimestamp)
-						);
+					var profile:Profile = new Profile
+					(
+						dbProfile.id,
+						dbProfile.time,
+						dbProfile.name,
+						dbProfile.insulintocarbratios,
+						dbProfile.insulinsensitivityfactors,
+						dbProfile.carbsabsorptionrate,
+						dbProfile.basalrates,
+						dbProfile.targetglucoserates,
+						dbProfile.trendcorrections,
+						Number(dbProfile.lastmodifiedtimestamp)
+					);
 						
-						profilesList.push(profile);
-						profilesMap[dbProfile.id] = profile;
-						profilesMapByTime[profile.time] = profile;
-					}
-					profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
-					
-					Trace.myTrace("ProfileManager.as", "Got profile from database!");
+					profilesList.push(profile);
+					profilesMap[dbProfile.id] = profile;
+					profilesMapByTime[profile.time] = profile;
 				}
-				else
-					Trace.myTrace("ProfileManager.as", "No profiles stored in database!");
+				profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+					
+				Trace.myTrace("ProfileManager.as", "Got profile from database!");
+			}
+			else
+				Trace.myTrace("ProfileManager.as", "No profiles stored in database!");
 				
-				if (profilesList.length == 0)
-				{
-					Trace.myTrace("ProfileManager.as", "Creating default profile...");
-					
-					createDefaultProfile();
-				}
+			if (profilesList.length == 0)
+			{
+				Trace.myTrace("ProfileManager.as", "Creating default profile...");
+				
+				createDefaultProfile();
 			}
 			
 			removeDuplicateProfiles();
