@@ -39,6 +39,7 @@ ENHANCEMENT: Added insulin precision of 0.05U to the Bolus Calculator. Available
 ENHANCEMENT: When scanning foods, if Spike only returns one hit it will auto select that food from the search results list to speed up the workflow process. (Miguel)
 ENHANCEMENT: Bolus Calculator popup can now be dismissed when pressing anywhere outside. (Miguel)
 ENHNACEMENT: Improvements to the Russian and Norwegian translations. Special thanks to our beloved translators!
+ENHANCEMENT: Improvements on how the treatments menu on the chart displays on small sceen devices (eg: iPhone 4s). (Miguel)
 FIX: Bolus Calculator popup should now display correctly when switching from portrait to landscape and vice-versa. (Miguel)
 FIX: Several small bug fixes in the Bolus Calculator calculation logic to address some bugs reported by users. (Miguel)
 FIX: When using Spike in Italian, languages were not listed correctly in the speech output settings (e.g. instead of Italian, it was Portuguese). (Sascha)

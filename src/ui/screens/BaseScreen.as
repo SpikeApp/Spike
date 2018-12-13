@@ -137,11 +137,13 @@ package ui.screens
 			treatmentsList.addEventListener(TreatmentsList.CLOSE, onCloseCallOut);
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatmentsEnabled)
 			{
+				if (iphone4DummyMarker != null) iphone4DummyMarker.removeFromParent(true);
 				iphone4DummyMarker = new Sprite();
 				var globalpoint:Point = treatmentsButton.localToGlobal(new Point(treatmentsButton.width / 2, treatmentsButton.height / 2));
 				iphone4DummyMarker.x = globalpoint.x;
 				iphone4DummyMarker.y = globalpoint.y + 15;
 				Starling.current.stage.addChild(iphone4DummyMarker);
+				
 				callout = Callout.show( treatmentsList, iphone4DummyMarker );
 				callout.addEventListener(Event.CLOSE, onCloseCallOut);
 			}
@@ -156,8 +158,23 @@ package ui.screens
 		{
 			extraOptionsList = new ExtraOptionsList();
 			extraOptionsList.addEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
-			callout = Callout.show( extraOptionsList, moreButton );
-			callout.addEventListener(Event.CLOSE, onCloseCallOut);
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatmentsEnabled)
+			{
+				if (iphone4DummyMarker != null) iphone4DummyMarker.removeFromParent(true);
+				iphone4DummyMarker = new Sprite();
+				var globalpoint:Point = moreButton.localToGlobal(new Point(moreButton.width / 2, moreButton.height / 2));
+				iphone4DummyMarker.x = globalpoint.x;
+				iphone4DummyMarker.y = globalpoint.y + 15;
+				Starling.current.stage.addChild(iphone4DummyMarker);
+				
+				callout = Callout.show( extraOptionsList, iphone4DummyMarker );
+				callout.addEventListener(Event.CLOSE, onCloseCallOut);
+			}
+			else
+			{
+				callout = Callout.show( extraOptionsList, moreButton );
+				callout.addEventListener(Event.CLOSE, onCloseCallOut);
+			}
 			
 			Callout.stagePaddingRight = -5
 		}
