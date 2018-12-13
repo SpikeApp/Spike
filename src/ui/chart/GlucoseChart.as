@@ -1784,7 +1784,7 @@ package ui.chart
 				{
 					treatmentCallout.close(true);
 					
-					var lastTreatmentIsCarb:Boolean = TreatmentsManager.lastTreatmentIsCarb();
+					var lastTreatmentIsCarb:Boolean = TreatmentsManager.lastTreatmentIsCarb() || (treatment.treatment != null && treatment.treatment.carbs > 0);
 					
 					var deleteTreatmentTween:Tween = new Tween(treatment, 0.3, Transitions.EASE_IN_BACK);
 					var lastReadingTimestamp:Number;
@@ -1856,16 +1856,20 @@ package ui.chart
 						
 						treatmentCallout.close(true);
 						
+						var forceCOBRefresh:Boolean = treatment.treatment != null && treatment.treatment.carbs > 0;
+						
 						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 						{
+							var timelineTimestamp:Number = getTimelineTimestamp();
+							
 							if (displayIOBEnabled)
-								calculateTotalIOB(getTimelineTimestamp());
+								calculateTotalIOB(timelineTimestamp);
 							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && displayCOBEnabled)
-								calculateTotalCOB(getTimelineTimestamp());
+								calculateTotalCOB(timelineTimestamp, forceCOBRefresh);
 						}
 						else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION && displayCOBEnabled)
 						{
-							calculateTotalCOB(getTimelineTimestamp());
+							calculateTotalCOB(getTimelineTimestamp(), forceCOBRefresh);
 						}
 						
 						if (predictionsEnabled && (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS))
