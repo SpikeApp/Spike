@@ -391,6 +391,12 @@ package treatments
 		
 		public static function getTotalIOB(time:Number):Object
 		{
+			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				return { time: time, activity: 0, iob: pumpIOB, bolusiob: pumpIOB, bolusinsulin: Number.NaN, firstInsulinTime: Number.NaN };
+			}
+			
 			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);;
 			
 			//Sort Treatments
@@ -465,12 +471,6 @@ package treatments
 		
 		public static function getTotalIOBNightscout(time:Number, relevantTreatments:Array):Object
 		{
-			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
-			{
-				return { time: time, activity: 0, iob: pumpIOB, bolusiob: pumpIOB, bolusinsulin: Number.NaN, firstInsulinTime: Number.NaN };
-			}
-			
 			var totalIOB:Number = 0;
 			var totalActivity:Number = 0;
 			var totalActivityForecast:Number = 0;
@@ -527,12 +527,6 @@ package treatments
 		
 		public static function getTotalIOBOpenAPS(time:Number, relevantTreatments:Array):Object
 		{
-			//OpenAPS/Loop Nightscout Support. Return value fetched from NS.
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
-			{
-				return { time: time, activity: 0, iob: pumpIOB, bolusiob: pumpIOB, bolusinsulin: Number.NaN, firstInsulinTime: Number.NaN };
-			}
-			
 			var now:Number = time;
 			var iob:Number = 0;
 			var bolusiob:Number = 0;
@@ -612,6 +606,12 @@ package treatments
 		
 		public static function getTotalCOB(time:Number, useLastBgReadingTimestamp:Boolean = false, isForPredictions:Boolean = false):Object 
 		{
+			//OpenAPS/Loop Support. Return value fetched from NS.
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+			{
+				return { time: time, cob: pumpCOB };
+			}
+			
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 			
@@ -788,12 +788,6 @@ package treatments
 		
 		public static function getTotalCOBNightscout(time:Number, relevantTreatments:Array):Object
 		{
-			//OpenAPS/Loop Support. Return value fetched from NS.
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
-			{
-				return { time: time, cob: pumpCOB };
-			}
-			
 			var liverSensRatio:int = 8;
 			var totalCOB:Number = 0;
 			var isDecaying:Number = 0;
