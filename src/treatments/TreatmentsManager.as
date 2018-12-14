@@ -10,8 +10,6 @@ package treatments
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -99,6 +97,7 @@ package treatments
 		private static var COBCache:Object = {};
 		private static var COBCacheTimes:Array = [];
 		private static var lastSavedCachesTimestamp:Number = 0;
+		private static var mostRecentIOBCaches:Array = [];
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -397,7 +396,10 @@ package treatments
 				return { time: time, activity: 0, iob: pumpIOB, bolusiob: pumpIOB, bolusinsulin: Number.NaN, firstInsulinTime: Number.NaN };
 			}
 			
-			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);;
+			var algorithm:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
+			var requestedDate:Date = new Date(time);
+			requestedDate.milliseconds = 0;
+			var cacheTime:Number = requestedDate.valueOf();
 			
 			//Sort Treatments
 			treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
@@ -421,12 +423,30 @@ package treatments
 					}
 				);
 			
-			//Check cache
-			var cachedIOB:Object = IOBCache[time];
-			if (cachedIOB != null && cachedIOB.hash == relevantTreatmentsHash && cachedIOB.algorithm == algorithm)
+			//Check first layer of caching
+			var cachedIOBFirstLayer:Object = IOBCache[cacheTime];
+			if (cachedIOBFirstLayer != null && cachedIOBFirstLayer.hash == relevantTreatmentsHash && cachedIOBFirstLayer.algorithm == algorithm)
 			{
 				//We have a cached data point. Return it instead of performing real calulations
-				return cachedIOB.iobCalc;
+				return cachedIOBFirstLayer.iobCalc;
+			}
+			
+			//Check second layer of caching
+			for(var i:int = mostRecentIOBCaches.length - 1 ; i >= 0; i--)
+			{
+				var mostRecentIOBCache:Number = mostRecentIOBCaches[i];
+				
+				if (Math.abs(cacheTime - mostRecentIOBCache) < TimeSpan.TIME_10_SECONDS )
+				{
+					var cachedIOBSecondLayer:Object = IOBCache[mostRecentIOBCache];
+					if (cachedIOBSecondLayer != null && cachedIOBSecondLayer.hash == relevantTreatmentsHash && cachedIOBSecondLayer.algorithm == algorithm)
+					{
+						//We have a cached data point. Return it instead of performing real calulations
+						return cachedIOBSecondLayer.iobCalc;
+					}
+					
+					break;
+				}
 			}
 			
 			var result:Object;
@@ -437,8 +457,11 @@ package treatments
 				result = getTotalIOBNightscout(time, relevantTreatmentsList);
 				
 				//Cache them
-				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
-				IOBCacheTimes.push(time);
+				IOBCache[cacheTime] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(cacheTime);
+				
+				//Update Internal Variables
+				saveMostRecentIOBCache(cacheTime);
 				
 				//Return them
 				return result;
@@ -449,8 +472,11 @@ package treatments
 				result = getTotalIOBOpenAPS(time, relevantTreatmentsList.reverse());
 				
 				//Cache them
-				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
-				IOBCacheTimes.push(time);
+				IOBCache[cacheTime] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(cacheTime);
+				
+				//Update Internal Variables
+				saveMostRecentIOBCache(cacheTime);
 				
 				//Return them
 				return result;
@@ -461,11 +487,23 @@ package treatments
 				result = getTotalIOBNightscout(time, relevantTreatmentsList); //Defaults to Nightscout if everything else fails
 				
 				//Cache them
-				IOBCache[time] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
-				IOBCacheTimes.push(time);
+				IOBCache[cacheTime] = { hash: relevantTreatmentsHash, algorithm: algorithm, iobCalc: result };
+				IOBCacheTimes.push(cacheTime);
+				
+				//Update Internal Variables
+				saveMostRecentIOBCache(cacheTime);
 				
 				//Return them
 				return result;
+			}
+			
+			function saveMostRecentIOBCache(cache:Number):void
+			{
+				mostRecentIOBCaches.push(cache);
+				if (mostRecentIOBCaches.length > 5)
+				{
+					mostRecentIOBCaches.shift();
+				}
 			}
 		}
 		
@@ -606,6 +644,10 @@ package treatments
 		
 		public static function getTotalCOB(time:Number, useLastBgReadingTimestamp:Boolean = false, isForPredictions:Boolean = false):Object 
 		{
+			trace("--------------------");
+			trace("GET TOTAL COB CALLED!", "useLastBgReadingTimestamp: " + useLastBgReadingTimestamp, "isForPredictions: " + isForPredictions, new Date(time));
+			trace(new Error().getStackTrace().split("\n")[2]);
+			
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
@@ -645,7 +687,12 @@ package treatments
 						
 						if (canTrimmTime)
 						{
+							trace("SETTING TIME TO LAST BG READING");
 							time = lastBgReading._timestamp;
+						}
+						else
+						{
+							trace("NOT POSSIBLE TO SET TIME TO LAST BG READING");
 						}
 					}
 				}
@@ -690,6 +737,8 @@ package treatments
 			//If no relevant treatments are found and COB is not meant for predictions, return COB of zero and avoid calculations
 			if (!relevantCarbTreatments && !isForPredictions)
 			{
+				trace("RETURNING ZERO");
+				
 				return {
 					time: time,
 					cob: 0,
@@ -710,9 +759,13 @@ package treatments
 			var cachedCOB:Object = COBCache[time];
 			if (cachedCOB != null && cachedCOB.hash == relevantTreatmentsHash && cachedCOB.algorithm == algorithm)
 			{
+				trace("RETURNING CACHE");
+				
 				//We have a cached data point. Return it instead of performing real calulations
 				return cachedCOB.cobCalc;
 			}
+			
+			trace("CALCULATING");
 			
 			//No cached data found. Perform real calculations
 			var result:Object;

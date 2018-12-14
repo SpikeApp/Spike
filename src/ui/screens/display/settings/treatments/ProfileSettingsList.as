@@ -29,6 +29,7 @@ package ui.screens.display.settings.treatments
 	
 	import treatments.Profile;
 	import treatments.ProfileManager;
+	import treatments.TreatmentsManager;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
@@ -565,9 +566,18 @@ package ui.screens.display.settings.treatments
 					
 					ProfileManager.insertProfile(newProfile);
 				}
+				
+				//Clear Previous IOB/COB Caches
+				TreatmentsManager.clearAllCaches();
 			}
-			else if (editMode)
+			else if (editMode && selectedProfile != null)
 			{
+				if (Number(selectedProfile.insulinSensitivityFactors) != ISFStepper.value || Number(selectedProfile.insulinToCarbRatios) != ICStepper.value)
+				{
+					//Clear Previous IOB/COB Caches
+					TreatmentsManager.clearAllCaches();
+				}
+				
 				selectedProfile.time = MathHelper.formatNumberToString(profileStartTime.value.hours) + ":" + MathHelper.formatNumberToString(profileStartTime.value.minutes);
 				selectedProfile.insulinSensitivityFactors = unit == "mgdl" ? String(ISFStepper.value) : String(Math.round(BgReading.mmolToMgdl(ISFStepper.value)));
 				selectedProfile.insulinToCarbRatios = String(ICStepper.value);

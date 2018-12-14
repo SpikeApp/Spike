@@ -176,8 +176,6 @@ package model
 				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 				NotificationService.init();
 				CalibrationService.init();
-				WidgetService.init();
-				WatchService.init();
 				AlarmService.init();
 				HTTPServerService.init();
 				if (!IS_IPAD) HealthKitService.init();
@@ -185,6 +183,8 @@ package model
 				DexcomShareService.init();
 				IFTTTService.init();
 				TextToSpeechService.init();
+				WidgetService.init();
+				WatchService.init();
 				ICloudService.init();
 				RemoteAlertService.init();
 				if (!APPCENTER_MODE) UpdateService.init();
