@@ -356,6 +356,7 @@ package ui.chart
 		private var currentTotalIOB:Number = 0;
 		private var currentTotalCOB:Number = 0;
 		private var predictionsCalloutTimeout:uint = 0;
+		private var forceNightscoutPredictionRefresh:Boolean = false;
 		private var numDifferentPredictionsDisplayed:uint;
 		private var preferredPrediction:String;
 		private var predictionPillExplanationEnabled:Boolean = false;
@@ -1785,7 +1786,7 @@ package ui.chart
 					treatmentCallout.close(true);
 					
 					var lastTreatmentIsCarb:Boolean = TreatmentsManager.lastTreatmentIsCarb() || (treatment.treatment != null && treatment.treatment.carbs > 0);
-					
+				
 					var deleteTreatmentTween:Tween = new Tween(treatment, 0.3, Transitions.EASE_IN_BACK);
 					var lastReadingTimestamp:Number;
 					if (!predictionsEnabled || predictionsMainGlucoseDataPoints == null || predictionsMainGlucoseDataPoints.length == 0 || predictionsMainGlucoseDataPoints[predictionsMainGlucoseDataPoints.length - 1] == null)
@@ -1823,6 +1824,7 @@ package ui.chart
 							
 							redrawPredictionsTimeoutID = setTimeout( function():void 
 							{
+								forceNightscoutPredictionRefresh = true;
 								redrawPredictions();
 							}, 250 );
 						}
@@ -1878,6 +1880,7 @@ package ui.chart
 							
 							redrawPredictionsTimeoutID = setTimeout( function():void 
 							{
+								forceNightscoutPredictionRefresh = true;
 								redrawPredictions();
 							}, 250 );
 						}
@@ -4966,7 +4969,8 @@ package ui.chart
 					rawDataContainer.x = mainChart.x;
 				
 				//Update pedictions in Nightscout
-				NightscoutService.uploadPredictions(lastTreatmentIsCarbs || forceIOBCOBRefresh);
+				NightscoutService.uploadPredictions(lastTreatmentIsCarbs || forceIOBCOBRefresh || forceNightscoutPredictionRefresh);
+				forceNightscoutPredictionRefresh = false;
 				
 				return;
 			}
@@ -4995,7 +4999,8 @@ package ui.chart
 			manageTreatments();
 			
 			//Update pedictions in Nightscout
-			NightscoutService.uploadPredictions(lastTreatmentIsCarbs || forceIOBCOBRefresh);
+			NightscoutService.uploadPredictions(lastTreatmentIsCarbs || forceIOBCOBRefresh || forceNightscoutPredictionRefresh);
+			forceNightscoutPredictionRefresh = false;
 			
 			//Drawing Logic
 			function drawPredictions(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):void

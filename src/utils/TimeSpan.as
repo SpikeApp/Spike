@@ -51,6 +51,7 @@ package utils
 		public static const TIME_30_SECONDS:int = 30000;
 		public static const TIME_10_SECONDS:int = 10000;
 		public static const TIME_5_SECONDS:int = 5000;
+		public static const TIME_3_SECONDS:int = 3000;
 		public static const TIME_2_SECONDS:int = 2000;
 		
 		/**
