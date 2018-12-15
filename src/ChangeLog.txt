@@ -31,6 +31,7 @@ FEATURE: Sensor noise! Spike can now detect sensor noise (clean, light, medium, 
 FEATURE: Also added BAGE to the +Info pill. (Miguel)
 FEATURE: Added Turkish Translation. Special thanks to Mustafa Gülcan. 
 ENHANCEMENT: Some improvements have been made in the connection logic between the dedicated Apple Watch app and the iOS app. (Miguel)
+ENHANCEMENT: For Loop/OpenAPS users, Spike can now display negative values in the IOB pill. Useful for zero-temp scenarios. (Miguel)
 ENHANCEMENT: Reverted back the /Pebble endpoint to also display in mmol as it seems some Pebble watch faces don't do the conversion automatically. (Miguel)
 ENHANCEMENT: Upgraded Spike's internal Dexcom Share server to add compatibility with new Loop versions. (Miguel)
 ENHANCEMENT: Better alarm snoozer popup. When an alarm fires the user now has more options to choose from in the alarm snoozer popup as well as a better layout. (Miguel).

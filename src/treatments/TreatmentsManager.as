@@ -647,10 +647,6 @@ package treatments
 		
 		public static function getTotalCOB(time:Number, useLastBgReadingTimestamp:Boolean = false, isForPredictions:Boolean = false):Object 
 		{
-			//trace("--------------------");
-			//trace("GET TOTAL COB CALLED!", "useLastBgReadingTimestamp: " + useLastBgReadingTimestamp, "isForPredictions: " + isForPredictions, new Date(time));
-			//trace(new Error().getStackTrace().split("\n")[2]);
-			
 			//OpenAPS/Loop Support. Return value fetched from NS.
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
@@ -690,12 +686,7 @@ package treatments
 						
 						if (canTrimmTime)
 						{
-							//trace("SETTING TIME TO LAST BG READING");
 							time = lastBgReading._timestamp;
-						}
-						else
-						{
-							//trace("NOT POSSIBLE TO SET TIME TO LAST BG READING");
 						}
 					}
 				}
@@ -740,8 +731,6 @@ package treatments
 			//If no relevant treatments are found and COB is not meant for predictions, return COB of zero and avoid calculations
 			if (!relevantCarbTreatments && !isForPredictions)
 			{
-				//trace("RETURNING ZERO");
-				
 				return {
 					time: time,
 					cob: 0,
@@ -762,13 +751,9 @@ package treatments
 			var cachedCOB:Object = COBCache[time];
 			if (cachedCOB != null && cachedCOB.hash == relevantTreatmentsHash && cachedCOB.algorithm == algorithm)
 			{
-				//trace("RETURNING CACHE");
-				
 				//We have a cached data point. Return it instead of performing real calulations
 				return cachedCOB.cobCalc;
 			}
-			
-			//trace("CALCULATING");
 			
 			//No cached data found. Perform real calculations
 			var result:Object;

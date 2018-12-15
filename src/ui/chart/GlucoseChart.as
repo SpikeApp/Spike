@@ -47,6 +47,7 @@ package ui.chart
 	import feathers.layout.VerticalLayout;
 	import feathers.motion.Cover;
 	import feathers.motion.Reveal;
+	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.Forecast;
 	import model.ModelLocator;
@@ -58,6 +59,7 @@ package ui.chart
 	import starling.animation.Tween;
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
+	import starling.display.Image;
 	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.events.Event;
@@ -410,6 +412,9 @@ package ui.chart
 		private var ztPredictLegendColorQuad:Quad;
 		private var ztPredictLegendHitArea:Quad;
 		private var lastPredictionUpdateTimePill:ChartTreatmentPill;
+		private var refreshExternalPredictionsButton:Button;
+		private var predictionsExternalRefreshPill:ChartComponentPill;
+		private var refreshPredictionsIcon:Image;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -4509,6 +4514,16 @@ package ui.chart
 						
 					);
 				}
+				else if (predictionsExternalRefreshPill != null && (e.currentTarget === predictionsExternalRefreshPill.pillBackground || e.currentTarget === predictionsExternalRefreshPill.titleLabel))
+				{
+					displayPredictionPillExplanationCallout
+					(
+						predictionsExternalRefreshPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','refresh_predictions_button_label'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','refresh_predictions_explanation_label')
+						
+					);
+				}
 				else if (e.currentTarget === lastPredictionUpdateTimePill)
 				{
 					displayPredictionPillExplanationCallout
@@ -5373,9 +5388,41 @@ package ui.chart
 				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsSingleCurvePill.width);
 			}
 			
-			//Last Update
+			//Loop/OpenAPS Users
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 			{
+				//Add Refresh Button
+				if (refreshExternalPredictionsButton != null)
+				{
+					if (refreshPredictionsIcon != null)
+					{
+						if (refreshPredictionsIcon.texture != null)
+						{
+							refreshPredictionsIcon.texture.dispose();
+						}
+						
+						refreshPredictionsIcon.removeFromParent(true);
+					}
+					
+					refreshExternalPredictionsButton.removeEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
+					refreshExternalPredictionsButton.removeFromParent(true);
+				}
+				refreshPredictionsIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
+				refreshExternalPredictionsButton = new Button();
+				refreshExternalPredictionsButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
+				refreshExternalPredictionsButton.height = 21;
+				refreshExternalPredictionsButton.paddingLeft = refreshExternalPredictionsButton.paddingRight = 8;
+				refreshExternalPredictionsButton.addEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
+				
+				if (predictionsExternalRefreshPill != null) predictionsExternalRefreshPill.removeFromParent(true);
+				predictionsExternalRefreshPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','refresh_predictions_button_label'), refreshExternalPredictionsButton);
+				predictionsExternalRefreshPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsExternalRefreshPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsContainer.addChild(predictionsExternalRefreshPill);
+				
+				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsExternalRefreshPill.width);
+				
+				//Last NS Update
 				if (!isNaN(lastPredictionUpdate))
 				{
 					if (lastPredictionUpdateTimePill != null) lastPredictionUpdateTimePill.removeFromParent(true);
@@ -5562,15 +5609,15 @@ package ui.chart
 				}
 				
 				//Incomplete profile
-				if (predictionsIncompleteProfile)
+				if (predictionsIncompleteProfile && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true")
 				{
 					if (incompleteProfileWarningLabel != null) incompleteProfileWarningLabel.removeFromParent(true);
 					incompleteProfileWarningLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','incomplete_user_profile'), HorizontalAlign.JUSTIFY, VerticalAlign.TOP, 11, true, 0xFF0000);
 					incompleteProfileWarningLabel.width = widestPreditctionPill;
 					incompleteProfileWarningLabel.wordWrap = true;
-					incompleteProfileWarningLabel.paddingTop = 8;
+					incompleteProfileWarningLabel.paddingBottom = 8;
 					
-					predictionsContainer.addChild(incompleteProfileWarningLabel);
+					predictionsContainer.addChildAt(incompleteProfileWarningLabel, 0);
 				}
 			}
 			
@@ -5584,6 +5631,16 @@ package ui.chart
 			predictionsCallout.height = finalCalloutHeight;
 			predictionsContainer.height = finalCalloutHeight - 50;
 			predictionsContainer.maxHeight = finalCalloutHeight - 50;
+		}
+		
+		private function onRefreshExternalPredictions(e:starling.events.Event):void
+		{
+			if (predictionsCallout != null)
+			{
+				predictionsCallout.removeFromParent(true);
+			}
+			
+			NightscoutService.getPropertiesV2Endpoint(true);
 		}
 		
 		private function onPredictionsTimeFrameChanged(e:starling.events.Event):void
@@ -6046,6 +6103,39 @@ package ui.chart
 				predictionsIOBCOBPill.removeFromParent();
 				predictionsIOBCOBPill.dispose();
 				predictionsIOBCOBPill = null;
+			}
+			
+			if (refreshExternalPredictionsButton != null)
+			{
+				if (refreshPredictionsIcon != null)
+				{
+					if (refreshPredictionsIcon.texture != null)
+					{
+						refreshPredictionsIcon.texture.dispose();
+					}
+					
+					refreshPredictionsIcon.removeFromParent(true);
+				}
+				
+				refreshExternalPredictionsButton.removeEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
+				refreshExternalPredictionsButton.removeFromParent(true);
+			}
+			
+			if (predictionsExternalRefreshPill != null)
+			{
+				if (predictionsExternalRefreshPill.pillBackground != null)
+				{
+					predictionsExternalRefreshPill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				if (predictionsExternalRefreshPill.titleLabel != null)
+				{
+					predictionsExternalRefreshPill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				predictionsExternalRefreshPill.removeFromParent();
+				predictionsExternalRefreshPill.dispose();
+				predictionsExternalRefreshPill = null;
 			}
 			
 			if (predictionsSingleCurveCheck != null)
