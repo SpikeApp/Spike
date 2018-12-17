@@ -1683,22 +1683,23 @@ package ui.chart
 				//Treatment Value
 				var treatmentValue:String = "";
 				var treatmentNotes:String = treatmentNotes = treatment.treatment.note;
+				var treatmentBG:Number = treatment.treatment.glucoseEstimated;
 				if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
 					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
-					treatmentValue = (insulin != null ? insulin.name + "\n" : "") + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount);
+					treatmentValue = (insulin != null ? insulin.name + "\n" : "") + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 				{
-					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + ": " + treatment.treatment.carbs + "g" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','carbs_type_label') + ": " + TreatmentsManager.getCarbTypeName(treatment.treatment);
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + ": " + treatment.treatment.carbs + "g" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','carbs_type_label') + ": " + TreatmentsManager.getCarbTypeName(treatment.treatment) + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 				{
-					treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ": " + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + ": " + treatment.treatment.carbs + "g" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','carbs_type_label') + ": " + TreatmentsManager.getCarbTypeName(treatment.treatment);
+					treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ": " + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + ": " + treatment.treatment.carbs + "g" + " (" + TreatmentsManager.getCarbTypeName(treatment.treatment) + ")" + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_NOTE)
 				{
-					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note');
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note') + "\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 				{
