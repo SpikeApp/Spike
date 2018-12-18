@@ -29,6 +29,7 @@ package model
 		private static var internalCache:Object = {};
 		private static var apsPredictions:Object = null;
 		public static var externalLoopAPS:Boolean = false;
+		public static var lastExternalPredictionFetchTimestamp:Number = 0;
 		
 		public function Forecast()
 		{
@@ -1197,6 +1198,7 @@ package model
 		public static function setAPSPredictions(predictions:Object):void
 		{
 			apsPredictions = predictions;
+			lastExternalPredictionFetchTimestamp = new Date().valueOf();
 			
 			_instance.dispatchEvent(new PredictionEvent(PredictionEvent.APS_RETRIEVED));
 		}

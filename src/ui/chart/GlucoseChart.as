@@ -5911,6 +5911,12 @@ package ui.chart
 				return;
 			
 			redrawPredictions(false, true);
+			
+			var now:Number = new Date().valueOf();
+			if (displayIOBEnabled)
+				calculateTotalIOB(now);
+			if (displayCOBEnabled)
+				calculateTotalCOB(now);
 		}
 		
 		private function disposePredictionsPills():void
@@ -6910,12 +6916,25 @@ package ui.chart
 		{
 			if (SystemUtil.isApplicationActive)
 			{
+				//Update Labels
 				calculateDisplayLabels();
+				
+				//Update IOB/COB
 				var timelineTimestamp:Number = getTimelineTimestamp();
 				if (displayIOBEnabled)
 					calculateTotalIOB(timelineTimestamp);
 				if (displayCOBEnabled)
 					calculateTotalCOB(timelineTimestamp);
+				
+				//Fetch predictions (Loop/OpenAPS users only)
+				if (predictionsEnabled && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+				{
+					var lastAvailableReading:BgReading = BgReading.lastWithCalculatedValue();
+					if (lastAvailableReading != null && lastAvailableReading.timestamp > Forecast.lastExternalPredictionFetchTimestamp)
+					{
+						NightscoutService.getPropertiesV2Endpoint();
+					}
+				}
 			}
 		}
 		
