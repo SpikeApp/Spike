@@ -3076,6 +3076,13 @@ package services
 			{
 				setupNightscoutProperties();
 			}
+			else if (e.data == CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON)
+			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) == "True")
+				{
+					uploadPredictions();
+				}
+			}
 		}
 		
 		private static function onServiceTimer(e:TimerEvent):void

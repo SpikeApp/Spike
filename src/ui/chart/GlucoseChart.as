@@ -6,6 +6,8 @@ package ui.chart
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
+	import flash.net.URLRequest;
+	import flash.net.navigateToURL;
 	import flash.system.System;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
@@ -415,6 +417,9 @@ package ui.chart
 		private var refreshExternalPredictionsButton:Button;
 		private var predictionsExternalRefreshPill:ChartComponentPill;
 		private var refreshPredictionsIcon:Image;
+		private var wikiPredictionsIcon:Image;
+		private var wikiPredictionsButton:Button;
+		private var wikiPredictionsPill:ChartComponentPill;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -4486,6 +4491,15 @@ package ui.chart
 						ModelLocator.resourceManagerInstance.getString('chartscreen','enable_disable_predictions_pill_explanation_body')
 					);
 				}
+				else if (wikiPredictionsPill != null && (e.currentTarget === wikiPredictionsPill.pillBackground || e.currentTarget === wikiPredictionsPill.titleLabel))
+				{
+					displayPredictionPillExplanationCallout
+					(
+						wikiPredictionsPill, 
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_wiki_label'),
+						ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_wiki_explanation_content')
+					);
+				}
 				else if (predictionsTimeFramePill != null && (e.currentTarget === predictionsTimeFramePill.pillBackground || e.currentTarget === predictionsTimeFramePill.titleLabel))
 				{
 					displayPredictionPillExplanationCallout
@@ -5235,218 +5249,248 @@ package ui.chart
 			
 			widestPreditctionPill = Math.max(widestPreditctionPill, predictionsContainer.width);
 			
-			//Duration
-			if (predictionsLengthPicker != null) predictionsLengthPicker.removeFromParent(true);
-			var currentPredictionsLength:Number;
-			var predictionsListSelectedIndex:int;
-			predictionsLengthPicker = LayoutFactory.createPickerList();
-			predictionsLengthPicker.labelField = "label";
-			predictionsLengthPicker.popUpContentManager = new DropDownPopUpContentManager();
-			var lengthData:Array = [];
-			if (timelineRange == TIMELINE_1H)
+			//Wiki
+			if (wikiPredictionsButton != null)
 			{
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_15_min_duration_label'), id: 15 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_20_min_duration_label'), id: 20 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_25_min_duration_label'), id: 25 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
-				
-				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
-				if (currentPredictionsLength == 15)
-					predictionsListSelectedIndex = 0;
-				else if (currentPredictionsLength == 20)
-					predictionsListSelectedIndex = 1;
-				else if (currentPredictionsLength == 25)
-					predictionsListSelectedIndex = 2;
-				else if (currentPredictionsLength == 30)
-					predictionsListSelectedIndex = 3;
-			}
-			else if (timelineRange == TIMELINE_3H)
-			{
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_30_min_duration_label'), id: 90 } );
-				
-				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_3_HOURS));
-				if (currentPredictionsLength == 30)
-					predictionsListSelectedIndex = 0;
-				else if (currentPredictionsLength == 60)
-					predictionsListSelectedIndex = 1;
-				else if (currentPredictionsLength == 90)
-					predictionsListSelectedIndex = 2;
-			}
-			else if (timelineRange == TIMELINE_6H)
-			{
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_30_min_duration_label'), id: 90 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hour_30_min_duration_label'), id: 150 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
-				
-				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_6_HOURS));
-				if (currentPredictionsLength == 30)
-					predictionsListSelectedIndex = 0;
-				else if (currentPredictionsLength == 60)
-					predictionsListSelectedIndex = 1;
-				else if (currentPredictionsLength == 90)
-					predictionsListSelectedIndex = 2;
-				else if (currentPredictionsLength == 120)
-					predictionsListSelectedIndex = 3;
-				else if (currentPredictionsLength == 150)
-					predictionsListSelectedIndex = 4;
-				else if (currentPredictionsLength == 180)
-					predictionsListSelectedIndex = 5;
-			}
-			else if (timelineRange == TIMELINE_12H)
-			{
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_4_hours_duration_label'), id: 240 } );
-				
-				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_12_HOURS));
-				if (currentPredictionsLength == 60)
-					predictionsListSelectedIndex = 0;
-				else if (currentPredictionsLength == 120)
-					predictionsListSelectedIndex = 1;
-				else if (currentPredictionsLength == 180)
-					predictionsListSelectedIndex = 2;
-				else if (currentPredictionsLength == 240)
-					predictionsListSelectedIndex = 3;
-			}
-			else if (timelineRange == TIMELINE_24H)
-			{
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
-				lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_4_hours_duration_label'), id: 240 } );
-				
-				currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_24_HOURS));
-				if (currentPredictionsLength == 60)
-					predictionsListSelectedIndex = 0;
-				else if (currentPredictionsLength == 120)
-					predictionsListSelectedIndex = 1;
-				else if (currentPredictionsLength == 180)
-					predictionsListSelectedIndex = 2;
-				else if (currentPredictionsLength == 240)
-					predictionsListSelectedIndex = 3;
-			}
-			
-			predictionsLengthPicker.dataProvider = new ArrayCollection(lengthData);
-			predictionsLengthPicker.selectedIndex = predictionsListSelectedIndex;
-			predictionsLengthPicker.buttonFactory = function():Button
-			{
-				var button:Button = new Button();
-				button.height = 21;
-				button.paddingLeft = button.paddingRight = 8;
-				
-				return button;
-			};
-			
-			predictionsLengthPicker.addEventListener(starling.events.Event.CHANGE, onPredictionsTimeFrameChanged);
-			predictionsLengthPicker.addEventListener(starling.events.Event.OPEN, onPredictionsTimeFrameOpened);
-			predictionsLengthPicker.addEventListener(starling.events.Event.CLOSE, onPredictionsTimeFrameClosed);
-			
-			if (predictionsTimeFramePill != null) predictionsTimeFramePill.removeFromParent(true);
-			predictionsTimeFramePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_label'), predictionsLengthPicker, 6, true);
-			predictionsTimeFramePill.addEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
-			predictionsTimeFramePill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-			predictionsTimeFramePill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-			predictionsContainer.addChild(predictionsTimeFramePill);
-			
-			widestPreditctionPill = Math.max(widestPreditctionPill, predictionsTimeFramePill.width);
-			
-			//IOB/COB Toggle
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true")
-			{
-				if (predictionsIOBCOBCheck != null) predictionsIOBCOBCheck.removeFromParent(true);
-				predictionsIOBCOBCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true");
-				predictionsIOBCOBCheck.paddingTop = predictionsIOBCOBCheck.paddingBottom = 3;
-				predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
-				if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.removeFromParent(true);
-				predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
-				predictionsIOBCOBPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsIOBCOBPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsContainer.addChild(predictionsIOBCOBPill);
-				
-				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsIOBCOBPill.width);
-			}
-			
-			//Single Prediction Curve Toggle
-			if (!Forecast.externalLoopAPS)
-			{
-				if (predictionsSingleCurveCheck != null) predictionsSingleCurveCheck.removeFromParent(true);
-				predictionsSingleCurveCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED) == "true");
-				predictionsSingleCurveCheck.paddingTop = predictionsSingleCurveCheck.paddingBottom = 3;
-				predictionsSingleCurveCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsSingleCurveChanged);
-				
-				if (predictionsSingleCurvePill != null) predictionsSingleCurvePill.removeFromParent(true);
-				predictionsSingleCurvePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','single_prediction_curve_label'), predictionsSingleCurveCheck);
-				predictionsSingleCurvePill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsSingleCurvePill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsContainer.addChild(predictionsSingleCurvePill);
-				
-				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsSingleCurvePill.width);
-			}
-			
-			//Loop/OpenAPS Users
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
-			{
-				//Add Refresh Button
-				if (refreshExternalPredictionsButton != null)
+				if (wikiPredictionsIcon != null)
 				{
-					if (refreshPredictionsIcon != null)
+					if (wikiPredictionsIcon.texture != null)
 					{
-						if (refreshPredictionsIcon.texture != null)
-						{
-							refreshPredictionsIcon.texture.dispose();
-						}
-						
-						refreshPredictionsIcon.removeFromParent(true);
+						wikiPredictionsIcon.texture.dispose();
 					}
 					
-					refreshExternalPredictionsButton.removeEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
-					refreshExternalPredictionsButton.removeFromParent(true);
+					wikiPredictionsIcon.removeFromParent(true);
 				}
-				refreshPredictionsIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
-				refreshExternalPredictionsButton = new Button();
-				refreshExternalPredictionsButton.defaultIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
-				refreshExternalPredictionsButton.height = 21;
-				refreshExternalPredictionsButton.paddingLeft = refreshExternalPredictionsButton.paddingRight = 8;
-				refreshExternalPredictionsButton.addEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
 				
-				if (predictionsExternalRefreshPill != null) predictionsExternalRefreshPill.removeFromParent(true);
-				predictionsExternalRefreshPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','refresh_predictions_button_label'), refreshExternalPredictionsButton);
-				predictionsExternalRefreshPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsExternalRefreshPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-				predictionsContainer.addChild(predictionsExternalRefreshPill);
-				
-				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsExternalRefreshPill.width);
-				
-				//Last NS Update
-				if (!isNaN(lastPredictionUpdate))
-				{
-					if (lastPredictionUpdateTimePill != null) lastPredictionUpdateTimePill.removeFromParent(true);
-					lastPredictionUpdateTimePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','last_nightscout_prediction_update_label'));
-					
-					var lastUpdateFormated:String = TimeSpan.formatHoursMinutesFromSecondsChart((new Date().valueOf() - lastPredictionUpdate) / 1000, true, true, false);
-					//lastUpdateFormated.replace(" ", "");
-					if (lastUpdateFormated != ModelLocator.resourceManagerInstance.getString('chartscreen','now'))
-					{
-						lastUpdateFormated += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
-					}
-					
-					lastPredictionUpdateTimePill.setValue(lastUpdateFormated);
-					lastPredictionUpdateTimePill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-					predictionsContainer.addChild(lastPredictionUpdateTimePill);
-					
-					widestPreditctionPill = Math.max(widestPreditctionPill, lastPredictionUpdateTimePill.width);
-				}
+				wikiPredictionsButton.removeEventListener(starling.events.Event.TRIGGERED, onPredictionsWiki);
+				wikiPredictionsButton.removeFromParent(true);
 			}
+			wikiPredictionsIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.helpOutlineTexture);
+			wikiPredictionsButton = new Button();
+			wikiPredictionsButton.defaultIcon = wikiPredictionsIcon;
+			wikiPredictionsButton.height = 21;
+			wikiPredictionsButton.paddingLeft = wikiPredictionsButton.paddingRight = 8;
+			wikiPredictionsButton.addEventListener(starling.events.Event.TRIGGERED, onPredictionsWiki);
 			
-			//Predictions Output
+			if (wikiPredictionsPill != null) wikiPredictionsPill.removeFromParent(true);
+			wikiPredictionsPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_wiki_label'), wikiPredictionsButton);
+			wikiPredictionsPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			wikiPredictionsPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+			predictionsContainer.addChild(wikiPredictionsPill);
+			
+			widestPreditctionPill = Math.max(widestPreditctionPill, wikiPredictionsPill.width);
+			
 			if (predictionsEnabled)
 			{
+				//Duration
+				if (predictionsLengthPicker != null) predictionsLengthPicker.removeFromParent(true);
+				var currentPredictionsLength:Number;
+				var predictionsListSelectedIndex:int;
+				predictionsLengthPicker = LayoutFactory.createPickerList();
+				predictionsLengthPicker.labelField = "label";
+				predictionsLengthPicker.popUpContentManager = new DropDownPopUpContentManager();
+				var lengthData:Array = [];
+				if (timelineRange == TIMELINE_1H)
+				{
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_15_min_duration_label'), id: 15 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_20_min_duration_label'), id: 20 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_25_min_duration_label'), id: 25 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
+					
+					currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR));
+					if (currentPredictionsLength == 15)
+						predictionsListSelectedIndex = 0;
+					else if (currentPredictionsLength == 20)
+						predictionsListSelectedIndex = 1;
+					else if (currentPredictionsLength == 25)
+						predictionsListSelectedIndex = 2;
+					else if (currentPredictionsLength == 30)
+						predictionsListSelectedIndex = 3;
+				}
+				else if (timelineRange == TIMELINE_3H)
+				{
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_30_min_duration_label'), id: 90 } );
+					
+					currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_3_HOURS));
+					if (currentPredictionsLength == 30)
+						predictionsListSelectedIndex = 0;
+					else if (currentPredictionsLength == 60)
+						predictionsListSelectedIndex = 1;
+					else if (currentPredictionsLength == 90)
+						predictionsListSelectedIndex = 2;
+				}
+				else if (timelineRange == TIMELINE_6H)
+				{
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_30_min_duration_label'), id: 30 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_30_min_duration_label'), id: 90 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hour_30_min_duration_label'), id: 150 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
+					
+					currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_6_HOURS));
+					if (currentPredictionsLength == 30)
+						predictionsListSelectedIndex = 0;
+					else if (currentPredictionsLength == 60)
+						predictionsListSelectedIndex = 1;
+					else if (currentPredictionsLength == 90)
+						predictionsListSelectedIndex = 2;
+					else if (currentPredictionsLength == 120)
+						predictionsListSelectedIndex = 3;
+					else if (currentPredictionsLength == 150)
+						predictionsListSelectedIndex = 4;
+					else if (currentPredictionsLength == 180)
+						predictionsListSelectedIndex = 5;
+				}
+				else if (timelineRange == TIMELINE_12H)
+				{
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_4_hours_duration_label'), id: 240 } );
+					
+					currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_12_HOURS));
+					if (currentPredictionsLength == 60)
+						predictionsListSelectedIndex = 0;
+					else if (currentPredictionsLength == 120)
+						predictionsListSelectedIndex = 1;
+					else if (currentPredictionsLength == 180)
+						predictionsListSelectedIndex = 2;
+					else if (currentPredictionsLength == 240)
+						predictionsListSelectedIndex = 3;
+				}
+				else if (timelineRange == TIMELINE_24H)
+				{
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_1_hour_duration_label'), id: 60 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_2_hours_duration_label'), id: 120 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_3_hours_duration_label'), id: 180 } );
+					lengthData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_4_hours_duration_label'), id: 240 } );
+					
+					currentPredictionsLength = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_24_HOURS));
+					if (currentPredictionsLength == 60)
+						predictionsListSelectedIndex = 0;
+					else if (currentPredictionsLength == 120)
+						predictionsListSelectedIndex = 1;
+					else if (currentPredictionsLength == 180)
+						predictionsListSelectedIndex = 2;
+					else if (currentPredictionsLength == 240)
+						predictionsListSelectedIndex = 3;
+				}
+				
+				predictionsLengthPicker.dataProvider = new ArrayCollection(lengthData);
+				predictionsLengthPicker.selectedIndex = predictionsListSelectedIndex;
+				predictionsLengthPicker.buttonFactory = function():Button
+				{
+					var button:Button = new Button();
+					button.height = 21;
+					button.paddingLeft = button.paddingRight = 8;
+					
+					return button;
+				};
+				
+				predictionsLengthPicker.addEventListener(starling.events.Event.CHANGE, onPredictionsTimeFrameChanged);
+				predictionsLengthPicker.addEventListener(starling.events.Event.OPEN, onPredictionsTimeFrameOpened);
+				predictionsLengthPicker.addEventListener(starling.events.Event.CLOSE, onPredictionsTimeFrameClosed);
+				
+				if (predictionsTimeFramePill != null) predictionsTimeFramePill.removeFromParent(true);
+				predictionsTimeFramePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_label'), predictionsLengthPicker, 6, true);
+				predictionsTimeFramePill.addEventListener(starling.events.Event.UPDATE, onPredictionTimeFramePillUpdated);
+				predictionsTimeFramePill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsTimeFramePill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				predictionsContainer.addChild(predictionsTimeFramePill);
+				
+				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsTimeFramePill.width);
+				
+				//IOB/COB Toggle
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true")
+				{
+					if (predictionsIOBCOBCheck != null) predictionsIOBCOBCheck.removeFromParent(true);
+					predictionsIOBCOBCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true");
+					predictionsIOBCOBCheck.paddingTop = predictionsIOBCOBCheck.paddingBottom = 3;
+					predictionsIOBCOBCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsIOBCOBChanged);
+					if (predictionsIOBCOBPill != null) predictionsIOBCOBPill.removeFromParent(true);
+					predictionsIOBCOBPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_include_iob_cob_label'), predictionsIOBCOBCheck);
+					predictionsIOBCOBPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsIOBCOBPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsContainer.addChild(predictionsIOBCOBPill);
+					
+					widestPreditctionPill = Math.max(widestPreditctionPill, predictionsIOBCOBPill.width);
+				}
+				
+				//Single Prediction Curve Toggle
+				if (!Forecast.externalLoopAPS)
+				{
+					if (predictionsSingleCurveCheck != null) predictionsSingleCurveCheck.removeFromParent(true);
+					predictionsSingleCurveCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED) == "true");
+					predictionsSingleCurveCheck.paddingTop = predictionsSingleCurveCheck.paddingBottom = 3;
+					predictionsSingleCurveCheck.addEventListener(starling.events.Event.CHANGE, onPredictionsSingleCurveChanged);
+					
+					if (predictionsSingleCurvePill != null) predictionsSingleCurvePill.removeFromParent(true);
+					predictionsSingleCurvePill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','single_prediction_curve_label'), predictionsSingleCurveCheck);
+					predictionsSingleCurvePill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsSingleCurvePill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsContainer.addChild(predictionsSingleCurvePill);
+					
+					widestPreditctionPill = Math.max(widestPreditctionPill, predictionsSingleCurvePill.width);
+				}
+				
+				//Loop/OpenAPS Users
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
+				{
+					//Add Refresh Button
+					if (refreshExternalPredictionsButton != null)
+					{
+						if (refreshPredictionsIcon != null)
+						{
+							if (refreshPredictionsIcon.texture != null)
+							{
+								refreshPredictionsIcon.texture.dispose();
+							}
+							
+							refreshPredictionsIcon.removeFromParent(true);
+						}
+						
+						refreshExternalPredictionsButton.removeEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
+						refreshExternalPredictionsButton.removeFromParent(true);
+					}
+					refreshPredictionsIcon = new Image(MaterialDeepGreyAmberMobileThemeIcons.refreshTexture);
+					refreshExternalPredictionsButton = new Button();
+					refreshExternalPredictionsButton.defaultIcon = refreshPredictionsIcon;
+					refreshExternalPredictionsButton.height = 21;
+					refreshExternalPredictionsButton.paddingLeft = refreshExternalPredictionsButton.paddingRight = 8;
+					refreshExternalPredictionsButton.addEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
+					
+					if (predictionsExternalRefreshPill != null) predictionsExternalRefreshPill.removeFromParent(true);
+					predictionsExternalRefreshPill = new ChartComponentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','refresh_predictions_button_label'), refreshExternalPredictionsButton);
+					predictionsExternalRefreshPill.pillBackground.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsExternalRefreshPill.titleLabel.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+					predictionsContainer.addChild(predictionsExternalRefreshPill);
+					
+					widestPreditctionPill = Math.max(widestPreditctionPill, predictionsExternalRefreshPill.width);
+					
+					//Last NS Update
+					if (!isNaN(lastPredictionUpdate))
+					{
+						if (lastPredictionUpdateTimePill != null) lastPredictionUpdateTimePill.removeFromParent(true);
+						lastPredictionUpdateTimePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','last_nightscout_prediction_update_label'));
+						
+						var lastUpdateFormated:String = TimeSpan.formatHoursMinutesFromSecondsChart((new Date().valueOf() - lastPredictionUpdate) / 1000, true, true, false);
+						//lastUpdateFormated.replace(" ", "");
+						if (lastUpdateFormated != ModelLocator.resourceManagerInstance.getString('chartscreen','now'))
+						{
+							lastUpdateFormated += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix');
+						}
+						
+						lastPredictionUpdateTimePill.setValue(lastUpdateFormated);
+						lastPredictionUpdateTimePill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+						predictionsContainer.addChild(lastPredictionUpdateTimePill);
+						
+						widestPreditctionPill = Math.max(widestPreditctionPill, lastPredictionUpdateTimePill.width);
+					}
+				}
+			
 				//Time Until High
 				if (!isNaN(predictedTimeUntilHigh) && predictedTimeUntilHigh != 0)
 				{
@@ -5574,7 +5618,7 @@ package ui.chart
 				}
 				
 				//Carb Impact
-				if (!isNaN(predictedCarbImpact))
+				/*if (!isNaN(predictedCarbImpact))
 				{
 					if (predictedCarbImpactPill != null) predictedCarbImpactPill.removeFromParent(true);
 					predictedCarbImpactPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_carb_impact'));
@@ -5583,7 +5627,7 @@ package ui.chart
 					predictionsContainer.addChild(predictedCarbImpactPill);
 					
 					widestPreditctionPill = Math.max(widestPreditctionPill, predictedCarbImpactPill.width);
-				}
+				}*/
 				
 				//BG Impact
 				if (!isNaN(predictedBGImpact))
@@ -5642,6 +5686,11 @@ package ui.chart
 			}
 			
 			NightscoutService.getPropertiesV2Endpoint(true);
+		}
+		
+		private function onPredictionsWiki(e:starling.events.Event):void
+		{
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Glucose-Predictions"));
 		}
 		
 		private function onPredictionsTimeFrameChanged(e:starling.events.Event):void
@@ -6058,6 +6107,43 @@ package ui.chart
 				predictionsEnablerPill = null;
 			}
 			
+			if (wikiPredictionsButton != null)
+			{
+				if (wikiPredictionsIcon != null)
+				{
+					if (wikiPredictionsIcon.texture != null)
+					{
+						wikiPredictionsIcon.texture.dispose();
+					}
+					
+					wikiPredictionsIcon.removeFromParent();
+					wikiPredictionsIcon.dispose();
+					wikiPredictionsIcon = null;
+				}
+				
+				wikiPredictionsButton.removeEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
+				wikiPredictionsButton.removeFromParent();
+				wikiPredictionsButton.dispose();
+				wikiPredictionsButton = null;
+			}
+			
+			if (wikiPredictionsPill != null)
+			{
+				if (wikiPredictionsPill.pillBackground != null)
+				{
+					wikiPredictionsPill.pillBackground.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				if (wikiPredictionsPill.titleLabel != null)
+				{
+					wikiPredictionsPill.titleLabel.removeEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+				}
+				
+				wikiPredictionsPill.removeFromParent();
+				wikiPredictionsPill.dispose();
+				wikiPredictionsPill = null;
+			}
+			
 			if (predictionsLengthPicker != null)
 			{
 				predictionsLengthPicker.removeEventListener(starling.events.Event.CHANGE, onPredictionsTimeFrameChanged);
@@ -6121,11 +6207,15 @@ package ui.chart
 						refreshPredictionsIcon.texture.dispose();
 					}
 					
-					refreshPredictionsIcon.removeFromParent(true);
+					refreshPredictionsIcon.removeFromParent();
+					refreshPredictionsIcon.dispose();
+					refreshPredictionsIcon = null;
 				}
 				
 				refreshExternalPredictionsButton.removeEventListener(starling.events.Event.TRIGGERED, onRefreshExternalPredictions);
-				refreshExternalPredictionsButton.removeFromParent(true);
+				refreshExternalPredictionsButton.removeFromParent();
+				refreshExternalPredictionsButton.dispose();
+				refreshExternalPredictionsButton = null;
 			}
 			
 			if (predictionsExternalRefreshPill != null)
