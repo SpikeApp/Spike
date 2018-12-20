@@ -5,18 +5,18 @@ FEATURE: Glucose predictions are here! (Miguel)
 3) Available prediction curves:
 - IOB: This is a predicted BG curve that is based on insulin only. If no IOB is present, this predicted BG curve will only take into account the current BG trend and things like "BG momentum".
 - COB: Uses carbs and insulin (if available) together in predicting the BG curve.
-- UAG: Spike is able to automatically detect "floating carbs" (unlogged carbs or glucose coming from stress, adrenaline, etc.) and use them along insulin (if available) together in predicting the BG curve.
+- UAG: Spike is able to automatically detect "floating carbs" (unlogged carbs or glucose coming from stress, adrenaline, etc.) and use it along insulin (if available) together in predicting the BG curve. This means that even if you eat carbs and don't log them, Spike will still be able to automatically detect them and account for them when calculating predictions.
 - ZT: Prediction BG curve representing a scenario when a zero temp is given (zero basal insulin). ZT predicts how BG SHOULD behave in the absence of basal insulin.
-4) New prediction pill available in the chart screen that provides a plethora of new information to the user like:
+4) New prediction pill available in the chart screen that provides a plethora of new information to the user:
 - Time until glucose reaches the user's high/low threshold.
 - Treatments outcome: Final BG outcome of all active insulin/carbs treatments. This is the same outcome given by the Bolus Calculator. 
 - BG velocity per minute.
 - Several prediction settings like enable/disable, duration change, include/exclude IOB/COB, etc.
-- Several more information like deviation, bg impact, carb impact, etc.
+- Several more information like deviation, BG impact, eventual BG, etc.
 5) Some of the colors used to display the prediction curves can be changed in Settings > Chart.
 6) Predictions are also available in the fullscreen view, today widget, apple watch complication and apple watch dedicated app.
 7) Predictions are available to masters and followers as well as Loop/OpenAPS Users that have the "Loop/OpenAPS User" option enabled in Settings > Treatments (please continue to have this option enabled).
-7) Much, much more. Please read the WiKi here:
+8) Much, much more. Please read the WiKi here: https://github.com/SpikeApp/Spike/wiki/Glucose-Predictions
 FEATURE: New IOB & COB algorithms! Spike can now use exponential insulin curves as well as the OpenAPS (oref0) COB algorithm. (Miguel).
 - Users can still choose between the current IOB/COB algorithm (ported from Nightscout) or the new oref0 IOB/COB algorithm. Head over to Settings > Treatments > Profile to choose.
 - The new IOB algorithm supports bilinear and exponential curves. Exponential curves are MUCH more precise and VERY close to the same insulin curves observed in trials.

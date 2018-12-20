@@ -3637,7 +3637,7 @@ package ui.chart
 			var cobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
 			var iobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
 			var uamPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR));
-			var ztPredictionsColor:uint = 0x00d1fe;
+			var ztPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ZT_COLOR));
 			
 			//Prediction's lists
 			var finalTotalPredictionsList:Array = [];
