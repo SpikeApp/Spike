@@ -1688,7 +1688,7 @@ package ui.chart
 				//Treatment Value
 				var treatmentValue:String = "";
 				var treatmentNotes:String = treatmentNotes = treatment.treatment.note;
-				var treatmentBG:Number = treatment.treatment.glucoseEstimated;
+				var treatmentBG:Number = glucoseUnit == "mg/dL" ? Math.round(treatment.treatment.glucoseEstimated) : Math.round(BgReading.mgdlToMmol(treatment.treatment.glucoseEstimated) * 10) / 10;
 				if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
 					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
