@@ -23,7 +23,7 @@ FEATURE: New IOB & COB algorithms! Spike can now use exponential insulin curves 
 2) The new IOB algorithm supports bilinear and exponential curves. Exponential curves are MUCH more precise and VERY close to the same insulin curves observed in trials.
 3) When using the exponential curve the user can customize the DIA and PEAK time of the insulin, meaning it can fully customize the insulin curve to his/her desire. Customization is done in real time while Spike draws the insulin curve based on the user's DIA and PEAK for a realistic visual representation.
 4) When using the exponential curve Spike now comes bundled with some predefined presets for Apidra, Humalog, Novolog, Novorapid, etc. Both for adults and children. Choose your preset and Spike will automatically draw your insulin curve.
-5) Please read a detailed explanation of the new IOB algorithm and the benedits of the new insulin curves in Settings > Treatments > Profile > Algorithm > Show Details.
+5) Please read a detailed explanation of the new IOB algorithm and the benefits of the new insulin curves in Settings > Treatments > Profile > Algorithm > Show Details.
 6) The new COB algorithm (heavily modified oref0) now analyzes in real time glucose trends to determine how much carbs have been absorbed. Instead of assuming a linear absorption model like the Nightscout algorithm, the new COB algorithm is intelligent enough to determine how much carbs have been absorbed by constantly analyzing the glucose trend in real time.
 7) More info available in the new IOB/COB wiki available here: https://github.com/SpikeApp/Spike/wiki/IOB-COB-Algorithms
 FEATURE: Due to the increased complexity of the new IOB/COB algorithm as well as glucose predictions and in order to avoid constant mathematical calculations that would decrease battery life, a new (from scratch) intelligent cache system has been coded so calculations are only done once and then cached and ready to be sent to all the different services inside Spike. Caches are also saved in Spike's internal database so they can survive app/system restarts. They can be cleared by going to Settings > Maintenance > Internal Cache > Clear although there should be no need to do it as Spike creates and clears caches automatically. (Miguel) 
@@ -40,7 +40,7 @@ ENHANCEMENT: Added a warning to the readings screen. If by some reason the user 
 ENHANCEMENT: Added insulin precision of 0.05U to the Bolus Calculator. Available in Settings > Treatments > Bolus Calculator. (Miguel)
 ENHANCEMENT: When scanning foods, if Spike only returns one hit it will auto select that food from the search results list to speed up the workflow process. (Miguel)
 ENHANCEMENT: Bolus Calculator popup can now be dismissed when pressing anywhere outside. (Miguel)
-ENHNACEMENT: Improvements to the Russian and Norwegian translations. Special thanks to our beloved translators!
+ENHANCEMENT: Improvements to the Russian and Norwegian translations. Special thanks to our beloved translators!
 ENHANCEMENT: Improvements on how the treatments menu and the +info menu are rendered and positioned on small screen devices (eg: iPhone 4s). (Miguel)
 ENHANCEMENT: When pressing a treatment on the chart the approximate BG value recorded at the time the treatment was inserted is now displayed on the popup. (Miguel)
 ENHANCEMENT: Added a button on the Help screen (main menu) that links to all available Spike wikis. (Miguel)
