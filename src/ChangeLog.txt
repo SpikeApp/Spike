@@ -42,6 +42,7 @@ ENHANCEMENT: Bolus Calculator popup can now be dismissed when pressing anywhere 
 ENHNACEMENT: Improvements to the Russian and Norwegian translations. Special thanks to our beloved translators!
 ENHANCEMENT: Improvements on how the treatments menu and the +info menu are rendered and positioned on small screen devices (eg: iPhone 4s). (Miguel)
 ENHANCEMENT: When pressing a treatment on the chart the approximate BG value recorded at the time the treatment was inserted is now displayed on the popup. (Miguel)
+ENHANCEMENT: Added a button on the Help screen (main menu) that links to all available Spike wikis. (Miguel)
 FIX: Bolus Calculator popup should now display correctly when switching from portrait to landscape and vice-versa. (Miguel)
 FIX: Several small bug fixes in the Bolus Calculator calculation logic to address some bugs reported by users. (Miguel)
 FIX: When using Spike in Italian, languages were not listed correctly in the speech output settings (e.g. instead of Italian, it was Portuguese). (Sascha)
