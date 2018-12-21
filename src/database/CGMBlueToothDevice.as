@@ -1,5 +1,7 @@
 package database
 {
+	import G5G6Model.G5G6VersionInfo;
+	
 	import model.ModelLocator;
 	
 	import services.bluetooth.CGMBluetoothService;
@@ -240,6 +242,58 @@ package database
 				return "xBridgeR";
 			
 			return "unknown";
+		}
+		
+		public static function getFirmwareVersion():String
+		{
+			if (isDexcomG5() || isDexcomG6())
+				return G5G6VersionInfo.getG5G6VersionInfo().firmware_version_string;
+			else if (isMiaoMiao())
+				return CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW);
+			
+			return null;
+		}
+		
+		public static function getHardwareVersion():String
+		{
+			if (isDexcomG5() || isDexcomG6())
+				return String(G5G6VersionInfo.getG5G6VersionInfo().hardwarev);
+			
+			return null;
+		}
+		
+		public static function getSoftwareVersion():String
+		{
+			if (isDexcomG5() || isDexcomG6())
+				return G5G6VersionInfo.getG5G6VersionInfo().bluetooth_firmware_version_string;
+			
+			return null;
+		}
+		
+		public static function getManufacturer():String
+		{
+			if (isDexcomG4() || isDexcomG5() || isDexcomG6())
+				return "Dexcom";
+			else if (isMiaoMiao())
+				return "MiaoMiao";
+			else if (isBluKon())
+				return "Ambrosia";
+			else if (isBlueReader())
+				return "Keßler";
+			else if (isLimitter())
+				return "JoernL";
+			else if (isTransmiter_PL())
+				return "mTransmiter";
+				
+			return null;
+		}
+		
+		public static function getLocalIdentifier():String
+		{
+			if (_address != null && _address != "")
+				return _address;
+			
+			return null;
 		}
 		
 		public static function getTransmitterName():String

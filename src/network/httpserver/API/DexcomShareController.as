@@ -82,9 +82,19 @@ package network.httpserver.API
 				}
 				
 				var collector:String = null;
+				var fwVersion:String = null;
+				var swVersion:String = null;
+				var hwVersion:String = null;
+				var manufacturer:String = null;
+				var localIdentifier:String = null;
 				if (includeCollector)
 				{
 					collector = CGMBlueToothDevice.deviceType();
+					fwVersion = CGMBlueToothDevice.getFirmwareVersion();
+					swVersion = CGMBlueToothDevice.getSoftwareVersion();
+					hwVersion = CGMBlueToothDevice.getHardwareVersion();
+					manufacturer = CGMBlueToothDevice.getManufacturer();
+					localIdentifier = CGMBlueToothDevice.getLocalIdentifier();
 				}
 				
 				var dexcomReadingsList:Array = BgReading.latest(numReadings, CGMBlueToothDevice.isFollower());
@@ -96,7 +106,7 @@ package network.httpserver.API
 					if (bgReading == null || bgReading.calculatedValue == 0)
 						continue;
 					
-					dexcomReadingsCollection.push(createGlucoseReading(bgReading, collector));
+					dexcomReadingsCollection.push(createGlucoseReading(bgReading, collector, manufacturer, fwVersion, swVersion, hwVersion, localIdentifier));
 				}
 				
 				//response = JSON.stringify(dexcomReadingsCollection);
@@ -166,7 +176,7 @@ package network.httpserver.API
 			return responseJSON;
 		}
 		
-		private static function createGlucoseReading(glucoseReading:BgReading, collector:String = null):Object
+		private static function createGlucoseReading(glucoseReading:BgReading, collector:String = null, manufacturer:String = null, fwVersion:String = null, swVersion:String = null, hwVersion:String = null, localIdentifier:String = null):Object
 		{
 			var newReading:Object = new Object();
 			newReading.DT = toDateString(glucoseReading.timestamp);
@@ -174,8 +184,12 @@ package network.httpserver.API
 			newReading.Trend = glucoseReading.getSlopeOrdinal();
 			newReading.Value = Math.round(glucoseReading.calculatedValue);
 			newReading.WT = toDateString(glucoseReading.timestamp - TimeSpan.TIME_5_SECONDS);
-			if (collector != null)
-				newReading.Collector = collector;
+			if (collector != null) newReading.Collector = collector;
+			if (manufacturer != null) newReading.Manufacturer = manufacturer;
+			if (fwVersion != null) newReading.FWVersion = fwVersion;
+			if (swVersion != null) newReading.SWVersion = swVersion;
+			if (hwVersion != null) newReading.SWVersion = hwVersion;
+			if (localIdentifier != null) newReading.LocalIdentifier = localIdentifier;
 			
 			return newReading;
 		}
