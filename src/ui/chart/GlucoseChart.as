@@ -1,6 +1,7 @@
 package ui.chart
 { 
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.hurlant.crypto.symmetric.NullPad;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
@@ -420,6 +421,10 @@ package ui.chart
 		private var wikiPredictionsIcon:Image;
 		private var wikiPredictionsButton:Button;
 		private var wikiPredictionsPill:ChartComponentPill;
+
+		private var finalPredictedDuration:Number;
+
+		private var finalPredictedValue:Number;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -2732,7 +2737,7 @@ package ui.chart
 			return true;
 		}
 		
-		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int, isRaw:Boolean = false, forcePredictionsCOBRefresh:Boolean = false):void
+		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int, isRaw:Boolean = false, forcePredictionsCOBRefresh:Boolean = false, calibratedPredictions:Array = null):void
 		{
 			if (!SystemUtil.isApplicationActive)
 				return;
@@ -2747,7 +2752,14 @@ package ui.chart
 				//Special case for latest carb treatment
 				var lastTreatmentIsCarbs:Boolean = TreatmentsManager.lastTreatmentIsCarb();
 				
-				predictionsList = fetchPredictions(lastTreatmentIsCarbs)
+				if (calibratedPredictions != null)
+				{
+					predictionsList = calibratedPredictions;
+				}
+				else
+				{
+					predictionsList = fetchPredictions(lastTreatmentIsCarbs);
+				}
 			}
 			else
 			{
@@ -4004,31 +4016,42 @@ package ui.chart
 			
 			//Update predictions pill
 			predictionsPill.isPredictive = true;
+			finalPredictedValue = Number.NaN;
+			finalPredictedDuration = Number.NaN;
 			
 			var predictionAvailableDuration:Number = Math.max(finalCOBPredictionsList.length, finalUAMPredictionsList.length, finalZTPredictionsList.length, finalIOBPredictionsList.length) * 5;
 			if (isNaN(predictionAvailableDuration))
 			{
 				predictionAvailableDuration = predictionsLengthInMinutes;
 			}
+			finalPredictedDuration = predictionAvailableDuration;
 			
 			if (preferredPrediction == "COB")
 			{
 				var numCOBPredictions:uint = finalCOBPredictionsList.length;
+				finalPredictedValue = finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue;
+				
 				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			else if (preferredPrediction == "UAM")
 			{
 				var numUAMPredictions:uint = finalUAMPredictionsList.length;
+				finalPredictedValue = finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue;
+				
 				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			else if (preferredPrediction == "ZTM")
 			{
 				var numZTPredictions:uint = finalZTPredictionsList.length;
+				finalPredictedValue = finalZTPredictionsList[numZTPredictions - 1].calculatedValue;
+				
 				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalZTPredictionsList[numZTPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalZTPredictionsList[numZTPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			else 
 			{
 				var numIOBPredictions:uint = finalIOBPredictionsList.length;
+				finalPredictedValue = finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue;
+				
 				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
 			}
 			
@@ -7057,6 +7080,7 @@ package ui.chart
 				
 				//Set and adjust latest marker's properties
 				var latestMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker;
+				var calibrationDifference:Number = latestCalibrationGlucose - latestMarker.glucoseValue;
 				latestMarker.newBgReading = BgReading.lastNoSensor();
 				var latestGlucoseProperties:Object = GlucoseFactory.getGlucoseOutput(latestCalibrationGlucose);
 				latestMarker.glucoseOutput = latestGlucoseProperties.glucoseOutput;
@@ -7086,12 +7110,60 @@ package ui.chart
 				glucoseValueDisplay.fontStyles.color = latestMarker.color;
 				glucoseSlopePill.setValue(latestMarker.slopeOutput, glucoseUnit, chartFontColor);
 				
-				//Dispose predictions if needed
+				//Predictions logic
+				var previousPredictions:Array = null;
 				if (predictionsEnabled)
+				{
+					//Organize previous predictions
+					if (predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0 && !isNaN(calibrationDifference))
+					{
+						previousPredictions = [];
+						
+						var numberOfAvailablePredictions:uint = predictionsMainGlucoseDataPoints.length;
+						for (var i:int = 0; i < numberOfAvailablePredictions; i++) 
+						{
+							var predictedGlucoseMarker:GlucoseMarker = predictionsMainGlucoseDataPoints[i];
+							if (predictedGlucoseMarker != null)
+							{
+								var predictedBgReading:BgReading = predictedGlucoseMarker.bgReading;
+								if (predictedBgReading != null)
+								{
+									predictedBgReading._calculatedValue += calibrationDifference;
+									if (predictedBgReading._calculatedValue < 40)
+									{
+										predictedBgReading._calculatedValue = 39;
+									}
+									
+									if (predictedBgReading._calculatedValue > 400)
+									{
+										predictedBgReading._calculatedValue = 401;
+									}
+									
+									previousPredictions.push(predictedBgReading);
+								}
+							}
+						}
+						
+						if (previousPredictions.length == 0)
+						{
+							previousPredictions = null;
+						}
+						else
+						{
+							//Update predictions pill
+							if (predictionsPill != null && !isNaN(finalPredictedValue) && !isNaN(finalPredictedDuration))
+							{
+								predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalPredictedValue + calibrationDifference)) : String(Math.round(BgReading.mgdlToMmol((finalPredictedValue + calibrationDifference) * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(finalPredictedDuration, false));
+							}
+						}
+					}
+					
+					//Dispose previous predictions
 					disposePredictions();
+				}
 				
 				//Redraw main chart
-				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0);
+				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0, false, false, previousPredictions);
 				
 				//Deativate DummyMode
 				dummyModeActive = false;
@@ -7124,7 +7196,7 @@ package ui.chart
 			}
 			
 			//Update pedictions in Nightscout
-			NightscoutService.uploadPredictions(true);
+			//NightscoutService.uploadPredictions(true);
 		}
 		
 		/**
