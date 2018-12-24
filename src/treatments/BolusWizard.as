@@ -507,6 +507,8 @@ package treatments
 				bwCarbTypePicker.selectedIndex = 2;
 			
 			bwCarbTypePicker.addEventListener(Event.CHANGE, onCarbTypeChanged);
+			bwCarbTypePicker.addEventListener(Event.OPEN, onDisableAutoClose);
+			bwCarbTypePicker.addEventListener(Event.CLOSE, onEnableAutoClose);
 			
 			bwCarbTypeContainer.addChild(bwCarbTypePicker);
 			
@@ -524,6 +526,8 @@ package treatments
 			bwInsulinTypeContainer.addChild(bwInsulinTypeLabel);
 			
 			bwInsulinTypePicker = LayoutFactory.createPickerList();
+			bwInsulinTypePicker.addEventListener(Event.OPEN, onDisableAutoClose);
+			bwInsulinTypePicker.addEventListener(Event.CLOSE, onEnableAutoClose);
 			bwInsulinTypePicker.labelField = "label";
 			bwInsulinTypePicker.popUpContentManager = new DropDownPopUpContentManager();
 			bwInsulinTypeContainer.addChild(bwInsulinTypePicker);
@@ -766,6 +770,8 @@ package treatments
 				);
 			bwExerciseTimePicker.selectedIndex = 0;
 			bwExerciseTimePicker.addEventListener(Event.CHANGE, onExerciseTimeChanged);
+			bwExerciseTimePicker.addEventListener(Event.OPEN, onDisableAutoClose);
+			bwExerciseTimePicker.addEventListener(Event.CLOSE, onEnableAutoClose);
 			bwExerciseTimeContainer.addChild(bwExerciseTimePicker);
 			bwExerciseTimePicker.validate();
 			bwExerciseTimeLabel.width = contentWidth - bwExerciseTimeLabel.x - bwExerciseTimePicker.width - 12;
@@ -793,6 +799,8 @@ package treatments
 				);
 			bwExerciseIntensityPicker.selectedIndex = 0;
 			bwExerciseIntensityPicker.addEventListener(Event.CHANGE, onExerciseIntensityChanged);
+			bwExerciseIntensityPicker.addEventListener(Event.OPEN, onDisableAutoClose);
+			bwExerciseIntensityPicker.addEventListener(Event.CLOSE, onEnableAutoClose);
 			bwExerciseIntensityContainer.addChild(bwExerciseIntensityPicker);
 			bwExerciseIntensityPicker.validate();
 			bwExerciseIntensityLabel.width = contentWidth - bwExerciseIntensityLabel.x - bwExerciseIntensityPicker.width - 12;
@@ -824,6 +832,8 @@ package treatments
 				);
 			bwExerciseDurationPicker.selectedIndex = 0;
 			bwExerciseDurationPicker.addEventListener(Event.CHANGE, onExerciseDurationChanged);
+			bwExerciseDurationPicker.addEventListener(Event.OPEN, onDisableAutoClose);
+			bwExerciseDurationPicker.addEventListener(Event.CLOSE, onEnableAutoClose);
 			bwExerciseDurationContainer.addChild(bwExerciseDurationPicker);
 			bwExerciseDurationPicker.validate();
 			bwExerciseDurationLabel.width = contentWidth - bwExerciseDurationLabel.x - bwExerciseDurationPicker.width - 12;
@@ -951,6 +961,8 @@ package treatments
 			bwExtendedBolusSoundList.popUpContentManager = soundListPopUp;
 			bwExtendedBolusSoundList.maxWidth = contentWidth - 50;
 			bwExtendedBolusSoundList.addEventListener(Event.CLOSE, onSoundListClose);
+			bwExtendedBolusSoundList.addEventListener(Event.OPEN, onDisableAutoClose);
+			bwExtendedBolusSoundList.addEventListener(Event.CLOSE, onEnableAutoClose);
 			
 			var soundLabelsList:Array = AlertCustomizerList.ALERT_NAMES_LIST.split(",");
 			soundLabelsList.insertAt(1, "Default iOS");
@@ -1632,6 +1644,12 @@ package treatments
 					bwFoodManager = new FoodManager(contentWidth, bolusWizardCallout.height - bolusWizardCallout.paddingTop - bolusWizardCallout.paddingBottom - 15);
 					bwFoodManager.addEventListener(Event.COMPLETE, onFoodManagerCompleted);
 					bwTotalScrollContainer.addChild(bwFoodManager);
+					
+					if (bolusWizardCallout != null)
+					{
+						bolusWizardCallout.closeOnTouchBeganOutside = false;
+						bolusWizardCallout.closeOnTouchEndedOutside = false;
+					}
 				}
 				
 				bwTotalScrollContainer.scrollToPageIndex( 1, bwTotalScrollContainer.verticalPageIndex );
@@ -1701,6 +1719,12 @@ package treatments
 				
 				//Scroll to the Bolus Wizard screen
 				bwTotalScrollContainer.scrollToPageIndex( 0, bwTotalScrollContainer.verticalPageIndex );
+			}
+			
+			if (bolusWizardCallout != null)
+			{
+				bolusWizardCallout.closeOnTouchBeganOutside = true;
+				bolusWizardCallout.closeOnTouchEndedOutside = true;
 			}
 		}
 		
@@ -2485,6 +2509,24 @@ package treatments
 			disposeComponents();
 		}
 		
+		private static function onDisableAutoClose(e:Event):void
+		{
+			if (bolusWizardCallout != null)
+			{
+				bolusWizardCallout.closeOnTouchBeganOutside = false;
+				bolusWizardCallout.closeOnTouchEndedOutside = false;
+			}
+		}
+		
+		private static function onEnableAutoClose(e:Event):void
+		{
+			if (bolusWizardCallout != null)
+			{
+				bolusWizardCallout.closeOnTouchBeganOutside = true;
+				bolusWizardCallout.closeOnTouchEndedOutside = true;
+			}
+		}
+		
 		private static function onStarlingResize(event:ResizeEvent):void 
 		{
 			if (!SystemUtil.isApplicationActive)
@@ -2710,6 +2752,8 @@ package treatments
 			
 			if (bwCarbTypePicker != null)
 			{
+				bwCarbTypePicker.removeEventListener(Event.OPEN, onDisableAutoClose);
+				bwCarbTypePicker.removeEventListener(Event.CLOSE, onEnableAutoClose);
 				bwCarbTypePicker.removeEventListener(Event.CHANGE, onCarbTypeChanged);
 				bwCarbTypePicker.removeFromParent();
 				bwCarbTypePicker.dispose();
@@ -2845,6 +2889,8 @@ package treatments
 			
 			if (bwExerciseTimePicker != null)
 			{
+				bwExerciseTimePicker.removeEventListener(Event.OPEN, onDisableAutoClose);
+				bwExerciseTimePicker.removeEventListener(Event.CLOSE, onEnableAutoClose);
 				bwExerciseTimePicker.removeEventListener(Event.CHANGE, onExerciseTimeChanged);
 				bwExerciseTimePicker.removeFromParent();
 				bwExerciseTimePicker.dispose();
@@ -2860,6 +2906,8 @@ package treatments
 			
 			if (bwExerciseIntensityPicker != null)
 			{
+				bwExerciseIntensityPicker.removeEventListener(Event.OPEN, onDisableAutoClose);
+				bwExerciseIntensityPicker.removeEventListener(Event.CLOSE, onEnableAutoClose);
 				bwExerciseIntensityPicker.removeEventListener(Event.CHANGE, onExerciseIntensityChanged);
 				bwExerciseIntensityPicker.removeFromParent();
 				bwExerciseIntensityPicker.dispose();
@@ -2965,6 +3013,8 @@ package treatments
 			
 			if (bwInsulinTypePicker != null)
 			{
+				bwInsulinTypePicker.removeEventListener(Event.OPEN, onDisableAutoClose);
+				bwInsulinTypePicker.removeEventListener(Event.CLOSE, onEnableAutoClose);
 				bwInsulinTypePicker.removeFromParent();
 				bwInsulinTypePicker.dispose();
 				bwInsulinTypePicker = null;
@@ -3002,6 +3052,8 @@ package treatments
 			
 			if (bwExtendedBolusSoundList != null)
 			{
+				bwExtendedBolusSoundList.removeEventListener(Event.OPEN, onDisableAutoClose);
+				bwExtendedBolusSoundList.removeEventListener(Event.CLOSE, onEnableAutoClose);
 				bwExtendedBolusSoundList.removeEventListener(Event.CLOSE, onSoundListClose);
 				bwExtendedBolusSoundList.removeFromParent();
 				bwExtendedBolusSoundList.dispose();
