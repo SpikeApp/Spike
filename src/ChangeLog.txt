@@ -1,3 +1,6 @@
+3.5.1
+FEATURE: Ability to press on prediction markers on the chart to visualize their curve, bg value and time. (Miguel)
+
 3.5.0
 FEATURE: Glucose predictions are here! (Miguel)
 1) Spike now incorporates a heavily modified and optimized version of the oref0 (OpenAPS) algorithm bringing the power of Artificial Pancreas Systems to the end user.

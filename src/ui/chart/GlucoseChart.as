@@ -1,7 +1,6 @@
 package ui.chart
 { 
 	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.hurlant.crypto.symmetric.NullPad;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
@@ -69,6 +68,8 @@ package ui.chart
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
+	import starling.filters.BlurFilter;
+	import starling.filters.GlowFilter;
 	import starling.utils.Align;
 	import starling.utils.SystemUtil;
 	
@@ -425,6 +426,28 @@ package ui.chart
 		private var finalPredictedDuration:Number;
 
 		private var finalPredictedValue:Number;
+
+		private var predictionDetailMainContainer:LayoutGroup;
+
+		private var predictionDetailBGContainer:LayoutGroup;
+
+		private var predictionDetailBGTitle:Label;
+
+		private var predictionDetailBGBody:Label;
+
+		private var predictionDetailCallout:Callout;
+
+		private var predictionDetailCurveContainer:LayoutGroup;
+
+		private var predictionDetailCurveTitle:Label;
+
+		private var predictionDetailCurveBody:Label;
+
+		private var predictionDetailTimeContainer:LayoutGroup;
+
+		private var predictionDetailTimeTitle:Label;
+
+		private var predictionDetailTimeBody:Label;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -606,7 +629,10 @@ package ui.chart
 			 */
 			mainChart = drawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius);
 			mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
-			mainChart.touchable = false;
+			if (!predictionsEnabled)
+			{
+				mainChart.touchable = false;
+			}
 			mainChartContainer.addChild(mainChart);
 			
 			/**
@@ -759,7 +785,12 @@ package ui.chart
 		private function drawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, isRaw:Boolean = false):Sprite
 		{
 			var chartContainer:Sprite = new Sprite();
-			chartContainer.touchable = false;
+			if (!predictionsEnabled)
+			{
+				chartContainer.touchable = false;
+			}
+			
+			trace("draw");
 			
 			/**
 			 * Predictions
@@ -1009,7 +1040,16 @@ package ui.chart
 						true
 					);
 				}
-				glucoseMarker.touchable = false;
+				
+				if (!isPrediction)
+				{
+					glucoseMarker.touchable = false;
+				}
+				else
+				{
+					if(chartType == MAIN_CHART)
+						glucoseMarker.addEventListener(TouchEvent.TOUCH, onPredictionMarkerTouched);
+				}
 				
 				//Hide glucose marker if it is out of bounds (fixed size chart);
 				if (glucoseMarker.glucoseValue < lowestGlucoseValue || glucoseMarker.glucoseValue > highestGlucoseValue)
@@ -2742,6 +2782,8 @@ package ui.chart
 			if (!SystemUtil.isApplicationActive)
 				return;
 			
+			trace("redraw");
+			
 			/**
 			 * Predictions
 			 */
@@ -2989,7 +3031,15 @@ package ui.chart
 							true
 						);
 					}
-					glucoseMarker.touchable = false;
+					if (!isPrediction)
+					{
+						glucoseMarker.touchable = false;
+					}
+					else
+					{
+						if(chartType == MAIN_CHART)
+							glucoseMarker.addEventListener(TouchEvent.TOUCH, onPredictionMarkerTouched);
+					}
 					
 					if(chartType == MAIN_CHART)
 					{
@@ -5058,6 +5108,8 @@ package ui.chart
 			//Drawing Logic
 			function drawPredictions(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):void
 			{
+				trace("drawPredictions");
+				
 				var chartContainer:Sprite = chartType == MAIN_CHART ? mainChart : scrollerChart;
 				
 				var totalTimestampDifference:Number = lastBGreadingTimeStamp - firstBGReadingTimeStamp;
@@ -5164,6 +5216,10 @@ package ui.chart
 							false,
 							true
 						);
+					if(chartType == MAIN_CHART)
+						glucoseMarker.addEventListener(TouchEvent.TOUCH, onPredictionMarkerTouched);
+					else
+						glucoseMarker.touchable = false;
 					
 					//Hide glucose marker if it is out of bounds (fixed size chart);
 					if (glucoseMarker.glucoseValue < lowestGlucoseValue || glucoseMarker.glucoseValue > highestGlucoseValue)
@@ -5991,6 +6047,167 @@ package ui.chart
 				calculateTotalCOB(now);
 		}
 		
+		private function onPredictionMarkerTouched(e:TouchEvent):void
+		{
+			var targetMarker:GlucoseMarker;
+			var touch:Touch = e.getTouch(stage);
+			
+			if (touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				targetMarker = e.currentTarget as GlucoseMarker;
+				if (targetMarker != null && targetMarker.bgReading != null)
+				{
+					targetMarker.filter = new GlowFilter(targetMarker.bgReading.rawData, 10, 1, 1);
+					if (_displayLine)
+					{
+						targetMarker.x += targetMarker.width / 3;
+						targetMarker.alpha = 1;
+					}
+					
+					displayPredictionDetailCallout(targetMarker);
+				}
+			}
+			else if (touch != null && touch.phase == TouchPhase.ENDED)
+			{
+				targetMarker = e.currentTarget as GlucoseMarker;
+				if (targetMarker != null)
+				{
+					targetMarker.filter = null;
+					if (_displayLine)
+					{
+						targetMarker.alpha = 0;
+						targetMarker.x -= targetMarker.width / 3;
+					}
+					
+					disposePredictionDetailCallout();
+				}
+			}
+		}
+		
+		private function displayPredictionDetailCallout(marker:GlucoseMarker):void
+		{
+			disposePredictionDetailCallout();
+			
+			predictionDetailMainContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 3);
+			
+			//Curve
+			predictionDetailCurveContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.TOP);
+			predictionDetailMainContainer.addChild(predictionDetailCurveContainer);
+			
+			var curve:String = marker.bgReading.uniqueId;
+			if (curve == "UAM")
+			{
+				curve = "UAG";
+			}
+			else if (curve == "ZTM")
+			{
+				curve = "ZT";
+			}
+			
+			predictionDetailCurveTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','curve_label') + ": ", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, true);
+			predictionDetailCurveContainer.addChild(predictionDetailCurveTitle);
+			predictionDetailCurveBody = LayoutFactory.createLabel(curve, HorizontalAlign.LEFT, VerticalAlign.TOP, 14, false);
+			predictionDetailCurveContainer.addChild(predictionDetailCurveBody);
+			
+			//BG
+			predictionDetailBGContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.TOP);
+			predictionDetailMainContainer.addChild(predictionDetailBGContainer);
+			
+			predictionDetailBGTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','blood_glucose') + ": ", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, true);
+			predictionDetailBGContainer.addChild(predictionDetailBGTitle);
+			predictionDetailBGBody = LayoutFactory.createLabel(glucoseUnit == "mg/dL" ? String(Math.round(marker.bgReading.calculatedValue)) : String(  Math.round(BgReading.mgdlToMmol(marker.bgReading.calculatedValue) * 10) / 10  ), HorizontalAlign.LEFT, VerticalAlign.TOP, 14, false);
+			predictionDetailBGContainer.addChild(predictionDetailBGBody);
+			
+			//Time
+			var dateFormat:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
+			var markerDate:Date = new Date(marker.bgReading.timestamp);
+			
+			predictionDetailTimeContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.TOP);
+			predictionDetailMainContainer.addChild(predictionDetailTimeContainer);
+			
+			predictionDetailTimeTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','prediction_time_hours_minutes') + ": ", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, true);
+			predictionDetailTimeContainer.addChild(predictionDetailTimeTitle);
+			predictionDetailTimeBody = LayoutFactory.createLabel(dateFormat.slice(0,2) == "24" ? TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_24H) : TimeSpan.formatHoursMinutes(markerDate.getHours(), markerDate.getMinutes(), TimeSpan.TIME_FORMAT_12H), HorizontalAlign.LEFT, VerticalAlign.TOP, 14, false);
+			predictionDetailTimeContainer.addChild(predictionDetailTimeBody);
+			
+			//Callout
+			predictionDetailCallout = Callout.show(predictionDetailMainContainer, marker, new <String>[RelativePosition.TOP]);
+		}
+		
+		private function disposePredictionDetailCallout():void
+		{
+			//Curve
+			if (predictionDetailCurveTitle != null)
+			{
+				predictionDetailCurveTitle.removeFromParent(true);
+				predictionDetailCurveTitle = null;
+			}
+			
+			if (predictionDetailCurveBody != null)
+			{
+				predictionDetailCurveBody.removeFromParent(true);
+				predictionDetailCurveBody = null;
+			}
+			
+			if (predictionDetailCurveContainer != null)
+			{
+				predictionDetailCurveContainer.removeFromParent(true);
+				predictionDetailCurveContainer = null;
+			}
+			
+			//BG
+			if (predictionDetailBGTitle != null)
+			{
+				predictionDetailBGTitle.removeFromParent(true);
+				predictionDetailBGTitle = null;
+			}
+			
+			if (predictionDetailBGBody != null)
+			{
+				predictionDetailBGBody.removeFromParent(true);
+				predictionDetailBGBody = null;
+			}
+			
+			if (predictionDetailBGContainer != null)
+			{
+				predictionDetailBGContainer.removeFromParent(true);
+				predictionDetailBGContainer = null;
+			}
+			
+			//Time
+			if (predictionDetailTimeTitle != null)
+			{
+				predictionDetailTimeTitle.removeFromParent(true);
+				predictionDetailTimeTitle = null;
+			}
+			
+			if (predictionDetailTimeBody != null)
+			{
+				predictionDetailTimeBody.removeFromParent(true);
+				predictionDetailTimeBody = null;
+			}
+			
+			if (predictionDetailTimeContainer != null)
+			{
+				predictionDetailTimeContainer.removeFromParent(true);
+				predictionDetailTimeContainer = null;
+			}
+			
+			//Main container
+			if (predictionDetailMainContainer != null)
+			{
+				predictionDetailMainContainer.removeFromParent(true);
+				predictionDetailMainContainer = null;
+			}
+			
+			//Callout
+			if (predictionDetailCallout != null)
+			{
+				predictionDetailCallout.removeFromParent(true);
+				predictionDetailCallout = null;
+			}
+		}
+		
 		private function disposePredictionsPills():void
 		{
 			if (lastPredictionUpdateTimePill != null)
@@ -6309,6 +6526,8 @@ package ui.chart
 		
 		private function disposePredictions():void
 		{
+			disposePredictionDetailCallout();
+			
 			var i:int;
 			var glucoseMarker:GlucoseMarker;
 			
@@ -6316,6 +6535,7 @@ package ui.chart
 			for (i = 0; i < mainPredictionsLength; i++) 
 			{
 				glucoseMarker = predictionsMainGlucoseDataPoints[i];
+				glucoseMarker.removeEventListener(TouchEvent.TOUCH, onPredictionMarkerTouched);
 				glucoseMarker.removeFromParent();
 				glucoseMarker.dispose();
 				glucoseMarker = null;

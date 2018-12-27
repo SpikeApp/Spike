@@ -4,15 +4,14 @@ package ui.chart.markers
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
-	import starling.display.DisplayObject;
 	import starling.display.Sprite;
 	
+	import ui.chart.helpers.GlucoseFactory;
 	import ui.shapes.SpikeNGon;
 	import ui.shapes.SpikeRing;
 	
 	import utils.MathHelper;
 	import utils.TimeSpan;
-	import ui.chart.helpers.GlucoseFactory;
 	
 	[ResourceBundle("chartscreen")]
 
