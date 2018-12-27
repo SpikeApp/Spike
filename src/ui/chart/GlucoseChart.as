@@ -790,8 +790,6 @@ package ui.chart
 				chartContainer.touchable = false;
 			}
 			
-			trace("draw");
-			
 			/**
 			 * Predictions
 			 */
@@ -2781,8 +2779,6 @@ package ui.chart
 		{
 			if (!SystemUtil.isApplicationActive)
 				return;
-			
-			trace("redraw");
 			
 			/**
 			 * Predictions
@@ -5108,8 +5104,6 @@ package ui.chart
 			//Drawing Logic
 			function drawPredictions(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):void
 			{
-				trace("drawPredictions");
-				
 				var chartContainer:Sprite = chartType == MAIN_CHART ? mainChart : scrollerChart;
 				
 				var totalTimestampDifference:Number = lastBGreadingTimeStamp - firstBGReadingTimeStamp;
