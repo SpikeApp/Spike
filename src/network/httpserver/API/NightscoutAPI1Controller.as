@@ -487,7 +487,7 @@ package network.httpserver.API
 			for (var i:int = 0; i < userProfiles.length; i++) 
 			{
 				var profile:Profile = userProfiles[i];
-				if (profile.time != "" && profile.insulinSensitivityFactors != "" && profile.insulinToCarbRatios != "" && profile.targetGlucoseRates != "")
+				if (profile != null && profile.time != "" && profile.insulinSensitivityFactors != "" && profile.insulinToCarbRatios != "" && profile.targetGlucoseRates != "")
 				{
 					//Date
 					var profileDate:Date = ProfileManager.getProfileDate(profile);
