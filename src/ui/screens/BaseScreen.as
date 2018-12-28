@@ -3,6 +3,7 @@ package ui.screens
 	import flash.geom.Point;
 	import flash.system.System;
 	
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.ScreenEvent;
@@ -97,20 +98,30 @@ package ui.screens
 			moreButton.addEventListener( Event.TRIGGERED, onMoreButtonTriggered );
 			moreButton.validate();
 			
-			/* Add treatments to the header */
-			treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.addTexture;
-			treatmentsImage = new Image(treatmentsTexture);
-			treatmentsButton = new Button();
-			treatmentsButton.defaultIcon = treatmentsImage;
-			treatmentsButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
-			treatmentsButton.addEventListener( Event.TRIGGERED, onTreatmentButtonTriggered );
-			treatmentsButton.validate();
-			
-			/* Populate Header */
-			headerProperties.rightItems = new <DisplayObject>[
-				treatmentsButton,
-				moreButton
-			];
+			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true") || !CGMBlueToothDevice.isFollower()) 
+			{
+				/* Add treatments to the header */
+				treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.addTexture;
+				treatmentsImage = new Image(treatmentsTexture);
+				treatmentsButton = new Button();
+				treatmentsButton.defaultIcon = treatmentsImage;
+				treatmentsButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+				treatmentsButton.addEventListener( Event.TRIGGERED, onTreatmentButtonTriggered );
+				treatmentsButton.validate();
+				
+				/* Populate Header */
+				headerProperties.rightItems = new <DisplayObject>[
+					treatmentsButton,
+					moreButton
+				];
+			}
+			else
+			{
+				/* Populate Header */
+				headerProperties.rightItems = new <DisplayObject>[
+					moreButton
+				];
+			}
 		}
 		
 		private function setupEventListeners():void
@@ -158,7 +169,7 @@ package ui.screens
 		{
 			extraOptionsList = new ExtraOptionsList();
 			extraOptionsList.addEventListener(ExtraOptionsList.CLOSE, onCloseCallOut);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatmentsEnabled)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 			{
 				if (iphone4DummyMarker != null) iphone4DummyMarker.removeFromParent(true);
 				iphone4DummyMarker = new Sprite();

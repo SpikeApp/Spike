@@ -38,6 +38,7 @@ package ui.chart.markers
 
 		// Display Objects
 		public var glucoseMarker:*;
+		public var hitArea:SpikeNGon;
 
         public function GlucoseMarker(data:Object, isRaw:Boolean = false, isPrediction:Boolean = false)
         {
@@ -137,10 +138,36 @@ package ui.chart.markers
 				glucoseMarker.x = glucoseMarker.y = radius;
 			}
 			else
+			{
 				glucoseMarker = new SpikeRing(radius / 2, radius, color);
+			}
 			
             addChild(glucoseMarker);
         }
+		
+		private function createHitArea():void
+		{
+			hitArea = new SpikeNGon(radius * 2, 10, 0, 360, 0x00FF00, 0);
+			hitArea.x = hitArea.y = radius;
+		}
+		
+		public function addHitArea():void
+		{
+			if (hitArea == null)
+			{
+				createHitArea();
+			}
+			
+			addChild(hitArea);
+		}
+		
+		public function removeHitArea():void
+		{
+			if (hitArea != null)
+			{
+				hitArea.removeFromParent();
+			}
+		}
 		
 		public function updateColor():void
 		{
@@ -174,6 +201,13 @@ package ui.chart.markers
 				glucoseMarker.removeFromParent();
 				glucoseMarker.dispose();
 				glucoseMarker = null;
+			}
+			
+			if (hitArea != null)
+			{
+				hitArea.removeFromParent();
+				hitArea.dispose();
+				hitArea = null;
 			}
 			
 			super.dispose();

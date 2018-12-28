@@ -1,5 +1,9 @@
 3.5.1
 FEATURE: Ability to press on prediction markers on the chart to visualize their curve, bg value and time. (Miguel)
+ENHANCEMENT: Ability to set ISF with 0.2 increments in Settings > Treatments > Profile. (Miguel)
+FIX: Small bug fixes to the predictions pill. (Miguel)
+FIX: Don't show the treatments menu (upper right + button) when not needed. (Miguel)
+FIX: As usual, several other small bug fixes and improvements. (Miguel)
 
 3.5.0
 FEATURE: Glucose predictions are here! (Miguel)

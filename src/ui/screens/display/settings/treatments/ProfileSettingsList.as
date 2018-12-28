@@ -136,7 +136,7 @@ package ui.screens.display.settings.treatments
 			actionsContainer.addChild(saveProfileButton);
 			
 			//ISF / IC / Target BG / Trend Corrections
-			ISFStepper = LayoutFactory.createNumericStepper(unit == "mgdl" ? 1 : Math.round(BgReading.mgdlToMmol(1) * 10) / 10, unit == "mgdl" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, unit == "mgdl" ? 25 : Math.round(BgReading.mgdlToMmol(25) * 10) / 10, unit == "mgdl" ? 1 : 0.1);
+			ISFStepper = LayoutFactory.createNumericStepper(unit == "mgdl" ? 1 : Math.round(BgReading.mgdlToMmol(1) * 10) / 10, unit == "mgdl" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, unit == "mgdl" ? 25 : Math.round(BgReading.mgdlToMmol(25) * 10) / 10, unit == "mgdl" ? 0.2 : 0.1);
 			ICStepper = LayoutFactory.createNumericStepper(0.5, 200, 10, 0.5);
 			targetBGStepper = LayoutFactory.createNumericStepper(unit == "mgdl" ? 40 : Math.round(BgReading.mgdlToMmol(40) * 10) / 10, unit == "mgdl" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, unit == "mgdl" ? 100 : Math.round(BgReading.mgdlToMmol(100) * 10) / 10,  unit == "mgdl" ? 1 : 0.1);
 			trend45UpStepper = LayoutFactory.createNumericStepper(0, 10, 1, 0.1);
@@ -323,7 +323,7 @@ package ui.screens.display.settings.treatments
 					ISFStepper.minimum = 1;
 					ISFStepper.maximum = 400;
 					ISFStepper.value = 25;
-					ISFStepper.step = 1;
+					ISFStepper.step = 0.2;
 					
 					targetBGStepper.minimum = 40;
 					targetBGStepper.maximum = 400;
@@ -362,7 +362,7 @@ package ui.screens.display.settings.treatments
 					ISFStepper.minimum = 1;
 					ISFStepper.maximum = 400;
 					ISFStepper.value = Number(selectedProfile.insulinSensitivityFactors);
-					ISFStepper.step = 1;
+					ISFStepper.step = 0.2;
 					
 					targetBGStepper.minimum = 40;
 					targetBGStepper.maximum = 400;

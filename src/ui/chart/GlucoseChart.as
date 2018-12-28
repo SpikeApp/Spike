@@ -369,6 +369,8 @@ package ui.chart
 		private var predictionsIncompleteProfile:Boolean = false;
 		private var singlePredictionCurve:Boolean = true;
 		private var lastPredictionUpdate:Number = Number.NaN;
+		private var finalPredictedDuration:Number = Number.NaN;
+		private var finalPredictedValue:Number = Number.NaN;
 		private var predictionsPill:ChartTreatmentPill;
 		private var predictionsContainer:ScrollContainer;
 		private var predictionsCallout:Callout;
@@ -422,31 +424,16 @@ package ui.chart
 		private var wikiPredictionsIcon:Image;
 		private var wikiPredictionsButton:Button;
 		private var wikiPredictionsPill:ChartComponentPill;
-
-		private var finalPredictedDuration:Number;
-
-		private var finalPredictedValue:Number;
-
 		private var predictionDetailMainContainer:LayoutGroup;
-
 		private var predictionDetailBGContainer:LayoutGroup;
-
 		private var predictionDetailBGTitle:Label;
-
 		private var predictionDetailBGBody:Label;
-
 		private var predictionDetailCallout:Callout;
-
 		private var predictionDetailCurveContainer:LayoutGroup;
-
 		private var predictionDetailCurveTitle:Label;
-
 		private var predictionDetailCurveBody:Label;
-
 		private var predictionDetailTimeContainer:LayoutGroup;
-
 		private var predictionDetailTimeTitle:Label;
-
 		private var predictionDetailTimeBody:Label;
 		
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
@@ -586,6 +573,8 @@ package ui.chart
 				chartTopPadding = COBPill.y + COBPill.height + extraPadding;
 			else if (infoPill != null)
 				chartTopPadding = infoPill.y + infoPill.height + extraPadding;
+			else if (predictionsPill != null)
+				chartTopPadding = predictionsPill.y + predictionsPill.height + extraPadding;
 			else
 			{
 				glucoseSlopePill.setValue(" ", " ", 0x20222a);
@@ -632,6 +621,10 @@ package ui.chart
 			if (!predictionsEnabled)
 			{
 				mainChart.touchable = false;
+			}
+			else if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0)
+			{
+				mainChart.x += mainChartGlucoseMarkerRadius;
 			}
 			mainChartContainer.addChild(mainChart);
 			
@@ -1118,6 +1111,8 @@ package ui.chart
 							//Add extra line to the end
 							if (previousGlucoseMarker != null)
 							{
+								if (chartType == MAIN_CHART && isPrediction) previousGlucoseMarker.removeHitArea();
+								
 								var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
 								var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
 								extraEndLineColor = previousGlucoseMarker.color;
@@ -1141,7 +1136,11 @@ package ui.chart
 								//Marker found, add y difference
 								if (targetGlucoseMarker != null)
 								{
+									if (chartType == MAIN_CHART && isPrediction) targetGlucoseMarker.removeHitArea();
+									
 									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 3));
+									
+									if (chartType == MAIN_CHART && isPrediction) targetGlucoseMarker.addHitArea();
 								}
 								else
 								{
@@ -1149,6 +1148,8 @@ package ui.chart
 								}
 								
 								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
+								
+								if (chartType == MAIN_CHART && isPrediction) previousGlucoseMarker.addHitArea();
 							}
 						}
 						
@@ -1215,12 +1216,19 @@ package ui.chart
 					else
 						predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
 				}
+				
+				if (isPrediction && chartType == MAIN_CHART)
+				{
+					glucoseMarker.addHitArea();
+				}
 			}
 			
 			//Predictions line fix
 			if (glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
 			{
 				//Add an extra line
+				if (chartType == MAIN_CHART && isPrediction) glucoseMarker.removeHitArea();
+				
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
 				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
 				extraEndLineColor = previousGlucoseMarker.color;
@@ -1231,6 +1239,8 @@ package ui.chart
 				}
 				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 3));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
+				
+				if (chartType == MAIN_CHART && isPrediction) glucoseMarker.addHitArea();
 			}
 			
 			//Creat dummy marker in case the current timestamp is bigger than the latest bgreading timestamp
@@ -1806,7 +1816,7 @@ package ui.chart
 				{
 					if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 					{
-						if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+						if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.type != Treatment.TYPE_SENSOR_START && treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
 						{
 							if (moveBtn != null) moveBtn.removeFromParent(true);
 							if (deleteBtn != null) deleteBtn.removeFromParent(true);
@@ -1816,12 +1826,9 @@ package ui.chart
 							actionsContainer = new LayoutGroup();
 							actionsContainer.layout = actionsLayout;
 							
-							if (treatment.treatment.type != Treatment.TYPE_SENSOR_START)
-							{
-								moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
-								moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
-								actionsContainer.addChild(moveBtn);
-							}
+							moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
+							moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+							actionsContainer.addChild(moveBtn);
 							
 							deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
 							deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
@@ -2221,7 +2228,7 @@ package ui.chart
 				if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 				predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
 				predictionsDelimiter.y = 0 - predictionsDelimiter.width;
-				predictionsDelimiter.x = _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
+				predictionsDelimiter.x = mainChartGlucoseMarkerRadius + _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
 				predictionsDelimiter.touchable = false;
 				yAxis.addChild(predictionsDelimiter);
 				
@@ -2710,6 +2717,10 @@ package ui.chart
 			if (displayLatestBGValue)
 			{
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0)
+				{
+					mainChart.x += mainChartGlucoseMarkerRadius;
+				}
 				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 			}
 			else if (!isNaN(firstTimestamp) && latestTimestamp - firstTimestamp < TimeSpan.TIME_23_HOURS_57_MINUTES)
@@ -2728,6 +2739,10 @@ package ui.chart
 				{
 					handPicker.x = _graphWidth - handPicker.width;
 					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0)
+					{
+						mainChart.x += mainChartGlucoseMarkerRadius;
+					}
 					displayLatestBGValue = true;
 				}
 			}
@@ -3136,6 +3151,8 @@ package ui.chart
 							//Add extra line to the end
 							if (previousGlucoseMarker != null)
 							{
+								if (chartType == MAIN_CHART && isPrediction) previousGlucoseMarker.removeHitArea();
+								
 								var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
 								var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
 								extraEndLineColor = previousGlucoseMarker.color;
@@ -3159,7 +3176,11 @@ package ui.chart
 								//Marker found, add y difference
 								if (targetGlucoseMarker != null)
 								{
+									if (chartType == MAIN_CHART && isPrediction) targetGlucoseMarker.removeHitArea();
+									
 									line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 3));
+									
+									if (chartType == MAIN_CHART && isPrediction) targetGlucoseMarker.addHitArea();
 								}
 								else
 								{
@@ -3167,6 +3188,8 @@ package ui.chart
 								}
 								
 								line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
+								
+								if (chartType == MAIN_CHART && isPrediction) previousGlucoseMarker.addHitArea();
 							}
 						}
 						
@@ -3210,12 +3233,19 @@ package ui.chart
 				previousXCoordinate = previousXCoordinate + glucoseX;
 				if (i < dataLength - 1)
 					previousGlucoseMarker = glucoseMarker;
+					
+				if (isPrediction && chartType == MAIN_CHART)
+				{
+					glucoseMarker.addHitArea();
+				}
 			}
 			
 			//Predictions line fix
 			if (_displayLine && !isRaw && previousGlucoseMarker != null && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
 			{
 				//Add an extra line
+				if (chartType == MAIN_CHART && isPrediction) glucoseMarker.removeHitArea();
+				
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
 				var extraPredictionLineY:Number = glucoseMarker.y + (glucoseMarker.height / 2);
 				extraEndLineColor = previousGlucoseMarker.color;
@@ -3227,6 +3257,8 @@ package ui.chart
 				
 				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 3));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
+				
+				if (chartType == MAIN_CHART && isPrediction) glucoseMarker.addHitArea();
 			}
 			
 			if(chartType == MAIN_CHART && !isRaw)
@@ -5043,6 +5075,10 @@ package ui.chart
 				if (displayLatestBGValue)
 				{
 					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0)
+					{
+						mainChart.x += mainChartGlucoseMarkerRadius;
+					}
 					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 				}
 				
@@ -5211,7 +5247,10 @@ package ui.chart
 							true
 						);
 					if(chartType == MAIN_CHART)
+					{
+						glucoseMarker.addHitArea();
 						glucoseMarker.addEventListener(TouchEvent.TOUCH, onPredictionMarkerTouched);
+					}
 					else
 						glucoseMarker.touchable = false;
 					
@@ -5253,14 +5292,13 @@ package ui.chart
 					yAxis.addChild(predictionsDelimiter);
 				}
 				
-				predictionsDelimiter.x = _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
-				
+				predictionsDelimiter.x = mainChartGlucoseMarkerRadius + _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
 				activeGlucoseDelimiter = predictionsDelimiter;
 				
 				//Adjust Main Chart Position
 				if (displayLatestBGValue)
 				{
-					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					mainChart.x = mainChartGlucoseMarkerRadius + -mainChart.width + _graphWidth - yAxisMargin;
 					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 				}
 				
@@ -5727,7 +5765,7 @@ package ui.chart
 				}
 				
 				//Incomplete profile
-				if (predictionsIncompleteProfile && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true")
+				if (predictionsIncompleteProfile && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true")
 				{
 					if (incompleteProfileWarningLabel != null) incompleteProfileWarningLabel.removeFromParent(true);
 					incompleteProfileWarningLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','incomplete_user_profile'), HorizontalAlign.JUSTIFY, VerticalAlign.TOP, 11, true, 0xFF0000);
@@ -5806,7 +5844,7 @@ package ui.chart
 					if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 					predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
 					predictionsDelimiter.y = 0 - predictionsDelimiter.width;
-					predictionsDelimiter.x = _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
+					predictionsDelimiter.x = mainChartGlucoseMarkerRadius + _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
 					predictionsDelimiter.touchable = false;
 					yAxis.addChild(predictionsDelimiter);
 					
@@ -5828,6 +5866,10 @@ package ui.chart
 				if (displayLatestBGValue)
 				{
 					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0)
+					{
+						mainChart.x += mainChartGlucoseMarkerRadius;
+					}
 					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 				}
 				
@@ -5982,7 +6024,7 @@ package ui.chart
 					if (predictionsDelimiter != null) predictionsDelimiter.removeFromParent(true);
 					predictionsDelimiter = GraphLayoutFactory.createVerticalDashedLine(_graphHeight, dashLineWidth, dashLineGap, dashLineThickness, lineColor);
 					predictionsDelimiter.y = 0 - predictionsDelimiter.width;
-					predictionsDelimiter.x = _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
+					predictionsDelimiter.x = mainChartGlucoseMarkerRadius + _graphWidth - yAxisMargin + (mainChartGlucoseMarkerRadius * 2) - (mainChart.width - mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x);
 					predictionsDelimiter.touchable = false;
 					yAxis.addChild(predictionsDelimiter);
 					
@@ -6005,6 +6047,10 @@ package ui.chart
 			if (displayLatestBGValue)
 			{
 				mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+				if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0)
+				{
+					mainChart.x += mainChartGlucoseMarkerRadius;
+				}
 				selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 			}
 			
@@ -6051,7 +6097,8 @@ package ui.chart
 				targetMarker = e.currentTarget as GlucoseMarker;
 				if (targetMarker != null && targetMarker.bgReading != null)
 				{
-					targetMarker.filter = new GlowFilter(targetMarker.bgReading.rawData, 10, 1, 1);
+					targetMarker.filter = new GlowFilter(targetMarker.bgReading.rawData, 10, 2.2, 1);
+					
 					if (_displayLine)
 					{
 						targetMarker.x += targetMarker.width / 3;
@@ -6126,6 +6173,8 @@ package ui.chart
 			
 			//Callout
 			predictionDetailCallout = Callout.show(predictionDetailMainContainer, marker, new <String>[RelativePosition.TOP]);
+			predictionDetailCallout.validate();
+			predictionDetailCallout.y += mainChartGlucoseMarkerRadius;
 		}
 		
 		private function disposePredictionDetailCallout():void
@@ -6693,6 +6742,11 @@ package ui.chart
 				if (glucoseMarker == null || glucoseMarker.bgReading == null || (glucoseMarker.bgReading.sensor == null && !CGMBlueToothDevice.isFollower() && !isPrediction))
 					continue;
 				
+				if (isPrediction && chartType == MAIN_CHART)
+				{
+					glucoseMarker.removeHitArea();
+				}
+				
 				var newPredictionSet:Boolean = isPrediction && previousGlucoseMarker != null && previousGlucoseMarker.bgReading.uniqueId.length == 3 && glucoseMarker.bgReading.uniqueId.length == 3 && previousGlucoseMarker.bgReading.uniqueId != glucoseMarker.bgReading.uniqueId;
 				
 				if (!isPrediction && i == realReadingsLength - 1)
@@ -6754,6 +6808,8 @@ package ui.chart
 						//Add extra line to the end
 						if (previousGlucoseMarker != null)
 						{
+							if (chartType == MAIN_CHART && isPrediction) previousGlucoseMarker.removeHitArea();
+							
 							var extraSetPredictionLineX:Number = previousGlucoseMarker.x + previousGlucoseMarker.width;
 							var extraSetPredictionLineY:Number = previousGlucoseMarker.y + (previousGlucoseMarker.height / 2);
 							extraEndLineColor = previousGlucoseMarker.color;
@@ -6777,7 +6833,17 @@ package ui.chart
 							//Marker found, add y difference
 							if (targetGlucoseMarker != null)
 							{
+								if (chartType == MAIN_CHART && isPrediction) 
+								{
+									targetGlucoseMarker.removeHitArea();
+								}
+								
 								line.moveTo(extraSetPredictionLineX, extraSetPredictionLineY + ((previousGlucoseMarker.y - targetGlucoseMarker.y) / 3));
+								
+								if (chartType == MAIN_CHART && isPrediction) 
+								{
+									targetGlucoseMarker.addHitArea();
+								}
 							}
 							else
 							{
@@ -6785,6 +6851,8 @@ package ui.chart
 							}
 							
 							line.lineTo(extraSetPredictionLineX - (previousGlucoseMarker.width / 2), extraSetPredictionLineY, extraEndLineColor, extraEndLineColor);
+							
+							if (chartType == MAIN_CHART && isPrediction) targetGlucoseMarker.addHitArea();
 						}
 					}
 					
@@ -6819,7 +6887,13 @@ package ui.chart
 				glucoseMarker.alpha = 0;
 				
 				if (i < dataLength - 1)
+				{
 					previousGlucoseMarker = glucoseMarker;
+					if (isPrediction && chartType == MAIN_CHART)
+					{
+						glucoseMarker.addHitArea();
+					}
+				}
 			}
 			
 			//Predictions line fix
@@ -6834,8 +6908,15 @@ package ui.chart
 				{
 					extraEndLineColor = doublePrevGlucoseMarker.color;
 				}
+				if (chartType == MAIN_CHART && isPrediction) previousGlucoseMarker.removeHitArea();
 				line.moveTo(extraPredictionLineX, extraPredictionLineY + ((glucoseMarker.y - previousGlucoseMarker.y) / 3));
 				line.lineTo(extraPredictionLineX - (glucoseMarker.width / 2), extraPredictionLineY, extraEndLineColor, extraEndLineColor);
+				if (chartType == MAIN_CHART && isPrediction) previousGlucoseMarker.addHitArea();
+			}
+			
+			if (isPrediction && chartType == MAIN_CHART)
+			{
+				glucoseMarker.addHitArea();
 			}
 			
 			//Add line to display list
@@ -6993,6 +7074,10 @@ package ui.chart
 				{
 					handPicker.x = _graphWidth - handPicker.width;
 					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0)
+					{
+						mainChart.x += mainChartGlucoseMarkerRadius;
+					}
 					displayLatestBGValue = true;
 				}
 				//else if(handPicker.x > _graphWidth - handPicker.width - 1) //Adjustements for finger drag imprecision
