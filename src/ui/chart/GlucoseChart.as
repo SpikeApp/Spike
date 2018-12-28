@@ -1988,7 +1988,7 @@ package ui.chart
 						//Treatment is still valid. Reposition it.
 						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_SENSOR_START || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
 						{
-							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && treatment.treatment.needsAdjustment && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0 && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] != null && (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).bgReading != null && treatment.treatment.timestamp <= (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).bgReading.timestamp)
+							if (treatment.treatment.needsAdjustment && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0 && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] != null && (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).bgReading != null && treatment.treatment.timestamp <= (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).bgReading.timestamp)
 							{
 								//It's a treatment that was added in the future. Now it's the time to calculate it's Y position on the graph
 								treatment.treatment.needsAdjustment = false;

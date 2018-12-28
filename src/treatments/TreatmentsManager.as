@@ -25,6 +25,7 @@ package treatments
 	
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
+	import feathers.controls.Check;
 	import feathers.controls.DateTimeSpinner;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
@@ -132,6 +133,28 @@ package treatments
 		private static var foodManagerContainer:LayoutGroup;
 		private static var totalScrollContainer:ScrollContainer;
 		private static var contentScrollContainer:ScrollContainer;
+
+		private static var extendedBolusMainContainer:LayoutGroup;
+
+		private static var extendedBolusCheck:Check;
+
+		private static var firstSplitNumericStepper:NumericStepper;
+
+		private static var firstSplitLabel:Label;
+
+		private static var extendedBolusSplitContainer1:LayoutGroup;
+
+		private static var extendedBolusSplitContainer2:LayoutGroup;
+
+		private static var lastSplitLabel:Label;
+
+		private static var lastSplitNumericStepper:NumericStepper;
+
+		private static var extendedDurationNumericStepper:NumericStepper;
+
+		private static var extendedBolusDurationContainer:LayoutGroup;
+
+		private static var extendedDurationLabel:Label;
 		
 		public function TreatmentsManager()
 		{
@@ -1784,6 +1807,21 @@ package treatments
 					insulinTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','insulin_text_input_prompt');
 				treatmentInserterContainer.addChild(insulinTextInput);
 				
+				//Extended Bolus
+				extendedBolusMainContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.MIDDLE, 10);
+				(extendedBolusMainContainer.layout as VerticalLayout).paddingTop = 10;
+				if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS)
+				{
+					(extendedBolusMainContainer.layout as VerticalLayout).paddingBottom = 10;
+				}
+				
+				treatmentInserterContainer.addChild(extendedBolusMainContainer);
+				
+				extendedBolusCheck = LayoutFactory.createCheckMark(false, "Combo / Extended?");
+				extendedBolusCheck.addEventListener(Event.CHANGE, onBolusExtendedChanged);
+				extendedBolusMainContainer.addChild(extendedBolusCheck);
+				
+				//Spacer
 				insulinSpacer = new Sprite();
 				insulinSpacer.height = 10;
 				treatmentInserterContainer.addChild(insulinSpacer);
@@ -1901,7 +1939,10 @@ package treatments
 			treatmentInserterContainer.addChild(treatmentSpacer);
 			
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
+			{
 				insulinTextInput.width = treatmentTime.width;
+				extendedBolusMainContainer.width = insulinTextInput.width;
+			}
 			if (type == Treatment.TYPE_GLUCOSE_CHECK)
 				glucoseTextInput.width = treatmentTime.width;
 			if (type == Treatment.TYPE_CARBS_CORRECTION)
@@ -2075,7 +2116,10 @@ package treatments
 			if (actionContainer.width > treatmentTime.width)
 			{
 				if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
+				{
 					insulinTextInput.width = actionContainer.width;
+					extendedBolusMainContainer.width = insulinTextInput.width;
+				}
 				if (type == Treatment.TYPE_GLUCOSE_CHECK)
 					glucoseTextInput.width = actionContainer.width;
 				if (type == Treatment.TYPE_CARBS_CORRECTION)
@@ -2113,6 +2157,11 @@ package treatments
 				if (insulinTextInput == null || insulinTextInput.text == null || !SpikeANE.appIsInForeground())
 					return;
 				
+				function onAskNewBolus():void
+				{
+					addTreatment(type);
+				}
+				
 				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
 				var insulinValue:Number = Number((insulinTextInput.text as String).replace(",","."));
 				if (isNaN(insulinValue) || insulinTextInput.text == "") 
@@ -2124,41 +2173,123 @@ package treatments
 						Number.NaN,
 						onAskNewBolus
 					);
-					
-					function onAskNewBolus():void
-					{
-						addTreatment(type);
-					}
 				}
 				else
 				{
-					var treatment:Treatment = new Treatment
-					(
-						Treatment.TYPE_BOLUS,
-						treatmentTime.value.valueOf(),
-						insulinValue,
-						insulinList.selectedItem.id,
-						0,
-						0,
-						getEstimatedGlucose(treatmentTime.value.valueOf()),
-						notes.text
-					);
-					
-					//Add to list
-					treatmentsList.push(treatment);
-					treatmentsMap[treatment.ID] = treatment;
-					
-					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
-					
-					//Notify listeners
-					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-					
-					//Insert in DB
-					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-						Database.insertTreatmentSynchronous(treatment);
-					
-					//Upload to Nightscout
-					NightscoutService.uploadTreatment(treatment);
+					if (!extendedBolusCheck.isSelected || (firstSplitNumericStepper != null && firstSplitNumericStepper.value == 100))
+					{
+						var treatment:Treatment = new Treatment
+						(
+							Treatment.TYPE_BOLUS,
+							treatmentTime.value.valueOf(),
+							insulinValue,
+							insulinList.selectedItem.id,
+							0,
+							0,
+							getEstimatedGlucose(treatmentTime.value.valueOf()),
+							notes.text
+						);
+						
+						//Add to list
+						treatmentsList.push(treatment);
+						treatmentsMap[treatment.ID] = treatment;
+						
+						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+						
+						//Notify listeners
+						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+						
+						//Insert in DB
+						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+							Database.insertTreatmentSynchronous(treatment);
+						
+						//Upload to Nightscout
+						NightscoutService.uploadTreatment(treatment);
+					}
+					else
+					{
+						if (extendedBolusCheck.isSelected && firstSplitNumericStepper != null && firstSplitNumericStepper.value != 100 && extendedDurationNumericStepper.value == 0)
+						{
+							AlertManager.showSimpleAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+								"Duration of extended bolus cannot be zero!",
+								Number.NaN,
+								onAskNewBolus
+							);
+							
+							return;
+						}
+						
+						if (extendedBolusCheck.isSelected && firstSplitNumericStepper != null && firstSplitNumericStepper.value != 100 && lastSplitNumericStepper != null && lastSplitNumericStepper.value != 0 && extendedDurationNumericStepper.value != 0)
+						{
+							
+							trace("1");
+							
+							var immediateBolusAmount:Number = Math.round(insulinValue * (firstSplitNumericStepper.value / 100) * 10) / 10;
+							var remainingBolusAmount:Number = insulinValue - immediateBolusAmount;
+							var extendedSteps:Number = extendedDurationNumericStepper.value / 5;
+							var extendedBolusAmount:Number = Math.round((remainingBolusAmount/extendedSteps) * 10) / 10;
+							
+							//Immediate Bolus
+							if (immediateBolusAmount != 0)
+							{
+								var immediateTreatment:Treatment = new Treatment
+								(
+									Treatment.TYPE_BOLUS,
+									treatmentTime.value.valueOf(),
+									immediateBolusAmount,
+									insulinList.selectedItem.id,
+									0,
+									0,
+									getEstimatedGlucose(treatmentTime.value.valueOf()),
+									notes.text
+								);
+								addExtendedBolusTreatment(immediateTreatment);
+							}
+								
+							//Extended Split Bolus
+							for (var j:int = 0; j < extendedSteps; j++) 
+							{
+								
+								var extendedTreatmentBolusAmount:Number = j < extendedSteps - 1 ? extendedBolusAmount : Math.round(remainingBolusAmount * 100) / 100;
+								var extendedTreatment:Treatment = new Treatment
+								(
+									Treatment.TYPE_BOLUS,
+									treatmentTime.value.valueOf() + ((j + 1) * TimeSpan.TIME_5_MINUTES),
+									extendedTreatmentBolusAmount,
+									insulinList.selectedItem.id,
+									0,
+									0,
+									getEstimatedGlucose(treatmentTime.value.valueOf()),
+									"Extended Bolus"
+								);
+								extendedTreatment.needsAdjustment = true;
+								addExtendedBolusTreatment(extendedTreatment);
+								
+								remainingBolusAmount -= extendedTreatmentBolusAmount;
+							}
+								
+							function addExtendedBolusTreatment(treatment:Treatment):void
+							{
+								//Add to list
+								treatmentsList.push(treatment);
+								treatmentsMap[treatment.ID] = treatment;
+								
+								Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+									
+								//Notify listeners
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+									
+								//Insert in DB
+								if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+									Database.insertTreatmentSynchronous(treatment);
+									
+								//Upload to Nightscout
+								NightscoutService.uploadTreatment(treatment);
+							}
+						}
+					}
 				}
 				
 				if (treatmentCallout != null) treatmentCallout.close();
@@ -2649,6 +2780,132 @@ package treatments
 					notes.clearFocus();
 			}
 			
+			function onBolusExtendedChanged(e:Event):void
+			{
+				if (extendedBolusCheck.isSelected)
+				{
+					if (extendedBolusMainContainer != null)
+					{
+						extendedBolusSplitContainer1 = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT);
+						extendedBolusSplitContainer1.width = extendedBolusMainContainer.width;
+						extendedBolusMainContainer.addChild(extendedBolusSplitContainer1);
+						
+						firstSplitLabel = LayoutFactory.createLabel("Split 1 (%):");
+						firstSplitNumericStepper = LayoutFactory.createNumericStepper(0, 100, 100, 5);
+						firstSplitNumericStepper.addEventListener(Event.CHANGE, onFirstSplitStepperChanged);
+						extendedBolusSplitContainer1.addChild(firstSplitLabel);
+						extendedBolusSplitContainer1.addChild(firstSplitNumericStepper);
+						firstSplitNumericStepper.validate();
+						extendedBolusSplitContainer1.validate();
+						firstSplitNumericStepper.x = extendedBolusMainContainer.width - firstSplitNumericStepper.width + 12;
+						
+						extendedBolusSplitContainer2 = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT);
+						extendedBolusSplitContainer2.width = extendedBolusMainContainer.width;
+						extendedBolusMainContainer.addChild(extendedBolusSplitContainer2);
+						
+						lastSplitLabel = LayoutFactory.createLabel("Split 2 (%):");
+						lastSplitNumericStepper = LayoutFactory.createNumericStepper(0, 100, 0, 5);
+						lastSplitNumericStepper.addEventListener(Event.CHANGE, onLastSplitStepperChanged);
+						extendedBolusSplitContainer2.addChild(lastSplitLabel);
+						extendedBolusSplitContainer2.addChild(lastSplitNumericStepper);
+						lastSplitNumericStepper.validate();
+						extendedBolusSplitContainer2.validate();
+						lastSplitNumericStepper.x = extendedBolusMainContainer.width - lastSplitNumericStepper.width + 12;
+						
+						extendedBolusDurationContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT);
+						extendedBolusDurationContainer.width = extendedBolusMainContainer.width;
+						extendedBolusMainContainer.addChild(extendedBolusDurationContainer);
+						
+						extendedDurationLabel = LayoutFactory.createLabel("Minutes:");
+						extendedDurationNumericStepper = LayoutFactory.createNumericStepper(10, 1000, 120, 5);
+						extendedBolusDurationContainer.addChild(extendedDurationLabel);
+						extendedBolusDurationContainer.addChild(extendedDurationNumericStepper);
+						extendedDurationNumericStepper.validate();
+						extendedBolusDurationContainer.validate();
+						extendedDurationNumericStepper.x = extendedBolusMainContainer.width - extendedDurationNumericStepper.width + 12;
+					}
+				}
+				else
+				{
+					disposeExtendedBolusComponents();
+				}
+			}
+			
+			function onFirstSplitStepperChanged(e:Event):void
+			{
+				if (firstSplitNumericStepper != null && lastSplitNumericStepper != null)
+				{
+					lastSplitNumericStepper.value = 100 - firstSplitNumericStepper.value;
+				}
+			}
+			
+			function onLastSplitStepperChanged(e:Event):void
+			{
+				if (firstSplitNumericStepper != null && lastSplitNumericStepper != null)
+				{
+					firstSplitNumericStepper.value = 100 - lastSplitNumericStepper.value;
+				}
+			}
+			
+			function disposeExtendedBolusComponents():void
+			{
+				if (firstSplitLabel != null)
+				{
+					firstSplitLabel.removeFromParent(true);
+					firstSplitLabel = null;
+				}
+				
+				if (firstSplitNumericStepper != null)
+				{
+					firstSplitNumericStepper.removeEventListener(Event.CHANGE, onFirstSplitStepperChanged);
+					firstSplitNumericStepper.removeFromParent(true);
+					firstSplitNumericStepper = null;
+				}
+				
+				if (extendedBolusSplitContainer1 != null)
+				{
+					extendedBolusSplitContainer1.removeFromParent(true);
+					extendedBolusSplitContainer1 = null;
+				}
+				
+				if (lastSplitLabel != null)
+				{
+					lastSplitLabel.removeFromParent(true);
+					lastSplitLabel = null;
+				}
+				
+				if (lastSplitNumericStepper != null)
+				{
+					lastSplitNumericStepper.removeEventListener(Event.CHANGE, onLastSplitStepperChanged);
+					lastSplitNumericStepper.removeFromParent(true);
+					lastSplitNumericStepper = null;
+				}
+				
+				if (extendedBolusSplitContainer2 != null)
+				{
+					extendedBolusSplitContainer2.removeFromParent(true);
+					extendedBolusSplitContainer2 = null;
+				}
+				
+				if (extendedDurationLabel != null)
+				{
+					extendedDurationLabel.removeFromParent(true);
+					extendedDurationLabel = null;
+				}
+				
+				if (extendedDurationNumericStepper != null)
+				{
+					extendedDurationNumericStepper.removeFromParent(true);
+					extendedDurationNumericStepper = null;
+				}
+				
+				if (extendedBolusDurationContainer != null)
+				{
+					extendedBolusDurationContainer.removeFromParent(true);
+					extendedBolusDurationContainer = null;
+				}
+			}
+			
 			function onTreatmentsCalloutClosed(e:Event):void
 			{
 				//Dispose Components	
@@ -2672,6 +2929,23 @@ package treatments
 					insulinTextInput.removeFromParent();
 					insulinTextInput.dispose();
 					insulinTextInput = null;
+				}
+				
+				disposeExtendedBolusComponents();
+				
+				if (extendedBolusCheck != null)
+				{
+					extendedBolusCheck.removeEventListener(Event.CHANGE, onBolusExtendedChanged);
+					extendedBolusCheck.removeFromParent();
+					extendedBolusCheck.dispose();
+					extendedBolusCheck = null;
+				}
+				
+				if (extendedBolusMainContainer != null)
+				{
+					extendedBolusMainContainer.removeFromParent();
+					extendedBolusMainContainer.dispose();
+					extendedBolusMainContainer = null;
 				}
 				
 				if (glucoseTextInput != null)
