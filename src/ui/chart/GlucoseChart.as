@@ -6097,11 +6097,11 @@ package ui.chart
 				targetMarker = e.currentTarget as GlucoseMarker;
 				if (targetMarker != null && targetMarker.bgReading != null)
 				{
-					targetMarker.filter = new GlowFilter(targetMarker.bgReading.rawData, 10, 2.2, 1);
+					targetMarker.filter = new GlowFilter(targetMarker.bgReading.rawData, 7, 2.4, 1);
 					
 					if (_displayLine)
 					{
-						targetMarker.x += targetMarker.width / 3;
+						targetMarker.x += targetMarker.width / 6;
 						targetMarker.alpha = 1;
 					}
 					
@@ -6117,7 +6117,7 @@ package ui.chart
 					if (_displayLine)
 					{
 						targetMarker.alpha = 0;
-						targetMarker.x -= targetMarker.width / 3;
+						targetMarker.x -= targetMarker.width / 6;
 					}
 					
 					disposePredictionDetailCallout();
