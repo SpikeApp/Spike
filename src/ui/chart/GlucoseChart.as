@@ -1293,7 +1293,7 @@ package ui.chart
 		
 		public function calculateTotalIOB(time:Number):void
 		{
-			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled || isHistoricalData)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayIOBEnabled || isHistoricalData || !SystemUtil.isApplicationActive)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && IOBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -2755,6 +2755,7 @@ package ui.chart
 						mainChart.x += mainChartGlucoseMarkerRadius;
 					}
 					displayLatestBGValue = true;
+					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
 				}
 			}
 			
@@ -6092,6 +6093,17 @@ package ui.chart
 					activeGlucoseDelimiter = glucoseDelimiter;
 				}
 				
+				//Reset chart/scroller positions
+				if (handPicker != null && mainChart != null)
+				{
+					handPicker.x = _graphWidth - handPicker.width;
+					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
+					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+					displayLatestBGValue = true;
+					
+					calculateDisplayLabels();
+				}
+				
 				//Redraw main chart
 				var lastMainGlucoseMarker:GlucoseMarker = mainChartGlucoseMarkersList.pop();
 				if (lastMainGlucoseMarker != null)
@@ -7566,6 +7578,7 @@ package ui.chart
 				
 				//Redraw main chart
 				redrawChart(MAIN_CHART, _graphWidth - yAxisMargin, _graphHeight, yAxisMargin, mainChartGlucoseMarkerRadius, 0, false, false, previousPredictions);
+				redrawChart(SCROLLER_CHART, _scrollerWidth - (scrollerChartGlucoseMarkerRadius * 2), _scrollerHeight, 0, scrollerChartGlucoseMarkerRadius, 0, false, false, previousPredictions);
 				
 				//Deativate DummyMode
 				dummyModeActive = false;
