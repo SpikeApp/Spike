@@ -68,12 +68,12 @@ package ui.chart
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
-	import starling.filters.BlurFilter;
 	import starling.filters.GlowFilter;
 	import starling.utils.Align;
 	import starling.utils.SystemUtil;
 	
 	import treatments.Insulin;
+	import treatments.Profile;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
@@ -847,13 +847,13 @@ package ui.chart
 			 */
 			//First we determine the maximum and minimum glucose values
 			var sortDataArray:Array = predictionsList.length == 0 ? _dataSource.concat() : _dataSource.concat().concat(predictionsList);
-			sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
+			sortDataArray.sortOn(["_calculatedValue"], Array.NUMERIC);
 			var lowestValue:Number;
 			var highestValue:Number;;
 			if (!dummyModeActive)
 			{
-				lowestValue = sortDataArray[0].calculatedValue as Number;
-				highestValue = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+				lowestValue = sortDataArray[0]._calculatedValue as Number;
+				highestValue = sortDataArray[sortDataArray.length - 1]._calculatedValue as Number;
 				if (!fixedSize)
 				{
 					lowestGlucoseValue = lowestValue;
@@ -948,7 +948,7 @@ package ui.chart
 				var glucoseReading:BgReading = readingsSource[index];
 				
 				//Get current glucose value
-				var currentGlucoseValue:Number = !isRaw || isPrediction ? Number(glucoseReading.calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
+				var currentGlucoseValue:Number = !isRaw || isPrediction ? Number(glucoseReading._calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
 				if(currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
 				else if (currentGlucoseValue > 400)
@@ -1049,7 +1049,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(_displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading._calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					//Define new predictions set
 					var newPredictionSet:Boolean = isPrediction && previousGlucoseMarker != null && previousGlucoseMarker.bgReading.uniqueId.length == 3 && glucoseMarker.bgReading.uniqueId.length == 3 && previousGlucoseMarker.bgReading.uniqueId != glucoseMarker.bgReading.uniqueId;
@@ -1185,7 +1185,7 @@ package ui.chart
 				}
 				
 				//Hide markers without sensor
-				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower() && !isPrediction) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
+				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower() && !isPrediction) || glucoseReading._calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
 					glucoseMarker.alpha = 0;
 			
 				//Set variables for next iteration
@@ -1224,7 +1224,7 @@ package ui.chart
 			}
 			
 			//Predictions line fix
-			if (glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
+			if (glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading._calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
 			{
 				//Add an extra line
 				if (chartType == MAIN_CHART && isPrediction) glucoseMarker.removeHitArea();
@@ -1313,7 +1313,7 @@ package ui.chart
 		
 		public function calculateTotalCOB(time:Number, forceNew:Boolean = false):void
 		{
-			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled || isHistoricalData)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !displayCOBEnabled || isHistoricalData || !SystemUtil.isApplicationActive)
 				return;
 			
 			if (treatmentsActive && TreatmentsManager.treatmentsList != null && TreatmentsManager.treatmentsList.length > 0 && COBPill != null && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
@@ -1324,17 +1324,28 @@ package ui.chart
 					var originalTime:Number = time;
 					
 					//For OpenAPS we ask for COB of the current selected marker timestamp. In between timestamps give exactly the same COB value and waste CPU cycles
+					var relevantMarker:GlucoseMarker;
 					if (displayLatestBGValue)
 					{
-						time = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].timestamp;
+						relevantMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1];
+						if (relevantMarker != null)
+						{
+							time = relevantMarker.timestamp;
+						}
 					}
 					else
-						time = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp;
+					{
+						relevantMarker = mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex];
+						if (relevantMarker != null)
+						{
+							time = relevantMarker.timestamp;
+						}
+					}
 					
 					var now:Number = new Date().valueOf();
 					var lastTreatment:Treatment = TreatmentsManager.getLastTreatment();
 					var lastBgReading:BgReading = _dataSource[_dataSource.length - 1];
-					var forceLatestCOB:Boolean = lastTreatment != null && lastTreatment.carbs > 0 && lastBgReading != null && lastTreatment.timestamp > lastBgReading.timestamp;
+					var forceLatestCOB:Boolean = lastTreatment != null && lastBgReading != null && lastTreatment.carbs > 0 && lastTreatment.timestamp > lastBgReading.timestamp;
 					
 					if (latestOpenAPSRequestedCOBTimestamp != time || forceLatestCOB)
 					{
@@ -1347,7 +1358,7 @@ package ui.chart
 							currentTotalCOB = TreatmentsManager.getTotalCOB(time, displayLatestBGValue || (mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex] != null && time >= mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp && now - mainChartGlucoseMarkersList[selectedGlucoseMarkerIndex].timestamp < TimeSpan.TIME_5_MINUTES)).cob;
 						}
 						
-						COBPill.setValue(GlucoseFactory.formatCOB(currentTotalCOB));
+						if (COBPill != null) COBPill.setValue(GlucoseFactory.formatCOB(currentTotalCOB));
 						latestOpenAPSRequestedCOBTimestamp = time;
 						SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 					}
@@ -1355,7 +1366,7 @@ package ui.chart
 				else
 				{
 					currentTotalCOB = TreatmentsManager.getTotalCOB(time).cob;
-					COBPill.setValue(GlucoseFactory.formatCOB(currentTotalCOB));
+					if (COBPill != null) COBPill.setValue(GlucoseFactory.formatCOB(currentTotalCOB));
 					SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 				}
 			}
@@ -1363,7 +1374,7 @@ package ui.chart
 			if (treatmentsActive && (TreatmentsManager.treatmentsList == null || TreatmentsManager.treatmentsList.length == 0))
 			{
 				currentTotalCOB = 0;
-				COBPill.setValue(GlucoseFactory.formatCOB(0));
+				if (COBPill != null) COBPill.setValue(GlucoseFactory.formatCOB(0));
 				SystemUtil.executeWhenApplicationIsActive( repositionTreatmentPills );
 			}
 		}
@@ -2792,14 +2803,15 @@ package ui.chart
 		
 		private function redrawChart(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number, numNewReadings:int, isRaw:Boolean = false, forcePredictionsCOBRefresh:Boolean = false, calibratedPredictions:Array = null):void
 		{
-			if (!SystemUtil.isApplicationActive)
+			if (!SystemUtil.isApplicationActive || dummyModeActive || mainChart == null)
 				return;
 			
 			/**
 			 * Predictions
 			 */
-			clearTimeout(redrawPredictionsTimeoutID);
-			var predictionsList:Array;
+			if (!isNaN(redrawPredictionsTimeoutID)) clearTimeout(redrawPredictionsTimeoutID);
+			
+			var predictionsList:Array = [];
 			if (predictionsEnabled)
 			{
 				//Special case for latest carb treatment
@@ -2814,10 +2826,10 @@ package ui.chart
 					predictionsList = fetchPredictions(lastTreatmentIsCarbs);
 				}
 			}
-			else
-			{
-				predictionsList = [];
-			}
+			
+			//Safeguards
+			if (predictionsList == null ) predictionsList = [];
+			if (predictionsMainGlucoseDataPoints == null) predictionsMainGlucoseDataPoints = [];
 			
 			if (predictionsEnabled && predictionsList.length == 0 && predictionsMainGlucoseDataPoints.length > 0)
 			{
@@ -2859,10 +2871,10 @@ package ui.chart
 			var previousLowestGlucoseValue:Number = lowestGlucoseValue;
 			
 			var sortDataArray:Array = predictionsList.length == 0 ? _dataSource.concat() : _dataSource.concat().concat(predictionsList);
-			sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
+			sortDataArray.sortOn(["_calculatedValue"], Array.NUMERIC);
 			
-			var lowestValue:Number = sortDataArray[0].calculatedValue as Number;
-			var highestValue:Number = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+			var lowestValue:Number = sortDataArray[0]._calculatedValue as Number;
+			var highestValue:Number = sortDataArray[sortDataArray.length - 1]._calculatedValue as Number;
 			
 			if (!fixedSize)
 			{
@@ -2944,10 +2956,12 @@ package ui.chart
 				
 				index = !isPrediction ? i : i - realReadingsLength;
 				readingsSource = !isPrediction ? _dataSource : predictionsList;
+				if (readingsSource == null) continue;
 				
 				var glucoseReading:BgReading = readingsSource[index];
+				if (glucoseReading == null) continue;
 				
-				var currentGlucoseValue:Number = !isRaw ? Number(glucoseReading.calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
+				var currentGlucoseValue:Number = !isRaw ? Number(glucoseReading._calculatedValue) : GlucoseFactory.getRawGlucose(glucoseReading, glucoseReading.calibration);
 				if (currentGlucoseValue < 40)
 					currentGlucoseValue = 40;
 				else if (currentGlucoseValue > 400)
@@ -2965,17 +2979,27 @@ package ui.chart
 					glucoseX = !isRaw ? 0 : glucoseMarkerRadius;
 				else
 				{
+					var prevReading:BgReading;
 					if (!isPrediction)
 					{
-						glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[i-1].timestamp)) * scaleXFactor;
+						prevReading = _dataSource[i-1];
+						if (prevReading == null) continue;
+						
+						glucoseX = (Number(glucoseReading.timestamp) - Number(prevReading._timestamp)) * scaleXFactor;
 					}
 					else if (isPrediction && index == 0)
 					{
-						glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[_dataSource.length-1].timestamp)) * scaleXFactor;
+						prevReading = _dataSource[_dataSource.length-1];
+						if (prevReading == null) continue;
+						
+						glucoseX = (Number(glucoseReading.timestamp) - Number(prevReading.timestamp)) * scaleXFactor;
 					}
 					else
 					{
-						glucoseX = (Number(glucoseReading.timestamp) - Number(readingsSource[index-1].timestamp)) * scaleXFactor;
+						prevReading = readingsSource[index-1];
+						if (prevReading == null) continue;
+						
+						glucoseX = (Number(glucoseReading.timestamp) - Number(prevReading.timestamp)) * scaleXFactor;
 					}
 				}
 				
@@ -2986,7 +3010,7 @@ package ui.chart
 				if(totalGlucoseDifference == 0 && !isRaw) 
 					glucoseY = (chartHeight - (glucoseMarkerRadius*2)) / 2;
 				
-				if(i < realReadingsLength - numNewReadings && !isPrediction)
+				if(i < realReadingsLength - numNewReadings && !isPrediction && glucoseMarker != null)
 				{
 					glucoseMarker.x = previousXCoordinate + glucoseX;
 					glucoseMarker.y = glucoseY;
@@ -3042,6 +3066,10 @@ package ui.chart
 							true
 						);
 					}
+					
+					if (glucoseMarker == null)
+						continue;
+					
 					if (!isPrediction)
 					{
 						glucoseMarker.touchable = false;
@@ -3059,27 +3087,30 @@ package ui.chart
 							//Add it to the display list
 							mainChart.addChild(glucoseMarker);
 							//Save it in the array for later
-							if (!isPrediction)
+							if (!isPrediction && mainChartGlucoseMarkersList != null)
 								mainChartGlucoseMarkersList.push(glucoseMarker);
-							else
+							else if (predictionsMainGlucoseDataPoints != null)
 								predictionsMainGlucoseDataPoints.push(glucoseMarker);
 						}
 						else
 						{
 							//Add it to the display list
-							rawDataContainer.addChild(glucoseMarker);
+							if (rawDataContainer != null)
+								rawDataContainer.addChild(glucoseMarker);
 							//Save it in the array for later
-							rawGlucoseMarkersList.push(glucoseMarker);
+							if (rawGlucoseMarkersList != null)
+								rawGlucoseMarkersList.push(glucoseMarker);
 						}
 					}
 					else if (chartType == SCROLLER_CHART)
 					{
 						//Add it to the display list
-						scrollerChart.addChild(glucoseMarker);
+						if (scrollerChart != null)
+							scrollerChart.addChild(glucoseMarker);
 						//Save it in the array for later
-						if (!isPrediction)
+						if (!isPrediction && scrollChartGlucoseMarkersList != null)
 							scrollChartGlucoseMarkersList.push(glucoseMarker);
-						else
+						else if (predictionsScrollerGlucoseDataPoints != null)
 							predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
 					}
 				}
@@ -3091,7 +3122,7 @@ package ui.chart
 					glucoseMarker.alpha = 1;
 				
 				//Draw line
-				if(glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
+				if(glucoseMarker != null && _displayLine && !isRaw && glucoseMarker.bgReading != null && glucoseMarker.bgReading != null && glucoseMarker.bgReading._calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue)
 				{
 					var newPredictionSet:Boolean = isPrediction && previousGlucoseMarker != null && previousGlucoseMarker.bgReading.uniqueId.length == 3 && glucoseMarker.bgReading.uniqueId.length == 3 && previousGlucoseMarker.bgReading.uniqueId != glucoseMarker.bgReading.uniqueId;
 					if (!isPrediction && i == realReadingsLength - 1)
@@ -3127,7 +3158,7 @@ package ui.chart
 						
 						//Determine if missed readings are bigger than the acceptable gap. If so, the line will be gray;
 						line.lineStyle(chartType == SCROLLER_CHART && glucoseLineThickness > 1 ? glucoseLineThickness / 2 : glucoseLineThickness, glucoseMarker.color, 1);
-						if(i > 0)
+						if(i > 0 && previousGlucoseMarker != null)
 						{
 							var elapsedMinutes:Number = TimeSpan.fromDates(new Date(previousGlucoseMarker.timestamp), new Date(glucoseMarker.timestamp)).minutes;
 							if (elapsedMinutes > NUM_MINUTES_MISSED_READING_GAP)
@@ -3201,7 +3232,7 @@ package ui.chart
 							}
 							else
 							{
-								if (previousGlucoseMarker.bgReading.uniqueId == glucoseMarker.bgReading.uniqueId && !newPredictionSet)
+								if (previousGlucoseMarker != null && previousGlucoseMarker.bgReading != null && glucoseMarker.bgReading != null && previousGlucoseMarker.bgReading.uniqueId == glucoseMarker.bgReading.uniqueId && !newPredictionSet)
 								{
 									line.lineTo((currentLineX + previousLineX) / 2, (currentLineY + previousLineY) / 2);
 								}
@@ -3225,7 +3256,7 @@ package ui.chart
 				}
 				
 				//Hide markers without sensor
-				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower() && !isPrediction) || glucoseReading.calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
+				if ((glucoseReading.sensor == null && !CGMBlueToothDevice.isFollower() && !isPrediction) || glucoseReading._calculatedValue == 0 || (glucoseReading.rawData == 0 && !CGMBlueToothDevice.isFollower()))
 					glucoseMarker.alpha = 0;
 				
 				
@@ -3241,7 +3272,7 @@ package ui.chart
 			}
 			
 			//Predictions line fix
-			if (_displayLine && !isRaw && previousGlucoseMarker != null && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
+			if (glucoseMarker != null && previousGlucoseMarker != null && _displayLine && !isRaw && previousGlucoseMarker != null && glucoseMarker.bgReading != null && glucoseMarker.bgReading._calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && predictionsLength > 0)
 			{
 				//Add an extra line
 				if (chartType == MAIN_CHART && isPrediction) glucoseMarker.removeHitArea();
@@ -3269,7 +3300,11 @@ package ui.chart
 				{
 					try
 					{
-						newBgTarget = Number(ProfileManager.getProfileByTime(new Date().valueOf()).targetGlucoseRates);
+						var nowProfile:Profile = ProfileManager.getProfileByTime(new Date().valueOf());
+						if (nowProfile != null)
+						{
+							newBgTarget = Number(nowProfile.targetGlucoseRates);
+						}
 					} 
 					catch(error:Error) {}
 				}
@@ -3287,14 +3322,19 @@ package ui.chart
 				}
 				
 				//Update glucose display textfield
-				if(displayLatestBGValue)
+				if(displayLatestBGValue && glucoseValueDisplay != null)
 				{
-					glucoseValueDisplay.text = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].glucoseValueFormatted + " " + mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].slopeArrow;
-					glucoseValueDisplay.fontStyles.color = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].color;
+					var displayMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1];
+					
+					if (displayMarker != null)
+					{
+						glucoseValueDisplay.text = displayMarker.glucoseValueFormatted + " " + displayMarker.slopeArrow;
+						glucoseValueDisplay.fontStyles.color = displayMarker.color;
+					}
 				}
 			}
 			//Chart Line
-			if(_displayLine && !isRaw)
+			if(_displayLine && !isRaw && line != null)
 			{	
 				//Remove touch events from line
 				line.touchable = false;
@@ -3703,47 +3743,7 @@ package ui.chart
 			//Dispose previous header
 			disposePredictionsHeader();
 			
-			//Poperties
-			var maxNumberOfPredictions:Number = Math.floor(predictionsLengthInMinutes / 5);
-			var lastAvailableBgReading:BgReading = _dataSource[_dataSource.length - 1];
-			var nowTimestamp:Number = new Date().valueOf();
-			var now:Number = lastAvailableBgReading != null ? lastAvailableBgReading.timestamp : nowTimestamp;
-			var currentReadingValue:Number = Number.NaN;
-			var readingTimestamp:Number;
-			var predictedCalculatedValue:Number;
-			var predictionsFound:Boolean = false;
-			var cobPredictionsEnabled:Boolean = false;
-			var iobPredictionsEnabled:Boolean = false;
-			var uamPredictionsEnabled:Boolean = false;
-			var ztPredictionsEnabled:Boolean = false;
-			numDifferentPredictionsDisplayed = 0;
-			
-			var i:int;
-			predictedTimeUntilHigh = Number.NaN;
-			predictedTimeUntilLow = Number.NaN;
-			
-			//Colors
-			var mainPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR));
-			var cobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
-			var iobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
-			var uamPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR));
-			var ztPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ZT_COLOR));
-			
-			//Prediction's lists
-			var finalTotalPredictionsList:Array = [];
-			var finalIOBPredictionsList:Array = [];
-			var finalCOBPredictionsList:Array = [];
-			var finalUAMPredictionsList:Array = [];
-			var finalZTPredictionsList:Array = [];
-			var unformattedIOBPredictionsList:Array = [];
-			var unformattedCOBPredictionsList:Array = [];
-			var unformattedUAMPredictionsList:Array = [];
-			var unformattedZTPredictionsList:Array = [];
-			preferredPrediction = "";
-			
-			//All Predictions
-			var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes, forceNewIOBCOB);
-			if (unformattedPredictions == null)
+			function resetVariables():void
 			{
 				//Reset all prediction variables
 				lastPredictionUpdate = Number.NaN;
@@ -3759,15 +3759,62 @@ package ui.chart
 				currentReadingValue = Number.NaN;
 				
 				//Update predictions pill
-				predictionsPill.setValue(ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
-				
-				//Return empty array
-				return finalTotalPredictionsList;
+				if (predictionsPill != null)
+				{
+					predictionsPill.setValue(ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'), TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false));
+				}
 			}
 			
-			//Update Useful Properties
-			if (unformattedPredictions != null)
+			try
 			{
+				//Poperties
+				var maxNumberOfPredictions:Number = Math.floor(predictionsLengthInMinutes / 5);
+				var lastAvailableBgReading:BgReading = _dataSource[_dataSource.length - 1];
+				var nowTimestamp:Number = new Date().valueOf();
+				var now:Number = lastAvailableBgReading != null ? lastAvailableBgReading.timestamp : nowTimestamp;
+				var currentReadingValue:Number = Number.NaN;
+				var readingTimestamp:Number = Number.NaN;
+				var predicted_calculatedValue:Number = Number.NaN;
+				var predictionsFound:Boolean = false;
+				var cobPredictionsEnabled:Boolean = false;
+				var iobPredictionsEnabled:Boolean = false;
+				var uamPredictionsEnabled:Boolean = false;
+				var ztPredictionsEnabled:Boolean = false;
+				numDifferentPredictionsDisplayed = 0;
+				
+				var i:int;
+				predictedTimeUntilHigh = Number.NaN;
+				predictedTimeUntilLow = Number.NaN;
+				
+				//Colors
+				var mainPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR));
+				var cobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_CARBS_MARKER_COLOR));
+				var iobPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
+				var uamPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR));
+				var ztPredictionsColor:uint = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ZT_COLOR));
+				
+				//Prediction's lists
+				var finalTotalPredictionsList:Array = [];
+				var finalIOBPredictionsList:Array = [];
+				var finalCOBPredictionsList:Array = [];
+				var finalUAMPredictionsList:Array = [];
+				var finalZTPredictionsList:Array = [];
+				var unformattedIOBPredictionsList:Array = [];
+				var unformattedCOBPredictionsList:Array = [];
+				var unformattedUAMPredictionsList:Array = [];
+				var unformattedZTPredictionsList:Array = [];
+				preferredPrediction = "";
+				
+				//All Predictions
+				var unformattedPredictions:Object = Forecast.predictBGs(predictionsLengthInMinutes, forceNewIOBCOB);
+				if (unformattedPredictions == null)
+				{
+					resetVariables();
+					
+					//Return empty array
+					return finalTotalPredictionsList;
+				}
+				//Update Useful Properties
 				lastPredictionUpdate = unformattedPredictions.lastUpdate != null ? unformattedPredictions.lastUpdate : Number.NaN;
 				predictedEventualBG = unformattedPredictions.eventualBG != null ? unformattedPredictions.eventualBG : Number.NaN;
 				predictedBGImpact = unformattedPredictions.bgImpact != null ? unformattedPredictions.bgImpact : Number.NaN;
@@ -3781,567 +3828,593 @@ package ui.chart
 				currentReadingValue = unformattedPredictions.bg != null ? unformattedPredictions.bg : Number.NaN;
 				var currentIOB:Number = unformattedPredictions.IOBValue != null ? unformattedPredictions.IOBValue : Number.NaN;
 				var currentCOB:Number = unformattedPredictions.COBValue != null ? unformattedPredictions.COBValue : Number.NaN;
-			}
-			
-			//UAM Predictions
-			if (unformattedPredictions != null && unformattedPredictions.UAM != null)
-			{
-				unformattedUAMPredictionsList = unformattedPredictions.UAM.concat();
-				var excludedUAMPrediction:Number = unformattedUAMPredictionsList.shift(); //Remove first element
-				if (isNaN(currentReadingValue)) currentReadingValue = excludedUAMPrediction;
 				
-				predictionsFound = true;
-				uamPredictionsEnabled = true;
-				numDifferentPredictionsDisplayed++;
-			}
-			
-			//COB Predictions
-			if (unformattedPredictions != null && unformattedPredictions.COB != null)
-			{
-				unformattedCOBPredictionsList = unformattedPredictions.COB.concat();
-				var excludedCOBPrediction:Number = unformattedCOBPredictionsList.shift(); //Remove first element
-				if (isNaN(currentReadingValue)) currentReadingValue = excludedCOBPrediction;
-				
-				predictionsFound = true;
-				cobPredictionsEnabled = true;
-				numDifferentPredictionsDisplayed++;
-			}
-			
-			//IOB Predictions
-			if (unformattedPredictions != null && unformattedPredictions.IOB != null)
-			{
-				unformattedIOBPredictionsList = unformattedPredictions.IOB.concat();
-				var excludedIOBPrediction:Number = unformattedIOBPredictionsList.shift(); //Remove first element
-				if (isNaN(currentReadingValue)) currentReadingValue = excludedIOBPrediction;
-				
-				predictionsFound = true;
-				iobPredictionsEnabled = true;
-				numDifferentPredictionsDisplayed++;
-			}
-			
-			//ZT Predictions
-			if (unformattedPredictions != null && unformattedPredictions.ZT != null)
-			{
-				unformattedZTPredictionsList = unformattedPredictions.ZT.concat();
-				var excludedZTPrediction :Number= unformattedZTPredictionsList.shift(); //Remove first element
-				if (isNaN(currentReadingValue)) currentReadingValue = excludedZTPrediction;
-				
-				predictionsFound = true;
-				ztPredictionsEnabled = true;
-				numDifferentPredictionsDisplayed++;
-			}
-			
-			preferredPrediction = Forecast.determineDefaultPredictionCurve(unformattedPredictions);
-			
-			//Validate
-			if (!predictionsFound)
-			{
-				//If no predictions are available return an empty array
-				return finalTotalPredictionsList;
-			}
-			
-			//First glucose thresholds check
-			if (currentReadingValue >= glucoseHigh)
-			{
-				predictedTimeUntilHigh = 0;
-			}
-			else if (currentReadingValue <= glucoseLow)
-			{
-				predictedTimeUntilLow = 0;
-			}
-			
-			//Loop through COB predictions (priority #1)
-			var startWithCOBColor:Boolean = true;
-			var cobPredictionsLength:uint =  unformattedCOBPredictionsList.length;
-			for (i = 0; i < cobPredictionsLength; i++) 
-			{
-				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
-				predictedCalculatedValue = unformattedCOBPredictionsList[i];
-				
-				var cobPredColor:uint;
-				if (preferredPrediction == "COB")
+				//UAM Predictions
+				if (unformattedPredictions.UAM != null)
 				{
-					cobPredColor = mainPredictionsColor;
+					unformattedUAMPredictionsList = unformattedPredictions.UAM.concat();
+					var excludedUAMPrediction:Number = unformattedUAMPredictionsList.shift(); //Remove first element
+					if (isNaN(currentReadingValue)) currentReadingValue = excludedUAMPrediction;
+					
+					predictionsFound = true;
+					uamPredictionsEnabled = true;
+					numDifferentPredictionsDisplayed++;
 				}
-				else
+				
+				//COB Predictions
+				if (unformattedPredictions.COB != null)
 				{
-					if (currentIOB > 0 || currentTotalIOB > 0)
+					unformattedCOBPredictionsList = unformattedPredictions.COB.concat();
+					var excludedCOBPrediction:Number = unformattedCOBPredictionsList.shift(); //Remove first element
+					if (isNaN(currentReadingValue)) currentReadingValue = excludedCOBPrediction;
+					
+					predictionsFound = true;
+					cobPredictionsEnabled = true;
+					numDifferentPredictionsDisplayed++;
+				}
+				
+				//IOB Predictions
+				if (unformattedPredictions.IOB != null)
+				{
+					unformattedIOBPredictionsList = unformattedPredictions.IOB.concat();
+					var excludedIOBPrediction:Number = unformattedIOBPredictionsList.shift(); //Remove first element
+					if (isNaN(currentReadingValue)) currentReadingValue = excludedIOBPrediction;
+					
+					predictionsFound = true;
+					iobPredictionsEnabled = true;
+					numDifferentPredictionsDisplayed++;
+				}
+				
+				//ZT Predictions
+				if (unformattedPredictions.ZT != null)
+				{
+					unformattedZTPredictionsList = unformattedPredictions.ZT.concat();
+					var excludedZTPrediction :Number= unformattedZTPredictionsList.shift(); //Remove first element
+					if (isNaN(currentReadingValue)) currentReadingValue = excludedZTPrediction;
+					
+					predictionsFound = true;
+					ztPredictionsEnabled = true;
+					numDifferentPredictionsDisplayed++;
+				}
+				
+				preferredPrediction = Forecast.determineDefaultPredictionCurve(unformattedPredictions);
+				
+				//Validate
+				if (!predictionsFound)
+				{
+					resetVariables();
+					
+					//If no predictions are available return an empty array
+					return finalTotalPredictionsList;
+				}
+				
+				//First glucose thresholds check
+				if (currentReadingValue >= glucoseHigh)
+				{
+					predictedTimeUntilHigh = 0;
+				}
+				else if (currentReadingValue <= glucoseLow)
+				{
+					predictedTimeUntilLow = 0;
+				}
+				
+				//Loop through COB predictions (priority #1)
+				var startWithCOBColor:Boolean = true;
+				var cobPredictionsLength:uint =  unformattedCOBPredictionsList.length;
+				for (i = 0; i < cobPredictionsLength; i++) 
+				{
+					readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+					predicted_calculatedValue = unformattedCOBPredictionsList[i];
+					
+					var cobPredColor:uint;
+					if (preferredPrediction == "COB")
 					{
-						if (startWithCOBColor)
-						{
-							cobPredColor = cobPredictionsColor;
-						}
-						else
-						{
-							cobPredColor = iobPredictionsColor;
-						}
-						
-						startWithCOBColor = !startWithCOBColor;
+						cobPredColor = mainPredictionsColor;
 					}
 					else
 					{
-						cobPredColor = cobPredictionsColor;
-					}
-				}
-				
-				var cobPredictionReading:BgReading = new BgReading
-				(
-					readingTimestamp, //timestamp
-					null, //sensor
-					null, //calibration
-					cobPredColor, //raw data
-					Number.NaN, //filtered data
-					Number.NaN, //adge adjusted raw data
-					false, //calibration flag
-					predictedCalculatedValue, //calculated value
-					Number.NaN, //filtered calculated value
-					Number.NaN, //calculated value slope
-					Number.NaN, //a
-					Number.NaN, //b
-					Number.NaN, //c
-					Number.NaN, //ra
-					Number.NaN, //rb
-					Number.NaN, //rc
-					Number.NaN, //raw calculated
-					false, //hide slope
-					"", //noise
-					readingTimestamp, //last modified timestamp
-					"COB" //unique id
-				);
-				
-				//Check if high or low thresholds will be reached
-				if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
-				{
-					predictedTimeUntilHigh = readingTimestamp - now;
-				}
-				
-				if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
-				{
-					predictedTimeUntilLow = readingTimestamp - now;
-				}
-				
-				//Add to prediction's list
-				finalCOBPredictionsList.push(cobPredictionReading);
-			}
-			
-			//Loop through UAM predictions (priority #2)
-			var uamPredictionsLength:uint =  unformattedUAMPredictionsList.length;
-			for (i = 0; i < uamPredictionsLength; i++) 
-			{
-				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
-				predictedCalculatedValue = unformattedUAMPredictionsList[i];
-				var uamPredictionReading:BgReading = new BgReading
-				(
-					readingTimestamp, //timestamp
-					null, //sensor
-					null, //calibration
-					preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor, //raw data
-					Number.NaN, //filtered data
-					Number.NaN, //adge adjusted raw data
-					false, //calibration flag
-					predictedCalculatedValue, //calculated value
-					Number.NaN, //filtered calculated value
-					Number.NaN, //calculated value slope
-					Number.NaN, //a
-					Number.NaN, //b
-					Number.NaN, //c
-					Number.NaN, //ra
-					Number.NaN, //rb
-					Number.NaN, //rc
-					Number.NaN, //raw calculated
-					false, //hide slope
-					"", //noise
-					readingTimestamp, //last modified timestamp
-					"UAM" //unique id
-				);
-				
-				//Check if high or low thresholds will be reached	
-				if (finalCOBPredictionsList.length == 0)
-				{
-					if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
-					{
-						predictedTimeUntilHigh = readingTimestamp - now;
-					}
-					
-					if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
-					{
-						predictedTimeUntilLow = readingTimestamp - now;
-					}
-				}
-				
-				//Add to prediction's list
-				finalUAMPredictionsList.push(uamPredictionReading);
-			}
-			
-			//Loop through IOB predictions (priority #3)
-			var iobPredictionsLength:uint =  unformattedIOBPredictionsList.length;
-			for (i = 0; i < iobPredictionsLength; i++) 
-			{
-				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
-				predictedCalculatedValue = unformattedIOBPredictionsList[i];
-				var iobPredictionReading:BgReading = new BgReading
-					(
-						readingTimestamp, //timestamp
-						null, //sensor
-						null, //calibration
-						preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor, //raw data
-						Number.NaN, //filtered data
-						Number.NaN, //adge adjusted raw data
-						false, //calibration flag
-						predictedCalculatedValue, //calculated value
-						Number.NaN, //filtered calculated value
-						Number.NaN, //calculated value slope
-						Number.NaN, //a
-						Number.NaN, //b
-						Number.NaN, //c
-						Number.NaN, //ra
-						Number.NaN, //rb
-						Number.NaN, //rc
-						Number.NaN, //raw calculated
-						false, //hide slope
-						"", //noise
-						readingTimestamp, //last modified timestamp
-						"IOB" //unique id
-					)
-				
-				//Check if high or low thresholds will be reached
-				if (finalCOBPredictionsList.length == 0 && finalUAMPredictionsList.length == 0)
-				{
-					if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
-					{
-						predictedTimeUntilHigh = readingTimestamp - now;
-					}
-					
-					if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
-					{
-						predictedTimeUntilLow = readingTimestamp - now;
-					}
-				}
-				
-				//Add to prediction's list
-				finalIOBPredictionsList.push(iobPredictionReading);
-			}
-			
-			//Loop through ZT predictions (priority #4)
-			var ztPredictionsLength:uint =  unformattedZTPredictionsList.length;
-			for (i = 0; i < ztPredictionsLength; i++) 
-			{
-				readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
-				predictedCalculatedValue = unformattedZTPredictionsList[i];
-				var ztPredictionReading:BgReading = new BgReading
-					(
-						readingTimestamp, //timestamp
-						null, //sensor
-						null, //calibration
-						preferredPrediction == "ZTM" ? mainPredictionsColor : ztPredictionsColor, //raw data
-						Number.NaN, //filtered data
-						Number.NaN, //adge adjusted raw data
-						false, //calibration flag
-						predictedCalculatedValue, //calculated value
-						Number.NaN, //filtered calculated value
-						Number.NaN, //calculated value slope
-						Number.NaN, //a
-						Number.NaN, //b
-						Number.NaN, //c
-						Number.NaN, //ra
-						Number.NaN, //rb
-						Number.NaN, //rc
-						Number.NaN, //raw calculated
-						false, //hide slope
-						"", //noise
-						readingTimestamp, //last modified timestamp
-						"ZTM" //unique id
-					);
-				
-				//Check if high or low thresholds will be reached
-				if (finalIOBPredictionsList.length == 0 && finalCOBPredictionsList.length == 0 && finalUAMPredictionsList.length == 0)
-				{
-					if (predictedCalculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
-					{
-						predictedTimeUntilHigh = readingTimestamp - now;
-					}
-					
-					if (predictedCalculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
-					{
-						predictedTimeUntilLow = readingTimestamp - now;
-					}
-				}
-				
-				//Add to prediction's list
-				finalZTPredictionsList.push(ztPredictionReading);
-			}
-			
-			//Truncate predictions if needed
-			if (finalCOBPredictionsList.length > maxNumberOfPredictions)
-			{
-				finalCOBPredictionsList = finalCOBPredictionsList.slice(0, maxNumberOfPredictions);
-			}
-				
-			if (finalIOBPredictionsList.length > maxNumberOfPredictions)
-			{
-				finalIOBPredictionsList = finalIOBPredictionsList.slice(0, maxNumberOfPredictions);
-			}
-				
-			if (finalUAMPredictionsList.length > maxNumberOfPredictions)
-			{
-				finalUAMPredictionsList = finalUAMPredictionsList.slice(0, maxNumberOfPredictions);
-			}
-			
-			if (finalZTPredictionsList.length > maxNumberOfPredictions)
-			{
-				finalZTPredictionsList = finalZTPredictionsList.slice(0, maxNumberOfPredictions);
-			}
-			
-			//Update predictions pill
-			predictionsPill.isPredictive = true;
-			finalPredictedValue = Number.NaN;
-			finalPredictedDuration = Number.NaN;
-			
-			var predictionAvailableDuration:Number = Math.max(finalCOBPredictionsList.length, finalUAMPredictionsList.length, finalZTPredictionsList.length, finalIOBPredictionsList.length) * 5;
-			if (isNaN(predictionAvailableDuration))
-			{
-				predictionAvailableDuration = predictionsLengthInMinutes;
-			}
-			finalPredictedDuration = predictionAvailableDuration;
-			
-			if (preferredPrediction == "COB")
-			{
-				var numCOBPredictions:uint = finalCOBPredictionsList.length;
-				finalPredictedValue = finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue;
-				
-				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalCOBPredictionsList[numCOBPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
-			}
-			else if (preferredPrediction == "UAM")
-			{
-				var numUAMPredictions:uint = finalUAMPredictionsList.length;
-				finalPredictedValue = finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue;
-				
-				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalUAMPredictionsList[numUAMPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
-			}
-			else if (preferredPrediction == "ZTM")
-			{
-				var numZTPredictions:uint = finalZTPredictionsList.length;
-				finalPredictedValue = finalZTPredictionsList[numZTPredictions - 1].calculatedValue;
-				
-				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalZTPredictionsList[numZTPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalZTPredictionsList[numZTPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
-			}
-			else 
-			{
-				var numIOBPredictions:uint = finalIOBPredictionsList.length;
-				finalPredictedValue = finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue;
-				
-				predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue)) : String(Math.round(BgReading.mgdlToMmol(finalIOBPredictionsList[numIOBPredictions - 1].calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
-			}
-			
-			repositionTreatmentPills();
-			
-			//Update header
-			if (!Forecast.externalLoopAPS)
-			{
-				if (headerProperties != null && !singlePredictionCurve)
-				{
-					predictionsLegendsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 0);
-					(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft = 40;
-					
-					if (cobPredictionsEnabled)
-					{
-						//Color
-						var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
-						//Legend Container
-						cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-						//Label
-						cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 && currentTotalIOB > 0 ? ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + " & " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label') : ModelLocator.resourceManagerInstance.getString('treatments','cob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
-						cobPredictLegendLabel.touchable = false;
-						cobPredictLegendLabel.validate();
-						//Color Marker
-						cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.6, cobPredictLegendLabel.height * 0.6, cobColor);
-						cobPredictLegendColorQuad.touchable = false;
-						if ((currentIOB > 0 && currentTotalIOB > 0) && preferredPrediction != "COB")
+						if (currentIOB > 0 || currentTotalIOB > 0)
 						{
-							cobPredictLegendColorQuad.setVertexColor(0, cobColor);
-							cobPredictLegendColorQuad.setVertexColor(1, iobPredictionsColor);
-							cobPredictLegendColorQuad.setVertexColor(2, cobColor);
-							cobPredictLegendColorQuad.setVertexColor(3, iobPredictionsColor);
+							if (startWithCOBColor)
+							{
+								cobPredColor = cobPredictionsColor;
+							}
+							else
+							{
+								cobPredColor = iobPredictionsColor;
+							}
+							
+							startWithCOBColor = !startWithCOBColor;
 						}
-						//Add label anc color marker to the container
-						cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
-						cobPredictLegendContainer.addChild(cobPredictLegendLabel);
-						cobPredictLegendContainer.validate();
-						//Hit Area
-						cobPredictLegendHitArea = new Quad(cobPredictLegendContainer.width, cobPredictLegendContainer.height, 0xFF0000);
-						cobPredictLegendHitArea.alpha = 0;
-						cobPredictLegendContainer.addChild(cobPredictLegendHitArea);
-						cobPredictLegendContainer.validate();
-						cobPredictLegendHitArea.x = cobPredictLegendHitArea.y = 0;
-						
-						cobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onCOBPredictionExplanation);
-						
-						if (preferredPrediction == "COB")
-							predictionsLegendsContainer.addChildAt(cobPredictLegendContainer, 0);
 						else
-							predictionsLegendsContainer.addChild(cobPredictLegendContainer);
-						
-						if (currentIOB > 0 && currentTotalIOB > 0)
 						{
-							(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft += 30;
+							cobPredColor = cobPredictionsColor;
 						}
 					}
 					
-					if (uamPredictionsEnabled)
+					var cobPredictionReading:BgReading = new BgReading
+						(
+							readingTimestamp, //timestamp
+							null, //sensor
+							null, //calibration
+							cobPredColor, //raw data
+							Number.NaN, //filtered data
+							Number.NaN, //adge adjusted raw data
+							false, //calibration flag
+							predicted_calculatedValue, //calculated value
+							Number.NaN, //filtered calculated value
+							Number.NaN, //calculated value slope
+							Number.NaN, //a
+							Number.NaN, //b
+							Number.NaN, //c
+							Number.NaN, //ra
+							Number.NaN, //rb
+							Number.NaN, //rc
+							Number.NaN, //raw calculated
+							false, //hide slope
+							"", //noise
+							readingTimestamp, //last modified timestamp
+							"COB" //unique id
+						);
+					
+					//Check if high or low thresholds will be reached
+					if (predicted_calculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
 					{
-						//Color
-						var uamColor:uint = preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor;
-						//Legend Container
-						uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-						//Label
-						uamPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','unannounced_glucose_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
-						uamPredictLegendLabel.touchable = false;
-						uamPredictLegendLabel.validate();
-						//Color Marker
-						uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.6, uamPredictLegendLabel.height * 0.6, uamColor);
-						uamPredictLegendColorQuad.touchable = false;
-						//Add label anc color marker to the container
-						uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
-						uamPredictLegendContainer.addChild(uamPredictLegendLabel);
-						uamPredictLegendContainer.validate();
-						//Hit Area
-						uamPredictLegendHitArea = new Quad(uamPredictLegendContainer.width, uamPredictLegendContainer.height, 0xFF0000);
-						uamPredictLegendHitArea.alpha = 0;
-						uamPredictLegendContainer.addChild(uamPredictLegendHitArea);
-						uamPredictLegendContainer.validate();
-						uamPredictLegendHitArea.x = uamPredictLegendHitArea.y = 0;
-						
-						uamPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onUAMPredictionExplanation);
-						
-						if (preferredPrediction == "UAM")
-							predictionsLegendsContainer.addChildAt(uamPredictLegendContainer, 0);
-						else
-							predictionsLegendsContainer.addChild(uamPredictLegendContainer);
+						predictedTimeUntilHigh = readingTimestamp - now;
 					}
 					
-					if (iobPredictionsEnabled)
+					if (predicted_calculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
 					{
-						//Color
-						var iobColor:uint = preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor;
-						//Legend Container
-						iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-						//Label
-						iobPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','iob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
-						iobPredictLegendLabel.touchable = false;
-						iobPredictLegendLabel.validate();
-						//Color Marker
-						iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.6, iobPredictLegendLabel.height * 0.6, iobColor);
-						iobPredictLegendColorQuad.touchable = false;
-						//Add label anc color marker to the container
-						iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
-						iobPredictLegendContainer.addChild(iobPredictLegendLabel);
-						iobPredictLegendContainer.validate();
-						//Hit Area
-						iobPredictLegendHitArea = new Quad(iobPredictLegendContainer.width, iobPredictLegendContainer.height, 0xFF0000);
-						iobPredictLegendHitArea.alpha = 0;
-						iobPredictLegendContainer.addChild(iobPredictLegendHitArea);
-						iobPredictLegendContainer.validate();
-						iobPredictLegendHitArea.x = iobPredictLegendHitArea.y = 0;
-						
-						iobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onIOBPredictionExplanation);
-						
-						if (preferredPrediction == "IOB")
-							predictionsLegendsContainer.addChildAt(iobPredictLegendContainer, 0);
-						else
-							predictionsLegendsContainer.addChild(iobPredictLegendContainer);
+						predictedTimeUntilLow = readingTimestamp - now;
 					}
 					
-					if (ztPredictionsEnabled)
-					{
-						//Color
-						var ztColor:uint = preferredPrediction == "ZTM" ? mainPredictionsColor : ztPredictionsColor;
-						//Legend Container
-						ztPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
-						//Label
-						ztPredictLegendLabel = LayoutFactory.createLabel("ZT", HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
-						ztPredictLegendLabel.touchable = false;
-						ztPredictLegendLabel.validate();
-						//Color Marker
-						ztPredictLegendColorQuad = new Quad(ztPredictLegendLabel.height * 0.6, ztPredictLegendLabel.height * 0.6, ztColor);
-						ztPredictLegendColorQuad.touchable = false;
-						//Add label anc color marker to the container
-						ztPredictLegendContainer.addChild(ztPredictLegendColorQuad);
-						ztPredictLegendContainer.addChild(ztPredictLegendLabel);
-						ztPredictLegendContainer.validate();
-						//Hit Area
-						ztPredictLegendHitArea = new Quad(ztPredictLegendContainer.width, ztPredictLegendContainer.height, 0xFF0000);
-						ztPredictLegendHitArea.alpha = 0;
-						ztPredictLegendContainer.addChild(ztPredictLegendHitArea);
-						ztPredictLegendContainer.validate();
-						ztPredictLegendHitArea.x = ztPredictLegendHitArea.y = 0;
-						
-						ztPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onZTPredictionExplanation);
-						
-						if (preferredPrediction == "ZTM")
-							predictionsLegendsContainer.addChildAt(ztPredictLegendContainer, 0);
-						else
-							predictionsLegendsContainer.addChild(ztPredictLegendContainer);
-					}
-					
-					headerProperties.centerItems = new <DisplayObject>[
-						predictionsLegendsContainer
-					];
+					//Add to prediction's list
+					finalCOBPredictionsList.push(cobPredictionReading);
 				}
-			}
-			
-			//Join all predictions
-			if (!singlePredictionCurve)
-			{
+				
+				//Loop through UAM predictions (priority #2)
+				var uamPredictionsLength:uint =  unformattedUAMPredictionsList.length;
+				for (i = 0; i < uamPredictionsLength; i++) 
+				{
+					readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+					predicted_calculatedValue = unformattedUAMPredictionsList[i];
+					var uamPredictionReading:BgReading = new BgReading
+						(
+							readingTimestamp, //timestamp
+							null, //sensor
+							null, //calibration
+							preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor, //raw data
+							Number.NaN, //filtered data
+							Number.NaN, //adge adjusted raw data
+							false, //calibration flag
+							predicted_calculatedValue, //calculated value
+							Number.NaN, //filtered calculated value
+							Number.NaN, //calculated value slope
+							Number.NaN, //a
+							Number.NaN, //b
+							Number.NaN, //c
+							Number.NaN, //ra
+							Number.NaN, //rb
+							Number.NaN, //rc
+							Number.NaN, //raw calculated
+							false, //hide slope
+							"", //noise
+							readingTimestamp, //last modified timestamp
+							"UAM" //unique id
+						);
+					
+					//Check if high or low thresholds will be reached	
+					if (finalCOBPredictionsList.length == 0)
+					{
+						if (predicted_calculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+						{
+							predictedTimeUntilHigh = readingTimestamp - now;
+						}
+						
+						if (predicted_calculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
+						{
+							predictedTimeUntilLow = readingTimestamp - now;
+						}
+					}
+					
+					//Add to prediction's list
+					finalUAMPredictionsList.push(uamPredictionReading);
+				}
+				
+				//Loop through IOB predictions (priority #3)
+				var iobPredictionsLength:uint =  unformattedIOBPredictionsList.length;
+				for (i = 0; i < iobPredictionsLength; i++) 
+				{
+					readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+					predicted_calculatedValue = unformattedIOBPredictionsList[i];
+					var iobPredictionReading:BgReading = new BgReading
+						(
+							readingTimestamp, //timestamp
+							null, //sensor
+							null, //calibration
+							preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor, //raw data
+							Number.NaN, //filtered data
+							Number.NaN, //adge adjusted raw data
+							false, //calibration flag
+							predicted_calculatedValue, //calculated value
+							Number.NaN, //filtered calculated value
+							Number.NaN, //calculated value slope
+							Number.NaN, //a
+							Number.NaN, //b
+							Number.NaN, //c
+							Number.NaN, //ra
+							Number.NaN, //rb
+							Number.NaN, //rc
+							Number.NaN, //raw calculated
+							false, //hide slope
+							"", //noise
+							readingTimestamp, //last modified timestamp
+							"IOB" //unique id
+						)
+					
+					//Check if high or low thresholds will be reached
+					if (finalCOBPredictionsList.length == 0 && finalUAMPredictionsList.length == 0)
+					{
+						if (predicted_calculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+						{
+							predictedTimeUntilHigh = readingTimestamp - now;
+						}
+						
+						if (predicted_calculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
+						{
+							predictedTimeUntilLow = readingTimestamp - now;
+						}
+					}
+					
+					//Add to prediction's list
+					finalIOBPredictionsList.push(iobPredictionReading);
+				}
+				
+				//Loop through ZT predictions (priority #4)
+				var ztPredictionsLength:uint =  unformattedZTPredictionsList.length;
+				for (i = 0; i < ztPredictionsLength; i++) 
+				{
+					readingTimestamp = now + ((i + 1) * TimeSpan.TIME_5_MINUTES);
+					predicted_calculatedValue = unformattedZTPredictionsList[i];
+					var ztPredictionReading:BgReading = new BgReading
+						(
+							readingTimestamp, //timestamp
+							null, //sensor
+							null, //calibration
+							preferredPrediction == "ZTM" ? mainPredictionsColor : ztPredictionsColor, //raw data
+							Number.NaN, //filtered data
+							Number.NaN, //adge adjusted raw data
+							false, //calibration flag
+							predicted_calculatedValue, //calculated value
+							Number.NaN, //filtered calculated value
+							Number.NaN, //calculated value slope
+							Number.NaN, //a
+							Number.NaN, //b
+							Number.NaN, //c
+							Number.NaN, //ra
+							Number.NaN, //rb
+							Number.NaN, //rc
+							Number.NaN, //raw calculated
+							false, //hide slope
+							"", //noise
+							readingTimestamp, //last modified timestamp
+							"ZTM" //unique id
+						);
+					
+					//Check if high or low thresholds will be reached
+					if (finalIOBPredictionsList.length == 0 && finalCOBPredictionsList.length == 0 && finalUAMPredictionsList.length == 0)
+					{
+						if (predicted_calculatedValue >= glucoseHigh && isNaN(predictedTimeUntilHigh))
+						{
+							predictedTimeUntilHigh = readingTimestamp - now;
+						}
+						
+						if (predicted_calculatedValue <= glucoseLow && isNaN(predictedTimeUntilLow))
+						{
+							predictedTimeUntilLow = readingTimestamp - now;
+						}
+					}
+					
+					//Add to prediction's list
+					finalZTPredictionsList.push(ztPredictionReading);
+				}
+				
+				//Truncate predictions if needed
+				if (finalCOBPredictionsList.length > maxNumberOfPredictions)
+				{
+					finalCOBPredictionsList = finalCOBPredictionsList.slice(0, maxNumberOfPredictions);
+				}
+				
+				if (finalIOBPredictionsList.length > maxNumberOfPredictions)
+				{
+					finalIOBPredictionsList = finalIOBPredictionsList.slice(0, maxNumberOfPredictions);
+				}
+				
+				if (finalUAMPredictionsList.length > maxNumberOfPredictions)
+				{
+					finalUAMPredictionsList = finalUAMPredictionsList.slice(0, maxNumberOfPredictions);
+				}
+				
+				if (finalZTPredictionsList.length > maxNumberOfPredictions)
+				{
+					finalZTPredictionsList = finalZTPredictionsList.slice(0, maxNumberOfPredictions);
+				}
+				
+				//Update predictions pill
+				predictionsPill.isPredictive = true;
+				finalPredictedValue = Number.NaN;
+				finalPredictedDuration = Number.NaN;
+				
+				var predictionAvailableDuration:Number = Math.max(finalCOBPredictionsList.length, finalUAMPredictionsList.length, finalZTPredictionsList.length, finalIOBPredictionsList.length) * 5;
+				if (isNaN(predictionAvailableDuration))
+				{
+					predictionAvailableDuration = predictionsLengthInMinutes;
+				}
+				finalPredictedDuration = predictionAvailableDuration;
+				
 				if (preferredPrediction == "COB")
 				{
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+					var numCOBPredictions:uint = finalCOBPredictionsList.length;
+					var cobPredReading:BgReading = finalCOBPredictionsList[numCOBPredictions - 1];
+					
+					if (cobPredReading != null && predictionsPill != null)
+					{
+						finalPredictedValue = cobPredReading._calculatedValue;
+						predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalPredictedValue)) : String(Math.round(BgReading.mgdlToMmol(finalCOBPredictionsList[numCOBPredictions - 1]._calculatedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
+					}
 				}
 				else if (preferredPrediction == "UAM")
 				{
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-				}
-				else if (preferredPrediction == "IOB")
-				{
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+					var numUAMPredictions:uint = finalUAMPredictionsList.length;
+					var uamPredReading:BgReading = finalUAMPredictionsList[numUAMPredictions - 1];
+					
+					if (uamPredReading != null && predictionsPill != null)
+					{
+						finalPredictedValue = uamPredReading._calculatedValue;
+						predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalPredictedValue)) : String(Math.round(BgReading.mgdlToMmol(finalPredictedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
+					}
 				}
 				else if (preferredPrediction == "ZTM")
 				{
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
+					var numZTPredictions:uint = finalZTPredictionsList.length;
+					var ztPredReading:BgReading = finalZTPredictionsList[numZTPredictions - 1];
+					
+					if (ztPredReading != null && predictionsPill != null)
+					{
+						finalPredictedValue = ztPredReading._calculatedValue;
+						predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalPredictedValue)) : String(Math.round(BgReading.mgdlToMmol(finalPredictedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
+					}
 				}
-			}
-			else
+				else 
+				{
+					var numIOBPredictions:uint = finalIOBPredictionsList.length;
+					var iobPredReading:BgReading = finalIOBPredictionsList[numIOBPredictions - 1];
+					
+					if (iobPredReading != null && predictionsPill != null)
+					{
+						finalPredictedValue = iobPredReading._calculatedValue;
+						predictionsPill.setValue(glucoseUnit == "mg/dL" ? String(Math.round(finalPredictedValue)) : String(Math.round(BgReading.mgdlToMmol(finalPredictedValue * 10)) / 10), TimeSpan.formatHoursMinutesFromMinutes(predictionAvailableDuration, false));
+					}
+				}
+				
+				repositionTreatmentPills();
+				
+				//Update header
+				if (!Forecast.externalLoopAPS)
+				{
+					if (headerProperties != null && !singlePredictionCurve)
+					{
+						predictionsLegendsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 0);
+						(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft = 40;
+						
+						if (cobPredictionsEnabled)
+						{
+							//Color
+							var cobColor:uint = preferredPrediction == "COB" ? mainPredictionsColor : cobPredictionsColor;
+							//Legend Container
+							cobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+							//Label
+							cobPredictLegendLabel = LayoutFactory.createLabel(currentIOB > 0 && currentTotalIOB > 0 ? ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + " & " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label') : ModelLocator.resourceManagerInstance.getString('treatments','cob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
+							cobPredictLegendLabel.touchable = false;
+							cobPredictLegendLabel.validate();
+							//Color Marker
+							cobPredictLegendColorQuad = new Quad(cobPredictLegendLabel.height * 0.6, cobPredictLegendLabel.height * 0.6, cobColor);
+							cobPredictLegendColorQuad.touchable = false;
+							if ((currentIOB > 0 && currentTotalIOB > 0) && preferredPrediction != "COB")
+							{
+								cobPredictLegendColorQuad.setVertexColor(0, cobColor);
+								cobPredictLegendColorQuad.setVertexColor(1, iobPredictionsColor);
+								cobPredictLegendColorQuad.setVertexColor(2, cobColor);
+								cobPredictLegendColorQuad.setVertexColor(3, iobPredictionsColor);
+							}
+							//Add label anc color marker to the container
+							cobPredictLegendContainer.addChild(cobPredictLegendColorQuad);
+							cobPredictLegendContainer.addChild(cobPredictLegendLabel);
+							cobPredictLegendContainer.validate();
+							//Hit Area
+							cobPredictLegendHitArea = new Quad(cobPredictLegendContainer.width, cobPredictLegendContainer.height, 0xFF0000);
+							cobPredictLegendHitArea.alpha = 0;
+							cobPredictLegendContainer.addChild(cobPredictLegendHitArea);
+							cobPredictLegendContainer.validate();
+							cobPredictLegendHitArea.x = cobPredictLegendHitArea.y = 0;
+							
+							cobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onCOBPredictionExplanation);
+							
+							if (preferredPrediction == "COB")
+								predictionsLegendsContainer.addChildAt(cobPredictLegendContainer, 0);
+							else
+								predictionsLegendsContainer.addChild(cobPredictLegendContainer);
+							
+							if (currentIOB > 0 && currentTotalIOB > 0)
+							{
+								(predictionsLegendsContainer.layout as VerticalLayout).paddingLeft += 30;
+							}
+						}
+						
+						if (uamPredictionsEnabled)
+						{
+							//Color
+							var uamColor:uint = preferredPrediction == "UAM" ? mainPredictionsColor : uamPredictionsColor;
+							//Legend Container
+							uamPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+							//Label
+							uamPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','unannounced_glucose_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
+							uamPredictLegendLabel.touchable = false;
+							uamPredictLegendLabel.validate();
+							//Color Marker
+							uamPredictLegendColorQuad = new Quad(uamPredictLegendLabel.height * 0.6, uamPredictLegendLabel.height * 0.6, uamColor);
+							uamPredictLegendColorQuad.touchable = false;
+							//Add label anc color marker to the container
+							uamPredictLegendContainer.addChild(uamPredictLegendColorQuad);
+							uamPredictLegendContainer.addChild(uamPredictLegendLabel);
+							uamPredictLegendContainer.validate();
+							//Hit Area
+							uamPredictLegendHitArea = new Quad(uamPredictLegendContainer.width, uamPredictLegendContainer.height, 0xFF0000);
+							uamPredictLegendHitArea.alpha = 0;
+							uamPredictLegendContainer.addChild(uamPredictLegendHitArea);
+							uamPredictLegendContainer.validate();
+							uamPredictLegendHitArea.x = uamPredictLegendHitArea.y = 0;
+							
+							uamPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onUAMPredictionExplanation);
+							
+							if (preferredPrediction == "UAM")
+								predictionsLegendsContainer.addChildAt(uamPredictLegendContainer, 0);
+							else
+								predictionsLegendsContainer.addChild(uamPredictLegendContainer);
+						}
+						
+						if (iobPredictionsEnabled)
+						{
+							//Color
+							var iobColor:uint = preferredPrediction == "IOB" ? mainPredictionsColor : iobPredictionsColor;
+							//Legend Container
+							iobPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+							//Label
+							iobPredictLegendLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','iob_label'), HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
+							iobPredictLegendLabel.touchable = false;
+							iobPredictLegendLabel.validate();
+							//Color Marker
+							iobPredictLegendColorQuad = new Quad(iobPredictLegendLabel.height * 0.6, iobPredictLegendLabel.height * 0.6, iobColor);
+							iobPredictLegendColorQuad.touchable = false;
+							//Add label anc color marker to the container
+							iobPredictLegendContainer.addChild(iobPredictLegendColorQuad);
+							iobPredictLegendContainer.addChild(iobPredictLegendLabel);
+							iobPredictLegendContainer.validate();
+							//Hit Area
+							iobPredictLegendHitArea = new Quad(iobPredictLegendContainer.width, iobPredictLegendContainer.height, 0xFF0000);
+							iobPredictLegendHitArea.alpha = 0;
+							iobPredictLegendContainer.addChild(iobPredictLegendHitArea);
+							iobPredictLegendContainer.validate();
+							iobPredictLegendHitArea.x = iobPredictLegendHitArea.y = 0;
+							
+							iobPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onIOBPredictionExplanation);
+							
+							if (preferredPrediction == "IOB")
+								predictionsLegendsContainer.addChildAt(iobPredictLegendContainer, 0);
+							else
+								predictionsLegendsContainer.addChild(iobPredictLegendContainer);
+						}
+						
+						if (ztPredictionsEnabled)
+						{
+							//Color
+							var ztColor:uint = preferredPrediction == "ZTM" ? mainPredictionsColor : ztPredictionsColor;
+							//Legend Container
+							ztPredictLegendContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+							//Label
+							ztPredictLegendLabel = LayoutFactory.createLabel("ZT", HorizontalAlign.LEFT, VerticalAlign.TOP, 10 * userAxisFontMultiplier, true);
+							ztPredictLegendLabel.touchable = false;
+							ztPredictLegendLabel.validate();
+							//Color Marker
+							ztPredictLegendColorQuad = new Quad(ztPredictLegendLabel.height * 0.6, ztPredictLegendLabel.height * 0.6, ztColor);
+							ztPredictLegendColorQuad.touchable = false;
+							//Add label anc color marker to the container
+							ztPredictLegendContainer.addChild(ztPredictLegendColorQuad);
+							ztPredictLegendContainer.addChild(ztPredictLegendLabel);
+							ztPredictLegendContainer.validate();
+							//Hit Area
+							ztPredictLegendHitArea = new Quad(ztPredictLegendContainer.width, ztPredictLegendContainer.height, 0xFF0000);
+							ztPredictLegendHitArea.alpha = 0;
+							ztPredictLegendContainer.addChild(ztPredictLegendHitArea);
+							ztPredictLegendContainer.validate();
+							ztPredictLegendHitArea.x = ztPredictLegendHitArea.y = 0;
+							
+							ztPredictLegendContainer.addEventListener(TouchEvent.TOUCH, onZTPredictionExplanation);
+							
+							if (preferredPrediction == "ZTM")
+								predictionsLegendsContainer.addChildAt(ztPredictLegendContainer, 0);
+							else
+								predictionsLegendsContainer.addChild(ztPredictLegendContainer);
+						}
+						
+						headerProperties.centerItems = new <DisplayObject>[
+							predictionsLegendsContainer
+						];
+					}
+				}
+				
+				//Join all predictions
+				if (!singlePredictionCurve)
+				{
+					if (preferredPrediction == "COB")
+					{
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+					}
+					else if (preferredPrediction == "UAM")
+					{
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+					}
+					else if (preferredPrediction == "IOB")
+					{
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+					}
+					else if (preferredPrediction == "ZTM")
+					{
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
+					}
+				}
+				else
+				{
+					if (preferredPrediction == "COB")
+					{
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
+					}
+					else if (preferredPrediction == "UAM")
+					{
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
+					}
+					else if (preferredPrediction == "IOB")
+					{
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
+					}
+					else if (preferredPrediction == "ZTM")
+					{
+						finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
+					}
+				}
+				
+				return finalTotalPredictionsList;
+			} 
+			catch(error:Error) 
 			{
-				if (preferredPrediction == "COB")
-				{
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalCOBPredictionsList);
-				}
-				else if (preferredPrediction == "UAM")
-				{
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalUAMPredictionsList);
-				}
-				else if (preferredPrediction == "IOB")
-				{
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalIOBPredictionsList);
-				}
-				else if (preferredPrediction == "ZTM")
-				{
-					finalTotalPredictionsList = finalTotalPredictionsList.concat(finalZTPredictionsList);
-				}
+				resetVariables();
+				
+				return [];
 			}
 			
-			return finalTotalPredictionsList;
+			return [];
 		}
 		
 		private function disposePredictionsExplanations(e:starling.events.Event = null):void
@@ -5012,7 +5085,7 @@ package ui.chart
 			//First validation
 			if (!externalAPSRequest && !predictionsEnabled)
 			{
-				if (!predictionsEnabled || predictionsMainGlucoseDataPoints.length == 0 || predictionsScrollerGlucoseDataPoints.length == 0 || predictionsDelimiter == null || dummyModeActive || !SystemUtil.isApplicationActive)
+				if (!predictionsEnabled || predictionsMainGlucoseDataPoints == null || predictionsMainGlucoseDataPoints.length == 0 || predictionsScrollerGlucoseDataPoints == null || predictionsScrollerGlucoseDataPoints.length == 0 || predictionsDelimiter == null || dummyModeActive || !SystemUtil.isApplicationActive)
 				{
 					//There's no current predictions drawn on the chart so no need to redraw anything
 					return;
@@ -5044,16 +5117,22 @@ package ui.chart
 			
 			//Check if lowest or highest glucose value have changed
 			var predictionsSorted:Array = predictionsList.concat();
-			predictionsSorted.sortOn(["calculatedValue"], Array.NUMERIC);
+			predictionsSorted.sortOn(["_calculatedValue"], Array.NUMERIC);
 			
-			var predictionLowestValue:Number = predictionsSorted[0].calculatedValue;
-			var predictionHighestValue:Number = predictionsSorted[predictionsSorted.length - 1].calculatedValue;
+			if (predictionsSorted[0] == null || predictionsSorted[predictionsSorted.length - 1] == null)
+				return;
+			
+			var predictionLowestValue:Number = predictionsSorted[0]._calculatedValue;
+			var predictionHighestValue:Number = predictionsSorted[predictionsSorted.length - 1]._calculatedValue;
 			
 			var realReadingsSorted:Array = _dataSource.concat();
-			realReadingsSorted.sortOn(["calculatedValue"], Array.NUMERIC);
+			realReadingsSorted.sortOn(["_calculatedValue"], Array.NUMERIC);
 			
-			var realReadingsLowestValue:Number = realReadingsSorted[0].calculatedValue;
-			var realReadingsHighestValue:Number = realReadingsSorted[realReadingsSorted.length - 1].calculatedValue;
+			if (realReadingsSorted[0] == null || realReadingsSorted[realReadingsSorted.length - 1] == null)
+				return;
+			
+			var realReadingsLowestValue:Number = realReadingsSorted[0]._calculatedValue;
+			var realReadingsHighestValue:Number = realReadingsSorted[realReadingsSorted.length - 1]._calculatedValue;
 			
 			if (predictionLowestValue < lowestGlucoseValue || predictionHighestValue > highestGlucoseValue || realReadingsLowestValue > lowestGlucoseValue || realReadingsHighestValue < highestGlucoseValue)
 			{
@@ -5072,14 +5151,18 @@ package ui.chart
 				}
 				
 				//Adjust Main Chart and Picker Position
-				if (displayLatestBGValue)
+				if (displayLatestBGValue && mainChart != null)
 				{
 					mainChart.x = -mainChart.width + _graphWidth - yAxisMargin;
 					if (predictionsEnabled && predictionsMainGlucoseDataPoints != null && predictionsMainGlucoseDataPoints.length > 0)
 					{
 						mainChart.x += mainChartGlucoseMarkerRadius;
 					}
-					selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+					
+					if (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] != null)
+					{
+						selectedGlucoseMarkerIndex = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].index;
+					}
 				}
 				
 				//Redraw timeline
@@ -5092,15 +5175,15 @@ package ui.chart
 				manageTreatments();
 				
 				//Timeline
-				if (timelineActive && timelineContainer != null)
+				if (timelineActive && timelineContainer != null && mainChart != null)
 					timelineContainer.x = mainChart.x;
 				
 				//Treatments
-				if (treatmentsActive && treatmentsContainer != null)
+				if (treatmentsActive && treatmentsContainer != null && mainChart != null)
 					treatmentsContainer.x = mainChart.x;
 				
 				//Raw
-				if (displayRaw && rawDataContainer != null)
+				if (displayRaw && rawDataContainer != null && mainChart != null)
 					rawDataContainer.x = mainChart.x;
 				
 				//Update pedictions in Nightscout
@@ -5140,7 +5223,11 @@ package ui.chart
 			//Drawing Logic
 			function drawPredictions(chartType:String, chartWidth:Number, chartHeight:Number, chartRightMargin:Number, glucoseMarkerRadius:Number):void
 			{
+				if (dummyModeActive || !SystemUtil.isApplicationActive)
+					return;
+				
 				var chartContainer:Sprite = chartType == MAIN_CHART ? mainChart : scrollerChart;
+				if (chartContainer == null) return;
 				
 				var totalTimestampDifference:Number = lastBGreadingTimeStamp - firstBGReadingTimeStamp;
 				var scaleXFactor:Number;
@@ -5159,13 +5246,16 @@ package ui.chart
 				
 				var scaleYFactor:Number;
 				var sortDataArray:Array = _dataSource.concat().concat(predictionsList);
-				sortDataArray.sortOn(["calculatedValue"], Array.NUMERIC);
+				sortDataArray.sortOn(["_calculatedValue"], Array.NUMERIC);
 				var lowestValue:Number;
 				var highestValue:Number;;
 				if (!dummyModeActive)
 				{
-					lowestValue = sortDataArray[0].calculatedValue as Number;
-					highestValue = sortDataArray[sortDataArray.length - 1].calculatedValue as Number;
+					if (sortDataArray[0] == null || sortDataArray[sortDataArray.length - 1] == null)
+						return;
+					
+					lowestValue = sortDataArray[0]._calculatedValue as Number;
+					highestValue = sortDataArray[sortDataArray.length - 1]._calculatedValue as Number;
 					if (!fixedSize)
 					{
 						lowestGlucoseValue = lowestValue;
@@ -5198,6 +5288,9 @@ package ui.chart
 				//Now we find a multiplier for the y axis so the glucose graph fits entirely with the chart height
 				scaleYFactor = (chartHeight - (glucoseMarkerRadius*2))/totalGlucoseDifference;
 				
+				if ((chartType == MAIN_CHART && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] == null) || (chartType == SCROLLER_CHART && scrollChartGlucoseMarkersList[scrollChartGlucoseMarkersList.length - 1] == null))
+					return
+				
 				var previousXCoordinate:Number = chartType == MAIN_CHART ? mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].x : scrollChartGlucoseMarkersList[scrollChartGlucoseMarkersList.length - 1].x;
 				var previousYCoordinate:Number = chartType == MAIN_CHART ? mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1].y : scrollChartGlucoseMarkersList[scrollChartGlucoseMarkersList.length - 1].y;
 				var previousGlucoseMarker:GlucoseMarker;
@@ -5207,9 +5300,10 @@ package ui.chart
 				for (var i:int = 0; i < predictionsLength; i++) 
 				{
 					var glucoseReading:BgReading = predictionsList[i];
+					if (glucoseReading == null) continue;
 					
 					//Get current glucose value
-					var currentGlucoseValue:Number = glucoseReading.calculatedValue;
+					var currentGlucoseValue:Number = glucoseReading._calculatedValue;
 					if(currentGlucoseValue < 40)
 						currentGlucoseValue = 40;
 					else if (currentGlucoseValue > 400)
@@ -5217,13 +5311,20 @@ package ui.chart
 					
 					//Define glucose marker x position
 					var glucoseX:Number;
+					var prevReading:BgReading;
 					if(i==0)
 					{
-						glucoseX = (Number(glucoseReading.timestamp) - Number(_dataSource[_dataSource.length-1].timestamp)) * scaleXFactor;
+						prevReading = _dataSource[_dataSource.length-1];
+						if (prevReading == null) continue;
+						
+						glucoseX = (Number(glucoseReading.timestamp) - Number(prevReading.timestamp)) * scaleXFactor;
 					}
 					else
 					{
-						glucoseX = (Number(glucoseReading.timestamp) - Number(predictionsList[i-1].timestamp)) * scaleXFactor;
+						prevReading = predictionsList[i-1];
+						if (prevReading == null) continue;
+						
+						glucoseX = (Number(glucoseReading.timestamp) - Number(prevReading.timestamp)) * scaleXFactor;
 					}
 					
 					//Define glucose marker y position
@@ -5233,19 +5334,20 @@ package ui.chart
 						glucoseY = (chartHeight - (glucoseMarkerRadius*2)) / 2;
 					
 					var glucoseMarker:GlucoseMarker = new GlucoseMarker
-						(
-							{
-								x: previousXCoordinate + glucoseX,
-								y: glucoseY,
-								index: i,
-								radius: glucoseMarkerRadius,
-								bgReading: glucoseReading,
-								glucose: currentGlucoseValue,
-								color: glucoseReading.rawData
-							},
-							false,
-							true
-						);
+					(
+						{
+							x: previousXCoordinate + glucoseX,
+							y: glucoseY,
+							index: i,
+							radius: glucoseMarkerRadius,
+							bgReading: glucoseReading,
+							glucose: currentGlucoseValue,
+							color: glucoseReading.rawData
+						},
+						false,
+						true
+					);
+					
 					if(chartType == MAIN_CHART)
 					{
 						glucoseMarker.addHitArea();
@@ -5266,13 +5368,14 @@ package ui.chart
 					previousGlucoseMarker = glucoseMarker;
 					
 					//Add glucose marker to the timeline
-					chartContainer.addChild(glucoseMarker);
+					if (chartContainer != null)
+						chartContainer.addChild(glucoseMarker);
 					
-					if(chartType == MAIN_CHART)
+					if(chartType == MAIN_CHART && predictionsMainGlucoseDataPoints != null)
 					{
 						predictionsMainGlucoseDataPoints.push(glucoseMarker);
 					}
-					else if (chartType == SCROLLER_CHART)
+					else if (chartType == SCROLLER_CHART && predictionsScrollerGlucoseDataPoints != null)
 					{
 						predictionsScrollerGlucoseDataPoints.push(glucoseMarker);
 					}
@@ -6156,7 +6259,7 @@ package ui.chart
 			
 			predictionDetailBGTitle = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','blood_glucose') + ": ", HorizontalAlign.LEFT, VerticalAlign.TOP, 14, true);
 			predictionDetailBGContainer.addChild(predictionDetailBGTitle);
-			predictionDetailBGBody = LayoutFactory.createLabel(glucoseUnit == "mg/dL" ? String(Math.round(marker.bgReading.calculatedValue)) : String(  Math.round(BgReading.mgdlToMmol(marker.bgReading.calculatedValue) * 10) / 10  ), HorizontalAlign.LEFT, VerticalAlign.TOP, 14, false);
+			predictionDetailBGBody = LayoutFactory.createLabel(glucoseUnit == "mg/dL" ? String(Math.round(marker.bgReading._calculatedValue)) : String(  Math.round(BgReading.mgdlToMmol(marker.bgReading._calculatedValue) * 10) / 10  ), HorizontalAlign.LEFT, VerticalAlign.TOP, 14, false);
 			predictionDetailBGContainer.addChild(predictionDetailBGBody);
 			
 			//Time
@@ -6897,7 +7000,7 @@ package ui.chart
 			}
 			
 			//Predictions line fix
-			if (glucoseMarker != null && previousGlucoseMarker != null && _displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading.calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
+			if (glucoseMarker != null && previousGlucoseMarker != null && _displayLine && glucoseMarker.bgReading != null && glucoseMarker.bgReading._calculatedValue != 0 && (glucoseMarker.bgReading.sensor != null || CGMBlueToothDevice.isFollower() || isPrediction) && glucoseMarker.glucoseValue >= lowestGlucoseValue && glucoseMarker.glucoseValue <= highestGlucoseValue && predictionsEnabled && numberOfPredictiveReadings > 0)
 			{
 				//Add an extra line
 				var extraPredictionLineX:Number = glucoseMarker.x + glucoseMarker.width;
@@ -7375,7 +7478,7 @@ package ui.chart
 			if (mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0)
 			{
 				//Get and adjust latest calibration value and chart's lowest and highest glucose values
-				var latestCalibrationGlucose:Number = BgReading.lastNoSensor().calculatedValue;
+				var latestCalibrationGlucose:Number = BgReading.lastNoSensor()._calculatedValue;
 				
 				//Set and adjust latest marker's properties
 				var latestMarker:GlucoseMarker = mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker;

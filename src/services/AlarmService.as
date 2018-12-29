@@ -904,14 +904,23 @@ package services
 		private static function openSnoozePickerDialog(alertSetting:String, notificationId:int, notificationEvent:NotificationEvent, 
 													   snoozePickerClosedHandler:Function, 
 													   snoozeText:String, alertSnoozeIdentifier:String, snoozeValueSetter:Function, presnoozeResetFunction:Function = null):void {
+			
+			if (alertSetting == null) return;
+			
 			var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
 				alertSetting, true);
+			if (listOfAlerts == null) return;
+			
 			var alertName:String = listOfAlerts != null ? listOfAlerts.getAlarmName(Number.NaN, "", new Date()) : "";
+			if (alertName == null) return;
+			
 			var alertType:AlertType = Database.getAlertType(alertName);
+			if (alertType == null) return;
+			
 			myTrace("in openSnoozePickerDialog with id = " + NotificationService.notificationIdToText(notificationId) + ", cancelling notification");
 			Notifications.service.cancel(notificationId);
 			
-			if (listOfAlerts == null || alertName == null || alertType == null || snoozeValueMinutes == null || snoozeValueStrings == null)
+			if (snoozeValueMinutes == null || snoozeValueStrings == null)
 				return;
 			
 			var index:int = 0;
@@ -941,13 +950,17 @@ package services
 					(snoozeText != null && snoozeText == "snooze_text_fast_rise_alert")
 				)
 				{
-					SystemUtil.executeWhenApplicationIsActive
-					(
-						AlarmSnoozer.displaySnoozer,
-						ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText) + "\n" + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + GlucoseHelper.getGlucoseUnit(),
-						snoozeValueStrings,
-						index
-					);
+					var snoozerReading:BgReading = BgReading.lastNoSensor();
+					if (snoozerReading != null)
+					{
+						SystemUtil.executeWhenApplicationIsActive
+						(
+							AlarmSnoozer.displaySnoozer,
+							ModelLocator.resourceManagerInstance.getString("alarmservice",snoozeText) + "\n" + BgGraphBuilder.unitizedString(snoozerReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") + " " + GlucoseHelper.getGlucoseUnit(),
+							snoozeValueStrings,
+							index
+						);
+					}
 				}
 				else
 				{
@@ -960,7 +973,7 @@ package services
 					);
 				}
 			} 
-			else if (notificationEvent.identifier == alertSnoozeIdentifier) {
+			else if (notificationEvent != null && notificationEvent.identifier == alertSnoozeIdentifier) {
 				snoozeValueSetter(alertType.defaultSnoozePeriodInMinutes);
 			}
 			
@@ -1572,10 +1585,17 @@ package services
 			listOfAlerts = FromtimeAndValueArrayCollection.createList(
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT), false);
 			if (listOfAlerts == null) return;
+			
 			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			if (isNaN(alertValue)) return;
+			
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			if (alertName == null) return;
+			
 			alertType = Database.getAlertType(alertName);
-			if (alertType != null && alertType.enabled && !isNaN(alertValue) && alertName != "") {
+			if (alertType == null) return;
+			
+			if (alertType.enabled && !isNaN(alertValue) && alertName != "") {
 				if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * TimeSpan.TIME_1_MINUTE
 					||
 					isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {

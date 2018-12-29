@@ -9,6 +9,7 @@ package treatments
 	import flash.text.SoftKeyboardType;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
+	import flash.utils.setTimeout;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -20,6 +21,7 @@ package treatments
 	import events.CalibrationServiceEvent;
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
@@ -59,6 +61,7 @@ package treatments
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import treatments.food.Food;
 	import treatments.food.ui.FoodManager;
@@ -147,8 +150,7 @@ package treatments
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onCalibrationReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onCalibrationReceived);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, saveCachesMaster, false, 10000, true);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, saveCachesFollower, false, 10000, true);
+			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppInForeground, false, 10000, true);
 			
 			//Fetch Data From Database
 			fetchAllTreatmentsFromDatabase();
@@ -205,22 +207,22 @@ package treatments
 			}
 		}
 		
-		private static function saveCachesMaster(e:TransmitterServiceEvent):void
+		private static function onAppInForeground(e:SpikeEvent):void
 		{
-			saveIOBCOBCache();
-		}
-		
-		private static function saveCachesFollower(e:FollowerEvent):void
-		{
-			saveIOBCOBCache();
+			setTimeout(saveIOBCOBCache, TimeSpan.TIME_2_SECONDS);
 		}
 		
 		private static function saveIOBCOBCache():void
 		{
-			var now:Number = new Date().valueOf();
-			if (now - lastSavedCachesTimestamp < TimeSpan.TIME_15_MINUTES)
+			if (!SystemUtil.isApplicationActive)
 			{
-				//Only save caches every 15 minutes or so.
+				return;
+			}
+			
+			var now:Number = new Date().valueOf();
+			if (now - lastSavedCachesTimestamp < TimeSpan.TIME_3_HOURS)
+			{
+				//Only save caches every 6 hours or so.
 				return;
 			}
 			
@@ -231,54 +233,58 @@ package treatments
 				return;
 			}
 			
-			//Sort indexes
-			COBCacheTimes.sort(Array.NUMERIC | Array.DESCENDING);
-			
-			//Define time limit (24h ago)
-			var twentyFourHoursAgo:Number = now - TimeSpan.TIME_24_HOURS;
-			
-			//Loop through all caches and remove the old ones (>24h)
-			for(var i:int = numberOfCaches - 1 ; i >= 0; i--)
+			try
 			{
-				var cacheTime:Number = COBCacheTimes[i];
+				//Sort indexes
+				COBCacheTimes.sort(Array.NUMERIC | Array.DESCENDING);
 				
-				if (cacheTime < twentyFourHoursAgo)
+				//Define time limit (24h ago)
+				var twentyFourHoursAgo:Number = now - TimeSpan.TIME_24_HOURS;
+				
+				//Loop through all caches and remove the old ones (>24h)
+				for(var i:int = numberOfCaches - 1 ; i >= 0; i--)
 				{
-					//Remove the index
-					COBCacheTimes.pop(); 
+					var cacheTime:Number = COBCacheTimes[i];
 					
-					//Remove the corresponding cache
-					delete COBCache[cacheTime];
+					if (cacheTime < twentyFourHoursAgo)
+					{
+						//Remove the index
+						COBCacheTimes.pop(); 
+						
+						//Remove the corresponding cache
+						delete COBCache[cacheTime];
+					}
+					else
+					{
+						//We've removed all outdated caches already.
+						break;
+					}
 				}
-				else
-				{
-					//We've removed all outdated caches already.
-					break;
-				}
-			}
-			
-			//Serialize Caches
-			//COB
-			var COBCachedBytes:ByteArray = new ByteArray();
-			COBCachedBytes.writeObject(COBCache);
-			var COBCachedBytesString:String = Base64.encodeByteArray(COBCachedBytes);
-			
-			var COBCachedTimesBytes:ByteArray = new ByteArray();
-			COBCachedTimesBytes.writeObject(COBCacheTimes);
-			var COBCachedTimesBytesString:String = Base64.encodeByteArray(COBCachedTimesBytes);
-			
-			//IOB
-			var IOBCachedBytes:ByteArray = new ByteArray();
-			IOBCachedBytes.writeObject(IOBCache);
-			var IOBCachedBytesString:String = Base64.encodeByteArray(IOBCachedBytes);
-			
-			var IOBCachedTimesBytes:ByteArray = new ByteArray();
-			IOBCachedTimesBytes.writeObject(IOBCacheTimes);
-			var IOBCachedTimesBytesString:String = Base64.encodeByteArray(IOBCachedTimesBytes);
-			
-			Database.updateIOBCOBCachesSynchronous(IOBCachedBytesString, IOBCachedTimesBytesString, COBCachedBytesString, COBCachedTimesBytesString);
-			
-			Trace.myTrace("TreatmentsManager.as", "Saved IOB/COB caches to database...");
+				
+				//Serialize Caches
+				//COB
+				var COBCachedBytes:ByteArray = new ByteArray();
+				COBCachedBytes.writeObject(COBCache);
+				var COBCachedBytesString:String = Base64.encodeByteArray(COBCachedBytes);
+				
+				var COBCachedTimesBytes:ByteArray = new ByteArray();
+				COBCachedTimesBytes.writeObject(COBCacheTimes);
+				var COBCachedTimesBytesString:String = Base64.encodeByteArray(COBCachedTimesBytes);
+				
+				//IOB
+				var IOBCachedBytes:ByteArray = new ByteArray();
+				IOBCachedBytes.writeObject(IOBCache);
+				var IOBCachedBytesString:String = Base64.encodeByteArray(IOBCachedBytes);
+				
+				var IOBCachedTimesBytes:ByteArray = new ByteArray();
+				IOBCachedTimesBytes.writeObject(IOBCacheTimes);
+				var IOBCachedTimesBytesString:String = Base64.encodeByteArray(IOBCachedTimesBytes);
+				
+				Database.updateIOBCOBCachesSynchronous(IOBCachedBytesString, IOBCachedTimesBytesString, COBCachedBytesString, COBCachedTimesBytesString);
+				
+				Trace.myTrace("TreatmentsManager.as", "Saved IOB/COB caches to database...");
+			} 
+			catch(error:Error) {}
 		}
 		
 		public static function clearAllCaches():void

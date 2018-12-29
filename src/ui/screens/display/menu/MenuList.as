@@ -247,7 +247,7 @@ package ui.screens.display.menu
 		{
 			if (Constants.isPortrait || Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr || (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && Constants.currentOrientation != StageOrientation.ROTATED_RIGHT))
 			{
-				if (maxTempWidth != 0)
+				if (maxTempWidth != 0 && maxTempWidth > 100)
 				{
 					width = maxTempWidth + 85;
 					lastCalculatedWidth = width;
@@ -261,7 +261,8 @@ package ui.screens.display.menu
 			else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
 				if (lastCalculatedWidth == 0) maxTempWidth + 85;
-				width = lastCalculatedWidth + 45;
+				if (lastCalculatedWidth + 45 > 100)
+					width = lastCalculatedWidth + 45;
 			}
 			
 			AppInterface.instance.drawers.invalidate();

@@ -12,6 +12,7 @@ package ui.chart.pills
 	import feathers.layout.VerticalAlign;
 	
 	import starling.display.Sprite;
+	import starling.utils.SystemUtil;
 	
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeCanvas;
@@ -114,6 +115,11 @@ package ui.chart.pills
 		
 		private function drawPill():void
 		{
+			if (!SystemUtil.isApplicationActive)
+			{
+				return;
+			}
+			
 			//Discart previous display objects
 			discard();
 			
@@ -163,6 +169,11 @@ package ui.chart.pills
 		
 		private function discard():void
 		{
+			if (!SystemUtil.isApplicationActive)
+			{
+				return;
+			}
+			
 			if (titleLabel != null)
 			{
 				removeChild(titleLabel);
@@ -194,6 +205,11 @@ package ui.chart.pills
 		
 		override public function dispose():void
 		{
+			if (!SystemUtil.isApplicationActive)
+			{
+				return;
+			}
+			
 			if (pillBackground != null)
 			{
 				pillBackground.removeFromParent();

@@ -402,7 +402,7 @@ package services
 			Trace.myTrace("NightscoutService.as", "uploadPredictions called");
 			
 			//Validation #1
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) != "true" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true" || CGMBlueToothDevice.isFollower() || !serviceActive || serviceHalted)
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) != "true" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) != "true" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true" || CGMBlueToothDevice.isFollower() || !serviceActive || serviceHalted)
 				return;
 			
 			//Validation #2
@@ -1107,6 +1107,11 @@ package services
 		private static function createTreatmentObject(treatment:Treatment):Object
 		{
 			var newTreatment:Object = new Object();
+			if (treatment == null)
+			{
+				return newTreatment;
+			}
+			
 			var usedInsulin:Insulin;
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 			{
@@ -1117,8 +1122,8 @@ package services
 				newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");	
 				newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";	
 				newTreatment["insulinID"] = treatment.insulinID;	
-				newTreatment["insulinPeak"] = usedInsulin.peak;	
-				newTreatment["insulinCurve"] = usedInsulin.curve;	
+				newTreatment["insulinPeak"] = usedInsulin != null ? usedInsulin.peak : 75;	
+				newTreatment["insulinCurve"] = usedInsulin != null ? usedInsulin.curve : "bilinear";	
 			}
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 			{
@@ -1143,8 +1148,8 @@ package services
 				newTreatment["carbs"] = treatment.carbs;
 				newTreatment["carbDelayTime"] = treatment.carbDelayTime;
 				newTreatment["insulinID"] = treatment.insulinID;
-				newTreatment["insulinPeak"] = usedInsulin.peak;	
-				newTreatment["insulinCurve"] = usedInsulin.curve;	
+				newTreatment["insulinPeak"] = usedInsulin != null ? usedInsulin.peak : 75;	
+				newTreatment["insulinCurve"] = usedInsulin != null ? usedInsulin.curve : "bilinear";	
 			}
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{

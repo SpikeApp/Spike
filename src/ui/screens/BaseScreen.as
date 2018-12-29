@@ -335,7 +335,6 @@ package ui.screens
 			
 			if (iphone4DummyMarker != null)
 			{
-				Starling.current.stage.removeChild(iphone4DummyMarker);
 				iphone4DummyMarker.removeFromParent();
 				iphone4DummyMarker.dispose();
 				iphone4DummyMarker = null;

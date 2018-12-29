@@ -437,12 +437,20 @@ package ui.screens
 		private function createChart():void
 		{	
 			//When in landscape mode and device is iPhone X, make the header height same as oher models, we don't need to worry about the extra status bar size
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
+			if (this.header != null)
 			{
-				if (Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				{
-					this.header.height = 123;
-					this.header.maxHeight = 123;	
+					if (Constants.isPortrait)
+					{
+						this.header.height = 123;
+						this.header.maxHeight = 123;	
+					}
+					else
+					{
+						this.header.height = 93;
+						this.header.maxHeight = 93;
+					}
 				}
 				else
 				{
@@ -450,13 +458,8 @@ package ui.screens
 					this.header.maxHeight = 93;
 				}
 			}
-			else
-			{
-				this.header.height = 93;
-				this.header.maxHeight = 93;
-			}
 			
-			var availableScreenHeight:Number = Constants.stageHeight - this.header.height;
+			var availableScreenHeight:Number = Constants.stageHeight - (this.header != null ? this.header.height : 93);
 			Constants.isPortrait ? glucoseChartTopPadding = 7 : glucoseChartTopPadding = 0;
 			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4) glucoseChartTopPadding = 0;
 			if (glucoseChartTopPadding == 0) availableScreenHeight += 7;
@@ -506,7 +509,8 @@ package ui.screens
 					createPieChart();
 			}
 			
-			Constants.headerHeight = this.header.maxHeight;
+			if (this.header != null)
+				Constants.headerHeight = this.header.maxHeight;
 		}
 		
 		private function redrawChart():void

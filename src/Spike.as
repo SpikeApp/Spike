@@ -39,7 +39,8 @@ package
 	
 	public class Spike extends Sprite 
 	{
-		private static const TIME_1_MINUTE:int = 60 * 1000;
+		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
+		
 		private var starling:Starling;
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
@@ -218,6 +219,12 @@ package
 		
 		private function sendError(error:String):void
 		{
+			var now:Number = new Date().valueOf();
+			
+			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life and not SPAM our email
+			if (now - lastCrashReportTimestamp < TIME_5_MINUTES)
+				return;
+			
 			//Things we don't want to report
 			if (
 				error.indexOf("ioError") != -1 ||
@@ -263,17 +270,56 @@ package
 				error.indexOf("getCalibrationForSensorId()") != -1 ||
 				error.indexOf("ListDataViewPort: active renderers should be empty") != -1 ||
 				error.indexOf("StageTextTextEditor/render()") != -1 ||
+				error.indexOf("saveIOBCOBCache()") != -1 ||
+				error.indexOf("MaterialDesignSpinner/stopAnimation()") != -1 ||
+				error.indexOf("BlowFishKey/F()") != -1 ||
+				error.indexOf("Error #2006 at starling.rendering::VertexData/copyTo()") != -1 ||
+				error.indexOf("Error #3694") != -1 ||
+				error.indexOf("describeTraits()") != -1 ||
+				error.indexOf("Error #3768 at services::DeepSleepService$/playSound()") != -1 ||
+				error.indexOf("TypeError: Error #1009 at feathers.controls.popups::DropDownPopUpContentManager/layout()") != -1 ||
+				error.indexOf("Error #3768 at flash.media::Sound/load()") != -1 ||
+				error.indexOf("Error Stack Trace: Error: Error #3768 at mx.collections::ArrayList/internalDispatchEvent()") != -1 ||
+				error.indexOf("Error #3768 at Number/http://adobe.com/AS3/2006/builtin::toString()") != -1 ||
+				error.indexOf("starling.animation::DelayedCall/advanceTime()") != -1 ||
+				error.indexOf("Error #3768 at mx.collections::ListCollectionView/removeItemsFromView()") != -1 ||
+				error.indexOf("Error #3768 at treatments::TreatmentsManager$/getTotalIOB()") != -1 ||
+				error.indexOf("Error #1009 at database::Database$/getAlertType()") != -1 ||
+				error.indexOf("Error #3768 at database::BgReading$/latest()") != -1 ||
+				error.indexOf("Error #1009 at feathers.controls.supportClasses::ListDataViewPort/draw()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLConnection/open()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLStatement/execute()") != -1 ||
+				error.indexOf("DropDownPopUpContentManager/openCloseTween_onUpdate()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLConnection/close()") != -1 ||
+				error.indexOf("Error #3768 at flash.net::URLLoader/addEventListener()") != -1 ||
+				error.indexOf("Error #3768 at String/http://adobe.com/AS3/2006/builtin::split()") != -1 ||
+				error.indexOf("Error #3768 at flash.utils::ByteArray/uncompress()") != -1 ||
+				error.indexOf("Error #3768 at com.hurlant.crypto.symmetric::BlowFishKey/processTable()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLConnection/begin()") != -1 ||
+				error.indexOf("Error #3768 at database::Database$/getAlertType()") != -1 ||
+				error.indexOf("Error #3768 at com.hurlant.util::Hex$/toArray()") != -1 ||
+				error.indexOf("Error #3768 at Array/http://adobe.com/AS3/2006/builtin::sortOn()") != -1 ||
+				error.indexOf("Error #3768 at mx.events::CollectionEvent()") != -1 ||
+				error.indexOf("Error #3768 at global/avmplus::describeType()") != -1 ||
+				error.indexOf("Error #3768 at flash.globalization::DateTimeFormatter/format()") != -1 ||
+				error.indexOf("Error #3768 at com.hurlant.util::Base64$/decodeToByteArray()") != -1 ||
+				error.indexOf("Error #3768 at com.adobe.serialization.json::JSONEncoder/arrayToString()") != -1 ||
+				error.indexOf("Error #3768 at utils::FromtimeAndValueArrayCollection/addItem()") != -1 ||
+				error.indexOf("Error #3768 at flash.net::URLLoader()") != -1 ||
+				error.indexOf("Error #3768 at flash.utils::ByteArray/toString()") != -1 ||
+				error.indexOf("Error #3768 at com.adobe.serialization.json::JSONEncoder/escapeString()") != -1 ||
+				error.indexOf("Error Stack Trace: Error: Error #3768 at flash.events::EventDispatcher/dispatchEvent()") != -1 ||
+				error.indexOf("Error #3768 at database::Calibration$/allForSensor()") != -1 ||
+				error.indexOf("Error #3768 at flash.utils::Timer/start()") != -1 ||
+				error.indexOf("Error Stack Trace: Error: Error #3768 at services::TransmitterService$/transmitterDataReceived()") != -1 ||
+				error.indexOf("Error #3768 at flash.external::ExtensionContext/call()") != -1 ||
+				error.indexOf("Error #3768 at utils::Trace$/myTrace()") != -1 ||
+				error.indexOf("Error #3768 at utils::FromtimeAndValueArrayCollection$/createList()") != -1 ||
 				error.indexOf("Graphic/getBounds()") != -1
 			)
 			{
 				return;
 			}
-			
-			var now:Number = new Date().valueOf();
-			
-			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life and not SPAM our email
-			if (now - lastCrashReportTimestamp < TIME_1_MINUTE)
-				return;
 			
 			lastCrashReportTimestamp = now;
 			

@@ -223,25 +223,26 @@ package ui.screens.display.dexcomshare
 			
 			var listDataProviderItems:Array = [];
 			
-			if (errorMessage != null)
+			if (errorMessage != null && errorLabel != null)
 			{
 				errorLabel.text = errorMessage;
 				errorMessage = null;
 				listDataProviderItems.push({ label: "", accessory: errorLabel });
 				scrollPosition = 0;
 			}
+			
 			listDataProviderItems.push({ label: "", accessory: userDisplayName });
 			listDataProviderItems.push({ label: "", accessory: followerName });
 			listDataProviderItems.push({ label: "", accessory: followerEmail });
 			listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','allow_graph_view_label'), accessory: graphViewCheck });
 			listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','urgent_low_alarm_label'), accessory: urgentLowSwitch });
-			if (urgentLowSwitch.isSelected)
+			if (urgentLowSwitch != null && urgentLowSwitch.isSelected)
 			{
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','notify_below_label'), accessory: urgentLowValue });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','alert_sound'), accessory: urgentLowSound });
 			}
 			listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','low_alarm_label'), accessory: lowSwitch });
-			if (lowSwitch.isSelected)
+			if (lowSwitch != null && lowSwitch.isSelected)
 			{
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','notify_below_label'), accessory: lowValue });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','for_more_than_label'), accessory: lowDelay });
@@ -249,7 +250,7 @@ package ui.screens.display.dexcomshare
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','alert_sound'), accessory: lowSound });
 			}
 			listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','high_alarm_label'), accessory: highSwitch });
-			if (highSwitch.isSelected)
+			if (highSwitch != null && highSwitch.isSelected)
 			{
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','notify_above_label'), accessory: highValue });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','for_more_than_label'), accessory: highDelay });
@@ -257,7 +258,7 @@ package ui.screens.display.dexcomshare
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','alert_sound'), accessory: highSound });
 			}
 			listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','missed_readings_alarm_label'), accessory: missedReadingSwitch });
-			if (missedReadingSwitch.isSelected)
+			if (missedReadingSwitch != null && missedReadingSwitch.isSelected)
 			{
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','for_more_than_label'), accessory: missedReadingsDelay });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','alert_sound'), accessory: missedReadingsSound });

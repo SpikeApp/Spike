@@ -2,8 +2,6 @@ package treatments
 {
 	import flash.utils.Dictionary;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
@@ -486,36 +484,40 @@ package treatments
 		{
 			var currentProfile:Profile;
 			
-			var requestedDate:Date = new Date(requestedTimestamp);
-			var requestedDateAdjusted:Date = new Date();
-			requestedDateAdjusted.hours = requestedDate.hours;
-			requestedDateAdjusted.minutes = requestedDate.minutes;
-			requestedDateAdjusted.seconds = requestedDate.seconds;
-			requestedDateAdjusted.milliseconds = requestedDate.milliseconds;
-			var requestedTimestampAdjusted:Number = requestedDateAdjusted.valueOf();
-			
-			var numberOfProfiles:int = profilesList.length;
-			if (numberOfProfiles == 0)
+			try
 			{
-				createDefaultProfile();
-				numberOfProfiles = profilesList.length;
-			}
-			
-			for (var i:int = numberOfProfiles - 1 ; i >= 0; i--)
-			{
-				var profile:Profile = profilesList[i] as Profile;
-				if (profile != null)
-				{	
-					var profileDate:Date = getProfileDate(profile);
-					var profileTimestamp:Number = profileDate.valueOf();
-					
-					if (requestedTimestampAdjusted >= profileTimestamp)
-					{
-						currentProfile = profile;
-						break;
+				var requestedDate:Date = new Date(requestedTimestamp);
+				var requestedDateAdjusted:Date = new Date();
+				requestedDateAdjusted.hours = requestedDate.hours;
+				requestedDateAdjusted.minutes = requestedDate.minutes;
+				requestedDateAdjusted.seconds = requestedDate.seconds;
+				requestedDateAdjusted.milliseconds = requestedDate.milliseconds;
+				var requestedTimestampAdjusted:Number = requestedDateAdjusted.valueOf();
+				
+				var numberOfProfiles:int = profilesList.length;
+				if (numberOfProfiles == 0)
+				{
+					createDefaultProfile();
+					numberOfProfiles = profilesList.length;
+				}
+				
+				for (var i:int = numberOfProfiles - 1 ; i >= 0; i--)
+				{
+					var profile:Profile = profilesList[i] as Profile;
+					if (profile != null)
+					{	
+						var profileDate:Date = getProfileDate(profile);
+						var profileTimestamp:Number = profileDate.valueOf();
+						
+						if (requestedTimestampAdjusted >= profileTimestamp)
+						{
+							currentProfile = profile;
+							break;
+						}
 					}
 				}
-			}
+			} 
+			catch(error:Error) {}
 			
 			if (currentProfile == null)
 			{
@@ -527,21 +529,30 @@ package treatments
 		
 		public static function getProfileDate(profile:Profile):Date
 		{
-			var profileDividedTime:Array = profile.time.split(":");
-			var profileHour:Number = Number(profileDividedTime[0]);
-			var profileMinutes:Number = Number(profileDividedTime[1]);
-			
-			if (isNaN(profileHour))
-				profileHour = 0;
-			
-			if (isNaN(profileMinutes))
-				profileMinutes = 0;
-			
 			var profileDate:Date = new Date();
-			profileDate.hours = profileHour;
-			profileDate.minutes = profileMinutes;
+			profileDate.hours = 0;
+			profileDate.minutes = 0;
 			profileDate.seconds = 0;
 			profileDate.milliseconds = 0;
+			
+			try
+			{
+				var profileDividedTime:Array = profile.time.split(":");
+				var profileHour:Number = Number(profileDividedTime[0]);
+				var profileMinutes:Number = Number(profileDividedTime[1]);
+				
+				if (isNaN(profileHour))
+					profileHour = 0;
+				
+				if (isNaN(profileMinutes))
+					profileMinutes = 0;
+				
+				profileDate.hours = profileHour;
+				profileDate.minutes = profileMinutes;
+				profileDate.seconds = 0;
+				profileDate.milliseconds = 0;
+			} 
+			catch(error:Error) {}
 			
 			return profileDate;
 		}

@@ -763,6 +763,8 @@ package model
 			{
 				return null;
 			}
+			
+			return null;
 		}
 		
 		public static function getLastPredictiveBG(duration:Number = Number.NaN):Number

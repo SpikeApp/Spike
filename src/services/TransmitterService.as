@@ -242,12 +242,18 @@ package services
 							);
 							SpikeANE.vibrate();
 						} else {
+							var body1:String = ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info");
+							if (body1 == null || body1 == "")
+							{
+								body1 = " ";
+							}
+							
 							notificationBuilderG5G6BatteryInfo = new NotificationBuilder()
 								.setCount(BadgeBuilder.getAppBadge())
 								.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
 								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
-								.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"))
+								.setBody(body1)
 								.enableVibration(true)
 							Notifications.service.notify(notificationBuilderG5G6BatteryInfo.build());
 						}
@@ -300,6 +306,11 @@ package services
 								{
 									badPlacedBatteriesTitle = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter").replace("G5", "G6");
 									badPlacedBatteriesBody = ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info").replace("G5", "G6");
+								}
+								
+								if (badPlacedBatteriesBody == null || badPlacedBatteriesBody == "")
+								{
+									badPlacedBatteriesBody = " ";
 								}
 								
 								notificationBuilderG5G6BatteryInfo = new NotificationBuilder()
