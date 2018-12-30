@@ -6,7 +6,7 @@ FIX: Small bug fixes to the predictions pill. (Miguel)
 FIX: Don't show the treatments menu (upper right + button) when not needed. (Miguel)
 FIX: Fixes a bug that made predictions temporarily disappear from the scroller graph after a calibration. (Miguel)
 FIX: Fixes a bug that created an empty gap of readings on the chart when enabling/disabling predictions if there was less than 24h of readings in Spike. (Miguel)
-FIX: Attempt to fix an issue with the main left mwnu on iPad Pro 12" in landscape. This fix is untested. (Miguel)
+FIX: Attempt to fix an issue with the main left menu on iPad Pro 12" in landscape. This fix is untested. (Miguel)
 FIX: A LOT of other small bug fixes and improvements that should increase overall app stability and speed. (Miguel)
 
 3.5.0
