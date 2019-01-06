@@ -1,3 +1,8 @@
+3.5.2
+FEATURE: Extended/Combo bolus support. Available in bolus, meal and bolus wizard treatments. (Miguel)
+ENHANCEMENT: Small improvements to Spike to Spike follower mode.
+FIX: Addresses a bug that could sometimes not display the correct insulin when editing a treatment by going to + menu > treatments > pencil icon. (Miguel)
+
 3.5.1
 FEATURE: Ability to press on prediction markers located on the chart to visualize details. (Miguel)
 ENHANCEMENT: Ability to set ISF with 0.2 increments in Settings > Treatments > Profile. (Miguel)
