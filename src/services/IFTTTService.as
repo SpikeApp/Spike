@@ -358,9 +358,11 @@ package services
 			(
 				(treatment.type == Treatment.TYPE_BOLUS && isIFTTTbolusTreatmentAddedEnabled) || 
 				(treatment.type == Treatment.TYPE_CORRECTION_BOLUS && isIFTTTbolusTreatmentAddedEnabled) || 
+				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT && isIFTTTbolusTreatmentAddedEnabled) || 
 				(treatment.type == Treatment.TYPE_CARBS_CORRECTION && isIFTTTcarbsTreatmentAddedEnabled) ||
 				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentAddedEnabled) ||
 				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT && isIFTTTmealTreatmentAddedEnabled) ||
 				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentAddedEnabled)
 			)
 				triggerTreatment(treatment, "added");
@@ -380,9 +382,11 @@ package services
 			(
 				(treatment.type == Treatment.TYPE_BOLUS && isIFTTTbolusTreatmentDeletedEnabled) || 
 				(treatment.type == Treatment.TYPE_CORRECTION_BOLUS && isIFTTTbolusTreatmentDeletedEnabled) || 
+				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT && isIFTTTbolusTreatmentDeletedEnabled) || 
 				(treatment.type == Treatment.TYPE_CARBS_CORRECTION && isIFTTTcarbsTreatmentDeletedEnabled) ||
 				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentDeletedEnabled) ||
 				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT && isIFTTTmealTreatmentDeletedEnabled) ||
 				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentDeletedEnabled)
 			)
 				triggerTreatment(treatment, "deleted");
@@ -402,9 +406,11 @@ package services
 			(
 				(treatment.type == Treatment.TYPE_BOLUS && isIFTTTbolusTreatmentUpdatedEnabled) || 
 				(treatment.type == Treatment.TYPE_CORRECTION_BOLUS && isIFTTTbolusTreatmentUpdatedEnabled) || 
+				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT && isIFTTTbolusTreatmentUpdatedEnabled) || 
 				(treatment.type == Treatment.TYPE_CARBS_CORRECTION && isIFTTTcarbsTreatmentUpdatedEnabled) ||
 				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentUpdatedEnabled) ||
 				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT && isIFTTTmealTreatmentUpdatedEnabled) ||
 				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentUpdatedEnabled)
 			)
 				triggerTreatment(treatment, "updated");
@@ -435,6 +441,11 @@ package services
 				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_bolus");
 				treatmentValue = GlucoseFactory.formatIOB(treatment.insulinAmount);
 			}
+			else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","extended_bolus_treatment");
+				treatmentValue = GlucoseFactory.formatIOB(treatment.getTotalInsulin());
+			} 
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 			{
 				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_carbs");
@@ -452,6 +463,11 @@ package services
 			{
 				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_meal");
 				treatmentValue = ModelLocator.resourceManagerInstance.getString("treatments","treatment_insulin_label") + ": " + GlucoseFactory.formatIOB(treatment.insulinAmount) + ", " + ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_carbs") + ": " + GlucoseFactory.formatCOB(treatment.carbs);
+			}
+			else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","meal_with_extended_bolus");
+				treatmentValue = ModelLocator.resourceManagerInstance.getString("treatments","treatment_insulin_label") + ": " + GlucoseFactory.formatIOB(treatment.getTotalInsulin()) + ", " + ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_carbs") + ": " + GlucoseFactory.formatCOB(treatment.carbs);
 			}
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{

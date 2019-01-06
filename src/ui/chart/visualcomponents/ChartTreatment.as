@@ -9,6 +9,7 @@ package ui.chart.visualcomponents
 		public var treatment:Treatment;
 		public var radius:Number = Number.NaN;
 		public var index:int;
+		public var children:Array = [];
 		
 		public function ChartTreatment()
 		{

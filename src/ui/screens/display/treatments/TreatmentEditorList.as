@@ -3,6 +3,8 @@ package ui.screens.display.treatments
 	import database.BgReading;
 	import database.CommonSettings;
 	
+	import events.TreatmentsEvent;
+	
 	import feathers.controls.Button;
 	import feathers.controls.DateTimeMode;
 	import feathers.controls.DateTimeSpinner;
@@ -41,9 +43,12 @@ package ui.screens.display.treatments
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.GlucoseHelper;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("treatments")]
+	[ResourceBundle("chartscreen")]
+	[ResourceBundle("generalsettingsscreen")]
 
 	public class TreatmentEditorList extends GroupedList 
 	{	
@@ -59,6 +64,9 @@ package ui.screens.display.treatments
 		private var noteTextArea:TextArea;
 		private var treatmentTimeConatiner:LayoutGroup;
 		private var carbTypePicker:PickerList;
+		private var splitNowStepper:NumericStepper;
+		private var splitExtStepper:NumericStepper;
+		private var extensionDuration:NumericStepper;
 		
 		/* Properties */
 		private var treatment:Treatment;
@@ -90,7 +98,8 @@ package ui.screens.display.treatments
 			autoHideBackground = true;
 			hasElasticEdges = false;
 			layoutData = new VerticalLayoutData( 100 );
-			width = 300;
+			width = Constants.stageWidth * 0.85;
+			maxWidth = 300;
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
 			(layout as VerticalLayout).useVirtualLayout = false;
 		}
@@ -103,7 +112,7 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			var treatmentType:String;
-			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
 				//Treatment Type
 				if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
@@ -113,6 +122,7 @@ package ui.screens.display.treatments
 				var userInsulins:Array = ProfileManager.insulinsList;
 				insulinsPicker = LayoutFactory.createPickerList()
 				var insulinsList:ArrayCollection = new ArrayCollection();
+				
 				var selectedInsulin:int = 0;
 				if (userInsulins != null)
 				{
@@ -120,15 +130,13 @@ package ui.screens.display.treatments
 					{
 						var insulin:Insulin = userInsulins[i];
 						
-						if (!insulin.isHidden)
-						{
-							insulinsList.push( {label: insulin.name, id: insulin.ID} );
-							
-							if (insulin.ID == treatment.insulinID)
-								selectedInsulin = i;
-						}
+						insulinsList.push( {label: insulin.name + (insulin.isHidden == true && insulin.name.indexOf("Nightscout") == -1 ? " " + "(" + ModelLocator.resourceManagerInstance.getString('generalsettingsscreen',"collection_list").split(",")[0] + ")" : ""), id: insulin.ID} );
+						
+						if (insulin.ID == treatment.insulinID)
+							selectedInsulin = i;
 					}
 				}
+				insulinsPicker.maxWidth = 150;
 				insulinsPicker.labelField = "label";
 				insulinsPicker.itemRendererFactory = function():IListItemRenderer
 				{
@@ -143,11 +151,35 @@ package ui.screens.display.treatments
 				
 				//Insulin Amount
 				insulinAmountStepper = LayoutFactory.createNumericStepper(0.1, 150, treatment.insulinAmount, 0.1);
+				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+				{
+					insulinAmountStepper.value = treatment.getTotalInsulin();
+				}
 				insulinAmountStepper.pivotX = -10;
 				insulinAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
 			
-			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+			{
+				var parentSplit:Number = Math.round((treatment.insulinAmount * 100) / treatment.getTotalInsulin());
+				var childrenSplit:Number = 100 - parentSplit;
+				
+				splitNowStepper = LayoutFactory.createNumericStepper(0, 100, parentSplit, 5);
+				splitNowStepper.pivotX = -10;
+				splitNowStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+				splitNowStepper.addEventListener(Event.CHANGE, onSplitNowChanged);
+				
+				splitExtStepper = LayoutFactory.createNumericStepper(0, 100, childrenSplit, 5);
+				splitExtStepper.pivotX = -10;
+				splitExtStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+				splitExtStepper.addEventListener(Event.CHANGE, onSplitExtChanged);
+				
+				extensionDuration = LayoutFactory.createNumericStepper(10, 1000, treatment.childTreatments.length * 5, 5);
+				extensionDuration.pivotX = -10;
+				extensionDuration.addEventListener(Event.CHANGE, onSettingsChanged);
+			}
+			
+			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
 				//Treatment Type
 				if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
@@ -211,6 +243,12 @@ package ui.screens.display.treatments
 			if (treatment.type == Treatment.TYPE_NOTE)
 				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_note"); //Treatment Type
 			
+			if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"extended_bolus_treatment"); //Treatment Type
+			
+			if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"meal_with_extended_bolus"); //Treatment Type
+			
 			//Treatment Time
 			var treatmentTimeLayout:VerticalLayout = new VerticalLayout();
 			treatmentTimeLayout.verticalAlign = VerticalAlign.MIDDLE;
@@ -230,7 +268,7 @@ package ui.screens.display.treatments
 			noteTextArea = new TextArea();
 			noteTextArea.width = 140;
 			noteTextArea.height = 120;
-			if ((treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS) && Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
+			if ((treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT) && Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				noteTextArea.height = 50;
 			noteTextArea.fontStyles = new TextFormat("Roboto", 14, 0xEEEEEE, HorizontalAlign.RIGHT, VerticalAlign.TOP);
 			noteTextArea.paddingTop = noteTextArea.paddingBottom = 10;
@@ -263,12 +301,18 @@ package ui.screens.display.treatments
 			
 			var infoSectionChildren:Array = [];
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_time_label"), accessory: treatmentTimeConatiner });
-			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
 			}
-			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+			{
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"extended_bolus_split_label") + " 1 (%)", accessory: splitNowStepper });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"extended_bolus_split_label") + " 2 (%)", accessory: splitExtStepper });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"extended_bolus_duration_minutes_label"), accessory: extensionDuration });
+			}
+			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_carbs_amount_label"), accessory: carbsAmountStepper });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"carbs_type_label"), accessory: carbTypePicker });
@@ -307,6 +351,22 @@ package ui.screens.display.treatments
 		/**
 		 * Event Handlers
 		 */
+		private function onSplitNowChanged(e:Event):void
+		{
+			if (splitNowStepper != null && splitExtStepper != null)
+			{
+				splitExtStepper.value = 100 - splitNowStepper.value;
+			}
+		}
+		
+		private function onSplitExtChanged(e:Event):void
+		{
+			if (splitNowStepper != null && splitExtStepper != null)
+			{
+				splitNowStepper.value = 100 - splitExtStepper.value;
+			}
+		}
+		
 		private function onSaveTreatment(e:Event):void
 		{
 			//Check if selected time range is acceptable
@@ -330,6 +390,7 @@ package ui.screens.display.treatments
 			
 			//Update treatment properties that are the same for all treatments
 			treatment.timestamp = treatmentTime.value.valueOf();
+			treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatmentTime.value.valueOf());
 			treatment.note = noteTextArea.text;
 			
 			var carbDelayTime:Number;
@@ -378,6 +439,103 @@ package ui.screens.display.treatments
 					carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
 				
 				treatment.carbDelayTime = carbDelayTime;
+			}
+			else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+			{
+				var internalExtendedBolusOverallInsulinAmount:Number = Math.round(treatment.getTotalInsulin() * 100) / 100;
+				var internalExtendedBolusParentInsulinAmount:Number = treatment.insulinAmount;
+				var internalExtendedBolusParentSplit:Number = Math.round((internalExtendedBolusParentInsulinAmount * 100) / internalExtendedBolusOverallInsulinAmount);
+				var internalExtendedBolusChildrenSplit:Number = 100 - internalExtendedBolusParentSplit;
+				var numberOfExtendedBolusChildren:uint = treatment.childTreatments.length;
+				var internalExtendedBolusDuration:Number = numberOfExtendedBolusChildren * 5;
+				
+				if (internalExtendedBolusOverallInsulinAmount != insulinAmountStepper.value 
+					||
+					internalExtendedBolusParentSplit != splitNowStepper.value
+					||
+					internalExtendedBolusChildrenSplit != splitExtStepper.value
+					||
+					internalExtendedBolusDuration != extensionDuration.value)
+				{
+					//First we delete all children
+					for (var k:int = 0; k < numberOfExtendedBolusChildren; k++) 
+					{
+						var internalExtendedBolusChild:Treatment = TreatmentsManager.getTreatmentByID(treatment.childTreatments[k]);
+						if (internalExtendedBolusChild != null)
+						{
+							//Delete child
+							TreatmentsManager.deleteTreatment(internalExtendedBolusChild, false, false, true, false, true);
+							
+							//Notify Listeners
+							TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalExtendedBolusChild));
+						}
+					}
+					
+					//Recalculate amounts and splits
+					var immediateBolusAmount:Number = Math.round((Math.round(Number(insulinAmountStepper.value) * 100) / 100) * ((Number(splitNowStepper.value)) / 100) * 100) / 100;
+					var remainingBolusAmount:Number = (Math.round(Number(insulinAmountStepper.value) * 100) / 100) - immediateBolusAmount;
+					var extendedSteps:Number = Math.round(Number(extensionDuration.value) / 5);
+					var extendedBolusAmount:Number = Math.round((remainingBolusAmount/extendedSteps) * 100) / 100;
+					var latestReading:BgReading = BgReading.lastWithCalculatedValue();
+					
+					//Extended Bolus Children
+					var extendedChildren:Array = [];
+					for (var m:int = 0; m < extendedSteps; m++) 
+					{
+						var extendedTreatmentBolusAmount:Number = m < extendedSteps - 1 ? extendedBolusAmount : remainingBolusAmount;
+						var childTimestamp:Number = treatmentTime.value.valueOf() + ((m + 1) * TimeSpan.TIME_5_MINUTES);
+						
+						var extendedTreatment:Treatment = new Treatment
+							(
+								Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD,
+								childTimestamp,
+								extendedTreatmentBolusAmount,
+								insulinsPicker != null && insulinsPicker.selectedItem != null && insulinsPicker.selectedItem.id != null ? insulinsPicker.selectedItem.id : "",
+								0,
+								0,
+								TreatmentsManager.getEstimatedGlucose(childTimestamp)
+							);
+						extendedTreatment.needsAdjustment = latestReading != null && latestReading.timestamp >= childTimestamp ? false : true;
+						TreatmentsManager.addExternalTreatment(extendedTreatment, false);
+						extendedChildren.push(extendedTreatment.ID);
+						
+						remainingBolusAmount -= extendedTreatmentBolusAmount;
+					}
+					
+					//Update parent
+					treatment.childTreatments = extendedChildren;
+					treatment.insulinAmount = immediateBolusAmount;
+					treatment.needsAdjustment = latestReading != null && latestReading.timestamp >= treatmentTime.value.valueOf() ? false : true;
+					if (treatment.timestamp != treatmentTime.value.valueOf())
+					{
+						treatment.timestamp = treatmentTime.value.valueOf();
+						treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatmentTime.value.valueOf());
+					}
+					
+					if (insulinsPicker != null && insulinsPicker.selectedItem != null && insulinsPicker.selectedItem.id != null && insulinsPicker.selectedItem.id != treatment.insulinID)
+					{
+						treatment.insulinID = insulinsPicker.selectedItem.id;
+						var newInsulin:Insulin = ProfileManager.getInsulin(treatment.insulinID);
+						if (newInsulin != null)
+						{
+							treatment.dia = newInsulin.dia;
+						}
+					}
+				}
+				
+				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+				{
+					treatment.carbs = carbsAmountStepper.value;
+					
+					if (carbTypePicker.selectedIndex == 0)
+						carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+					else if (carbTypePicker.selectedIndex == 1)
+						carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+					else if (carbTypePicker.selectedIndex == 2)
+						carbDelayTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+					
+					treatment.carbDelayTime = carbDelayTime;
+				}
 			}
 			
 			//Update treatment in Spike and DB
@@ -473,6 +631,29 @@ package ui.screens.display.treatments
 				carbTypePicker.removeEventListener(Event.CHANGE, onSettingsChanged);
 				carbTypePicker.dispose();
 				carbTypePicker = null;
+			}
+			
+			if (splitNowStepper != null)
+			{
+				splitNowStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
+				splitNowStepper.removeEventListener(Event.CHANGE, onSplitNowChanged);
+				splitNowStepper.dispose();
+				splitNowStepper = null;
+			}
+			
+			if (splitExtStepper != null)
+			{
+				splitExtStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
+				splitExtStepper.removeEventListener(Event.CHANGE, onSplitExtChanged);
+				splitExtStepper.dispose();
+				splitExtStepper = null;
+			}
+			
+			if (extensionDuration != null)
+			{
+				extensionDuration.removeEventListener(Event.CHANGE, onSettingsChanged);
+				extensionDuration.dispose();
+				extensionDuration = null;
 			}
 			
 			super.dispose();

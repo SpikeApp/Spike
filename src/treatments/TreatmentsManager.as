@@ -373,6 +373,18 @@ package treatments
 								dbTreatment.basalduration
 							);
 						treatment.ID = dbTreatment.id;
+						if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
+						{
+							treatment.needsAdjustment = true;
+						}
+						if (dbTreatment.children != null && String(dbTreatment.children) != "")
+						{
+							treatment.parseChildren(String(dbTreatment.children));
+						}
+						if (dbTreatment.prebolus != null && !isNaN(dbTreatment.prebolus))
+						{
+							treatment.preBolus = Number(dbTreatment.prebolus);
+						}
 						
 						treatmentsList.push(treatment);
 						treatmentsMap[treatment.ID] = treatment;
@@ -1641,7 +1653,7 @@ package treatments
 			pumpCOB = value;
 		}
 		
-		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true, nullifyTreatment:Boolean = true, deleteFromDatabase:Boolean = true):void
+		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true, nullifyTreatment:Boolean = true, deleteFromDatabase:Boolean = true, notifyInternally:Boolean = true, notiyExternally:Boolean = false):void
 		{
 			Trace.myTrace("TreatmentsManager.as", "deleteTreatment called!");
 			
@@ -1653,12 +1665,30 @@ package treatments
 					var spikeTreatment:Treatment = treatmentsList[i] as Treatment;
 					if (treatment.ID == spikeTreatment.ID)
 					{
+						if (spikeTreatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || spikeTreatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+						{
+							//Delete children
+							var numberOfChildren:uint = spikeTreatment.childTreatments.length;
+							for (var j:int = 0; j < numberOfChildren; j++) 
+							{
+								var child:Treatment = treatmentsMap[spikeTreatment.childTreatments[j]];
+								if (child != null)
+								{
+									deleteTreatment(child, false, true, deleteFromDatabase, notifyInternally, notiyExternally);
+								}
+							}
+						}
+						
 						Trace.myTrace("TreatmentsManager.as", "Treatment deleted. Type: " + spikeTreatment.type);
 						
 						treatmentsList.removeAt(i);
 						
 						//Notify listeners
-						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, spikeTreatment));
+						if (notifyInternally)
+							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, spikeTreatment));
+						
+						if (notiyExternally)
+							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, spikeTreatment));
 						
 						//Delete from Nightscout
 						if (updateNightscout && (NightscoutService.serviceActive || NightscoutService.followerModeEnabled))
@@ -1817,7 +1847,7 @@ package treatments
 				
 				treatmentInserterContainer.addChild(extendedBolusMainContainer);
 				
-				extendedBolusCheck = LayoutFactory.createCheckMark(false, "Combo / Extended?");
+				extendedBolusCheck = LayoutFactory.createCheckMark(false, ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_treatment'));
 				extendedBolusCheck.addEventListener(Event.CHANGE, onBolusExtendedChanged);
 				extendedBolusMainContainer.addChild(extendedBolusCheck);
 				
@@ -2176,7 +2206,7 @@ package treatments
 				}
 				else
 				{
-					if (!extendedBolusCheck.isSelected || (firstSplitNumericStepper != null && firstSplitNumericStepper.value == 100))
+					if ((extendedBolusCheck != null && !extendedBolusCheck.isSelected) || (firstSplitNumericStepper != null && firstSplitNumericStepper.value == 100))
 					{
 						var treatment:Treatment = new Treatment
 						(
@@ -2208,86 +2238,35 @@ package treatments
 					}
 					else
 					{
-						if (extendedBolusCheck.isSelected && firstSplitNumericStepper != null && firstSplitNumericStepper.value != 100 && extendedDurationNumericStepper.value == 0)
+						if (extendedBolusCheck != null && extendedBolusCheck.isSelected && firstSplitNumericStepper != null && firstSplitNumericStepper.value != 100 && lastSplitNumericStepper != null && lastSplitNumericStepper.value != 0 && extendedDurationNumericStepper != null && extendedDurationNumericStepper.value != 0)
+						{
+							//Add extended bolus treatment to Spike
+							addExtendedBolusTreatment
+							(
+								insulinValue, 
+								0,
+								firstSplitNumericStepper.value, 
+								lastSplitNumericStepper.value, 
+								extendedDurationNumericStepper.value, 
+								insulinList.selectedItem.id, 
+								treatmentTime.value.valueOf(),
+								notes.text,
+								null,
+								Number.NaN,
+								true
+							);
+						}
+						else
 						{
 							AlertManager.showSimpleAlert
 							(
 								ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-								"Duration of extended bolus cannot be zero!",
+								ModelLocator.resourceManagerInstance.getString('treatments','treatment_insertion_error_label'),
 								Number.NaN,
 								onAskNewBolus
 							);
 							
 							return;
-						}
-						
-						if (extendedBolusCheck.isSelected && firstSplitNumericStepper != null && firstSplitNumericStepper.value != 100 && lastSplitNumericStepper != null && lastSplitNumericStepper.value != 0 && extendedDurationNumericStepper.value != 0)
-						{
-							
-							trace("1");
-							
-							var immediateBolusAmount:Number = Math.round(insulinValue * (firstSplitNumericStepper.value / 100) * 10) / 10;
-							var remainingBolusAmount:Number = insulinValue - immediateBolusAmount;
-							var extendedSteps:Number = extendedDurationNumericStepper.value / 5;
-							var extendedBolusAmount:Number = Math.round((remainingBolusAmount/extendedSteps) * 10) / 10;
-							
-							//Immediate Bolus
-							if (immediateBolusAmount != 0)
-							{
-								var immediateTreatment:Treatment = new Treatment
-								(
-									Treatment.TYPE_BOLUS,
-									treatmentTime.value.valueOf(),
-									immediateBolusAmount,
-									insulinList.selectedItem.id,
-									0,
-									0,
-									getEstimatedGlucose(treatmentTime.value.valueOf()),
-									notes.text
-								);
-								addExtendedBolusTreatment(immediateTreatment);
-							}
-								
-							//Extended Split Bolus
-							for (var j:int = 0; j < extendedSteps; j++) 
-							{
-								
-								var extendedTreatmentBolusAmount:Number = j < extendedSteps - 1 ? extendedBolusAmount : Math.round(remainingBolusAmount * 100) / 100;
-								var extendedTreatment:Treatment = new Treatment
-								(
-									Treatment.TYPE_BOLUS,
-									treatmentTime.value.valueOf() + ((j + 1) * TimeSpan.TIME_5_MINUTES),
-									extendedTreatmentBolusAmount,
-									insulinList.selectedItem.id,
-									0,
-									0,
-									getEstimatedGlucose(treatmentTime.value.valueOf()),
-									"Extended Bolus"
-								);
-								extendedTreatment.needsAdjustment = true;
-								addExtendedBolusTreatment(extendedTreatment);
-								
-								remainingBolusAmount -= extendedTreatmentBolusAmount;
-							}
-								
-							function addExtendedBolusTreatment(treatment:Treatment):void
-							{
-								//Add to list
-								treatmentsList.push(treatment);
-								treatmentsMap[treatment.ID] = treatment;
-								
-								Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
-									
-								//Notify listeners
-								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-									
-								//Insert in DB
-								if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-									Database.insertTreatmentSynchronous(treatment);
-									
-								//Upload to Nightscout
-								NightscoutService.uploadTreatment(treatment);
-							}
 						}
 					}
 				}
@@ -2368,7 +2347,6 @@ package treatments
 			
 			function onMealEntered (e:Event):void
 			{
-				
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onMealEntered);
 				
 				if (insulinTextInput == null || insulinTextInput.text == null || carbsTextInput == null || carbsTextInput.text == null || carbOffSet == null || !SpikeANE.appIsInForeground())
@@ -2382,12 +2360,12 @@ package treatments
 				if (isNaN(insulinValue) || insulinTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
-						(
-							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-							ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_insulin'),
-							Number.NaN,
-							onAskNewBolus
-						);
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_insulin'),
+						Number.NaN,
+						onAskNewBolus
+					);
 					
 					function onAskNewBolus():void
 					{
@@ -2397,12 +2375,12 @@ package treatments
 				else if (isNaN(carbsValue) || carbsTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
-						(
-							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-							ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_carbs'),
-							Number.NaN,
-							onAskNewCarbs
-						);
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_carbs'),
+						Number.NaN,
+						onAskNewCarbs
+					);
 					
 					function onAskNewCarbs():void
 					{
@@ -2423,7 +2401,9 @@ package treatments
 					
 					if (carbOffSet.value == 0)
 					{
-						var treatment:Treatment = new Treatment
+						if ((extendedBolusCheck != null && !extendedBolusCheck.isSelected) || (firstSplitNumericStepper != null && firstSplitNumericStepper.value == 100))
+						{
+							var treatment:Treatment = new Treatment
 							(
 								Treatment.TYPE_MEAL_BOLUS,
 								treatmentTime.value.valueOf(),
@@ -2436,27 +2416,70 @@ package treatments
 								null,
 								carbDelayMinutes
 							);
-						
-						//Add to list
-						treatmentsList.push(treatment);
-						treatmentsMap[treatment.ID] = treatment;
-						
-						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
-						
-						//Notify listeners
-						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-						
-						//Insert in DB
-						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-							Database.insertTreatmentSynchronous(treatment);
-						
-						//Upload to Nightscout
-						NightscoutService.uploadTreatment(treatment);
+							
+							//Add to list
+							treatmentsList.push(treatment);
+							treatmentsMap[treatment.ID] = treatment;
+							
+							Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+							
+							//Notify listeners
+							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+							
+							//Insert in DB
+							if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+								Database.insertTreatmentSynchronous(treatment);
+							
+							//Upload to Nightscout
+							NightscoutService.uploadTreatment(treatment);
+						}
+						else
+						{
+							if (extendedBolusCheck != null && extendedBolusCheck.isSelected && firstSplitNumericStepper != null && firstSplitNumericStepper.value != 100 && lastSplitNumericStepper != null && lastSplitNumericStepper.value != 0 && extendedDurationNumericStepper != null && extendedDurationNumericStepper.value != 0)
+							{
+								//Add extended bolus treatment to Spike
+								addExtendedBolusTreatment
+								(
+									insulinValue, 
+									carbsValue,
+									firstSplitNumericStepper.value, 
+									lastSplitNumericStepper.value, 
+									extendedDurationNumericStepper.value, 
+									insulinList.selectedItem.id, 
+									treatmentTime.value.valueOf(),
+									notes.text,
+									null,
+									carbDelayMinutes,
+									true
+								);
+							}
+							else
+							{
+								AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+									ModelLocator.resourceManagerInstance.getString('treatments','treatment_insertion_error_label'),
+									Number.NaN,
+									onAskNewBolus
+								);
+								
+								return;
+							}
+						}
 					}
 					else
 					{
-						//Insulin portion
-						var treatmentInsulin:Treatment = new Treatment
+						/**
+						 * WITH CARB OFFSET
+						 */
+						
+						if ((extendedBolusCheck != null && !extendedBolusCheck.isSelected) || (firstSplitNumericStepper != null && firstSplitNumericStepper.value == 100))
+						{
+							/**
+							 * SIMPLE 
+							 */
+							//Insulin portion
+							var treatmentInsulin:Treatment = new Treatment
 							(
 								Treatment.TYPE_MEAL_BOLUS,
 								treatmentTime.value.valueOf(),
@@ -2467,51 +2490,129 @@ package treatments
 								getEstimatedGlucose(treatmentTime.value.valueOf()),
 								notes.text
 							);
-						
-						//Add to list
-						treatmentsList.push(treatmentInsulin);
-						treatmentsMap[treatmentInsulin.ID] = treatmentInsulin;
-						
-						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatmentInsulin.type);
-						
-						//Carb portion
-						var carbTime:Number = treatmentTime.value.valueOf() + (carbOffSet.value * 60 * 1000);
-						var nowTime:Number = new Date().valueOf();
-						var treatmentCarbs:Treatment = new Treatment
-							(
-								Treatment.TYPE_MEAL_BOLUS,
-								carbTime,
-								0,
-								insulinList.selectedItem.id,
-								carbsValue,
-								0,
-								getEstimatedGlucose(carbTime <= nowTime ? carbTime : treatmentTime.value.valueOf()),
-								notes.text,
-								null,
-								carbDelayMinutes
-							);
-						if (carbTime > nowTime) treatmentCarbs.needsAdjustment = true;
-						
-						//Add to list
-						treatmentsList.push(treatmentCarbs);
-						treatmentsMap[treatmentCarbs.ID] = treatmentCarbs;
-						
-						Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatmentCarbs.type);
-						
-						//Notify listeners
-						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentInsulin));
-						_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentCarbs));
-						
-						//Insert in DB
-						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-						{
-							Database.insertTreatmentSynchronous(treatmentInsulin);
-							Database.insertTreatmentSynchronous(treatmentCarbs);
+							treatmentInsulin.preBolus = carbOffSet.value;
+							
+							//Add to list
+							treatmentsList.push(treatmentInsulin);
+							treatmentsMap[treatmentInsulin.ID] = treatmentInsulin;
+							
+							Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatmentInsulin.type);
+							
+							//Carb portion
+							var carbTime:Number = treatmentTime.value.valueOf() + (carbOffSet.value * 60 * 1000);
+							var nowTime:Number = new Date().valueOf();
+							var treatmentCarbs:Treatment = new Treatment
+								(
+									Treatment.TYPE_MEAL_BOLUS,
+									carbTime,
+									0,
+									insulinList.selectedItem.id,
+									carbsValue,
+									0,
+									getEstimatedGlucose(carbTime <= nowTime ? carbTime : treatmentTime.value.valueOf()),
+									notes.text,
+									null,
+									carbDelayMinutes
+								);
+							if (carbTime > nowTime) treatmentCarbs.needsAdjustment = true;
+							
+							//Add to list
+							treatmentsList.push(treatmentCarbs);
+							treatmentsMap[treatmentCarbs.ID] = treatmentCarbs;
+							
+							Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatmentCarbs.type);
+							
+							//Notify listeners
+							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentInsulin));
+							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentCarbs));
+							
+							//Insert in DB
+							if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+							{
+								Database.insertTreatmentSynchronous(treatmentInsulin);
+								Database.insertTreatmentSynchronous(treatmentCarbs);
+							}
+							
+							//Upload to Nightscout
+							NightscoutService.uploadTreatment(treatmentInsulin);
+							NightscoutService.uploadTreatment(treatmentCarbs);
 						}
-						
-						//Upload to Nightscout
-						NightscoutService.uploadTreatment(treatmentInsulin);
-						NightscoutService.uploadTreatment(treatmentCarbs);
+						else
+						{
+							/**
+							 * EXTENDED MEAL
+							 */
+							if (extendedBolusCheck != null && extendedBolusCheck.isSelected && firstSplitNumericStepper != null && firstSplitNumericStepper.value != 100 && lastSplitNumericStepper != null && lastSplitNumericStepper.value != 0 && extendedDurationNumericStepper != null && extendedDurationNumericStepper.value != 0)
+							{
+								//Extended Insulin Portion
+								addExtendedBolusTreatment
+								(
+									insulinValue, 
+									0,
+									firstSplitNumericStepper.value, 
+									lastSplitNumericStepper.value, 
+									extendedDurationNumericStepper.value, 
+									insulinList.selectedItem.id, 
+									treatmentTime.value.valueOf(),
+									notes.text,
+									null,
+									carbDelayMinutes,
+									true,
+									true,
+									carbOffSet.value
+								);
+								
+								//Extended Carb Portion
+								var extendedCarbTime:Number = treatmentTime.value.valueOf() + (carbOffSet.value * 60 * 1000);
+								var extendedNowTime:Number = new Date().valueOf();
+								var extendedTreatmentCarbs:Treatment = new Treatment
+								(
+									Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT,
+									extendedCarbTime,
+									0,
+									insulinList.selectedItem.id,
+									carbsValue,
+									0,
+									getEstimatedGlucose(extendedCarbTime <= extendedNowTime ? extendedCarbTime : treatmentTime.value.valueOf()),
+									notes.text,
+									null,
+									carbDelayMinutes
+								);
+								
+								if (extendedCarbTime > extendedNowTime) 
+									extendedTreatmentCarbs.needsAdjustment = true;
+								
+								//Add to list
+								treatmentsList.push(extendedTreatmentCarbs);
+								treatmentsMap[extendedTreatmentCarbs.ID] = extendedTreatmentCarbs;
+								
+								Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + extendedTreatmentCarbs.type);
+								
+								//Notify listeners
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, extendedTreatmentCarbs));
+								
+								//Insert in DB
+								if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+								{
+									Database.insertTreatmentSynchronous(extendedTreatmentCarbs);
+								}
+								
+								//Upload to Nightscout
+								NightscoutService.uploadTreatment(extendedTreatmentCarbs);
+							}
+							else
+							{
+								AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+									ModelLocator.resourceManagerInstance.getString('treatments','treatment_insertion_error_label'),
+									Number.NaN,
+									onAskNewBolus
+								);
+								
+								return;
+							}
+						}
 					}
 				}
 				
@@ -2790,7 +2891,7 @@ package treatments
 						extendedBolusSplitContainer1.width = extendedBolusMainContainer.width;
 						extendedBolusMainContainer.addChild(extendedBolusSplitContainer1);
 						
-						firstSplitLabel = LayoutFactory.createLabel("Split 1 (%):");
+						firstSplitLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments',"extended_bolus_split_label") + " 1 (%)" + ":");
 						firstSplitNumericStepper = LayoutFactory.createNumericStepper(0, 100, 100, 5);
 						firstSplitNumericStepper.addEventListener(Event.CHANGE, onFirstSplitStepperChanged);
 						extendedBolusSplitContainer1.addChild(firstSplitLabel);
@@ -2803,7 +2904,7 @@ package treatments
 						extendedBolusSplitContainer2.width = extendedBolusMainContainer.width;
 						extendedBolusMainContainer.addChild(extendedBolusSplitContainer2);
 						
-						lastSplitLabel = LayoutFactory.createLabel("Split 2 (%):");
+						lastSplitLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments',"extended_bolus_split_label") + " 2 (%)" + ":");
 						lastSplitNumericStepper = LayoutFactory.createNumericStepper(0, 100, 0, 5);
 						lastSplitNumericStepper.addEventListener(Event.CHANGE, onLastSplitStepperChanged);
 						extendedBolusSplitContainer2.addChild(lastSplitLabel);
@@ -2816,7 +2917,7 @@ package treatments
 						extendedBolusDurationContainer.width = extendedBolusMainContainer.width;
 						extendedBolusMainContainer.addChild(extendedBolusDurationContainer);
 						
-						extendedDurationLabel = LayoutFactory.createLabel("Minutes:");
+						extendedDurationLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments',"extended_bolus_duration_minutes_label") + ":");
 						extendedDurationNumericStepper = LayoutFactory.createNumericStepper(10, 1000, 120, 5);
 						extendedBolusDurationContainer.addChild(extendedDurationLabel);
 						extendedBolusDurationContainer.addChild(extendedDurationNumericStepper);
@@ -3165,6 +3266,75 @@ package treatments
 			}
 		}
 		
+		public static function addExtendedBolusTreatment(totalInsulinAmount:Number,
+														  carbsAmount:Number,
+														  firstSplit:Number, 
+														  secondSplit:Number, 
+														  duration:Number, 
+														  insulinID:String, 
+														  treatmentTime:Number, 
+														  note:String = "",
+														  treatmentID:String = null,
+														  carbDelayInMinutes:Number = Number.NaN,
+														  syncToNightscout:Boolean = true,
+														  forceMealTreatment:Boolean = false,
+														  carbOffset:Number = Number.NaN
+		):void
+		{
+			var immediateBolusAmount:Number = Math.round(totalInsulinAmount * (firstSplit / 100) * 100) / 100;
+			var remainingBolusAmount:Number = totalInsulinAmount - immediateBolusAmount;
+			var extendedSteps:Number = Math.round(duration / 5);
+			var extendedBolusAmount:Number = Math.round((remainingBolusAmount/extendedSteps) * 100) / 100;
+			var latestReading:BgReading = BgReading.lastWithCalculatedValue();
+			
+			//Extended Bolus Children
+			var extendedChildren:Array = [];
+			for (var j:int = 0; j < extendedSteps; j++) 
+			{
+				var extendedTreatmentBolusAmount:Number = j < extendedSteps - 1 ? extendedBolusAmount : remainingBolusAmount;
+				
+				var childTimestamp:Number = treatmentTime + ((j + 1) * TimeSpan.TIME_5_MINUTES);
+				var extendedTreatment:Treatment = new Treatment
+					(
+						Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD,
+						childTimestamp,
+						extendedTreatmentBolusAmount,
+						insulinID,
+						0,
+						0,
+						getEstimatedGlucose(childTimestamp)
+					);
+				extendedTreatment.needsAdjustment = latestReading != null && latestReading.timestamp >= childTimestamp ? false : true;
+				addExternalTreatment(extendedTreatment, false);
+				extendedChildren.push(extendedTreatment.ID);
+				
+				remainingBolusAmount -= extendedTreatmentBolusAmount;
+			}
+			
+			//Extended Bolus Parent
+			var extendedParentTreatment:Treatment = new Treatment
+			(
+				carbsAmount > 0 || forceMealTreatment ? Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT : Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT,
+				treatmentTime,
+				immediateBolusAmount,
+				insulinID,
+				carbsAmount,
+				0,
+				getEstimatedGlucose(treatmentTime),
+				note,
+				treatmentID,
+				carbDelayInMinutes
+			);
+			extendedParentTreatment.childTreatments = extendedChildren;
+			extendedParentTreatment.needsAdjustment = latestReading != null && latestReading.timestamp >= treatmentTime ? false : true;
+			if (!isNaN(carbOffset))
+			{
+				extendedParentTreatment.preBolus = carbOffset;
+			}
+			
+			addExternalTreatment(extendedParentTreatment, syncToNightscout);
+		}
+		
 		private static function sortInsulinsByDefault(insulins:Array):Array
 		{
 			insulins.sortOn(["name"], Array.CASEINSENSITIVE);
@@ -3187,7 +3357,7 @@ package treatments
 			return insulins;
 		}
 		
-		public static function addExternalTreatment(treatment:Treatment):void
+		public static function addExternalTreatment(treatment:Treatment, syncToNightscout:Boolean = true):void
 		{
 			Trace.myTrace("TreatmentsManager.as", "addExternalTreatment called! Type: " + treatment.type);
 			
@@ -3207,8 +3377,9 @@ package treatments
 				//Notify listeners
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
 				
-				//Upload to Nightscout
-				NightscoutService.uploadTreatment(treatment);
+				//Upload to Nightscou
+				if (syncToNightscout)
+					NightscoutService.uploadTreatment(treatment);
 				
 				Trace.myTrace("TreatmentsManager.as", "Treatment added to Spike");
 			}
@@ -3406,24 +3577,217 @@ package treatments
 				}
 				else if (treatmentEventType == "Combo Bolus")
 				{
-					if (nsTreatment.insulin != null && nsTreatment.carbs != null)
-					{
-						treatmentType = Treatment.TYPE_MEAL_BOLUS;
-						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
-						treatmentCarbs = Number(nsTreatment.carbs);
-					}
-					else if (nsTreatment.insulin != null && nsTreatment.carbs == null)
-					{
-						treatmentType = Treatment.TYPE_BOLUS;
-						treatmentInsulinAmount = Math.round(Number(nsTreatment.insulin) * 100) / 100;
-					}
-					else if (nsTreatment.insulin == null && nsTreatment.carbs != null)
-					{
-						treatmentType = Treatment.TYPE_CARBS_CORRECTION;
-						treatmentCarbs = Number(nsTreatment.carbs);
-					}
+					treatmentType = ""; //Set to empty to avoid further processing
 					
-					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Combo Bolus";
+					var latestReading:BgReading;
+					
+					if (treatmentsMap[treatmentID] == null)
+					{
+						if (nsTreatment.enteredinsulin != null && nsTreatment.splitNow != null && nsTreatment.splitExt != null && nsTreatment.duration != null)
+						{
+							//Add new extended bolus/meal treatment
+							addExtendedBolusTreatment
+							(
+								Math.round(Number(nsTreatment.enteredinsulin) * 100) / 100, 
+								nsTreatment.carbs != null ? Number(nsTreatment.carbs) : 0, 
+								Number(nsTreatment.splitNow), 
+								Number(nsTreatment.splitExt), 
+								nsTreatment.duration, 
+								treatmentInsulinID, 
+								treatmentTimestamp, 
+								nsTreatment.notes != null ? String(nsTreatment.notes) : "", 
+								treatmentID,
+								nsTreatment.carbDelayTime != null ? Number(nsTreatment.carbDelayTime) : Number.NaN,
+								false,
+								false,
+								nsTreatment.preBolus != null ? Number(nsTreatment.preBolus) : Number.NaN
+							);
+						}
+						else if (nsTreatment.insulin == null && nsTreatment.carbs != null)
+						{
+							//Extended Carb Portion
+							latestReading = BgReading.lastWithCalculatedValue();
+							var extendedTreatmentCarbs:Treatment = new Treatment
+							(
+								Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT,
+								treatmentTimestamp,
+								0,
+								"",
+								Number(nsTreatment.carbs),
+								0,
+								getEstimatedGlucose(treatmentTimestamp),
+								nsTreatment.notes != null ? String(nsTreatment.notes) : "",
+								treatmentID,
+								nsTreatment.carbDelayTime != null ? Number(nsTreatment.carbDelayTime) : Number.NaN
+							);
+							
+							if (latestReading != null && treatmentTimestamp > latestReading.timestamp) 
+								extendedTreatmentCarbs.needsAdjustment = true;
+							
+							//Add to list
+							treatmentsList.push(extendedTreatmentCarbs);
+							treatmentsMap[extendedTreatmentCarbs.ID] = extendedTreatmentCarbs;
+							
+							Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + extendedTreatmentCarbs.type);
+							
+							//Notify listeners
+							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, extendedTreatmentCarbs));
+							
+							//Insert in DB
+							if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+							{
+								Database.insertTreatmentSynchronous(extendedTreatmentCarbs);
+							}
+						}
+					}
+					else
+					{
+						//Check if edits where made.
+						var internalExtendedBolusTreatment:Treatment = treatmentsMap[treatmentID];
+						var internalExtendedBolusOverallInsulinAmount:Number = Math.round(internalExtendedBolusTreatment.getTotalInsulin() * 100) / 100;
+						var internalExtendedBolusParentInsulinAmount:Number = internalExtendedBolusTreatment.insulinAmount;
+						var internalExtendedBolusParentSplit:Number = Math.round((internalExtendedBolusParentInsulinAmount * 100) / internalExtendedBolusOverallInsulinAmount);
+						var internalExtendedBolusChildrenSplit:Number = 100 - internalExtendedBolusParentSplit;
+						var numberOfExtendedBolusChildren:uint = internalExtendedBolusTreatment.childTreatments.length;
+						var internalExtendedBolusDuration:Number = numberOfExtendedBolusChildren * 5;
+						latestReading = BgReading.lastWithCalculatedValue();
+						
+						if (
+							(nsTreatment.enteredinsulin != null && Number(nsTreatment.enteredinsulin) != internalExtendedBolusOverallInsulinAmount)
+							||
+							(nsTreatment.splitNow != null && Number(nsTreatment.splitNow) != internalExtendedBolusParentSplit)
+							||
+							(nsTreatment.splitExt != null && Number(nsTreatment.splitExt) != internalExtendedBolusChildrenSplit)
+							||
+							(nsTreatment.duration != null && Number(nsTreatment.duration) != internalExtendedBolusDuration)
+						)
+						{
+							if (nsTreatment.enteredinsulin != null && nsTreatment.splitNow != null && nsTreatment.splitExt && nsTreatment.duration)
+							{
+								//First we delete all children
+								for (var k:int = 0; k < numberOfExtendedBolusChildren; k++) 
+								{
+									var internalExtendedBolusChild:Treatment = treatmentsMap[internalExtendedBolusTreatment.childTreatments[k]];
+									if (internalExtendedBolusChild != null)
+									{
+										//Treatment is not present in Nightscout. User has deleted it
+										delete treatmentsMap[internalExtendedBolusTreatment.childTreatments[k]];
+										deleteTreatment(internalExtendedBolusChild, false, false, true, false, true);
+										
+										//Notify Listeners
+										_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalExtendedBolusChild));
+									}
+								}
+								internalExtendedBolusTreatment.childTreatments.length = 0;
+								
+								//Recalculate amounts and splits
+								var immediateBolusAmount:Number = Math.round((Math.round(Number(nsTreatment.enteredinsulin) * 100) / 100) * ((Number(nsTreatment.splitNow)) / 100) * 100) / 100;
+								var remainingBolusAmount:Number = (Math.round(Number(nsTreatment.enteredinsulin) * 100) / 100) - immediateBolusAmount;
+								var extendedSteps:Number = Math.round(Number(nsTreatment.duration) / 5);
+								var extendedBolusAmount:Number = Math.round((remainingBolusAmount/extendedSteps) * 100) / 100;
+								
+								//Extended Bolus Children
+								var extendedChildren:Array = [];
+								for (var m:int = 0; m < extendedSteps; m++) 
+								{
+									var extendedTreatmentBolusAmount:Number = m < extendedSteps - 1 ? extendedBolusAmount : remainingBolusAmount;
+									
+									var childTimestamp:Number = treatmentTimestamp + ((m + 1) * TimeSpan.TIME_5_MINUTES);
+									var extendedTreatment:Treatment = new Treatment
+										(
+											Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD,
+											childTimestamp,
+											extendedTreatmentBolusAmount,
+											treatmentInsulinID,
+											0,
+											0,
+											getEstimatedGlucose(childTimestamp)
+										);
+									extendedTreatment.needsAdjustment = latestReading != null && latestReading.timestamp >= childTimestamp ? false : true;
+									addExternalTreatment(extendedTreatment, false);
+									extendedChildren.push(extendedTreatment.ID);
+									
+									remainingBolusAmount -= extendedTreatmentBolusAmount;
+								}
+								
+								//Update parent
+								internalExtendedBolusTreatment.childTreatments = extendedChildren;
+								internalExtendedBolusTreatment.insulinAmount = internalExtendedBolusParentInsulinAmount;
+								internalExtendedBolusTreatment.needsAdjustment = latestReading != null && latestReading.timestamp >= treatmentTimestamp ? false : true;
+								if (Math.abs(internalExtendedBolusTreatment.timestamp - treatmentTimestamp) > 1000)
+								{
+									internalExtendedBolusTreatment.timestamp = treatmentTimestamp;
+									internalExtendedBolusTreatment.glucoseEstimated = getEstimatedGlucose(treatmentTimestamp);
+								}
+								if (nsTreatment.notes != null && String(nsTreatment.notes) != internalExtendedBolusTreatment.note)
+								{
+									internalExtendedBolusTreatment.note = String(nsTreatment.notes);
+								}
+								if (treatmentInsulinID != internalExtendedBolusTreatment.insulinID)
+								{
+									internalExtendedBolusTreatment.insulinID = treatmentInsulinID;
+									if (!isNaN(treatmentInsulinDIA) && internalExtendedBolusTreatment.dia != treatmentInsulinDIA)
+									{
+										internalExtendedBolusTreatment.dia = treatmentInsulinDIA;
+									}
+								}
+								if (nsTreatment.carbs != null && Number(nsTreatment.carbs) != internalExtendedBolusTreatment.carbs)
+								{
+									internalExtendedBolusTreatment.carbs = Number(nsTreatment.carbs);
+								}
+								
+								updateTreatment(internalExtendedBolusTreatment, false);
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, internalExtendedBolusTreatment));
+							}
+						}
+						else
+						{
+							var extendedTreatmentModified:Boolean = false;
+							
+							if (nsTreatment.notes != null && String(nsTreatment.notes) != internalExtendedBolusTreatment.note)
+							{
+								internalExtendedBolusTreatment.note = String(nsTreatment.notes);
+								extendedTreatmentModified = true;
+							}
+							
+							if (nsTreatment.carbs != null && Number(nsTreatment.carbs) != internalExtendedBolusTreatment.carbs)
+							{
+								internalExtendedBolusTreatment.carbs = Number(nsTreatment.carbs);
+								extendedTreatmentModified = true;
+							}
+							
+							if (Math.abs(internalExtendedBolusTreatment.timestamp - treatmentTimestamp) > 1000)
+							{
+								var originalTimestamp:Number = internalExtendedBolusTreatment.timestamp;
+								var differenceTimestamp:Number = treatmentTimestamp - originalTimestamp;
+								internalExtendedBolusTreatment.timestamp = treatmentTimestamp;
+								internalExtendedBolusTreatment.glucoseEstimated = getEstimatedGlucose(internalExtendedBolusTreatment.timestamp);
+								internalExtendedBolusTreatment.needsAdjustment = latestReading != null && latestReading.timestamp >= internalExtendedBolusTreatment.timestamp ? false : true;
+								
+								for (var i2:int = 0; i2 < numberOfExtendedBolusChildren; i2++) 
+								{
+									var child:Treatment = treatmentsMap[internalExtendedBolusTreatment.childTreatments[i2]];
+									if (child != null)
+									{
+										child.timestamp += differenceTimestamp;
+										child.glucoseEstimated = getEstimatedGlucose(child.timestamp);
+										child.needsAdjustment = latestReading != null && latestReading.timestamp >= child.timestamp ? false : true;
+										
+										updateTreatment(child, false);
+										_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, child));
+									}
+								}
+								
+								extendedTreatmentModified = true;
+							}
+							
+							if (extendedTreatmentModified)
+							{
+								updateTreatment(internalExtendedBolusTreatment, false);
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, internalExtendedBolusTreatment));
+							}
+						}
+					}
 				}
 				else if (treatmentEventType == "Carb Correction" || treatmentEventType == "Carbs")
 				{
@@ -3549,55 +3913,59 @@ package treatments
 						//Treatment exists... Lets check if it was modified
 						var wasTreatmentModified:Boolean = false;
 						var spikeTreatment:Treatment = treatmentsMap[treatmentID];
-						if (!isNaN(treatmentCarbs) && spikeTreatment.carbs != treatmentCarbs)
-						{
-							spikeTreatment.carbs = treatmentCarbs;
-							wasTreatmentModified = true;
-						}
-						if (!isNaN(treatmentCarbDelayTime) && spikeTreatment.carbDelayTime != treatmentCarbDelayTime)
-						{
-							spikeTreatment.carbDelayTime = treatmentCarbDelayTime;
-							wasTreatmentModified = true;
-						}
-						if (!isNaN(treatmentGlucose) && Math.abs(spikeTreatment.glucose - treatmentGlucose) >= 1) //Nightscout rounds values so we just check if the glucose value differnce is bigger than 1 to avoid triggering this on every treatment
-						{
-							spikeTreatment.glucose = treatmentGlucose;
-							wasTreatmentModified = true;
-						}
-						if (!isNaN(treatmentInsulinAmount) && spikeTreatment.insulinAmount != treatmentInsulinAmount)
-						{
-							spikeTreatment.insulinAmount = treatmentInsulinAmount;
-							wasTreatmentModified = true;
-						}
-						if (!isNaN(treatmentInsulinDIA) && spikeTreatment.dia != treatmentInsulinDIA)
-						{
-							spikeTreatment.dia = treatmentInsulinDIA;
-							wasTreatmentModified = true;
-						}
-						if (treatmentInsulinID != "000000" && spikeTreatment.insulinID != treatmentInsulinID)
-						{
-							spikeTreatment.insulinID = treatmentInsulinID;
-							wasTreatmentModified = true;
-						}
-						if (spikeTreatment.note != treatmentNote)
-						{
-							spikeTreatment.note = treatmentNote;
-							wasTreatmentModified = true;
-						}
-						if (Math.abs(spikeTreatment.timestamp - treatmentTimestamp) > 1000) //parseW3CDTF ignores ms so we just check if the time difference is bigger than 1 sec to determine if the user changed the treatment type. This avoids triggering this on every treatment.
-						{
-							spikeTreatment.timestamp = treatmentTimestamp;
-							spikeTreatment.glucoseEstimated = treatmentType != Treatment.TYPE_GLUCOSE_CHECK ? getEstimatedGlucose(treatmentTimestamp) : spikeTreatment.glucose;
-							wasTreatmentModified = true;
-						}
 						
-						if (wasTreatmentModified)
+						if (spikeTreatment.type != Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
 						{
-							//Treatment was modified. Update Spike and notify listeners
-							updateTreatment(spikeTreatment, false);
-							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, spikeTreatment));
+							if (!isNaN(treatmentCarbs) && spikeTreatment.carbs != treatmentCarbs)
+							{
+								spikeTreatment.carbs = treatmentCarbs;
+								wasTreatmentModified = true;
+							}
+							if (!isNaN(treatmentCarbDelayTime) && spikeTreatment.carbDelayTime != treatmentCarbDelayTime)
+							{
+								spikeTreatment.carbDelayTime = treatmentCarbDelayTime;
+								wasTreatmentModified = true;
+							}
+							if (!isNaN(treatmentGlucose) && Math.abs(spikeTreatment.glucose - treatmentGlucose) >= 1) //Nightscout rounds values so we just check if the glucose value differnce is bigger than 1 to avoid triggering this on every treatment
+							{
+								spikeTreatment.glucose = treatmentGlucose;
+								wasTreatmentModified = true;
+							}
+							if (!isNaN(treatmentInsulinAmount) && spikeTreatment.insulinAmount != treatmentInsulinAmount)
+							{
+								spikeTreatment.insulinAmount = treatmentInsulinAmount;
+								wasTreatmentModified = true;
+							}
+							if (!isNaN(treatmentInsulinDIA) && spikeTreatment.dia != treatmentInsulinDIA)
+							{
+								spikeTreatment.dia = treatmentInsulinDIA;
+								wasTreatmentModified = true;
+							}
+							if (treatmentInsulinID != "000000" && spikeTreatment.insulinID != treatmentInsulinID)
+							{
+								spikeTreatment.insulinID = treatmentInsulinID;
+								wasTreatmentModified = true;
+							}
+							if (spikeTreatment.note != treatmentNote)
+							{
+								spikeTreatment.note = treatmentNote;
+								wasTreatmentModified = true;
+							}
+							if (Math.abs(spikeTreatment.timestamp - treatmentTimestamp) > 1000) //parseW3CDTF ignores ms so we just check if the time difference is bigger than 1 sec to determine if the user changed the treatment type. This avoids triggering this on every treatment.
+							{
+								spikeTreatment.timestamp = treatmentTimestamp;
+								spikeTreatment.glucoseEstimated = treatmentType != Treatment.TYPE_GLUCOSE_CHECK ? getEstimatedGlucose(treatmentTimestamp) : spikeTreatment.glucose;
+								wasTreatmentModified = true;
+							}
 							
-							Trace.myTrace("TreatmentsManager.as", "Updated nightscout treatment. Type: " + spikeTreatment.type);
+							if (wasTreatmentModified)
+							{
+								//Treatment was modified. Update Spike and notify listeners
+								updateTreatment(spikeTreatment, false);
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, false, false, spikeTreatment));
+								
+								Trace.myTrace("TreatmentsManager.as", "Updated nightscout treatment. Type: " + spikeTreatment.type);
+							}
 						}
 					}
 				}
@@ -3615,18 +3983,13 @@ package treatments
 					continue;
 				}
 					
-				if (nightscoutTreatmentsMap[internalTreatment.ID] == null)
+				if (nightscoutTreatmentsMap[internalTreatment.ID] == null && internalTreatment.type != Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
 				{
 					Trace.myTrace("TreatmentsManager.as", "User deleted treatment in Nightscout. Deleting in Spike as well. Type: " + internalTreatment.type);
 					
-					//Treatment is not present in Nightscout. User has deleted it
-					deleteTreatment(internalTreatment, false, false, now - internalTreatment.timestamp < TimeSpan.TIME_24_HOURS);
-					
-					//Notify Listeners
-					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalTreatment));
-					
-					//Nullify treatment
-					internalTreatment = null;
+					//Treatment is not present in Nightscout. User has deleted it.
+					var removeFromDB:Boolean = now - internalTreatment.timestamp < TimeSpan.TIME_24_HOURS && (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING);
+					deleteTreatment(internalTreatment, false, true, removeFromDB, true, true);
 				}
 			}
 			
@@ -3698,7 +4061,7 @@ package treatments
 			{
 				var treatment:Treatment = treatmentsList[i];
 				
-				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS) && treatment.calculateIOBNightscout(now).iobContrib > 0)
+				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT) && treatment.calculateIOBNightscout(now).iobContrib > 0)
 				{
 					activeTotalInsulin += treatment.insulinAmount;
 					if (treatment.timestamp < firstTreatmentTimestamp)
@@ -3734,7 +4097,7 @@ package treatments
 			{
 				var treatment:Treatment = treatmentsList[i];
 				
-				if (treatment != null && (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS) && now >= treatment.timestamp)
+				if (treatment != null && (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT) && now >= treatment.timestamp)
 				{
 					var cCalc:CobCalc = treatment.calculateCOB(lastDecayedBy, now);
 					if (cCalc != null)
@@ -3788,7 +4151,7 @@ package treatments
 		{
 			var carbTypeName:String = ModelLocator.resourceManagerInstance.getString('treatments','carbs_unknown_label');
 			
-			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			if (treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
 				if (treatment.carbDelayTime == Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME)))
 					carbTypeName = ModelLocator.resourceManagerInstance.getString('treatments','carbs_fast_label');
@@ -3820,6 +4183,11 @@ package treatments
 			}
 			
 			return treatment;
+		}
+		
+		public static function getTreatmentByID(treatmentID:String):Treatment
+		{
+			return treatmentsMap[treatmentID];
 		}
 		
 		public static function lastTreatmentIsCarb():Boolean

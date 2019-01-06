@@ -8,13 +8,13 @@ package ui.chart.markers
 	
 	import treatments.Treatment;
 	
+	import ui.chart.GlucoseChart;
+	import ui.chart.visualcomponents.ChartTreatment;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeNGon;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
-	import ui.chart.visualcomponents.ChartTreatment;
-	import ui.chart.GlucoseChart;
 	
 	public class InsulinMarker extends ChartTreatment
 	{
@@ -24,15 +24,16 @@ package ui.chart.markers
 		private var stroke:SpikeNGon;
 		
 		/* Properties */
+		private const strokeThickness:Number = 0.8;
 		private var fontSize:Number = 11;
-		private var backgroundColor:uint;
-		private var strokeColor:uint;
+		public var backgroundColor:uint;
+		public var strokeColor:uint;
 		private var initialRadius:Number = 8;
 		private var chartTimeline:Number;
 		private var numSides:int = 30;
-		private const strokeThickness:Number = 0.8;
+		private var isChild:Boolean = false;
 		
-		public function InsulinMarker(treatment:Treatment, timeline:Number)
+		public function InsulinMarker(treatment:Treatment, timeline:Number, isChild:Boolean = false)
 		{
 			this.treatment = treatment;
 			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
@@ -41,6 +42,7 @@ package ui.chart.markers
 				numSides = 20;
 			
 			chartTimeline = timeline;
+			this.isChild = isChild;
 			
 			draw();
 		}
@@ -77,10 +79,13 @@ package ui.chart.markers
 				fontSize -= 1.5;
 			
 			//Stroke
-			stroke = new SpikeNGon(radius + strokeThickness, numSides, 0, 360, strokeColor);
-			stroke.x = radius / 3;
-			stroke.y = radius + radius/4;
-			addChild(stroke);
+			if (!isChild)
+			{
+				stroke = new SpikeNGon(radius + strokeThickness, numSides, 0, 360, strokeColor);
+				stroke.x = radius / 3;
+				stroke.y = radius + radius/4;
+				addChild(stroke);
+			}
 			
 			//Background
 			insulinMarker = new SpikeNGon(radius, numSides, 0, 360, backgroundColor);
@@ -89,18 +94,21 @@ package ui.chart.markers
 			addChild(insulinMarker);
 			
 			//Label
-			label = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
-			try
+			if (!isChild)
 			{
-				label.validate();
-			} 
-			catch(error:Error) 
-			{
-				label.width = 25;
+				label = LayoutFactory.createLabel(treatment.insulinAmount + "U", HorizontalAlign.CENTER, VerticalAlign.TOP, fontSize, true);
+				try
+				{
+					label.validate();
+				} 
+				catch(error:Error) 
+				{
+					label.width = 25;
+				}
+				label.x = radius/3 - (label.width / 2);
+				label.y = radius * 2 + 4;
+				addChild(label);
 			}
-			label.x = radius/3 - (label.width / 2);
-			label.y = radius * 2 + 4;
-			addChild(label);
 		}
 		
 		override public function labelUp():void
@@ -126,6 +134,12 @@ package ui.chart.markers
 		
 		override public function dispose():void
 		{
+			if (children != null)
+			{
+				children.length = 0;
+				children = null;
+			}
+			
 			if (label != null)
 			{
 				label.removeFromParent();
@@ -145,6 +159,12 @@ package ui.chart.markers
 				stroke.removeFromParent();
 				stroke.dispose();
 				stroke = null;
+			}
+			
+			if (this.filter != null)
+			{
+				this.filter.dispose();
+				this.filter = null;
 			}
 			
 			super.dispose();
