@@ -18,6 +18,7 @@ package network.httpserver.API
 	
 	import services.AlarmService;
 	
+	import treatments.Insulin;
 	import treatments.Profile;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
@@ -679,23 +680,61 @@ package network.httpserver.API
 							responseTreatmentType = "Note";
 						else if (spikeTreatment.type == Treatment.TYPE_SENSOR_START)
 							responseTreatmentType = "Sensor Start";
+						else if (spikeTreatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || spikeTreatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+							responseTreatmentType = "Combo Bolus";
 						
 						var responseTreatment:Object = {};
 						responseTreatment["_id"] = spikeTreatment.ID;
 						responseTreatment["created_at"] = nsFormatter.format(spikeTreatment.timestamp).replace("000+0000", "000Z");
 						responseTreatment.eventType = responseTreatmentType;
-						if (responseTreatmentType == "Bolus" || responseTreatmentType == "Correction Bolus" || responseTreatmentType == "Meal Bolus")
+						
+						if (responseTreatmentType == "Bolus" || responseTreatmentType == "Correction Bolus" || responseTreatmentType == "Meal Bolus" || (responseTreatmentType == "Combo Bolus" && spikeTreatment.insulinAmount > 0))
 						{
 							responseTreatment.insulin = spikeTreatment.insulinAmount;
 							responseTreatment.insulinID = spikeTreatment.insulinID;
-							responseTreatment.insulinName = ProfileManager.getInsulin(spikeTreatment.insulinID).name;
 							responseTreatment.dia = spikeTreatment.dia;
+							
+							var treatmentInsulin:Insulin = ProfileManager.getInsulin(spikeTreatment.insulinID);
+							if (treatmentInsulin != null)
+							{
+								responseTreatment.insulinName = treatmentInsulin.name;
+								responseTreatment.insulinType = treatmentInsulin.type;
+								responseTreatment.insulinPeak = treatmentInsulin.peak;
+								responseTreatment.insulinCurve = treatmentInsulin.curve;
+							}
 						}
-						if (responseTreatmentType == "Meal Bolus" || responseTreatmentType == "Carb Correction")
+						
+						if (responseTreatmentType == "Meal Bolus" || responseTreatmentType == "Carb Correction" || (responseTreatmentType == "Combo Bolus" && spikeTreatment.carbs > 0))
 						{
 							responseTreatment.carbs = spikeTreatment.carbs;
 							responseTreatment.carbDelayTime = spikeTreatment.carbDelayTime;
 						}
+						
+						if (responseTreatmentType == "Combo Bolus")
+						{
+							var parentInsulin:Number = Math.round(spikeTreatment.insulinAmount * 100) / 100;
+							var totalInsulin:Number = Math.round(spikeTreatment.getTotalInsulin() * 100) / 100;
+							var childrenInsulin:Number = Math.round((totalInsulin - parentInsulin) * 100) / 100;
+							var parentSplit:Number = Math.round((parentInsulin * 100) / totalInsulin);
+							var childrenSplit:Number = 100 - parentSplit;
+							
+							responseTreatment.enteredinsulin = String(totalInsulin);
+							responseTreatment.duration = spikeTreatment.childTreatments.length * 5;
+							responseTreatment.splitNow = String(parentSplit);
+							responseTreatment.splitExt = String(childrenSplit);
+							responseTreatment.relative = totalInsulin - parentInsulin;
+							
+							if (!isNaN(treatment.preBolus))
+							{
+								responseTreatment.preBolus = spikeTreatment.preBolus;
+							}
+						}
+						
+						if (responseTreatmentType == "BG Check")
+						{
+							responseTreatment.glucoseType = "Finger";
+						}
+						
 						responseTreatment.glucose = spikeTreatment.glucose;
 						responseTreatment.notes = spikeTreatment.note;
 						

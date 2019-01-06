@@ -319,6 +319,15 @@ package ui.screens
 							dbTreatment.basalduration
 						);
 					treatment.ID = dbTreatment.id;
+					if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
+					{
+						treatment.needsAdjustment = true;
+					}
+					if (dbTreatment.children != null && String(dbTreatment.children) != "")
+					{
+						treatment.parseChildren(String(dbTreatment.children));
+					}
+					
 					chartTreatments.push(treatment);
 				}
 			}

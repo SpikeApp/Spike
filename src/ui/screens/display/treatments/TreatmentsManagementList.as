@@ -1,6 +1,7 @@
 package ui.screens.display.treatments
 {
 	import flash.display.StageOrientation;
+	import flash.geom.Point;
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
@@ -12,12 +13,14 @@ package ui.screens.display.treatments
 	import feathers.controls.Callout;
 	import feathers.controls.ImageLoader;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.ScrollContainer;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -66,6 +69,7 @@ package ui.screens.display.treatments
 		private var treatmentEditor:TreatmentEditorList;
 		private var sensorStartCanvas:Canvas;
 		private var sensorStartTexture:RenderTexture;
+		private var treatmentEditorContainer:ScrollContainer;
 		
 		/* Objects */
 		private var allTreatments:Array;
@@ -78,7 +82,7 @@ package ui.screens.display.treatments
 		private var carbsColor:uint;
 		private var bgCheckColor:uint;
 		private var sensorStartColor:uint;
-		
+
 		public function TreatmentsManagementList()
 		{
 			super();
@@ -163,10 +167,26 @@ package ui.screens.display.treatments
 				var treatment:Treatment = allTreatments[i] as Treatment;
 				var treatmentValue:String;
 				var icon:RenderTexture;
-				if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+				
+				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+				{
+					//Skip children
+					continue;
+				}
+				else if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
 					treatmentValue = GlucoseFactory.formatIOB(treatment.insulinAmount);
 					icon = bolusTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
+				{
+					treatmentValue = GlucoseFactory.formatIOB(treatment.getTotalInsulin()) + " " + "(" + ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_small') + ")";
+					icon = bolusTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+				{
+					treatmentValue = GlucoseFactory.formatIOB(treatment.getTotalInsulin()) + "/" + GlucoseFactory.formatCOB(treatment.carbs) + " " + "(" + ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_small') + ")";
+					icon = mealTexture;
 				}
 				else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 				{
@@ -350,18 +370,30 @@ package ui.screens.display.treatments
 			
 			setupCalloutPosition();
 			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatment.type == Treatment.TYPE_MEAL_BOLUS)
-			{
-				positionHelper.y -= 10;	
-			}
+			if (treatmentEditorContainer != null) treatmentEditorContainer.removeFromParent(true);
+			treatmentEditorContainer = new ScrollContainer();
+			treatmentEditorContainer.layout = new VerticalLayout();
 			
+			if (treatmentEditor != null) treatmentEditor.removeFromParent(true);
 			treatmentEditor = new TreatmentEditorList(treatment);
 			treatmentEditor.addEventListener(Event.CANCEL, onCancelTreatmentEditor);
 			treatmentEditor.addEventListener(Event.CHANGE, onRefreshContent);
+			treatmentEditorContainer.addChild(treatmentEditor);
+			treatmentEditorContainer.validate();
 			
+			var predictionsCalloutPointOfOrigin:Number = positionHelper.localToGlobal(new Point(0, 0)).y;
+			var predictionsContentOriginalHeight:Number = treatmentEditor.height + 60;
+			var suggestedPredictionsCalloutHeight:Number = Constants.stageHeight - predictionsCalloutPointOfOrigin - 5;
+			var finalCalloutHeight:Number = predictionsContentOriginalHeight > suggestedPredictionsCalloutHeight ?  suggestedPredictionsCalloutHeight : predictionsContentOriginalHeight;
+			
+			if (treatmentEditorCallout != null) treatmentEditorCallout.removeFromParent(true);
 			treatmentEditorCallout = new Callout();
-			treatmentEditorCallout.content = treatmentEditor;
+			treatmentEditorCallout.content = treatmentEditorContainer;
 			treatmentEditorCallout.origin = positionHelper;
+			
+			treatmentEditorCallout.height = finalCalloutHeight;
+			treatmentEditorContainer.height = finalCalloutHeight - 50;
+			treatmentEditorContainer.maxHeight = finalCalloutHeight - 50;
 			
 			PopUpManager.addPopUp(treatmentEditorCallout, false, false);
 		}
@@ -401,7 +433,7 @@ package ui.screens.display.treatments
 			function deleteTreatment(e:Event):void
 			{
 				//Delete reading from Spike, database and list
-				TreatmentsManager.deleteTreatment(treatment);
+				TreatmentsManager.deleteTreatment(treatment, true, true, !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING, true, false);
 				dataProvider.removeItem(item);
 			}
 		}
@@ -586,6 +618,27 @@ package ui.screens.display.treatments
 			{
 				mealTexture.dispose();
 				mealTexture = null;
+			}
+			
+			if (treatmentEditor != null)
+			{
+				treatmentEditor.removeFromParent();
+				treatmentEditor.dispose();
+				treatmentEditor = null;
+			}
+			
+			if (treatmentEditorContainer != null)
+			{
+				treatmentEditorContainer.removeFromParent();
+				treatmentEditorContainer.dispose();
+				treatmentEditorContainer = null;
+			}
+			
+			if (treatmentEditorCallout != null)
+			{
+				treatmentEditorCallout.removeFromParent();
+				treatmentEditorCallout.dispose();
+				treatmentEditorCallout = null;
 			}
 			
 			super.dispose();

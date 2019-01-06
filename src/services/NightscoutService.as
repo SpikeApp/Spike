@@ -1125,6 +1125,45 @@ package services
 				newTreatment["insulinPeak"] = usedInsulin != null ? usedInsulin.peak : 75;	
 				newTreatment["insulinCurve"] = usedInsulin != null ? usedInsulin.curve : "bilinear";	
 			}
+			else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+			{
+				newTreatment["eventType"] = "Combo Bolus";
+				
+				var parentInsulin:Number = Math.round(treatment.insulinAmount * 100) / 100;
+				
+				if (parentInsulin > 0)
+				{
+					var totalInsulin:Number = Math.round(treatment.getTotalInsulin() * 100) / 100;
+					var childrenInsulin:Number = Math.round((totalInsulin - parentInsulin) * 100) / 100;
+					var parentSplit:Number = Math.round((parentInsulin * 100) / totalInsulin);
+					var childrenSplit:Number = 100 - parentSplit;
+					usedInsulin = ProfileManager.getInsulin(treatment.insulinID);
+				
+					newTreatment["insulin"] = parentInsulin;	
+					newTreatment["enteredinsulin"] = String(totalInsulin);	
+					newTreatment["dia"] = treatment.dia;
+					newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");	
+					newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";	
+					newTreatment["insulinID"] = treatment.insulinID;	
+					newTreatment["insulinPeak"] = usedInsulin.peak;	
+					newTreatment["insulinCurve"] = usedInsulin.curve;
+					newTreatment["duration"] = treatment.childTreatments.length * 5;
+					newTreatment["splitNow"] = String(parentSplit);
+					newTreatment["splitExt"] = String(childrenSplit);
+					newTreatment["relative"] = totalInsulin - parentInsulin;
+					
+					if (!isNaN(treatment.preBolus))
+					{
+						newTreatment["preBolus"] = treatment.preBolus;
+					}
+				}
+					
+				if (treatment.carbs > 0)
+				{
+					newTreatment["carbs"] = treatment.carbs;
+					newTreatment["carbDelayTime"] = treatment.carbDelayTime;
+				}
+			}
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 			{
 				newTreatment["eventType"] = "Carb Correction";	
@@ -1139,17 +1178,30 @@ package services
 			}
 			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
 			{
-				usedInsulin = ProfileManager.getInsulin(treatment.insulinID);
 				newTreatment["eventType"] = "Meal Bolus";
-				newTreatment["insulin"] = treatment.insulinAmount;
-				newTreatment["dia"] = treatment.dia;	
-				newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
-				newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";
-				newTreatment["carbs"] = treatment.carbs;
-				newTreatment["carbDelayTime"] = treatment.carbDelayTime;
-				newTreatment["insulinID"] = treatment.insulinID;
-				newTreatment["insulinPeak"] = usedInsulin != null ? usedInsulin.peak : 75;	
-				newTreatment["insulinCurve"] = usedInsulin != null ? usedInsulin.curve : "bilinear";	
+
+				if (treatment.insulinAmount > 0)
+				{
+					usedInsulin = ProfileManager.getInsulin(treatment.insulinID);
+					newTreatment["insulin"] = treatment.insulinAmount;
+					newTreatment["dia"] = treatment.dia;	
+					newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
+					newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";
+					newTreatment["insulinID"] = treatment.insulinID;
+					newTreatment["insulinPeak"] = usedInsulin != null ? usedInsulin.peak : 75;	
+					newTreatment["insulinCurve"] = usedInsulin != null ? usedInsulin.curve : "bilinear";	
+					
+					if (!isNaN(treatment.preBolus))
+					{
+						newTreatment["preBolus"] = treatment.preBolus;
+					}
+				}
+				
+				if (treatment.carbs > 0)
+				{
+					newTreatment["carbs"] = treatment.carbs;
+					newTreatment["carbDelayTime"] = treatment.carbDelayTime;
+				}
 			}
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{
@@ -1216,7 +1268,8 @@ package services
 					treatment.note.indexOf("Suspend Pump") != -1 ||
 					treatment.note.indexOf("Profile Switch") != -1 ||
 					treatment.note.indexOf("Combo Bolus") != -1 ||
-					treatment.note.indexOf("Announcement") != -1
+					treatment.note.indexOf("Announcement") != -1 ||
+					treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD
 				)
 					return;
 				
@@ -1270,7 +1323,8 @@ package services
 					treatment.note.indexOf("Suspend Pump") != -1 ||
 					treatment.note.indexOf("Profile Switch") != -1 ||
 					treatment.note.indexOf("Combo Bolus") != -1 ||
-					treatment.note.indexOf("Announcement") != -1
+					treatment.note.indexOf("Announcement") != -1 ||
+					treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD
 				)
 				{
 					continue;

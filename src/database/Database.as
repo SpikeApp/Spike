@@ -159,6 +159,9 @@ package database
 			"note STRING, " +
 			"carbdelay REAL, " +
 			"basalduration REAL, " +
+			"children STRING, " +
+			"needsadjustment STRING, " +
+			"prebolus REAL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -699,7 +702,72 @@ package database
 						sqlStatement.removeEventListener(SQLEvent.RESULT,check2Performed);
 						sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check2Error);
 						sqlStatement.clearParameters();
-						createInsulinsTable();
+						
+						//Check if table needs to be updated for new Spike format #2
+						sqlStatement.text = "SELECT children FROM treatments";
+						sqlStatement.addEventListener(SQLEvent.RESULT,check3Performed);
+						sqlStatement.addEventListener(SQLErrorEvent.ERROR,check3Error);
+						sqlStatement.execute();
+						
+						function check3Performed(se:SQLEvent):void 
+						{
+							sqlStatement.removeEventListener(SQLEvent.RESULT,check3Performed);
+							sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check3Error);
+							sqlStatement.clearParameters();
+							
+							//Check if table needs to be updated for new Spike format #2
+							sqlStatement.text = "SELECT needsadjustment FROM treatments";
+							sqlStatement.addEventListener(SQLEvent.RESULT,check4Performed);
+							sqlStatement.addEventListener(SQLErrorEvent.ERROR,check4Error);
+							sqlStatement.execute();
+							
+							function check4Performed(se:SQLEvent):void 
+							{
+								sqlStatement.removeEventListener(SQLEvent.RESULT,check4Performed);
+								sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check4Error);
+								sqlStatement.clearParameters();
+								
+								//Check if table needs to be updated for new Spike format #2
+								sqlStatement.text = "SELECT prebolus FROM treatments";
+								sqlStatement.addEventListener(SQLEvent.RESULT,check5Performed);
+								sqlStatement.addEventListener(SQLErrorEvent.ERROR,check5Error);
+								sqlStatement.execute();
+								
+								function check5Performed(se:SQLEvent):void 
+								{
+									sqlStatement.removeEventListener(SQLEvent.RESULT,check5Performed);
+									sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check5Error);
+									sqlStatement.clearParameters();
+									
+									//All checks performed. Continue with next table
+									createInsulinsTable();
+								}
+								
+								function check5Error(see:SQLErrorEvent):void 
+								{
+									if (debugMode) trace("Database.as : prebolus column not found in treatments table (old version of Spike). Updating table...");
+									sqlStatement.clearParameters();
+									sqlStatement.text = "ALTER TABLE treatments ADD COLUMN prebolus REAL;";
+									sqlStatement.execute();
+								}
+							}
+							
+							function check4Error(see:SQLErrorEvent):void 
+							{
+								if (debugMode) trace("Database.as : needsadjustment column not found in treatments table (old version of Spike). Updating table...");
+								sqlStatement.clearParameters();
+								sqlStatement.text = "ALTER TABLE treatments ADD COLUMN needsadjustment STRING;";
+								sqlStatement.execute();
+							}
+						}
+						
+						function check3Error(see:SQLErrorEvent):void 
+						{
+							if (debugMode) trace("Database.as : children column not found in treatments table (old version of Spike). Updating table...");
+							sqlStatement.clearParameters();
+							sqlStatement.text = "ALTER TABLE treatments ADD COLUMN children STRING;";
+							sqlStatement.execute();
+						}
 					}
 					
 					function check2Error(see:SQLErrorEvent):void 
@@ -2354,7 +2422,10 @@ package database
 				text += "note, ";
 				text += "lastmodifiedtimestamp, ";
 				text += "carbdelay, ";
-				text += "basalduration) ";
+				text += "basalduration, ";
+				text += "children, ";
+				text += "prebolus, ";
+				text += "needsadjustment) ";
 				text += "VALUES (";
 				text += "'" + treatment.ID + "', ";
 				text += "'" + treatment.type + "', ";
@@ -2366,7 +2437,10 @@ package database
 				text += "'" + treatment.note + "', ";
 				text += treatment.timestamp + ", ";
 				text += treatment.carbDelayTime + ", ";
-				text += treatment.basalDuration + ")";
+				text += treatment.basalDuration + ", ";
+				text += "'" + treatment.extractChildren() + "', ";
+				text += treatment.preBolus + ", ";
+				text += "'" + String(treatment.needsAdjustment) + "')";
 				
 				insertRequest.text = text;
 				insertRequest.execute();
@@ -2408,7 +2482,10 @@ package database
 				"note = '" + treatment.note + "', " +
 				"lastmodifiedtimestamp = " + treatment.timestamp + ", " +
 				"carbdelay = " + treatment.carbDelayTime + ", " +
-				"basalduration = " + treatment.basalDuration + " " +
+				"basalduration = " + treatment.basalDuration + ", " +
+				"children = '" + treatment.extractChildren() + "', " +
+				"prebolus = " + treatment.preBolus + ", " +
+				"needsadjustment = '" + String(treatment.needsAdjustment) + "' " +
 				"WHERE id = '" + treatment.ID + "'";
 				updateRequest.execute();
 				conn.commit();

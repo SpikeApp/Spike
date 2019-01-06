@@ -226,6 +226,20 @@ package treatments
 		private static var finalCalculationsLabel:Label;
 		private static var bolusWizardMainActionContainer:LayoutGroup;
 		private static var instructionsButton:Button;
+		private static var bwExtendedBolusContainer:LayoutGroup;
+		private static var bwExtendedBolusLabelContainer:LayoutGroup;
+		private static var bwExtendedBolusCheck:Check;
+		private static var bwExtendedBolusLabel:Label;
+		private static var bwExendedBolusComponentsContainer:LayoutGroup;
+		private static var bwExtendedBolusSplitNowContainer:LayoutGroup;
+		private static var bwExtendedBolusSplitNowLabel:Label;
+		private static var bwExtendedBolusSplitNowStepper:NumericStepper;
+		private static var bwExtendedBolusSplitExtContainer:LayoutGroup;
+		private static var bwExtendedBolusSplitExtLabel:Label;
+		private static var bwExtendedBolusSplitExtStepper:NumericStepper;
+		private static var bwExtendedBolusDurationContainer:LayoutGroup;
+		private static var bwExtendedBolusDurationabel:Label;
+		private static var bwExtendedBolusDurationStepper:NumericStepper;
 		
 		public function BolusWizard()
 		{
@@ -921,6 +935,76 @@ package treatments
 			bwOtherCorrectionLabel.width = contentWidth - bwOtherCorrectionLabel.x - bwOtherCorrectionAmountStepper.width - 12;
 			bwOtherCorrectionContainer.validate();
 			bwOtherCorrectionAmountStepper.x = contentWidth - bwOtherCorrectionAmountStepper.width + 12;
+			
+			//Extended/Combo Bolus
+			bwExtendedBolusContainer = LayoutFactory.createLayoutGroup("vertical");
+			bwExtendedBolusContainer.width = contentWidth;
+			bwMainContainer.addChild(bwExtendedBolusContainer);
+			
+			bwExtendedBolusLabelContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwExtendedBolusContainer.addChild(bwExtendedBolusLabelContainer);
+			
+			bwExtendedBolusCheck = LayoutFactory.createCheckMark(false);
+			bwExtendedBolusCheck.addEventListener(Event.CHANGE, onShowHideExtendedBolus);
+			bwExtendedBolusLabelContainer.addChild(bwExtendedBolusCheck);
+			
+			bwExtendedBolusLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_treatment'));
+			bwExtendedBolusLabel.wordWrap = true;
+			bwExtendedBolusLabelContainer.addChild(bwExtendedBolusLabel);
+			
+			bwExendedBolusComponentsContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.LEFT, VerticalAlign.TOP, 10);
+			bwExendedBolusComponentsContainer.width = contentWidth;
+			
+			bwExtendedBolusSplitNowContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwExtendedBolusSplitNowContainer.width = contentWidth;
+			bwExendedBolusComponentsContainer.addChild(bwExtendedBolusSplitNowContainer);
+			
+			bwExtendedBolusSplitNowLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_split_label') + " " + "1" + " " + "(%)");
+			bwExtendedBolusSplitNowLabel.wordWrap = true;
+			bwExtendedBolusSplitNowLabel.paddingLeft = 25;
+			bwExtendedBolusSplitNowContainer.addChild(bwExtendedBolusSplitNowLabel);
+			
+			bwExtendedBolusSplitNowStepper = LayoutFactory.createNumericStepper(0, 100, 100, 5);
+			bwExtendedBolusSplitNowStepper.addEventListener(Event.CHANGE, onExtendedBolusSplitNowChanged);
+			bwExtendedBolusSplitNowStepper.validate();
+			bwExtendedBolusSplitNowContainer.addChild(bwExtendedBolusSplitNowStepper);
+			
+			bwExtendedBolusLabel.width = contentWidth - bwExtendedBolusLabel.x - bwExtendedBolusSplitNowStepper.width - 12;
+			bwExtendedBolusSplitNowContainer.validate();
+			bwExtendedBolusSplitNowStepper.x = contentWidth - bwExtendedBolusSplitNowStepper.width + 12;
+			
+			bwExtendedBolusSplitExtContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwExtendedBolusSplitExtContainer.width = contentWidth;
+			bwExendedBolusComponentsContainer.addChild(bwExtendedBolusSplitExtContainer);
+			
+			bwExtendedBolusSplitExtLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_split_label') + " " + "2" + " " + "(%)");
+			bwExtendedBolusSplitExtLabel.wordWrap = true;
+			bwExtendedBolusSplitExtLabel.paddingLeft = 25;
+			bwExtendedBolusSplitExtContainer.addChild(bwExtendedBolusSplitExtLabel);
+			
+			bwExtendedBolusSplitExtStepper = LayoutFactory.createNumericStepper(0, 100, 0, 5);
+			bwExtendedBolusSplitExtStepper.addEventListener(Event.CHANGE, onExtendedBolusSplitExtChanged);
+			bwExtendedBolusSplitExtStepper.validate();
+			bwExtendedBolusSplitExtContainer.addChild(bwExtendedBolusSplitExtStepper);
+			
+			bwExtendedBolusSplitExtContainer.validate();
+			bwExtendedBolusSplitExtStepper.x = contentWidth - bwExtendedBolusSplitExtStepper.width + 12;
+			
+			bwExtendedBolusDurationContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.MIDDLE, 5);
+			bwExtendedBolusDurationContainer.width = contentWidth;
+			bwExendedBolusComponentsContainer.addChild(bwExtendedBolusDurationContainer);
+			
+			bwExtendedBolusDurationabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_duration_minutes_label'));
+			bwExtendedBolusDurationabel.wordWrap = true;
+			bwExtendedBolusDurationabel.paddingLeft = 25;
+			bwExtendedBolusDurationContainer.addChild(bwExtendedBolusDurationabel);
+			
+			bwExtendedBolusDurationStepper = LayoutFactory.createNumericStepper(10, 1000, 120, 5);
+			bwExtendedBolusDurationStepper.validate();
+			bwExtendedBolusDurationContainer.addChild(bwExtendedBolusDurationStepper);
+			
+			bwExtendedBolusDurationContainer.validate();
+			bwExtendedBolusDurationStepper.x = contentWidth - bwExtendedBolusDurationStepper.width + 12;
 			
 			//Extended Bolus Reminder
 			bwExtendedBolusReminderContainer = LayoutFactory.createLayoutGroup("vertical");
@@ -2194,6 +2278,40 @@ package treatments
 			performCalculations();
 		}
 		
+		private static function onShowHideExtendedBolus(e:Event = null):void
+		{
+			if (bwExtendedBolusCheck.isSelected)
+			{
+				var childIndex:int = bwExtendedBolusContainer.getChildIndex(bwExtendedBolusLabelContainer);
+				if (childIndex != -1)
+				{
+					bwExtendedBolusContainer.addChildAt(bwExendedBolusComponentsContainer, childIndex + 1);
+					bwExtendedBolusContainer.validate();
+					bwExtendedBolusSplitNowStepper.x = contentWidth - bwExtendedBolusSplitNowStepper.width + 12;
+					bwExtendedBolusSplitExtStepper.x = contentWidth - bwExtendedBolusSplitExtStepper.width + 12;
+					bwExtendedBolusDurationStepper.x = contentWidth - bwExtendedBolusDurationStepper.width + 12;
+				}
+			}
+			else
+				bwExendedBolusComponentsContainer.removeFromParent();
+		}
+		
+		private static function onExtendedBolusSplitNowChanged(e:Event):void
+		{
+			if (bwExtendedBolusSplitNowStepper != null && bwExtendedBolusSplitExtStepper != null)
+			{
+				bwExtendedBolusSplitExtStepper.value = 100 - bwExtendedBolusSplitNowStepper.value;
+			}
+		}
+		
+		private static function onExtendedBolusSplitExtChanged(e:Event):void
+		{
+			if (bwExtendedBolusSplitNowStepper != null && bwExtendedBolusSplitExtStepper != null)
+			{
+				bwExtendedBolusSplitNowStepper.value = 100 - bwExtendedBolusSplitExtStepper.value;
+			}
+		}
+		
 		private static function onShowHideExtendedBolusReminder(e:Event = null):void
 		{
 			if (bwExtendedBolusReminderCheck.isSelected)
@@ -2287,18 +2405,217 @@ package treatments
 					
 					if (bwCarbsOffsetStepper.value == 0)
 					{
+						if ((bwExtendedBolusCheck != null && !bwExtendedBolusCheck.isSelected) || (bwExtendedBolusSplitNowStepper != null && bwExtendedBolusSplitNowStepper.value == 100))
+						{
+							//Simple
+							treatment = new Treatment
+								(
+									Treatment.TYPE_MEAL_BOLUS,
+									now,
+									bwFinalCalculatedInsulinStepper.value,
+									bwInsulinTypePicker != null && bwInsulinTypePicker.selectedItem != null && bwInsulinTypePicker.selectedItem.id != null ? bwInsulinTypePicker.selectedItem.id : "",
+									bwFinalCalculatedCarbsStepper.value,
+									0,
+									TreatmentsManager.getEstimatedGlucose(now),
+									bwNotes.text,
+									null,
+									carbDelayMinutes
+								);
+							
+							//Add to list
+							TreatmentsManager.treatmentsList.push(treatment);
+							TreatmentsManager.treatmentsMap[treatment.ID] = treatment;
+							
+							Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatment.type);
+							
+							//Notify listeners
+							TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+							
+							//Insert in DB
+							if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+								Database.insertTreatmentSynchronous(treatment);
+							
+							//Upload to Nightscout
+							NightscoutService.uploadTreatment(treatment);
+						}
+						else
+						{
+							//Extended
+							if (bwExtendedBolusCheck != null && bwExtendedBolusCheck.isSelected && bwExtendedBolusSplitNowStepper != null && bwExtendedBolusSplitNowStepper.value != 100 && bwExtendedBolusSplitExtStepper != null && bwExtendedBolusSplitExtStepper.value != 0 && bwExtendedBolusDurationStepper != null && bwExtendedBolusDurationStepper.value != 0)
+							{
+								TreatmentsManager.addExtendedBolusTreatment
+								(
+									bwFinalCalculatedInsulinStepper.value, 
+									bwFinalCalculatedCarbsStepper.value,
+									bwExtendedBolusSplitNowStepper.value, 
+									bwExtendedBolusSplitExtStepper.value, 
+									bwExtendedBolusDurationStepper.value, 
+									bwInsulinTypePicker != null && bwInsulinTypePicker.selectedItem != null && bwInsulinTypePicker.selectedItem.id != null ? bwInsulinTypePicker.selectedItem.id : "", 
+									now,
+									bwNotes.text,
+									null,
+									carbDelayMinutes,
+									true
+								);
+							}
+							else
+							{
+								displayGenericErrorAlert();
+								return;
+							}
+						}
+					}
+					else
+					{
+						//Simple
+						if ((bwExtendedBolusCheck != null && !bwExtendedBolusCheck.isSelected) || (bwExtendedBolusSplitNowStepper != null && bwExtendedBolusSplitNowStepper.value == 100))
+						{
+							//Insulin portion
+							var treatmentInsulin:Treatment = new Treatment
+								(
+									Treatment.TYPE_MEAL_BOLUS,
+									now,
+									bwFinalCalculatedInsulinStepper.value,
+									bwInsulinTypePicker != null && bwInsulinTypePicker.selectedItem != null && bwInsulinTypePicker.selectedItem.id != null ? bwInsulinTypePicker.selectedItem.id : "",
+									0,
+									0,
+									TreatmentsManager.getEstimatedGlucose(now),
+									bwNotes.text
+								);
+							
+							//Add to list
+							TreatmentsManager.treatmentsList.push(treatmentInsulin);
+							TreatmentsManager.treatmentsMap[treatmentInsulin.ID] = treatmentInsulin;
+							
+							Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatmentInsulin.type);
+							
+							//Carb portion
+							var carbTime:Number = now + (bwCarbsOffsetStepper.value * 60 * 1000);
+							var treatmentCarbs:Treatment = new Treatment
+								(
+									Treatment.TYPE_MEAL_BOLUS,
+									carbTime,
+									0,
+									bwInsulinTypePicker != null && bwInsulinTypePicker.selectedItem != null && bwInsulinTypePicker.selectedItem.id != null ? bwInsulinTypePicker.selectedItem.id : "",
+									bwFinalCalculatedCarbsStepper.value,
+									0,
+									TreatmentsManager.getEstimatedGlucose(carbTime <= now ? carbTime : now),
+									bwNotes.text,
+									null,
+									carbDelayMinutes
+								);
+							if (carbTime > now) treatmentCarbs.needsAdjustment = true;
+							
+							//Add to list
+							TreatmentsManager.treatmentsList.push(treatmentCarbs);
+							TreatmentsManager.treatmentsMap[treatmentCarbs.ID] = treatmentCarbs;
+							
+							Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatmentCarbs.type);
+							
+							//Notify listeners
+							TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentInsulin));
+							TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentCarbs));
+							
+							//Insert in DB
+							if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+							{
+								Database.insertTreatmentSynchronous(treatmentInsulin);
+								Database.insertTreatmentSynchronous(treatmentCarbs);
+							}
+							
+							//Upload to Nightscout
+							NightscoutService.uploadTreatment(treatmentInsulin);
+							NightscoutService.uploadTreatment(treatmentCarbs);
+						}
+						else
+						{
+							//Extended
+							if (bwExtendedBolusCheck != null && bwExtendedBolusCheck.isSelected && bwExtendedBolusSplitNowStepper != null && bwExtendedBolusSplitNowStepper.value != 100 && bwExtendedBolusSplitExtStepper != null && bwExtendedBolusSplitExtStepper.value != 0 && bwExtendedBolusDurationStepper != null && bwExtendedBolusDurationStepper.value != 0)
+							{
+								//Extended Insulin Portion
+								TreatmentsManager.addExtendedBolusTreatment
+								(
+									bwFinalCalculatedInsulinStepper.value, 
+									0,
+									bwExtendedBolusSplitNowStepper.value, 
+									bwExtendedBolusSplitExtStepper.value, 
+									bwExtendedBolusDurationStepper.value, 
+									bwInsulinTypePicker != null && bwInsulinTypePicker.selectedItem != null && bwInsulinTypePicker.selectedItem.id != null ? bwInsulinTypePicker.selectedItem.id : "", 
+									now,
+									bwNotes.text,
+									null,
+									carbDelayMinutes,
+									true,
+									true,
+									bwCarbsOffsetStepper.value
+								);
+								
+								//Extended Carb Portion
+								var extendedCarbTime:Number = now + (bwCarbsOffsetStepper.value * 60 * 1000);
+								var extendedTreatmentCarbs:Treatment = new Treatment
+								(
+									Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT,
+									extendedCarbTime,
+									0,
+									bwInsulinTypePicker != null && bwInsulinTypePicker.selectedItem != null && bwInsulinTypePicker.selectedItem.id != null ? bwInsulinTypePicker.selectedItem.id : "",
+									bwFinalCalculatedCarbsStepper.value,
+									0,
+									TreatmentsManager.getEstimatedGlucose(extendedCarbTime <= now ? extendedCarbTime : now),
+									bwNotes.text,
+									null,
+									carbDelayMinutes
+								);
+								
+								if (extendedCarbTime > now) 
+									extendedTreatmentCarbs.needsAdjustment = true;
+								
+								//Add to list
+								TreatmentsManager.treatmentsList.push(extendedTreatmentCarbs);
+								TreatmentsManager.treatmentsMap[extendedTreatmentCarbs.ID] = extendedTreatmentCarbs;
+								
+								Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + extendedTreatmentCarbs.type);
+								
+								//Notify listeners
+								TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, extendedTreatmentCarbs));
+								
+								//Insert in DB
+								if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+								{
+									Database.insertTreatmentSynchronous(extendedTreatmentCarbs);
+								}
+								
+								//Upload to Nightscout
+								NightscoutService.uploadTreatment(extendedTreatmentCarbs);
+							}
+							else
+							{
+								displayGenericErrorAlert();
+								return;
+							}
+						}
+					}
+				}
+				else if (bwFinalCalculatedInsulinStepper.value > 0 && bwFinalCalculatedCarbsStepper.value == 0)
+				{
+					//Bolus Treatment
+					if (!canAddInsulin)
+					{
+						displayInsulinRequiredAlert();
+						return;
+					}
+					if ((bwExtendedBolusCheck != null && !bwExtendedBolusCheck.isSelected) || (bwExtendedBolusSplitNowStepper != null && bwExtendedBolusSplitNowStepper.value == 100))
+					{
+						//Simple
 						treatment = new Treatment
 							(
-								Treatment.TYPE_MEAL_BOLUS,
+								Treatment.TYPE_BOLUS,
 								now,
 								bwFinalCalculatedInsulinStepper.value,
-								bwInsulinTypePicker.selectedItem.id,
-								bwFinalCalculatedCarbsStepper.value,
+								bwInsulinTypePicker != null && bwInsulinTypePicker.selectedItem != null && bwInsulinTypePicker.selectedItem.id != null ? bwInsulinTypePicker.selectedItem.id : "",
+								0,
 								0,
 								TreatmentsManager.getEstimatedGlucose(now),
-								bwNotes.text,
-								null,
-								carbDelayMinutes
+								bwNotes.text
 							);
 						
 						//Add to list
@@ -2319,100 +2636,31 @@ package treatments
 					}
 					else
 					{
-						//Insulin portion
-						var treatmentInsulin:Treatment = new Treatment
+						//Extended
+						if (bwExtendedBolusCheck != null && bwExtendedBolusCheck.isSelected && bwExtendedBolusSplitNowStepper != null && bwExtendedBolusSplitNowStepper.value != 100 && bwExtendedBolusSplitExtStepper != null && bwExtendedBolusSplitExtStepper.value != 0 && bwExtendedBolusDurationStepper != null && bwExtendedBolusDurationStepper.value != 0)
+						{
+							//Add extended bolus treatment to Spike
+							TreatmentsManager.addExtendedBolusTreatment
 							(
-								Treatment.TYPE_MEAL_BOLUS,
+								bwFinalCalculatedInsulinStepper.value, 
+								0,
+								bwExtendedBolusSplitNowStepper.value, 
+								bwExtendedBolusSplitExtStepper.value, 
+								bwExtendedBolusDurationStepper.value, 
+								bwInsulinTypePicker != null && bwInsulinTypePicker.selectedItem != null && bwInsulinTypePicker.selectedItem.id != null ? bwInsulinTypePicker.selectedItem.id : "", 
 								now,
-								bwFinalCalculatedInsulinStepper.value,
-								bwInsulinTypePicker.selectedItem.id,
-								0,
-								0,
-								TreatmentsManager.getEstimatedGlucose(now),
-								bwNotes.text
-							);
-						
-						//Add to list
-						TreatmentsManager.treatmentsList.push(treatmentInsulin);
-						TreatmentsManager.treatmentsMap[treatmentInsulin.ID] = treatmentInsulin;
-						
-						Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatmentInsulin.type);
-						
-						//Carb portion
-						var carbTime:Number = now + (bwCarbsOffsetStepper.value * 60 * 1000);
-						var treatmentCarbs:Treatment = new Treatment
-							(
-								Treatment.TYPE_MEAL_BOLUS,
-								carbTime,
-								0,
-								bwInsulinTypePicker.selectedItem.id,
-								bwFinalCalculatedCarbsStepper.value,
-								0,
-								TreatmentsManager.getEstimatedGlucose(carbTime <= now ? carbTime : now),
 								bwNotes.text,
 								null,
-								carbDelayMinutes
+								Number.NaN,
+								true
 							);
-						if (carbTime > now) treatmentCarbs.needsAdjustment = true;
-						
-						//Add to list
-						TreatmentsManager.treatmentsList.push(treatmentCarbs);
-						TreatmentsManager.treatmentsMap[treatmentCarbs.ID] = treatmentCarbs;
-						
-						Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatmentCarbs.type);
-						
-						//Notify listeners
-						TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentInsulin));
-						TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatmentCarbs));
-						
-						//Insert in DB
-						if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-						{
-							Database.insertTreatmentSynchronous(treatmentInsulin);
-							Database.insertTreatmentSynchronous(treatmentCarbs);
 						}
-						
-						//Upload to Nightscout
-						NightscoutService.uploadTreatment(treatmentInsulin);
-						NightscoutService.uploadTreatment(treatmentCarbs);
+						else
+						{
+							displayGenericErrorAlert();
+							return;
+						}
 					}
-				}
-				else if (bwFinalCalculatedInsulinStepper.value > 0 && bwFinalCalculatedCarbsStepper.value == 0)
-				{
-					//Bolus Treatment
-					if (!canAddInsulin)
-					{
-						displayInsulinRequiredAlert();
-						return;
-					}
-					
-					treatment = new Treatment
-						(
-							Treatment.TYPE_BOLUS,
-							now,
-							bwFinalCalculatedInsulinStepper.value,
-							bwInsulinTypePicker.selectedItem.id,
-							0,
-							0,
-							TreatmentsManager.getEstimatedGlucose(now),
-							bwNotes.text
-						);
-					
-					//Add to list
-					TreatmentsManager.treatmentsList.push(treatment);
-					TreatmentsManager.treatmentsMap[treatment.ID] = treatment;
-					
-					Trace.myTrace("BolusWizard.as", "Added treatment to Spike. Type: " + treatment.type);
-					
-					//Notify listeners
-					TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-					
-					//Insert in DB
-					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-						Database.insertTreatmentSynchronous(treatment);
-					
-					//Upload to Nightscout
-					NightscoutService.uploadTreatment(treatment);
 				}
 				else if (bwFinalCalculatedInsulinStepper.value == 0 && bwFinalCalculatedCarbsStepper.value > 0)
 				{
@@ -2495,10 +2743,19 @@ package treatments
 			function displayInsulinRequiredAlert():void
 			{
 				AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-						ModelLocator.resourceManagerInstance.getString('treatments','missing_insulins_label')
-					);
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('treatments','missing_insulins_label')
+				);
+			}
+			
+			function displayGenericErrorAlert():void
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('treatments','treatment_insertion_error_label')
+				);
 			}
 		}
 		
@@ -3026,6 +3283,108 @@ package treatments
 				createInsulinButton.removeFromParent();
 				createInsulinButton.dispose();
 				createInsulinButton = null;
+			}
+			
+			if (bwExtendedBolusDurationStepper != null)
+			{
+				bwExtendedBolusDurationStepper.removeFromParent();
+				bwExtendedBolusDurationStepper.dispose();
+				bwExtendedBolusDurationStepper = null;
+			}
+			
+			if (bwExtendedBolusDurationabel != null)
+			{
+				bwExtendedBolusDurationabel.removeFromParent();
+				bwExtendedBolusDurationabel.dispose();
+				bwExtendedBolusDurationabel = null;
+			}
+			
+			if (bwExtendedBolusDurationContainer != null)
+			{
+				bwExtendedBolusDurationContainer.removeFromParent();
+				bwExtendedBolusDurationContainer.dispose();
+				bwExtendedBolusDurationContainer = null;
+			}
+			
+			if (bwExtendedBolusSplitExtStepper != null)
+			{
+				bwExtendedBolusSplitExtStepper.removeEventListener(Event.CHANGE, onExtendedBolusSplitExtChanged);
+				bwExtendedBolusSplitExtStepper.removeFromParent();
+				bwExtendedBolusSplitExtStepper.dispose();
+				bwExtendedBolusSplitExtStepper = null;
+			}
+			
+			if (bwExtendedBolusSplitExtLabel != null)
+			{
+				bwExtendedBolusSplitExtLabel.removeFromParent();
+				bwExtendedBolusSplitExtLabel.dispose();
+				bwExtendedBolusSplitExtLabel = null;
+			}
+			
+			
+			if (bwExtendedBolusSplitExtContainer != null)
+			{
+				bwExtendedBolusSplitExtContainer.removeFromParent();
+				bwExtendedBolusSplitExtContainer.dispose();
+				bwExtendedBolusSplitExtContainer = null;
+			}
+			
+			if (bwExtendedBolusSplitNowStepper != null)
+			{
+				bwExtendedBolusSplitNowStepper.removeEventListener(Event.CHANGE, onExtendedBolusSplitNowChanged);
+				bwExtendedBolusSplitNowStepper.removeFromParent();
+				bwExtendedBolusSplitNowStepper.dispose();
+				bwExtendedBolusSplitNowStepper = null;
+			}
+			
+			if (bwExtendedBolusSplitNowLabel != null)
+			{
+				bwExtendedBolusSplitNowLabel.removeFromParent();
+				bwExtendedBolusSplitNowLabel.dispose();
+				bwExtendedBolusSplitNowLabel = null;
+			}
+			
+			if (bwExtendedBolusSplitNowContainer != null)
+			{
+				bwExtendedBolusSplitNowContainer.removeFromParent();
+				bwExtendedBolusSplitNowContainer.dispose();
+				bwExtendedBolusSplitNowContainer = null;
+			}
+			
+			if (bwExendedBolusComponentsContainer != null)
+			{
+				bwExendedBolusComponentsContainer.removeFromParent();
+				bwExendedBolusComponentsContainer.dispose();
+				bwExendedBolusComponentsContainer = null;
+			}
+			
+			if (bwExtendedBolusCheck != null)
+			{
+				bwExtendedBolusCheck.removeEventListener(Event.CHANGE, onShowHideExtendedBolus);
+				bwExtendedBolusCheck.removeFromParent();
+				bwExtendedBolusCheck.dispose();
+				bwExtendedBolusCheck = null;
+			}
+			
+			if (bwExtendedBolusLabel != null)
+			{
+				bwExtendedBolusLabel.removeFromParent();
+				bwExtendedBolusLabel.dispose();
+				bwExtendedBolusLabel = null;
+			}
+			
+			if (bwExtendedBolusLabelContainer != null)
+			{
+				bwExtendedBolusLabelContainer.removeFromParent();
+				bwExtendedBolusLabelContainer.dispose();
+				bwExtendedBolusLabelContainer = null;
+			}
+			
+			if (bwExtendedBolusContainer != null)
+			{
+				bwExtendedBolusContainer.removeFromParent();
+				bwExtendedBolusContainer.dispose();
+				bwExtendedBolusContainer = null;
 			}
 			
 			if (bwExtendedBolusReminderCheck != null)

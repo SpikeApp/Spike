@@ -68,6 +68,8 @@ package ui.chart
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
+	import starling.filters.BlurFilter;
+	import starling.filters.FilterChain;
 	import starling.filters.GlowFilter;
 	import starling.utils.Align;
 	import starling.utils.SystemUtil;
@@ -1467,7 +1469,7 @@ package ui.chart
 		
 		public function updateExternallyModifiedTreatment(treatment:Treatment):void
 		{
-			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || !isHistoricalData)
+			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart || isHistoricalData || treatment == null)
 				return;
 			
 			var modifiedTreatment:ChartTreatment = treatmentsMap[treatment.ID] as ChartTreatment;
@@ -1479,12 +1481,15 @@ package ui.chart
 				//Reposition all treatments
 				manageTreatments();
 				
-				//Recalculate total IOB and COB
-				var timelineTimestamp:Number = getTimelineTimestamp();
-				if (displayIOBEnabled)
-					calculateTotalIOB(timelineTimestamp);
-				if (displayCOBEnabled)
-					calculateTotalCOB(timelineTimestamp);
+				if (treatment.insulinAmount > 0 || treatment.carbs > 0)
+				{
+					//Recalculate total IOB and COB
+					var timelineTimestamp:Number = getTimelineTimestamp();
+					if (displayIOBEnabled && treatment.insulinAmount > 0)
+						calculateTotalIOB(timelineTimestamp);
+					if (displayCOBEnabled && treatment.carbs > 0)
+						calculateTotalCOB(timelineTimestamp);
+				}
 			}
 		}
 		
@@ -1520,6 +1525,26 @@ package ui.chart
 			}
 		}
 		
+		private function parseChildTreatments(chartTreatment:ChartTreatment):void
+		{
+			if (chartTreatment.treatment != null && (chartTreatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || chartTreatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT))
+			{
+				var treatment:Treatment = chartTreatment.treatment;
+				var childrenIDs:Array = treatment.childTreatments;
+				var numberOfBolusChildren:uint = childrenIDs.length;
+				chartTreatment.children.length = 0;
+				
+				for (var i:int = 0; i < numberOfBolusChildren; i++) 
+				{
+					var bolusChild:ChartTreatment = getTreatmentByID(String(childrenIDs[i]));
+					if (bolusChild != null)
+					{
+						chartTreatment.children.push(bolusChild);
+					}
+				}
+			}
+		}
+		
 		public function addTreatment(treatment:Treatment):void
 		{
 			if (dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
@@ -1548,7 +1573,7 @@ package ui.chart
 			var chartTreatment:ChartTreatment;
 			
 			//Check treatment type
-			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
 			{
 				//Create treatment marker and add it to the chart
 				var insulinMarker:InsulinMarker = new InsulinMarker(treatment, timelineRange);
@@ -1558,6 +1583,12 @@ package ui.chart
 				insulinMarker.index = treatmentsList.length;
 				treatmentsList.push(insulinMarker);
 				treatmentsMap[treatment.ID] = insulinMarker;
+				
+				//Find and store children
+				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
+				{
+					parseChildTreatments(insulinMarker);
+				}
 				
 				if (displayIOBEnabled && !isHistoricalData)
 				{
@@ -1580,6 +1611,40 @@ package ui.chart
 				}
 				
 				chartTreatment = insulinMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+			{
+				//Create treatment marker and add it to the chart
+				var extendedInsulinChildMarker:InsulinMarker = new InsulinMarker(treatment, timelineRange, true);
+				extendedInsulinChildMarker.x = (extendedInsulinChildMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
+				extendedInsulinChildMarker.y = _graphHeight - (extendedInsulinChildMarker.radius * 1.66) - ((extendedInsulinChildMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
+				extendedInsulinChildMarker.filter = new FilterChain(new GlowFilter(extendedInsulinChildMarker.strokeColor, 1, 2.2, 1), new BlurFilter(5, 1, 1))
+				
+				extendedInsulinChildMarker.index = treatmentsList.length;
+				treatmentsList.push(extendedInsulinChildMarker);
+				treatmentsMap[treatment.ID] = extendedInsulinChildMarker;
+				
+				if (displayIOBEnabled && !isHistoricalData && treatment.timestamp <= new Date().valueOf())
+				{
+					clearTimeout(totalIOBTimeoutID);
+					
+					totalIOBTimeoutID = setTimeout( function():void 
+					{
+						calculateTotalIOB(getTimelineTimestamp());
+					}, 200 );
+					
+					if (predictionsEnabled)
+					{
+						clearTimeout(redrawPredictionsTimeoutID);
+						
+						redrawPredictionsTimeoutID = setTimeout( function():void 
+						{
+							redrawPredictions();
+						}, 250 );
+					}
+				}
+				
+				chartTreatment = extendedInsulinChildMarker;
 			}
 			else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 			{
@@ -1614,7 +1679,7 @@ package ui.chart
 				
 				chartTreatment = carbsMarker;
 			}
-			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
+			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
 				//Create treatment marker and add it to the chart
 				var mealMarker:MealMarker = new MealMarker(treatment, timelineRange);
@@ -1624,6 +1689,12 @@ package ui.chart
 				mealMarker.index = treatmentsList.length;
 				treatmentsList.push(mealMarker);
 				treatmentsMap[treatment.ID] = mealMarker;
+				
+				//Find and store children
+				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
+				{
+					parseChildTreatments(insulinMarker);
+				}
 				
 				var timelineTimestamp:Number = getTimelineTimestamp();
 				if (displayIOBEnabled && !isHistoricalData)
@@ -1710,25 +1781,61 @@ package ui.chart
 			}
 			
 			//Reposition out of bounds treatments
-			if (yAxisHeight > 0 && chartTreatment.y + chartTreatment.height > yAxisHeight - 5) //Lower Area
-				chartTreatment.labelUp();
-			
-			if (chartTreatment.y < 0) //Upper Area
-				chartTreatment.y = 0;
-			
-			//Add treatment
-			chartTreatment.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
-			chartTreatment.alpha = 0;
-			treatmentsContainer.addChild(chartTreatment);
-			
-			//Fade in treatment
-			var popupTween:Tween = new Tween(chartTreatment, 0.5, Transitions.EASE_OUT);
-			popupTween.fadeTo(1);
-			popupTween.onComplete = function():void
+			if (chartTreatment != null)
 			{
-				popupTween = null;
+				if (yAxisHeight > 0 && chartTreatment.y + chartTreatment.height > yAxisHeight - 5) //Lower Area
+					chartTreatment.labelUp();
+				
+				if (chartTreatment.y < 0) //Upper Area
+					chartTreatment.y = 0;
+				
+				//Add treatment
+				if (chartTreatment.treatment.type != Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+				{
+					chartTreatment.addEventListener(TouchEvent.TOUCH, onDisplayTreatmentDetails);
+				}
+				chartTreatment.alpha = 0;
+				
+				if (treatment.type != Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+				{
+					treatmentsContainer.addChild(chartTreatment);
+				}
+				else
+				{
+					treatmentsContainer.addChildAt(chartTreatment, 0);
+				}
+				
+				//Fade in treatment
+				var popupTween:Tween = new Tween(chartTreatment, 0.5, Transitions.EASE_OUT);
+				popupTween.fadeTo(1);
+				popupTween.onComplete = function():void
+				{
+					popupTween = null;
+				}
+				Starling.juggler.add(popupTween);
 			}
-			Starling.juggler.add(popupTween);
+		}
+		
+		private function getTreatmentByID(treatmentID:String):ChartTreatment
+		{
+			var matchedTreatment:ChartTreatment = null;
+			
+			if (treatmentID == null || treatmentID == "")
+			{
+				return matchedTreatment;
+			}
+			
+			for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+			{
+				var chartTreatment:ChartTreatment = treatmentsList[i];
+				if (chartTreatment!= null && chartTreatment.treatment != null && chartTreatment.treatment.ID == treatmentID)
+				{
+					matchedTreatment = chartTreatment;
+					break;
+				}
+			}
+			
+			return matchedTreatment;
 		}
 		
 		private function onDisplayTreatmentDetails(e:starling.events.TouchEvent):void
@@ -1753,10 +1860,76 @@ package ui.chart
 				var treatmentValue:String = "";
 				var treatmentNotes:String = treatmentNotes = treatment.treatment.note;
 				var treatmentBG:Number = glucoseUnit == "mg/dL" ? Math.round(treatment.treatment.glucoseEstimated) : Math.round(BgReading.mgdlToMmol(treatment.treatment.glucoseEstimated) * 10) / 10;
+				var insulin:Insulin;
 				if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
-					var insulin:Insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
+					insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
 					treatmentValue = (insulin != null ? insulin.name + "\n" : "") + GlucoseFactory.formatIOB(treatment.treatment.insulinAmount) + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+				{
+					parseChildTreatments(treatment);
+					insulin = ProfileManager.getInsulin(treatment.treatment.insulinID);
+					var parentInsulinAmount:Number = treatment.treatment.insulinAmount;
+					var overallInsulinAmount:Number = treatment.treatment.getTotalInsulin();
+					var childrenInsulinAmount:Number = overallInsulinAmount - parentInsulinAmount;
+					var parentSplit:Number = Math.round((parentInsulinAmount * 100) / overallInsulinAmount);
+					var childrenSplit:Number = 100 - parentSplit;
+					var now:Number = new Date().valueOf();
+					var insulinAdded:Number = overallInsulinAmount;
+					
+					if (treatment.treatment.timestamp > now)
+					{
+						insulinAdded -= parentInsulinAmount;
+					}
+					if (treatment.children != null)
+					{
+						for(var i:int =treatment.children.length - 1 ; i >= 0; i--)
+						{
+							var child:ChartTreatment = treatment.children[i];
+							if (child != null && child.treatment.timestamp > now)
+							{
+								insulinAdded -= child.treatment.insulinAmount;
+							}
+						}
+					}
+					var remainingInsulin:Number = overallInsulinAmount - insulinAdded;
+					
+					if (treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
+					{
+						treatmentValue = (insulin != null ? insulin.name + "\n" : "") + GlucoseFactory.formatIOB(overallInsulinAmount) + "\n\n" + ModelLocator.resourceManagerInstance.getString('chartscreen','extended_bolus_split_label') + ": " + parentSplit + "%" + ":" +  childrenSplit + "%" + "\n" + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_label') + ": " + (treatment.treatment.childTreatments.length * 5) + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small') + "\n" + ModelLocator.resourceManagerInstance.getString('chartscreen','extneded_bolus_administered_label') + ": " + GlucoseFactory.formatIOB(insulinAdded)+ "\n" + ModelLocator.resourceManagerInstance.getString('chartscreen','extneded_bolus_remaining_label') + ": " + GlucoseFactory.formatIOB(remainingInsulin) + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
+					}
+					else if (treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+					{
+						if (parentInsulinAmount > 0)
+						{
+							treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','meal_with_extended_bolus')
+								+ "\n" + 
+								ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ": " + GlucoseFactory.formatIOB(overallInsulinAmount) 
+								+ "\n" + 
+								ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + ": " + treatment.treatment.carbs + "g" + " (" + TreatmentsManager.getCarbTypeName(treatment.treatment) + ")"
+								+ "\n\n" + 
+								ModelLocator.resourceManagerInstance.getString('chartscreen','extended_bolus_split_label') + ": " + parentSplit + "%" + ":" +  childrenSplit + "%" 
+								+ "\n" + 
+								ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_duration_label') + ": " + (treatment.treatment.childTreatments.length * 5) + ModelLocator.resourceManagerInstance.getString('chartscreen','minutes_small')
+								+ "\n" + 
+								ModelLocator.resourceManagerInstance.getString('chartscreen','extneded_bolus_administered_label') + ": " + GlucoseFactory.formatIOB(insulinAdded)
+								+ "\n" + 
+								ModelLocator.resourceManagerInstance.getString('chartscreen','extneded_bolus_remaining_label') + ": " + GlucoseFactory.formatIOB(remainingInsulin)
+								+ "\n\n" + 
+								treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
+						}
+						else
+						{
+							treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','meal_with_extended_bolus')
+								+ "\n" + 
+								ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ": " + GlucoseFactory.formatIOB(overallInsulinAmount) 
+								+ "\n" + 
+								ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs') + ": " + treatment.treatment.carbs + "g" + " (" + TreatmentsManager.getCarbTypeName(treatment.treatment) + ")"
+								+ "\n\n" + 
+								treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
+						}
+					}
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 				{
@@ -1801,8 +1974,7 @@ package ui.chart
 				treatmentTimeSpinner.value = new Date(treatment.treatment.timestamp);
 				treatmentTimeSpinner.height = 30;
 				treatmentTimeSpinner.paddingTop = treatmentTimeSpinner.paddingBottom = 0;
-				if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
-					treatmentTimeSpinner.isEnabled = false;
+				
 				if (isHistoricalData) treatmentTimeSpinner.isEnabled = false;
 				if (timeSpacer != null) timeSpacer.removeFromParent(true);
 				timeSpacer = new Sprite();
@@ -1810,8 +1982,13 @@ package ui.chart
 				treatmentContainer.addChild(treatmentTimeSpinner);
 				treatmentContainer.addChild(timeSpacer);
 				
-				if (treatment.treatment.type == Treatment.TYPE_SENSOR_START || (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note")))
+				if (treatment.treatment.type == Treatment.TYPE_SENSOR_START 
+					|| 
+					(treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+				)
+				{
 					treatmentTimeSpinner.isEnabled = false;
+				}
 				
 				if (treatmentNotes != "" && treatmentNotes != ModelLocator.resourceManagerInstance.getString('treatments','sensor_calibration_note'))
 				{
@@ -1870,8 +2047,55 @@ package ui.chart
 						lastReadingTimestamp = predictionsMainGlucoseDataPoints[predictionsMainGlucoseDataPoints.length - 1].timestamp;
 					}
 					
+					if (treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+					{
+						var numberOfChildren:uint = treatment.children.length;
+						var deleteDelay:uint = 200;
+						
+						for (var i:int = 0; i <numberOfChildren; i++) 
+						{
+							var child:ChartTreatment = treatment.children[i];
+							if (child != null)
+							{
+								deleteDelay += 10;
+								
+								setTimeout( function(childToDelete:ChartTreatment):void 
+								{
+									if (!SystemUtil.isApplicationActive || childToDelete == null)
+									{
+										return;
+									}
+									
+									treatmentsContainer.removeChild(childToDelete);
+									treatmentsList.removeAt(childToDelete.index);
+									
+									var treatmentToDelete:Treatment = childToDelete.treatment;
+									
+									TreatmentsManager.deleteTreatment(childToDelete.treatment, false);
+									
+									childToDelete.dispose();
+									childToDelete = null;
+									
+								}, deleteDelay, child);
+							}
+							
+							if (predictionsEnabled)
+							{
+								clearTimeout(redrawPredictionsTimeoutID);
+								
+								redrawPredictionsTimeoutID = setTimeout( function():void 
+								{
+									forceNightscoutPredictionRefresh = true;
+									redrawPredictions();
+								}, deleteDelay + 100 );
+							}
+						}
+						
+					}
+					
 					var deleteX:Number = ((lastReadingTimestamp - firstBGReadingTimeStamp) * mainChartXFactor) + treatment.width + 5;
 					deleteTreatmentTween.moveTo(deleteX, treatment.y);
+					
 					deleteTreatmentTween.onComplete = function():void
 					{
 						treatmentsContainer.removeChild(treatment);
@@ -1890,7 +2114,7 @@ package ui.chart
 						if (displayCOBEnabled)
 							calculateTotalCOB(timelineTimestamp, lastTreatmentIsCarb);
 						
-						if (predictionsEnabled && (treatmentToDelete.type == Treatment.TYPE_BOLUS || treatmentToDelete.type == Treatment.TYPE_CARBS_CORRECTION || treatmentToDelete.type == Treatment.TYPE_CORRECTION_BOLUS || treatmentToDelete.type == Treatment.TYPE_MEAL_BOLUS))
+						if (predictionsEnabled && (treatmentToDelete.type == Treatment.TYPE_BOLUS || treatmentToDelete.type == Treatment.TYPE_CARBS_CORRECTION || treatmentToDelete.type == Treatment.TYPE_CORRECTION_BOLUS || treatmentToDelete.type == Treatment.TYPE_MEAL_BOLUS || treatmentToDelete.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatmentToDelete.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT))
 						{
 							clearTimeout(redrawPredictionsTimeoutID);
 							
@@ -1910,7 +2134,7 @@ package ui.chart
 				{
 					var movedTimestamp:Number = treatmentTimeSpinner.value.valueOf();
 					
-					if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > new Date().valueOf())
+					if(movedTimestamp < firstBGReadingTimeStamp)
 					{
 						AlertManager.showSimpleAlert
 							(
@@ -1925,28 +2149,65 @@ package ui.chart
 							estimatedGlucoseValue = TreatmentsManager.getEstimatedGlucose(movedTimestamp);
 						else
 							estimatedGlucoseValue = treatment.treatment.glucoseEstimated;
+						
+						var originalTreatmmentTimestamp:Number = treatment.treatment.timestamp;
 						treatment.treatment.timestamp = movedTimestamp;
 						treatment.treatment.glucoseEstimated = estimatedGlucoseValue;
+						
+						if(treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+						{
+							var timeDifference:Number = movedTimestamp - originalTreatmmentTimestamp;
+							
+							var numberOfChildren:uint = treatment.children.length;
+							for (var i:int = 0; i < numberOfChildren; i++) 
+							{
+								var child:ChartTreatment = treatment.children[i];
+								if (child != null && child.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+								{
+									child.treatment.timestamp += timeDifference;
+									child.treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(child.treatment.timestamp)
+								}
+							}
+						}
 						
 						treatmentCallout.close(true);
 						
 						var forceCOBRefresh:Boolean = treatment.treatment != null && treatment.treatment.carbs > 0;
 						
-						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 						{
 							var timelineTimestamp:Number = getTimelineTimestamp();
 							
 							if (displayIOBEnabled)
-								calculateTotalIOB(timelineTimestamp);
+							{
+								if(treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+								{
+									setTimeout(calculateTotalIOB, TimeSpan.TIME_2_SECONDS, timelineTimestamp);
+								}
+								else
+								{
+									calculateTotalIOB(timelineTimestamp);
+								}
+							}
+							
 							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && displayCOBEnabled)
-								calculateTotalCOB(timelineTimestamp, forceCOBRefresh);
+							{
+								if(treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+								{
+									setTimeout(calculateTotalCOB, TimeSpan.TIME_2_SECONDS, timelineTimestamp, forceCOBRefresh);
+								}
+								else
+								{
+									calculateTotalCOB(timelineTimestamp, forceCOBRefresh);
+								}
+							}
 						}
 						else if (treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION && displayCOBEnabled)
 						{
 							calculateTotalCOB(getTimelineTimestamp(), forceCOBRefresh);
 						}
 						
-						if (predictionsEnabled && (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS))
+						if (predictionsEnabled && (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT))
 						{
 							clearTimeout(redrawPredictionsTimeoutID);
 							
@@ -1997,19 +2258,50 @@ package ui.chart
 					else
 					{
 						//Treatment is still valid. Reposition it.
-						if (treatment.treatment.type == Treatment.TYPE_BOLUS || treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK || treatment.treatment.type == Treatment.TYPE_SENSOR_START || treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION || treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS)
+						if (
+							treatment.treatment.type == Treatment.TYPE_BOLUS 
+							|| 
+							treatment.treatment.type == Treatment.TYPE_CORRECTION_BOLUS 
+							|| 
+							treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK 
+							|| 
+							treatment.treatment.type == Treatment.TYPE_SENSOR_START 
+							|| 
+							treatment.treatment.type == Treatment.TYPE_CARBS_CORRECTION 
+							|| 
+							treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS
+							|| 
+							treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD
+							|| 
+							treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT
+							|| 
+							treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT
+						)
 						{
-							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && treatment.treatment.needsAdjustment && mainChartGlucoseMarkersList != null && mainChartGlucoseMarkersList.length > 0 && mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] != null && (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).bgReading != null && treatment.treatment.timestamp <= (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).bgReading.timestamp)
+							if (treatment.treatment.needsAdjustment)
 							{
 								//It's a treatment that was added in the future. Now it's the time to calculate it's Y position on the graph
-								treatment.treatment.needsAdjustment = false;
 								treatment.treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatment.treatment.timestamp);
-								TreatmentsManager.updateTreatment(treatment.treatment, false);
+								
+								if (mainChartGlucoseMarkersList != null 
+									&& 
+									mainChartGlucoseMarkersList.length > 0 
+									&& 
+									mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] != null
+									&& 
+									(mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).bgReading != null 
+									&& 
+									treatment.treatment.timestamp <= (mainChartGlucoseMarkersList[mainChartGlucoseMarkersList.length - 1] as GlucoseMarker).bgReading.timestamp
+									)
+								{
+									treatment.treatment.needsAdjustment = false;
+									TreatmentsManager.updateTreatment(treatment.treatment, false);
+								}
 							}
 							
 							var generalTreatmentX:Number = (treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 							var generalTreatmentY:Number = _graphHeight - (treatment.radius * 1.66) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
-							if (treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS && generalTreatmentY < -2)
+							if ((treatment.treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT) && generalTreatmentY < -2)
 								generalTreatmentY = -2;
 							
 							if (!animate)
@@ -5084,6 +5376,9 @@ package ui.chart
 		private function redrawPredictions(forceIOBCOBRefresh:Boolean = false, externalAPSRequest:Boolean = false):void
 		{
 			//First validation
+			if (!SystemUtil.isApplicationActive)
+				return;
+			
 			if (!externalAPSRequest && !predictionsEnabled)
 			{
 				if (!predictionsEnabled || predictionsMainGlucoseDataPoints == null || predictionsMainGlucoseDataPoints.length == 0 || predictionsScrollerGlucoseDataPoints == null || predictionsScrollerGlucoseDataPoints.length == 0 || predictionsDelimiter == null || dummyModeActive || !SystemUtil.isApplicationActive)
@@ -6695,6 +6990,8 @@ package ui.chart
 				glucoseMarker = predictionsMainGlucoseDataPoints[i];
 				glucoseMarker.removeEventListener(TouchEvent.TOUCH, onPredictionMarkerTouched);
 				glucoseMarker.removeFromParent();
+				if (glucoseMarker.filter != null)
+					glucoseMarker.filter.dispose();
 				glucoseMarker.dispose();
 				glucoseMarker = null;
 			}
@@ -6704,6 +7001,8 @@ package ui.chart
 			{
 				glucoseMarker = predictionsScrollerGlucoseDataPoints[i];
 				glucoseMarker.removeFromParent();
+				if (glucoseMarker.filter != null)
+					glucoseMarker.filter.dispose();
 				glucoseMarker.dispose();
 				glucoseMarker = null;
 			}

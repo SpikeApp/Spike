@@ -14,6 +14,9 @@ package treatments
 		public static const TYPE_GLUCOSE_CHECK:String = "glucoseCheck";
 		public static const TYPE_NOTE:String = "note";
 		public static const TYPE_SENSOR_START:String = "sensorStart";
+		public static const TYPE_EXTENDED_COMBO_BOLUS_PARENT:String = "extendedComboBolusParent";
+		public static const TYPE_EXTENDED_COMBO_MEAL_PARENT:String = "extendedComboMealParent";
+		public static const TYPE_EXTENDED_COMBO_BOLUS_CHILD:String = "extendedComboBolusChild";
 		
 		/* Internal Constants */
 		private static const INSULIN_PEAK:uint = 75;
@@ -33,6 +36,8 @@ package treatments
 		public var needsAdjustment:Boolean = false;
 		public var carbDelayTime:Number = 20;
 		public var basalDuration:Number = 0;
+		public var preBolus:Number = Number.NaN;
+		public var childTreatments:Array = [];
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = Number.NaN, basalDuration:Number = 0)
 		{
@@ -263,6 +268,40 @@ package treatments
 			{
 				return null;
 			}
+		}
+		
+		public function parseChildren(children:String):void
+		{
+			if (children == null || children.length == 0)
+				return;
+			
+			childTreatments = children.split(",");
+		}
+		
+		public function extractChildren():String
+		{
+			return childTreatments.join(",");
+		}
+		
+		public function getTotalInsulin(onlyChildren:Boolean = false):Number
+		{
+			if ((type != TYPE_EXTENDED_COMBO_BOLUS_PARENT && type != TYPE_EXTENDED_COMBO_MEAL_PARENT) || childTreatments.length == 0)
+			{
+				return insulinAmount;
+			}
+			
+			var parentInsulinAmount:Number = onlyChildren ? 0 : insulinAmount;
+			var numberOfChildren:uint = childTreatments.length;
+			for (var i:int = 0; i < numberOfChildren; i++) 
+			{
+				var childTreatment:Treatment = TreatmentsManager.getTreatmentByID(String(childTreatments[i]));
+				if (childTreatment != null)
+				{
+					parentInsulinAmount += childTreatment.insulinAmount;
+				}
+			}
+			
+			return parentInsulinAmount;
 		}
 
 		/**
