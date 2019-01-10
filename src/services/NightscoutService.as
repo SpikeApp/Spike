@@ -164,6 +164,7 @@ package services
 		private static var phoneBatteryLevel:Number = 0;
 		private static var lastPredictionsUploadTimestamp:Number = 0;
 		private static var propertiesV2Timeout:uint = 0;
+		private static var treatmentsAPIServerResponse:String = "";
 
 		public function NightscoutService()
 		{
@@ -2241,7 +2242,7 @@ package services
 			//Validate response
 			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
 			{
-				if (NetworkConnector.nightscoutTreatmentsLastModifiedHeader != "" && TreatmentsManager.nightscoutTreatmentsLastModifiedHeader != "" && NetworkConnector.nightscoutTreatmentsLastModifiedHeader == TreatmentsManager.nightscoutTreatmentsLastModifiedHeader)
+				if (response == treatmentsAPIServerResponse)
 				{
 					Trace.myTrace("NightscoutService.as", "No treatments where modified in Nightscout. No further processing.");
 				}
@@ -2287,6 +2288,9 @@ package services
 					retriesForTreatmentsDownload++;
 				}
 			}
+			
+			//Cache response
+			treatmentsAPIServerResponse = response;
 		}
 		
 		/**

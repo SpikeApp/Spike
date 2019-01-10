@@ -241,9 +241,9 @@ package treatments
 			}
 			
 			var now:Number = new Date().valueOf();
-			if (now - lastSavedCachesTimestamp < TimeSpan.TIME_3_HOURS)
+			if (now - lastSavedCachesTimestamp < TimeSpan.TIME_2_HOURS)
 			{
-				//Only save caches every 6 hours or so.
+				//Only save caches every 2 hours or so. Abort!
 				return;
 			}
 			
@@ -302,6 +302,8 @@ package treatments
 				var IOBCachedTimesBytesString:String = Base64.encodeByteArray(IOBCachedTimesBytes);
 				
 				Database.updateIOBCOBCachesSynchronous(IOBCachedBytesString, IOBCachedTimesBytesString, COBCachedBytesString, COBCachedTimesBytesString);
+				
+				lastSavedCachesTimestamp = now;
 				
 				Trace.myTrace("TreatmentsManager.as", "Saved IOB/COB caches to database...");
 			} 
