@@ -11,6 +11,8 @@ package treatments
 	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -19,10 +21,8 @@ package treatments
 	import database.Sensor;
 	
 	import events.CalibrationServiceEvent;
-	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
-	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
 	import feathers.controls.Button;
@@ -55,7 +55,6 @@ package treatments
 	
 	import services.CalibrationService;
 	import services.NightscoutService;
-	import services.TransmitterService;
 	
 	import starling.animation.Transitions;
 	import starling.animation.Tween;
@@ -136,28 +135,24 @@ package treatments
 		private static var foodManagerContainer:LayoutGroup;
 		private static var totalScrollContainer:ScrollContainer;
 		private static var contentScrollContainer:ScrollContainer;
-
 		private static var extendedBolusMainContainer:LayoutGroup;
-
 		private static var extendedBolusCheck:Check;
-
 		private static var firstSplitNumericStepper:NumericStepper;
-
 		private static var firstSplitLabel:Label;
-
 		private static var extendedBolusSplitContainer1:LayoutGroup;
-
 		private static var extendedBolusSplitContainer2:LayoutGroup;
-
 		private static var lastSplitLabel:Label;
-
 		private static var lastSplitNumericStepper:NumericStepper;
-
 		private static var extendedDurationNumericStepper:NumericStepper;
-
 		private static var extendedBolusDurationContainer:LayoutGroup;
-
 		private static var extendedDurationLabel:Label;
+		private static var exerciseDurationTextInput:TextInput;
+		private static var exerciseChangerSpacer:Sprite;
+		private static var exerciseIntensityContainer:LayoutGroup;
+		private static var exerciseIntensityGroup:ToggleGroup;
+		private static var lowIntensity:Radio;
+		private static var moderateIntensity:Radio;
+		private static var highIntendity:Radio;
 		
 		public function TreatmentsManager()
 		{
@@ -180,6 +175,9 @@ package treatments
 			
 			//Fetch IOB/COB Caches
 			fetchIOBCOBCaches();
+			
+			//Delete Old Teatments
+			Database.deleteOldTreatments();
 		}
 		
 		private static function fetchIOBCOBCaches():void
@@ -354,7 +352,7 @@ package treatments
 				
 				var now:Number = new Date().valueOf();
 				treatmentsList.length = 0;
-				var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TimeSpan.TIME_24_HOURS, now);
+				var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TimeSpan.TIME_24_HOURS, now + TimeSpan.TIME_24_HOURS);
 				
 				if (dbTreatments != null && dbTreatments.length > 0)
 				{
@@ -365,20 +363,22 @@ package treatments
 							continue;
 						
 						var treatment:Treatment = new Treatment
-							(
-								dbTreatment.type,
-								dbTreatment.lastmodifiedtimestamp,
-								dbTreatment.insulinamount,
-								dbTreatment.insulinid,
-								dbTreatment.carbs,
-								dbTreatment.glucose,
-								dbTreatment.glucoseestimated,
-								dbTreatment.note,
-								null,
-								dbTreatment.carbdelay,
-								dbTreatment.basalduration
-							);
+						(
+							dbTreatment.type,
+							dbTreatment.lastmodifiedtimestamp,
+							dbTreatment.insulinamount,
+							dbTreatment.insulinid,
+							dbTreatment.carbs,
+							dbTreatment.glucose,
+							dbTreatment.glucoseestimated,
+							dbTreatment.note,
+							null,
+							dbTreatment.carbdelay,
+							dbTreatment.basalduration
+						);
+						
 						treatment.ID = dbTreatment.id;
+						
 						if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
 						{
 							treatment.needsAdjustment = true;
@@ -391,6 +391,14 @@ package treatments
 						{
 							treatment.preBolus = Number(dbTreatment.prebolus);
 						}
+						if (dbTreatment.duration != null && !isNaN(dbTreatment.duration))
+						{
+							treatment.duration = Number(dbTreatment.duration);
+						}
+						if (dbTreatment.intensity != null && String(dbTreatment.intensity) != "")
+						{
+							treatment.exerciseIntensity = String(dbTreatment.intensity);
+						}
 						
 						treatmentsList.push(treatment);
 						treatmentsMap[treatment.ID] = treatment;
@@ -401,6 +409,10 @@ package treatments
 				}
 				
 				Trace.myTrace("TreatmentsManager.as", "Fetched " + treatmentsList.length + " treatment(s)");
+				
+				
+				trace(ObjectUtil.toString(treatmentsList));
+				
 			}
 		}
 		
@@ -1661,6 +1673,9 @@ package treatments
 		
 		public static function deleteTreatment(treatment:Treatment, updateNightscout:Boolean = true, nullifyTreatment:Boolean = true, deleteFromDatabase:Boolean = true, notifyInternally:Boolean = true, notiyExternally:Boolean = false):void
 		{
+			if (treatment == null) 
+				return;
+			
 			Trace.myTrace("TreatmentsManager.as", "deleteTreatment called!");
 			
 			if (treatmentsMap[treatment.ID] != null) //treatment exists
@@ -1696,6 +1711,20 @@ package treatments
 						if (notiyExternally)
 							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, spikeTreatment));
 						
+						//Delete from settings
+						if (spikeTreatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, "0", true, false);
+						}
+						else if (spikeTreatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PUMP_BATTERY_ON, "0", true, false);
+						}
+						else if (spikeTreatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, "0", true, false);
+						}
+						
 						//Delete from Nightscout
 						if (updateNightscout && (NightscoutService.serviceActive || NightscoutService.followerModeEnabled))
 							NightscoutService.deleteTreatment(spikeTreatment);
@@ -1715,7 +1744,24 @@ package treatments
 		
 		public static function updateTreatment(treatment:Treatment, updateNightscout:Boolean = true):void
 		{
+			if (treatment == null) 
+				return;
+			
 			Trace.myTrace("TreatmentsManager.as", "updateTreatment called! Treatment type: " + treatment.type);
+			
+			//Update settings
+			if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatment.timestamp), true, false);
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PUMP_BATTERY_ON, String(treatment.timestamp), true, false);
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatment.timestamp), true, false);
+			}
 			
 			//Notify listeners
 			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
@@ -1732,6 +1778,20 @@ package treatments
 		public static function addNightscoutTreatment(treatment:Treatment, uploadToNightscout:Boolean = false):void
 		{	
 			Trace.myTrace("TreatmentsManager.as", "addNightscoutTreatment called! Treatment type: " + treatment.type);
+			
+			//Save settings
+			if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatment.timestamp), true, false);
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE, String(treatment.timestamp), true, false);
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatment.timestamp), true, false);
+			}
 			
 			//Insert in Database
 			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -1824,8 +1884,20 @@ package treatments
 				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_grams_label');
 			else if (type == Treatment.TYPE_MEAL_BOLUS)
 				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','enter_meal_label');
+			else if (type == Treatment.TYPE_EXERCISE)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_exercise');
+			else if (type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_insulin_cartridge_change');
+			else if (type == Treatment.TYPE_PUMP_SITE_CHANGE)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change');
+			else if (type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_battery_change');
 			
 			treatmentInserterTitleLabel = LayoutFactory.createLabel(treatmentTitle, HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
+			if (type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE || type == Treatment.TYPE_PUMP_BATTERY_CHANGE || type == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				treatmentInserterTitleLabel.paddingBottom = 15;
+			}
 			treatmentInserterContainer.addChild(treatmentInserterTitleLabel);
 			
 			//Fields
@@ -1874,6 +1946,40 @@ package treatments
 				glucoseSpacer = new Sprite();
 				glucoseSpacer.height = 10;
 				treatmentInserterContainer.addChild(glucoseSpacer);
+			}
+			
+			if (type == Treatment.TYPE_EXERCISE)
+			{
+				//Duration Amout
+				exerciseDurationTextInput = LayoutFactory.createTextInput(false, true, 159, HorizontalAlign.CENTER, false);
+				exerciseDurationTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
+				exerciseDurationTextInput.maxChars = 4;
+				exerciseDurationTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_prompt');
+				treatmentInserterContainer.addChild(exerciseDurationTextInput);
+				
+				exerciseChangerSpacer = new Sprite();
+				exerciseChangerSpacer.height = 10;
+				treatmentInserterContainer.addChild(exerciseChangerSpacer);
+			
+				//Intensity
+				var exerciseIntensityLayout:HorizontalLayout = new HorizontalLayout();
+				exerciseIntensityLayout.distributeWidths = true;
+				exerciseIntensityLayout.paddingBottom = 20;
+				
+				exerciseIntensityContainer = new LayoutGroup();
+				exerciseIntensityContainer.layout = exerciseIntensityLayout;
+				exerciseIntensityGroup = new ToggleGroup();
+				
+				lowIntensity = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_low_label') , exerciseIntensityGroup);
+				moderateIntensity = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_moderate_label'), exerciseIntensityGroup);
+				highIntendity = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_high_label'), exerciseIntensityGroup);
+				
+				exerciseIntensityGroup.selectedItem = moderateIntensity;
+				
+				exerciseIntensityContainer.addChild(lowIntensity);
+				exerciseIntensityContainer.addChild(moderateIntensity);
+				exerciseIntensityContainer.addChild(highIntendity);
+				treatmentInserterContainer.addChild(exerciseIntensityContainer);
 			}
 			
 			if (type == Treatment.TYPE_CARBS_CORRECTION || type == Treatment.TYPE_MEAL_BOLUS)
@@ -1966,8 +2072,10 @@ package treatments
 			treatmentTime.value = new Date();
 			treatmentTime.height = 30;
 			treatmentInserterContainer.addChild(treatmentTime);
-			if (type == Treatment.TYPE_MEAL_BOLUS)
+			if (type == Treatment.TYPE_MEAL_BOLUS || type == Treatment.TYPE_EXERCISE)
+			{
 				treatmentTime.minWidth = 270;
+			}
 			treatmentTime.validate();
 			
 			treatmentSpacer = new Sprite();
@@ -1980,7 +2088,14 @@ package treatments
 				extendedBolusMainContainer.width = insulinTextInput.width;
 			}
 			if (type == Treatment.TYPE_GLUCOSE_CHECK)
+			{
 				glucoseTextInput.width = treatmentTime.width;
+			}
+			if (type == Treatment.TYPE_EXERCISE)
+			{
+				exerciseDurationTextInput.width = treatmentTime.width;
+				exerciseIntensityContainer.width = treatmentTime.width;
+			}
 			if (type == Treatment.TYPE_CARBS_CORRECTION)
 			{
 				carbsTextInput.width = treatmentTime.width;
@@ -2066,6 +2181,14 @@ package treatments
 				actionFunction = onCarbsEntered;
 			else if (type == Treatment.TYPE_MEAL_BOLUS)
 				actionFunction = onMealEntered;
+			else if (type == Treatment.TYPE_EXERCISE)
+				actionFunction = onExerciseEntered;
+			else if (type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+				actionFunction = onInsulinCartridgeEntered;
+			else if (type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+				actionFunction = onPumpBatteryEntered;
+			else if (type == Treatment.TYPE_PUMP_SITE_CHANGE)
+				actionFunction = onPumpSiteEntered;
 			
 			var actionLayout:HorizontalLayout = new HorizontalLayout();
 			actionLayout.gap = 5;
@@ -2078,7 +2201,23 @@ package treatments
 			cancelButton.addEventListener(Event.TRIGGERED, closeCallout);
 			actionContainer.addChild(cancelButton);
 			
-			if (((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) || type == Treatment.TYPE_NOTE || type == Treatment.TYPE_GLUCOSE_CHECK || type == Treatment.TYPE_CARBS_CORRECTION)
+			if (
+				((type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_MEAL_BOLUS) && canAddInsulin) 
+				|| 
+				type == Treatment.TYPE_NOTE 
+				|| 
+				type == Treatment.TYPE_GLUCOSE_CHECK 
+				|| 
+				type == Treatment.TYPE_CARBS_CORRECTION
+				|| 
+				type == Treatment.TYPE_EXERCISE
+				|| 
+				type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE
+				|| 
+				type == Treatment.TYPE_PUMP_BATTERY_CHANGE
+				|| 
+				type == Treatment.TYPE_PUMP_SITE_CHANGE
+			)
 			{
 				addButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
 				addButton.addEventListener(Event.TRIGGERED, actionFunction);
@@ -2157,7 +2296,14 @@ package treatments
 					extendedBolusMainContainer.width = insulinTextInput.width;
 				}
 				if (type == Treatment.TYPE_GLUCOSE_CHECK)
+				{
 					glucoseTextInput.width = actionContainer.width;
+				}
+				if (type == Treatment.TYPE_EXERCISE)
+				{
+					exerciseDurationTextInput.width = actionContainer.width;
+					exerciseIntensityContainer.width = actionContainer.width;
+				}
 				if (type == Treatment.TYPE_CARBS_CORRECTION)
 				{
 					carbsTextInput.width = actionContainer.width;
@@ -2182,6 +2328,197 @@ package treatments
 			function closeCallout(e:Event):void
 			{
 				if (cancelButton != null) cancelButton.removeEventListener(Event.TRIGGERED, closeCallout);
+				
+				if (treatmentCallout != null) treatmentCallout.close();
+			}
+			
+			function onExerciseEntered (e:Event):void
+			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onExerciseEntered);
+				
+				if (!SystemUtil.isApplicationActive || treatmentTime == null || exerciseDurationTextInput == null || exerciseIntensityGroup == null)
+					return;
+				
+				function onAskNewExercise():void
+				{
+					addTreatment(type);
+				}
+				
+				if (exerciseDurationTextInput.text == "") 
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_duration'),
+						Number.NaN,
+						onAskNewExercise
+					);					
+				}
+				else
+				{
+					var selectedExerciseIntendityIndex:int = exerciseIntensityGroup.selectedIndex;
+					var selectedExerciseIntensity:String = Treatment.EXERCISE_INTENSITY_MODERATE;
+					if (selectedExerciseIntendityIndex == 0)
+						selectedExerciseIntensity = Treatment.EXERCISE_INTENSITY_LOW;
+					if (selectedExerciseIntendityIndex == 1)
+						selectedExerciseIntensity = Treatment.EXERCISE_INTENSITY_MODERATE;
+					if (selectedExerciseIntendityIndex == 2)
+						selectedExerciseIntensity = Treatment.EXERCISE_INTENSITY_HIGH;
+					
+					var treatment:Treatment = new Treatment
+					(
+						Treatment.TYPE_EXERCISE,
+						treatmentTime.value.valueOf(),
+						0,
+						"",
+						0,
+						0,
+						getEstimatedGlucose(treatmentTime.value.valueOf()),
+						notes != null ? notes.text : ""
+					);
+					
+					treatment.exerciseIntensity = selectedExerciseIntensity;
+					treatment.duration = Number(exerciseDurationTextInput.text);
+					
+					//Add to list
+					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
+					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Insert in DB
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						Database.insertTreatmentSynchronous(treatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(treatment);
+				}
+				
+				if (treatmentCallout != null) treatmentCallout.close();
+			}
+			
+			function onInsulinCartridgeEntered (e:Event):void
+			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onInsulinCartridgeEntered);
+				
+				if (!SystemUtil.isApplicationActive || treatmentTime == null)
+					return;
+				
+				var treatment:Treatment = new Treatment
+				(
+					Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE,
+					treatmentTime.value.valueOf(),
+					0,
+					"",
+					0,
+					0,
+					getEstimatedGlucose(treatmentTime.value.valueOf()),
+					notes != null ? notes.text : ""
+				);
+				
+				//Add to list
+				treatmentsList.push(treatment);
+				treatmentsMap[treatment.ID] = treatment;
+				
+				//Update Settings
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatmentTime.value.valueOf()), true, false);
+				
+				Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+				
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				
+				//Insert in DB
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					Database.insertTreatmentSynchronous(treatment);
+				
+				//Upload to Nightscout
+				NightscoutService.uploadTreatment(treatment);
+				
+				if (treatmentCallout != null) treatmentCallout.close();
+			}
+			
+			function onPumpBatteryEntered (e:Event):void
+			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onPumpBatteryEntered);
+				
+				if (!SystemUtil.isApplicationActive || treatmentTime == null)
+					return;
+				
+				var treatment:Treatment = new Treatment
+				(
+					Treatment.TYPE_PUMP_BATTERY_CHANGE,
+					treatmentTime.value.valueOf(),
+					0,
+					"",
+					0,
+					0,
+					getEstimatedGlucose(treatmentTime.value.valueOf()),
+					notes != null ? notes.text : ""
+				);
+				
+				//Add to list
+				treatmentsList.push(treatment);
+				treatmentsMap[treatment.ID] = treatment;
+				
+				//Update Settings
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE, String(treatmentTime.value.valueOf()), true, false);
+				
+				Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+				
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				
+				//Insert in DB
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					Database.insertTreatmentSynchronous(treatment);
+				
+				//Upload to Nightscout
+				NightscoutService.uploadTreatment(treatment);
+				
+				if (treatmentCallout != null) treatmentCallout.close();
+			}
+			
+			function onPumpSiteEntered (e:Event):void
+			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onPumpSiteEntered);
+				
+				if (!SystemUtil.isApplicationActive || treatmentTime == null)
+					return;
+				
+				var treatment:Treatment = new Treatment
+				(
+					Treatment.TYPE_PUMP_SITE_CHANGE,
+					treatmentTime.value.valueOf(),
+					0,
+					"",
+					0,
+					0,
+					getEstimatedGlucose(treatmentTime.value.valueOf()),
+					notes != null ? notes.text : ""
+				);
+				
+				//Add to list
+				treatmentsList.push(treatment);
+				treatmentsMap[treatment.ID] = treatment;
+				
+				//Update Settings
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatmentTime.value.valueOf()), true, false);
+				
+				Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + treatment.type);
+				
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				
+				//Insert in DB
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+					Database.insertTreatmentSynchronous(treatment);
+				
+				//Upload to Nightscout
+				NightscoutService.uploadTreatment(treatment);
 				
 				if (treatmentCallout != null) treatmentCallout.close();
 			}
@@ -2885,6 +3222,9 @@ package treatments
 				
 				if (notes != null)
 					notes.clearFocus();
+				
+				if (exerciseDurationTextInput != null)
+					exerciseDurationTextInput.clearFocus();
 			}
 			
 			function onBolusExtendedChanged(e:Event):void
@@ -2935,6 +3275,31 @@ package treatments
 				else
 				{
 					disposeExtendedBolusComponents();
+				}
+				
+				//Readjust callout
+				
+				if (treatmentInserterContainer != null && treatmentCallout != null && contentScrollContainer != null && totalScrollContainer != null)
+				{
+					treatmentInserterContainer.invalidate();
+					contentScrollContainer.invalidate();
+					totalScrollContainer.invalidate();
+					treatmentCallout.invalidate();
+					
+					treatmentInserterContainer.validate();
+					var contentOriginalHeight:Number = treatmentInserterContainer.height + 60;
+					var suggestedCalloutHeight:Number = Constants.stageHeight - yPos - 10;
+					var finalCalloutHeight:Number = contentOriginalHeight > suggestedCalloutHeight ?  suggestedCalloutHeight : contentOriginalHeight;
+					
+					treatmentCallout.height = finalCalloutHeight;
+					treatmentCallout.validate();
+					
+					contentScrollContainer.height = finalCalloutHeight - 50;
+					contentScrollContainer.maxHeight = finalCalloutHeight - 50;
+					contentScrollContainer.validate();
+					totalScrollContainer.height = finalCalloutHeight - 50;
+					totalScrollContainer.maxHeight = finalCalloutHeight - 50;
+					totalScrollContainer.validate();
 				}
 			}
 			
@@ -3251,6 +3616,56 @@ package treatments
 					otherFieldsContainer = null;
 				}
 				
+				if (highIntendity != null)
+				{
+					highIntendity.removeFromParent();
+					highIntendity.dispose();
+					highIntendity = null;
+				}
+				
+				if (moderateIntensity != null)
+				{
+					moderateIntensity.removeFromParent();
+					moderateIntensity.dispose();
+					moderateIntensity = null;
+				}
+				
+				if (lowIntensity != null)
+				{
+					lowIntensity.removeFromParent();
+					lowIntensity.dispose();
+					lowIntensity = null;
+				}
+				
+				if (exerciseIntensityContainer != null)
+				{
+					exerciseIntensityContainer.removeFromParent();
+					exerciseIntensityContainer.dispose();
+					exerciseIntensityContainer = null;
+				}
+				
+				if (exerciseChangerSpacer != null)
+				{
+					exerciseChangerSpacer.removeFromParent();
+					exerciseChangerSpacer.dispose();
+					exerciseChangerSpacer = null;
+				}
+				
+				if (exerciseDurationTextInput != null)
+				{
+					exerciseDurationTextInput.removeEventListener(FeathersEventType.ENTER, onClearFocus);
+					exerciseDurationTextInput.removeFromParent();
+					exerciseDurationTextInput.dispose();
+					exerciseDurationTextInput = null;
+				}
+				
+				if (exerciseChangerSpacer != null)
+				{
+					exerciseChangerSpacer.removeFromParent();
+					exerciseChangerSpacer.dispose();
+					exerciseChangerSpacer = null;
+				}
+				
 				if (actionContainer != null)
 				{
 					actionContainer.removeFromParent();
@@ -3365,7 +3780,24 @@ package treatments
 		
 		public static function addExternalTreatment(treatment:Treatment, syncToNightscout:Boolean = true):void
 		{
+			if (treatment == null) 
+				return;
+			
 			Trace.myTrace("TreatmentsManager.as", "addExternalTreatment called! Type: " + treatment.type);
+			
+			//Save settings
+			if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatment.timestamp), true, false);
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE, String(treatment.timestamp), true, false);
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatment.timestamp), true, false);
+			}
 			
 			//Insert in DB
 			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -3499,6 +3931,8 @@ package treatments
 				var treatmentInsulinPeak:Number = Number.NaN;
 				var treatmentInsulinCurve:String = "bilinear";
 				var treatmentCarbDelayTime:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME));
+				var treatmentDuration:Number = Number.NaN;
+				var treatmentExerciseIntensity:String = Treatment.EXERCISE_INTENSITY_MODERATE;
 				
 				if (treatmentTimestamp < firstReadingTimestamp)
 				{
@@ -3802,26 +4236,39 @@ package treatments
 						treatmentCarbs = Number(nsTreatment.carbs);
 				}
 				else if (treatmentEventType == "Note")
-					treatmentType = Treatment.TYPE_NOTE;
-				else if (treatmentEventType == "Exercise")
 				{
 					treatmentType = Treatment.TYPE_NOTE;
-					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Exercise (NS)";
+				}
+				else if (treatmentEventType == "Exercise")
+				{
+					treatmentType = Treatment.TYPE_EXERCISE;
+					
+					if (nsTreatment.duration != null)
+					{
+						treatmentDuration = nsTreatment.duration;
+					}
+					
+					if (nsTreatment.exerciseIntensity != null)
+					{
+						treatmentExerciseIntensity = nsTreatment.exerciseIntensity;
+					}
+				}
+				else if (treatmentEventType == "Insulin Change")
+				{
+					treatmentType = Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE;
+				}
+				else if (treatmentEventType == "Site Change")
+				{
+					treatmentType = Treatment.TYPE_PUMP_SITE_CHANGE;
+				}
+				else if (treatmentEventType == "Pump Battery Change")
+				{
+					treatmentType = Treatment.TYPE_PUMP_BATTERY_CHANGE;
 				}
 				else if (treatmentEventType == "OpenAPS Offline")
 				{
 					treatmentType = Treatment.TYPE_NOTE;
 					treatmentNote += (treatmentNote != "" ? "\n" : "") + "OpenAPS Offline";
-				}
-				else if (treatmentEventType == "Site Change")
-				{
-					treatmentType = Treatment.TYPE_NOTE;
-					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Pump Site Change";
-				}
-				else if (treatmentEventType == "Pump Battery Change")
-				{
-					treatmentType = Treatment.TYPE_NOTE;
-					treatmentNote += (treatmentNote != "" ? "\n" : "") + "Pump Battery Change";
 				}
 				else if (treatmentEventType == "Resume Pump")
 				{
@@ -3905,6 +4352,12 @@ package treatments
 							treatmentCarbDelayTime
 						);
 						
+						if (treatmentType == Treatment.TYPE_EXERCISE)
+						{
+							treatment.duration = treatmentDuration;
+							treatment.exerciseIntensity = treatmentExerciseIntensity;
+						}
+						
 						//If it's a future treatment let's mark that it needs adjustment for proper displaying on the chart
 						if (treatmentTimestamp > now)
 							treatment.needsAdjustment = true;
@@ -3961,6 +4414,11 @@ package treatments
 							{
 								spikeTreatment.timestamp = treatmentTimestamp;
 								spikeTreatment.glucoseEstimated = treatmentType != Treatment.TYPE_GLUCOSE_CHECK ? getEstimatedGlucose(treatmentTimestamp) : spikeTreatment.glucose;
+								wasTreatmentModified = true;
+							}
+							if (spikeTreatment.type == Treatment.TYPE_EXERCISE && !isNaN(treatmentDuration) && spikeTreatment.duration != treatmentDuration)
+							{
+								spikeTreatment.duration = treatmentDuration;
 								wasTreatmentModified = true;
 							}
 							
@@ -4194,6 +4652,26 @@ package treatments
 		public static function getTreatmentByID(treatmentID:String):Treatment
 		{
 			return treatmentsMap[treatmentID];
+		}
+		
+		public static function getExerciseTreatmentIntensity(treatment:Treatment):String
+		{
+			var exerciseIntensity:String = ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+			
+			if (treatment.exerciseIntensity == Treatment.EXERCISE_INTENSITY_LOW)
+			{
+				exerciseIntensity = ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_low_label');
+			}
+			else if (treatment.exerciseIntensity == Treatment.EXERCISE_INTENSITY_MODERATE)
+			{
+				exerciseIntensity = ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_moderate_label');
+			}
+			else if (treatment.exerciseIntensity == Treatment.EXERCISE_INTENSITY_HIGH)
+			{
+				exerciseIntensity = ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_high_label');
+			}
+			
+			return exerciseIntensity;
 		}
 		
 		public static function lastTreatmentIsCarb():Boolean

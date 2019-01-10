@@ -49,6 +49,8 @@ package network.httpserver.API
 					var treatmentGlucose:Number = 0;
 					var treatmentNote:String = "";
 					var treatmentCarbDelayTime:Number = 20;
+					var treatmentDuration:Number = Number.NaN;
+					var treatmentExerciseIntensity:String = Treatment.EXERCISE_INTENSITY_MODERATE;
 					
 					if (treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_BOLUS)
 					{
@@ -113,8 +115,43 @@ package network.httpserver.API
 						else
 							response = "ERROR";
 					}
+					else if (treatmentType == Treatment.TYPE_EXERCISE)
+					{
+						if (params.duration != null && !isNaN(params.duration))
+							treatmentDuration = Number(params.duration);
+						else
+							response = "ERROR";
+						
+						if (params.exerciseIntensity != null && String(params.exerciseIntensity) != "")
+							treatmentExerciseIntensity = String(params.exerciseIntensity);
+					}
 					
-					if ((treatmentType == Treatment.TYPE_BOLUS || treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_MEAL_BOLUS || treatmentType == Treatment.TYPE_CARBS_CORRECTION || treatmentType == Treatment.TYPE_GLUCOSE_CHECK || treatmentType == Treatment.TYPE_NOTE) && response == "OK")
+					if 
+					(
+						(
+							treatmentType == Treatment.TYPE_BOLUS 
+							||
+							treatmentType == Treatment.TYPE_CORRECTION_BOLUS 
+							|| 
+							treatmentType == Treatment.TYPE_MEAL_BOLUS 
+							|| 
+							treatmentType == Treatment.TYPE_CARBS_CORRECTION 
+							|| 
+							treatmentType == Treatment.TYPE_GLUCOSE_CHECK 
+							||
+							treatmentType == Treatment.TYPE_NOTE
+							||
+							treatmentType == Treatment.TYPE_EXERCISE
+							||
+							treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE
+							||
+							treatmentType == Treatment.TYPE_PUMP_BATTERY_CHANGE
+							||
+							treatmentType == Treatment.TYPE_PUMP_SITE_CHANGE
+						) 
+						&& 
+						response == "OK"
+					)
 					{
 						var treatment:Treatment = new Treatment
 						(
@@ -129,6 +166,26 @@ package network.httpserver.API
 							null,
 							treatmentCarbDelayTime
 						);
+						
+						if (treatmentType == Treatment.TYPE_EXERCISE)
+						{
+							treatment.duration = treatmentDuration;
+							treatment.exerciseIntensity = treatmentExerciseIntensity;
+						}
+						
+						if (treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatmentTimestamp), true, false);
+						}
+						else if (treatmentType == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE, String(treatmentTimestamp), true, false);
+						}
+						else if (treatmentType == Treatment.TYPE_PUMP_SITE_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatmentTimestamp), true, false);
+						}
+						
 						TreatmentsManager.addExternalTreatment(treatment);
 					}
 					else

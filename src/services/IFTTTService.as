@@ -91,6 +91,18 @@ package services
 		private static var isIFTTTFastRiseSnoozedEnabled:Boolean;
 		private static var isIFTTTFastDropTriggeredEnabled:Boolean;
 		private static var isIFTTTFastDropSnoozedEnabled:Boolean;
+		private static var isIFTTTexerciseTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTexerciseTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTexerciseTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTinsulinCartridgeTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTinsulinCartridgeTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTinsulinCartridgeTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTpumpSiteTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTpumpSiteTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTpumpSiteTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTpumpBatteryTreatmentAddedEnabled:Boolean;
+		private static var isIFTTTpumpBatteryTreatmentUpdatedEnabled:Boolean;
+		private static var isIFTTTpumpBatteryTreatmentDeletedEnabled:Boolean;
 		
 		public function IFTTTService()
 		{
@@ -155,7 +167,19 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_NOTE_UPDATED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_NOTE_DELETED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_IOB_UPDATED_ON ||
-				e.data == LocalSettings.LOCAL_SETTING_IFTTT_COB_UPDATED_ON
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_COB_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON
 			)
 			{
 				getInitialProperties();
@@ -210,6 +234,18 @@ package services
 			isIFTTTnoteTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_NOTE_DELETED_ON) == "true";
 			isIFTTTiobUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_IOB_UPDATED_ON) == "true";
 			isIFTTTcobUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_COB_UPDATED_ON) == "true";
+			isIFTTTexerciseTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_ADDED_ON) == "true";
+			isIFTTTexerciseTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_UPDATED_ON) == "true";
+			isIFTTTexerciseTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_DELETED_ON) == "true";
+			isIFTTTinsulinCartridgeTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_ADDED_ON) == "true";
+			isIFTTTinsulinCartridgeTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_UPDATED_ON) == "true";
+			isIFTTTinsulinCartridgeTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_DELETED_ON) == "true";
+			isIFTTTpumpSiteTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_ADDED_ON) == "true";
+			isIFTTTpumpSiteTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_UPDATED_ON) == "true";
+			isIFTTTpumpSiteTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_DELETED_ON) == "true";
+			isIFTTTpumpBatteryTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON) == "true";
+			isIFTTTpumpBatteryTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON) == "true";
+			isIFTTTpumpBatteryTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON) == "true";
 		}
 		
 		private static function configureService():void
@@ -330,17 +366,17 @@ package services
 			else
 				HttpServer.instance.removeEventListener(HTTPServerEvent.SERVER_OFFLINE, onServerOffline);
 			
-			if ((isIFTTTbolusTreatmentAddedEnabled || isIFTTTcarbsTreatmentAddedEnabled || isIFTTTmealTreatmentAddedEnabled || isIFTTTbgCheckTreatmentAddedEnabled || isIFTTTnoteTreatmentAddedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+			if ((isIFTTTbolusTreatmentAddedEnabled || isIFTTTcarbsTreatmentAddedEnabled || isIFTTTmealTreatmentAddedEnabled || isIFTTTbgCheckTreatmentAddedEnabled || isIFTTTnoteTreatmentAddedEnabled || isIFTTTexerciseTreatmentAddedEnabled || isIFTTTinsulinCartridgeTreatmentAddedEnabled || isIFTTTpumpSiteTreatmentAddedEnabled || isIFTTTpumpBatteryTreatmentAddedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
 				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
 			else
 				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
 			
-			if ((isIFTTTbolusTreatmentDeletedEnabled || isIFTTTcarbsTreatmentDeletedEnabled || isIFTTTmealTreatmentDeletedEnabled || isIFTTTbgCheckTreatmentDeletedEnabled || isIFTTTnoteTreatmentDeletedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+			if ((isIFTTTbolusTreatmentDeletedEnabled || isIFTTTcarbsTreatmentDeletedEnabled || isIFTTTmealTreatmentDeletedEnabled || isIFTTTbgCheckTreatmentDeletedEnabled || isIFTTTnoteTreatmentDeletedEnabled || isIFTTTexerciseTreatmentDeletedEnabled || isIFTTTinsulinCartridgeTreatmentDeletedEnabled || isIFTTTpumpSiteTreatmentDeletedEnabled || isIFTTTpumpBatteryTreatmentDeletedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
 				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
 			else
 				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
 			
-			if ((isIFTTTbolusTreatmentUpdatedEnabled || isIFTTTcarbsTreatmentUpdatedEnabled || isIFTTTmealTreatmentUpdatedEnabled || isIFTTTbgCheckTreatmentUpdatedEnabled || isIFTTTnoteTreatmentUpdatedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+			if ((isIFTTTbolusTreatmentUpdatedEnabled || isIFTTTcarbsTreatmentUpdatedEnabled || isIFTTTmealTreatmentUpdatedEnabled || isIFTTTbgCheckTreatmentUpdatedEnabled || isIFTTTnoteTreatmentUpdatedEnabled || isIFTTTexerciseTreatmentUpdatedEnabled || isIFTTTinsulinCartridgeTreatmentUpdatedEnabled || isIFTTTpumpSiteTreatmentUpdatedEnabled || isIFTTTpumpBatteryTreatmentUpdatedEnabled || isIFTTTiobUpdatedEnabled || isIFTTTcobUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
 				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentUpdated);
 			else
 				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentUpdated);
@@ -363,7 +399,11 @@ package services
 				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentAddedEnabled) ||
 				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentAddedEnabled) ||
 				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT && isIFTTTmealTreatmentAddedEnabled) ||
-				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentAddedEnabled)
+				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_EXERCISE && isIFTTTexerciseTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE && isIFTTTinsulinCartridgeTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE && isIFTTTpumpSiteTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentAddedEnabled)
 			)
 				triggerTreatment(treatment, "added");
 			
@@ -387,7 +427,11 @@ package services
 				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentDeletedEnabled) ||
 				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentDeletedEnabled) ||
 				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT && isIFTTTmealTreatmentDeletedEnabled) ||
-				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentDeletedEnabled)
+				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_EXERCISE && isIFTTTexerciseTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE && isIFTTTinsulinCartridgeTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE && isIFTTTpumpSiteTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentDeletedEnabled)
 			)
 				triggerTreatment(treatment, "deleted");
 			
@@ -411,7 +455,11 @@ package services
 				(treatment.type == Treatment.TYPE_GLUCOSE_CHECK && isIFTTTbgCheckTreatmentUpdatedEnabled) ||
 				(treatment.type == Treatment.TYPE_MEAL_BOLUS && isIFTTTmealTreatmentUpdatedEnabled) ||
 				(treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT && isIFTTTmealTreatmentUpdatedEnabled) ||
-				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentUpdatedEnabled)
+				(treatment.type == Treatment.TYPE_NOTE && isIFTTTnoteTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_EXERCISE && isIFTTTexerciseTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE && isIFTTTinsulinCartridgeTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE && isIFTTTpumpSiteTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentUpdatedEnabled)
 			)
 				triggerTreatment(treatment, "updated");
 			
@@ -472,6 +520,26 @@ package services
 			else if (treatment.type == Treatment.TYPE_NOTE)
 			{
 				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_note");
+				treatmentValue = treatment.note;
+			}
+			else if (treatment.type == Treatment.TYPE_EXERCISE)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_exercise");
+				treatmentValue = ModelLocator.resourceManagerInstance.getString("treatments","exercise_duration_label") + ": " + treatment.duration + ModelLocator.resourceManagerInstance.getString("treatments","minutes_small_label") + ", " + ModelLocator.resourceManagerInstance.getString("treatments","exercise_intensity_label") + ": " + TreatmentsManager.getExerciseTreatmentIntensity(treatment);
+			}
+			else if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_insulin_cartridge_change");
+				treatmentValue = treatment.note;
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_pump_site_change");
+				treatmentValue = treatment.note;
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_pump_battery_change");
 				treatmentValue = treatment.note;
 			}
 			

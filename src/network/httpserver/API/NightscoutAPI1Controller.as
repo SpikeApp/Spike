@@ -560,6 +560,8 @@ package network.httpserver.API
 				var treatmentCarbs:Number = 0;
 				var treatmentGlucose:Number = 0;
 				var treatmentNote:String = "";
+				var treatmentDuration:Number = 0;
+				var treatmentExerciseIntensity:String = Treatment.EXERCISE_INTENSITY_MODERATE;
 				
 				if (treatmentEventType == "Correction Bolus" || treatmentEventType == "Bolus" || treatmentEventType == "Correction")
 				{
@@ -613,6 +615,29 @@ package network.httpserver.API
 					treatmentType = Treatment.TYPE_GLUCOSE_CHECK;
 					treatmentGlucose = Number(params.glucose);
 				}
+				else if (treatmentEventType == "Insulin Change")
+				{
+					treatmentType = Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE;
+				}
+				else if (treatmentEventType == "Pump Battery Change")
+				{
+					treatmentType = Treatment.TYPE_PUMP_BATTERY_CHANGE;
+				}
+				else if (treatmentEventType == "Site Change")
+				{
+					treatmentType = Treatment.TYPE_PUMP_SITE_CHANGE;
+				}
+				else if (treatmentEventType == "Exercise")
+				{
+					treatmentType = Treatment.TYPE_EXERCISE;
+					
+					if (params.duration != null)
+						treatmentDuration = Number(params.duration);
+					
+					if (params.exerciseIntensity != null)
+						treatmentExerciseIntensity= String(params.exerciseIntensity);
+				}
+				
 				
 				if (params.notes != null)
 					treatmentNote = params.notes;
@@ -633,6 +658,25 @@ package network.httpserver.API
 						treatmentNote
 					);
 					
+					if (treatmentType == Treatment.TYPE_EXERCISE)
+					{
+						treatment.duration = treatmentDuration;
+						treatment.exerciseIntensity = treatmentExerciseIntensity;
+					}
+					
+					if (treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+					{
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatmentTimestamp), true, false);
+					}
+					else if (treatmentType == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+					{
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE, String(treatmentTimestamp), true, false);
+					}
+					else if (treatmentType == Treatment.TYPE_PUMP_SITE_CHANGE)
+					{
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatmentTimestamp), true, false);
+					}
+					
 					//Add treatment to Spike and Databse
 					TreatmentsManager.addNightscoutTreatment(treatment, true);
 					
@@ -646,6 +690,11 @@ package network.httpserver.API
 					responseObject.carbs = treatmentCarbs;
 					responseObject.glucose = treatmentGlucose;
 					responseObject.notes = treatmentNote;
+					if (treatmentType == Treatment.TYPE_EXERCISE)
+					{
+						responseObject.duration = treatmentDuration;
+						responseObject.exerciseIntensity = treatmentExerciseIntensity;
+					}
 					responseArray.push(responseObject);
 					response = SpikeJSON.stringify(responseArray);
 				}
@@ -682,6 +731,14 @@ package network.httpserver.API
 							responseTreatmentType = "Sensor Start";
 						else if (spikeTreatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || spikeTreatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 							responseTreatmentType = "Combo Bolus";
+						else if (spikeTreatment.type == Treatment.TYPE_EXERCISE)
+							responseTreatmentType = "Exercise";
+						else if (spikeTreatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+							responseTreatmentType = "Insulin Change";
+						else if (spikeTreatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+							responseTreatmentType = "Pump Battery Change";
+						else if (spikeTreatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+							responseTreatmentType = "Site Change";
 						
 						var responseTreatment:Object = {};
 						responseTreatment["_id"] = spikeTreatment.ID;
@@ -733,6 +790,12 @@ package network.httpserver.API
 						if (responseTreatmentType == "BG Check")
 						{
 							responseTreatment.glucoseType = "Finger";
+						}
+						
+						if (responseTreatmentType == "Exercise")
+						{
+							responseTreatment.duration = spikeTreatment.duration;
+							responseTreatment.exerciseIntensity = spikeTreatment.exerciseIntensity;
 						}
 						
 						responseTreatment.glucose = spikeTreatment.glucose;

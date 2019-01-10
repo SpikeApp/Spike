@@ -86,10 +86,14 @@ package ui.chart
 	import ui.chart.layout.GraphLayoutFactory;
 	import ui.chart.markers.BGCheckMarker;
 	import ui.chart.markers.CarbsMarker;
+	import ui.chart.markers.ExerciseMarker;
 	import ui.chart.markers.GlucoseMarker;
+	import ui.chart.markers.InsulinCartridgeMarker;
 	import ui.chart.markers.InsulinMarker;
 	import ui.chart.markers.MealMarker;
 	import ui.chart.markers.NoteMarker;
+	import ui.chart.markers.PumpBatteryMarker;
+	import ui.chart.markers.PumpSiteMarker;
 	import ui.chart.markers.SensorMarker;
 	import ui.chart.pills.ChartComponentPill;
 	import ui.chart.pills.ChartInfoPill;
@@ -319,6 +323,9 @@ package ui.chart
 		private var spikeMasterPhoneBatteryPill:ChartTreatmentPill;
 		private var spikeMasterTransmitterBatteryPill:ChartTreatmentPill;
 		private var bagePill:ChartTreatmentPill;
+		private var localBAGEAdded:Boolean = false;
+		private var localIAGEAdded:Boolean = false;
+		private var localCAGEAdded:Boolean = false;
 		
 		//Absorption curves
 		private var insulinCurveCallout:Callout;
@@ -437,7 +444,7 @@ package ui.chart
 		private var predictionDetailTimeContainer:LayoutGroup;
 		private var predictionDetailTimeTitle:Label;
 		private var predictionDetailTimeBody:Label;
-		
+
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
 			//Header
@@ -1618,7 +1625,7 @@ package ui.chart
 				var extendedInsulinChildMarker:InsulinMarker = new InsulinMarker(treatment, timelineRange, true);
 				extendedInsulinChildMarker.x = (extendedInsulinChildMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				extendedInsulinChildMarker.y = _graphHeight - (extendedInsulinChildMarker.radius * 1.66) - ((extendedInsulinChildMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
-				extendedInsulinChildMarker.filter = new FilterChain(new GlowFilter(extendedInsulinChildMarker.strokeColor, 1, 2.2, 1), new BlurFilter(5, 1, 1))
+				extendedInsulinChildMarker.filter = new FilterChain(new GlowFilter(extendedInsulinChildMarker.strokeColor, 1, 2.2, 1), new BlurFilter(!DeviceInfo.isTablet() ? 5 : 10, !DeviceInfo.isTablet() ? 5 : 10, 1))
 				
 				extendedInsulinChildMarker.index = treatmentsList.length;
 				treatmentsList.push(extendedInsulinChildMarker);
@@ -1745,6 +1752,62 @@ package ui.chart
 				treatmentsMap[treatment.ID] = noteMarker;
 				
 				chartTreatment = noteMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_EXERCISE)
+			{
+				//Create treatment marker and add it to the chart
+				var exerciseMarker:ExerciseMarker = new ExerciseMarker(treatment, timelineRange);
+				
+				exerciseMarker.x = ((exerciseMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) - (exerciseMarker.width / 2) + (mainChartGlucoseMarkerRadius / 2);
+				exerciseMarker.y = (_graphHeight - exerciseMarker.height - (mainChartGlucoseMarkerRadius * 3) - ((exerciseMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 6;
+				
+				exerciseMarker.index = treatmentsList.length;
+				treatmentsList.push(exerciseMarker);
+				treatmentsMap[treatment.ID] = exerciseMarker;
+				
+				chartTreatment = exerciseMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+			{
+				//Create treatment marker and add it to the chart
+				var insulinCartridgeMarker:InsulinCartridgeMarker = new InsulinCartridgeMarker(treatment, timelineRange);
+				
+				insulinCartridgeMarker.x = ((insulinCartridgeMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) - (insulinCartridgeMarker.width / 2) + (mainChartGlucoseMarkerRadius / 2);
+				insulinCartridgeMarker.y = (_graphHeight - insulinCartridgeMarker.height - (mainChartGlucoseMarkerRadius * 3) - ((insulinCartridgeMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 3;
+				
+				insulinCartridgeMarker.index = treatmentsList.length;
+				treatmentsList.push(insulinCartridgeMarker);
+				treatmentsMap[treatment.ID] = insulinCartridgeMarker;
+				
+				chartTreatment = insulinCartridgeMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+			{
+				//Create treatment marker and add it to the chart
+				var pumpBatteryMarker:PumpBatteryMarker = new PumpBatteryMarker(treatment, timelineRange);
+				
+				pumpBatteryMarker.x = ((pumpBatteryMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) - (pumpBatteryMarker.width / 2) + (mainChartGlucoseMarkerRadius / 2);
+				pumpBatteryMarker.y = (_graphHeight - pumpBatteryMarker.height - (mainChartGlucoseMarkerRadius * 3) - ((pumpBatteryMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 3;
+				
+				pumpBatteryMarker.index = treatmentsList.length;
+				treatmentsList.push(pumpBatteryMarker);
+				treatmentsMap[treatment.ID] = pumpBatteryMarker;
+				
+				chartTreatment = pumpBatteryMarker;
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				//Create treatment marker and add it to the chart
+				var pumpSiteMarker:PumpSiteMarker = new PumpSiteMarker(treatment, timelineRange);
+				
+				pumpSiteMarker.x = ((pumpSiteMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) - (pumpSiteMarker.width / 2) + (mainChartGlucoseMarkerRadius / 2);
+				pumpSiteMarker.y = (_graphHeight - pumpSiteMarker.height - (mainChartGlucoseMarkerRadius * 3) - ((pumpSiteMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) - 1;
+				
+				pumpSiteMarker.index = treatmentsList.length;
+				treatmentsList.push(pumpSiteMarker);
+				treatmentsMap[treatment.ID] = pumpSiteMarker;
+				
+				chartTreatment = pumpSiteMarker;
 			}
 			else if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
@@ -1955,7 +2018,23 @@ package ui.chart
 				}
 				else if (treatment.treatment.type == Treatment.TYPE_SENSOR_START)
 				{
-					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_sensor_start');
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_sensor_start') + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_EXERCISE)
+				{
+					treatmentValue += ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_exercise') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_label') + ": " + treatment.treatment.duration + ModelLocator.resourceManagerInstance.getString('treatments','minutes_small_label') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_label') + ": " + TreatmentsManager.getExerciseTreatmentIntensity(treatment.treatment) + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_insulin_cartridge_change') + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_battery_change') + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
+				}
+				else if (treatment.treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change') + "\n\n" + treatmentBG + " " + GlucoseHelper.getGlucoseUnit();
 				}
 				
 				if (treatmentValue != "")
@@ -2047,12 +2126,15 @@ package ui.chart
 						lastReadingTimestamp = predictionsMainGlucoseDataPoints[predictionsMainGlucoseDataPoints.length - 1].timestamp;
 					}
 					
+					var childTreatmentsList:Array = [];
+					var allChildrenHidden:Boolean = false;
+					
 					if (treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 					{
 						var numberOfChildren:uint = treatment.children.length;
 						var deleteDelay:uint = 200;
 						
-						for (var i:int = 0; i <numberOfChildren; i++) 
+						for (var i:int = 0; i < numberOfChildren; i++) 
 						{
 							var child:ChartTreatment = treatment.children[i];
 							if (child != null)
@@ -2066,31 +2148,64 @@ package ui.chart
 										return;
 									}
 									
-									treatmentsContainer.removeChild(childToDelete);
-									treatmentsList.removeAt(childToDelete.index);
-									
-									var treatmentToDelete:Treatment = childToDelete.treatment;
-									
-									TreatmentsManager.deleteTreatment(childToDelete.treatment, false);
-									
-									childToDelete.dispose();
-									childToDelete = null;
+									childToDelete.alpha = 0;
+									childTreatmentsList.push(childToDelete);
 									
 								}, deleteDelay, child);
 							}
+						}
+						
+						setTimeout( function():void 
+						{
+							allChildrenHidden = true;
+						}, deleteDelay + 5);
+						
+						
+						setTimeout( function():void 
+						{
+							allChildrenHidden = true;
 							
-							if (predictionsEnabled)
+							if (deleteChildTreatments())
 							{
-								clearTimeout(redrawPredictionsTimeoutID);
+								var timelineStamp:Number = getTimelineTimestamp();
+								if (displayIOBEnabled)
+									calculateTotalIOB(timelineStamp);
+								if (displayCOBEnabled)
+									calculateTotalCOB(timelineStamp, lastTreatmentIsCarb);
 								
-								redrawPredictionsTimeoutID = setTimeout( function():void 
+								if (predictionsEnabled)
 								{
 									forceNightscoutPredictionRefresh = true;
 									redrawPredictions();
-								}, deleteDelay + 100 );
+								}
 							}
+							
+						}, Math.max(deleteDelay + 10, 1500));
+					}
+					
+					function deleteChildTreatments():Boolean
+					{
+						var childrenDeleted:Boolean = false;
+						
+						for(var k:int = childTreatmentsList.length - 1 ; k >= 0; k--)
+						{
+							var child:ChartTreatment = childTreatmentsList.pop();
+							
+							treatmentsContainer.removeChild(child);
+							treatmentsList.removeAt(child.index);
+							
+							if (child.treatment != null)
+							{
+								TreatmentsManager.deleteTreatment(child.treatment, false);
+							}
+							
+							child.dispose();
+							child = null;
+							
+							childrenDeleted = true;
 						}
 						
+						return childrenDeleted;
 					}
 					
 					var deleteX:Number = ((lastReadingTimestamp - firstBGReadingTimeStamp) * mainChartXFactor) + treatment.width + 5;
@@ -2098,34 +2213,49 @@ package ui.chart
 					
 					deleteTreatmentTween.onComplete = function():void
 					{
-						treatmentsContainer.removeChild(treatment);
-						treatmentsList.removeAt(treatment.index);
+						var deletionTimeout:uint = 1;
 						
-						var treatmentToDelete:Treatment = treatment.treatment;
-						
-						TreatmentsManager.deleteTreatment(treatment.treatment);
-						
-						treatment.dispose();
-						treatment = null;
-						
-						var timelineTimestamp:Number = getTimelineTimestamp();
-						if (displayIOBEnabled)
-							calculateTotalIOB(timelineTimestamp);
-						if (displayCOBEnabled)
-							calculateTotalCOB(timelineTimestamp, lastTreatmentIsCarb);
-						
-						if (predictionsEnabled && (treatmentToDelete.type == Treatment.TYPE_BOLUS || treatmentToDelete.type == Treatment.TYPE_CARBS_CORRECTION || treatmentToDelete.type == Treatment.TYPE_CORRECTION_BOLUS || treatmentToDelete.type == Treatment.TYPE_MEAL_BOLUS || treatmentToDelete.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatmentToDelete.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT))
+						if (treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 						{
-							clearTimeout(redrawPredictionsTimeoutID);
-							
-							redrawPredictionsTimeoutID = setTimeout( function():void 
-							{
-								forceNightscoutPredictionRefresh = true;
-								redrawPredictions();
-							}, 250 );
+							deletionTimeout = 200;
 						}
 						
-						deleteTreatmentTween = null;
+						setTimeout( function():void 
+						{
+							SystemUtil.executeWhenApplicationIsActive(treatmentsContainer.removeChild, treatment);
+							treatmentsList.removeAt(treatment.index);
+							
+							var treatmentToDelete:Treatment = treatment.treatment;
+							
+							TreatmentsManager.deleteTreatment(treatment.treatment);
+							
+							SystemUtil.executeWhenApplicationIsActive(treatment.dispose);
+							if (SystemUtil.isApplicationActive) treatment = null;
+							
+							if (allChildrenHidden)
+							{
+								deleteChildTreatments();
+							}
+							
+							var timelineTimestamp:Number = getTimelineTimestamp();
+							if (displayIOBEnabled)
+								calculateTotalIOB(timelineTimestamp);
+							if (displayCOBEnabled)
+								calculateTotalCOB(timelineTimestamp, lastTreatmentIsCarb);
+							
+							if (predictionsEnabled && (treatmentToDelete.type == Treatment.TYPE_BOLUS || treatmentToDelete.type == Treatment.TYPE_CARBS_CORRECTION || treatmentToDelete.type == Treatment.TYPE_CORRECTION_BOLUS || treatmentToDelete.type == Treatment.TYPE_MEAL_BOLUS || treatmentToDelete.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatmentToDelete.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT))
+							{
+								clearTimeout(redrawPredictionsTimeoutID);
+								
+								redrawPredictionsTimeoutID = setTimeout( function():void 
+								{
+									forceNightscoutPredictionRefresh = true;
+									redrawPredictions();
+								}, 250 );
+							}
+							
+							deleteTreatmentTween = null;
+						}, deletionTimeout );
 					}
 					Starling.juggler.add(deleteTreatmentTween);
 				}
@@ -2137,10 +2267,10 @@ package ui.chart
 					if(movedTimestamp < firstBGReadingTimeStamp)
 					{
 						AlertManager.showSimpleAlert
-							(
-								ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-								ModelLocator.resourceManagerInstance.getString('treatments','out_of_bounds_treatment')
-							);
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('treatments','out_of_bounds_treatment')
+						);
 					}
 					else
 					{
@@ -2165,7 +2295,8 @@ package ui.chart
 								if (child != null && child.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
 								{
 									child.treatment.timestamp += timeDifference;
-									child.treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(child.treatment.timestamp)
+									child.treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(child.treatment.timestamp);
+									TreatmentsManager.updateTreatment(child.treatment);
 								}
 							}
 						}
@@ -2211,11 +2342,17 @@ package ui.chart
 						{
 							clearTimeout(redrawPredictionsTimeoutID);
 							
+							var predTimeout:uint = 250;
+							if(treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+							{
+								predTimeout = 1500;
+							}
+							
 							redrawPredictionsTimeoutID = setTimeout( function():void 
 							{
 								forceNightscoutPredictionRefresh = true;
 								redrawPredictions();
-							}, 250 );
+							}, predTimeout );
 						}
 						
 						//Update database
@@ -2346,6 +2483,40 @@ package ui.chart
 									noteTween = null;
 								}
 								Starling.juggler.add(noteTween);
+							}
+						}
+						else if (treatment.treatment.type == Treatment.TYPE_EXERCISE || treatment.treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE || treatment.treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE || treatment.treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+						{
+							var iconTreatmentX:Number = ((treatment.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor) - (treatment.width / 2) + (mainChartGlucoseMarkerRadius / 2);
+							var iconTreatmentY:Number = (_graphHeight - treatment.height - (mainChartGlucoseMarkerRadius * 3) - ((treatment.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor) + (mainChartGlucoseMarkerRadius / 2)) + 8;
+							if (treatment.treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE || treatment.treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+							{
+								iconTreatmentY -= 5;
+							}
+							if (treatment.treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+							{
+								iconTreatmentY -= 9;
+							}
+							if (treatment.treatment.type == Treatment.TYPE_EXERCISE)
+							{
+								iconTreatmentY -= 2;
+							}
+							
+							if (!animate)
+							{
+								treatment.x = iconTreatmentX;
+								treatment.y = iconTreatmentY;
+							}
+							else
+							{
+								var iconTreatmentTween:Tween = new Tween(treatment, 0.8, Transitions.EASE_OUT_BACK);
+								iconTreatmentTween.moveTo(iconTreatmentX, iconTreatmentY);
+								iconTreatmentTween.onComplete = function():void
+								{
+									repositionOutOfBounds();
+									iconTreatmentTween = null;
+								}
+								Starling.juggler.add(iconTreatmentTween);
 							}
 						}
 						
@@ -8033,6 +8204,10 @@ package ui.chart
 				infoContainer = new ScrollContainer();
 				infoContainer.layout = infoLayout;
 				
+				localCAGEAdded = false;
+				localIAGEAdded = false;
+				localBAGEAdded = false;
+				
 				//Raw & Sage for master
 				if (!CGMBlueToothDevice.isFollower())
 				{
@@ -8104,6 +8279,42 @@ package ui.chart
 						sagePill.setValue(GlucoseFactory.getSensorAge());
 						sagePill.touchable = false;
 						infoContainer.addChild(sagePill);
+					}
+					
+					//CAGE
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CAGE_ON) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE) != "0")
+					{
+						if (cagePill != null) cagePill.dispose();
+						cagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','canula_age'));
+						cagePill.setValue(TimeSpan.getFormattedDateFromTimestamp(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE))));
+						cagePill.touchable = false;
+						infoContainer.addChild(cagePill);
+						
+						localCAGEAdded = true;
+					}
+					
+					//IAGE
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE) != "0")
+					{
+						if (iagePill != null) iagePill.dispose();
+						iagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_age'));
+						iagePill.setValue(TimeSpan.getFormattedDateFromTimestamp(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE))));
+						iagePill.touchable = false;
+						infoContainer.addChild(iagePill);
+						
+						localIAGEAdded = true;
+					}
+					
+					//BAGE
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BAGE_ON) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE) != "0")
+					{
+						if (bagePill != null) bagePill.dispose();
+						bagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','battery_age'));
+						bagePill.setValue(TimeSpan.getFormattedDateFromTimestamp(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE))));
+						bagePill.touchable = false;
+						infoContainer.addChild(bagePill);
+						
+						localBAGEAdded = true;
 					}
 				}
 				
@@ -8272,33 +8483,42 @@ package ui.chart
 			}
 			
 			//CAGE
-			if (cagePill != null) cagePill.dispose();
-			if (e.userInfo.cage != null && e.userInfo.cage != "" && String(e.userInfo.cage).indexOf("n/a") == -1)
+			if (!localCAGEAdded)
 			{
-				cagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','canula_age'));
-				cagePill.setValue(e.userInfo.cage);
-				cagePill.touchable = false;
-				infoContainer.addChild(cagePill);
+				if (cagePill != null) cagePill.dispose();
+				if (e.userInfo.cage != null && e.userInfo.cage != "" && String(e.userInfo.cage).indexOf("n/a") == -1)
+				{
+					cagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','canula_age'));
+					cagePill.setValue(e.userInfo.cage);
+					cagePill.touchable = false;
+					infoContainer.addChild(cagePill);
+				}
 			}
 			
 			//IAGE
-			if (iagePill != null) iagePill.dispose();
-			if (e.userInfo.iage != null && e.userInfo.iage != "" && String(e.userInfo.iage).indexOf("n/a") == -1)
+			if (!localIAGEAdded)
 			{
-				iagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_age'));
-				iagePill.setValue(e.userInfo.iage);
-				iagePill.touchable = false;
-				infoContainer.addChild(iagePill);
+				if (iagePill != null) iagePill.dispose();
+				if (e.userInfo.iage != null && e.userInfo.iage != "" && String(e.userInfo.iage).indexOf("n/a") == -1)
+				{
+					iagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','insulin_age'));
+					iagePill.setValue(e.userInfo.iage);
+					iagePill.touchable = false;
+					infoContainer.addChild(iagePill);
+				}
 			}
 			
 			//BAGE
-			if (bagePill != null) bagePill.dispose();
-			if (e.userInfo.bage != null && e.userInfo.bage != "" && String(e.userInfo.bage).indexOf("n/a") == -1)
+			if (!localBAGEAdded)
 			{
-				bagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','battery_age'));
-				bagePill.setValue(e.userInfo.bage);
-				bagePill.touchable = false;
-				infoContainer.addChild(bagePill);
+				if (bagePill != null) bagePill.dispose();
+				if (e.userInfo.bage != null && e.userInfo.bage != "" && String(e.userInfo.bage).indexOf("n/a") == -1)
+				{
+					bagePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','battery_age'));
+					bagePill.setValue(e.userInfo.bage);
+					bagePill.touchable = false;
+					infoContainer.addChild(bagePill);
+				}
 			}
 			
 			//Basal Rate

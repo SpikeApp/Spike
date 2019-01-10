@@ -1,5 +1,9 @@
 package utils
 {
+	import spark.formatters.DateTimeFormatter;
+	
+	import database.CommonSettings;
+	
 	import model.ModelLocator;
 
 	[ResourceBundle("chartscreen")]
@@ -212,6 +216,17 @@ package utils
 			}
 			
 			return totalOutput;
+		}
+		
+		public static function getFormattedDateFromTimestamp(timestamp:Number):String
+		{
+			//Calculate Age
+			var realDate:Date = new Date(timestamp)
+			var nowDate:Date = new Date();
+			var realDays:String = fromDates(realDate, nowDate).days.toString();
+			var realHours:String = fromDates(realDate, nowDate).hours.toString();
+			
+			return realDays + "d " + realHours + "h";
 		}
 		
 		/**

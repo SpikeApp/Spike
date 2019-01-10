@@ -162,6 +162,8 @@ package database
 			"children STRING, " +
 			"needsadjustment STRING, " +
 			"prebolus REAL, " +
+			"duration REAL, " +
+			"intensity STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -739,8 +741,49 @@ package database
 									sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check5Error);
 									sqlStatement.clearParameters();
 									
-									//All checks performed. Continue with next table
-									createInsulinsTable();
+									//Check if table needs to be updated for new Spike format #2
+									sqlStatement.text = "SELECT duration FROM treatments";
+									sqlStatement.addEventListener(SQLEvent.RESULT,check6Performed);
+									sqlStatement.addEventListener(SQLErrorEvent.ERROR,check6Error);
+									sqlStatement.execute();
+									
+									function check6Performed(se:SQLEvent):void 
+									{
+										sqlStatement.removeEventListener(SQLEvent.RESULT,check6Performed);
+										sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check6Error);
+										sqlStatement.clearParameters();
+										
+										sqlStatement.text = "SELECT intensity FROM treatments";
+										sqlStatement.addEventListener(SQLEvent.RESULT,check7Performed);
+										sqlStatement.addEventListener(SQLErrorEvent.ERROR,check7Error);
+										sqlStatement.execute();
+										
+										function check7Performed(se:SQLEvent):void 
+										{
+											sqlStatement.removeEventListener(SQLEvent.RESULT,check7Performed);
+											sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check7Error);
+											sqlStatement.clearParameters();
+											
+											//All checks performed. Continue with next table
+											createInsulinsTable();
+										}
+										
+										function check7Error(see:SQLErrorEvent):void 
+										{
+											if (debugMode) trace("Database.as : intensity column not found in treatments table (old version of Spike). Updating table...");
+											sqlStatement.clearParameters();
+											sqlStatement.text = "ALTER TABLE treatments ADD COLUMN intensity STRING;";
+											sqlStatement.execute();
+										}
+									}
+									
+									function check6Error(see:SQLErrorEvent):void 
+									{
+										if (debugMode) trace("Database.as : duration column not found in treatments table (old version of Spike). Updating table...");
+										sqlStatement.clearParameters();
+										sqlStatement.text = "ALTER TABLE treatments ADD COLUMN duration REAL;";
+										sqlStatement.execute();
+									}
 								}
 								
 								function check5Error(see:SQLErrorEvent):void 
@@ -2396,7 +2439,6 @@ package database
 			}
 		}
 		
-		
 		/**
 		 * inserts a treatment in the database<br>
 		 * synchronous<br>
@@ -2404,6 +2446,8 @@ package database
 		 */
 		public static function insertTreatmentSynchronous(treatment:Treatment):void 
 		{
+			trace("insertTreatmentSynchronous:", treatment.type);
+			
 			try 
 			{
 				var conn:SQLConnection = new SQLConnection();
@@ -2425,6 +2469,8 @@ package database
 				text += "basalduration, ";
 				text += "children, ";
 				text += "prebolus, ";
+				text += "duration, ";
+				text += "intensity, ";
 				text += "needsadjustment) ";
 				text += "VALUES (";
 				text += "'" + treatment.ID + "', ";
@@ -2439,7 +2485,9 @@ package database
 				text += treatment.carbDelayTime + ", ";
 				text += treatment.basalDuration + ", ";
 				text += "'" + treatment.extractChildren() + "', ";
-				text += treatment.preBolus + ", ";
+				text += (!isNaN(treatment.preBolus) ? treatment.preBolus : "NULL") + ", ";
+				text += (!isNaN(treatment.duration) ? treatment.duration : "NULL") + ", ";
+				text += "'" + treatment.exerciseIntensity + "', ";
 				text += "'" + String(treatment.needsAdjustment) + "')";
 				
 				insertRequest.text = text;
@@ -2484,7 +2532,9 @@ package database
 				"carbdelay = " + treatment.carbDelayTime + ", " +
 				"basalduration = " + treatment.basalDuration + ", " +
 				"children = '" + treatment.extractChildren() + "', " +
-				"prebolus = " + treatment.preBolus + ", " +
+				"prebolus = " + (!isNaN(treatment.preBolus) ? treatment.preBolus : "NULL") + ", " +
+				"duration = " + (!isNaN(treatment.duration ) ? treatment.duration : "NULL") + ", " +
+				"intensity = '" + treatment.exerciseIntensity + "', " +
 				"needsadjustment = '" + String(treatment.needsAdjustment) + "' " +
 				"WHERE id = '" + treatment.ID + "'";
 				updateRequest.execute();
@@ -2521,6 +2571,29 @@ package database
 					conn.close();
 				}
 				dispatchInformation('error_while_deleting_treatment_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Deletes treatments older than 3 months (not needed any more)
+		 */
+		public static function deleteOldTreatments():void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from treatments WHERE lastmodifiedtimestamp < " + (new Date().valueOf() - (95 * 24 * 60 * 60 * 1000));
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_old_treatments_in_db', error.message + " - " + error.details);
 			}
 		}
 		

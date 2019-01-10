@@ -1208,6 +1208,25 @@ package services
 				newTreatment["eventType"] = "Note";
 				newTreatment["duration"] = 45;
 			}
+			else if (treatment.type == Treatment.TYPE_EXERCISE)
+			{
+				newTreatment["eventType"] = "Exercise";
+				newTreatment["duration"] = treatment.duration;
+				newTreatment["exerciseIntensity"] = treatment.exerciseIntensity;
+			}
+			else if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+			{
+				newTreatment["eventType"] = "Insulin Change";
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+			{
+				newTreatment["eventType"] = "Pump Battery Change";
+			}
+			else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				newTreatment["eventType"] = "Site Change";
+			}
+			
 			newTreatment["_id"] = treatment.ID;
 			newTreatment["created_at"] = formatter.format(treatment.timestamp).replace("000+0000", "000Z");
 			newTreatment["enteredBy"] = "Spike";

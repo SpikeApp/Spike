@@ -645,6 +645,13 @@ package database
 		  * Predictions #3
 		  */
 		 public static const COMMON_SETTING_GLUCOSE_PREDICTIONS_ZT_COLOR:int = 272;
+		 
+		 /**
+		  * Pump Treatments
+		  */
+		 public static const COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE:int = 273;
+		 public static const COMMON_SETTING_LAST_PUMP_SITE_CHANGE:int = 274;
+		 public static const COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE:int = 275;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -919,7 +926,10 @@ package database
 			 "false", //COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON
 			 "false", //COMMON_SETTING_GLUCOSE_PREDICTIONS_SINGLE_LINE_ENABLED
 			 "true", //COMMON_SETTING_BAGE_ON
-			 "0x00D1FE" //COMMON_SETTING_GLUCOSE_PREDICTIONS_ZT_COLOR
+			 "0x00D1FE", //COMMON_SETTING_GLUCOSE_PREDICTIONS_ZT_COLOR
+			 "0", //COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE
+			 "0", //COMMON_SETTING_LAST_PUMP_SITE_CHANGE
+			 "0" //COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE
 		 ];
 
 		 public function CommonSettings()

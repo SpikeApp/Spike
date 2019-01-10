@@ -70,6 +70,14 @@ package ui.screens.display.treatments
 		private var sensorStartCanvas:Canvas;
 		private var sensorStartTexture:RenderTexture;
 		private var treatmentEditorContainer:ScrollContainer;
+		private var exerciseCanvas:Canvas;
+		private var exerciseTexture:RenderTexture;
+		private var insulinCartridgeCanvas:Canvas;
+		private var insulinCartridgeTexture:RenderTexture;
+		private var pumpSiteCanvas:Canvas;
+		private var pumpSiteTexture:RenderTexture;
+		private var pumpBatteryCanvas:Canvas;
+		private var pumpBatteryTexture:RenderTexture;
 		
 		/* Objects */
 		private var allTreatments:Array;
@@ -159,6 +167,22 @@ package ui.screens.display.treatments
 			mealTexture = new RenderTexture(mealCanvas.width, mealCanvas.height);
 			mealTexture.draw(mealCanvas);
 			
+			exerciseCanvas = createTreatmentIcon(Treatment.TYPE_EXERCISE);
+			exerciseTexture = new RenderTexture(exerciseCanvas.width, exerciseCanvas.height);
+			exerciseTexture.draw(exerciseCanvas);
+			
+			insulinCartridgeCanvas = createTreatmentIcon(Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE);
+			insulinCartridgeTexture = new RenderTexture(insulinCartridgeCanvas.width, insulinCartridgeCanvas.height);
+			insulinCartridgeTexture.draw(insulinCartridgeCanvas);
+			
+			pumpSiteCanvas = createTreatmentIcon(Treatment.TYPE_PUMP_SITE_CHANGE);
+			pumpSiteTexture = new RenderTexture(pumpSiteCanvas.width, pumpSiteCanvas.height);
+			pumpSiteTexture.draw(pumpSiteCanvas);
+			
+			pumpBatteryCanvas = createTreatmentIcon(Treatment.TYPE_PUMP_BATTERY_CHANGE);
+			pumpBatteryTexture = new RenderTexture(pumpBatteryCanvas.width, pumpBatteryCanvas.height);
+			pumpBatteryTexture.draw(pumpBatteryCanvas);
+			
 			var dataList:Array = [];
 			
 			for(var i:int = allTreatments.length - 1 ; i >= 0; i--)
@@ -215,6 +239,26 @@ package ui.screens.display.treatments
 				{
 					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_sensor_start');
 					icon = sensorStartTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_EXERCISE)
+				{
+					treatmentValue = treatment.duration + ModelLocator.resourceManagerInstance.getString('treatments','minutes_small_label') + " / " + TreatmentsManager.getExerciseTreatmentIntensity(treatment);
+					icon = exerciseTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_insulin_cartridge_change');
+					icon = insulinCartridgeTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_battery_change');
+					icon = pumpBatteryTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change');
+					icon = pumpSiteTexture;
 				}
 				
 				var treatmentTime:Date = new Date(treatment.timestamp);
@@ -356,6 +400,30 @@ package ui.screens.display.treatments
 				noteImage.scale = 0.75;
 				icon.addChild(noteImage);
 			}
+			else if (treatmentType == Treatment.TYPE_EXERCISE)
+			{
+				var exerciseImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.exerciseChartTexture);
+				exerciseImage.scale = 0.75;
+				icon.addChild(exerciseImage);
+			}
+			else if (treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+			{
+				var insulinCartridgeImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.insulinCartridgeChartTexture);
+				insulinCartridgeImage.scale = 0.75;
+				icon.addChild(insulinCartridgeImage);
+			}
+			else if (treatmentType == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+			{
+				var pumpBatteryImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.pumpBatteryChartTexture);
+				pumpBatteryImage.scale = 0.75;
+				icon.addChild(pumpBatteryImage);
+			}
+			else if (treatmentType == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				var pumpSiteImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.pumpSiteChartTexture);
+				pumpSiteImage.scale = 0.75;
+				icon.addChild(pumpSiteImage);
+			}
 			
 			return icon;
 		}
@@ -452,6 +520,9 @@ package ui.screens.display.treatments
 		 */
 		override public function dispose():void
 		{
+			//Common variable holders
+			var childImage:Image;
+			
 			//Clear accessories
 			if (accessoryDictionary != null)
 			{
@@ -577,7 +648,7 @@ package ui.screens.display.treatments
 				{
 					if (noteCanvas.getChildAt(i) is Image)
 					{
-						var childImage:Image = noteCanvas.getChildAt(i) as Image;
+						childImage = noteCanvas.getChildAt(i) as Image;
 						if (childImage != null)
 						{
 							childImage.removeFromParent();
@@ -618,6 +689,114 @@ package ui.screens.display.treatments
 			{
 				mealTexture.dispose();
 				mealTexture = null;
+			}
+			
+			if (exerciseCanvas != null)
+			{
+				for(i = exerciseCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (exerciseCanvas.getChildAt(i) is Image)
+					{
+						childImage = exerciseCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				exerciseCanvas.dispose();
+				exerciseCanvas = null;
+			}
+			
+			if (exerciseTexture != null)
+			{
+				exerciseTexture.dispose();
+				exerciseTexture = null;
+			}
+			
+			if (insulinCartridgeCanvas != null)
+			{
+				for(i = insulinCartridgeCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (insulinCartridgeCanvas.getChildAt(i) is Image)
+					{
+						childImage = insulinCartridgeCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				insulinCartridgeCanvas.dispose();
+				insulinCartridgeCanvas = null;
+			}
+			
+			if (insulinCartridgeTexture != null)
+			{
+				insulinCartridgeTexture.dispose();
+				insulinCartridgeTexture = null;
+			}
+			
+			if (pumpBatteryCanvas != null)
+			{
+				for(i = pumpBatteryCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (pumpBatteryCanvas.getChildAt(i) is Image)
+					{
+						childImage = pumpBatteryCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				pumpBatteryCanvas.dispose();
+				pumpBatteryCanvas = null;
+			}
+			
+			if (pumpBatteryTexture != null)
+			{
+				pumpBatteryTexture.dispose();
+				pumpBatteryTexture = null;
+			}
+			
+			if (pumpSiteCanvas != null)
+			{
+				for(i = pumpSiteCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (pumpSiteCanvas.getChildAt(i) is Image)
+					{
+						childImage = pumpSiteCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				pumpSiteCanvas.dispose();
+				pumpSiteCanvas = null;
+			}
+			
+			if (pumpSiteTexture != null)
+			{
+				pumpSiteTexture.dispose();
+				pumpSiteTexture = null;
 			}
 			
 			if (treatmentEditor != null)

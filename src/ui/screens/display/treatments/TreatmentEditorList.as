@@ -67,6 +67,8 @@ package ui.screens.display.treatments
 		private var splitNowStepper:NumericStepper;
 		private var splitExtStepper:NumericStepper;
 		private var extensionDuration:NumericStepper;
+		private var exerciseDurationStepper:NumericStepper;
+		private var exerciseIntensityPicker:PickerList;
 		
 		/* Properties */
 		private var treatment:Treatment;
@@ -249,6 +251,52 @@ package ui.screens.display.treatments
 			if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"meal_with_extended_bolus"); //Treatment Type
 			
+			if (treatment.type == Treatment.TYPE_EXERCISE)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_exercise"); //Treatment Type
+				
+				//Exercise Duration
+				exerciseDurationStepper = LayoutFactory.createNumericStepper(5, 1000, treatment.duration, 5);
+				exerciseDurationStepper.pivotX = -10;
+				exerciseDurationStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+				
+				//Exercise Intensity
+				exerciseIntensityPicker = LayoutFactory.createPickerList();
+				exerciseIntensityPicker.popUpContentManager = new DropDownPopUpContentManager();
+				exerciseIntensityPicker.labelField = "label";
+				exerciseIntensityPicker.itemRendererFactory = function():IListItemRenderer
+				{
+					var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+					renderer.paddingRight = renderer.paddingLeft = 20;
+					return renderer;
+				};
+				
+				var exerciseIntensityDataProvider:ArrayCollection = new ArrayCollection();
+				exerciseIntensityDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_high_label') } );
+				exerciseIntensityDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_moderate_label') } );
+				exerciseIntensityDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','exercise_intensity_low_label') } );
+				
+				exerciseIntensityPicker.dataProvider = exerciseIntensityDataProvider;
+				
+				if (treatment.exerciseIntensity == Treatment.EXERCISE_INTENSITY_HIGH)
+					exerciseIntensityPicker.selectedIndex = 0;
+				else if (treatment.exerciseIntensity == Treatment.EXERCISE_INTENSITY_MODERATE)
+					exerciseIntensityPicker.selectedIndex = 1;
+				else if (treatment.exerciseIntensity == Treatment.EXERCISE_INTENSITY_LOW)
+					exerciseIntensityPicker.selectedIndex = 2;
+				
+				exerciseIntensityPicker.addEventListener(Event.CHANGE, onSettingsChanged);
+			}
+			
+			if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_insulin_cartridge_change"); //Treatment Type
+			
+			if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_pump_battery_change"); //Treatment Type
+			
+			if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_pump_site_change"); //Treatment Type
+			
 			//Treatment Time
 			var treatmentTimeLayout:VerticalLayout = new VerticalLayout();
 			treatmentTimeLayout.verticalAlign = VerticalAlign.MIDDLE;
@@ -320,6 +368,11 @@ package ui.screens.display.treatments
 			if (treatment.type == Treatment.TYPE_GLUCOSE_CHECK)
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_value_label") + " (" + GlucoseHelper.getGlucoseUnit() + ")", accessory: glucoseAmountStepper });
+			}
+			if (treatment.type == Treatment.TYPE_EXERCISE)
+			{
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: exerciseDurationStepper });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_intensity_label"), accessory: exerciseIntensityPicker });
 			}
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_note_label"), accessory: noteTextArea });
 			infoSectionChildren.push({ label: "", accessory: actionButtonsContainer });
@@ -464,10 +517,7 @@ package ui.screens.display.treatments
 						if (internalExtendedBolusChild != null)
 						{
 							//Delete child
-							TreatmentsManager.deleteTreatment(internalExtendedBolusChild, false, false, true, false, true);
-							
-							//Notify Listeners
-							TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, internalExtendedBolusChild));
+							TreatmentsManager.deleteTreatment(internalExtendedBolusChild, false, false, true, false, false);
 						}
 					}
 					
@@ -536,6 +586,25 @@ package ui.screens.display.treatments
 					
 					treatment.carbDelayTime = carbDelayTime;
 				}
+			}
+			else if(treatment.type == Treatment.TYPE_EXERCISE)
+			{
+				var exerciseIntensity:String = "";
+				if (exerciseIntensityPicker.selectedIndex == 0)
+				{
+					exerciseIntensity = Treatment.EXERCISE_INTENSITY_HIGH;
+				}
+				else if (exerciseIntensityPicker.selectedIndex == 1)
+				{
+					exerciseIntensity = Treatment.EXERCISE_INTENSITY_MODERATE;
+				}
+				else if (exerciseIntensityPicker.selectedIndex == 2)
+				{
+					exerciseIntensity = Treatment.EXERCISE_INTENSITY_LOW;
+				}
+				
+				treatment.duration = exerciseDurationStepper.value;
+				treatment.exerciseIntensity = exerciseIntensity;
 			}
 			
 			//Update treatment in Spike and DB
@@ -654,6 +723,20 @@ package ui.screens.display.treatments
 				extensionDuration.removeEventListener(Event.CHANGE, onSettingsChanged);
 				extensionDuration.dispose();
 				extensionDuration = null;
+			}
+			
+			if (exerciseDurationStepper != null)
+			{
+				exerciseDurationStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
+				exerciseDurationStepper.dispose();
+				exerciseDurationStepper = null;
+			}
+			
+			if (exerciseIntensityPicker != null)
+			{
+				exerciseIntensityPicker.removeEventListener(Event.CHANGE, onSettingsChanged);
+				exerciseIntensityPicker.dispose();
+				exerciseIntensityPicker = null;
 			}
 			
 			super.dispose();

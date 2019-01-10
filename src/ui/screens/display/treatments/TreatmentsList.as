@@ -55,6 +55,14 @@ package ui.screens.display.treatments
 		private var treatmentsImage:Image;
 		private var bolusWizardTexture:Texture;
 		private var bolusWizardImage:Image;
+		private var exerciseTexture:Texture;
+		private var exerciseImage:Image;
+		private var insulinCartridgeTexture:Texture;
+		private var insulinCartridgeImage:Image;
+		private var pumpSiteTexture:Texture;
+		private var pumpSiteImage:Image;
+		private var pumpBatteryTexture:Texture;
+		private var pumpBatteryImage:Image;
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
@@ -62,7 +70,7 @@ package ui.screens.display.treatments
 		private var numBgReadings:int = 0;
 		private var canAddTreatments:Boolean = false;
 		private var canSeeTreatments:Boolean = false;
-		
+
 		public function TreatmentsList()
 		{
 			super();
@@ -116,6 +124,14 @@ package ui.screens.display.treatments
 				noteImage = new Image(noteTexture);
 				bolusWizardTexture = MaterialDeepGreyAmberMobileThemeIcons.bolusWizardTexture;
 				bolusWizardImage = new Image(bolusWizardTexture);
+				exerciseTexture = MaterialDeepGreyAmberMobileThemeIcons.exerciseTexture;
+				exerciseImage = new Image(exerciseTexture);
+				insulinCartridgeTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinCartridgeTexture;
+				insulinCartridgeImage = new Image(insulinCartridgeTexture);
+				pumpSiteTexture = MaterialDeepGreyAmberMobileThemeIcons.pumpSiteTexture;
+				pumpSiteImage = new Image(pumpSiteTexture);
+				pumpBatteryTexture = MaterialDeepGreyAmberMobileThemeIcons.pumpBatteryTexture;
+				pumpBatteryImage = new Image(pumpBatteryTexture);
 			}
 			if (treatmentsEnabled)
 			{
@@ -148,10 +164,14 @@ package ui.screens.display.treatments
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','bolus_wizard_settings_label'), icon: bolusWizardImage, selectable: canAddTreatments, id: 5 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: canAddTreatments, id: 6 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: canAddTreatments, id: 7 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_exercise'), icon: exerciseImage, selectable: canAddTreatments, id: 8 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_insulin_cartridge_change'), icon: insulinCartridgeImage, selectable: canAddTreatments, id: 9 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change'), icon: pumpSiteImage, selectable: canAddTreatments, id: 10 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_battery_change'), icon: pumpBatteryImage, selectable: canAddTreatments, id: 11 } );
 			}
 			if (treatmentsEnabled)
 			{
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canSeeTreatments, id: 8 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canSeeTreatments, id: 12 } );
 			}
 			
 			dataProvider = new ListCollection(menuData);
@@ -215,9 +235,9 @@ package ui.screens.display.treatments
 				{
 					if(index === 0 && !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						return "calibration-item";
-					else if(index == 0 || index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 7)
+					else if(index == 0 || index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 7 || index == 8 || index == 9 || index == 10 || index == 11 || index == 12)
 						return "treatment-item";
-					else if(index == 8)
+					else if(index == 13)
 						return "treatment-list-item";
 					
 					return "default-item";
@@ -287,7 +307,31 @@ package ui.screens.display.treatments
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_NOTE);
 			}
-			else if(treatmentID == 8) //Treatments Manager
+			else if(treatmentID == 8) //Exercise
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_EXERCISE);
+			}
+			else if(treatmentID == 9) //Insulin Cartridge
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE);
+			}
+			else if(treatmentID == 10) //Pump Site
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_PUMP_SITE_CHANGE);
+			}
+			else if(treatmentID == 11) //Pump Battery
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_PUMP_BATTERY_CHANGE);
+			}
+			else if(treatmentID == 12) //Treatments Manager
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
@@ -418,8 +462,66 @@ package ui.screens.display.treatments
 			
 			if (bolusWizardImage != null)
 			{
+				if (bolusWizardImage.texture != null)
+					bolusWizardImage.texture.dispose();
 				bolusWizardImage.dispose();
 				bolusWizardImage = null;
+			}
+			
+			if (exerciseTexture != null)
+			{
+				exerciseTexture.dispose();
+				exerciseTexture = null;
+			}
+			
+			if (exerciseImage != null)
+			{
+				if (exerciseImage.texture != null)
+					exerciseImage.texture.dispose();
+				exerciseImage.dispose();
+				exerciseImage = null;
+			}
+			
+			if (insulinCartridgeTexture != null)
+			{
+				insulinCartridgeTexture.dispose();
+				insulinCartridgeTexture = null;
+			}
+			
+			if (insulinCartridgeImage != null)
+			{
+				if (insulinCartridgeImage.texture != null)
+					insulinCartridgeImage.texture.dispose();
+				insulinCartridgeImage.dispose();
+				insulinCartridgeImage = null;
+			}
+			
+			if (pumpSiteTexture != null)
+			{
+				pumpSiteTexture.dispose();
+				pumpSiteTexture = null;
+			}
+			
+			if (pumpSiteImage != null)
+			{
+				if (pumpSiteImage.texture != null)
+					pumpSiteImage.texture.dispose();
+				pumpSiteImage.dispose();
+				pumpSiteImage = null;
+			}
+			
+			if (pumpBatteryTexture != null)
+			{
+				pumpBatteryTexture.dispose();
+				pumpBatteryTexture = null;
+			}
+			
+			if (pumpBatteryImage != null)
+			{
+				if (pumpBatteryImage.texture != null)
+					pumpBatteryImage.texture.dispose();
+				pumpBatteryImage.dispose();
+				pumpBatteryImage = null;
 			}
 			
 			super.dispose();

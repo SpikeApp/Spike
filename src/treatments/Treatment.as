@@ -17,6 +17,13 @@ package treatments
 		public static const TYPE_EXTENDED_COMBO_BOLUS_PARENT:String = "extendedComboBolusParent";
 		public static const TYPE_EXTENDED_COMBO_MEAL_PARENT:String = "extendedComboMealParent";
 		public static const TYPE_EXTENDED_COMBO_BOLUS_CHILD:String = "extendedComboBolusChild";
+		public static const TYPE_EXERCISE:String = "exercise";
+		public static const TYPE_PUMP_SITE_CHANGE:String = "pumpSiteChange";
+		public static const TYPE_PUMP_BATTERY_CHANGE:String = "pumpBatteryChange";
+		public static const TYPE_INSULIN_CARTRIDGE_CHANGE:String = "insulinCartridgeChange";
+		public static const EXERCISE_INTENSITY_LOW:String = "low";
+		public static const EXERCISE_INTENSITY_MODERATE:String = "moderate";
+		public static const EXERCISE_INTENSITY_HIGH:String = "high";
 		
 		/* Internal Constants */
 		private static const INSULIN_PEAK:uint = 75;
@@ -38,6 +45,8 @@ package treatments
 		public var basalDuration:Number = 0;
 		public var preBolus:Number = Number.NaN;
 		public var childTreatments:Array = [];
+		public var duration:Number = Number.NaN;
+		public var exerciseIntensity:String = "";
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = Number.NaN, basalDuration:Number = 0)
 		{

@@ -23,6 +23,7 @@ package services
 	import model.Forecast;
 	import model.ModelLocator;
 	
+	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
 	import ui.chart.helpers.GlucoseFactory;
@@ -255,8 +256,11 @@ package services
 			processLatestGlucose();
 		}
 		
-		private static function onTreatmentsChanged(e:Event):void
+		private static function onTreatmentsChanged(e:TreatmentsEvent):void
 		{
+			if (e.treatment != null && e.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+				return;
+			
 			if (displayCOBEnabled || displayIOBEnabled)
 				processLatestGlucose();
 		}
