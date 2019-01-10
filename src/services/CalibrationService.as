@@ -415,19 +415,19 @@ package services
 				Calibration.initialCalibration(asNumber, now - TimeSpan.TIME_5_MINUTES, now, CGMBlueToothDevice.isMiaoMiao() ? 36 : 5);
 				
 				//Apply Fix if calibrated value has a difference > 10mg/dL of the one inserted by the user
-				var lastBgReading:BgReading = BgReading.lastNoSensor();
+				var lastBgReading:BgReading = (BgReading.latest(1))[0] as BgReading;
 				var fixCounter:uint = 0;
 				
-				while(fixCounter < 20 && lastBgReading != null && Math.abs(lastBgReading._calculatedValue - asNumber) > 10)
+				while(fixCounter < 10 && lastBgReading != null && Math.abs(lastBgReading._calculatedValue - asNumber) > 10)
 				{
-					myTrace("Applying initial calibration fix #" + (fixCounter + 1));
+					myTrace("Applying initial calibration fix #" + (fixCounter + 1) + ". Difference from calibrated value is " + Math.abs(lastBgReading._calculatedValue - asNumber));
 					
 					//Re-apply initial calibration
 					Calibration.clearLastCalibration();
 					var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
 					
 					//Update conditional variavles
-					lastBgReading = BgReading.lastNoSensor();
+					lastBgReading = (BgReading.latest(1))[0] as BgReading;
 					fixCounter += 1;
 				}
 				
