@@ -4,6 +4,7 @@ FEATURE: Support for exercise, insulin cartridge change, pump battery change and
 FEATURE: All new treatments have bidirectional Nightscout sync support and will update their respective pills. Support for IFTTT has also been added. (Miguel)
 ENHANCEMENT: Added ability to add treatments with a future time/date. (Miguel)
 ENHANCEMENT: Small improvements to Spike to Spike follower mode. (Miguel)
+ENHANCEMENT: Spike will automatically delete treatments older than 3 minths from its internal database to keep the file as small as possible. (Miguel)
 FIX: Addresses a bug that could sometimes not display the correct insulin when editing a treatment by going to + menu > treatments > pencil icon. (Miguel)
 
 3.5.1
