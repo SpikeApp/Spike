@@ -11,8 +11,6 @@ package treatments
 	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -411,10 +409,6 @@ package treatments
 				}
 				
 				Trace.myTrace("TreatmentsManager.as", "Fetched " + treatmentsList.length + " treatment(s)");
-				
-				
-				trace(ObjectUtil.toString(treatmentsList));
-				
 			}
 		}
 		

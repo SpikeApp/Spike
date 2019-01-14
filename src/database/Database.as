@@ -34,6 +34,8 @@ package database
 	import treatments.food.Food;
 	import treatments.food.Recipe;
 	
+	import ui.chart.helpers.GlucoseFactory;
+	
 	import utils.TimeSpan;
 	import utils.Trace;
 	
@@ -2446,8 +2448,6 @@ package database
 		 */
 		public static function insertTreatmentSynchronous(treatment:Treatment):void 
 		{
-			trace("insertTreatmentSynchronous:", treatment.type);
-			
 			try 
 			{
 				var conn:SQLConnection = new SQLConnection();
@@ -2879,16 +2879,19 @@ package database
 		}
 		
 		/**
-		 * Returns pie chart stats: Average Glucose, Number Low Readings, Number In Range Readings, Number High Readings and Number Total Readings.<br>
+		 * Returns pie chart stats for glucose distribution, glucose variability and tratments.<br>
 		 * Between two dates, in a combined query for faster processing.<br>
-		 * Readings without calibration are ignored.
+		 * Readings without calibration are ignored.<br>
+		 * Has option to only query and return different sections of stats.
 		 */
-		public static function getBasicUserStats(fromTime:Number = Number.NaN, untilTime:Number = Number.NaN):BasicUserStats 
+		public static function getBasicUserStats(fromTime:Number = Number.NaN, untilTime:Number = Number.NaN, page:String = "all"):BasicUserStats 
 		{
-			var userStats:BasicUserStats = new BasicUserStats();
+			var userStats:BasicUserStats = new BasicUserStats(page);
 			var a1cOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_OFFSET));
 			var avgOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_AVG_OFFSET));
 			var rangesOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_RANGES_OFFSET));
+			var variabilityOffSet:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_VARIABILITY_OFFSET));
+			var treatmentsOffSet:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_TREATMENTS_OFFSET));
 			var lowThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
 			var highThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
 			var now:Number = new Date().valueOf();
@@ -2900,42 +2903,81 @@ package database
 				conn.begin();
 				var getRequest:SQLStatement = new SQLStatement();
 				getRequest.sqlConnection = conn;
-				var sqlQuery:String = "";
-				sqlQuery += "SELECT AVG(calculatedValue) AS `averageGlucose`, "
-				sqlQuery +=	"(SELECT AVG(calculatedValue) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - a1cOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `averageGlucoseA1C`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - TimeSpan.TIME_24_HOURS) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsDay`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsTotal`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsLow`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsInRange`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue >= " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsHigh` ";
-				sqlQuery +=	"FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - avgOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
-				getRequest.text = sqlQuery;
-				getRequest.execute();
-				var result:SQLResult = getRequest.getResult();
+				
+				if (page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_BG_DISTRIBUTION)
+				{
+					var sqlQuery:String = "";
+					sqlQuery += "SELECT AVG(calculatedValue) AS `averageGlucose`, ";
+					sqlQuery +=	"(SELECT AVG(calculatedValue) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - a1cOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `averageGlucoseA1C`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - TimeSpan.TIME_24_HOURS) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsDay`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsTotal`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsLow`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsInRange`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue >= " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsHigh` ";
+					sqlQuery +=	"FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - avgOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
+					getRequest.text = sqlQuery;
+					getRequest.execute();
+					var resultBasic:SQLResult = getRequest.getResult();
+				}
+				
+				if (page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_VARIABILITY)
+				{
+					getRequest.clearParameters();
+					getRequest.text = "SELECT calculatedValue, timestamp, ";
+					getRequest.text += "(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - variabilityOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsInRangeForVariability`, ";
+					getRequest.text += "(SELECT ((COUNT(*)*(SUM(calculatedValue * calculatedValue)) - (SUM(calculatedValue)*SUM(calculatedValue)) )/((COUNT(*)-1)*(COUNT(*))) ) from bgreading WHERE calibrationid != '-' AND calculatedValue > 38 AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - variabilityOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `stdDeviation` ";
+					getRequest.text += "FROM bgreading WHERE calibrationid != '-' AND calculatedValue > 38 AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - variabilityOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
+					getRequest.execute();
+					var resultVariability:SQLResult = getRequest.getResult();
+				}
+				
+				if (page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_TREATMENTS)
+				{
+					getRequest.clearParameters();
+					getRequest.text = "SELECT SUM(insulinamount) AS `totalBolus`, ";
+					getRequest.text +=	"(SELECT SUM(carbs) FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `totalCarbs`, ";
+					getRequest.text +=	"(SELECT SUM(duration) FROM treatments WHERE type == '" + Treatment.TYPE_EXERCISE + "' AND lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `totalExercise` ";
+					getRequest.text += "FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
+					getRequest.execute();
+					var resultTreatments:SQLResult = getRequest.getResult();
+				}
+				
 				conn.close();
 				
-				if 
-				(
-					result.data != null && 
-					result.data is Array && 
-					result.data[0] != null && 
-					(result.data[0]["averageGlucose"] != null && !isNaN(result.data[0]["averageGlucose"])) &&    
-					(result.data[0]["numReadingsDay"] != null && !isNaN(result.data[0]["numReadingsDay"])) &&    
-					(result.data[0]["numReadingsTotal"] != null && !isNaN(result.data[0]["numReadingsTotal"])) &&    
-					(result.data[0]["numReadingsLow"] != null && !isNaN(result.data[0]["numReadingsLow"])) &&    
-					(result.data[0]["numReadingsInRange"] != null && !isNaN(result.data[0]["numReadingsInRange"])) &&    
-					(result.data[0]["numReadingsHigh"] != null && !isNaN(result.data[0]["numReadingsHigh"])) && 
-					(result.data[0]["averageGlucoseA1C"] != null && !isNaN(result.data[0]["averageGlucoseA1C"]))  
+				//Glucose Distribution
+				if ((page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_BG_DISTRIBUTION)
+					&&
+					resultBasic != null
+					&&
+					resultBasic.data != null 
+					&& 
+					resultBasic.data is Array 
+					&& 
+					resultBasic.data[0] != null 
+					&& 
+					(resultBasic.data[0]["averageGlucose"] != null && !isNaN(resultBasic.data[0]["averageGlucose"])) 
+					&&    
+					(resultBasic.data[0]["numReadingsDay"] != null && !isNaN(resultBasic.data[0]["numReadingsDay"])) 
+					&&    
+					(resultBasic.data[0]["numReadingsTotal"] != null && !isNaN(resultBasic.data[0]["numReadingsTotal"])) 
+					&&    
+					(resultBasic.data[0]["numReadingsLow"] != null && !isNaN(resultBasic.data[0]["numReadingsLow"])) 
+					&&    
+					(resultBasic.data[0]["numReadingsInRange"] != null && !isNaN(resultBasic.data[0]["numReadingsInRange"])) 
+					&&       
+					(resultBasic.data[0]["numReadingsHigh"] != null && !isNaN(resultBasic.data[0]["numReadingsHigh"])) 
+					&& 
+					(resultBasic.data[0]["averageGlucoseA1C"] != null && !isNaN(resultBasic.data[0]["averageGlucoseA1C"]))
 				)
 				{
-					userStats.averageGlucose = ((Number(result.data[0]["averageGlucose"]) * 10 + 0.5)  >> 0) / 10;
+					userStats.averageGlucose = ((Number(resultBasic.data[0]["averageGlucose"]) * 10 + 0.5)  >> 0) / 10;
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") userStats.averageGlucose = Math.round(((BgReading.mgdlToMmol((userStats.averageGlucose))) * 10)) / 10;
-					userStats.numReadingsDay = Number(result.data[0]["numReadingsDay"]);
-					userStats.numReadingsTotal = Number(result.data[0]["numReadingsTotal"]);
-					userStats.numReadingsLow = Number(result.data[0]["numReadingsLow"]);
-					userStats.numReadingsInRange = Number(result.data[0]["numReadingsInRange"]);
-					userStats.numReadingsHigh = Number(result.data[0]["numReadingsHigh"]);
-					userStats.a1c = ((((46.7 + (((Number(result.data[0]["averageGlucoseA1C"]) * 10 + 0.5)  >> 0) / 10)) / 28.7) * 10 + 0.5)  >> 0) / 10;
+					userStats.numReadingsDay = Number(resultBasic.data[0]["numReadingsDay"]);
+					userStats.numReadingsTotal = Number(resultBasic.data[0]["numReadingsTotal"]);
+					userStats.numReadingsLow = Number(resultBasic.data[0]["numReadingsLow"]);
+					userStats.numReadingsInRange = Number(resultBasic.data[0]["numReadingsInRange"]);
+					userStats.numReadingsHigh = Number(resultBasic.data[0]["numReadingsHigh"]);
+					userStats.a1c = ((((46.7 + (((Number(resultBasic.data[0]["averageGlucoseA1C"]) * 10 + 0.5)  >> 0) / 10)) / 28.7) * 10 + 0.5)  >> 0) / 10;
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) == "true")
 						userStats.a1c = ((((userStats.a1c - 2.15) * 10.929) * 10 + 0.5)  >> 0) / 10; //IFCC support
 					userStats.percentageHigh = (userStats.numReadingsHigh * 100) / userStats.numReadingsTotal;
@@ -2953,12 +2995,59 @@ package database
 					userStats.captureRate = ((((userStats.numReadingsDay * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 					if (userStats.captureRate > 100) userStats.captureRate = 100;
 				}
+				
+				//Glucose Variability
+				if ((page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_VARIABILITY)
+					&&
+					resultVariability != null
+					&&
+					resultVariability.data != null 
+					&& 
+					resultVariability.data is Array 
+					&& 
+					resultVariability.data[0] != null 
+					&& 
+					(resultVariability.data[0]["stdDeviation"] != null && !isNaN(resultVariability.data[0]["stdDeviation"]))
+					&& 
+					(resultVariability.data[0]["numReadingsInRangeForVariability"] != null && !isNaN(resultVariability.data[0]["numReadingsInRangeForVariability"]))
+				)
+				{
+					var variabilityInRangePct:Number = (resultVariability.data[0]["numReadingsInRangeForVariability"] * 100) / resultVariability.data.length;
+					var advancedStats:Object = GlucoseFactory.calculateAdvancedStats(resultVariability.data, variabilityInRangePct);
+					userStats.standardDeviation = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(Math.sqrt(resultVariability.data[0]["stdDeviation"]) * 10) / 10 : Math.round(BgReading.mgdlToMmol(Math.sqrt(resultVariability.data[0]["stdDeviation"])) * 100) / 100;
+					userStats.gvi = advancedStats.GVI != null && !isNaN(advancedStats.GVI) ? advancedStats.GVI : Number.NaN;
+					userStats.pgs = advancedStats.PGS != null && !isNaN(advancedStats.PGS) ? advancedStats.PGS : Number.NaN;
+					userStats.hourlyChange = advancedStats.meanHourlyChange != null && !isNaN( advancedStats.meanHourlyChange) ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(advancedStats.meanHourlyChange * 10) / 10 : Math.round(advancedStats.meanHourlyChange * 100) / 100 : Number.NaN;
+					userStats.fluctuation5 = advancedStats.timeInFluctuation != null && !isNaN(advancedStats.timeInFluctuation) ? advancedStats.timeInFluctuation : Number.NaN;
+					userStats.fluctuation10 = advancedStats.timeInRapidFluctuation != null && !isNaN(advancedStats.timeInRapidFluctuation) ? advancedStats.timeInRapidFluctuation : Number.NaN;
+				}
+				
+				//Treatments
+				if ((page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_TREATMENTS)
+					&&
+					resultTreatments != null
+					&&
+					resultTreatments.data != null 
+					&& 
+					resultTreatments.data is Array 
+					&& 
+					resultTreatments.data[0] != null 
+					&& 
+					(resultTreatments.data[0]["totalBolus"] != null && !isNaN(resultTreatments.data[0]["totalBolus"]))
+					&& 
+					(resultTreatments.data[0]["totalCarbs"] != null && !isNaN(resultTreatments.data[0]["totalCarbs"]))
+				)
+				{
+					userStats.bolus = Math.round(resultTreatments.data[0]["totalBolus"] * 100) / 100;
+					userStats.carbs = Math.round(resultTreatments.data[0]["totalCarbs"] * 10) / 10;
+					userStats.exercise = resultTreatments.data[0]["totalExercise"] != null && !isNaN(resultTreatments.data[0]["totalExercise"]) ? Math.round(resultTreatments.data[0]["totalExercise"]) : 0;
+				}
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();
-				dispatchInformation('error_while_getting_bgreadings_for_spike_server', error.message + " - " + error.details);
+				dispatchInformation('error_while_getting_user_stats', error.message + " - " + error.details);
 			} catch (other:Error) {
 				if (conn.connected) conn.close();
-				dispatchInformation('error_while_getting_bgreadings_for_spike_server',other.getStackTrace().toString());
+				dispatchInformation('error_while_getting_user_stats',other.getStackTrace().toString());
 			} finally {
 				if (conn.connected) conn.close();
 				return userStats;

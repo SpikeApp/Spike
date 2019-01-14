@@ -35,6 +35,8 @@ package ui.screens
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
+	import stats.BasicUserStats;
+	
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -48,6 +50,7 @@ package ui.screens
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	[ResourceBundle("chartscreen")]
@@ -85,6 +88,7 @@ package ui.screens
 		private var chartTreatmentsEnabled:Boolean = false;
 		private var displayIOBEnabled:Boolean = false;
 		private var displayCOBEnabled:Boolean = false;
+		private var pieChartTreatmentUpdaterTimeout:int = -1;
 		
 		//Display Objects
 		private var glucoseChart:GlucoseChart;
@@ -380,8 +384,13 @@ package ui.screens
 							
 							if (displayPieChart && pieChart != null)
 							{
-								if (pieChart.drawChart())
+								if (pieChart.updateStats(pieChart.getPageName()))
 									queueAddedToPie = true;
+								
+								if (pieChart.dummyModeActive || (pieChart.currentPageName != BasicUserStats.PAGE_BG_DISTRIBUTION && new Date().valueOf() - pieChart.lastGlucoseDistributionFetch >= TimeSpan.TIME_1_HOUR))
+								{
+									pieChart.updateStats(BasicUserStats.PAGE_BG_DISTRIBUTION);
+								}
 							}
 							else
 								queueAddedToPie = true;
@@ -402,8 +411,13 @@ package ui.screens
 							
 							if (displayPieChart && pieChart != null)
 							{
-								if (pieChart.drawChart())
+								if (pieChart.updateStats(pieChart.getPageName()))
 									queueAddedToPie = true;
+								
+								if (pieChart.dummyModeActive || (pieChart.currentPageName != BasicUserStats.PAGE_BG_DISTRIBUTION && new Date().valueOf() - pieChart.lastGlucoseDistributionFetch >= TimeSpan.TIME_1_HOUR))
+								{
+									pieChart.updateStats(BasicUserStats.PAGE_BG_DISTRIBUTION);
+								}
 							}
 							else
 								queueAddedToPie = true;
@@ -554,8 +568,19 @@ package ui.screens
 					if (glucoseChart != null && SystemUtil.isApplicationActive)
 					{
 						glucoseChart.addGlucose(readings);
-						if (displayPieChart)
-							pieChart.drawChart();
+						
+						if (displayPieChart && pieChart != null)
+						{
+							if (pieChart.currentPageName == BasicUserStats.PAGE_BG_DISTRIBUTION || pieChart.currentPageName == BasicUserStats.PAGE_VARIABILITY)
+							{
+								pieChart.updateStats(pieChart.getPageName());
+							}
+							
+							if (pieChart.dummyModeActive || (pieChart.currentPageName != BasicUserStats.PAGE_BG_DISTRIBUTION && new Date().valueOf() - pieChart.lastGlucoseDistributionFetch >= TimeSpan.TIME_1_HOUR))
+							{
+								pieChart.updateStats(BasicUserStats.PAGE_BG_DISTRIBUTION);
+							}
+						}
 					}
 					else
 					{
@@ -632,7 +657,17 @@ package ui.screens
 					
 					//Redraw Pie Chart
 					if (displayPieChart && pieChart != null)
-						pieChart.drawChart();
+					{
+						if (pieChart.currentPageName == BasicUserStats.PAGE_BG_DISTRIBUTION || pieChart.currentPageName == BasicUserStats.PAGE_VARIABILITY)
+						{
+							pieChart.updateStats(pieChart.getPageName());
+						}
+						
+						if (pieChart.dummyModeActive || (pieChart.currentPageName != BasicUserStats.PAGE_BG_DISTRIBUTION && new Date().valueOf() - pieChart.lastGlucoseDistributionFetch >= TimeSpan.TIME_1_HOUR))
+						{
+							pieChart.updateStats(BasicUserStats.PAGE_BG_DISTRIBUTION);
+						}
+					}
 				}
 			} 
 			catch(error:Error) 
@@ -665,6 +700,17 @@ package ui.screens
 			{
 				Trace.myTrace("ChartScreen.as", "Adding treatment to the chart: Type: " + treatment.type);
 				SystemUtil.executeWhenApplicationIsActive(glucoseChart.addTreatment, treatment);
+				
+				if (SystemUtil.isApplicationActive && pieChart != null && pieChart.currentPageName == BasicUserStats.PAGE_TREATMENTS && (treatment.insulinAmount > 0 || treatment.carbs > 0 || treatment.type == Treatment.TYPE_EXERCISE))
+				{
+					clearTimeout(pieChartTreatmentUpdaterTimeout);
+					
+					pieChartTreatmentUpdaterTimeout = setTimeout( function():void 
+					{
+						if (pieChart == null) return;
+						SystemUtil.executeWhenApplicationIsActive(pieChart.updateStats, BasicUserStats.PAGE_TREATMENTS);
+					}, 1000 );
+				}
 			}
 		}
 		
@@ -675,6 +721,17 @@ package ui.screens
 			{
 				Trace.myTrace("ChartScreen.as", "Sending externally modified treatment to the chart: Type: " + treatment.type);
 				SystemUtil.executeWhenApplicationIsActive(glucoseChart.updateExternallyModifiedTreatment, treatment);
+				
+				if (SystemUtil.isApplicationActive && pieChart != null && pieChart.currentPageName == BasicUserStats.PAGE_TREATMENTS && (treatment.insulinAmount > 0 || treatment.carbs > 0 || treatment.type == Treatment.TYPE_EXERCISE))
+				{
+					clearTimeout(pieChartTreatmentUpdaterTimeout);
+					
+					pieChartTreatmentUpdaterTimeout = setTimeout( function():void 
+					{
+						if (pieChart == null) return;
+						SystemUtil.executeWhenApplicationIsActive(pieChart.updateStats, BasicUserStats.PAGE_TREATMENTS);
+					}, 1000 );
+				}
 			}
 		}
 		
@@ -685,6 +742,17 @@ package ui.screens
 			{
 				Trace.myTrace("ChartScreen.as", "Sending externally deleted treatment to the chart: Type: " + treatment.type);
 				SystemUtil.executeWhenApplicationIsActive(glucoseChart.updateExternallyDeletedTreatment, treatment);
+				
+				if (SystemUtil.isApplicationActive && pieChart != null && pieChart.currentPageName == BasicUserStats.PAGE_TREATMENTS && (treatment.insulinAmount > 0 || treatment.carbs > 0 || treatment.type == Treatment.TYPE_EXERCISE))
+				{
+					clearTimeout(pieChartTreatmentUpdaterTimeout);
+					
+					pieChartTreatmentUpdaterTimeout = setTimeout( function():void 
+					{
+						if (pieChart == null) return;
+						SystemUtil.executeWhenApplicationIsActive(pieChart.updateStats, BasicUserStats.PAGE_TREATMENTS);
+					}, 1000 );
+				}
 			}
 		}
 		
@@ -874,6 +942,8 @@ package ui.screens
 		{
 			/* Timers */
 			clearTimeout(redrawChartTimeoutID);
+			clearTimeout(pieChartTreatmentUpdaterTimeout);
+			clearTimeout(queueTimeout);
 
 			/* Event Listeners */
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_BACKGROUND, onAppInBackground);

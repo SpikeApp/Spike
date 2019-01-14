@@ -551,5 +551,85 @@ package ui.chart.helpers
 			
 			return { level: transmitterBattery, color: transmitterBatteryColor };
 		}
+		
+		public static function calculateAdvancedStats(readingsList:Array, timeInRangePercentage:Number):Object
+		{
+			var totalReadings:uint = readingsList.length;
+			
+			var GVI:Number = Number.NaN;
+			var PGS:Number = Number.NaN;
+			var TDC:Number = Number.NaN;
+			var TDCHourly:Number = Number.NaN;
+			var timeInT1:Number = Number.NaN;
+			var timeInT2:Number = Number.NaN;
+			
+			if (totalReadings > 0)
+			{
+				var lowTreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
+				var highTreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+				var t1:Number = 6;
+				var t2:Number = 11;
+				var t1count:Number = 0;
+				var t2count:Number = 0;
+				var total:Number = 0;
+				var events:Number = 0;
+				var GVITotal:Number = 0;
+				var GVIIdeal:Number = 0;
+				var RMSTotal:Number = 0;
+				var usedRecords:Number = 0;
+				var glucoseTotal:Number = 0;
+				var deltaTotal:Number = 0;
+				var daysTotal:Number = (readingsList[totalReadings - 1].timestamp - readingsList[0].timestamp) / TimeSpan.TIME_24_HOURS;
+				
+				for (var i:int = 0; i < totalReadings - 2; i++) 
+				{
+					var currentReading:Number = readingsList[i].calculatedValue;
+					var nextReading:Number = readingsList[i + 1].calculatedValue;
+					var delta:Number = Math.abs(nextReading - currentReading);
+					
+					events += 1;
+					usedRecords += 1;
+					deltaTotal += delta;
+					total += delta;
+					if (delta >= t1) t1count += 1;
+					if (delta >= t2) t2count += 1;
+					GVITotal += Math.sqrt(25 + Math.pow(delta, 2));  
+					glucoseTotal += currentReading;
+					if (currentReading < lowTreshold) RMSTotal += Math.pow(lowTreshold - currentReading, 2);
+					if (currentReading > highTreshold) RMSTotal += Math.pow(currentReading - highTreshold, 2);
+				}
+				
+				var GVIDelta:Number = Math.abs(readingsList[totalReadings-1].calculatedValue - readingsList[0].calculatedValue); //var GVIDelta:Number = Math.floor(readingsList[0], readingsList[totalReadings-1]);
+				GVIIdeal = Math.sqrt(Math.pow(usedRecords*5,2) + Math.pow(GVIDelta,2));
+				GVI = Math.round(GVITotal / GVIIdeal * 100) / 100;
+				var glucoseMean:Number = Math.floor(glucoseTotal / usedRecords);
+				var tirMultiplier:Number = timeInRangePercentage / 100.0;
+				PGS = Math.round(GVI * glucoseMean * (1-tirMultiplier) * 100) / 100;
+				TDC = deltaTotal / daysTotal;
+				TDCHourly = TDC / 24;
+				var RMS:Number = Math.sqrt(RMSTotal / events);
+				timeInT1 = Number(Math.round(100 * t1count / events).toFixed(1));
+				timeInT2 = Number(Math.round(100 * t2count / events).toFixed(1));
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") 
+				{
+					TDC = TDC / 18.0182;
+					TDCHourly = TDCHourly / 18.0182;
+					RMS = RMS / 18.0182;
+				}
+				
+				TDC = Math.round(TDC * 100) / 100;
+				TDCHourly = Math.round(TDCHourly * 100) / 100;
+			}
+			
+			return {
+				GVI: GVI,
+				PGS: PGS,
+				meanTotalDailyChange: TDC,
+				meanHourlyChange: TDCHourly,
+				timeInFluctuation: timeInT1,
+				timeInRapidFluctuation: timeInT2
+			}
+		}
 	}
 }

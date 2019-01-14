@@ -2,9 +2,13 @@ package ui.screens.display.settings.chart
 {
 	import com.adobe.utils.StringUtil;
 	
+	import flash.net.URLRequest;
+	import flash.net.navigateToURL;
+	
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
+	import feathers.controls.Button;
 	import feathers.controls.Check;
 	import feathers.controls.PickerList;
 	import feathers.controls.ToggleSwitch;
@@ -24,6 +28,8 @@ package ui.screens.display.settings.chart
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("chartsettingsscreen")]
+	[ResourceBundle("treatments")]
+	[ResourceBundle("helpscreen")]
 
 	public class GlucoseDistributionSettingsList extends SpikeList 
 	{
@@ -34,6 +40,9 @@ package ui.screens.display.settings.chart
 		private var a1cRangePicker:PickerList;
 		private var a1cIFCCCheck:Check;
 		private var displayInLandscapeCheck:Check;
+		private var variabilityRangePicker:PickerList;
+		private var treatmentsRangePicker:PickerList;
+		private var wikiButton:Button;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -43,6 +52,8 @@ package ui.screens.display.settings.chart
 		private var avgRangeValue:Number;
 		private var isA1CIFCC:Boolean;
 		private var displayInLandscapeValue:Boolean;
+		private var variabilityRangeValue:Number;
+		private var treatmentsRangeValue:Number;
 		
 		public function GlucoseDistributionSettingsList()
 		{
@@ -74,6 +85,8 @@ package ui.screens.display.settings.chart
 			percentageRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_RANGES_OFFSET));
 			a1cRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_OFFSET));
 			avgRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_AVG_OFFSET));
+			variabilityRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_VARIABILITY_OFFSET));
+			treatmentsRangeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_TREATMENTS_OFFSET));
 			isA1CIFCC = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) == "true";
 			displayInLandscapeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE) == "true";
 		}
@@ -139,10 +152,46 @@ package ui.screens.display.settings.chart
 			a1cRangePicker.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			a1cIFCCCheck = LayoutFactory.createCheckMark(isA1CIFCC);
+			a1cIFCCCheck.pivotX = 5;
 			a1cIFCCCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			variabilityRangePicker = LayoutFactory.createPickerList();
+			variabilityRangePicker.dataProvider = new ArrayCollection();
+			for (i = 0; i < rangesLabels.length; i++) 
+			{
+				if (rangesValues[i] == null || rangesLabels[i] == null)
+					continue;
+				
+				value = Number(StringUtil.trim(rangesValues[i]));
+				variabilityRangePicker.dataProvider.push( { label: StringUtil.trim(rangesLabels[i]), value: value } );
+				if (value == variabilityRangeValue)
+					variabilityRangePicker.selectedIndex = i;
+			}
+			variabilityRangePicker.labelField = "label";
+			variabilityRangePicker.popUpContentManager = new DropDownPopUpContentManager();
+			variabilityRangePicker.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			treatmentsRangePicker = LayoutFactory.createPickerList();
+			treatmentsRangePicker.dataProvider = new ArrayCollection();
+			for (i = 0; i < rangesLabels.length; i++) 
+			{
+				if (rangesValues[i] == null || rangesLabels[i] == null)
+					continue;
+				
+				value = Number(StringUtil.trim(rangesValues[i]));
+				treatmentsRangePicker.dataProvider.push( { label: StringUtil.trim(rangesLabels[i]), value: value } );
+				if (value == treatmentsRangeValue)
+					treatmentsRangePicker.selectedIndex = i;
+			}
+			treatmentsRangePicker.labelField = "label";
+			treatmentsRangePicker.popUpContentManager = new DropDownPopUpContentManager();
+			treatmentsRangePicker.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			displayInLandscapeCheck = LayoutFactory.createCheckMark(displayInLandscapeValue);
 			displayInLandscapeCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			wikiButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('helpscreen','wiki_button_label'));
+			wikiButton.addEventListener(Event.TRIGGERED, onWikiPressed);
 			
 			refreshContent();
 		}
@@ -162,6 +211,12 @@ package ui.screens.display.settings.chart
 					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_range_label'), accessory: a1cRangePicker } );
 				}
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','a1c_ifcc_label'), accessory: a1cIFCCCheck } );
+				if (!CGMBlueToothDevice.isFollower())
+				{
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_variability_label'), accessory: variabilityRangePicker } );
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), accessory: treatmentsRangePicker } );
+				}
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('helpscreen','screen_title'), accessory: wikiButton } );
 			}
 			
 			dataProvider = new ArrayCollection( data );
@@ -188,6 +243,12 @@ package ui.screens.display.settings.chart
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE) != String(displayInLandscapeValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SHOW_PIE_IN_LANDSCAPE, String(displayInLandscapeValue));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_VARIABILITY_OFFSET) != String(variabilityRangeValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_VARIABILITY_OFFSET, String(variabilityRangeValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_TREATMENTS_OFFSET) != String(treatmentsRangeValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_TREATMENTS_OFFSET, String(treatmentsRangeValue));
+			
 			needsSave = false;
 		}
 		
@@ -209,8 +270,15 @@ package ui.screens.display.settings.chart
 			avgRangeValue = Number(avgRangePicker.selectedItem.value);
 			isA1CIFCC = a1cIFCCCheck.isSelected;
 			displayInLandscapeValue = displayInLandscapeCheck.isSelected;
+			variabilityRangeValue = Number(variabilityRangePicker.selectedItem.value);
+			treatmentsRangeValue = Number(treatmentsRangePicker.selectedItem.value);
 			
 			needsSave = true;
+		}
+		
+		private function onWikiPressed(e:Event):void
+		{
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/stats"));
 		}
 		
 		/**
@@ -246,6 +314,20 @@ package ui.screens.display.settings.chart
 				percentageRangePicker = null;
 			}
 			
+			if (variabilityRangePicker != null)
+			{
+				variabilityRangePicker.removeEventListener(Event.CHANGE, onSettingsChanged);
+				variabilityRangePicker.dispose();
+				variabilityRangePicker = null;
+			}
+			
+			if (treatmentsRangePicker != null)
+			{
+				treatmentsRangePicker.removeEventListener(Event.CHANGE, onSettingsChanged);
+				treatmentsRangePicker.dispose();
+				treatmentsRangePicker = null;
+			}
+			
 			if (a1cIFCCCheck != null)
 			{
 				a1cIFCCCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
@@ -258,6 +340,13 @@ package ui.screens.display.settings.chart
 				displayInLandscapeCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
 				displayInLandscapeCheck.dispose();
 				displayInLandscapeCheck = null;
+			}
+			
+			if (wikiButton != null)
+			{
+				wikiButton.removeEventListener(Event.TRIGGERED, onWikiPressed);
+				wikiButton.dispose();
+				wikiButton = null;
 			}
 			
 			super.dispose();
