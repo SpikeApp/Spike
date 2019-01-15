@@ -1,5 +1,6 @@
 package ui.screens.display.settings.integration
 {
+	import flash.display.StageOrientation;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
@@ -16,10 +17,13 @@ package ui.screens.display.settings.integration
 	import feathers.controls.NumericStepper;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -101,6 +105,7 @@ package ui.screens.display.settings.integration
 		private var treatmentPumpBatteryAddedCheck:Check;
 		private var treatmentPumpBatteryUpdatedCheck:Check;
 		private var treatmentPumpBatteryDeletedCheck:Check;
+		private var glucoseDivideByThresholdCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -161,6 +166,7 @@ package ui.screens.display.settings.integration
 		private var isIFTTTpumpBatteryTreatmentAddedEnabled:Boolean;
 		private var isIFTTTpumpBatteryTreatmentUpdatedEnabled:Boolean;
 		private var isIFTTTpumpBatteryTreatmentDeletedEnabled:Boolean;
+		private var isIFTTGlucoseEventsDividedByThreshold:Boolean;
 
 		public function IFTTTSettingsList()
 		{
@@ -214,6 +220,7 @@ package ui.screens.display.settings.integration
 			isIFTTTTransmitterLowBatteryTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TRANSMITTER_LOW_BATTERY_TRIGGERED_ON) == "true";
 			isIFTTTTransmitterLowBatterySnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TRANSMITTER_LOW_BATTERY_SNOOZED_ON) == "true";
 			isIFTTTGlucoseReadingsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON) == "true";
+			isIFTTGlucoseEventsDividedByThreshold = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON) == "true";
 			makerKeyValue = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY));
 			isIFTTTGlucoseThresholdsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON) == "true";
 			highGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD));
@@ -316,6 +323,10 @@ package ui.screens.display.settings.integration
 			//Glucose Readings
 			glucoseReadingCheck = LayoutFactory.createCheckMark(isIFTTTGlucoseReadingsEnabled);
 			glucoseReadingCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Divide Glucose Thresholds
+			glucoseDivideByThresholdCheck = LayoutFactory.createCheckMark(isIFTTGlucoseEventsDividedByThreshold);
+			glucoseDivideByThresholdCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//HTTP Server
 			httpServerErrorsCheck = LayoutFactory.createCheckMark(isIFTTTinteralServerErrorsEnabled);
@@ -545,6 +556,10 @@ package ui.screens.display.settings.integration
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_threshold_label"), accessory: lowGlucoseThresholdStepper } );
 				}
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_readings_label"), accessory: glucoseReadingCheck } );
+				if (isIFTTTGlucoseReadingsEnabled)
+				{
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_thresholds_separated_by_events_label"), accessory: glucoseDivideByThresholdCheck } );
+				}
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","http_server_errors"), accessory: httpServerErrorsCheck } );
 				screenContent.push( { label: "", accessory: alarmsLabel } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","fast_rise_glucose_triggered_label"), accessory: fastRiseGlucoseTriggeredCheck } );
@@ -671,6 +686,9 @@ package ui.screens.display.settings.integration
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON) != String(isIFTTTGlucoseReadingsEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON, String(isIFTTTGlucoseReadingsEnabled));
 			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON) != String(isIFTTGlucoseEventsDividedByThreshold))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON, String(isIFTTGlucoseEventsDividedByThreshold));
+			
 			var masterKeyToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, makerKeyValue.replace(" ", ""));
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY) != masterKeyToSave)
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY, masterKeyToSave);
@@ -792,7 +810,7 @@ package ui.screens.display.settings.integration
 		/**
 		 * Event Handlers
 		 */
-		private function onSettingsChanged(E:Event):void
+		private function onSettingsChanged(e:Event):void
 		{
 			/* Update Internal Variables */
 			isIFTTTFastRiseTriggeredEnabled = fastRiseGlucoseTriggeredCheck.isSelected;
@@ -849,8 +867,14 @@ package ui.screens.display.settings.integration
 			isIFTTTpumpBatteryTreatmentAddedEnabled = treatmentPumpBatteryAddedCheck.isSelected;
 			isIFTTTpumpBatteryTreatmentUpdatedEnabled = treatmentPumpBatteryUpdatedCheck.isSelected;
 			isIFTTTpumpBatteryTreatmentDeletedEnabled = treatmentPumpBatteryDeletedCheck.isSelected;
+			isIFTTGlucoseEventsDividedByThreshold = glucoseDivideByThresholdCheck.isSelected;
 			
 			needsSave = true;
+			
+			if (e.currentTarget == glucoseReadingCheck)
+			{
+				reloadContent();
+			}
 		}
 		
 		private function onSettingsReload(event:Event):void
@@ -895,6 +919,44 @@ package ui.screens.display.settings.integration
 		/**
 		 * Utility
 		 */
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer 
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.accessoryField = "accessory";
+				item.iconSourceField = "icon";
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
+				item.paddingTop = item.paddingBottom = 10;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						item.paddingLeft = 30;
+						if (noRightPadding) item.paddingRight = 0;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						item.paddingRight = 30;
+				}
+				else
+					if (noRightPadding) item.paddingRight = 0;
+				
+				return item;
+			};
+		}
+		
+		override protected function draw():void
+		{
+			super.draw();
+			
+			if ((layout as VerticalLayout) != null)
+				(layout as VerticalLayout).hasVariableItemDimensions = true;
+		}
+		
 		override public function dispose():void
 		{
 			if(IFTTTToggle != null)
@@ -1056,6 +1118,13 @@ package ui.screens.display.settings.integration
 				glucoseReadingCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
 				glucoseReadingCheck.dispose();
 				glucoseReadingCheck = null;
+			}
+			
+			if(glucoseDivideByThresholdCheck != null)
+			{
+				glucoseDivideByThresholdCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				glucoseDivideByThresholdCheck.dispose();
+				glucoseDivideByThresholdCheck = null;
 			}
 			
 			if(makerKeyTextInput != null)

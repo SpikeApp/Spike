@@ -656,11 +656,36 @@ package services
 					}
 					else if (isIFTTTGlucoseReadingsEnabled) //Trigger glucose reading... this is when the user selected to trigger all glucose readings
 					{
+						var trigger:String = "spike-bgreading";
+						
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON) == "true" && !isNaN(lastReading.calculatedValue))
+						{
+							if (lastReading.calculatedValue >= Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK)))
+							{
+								trigger = "spike-bgreading-urgent-high";
+							}
+							else if (lastReading.calculatedValue >= Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)))
+							{
+								trigger = "spike-bgreading-high";
+							}
+							else if (lastReading.calculatedValue > Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK)) && lastReading.calculatedValue < Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)))
+							{
+								trigger = "spike-bgreading-in-range";
+							}
+							else if (lastReading.calculatedValue <= Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK)) && lastReading.calculatedValue > Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK)))
+							{
+								trigger = "spike-bgreading-low";
+							}
+							else if (lastReading.calculatedValue <= Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK)))
+							{
+								trigger = "spike-bgreading-urgent-low";
+							}
+						}
+						
 						for (i = 0; i < makerKeyList.length; i++) 
 						{
 							key = makerKeyList[i] as String;
-							//NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, JSON.stringify(info));
-							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
+							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", trigger).replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
 						}
 					}
 					

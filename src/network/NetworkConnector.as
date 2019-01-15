@@ -141,8 +141,8 @@ package network
 			//Create the URL Loader
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
-			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
-			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
+			urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
+			urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
 			
 			var finalCompleteHandler:Function;
 			var finalIOHandler:Function;

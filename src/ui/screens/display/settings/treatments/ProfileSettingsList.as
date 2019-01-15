@@ -137,7 +137,7 @@ package ui.screens.display.settings.treatments
 			
 			//ISF / IC / Target BG / Trend Corrections
 			ISFStepper = LayoutFactory.createNumericStepper(unit == "mgdl" ? 1 : Math.round(BgReading.mgdlToMmol(1) * 10) / 10, unit == "mgdl" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, unit == "mgdl" ? 25 : Math.round(BgReading.mgdlToMmol(25) * 10) / 10, unit == "mgdl" ? 0.2 : 0.1);
-			ICStepper = LayoutFactory.createNumericStepper(0.5, 200, 10, 0.5);
+			ICStepper = LayoutFactory.createNumericStepper(0.5, 200, 10, 0.1);
 			targetBGStepper = LayoutFactory.createNumericStepper(unit == "mgdl" ? 40 : Math.round(BgReading.mgdlToMmol(40) * 10) / 10, unit == "mgdl" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, unit == "mgdl" ? 100 : Math.round(BgReading.mgdlToMmol(100) * 10) / 10,  unit == "mgdl" ? 1 : 0.1);
 			trend45UpStepper = LayoutFactory.createNumericStepper(0, 10, 1, 0.1);
 			trend90UpStepper = LayoutFactory.createNumericStepper(0, 10, 1.5, 0.1);
@@ -346,7 +346,7 @@ package ui.screens.display.settings.treatments
 				ICStepper.minimum = 0.5;
 				ICStepper.maximum = 200;
 				ICStepper.value = 10;
-				ICStepper.step = 0.5;
+				ICStepper.step = 0.1;
 				
 				trend45UpStepper.value = 1;
 				trend90UpStepper.value = 1.5;
@@ -385,7 +385,7 @@ package ui.screens.display.settings.treatments
 				ICStepper.minimum = 0.5;
 				ICStepper.maximum = 200;
 				ICStepper.value = Number(selectedProfile.insulinToCarbRatios);
-				ICStepper.step = 0.5;
+				ICStepper.step = 0.1;
 				
 				trend45UpStepper.value = selectedProfile.trend45Up;
 				trend90UpStepper.value = selectedProfile.trend90Up;

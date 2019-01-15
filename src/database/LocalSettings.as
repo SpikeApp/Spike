@@ -314,6 +314,7 @@ package database
 		public static const LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON:int = 147;
 		public static const LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON:int = 148;
 		public static const LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON:int = 149;
+		public static const LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON:int = 150;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -465,7 +466,8 @@ package database
 			"false",//LOCAL_SETTING_IFTTT_PUMP_SITE_DELETED_ON
 			"false",//LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON
 			"false",//LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON
-			"false"//LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON
+			"false",//LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON
+			"false"//LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON
 		];
 		
 		public function LocalSettings() {
