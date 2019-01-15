@@ -8,13 +8,13 @@ package ui.chart.markers
 	
 	import treatments.Treatment;
 	
+	import ui.chart.GlucoseChart;
+	import ui.chart.visualcomponents.ChartTreatment;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeNGon;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
-	import ui.chart.visualcomponents.ChartTreatment;
-	import ui.chart.GlucoseChart;
 	
 	public class MealMarker extends ChartTreatment
 	{
@@ -34,9 +34,9 @@ package ui.chart.markers
 		private var initialRadius:Number = 8;
 		private var chartTimeline:Number;
 		private var numSides:int = 30;
-		private const strokeThickness:Number = 0.8;
+		private var strokeThickness:Number = 0.8;
 
-		public function MealMarker(treatment:Treatment, timeline:Number)
+		public function MealMarker(treatment:Treatment, timeline:Number, isExtended:Boolean = false)
 		{
 			this.treatment = treatment;
 			backgroundInsulinColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
@@ -46,6 +46,9 @@ package ui.chart.markers
 				numSides = 20;
 			
 			chartTimeline = timeline;
+			
+			if (isExtended)
+				strokeThickness *= 1.5;
 			
 			draw();
 		}

@@ -1583,7 +1583,7 @@ package ui.chart
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
 			{
 				//Create treatment marker and add it to the chart
-				var insulinMarker:InsulinMarker = new InsulinMarker(treatment, timelineRange);
+				var insulinMarker:InsulinMarker = new InsulinMarker(treatment, timelineRange, false, treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT);
 				insulinMarker.x = (insulinMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				insulinMarker.y = _graphHeight - (insulinMarker.radius * 1.66) - ((insulinMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
 				
@@ -1622,7 +1622,7 @@ package ui.chart
 			else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
 			{
 				//Create treatment marker and add it to the chart
-				var extendedInsulinChildMarker:InsulinMarker = new InsulinMarker(treatment, timelineRange, true);
+				var extendedInsulinChildMarker:InsulinMarker = new InsulinMarker(treatment, timelineRange, true, true);
 				extendedInsulinChildMarker.x = (extendedInsulinChildMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				extendedInsulinChildMarker.y = _graphHeight - (extendedInsulinChildMarker.radius * 1.66) - ((extendedInsulinChildMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
 				extendedInsulinChildMarker.filter = new FilterChain(new GlowFilter(extendedInsulinChildMarker.strokeColor, 1, 2.2, 1), new BlurFilter(!DeviceInfo.isTablet() ? 5 : 10, !DeviceInfo.isTablet() ? 5 : 10, 1))
@@ -1689,7 +1689,7 @@ package ui.chart
 			else if (treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
 				//Create treatment marker and add it to the chart
-				var mealMarker:MealMarker = new MealMarker(treatment, timelineRange);
+				var mealMarker:MealMarker = new MealMarker(treatment, timelineRange, treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT);
 				mealMarker.x = (mealMarker.treatment.timestamp - firstBGReadingTimeStamp) * mainChartXFactor;
 				mealMarker.y = _graphHeight - (mealMarker.radius * 1.66) - ((mealMarker.treatment.glucoseEstimated - lowestGlucoseValue) * mainChartYFactor);
 				
@@ -1698,9 +1698,9 @@ package ui.chart
 				treatmentsMap[treatment.ID] = mealMarker;
 				
 				//Find and store children
-				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
+				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 				{
-					parseChildTreatments(insulinMarker);
+					parseChildTreatments(mealMarker);
 				}
 				
 				var timelineTimestamp:Number = getTimelineTimestamp();

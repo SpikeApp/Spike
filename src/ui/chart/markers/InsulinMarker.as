@@ -24,7 +24,7 @@ package ui.chart.markers
 		private var stroke:SpikeNGon;
 		
 		/* Properties */
-		private const strokeThickness:Number = 0.8;
+		private var strokeThickness:Number = 0.8;
 		private var fontSize:Number = 11;
 		public var backgroundColor:uint;
 		public var strokeColor:uint;
@@ -33,7 +33,7 @@ package ui.chart.markers
 		private var numSides:int = 30;
 		private var isChild:Boolean = false;
 		
-		public function InsulinMarker(treatment:Treatment, timeline:Number, isChild:Boolean = false)
+		public function InsulinMarker(treatment:Treatment, timeline:Number, isChild:Boolean = false, isExtended:Boolean = false)
 		{
 			this.treatment = treatment;
 			backgroundColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR));
@@ -43,6 +43,9 @@ package ui.chart.markers
 			
 			chartTimeline = timeline;
 			this.isChild = isChild;
+			
+			if (isExtended)
+				strokeThickness *= 1.5;
 			
 			draw();
 		}
