@@ -8,6 +8,7 @@ package ui.chart
 	import flash.geom.Point;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
+	import flash.system.Capabilities;
 	import flash.system.System;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
@@ -4809,6 +4810,12 @@ package ui.chart
 								predictionsLegendsContainer.addChildAt(ztPredictLegendContainer, 0);
 							else
 								predictionsLegendsContainer.addChild(ztPredictLegendContainer);
+						}
+						
+						//iPhone XR Header Fix
+						if (Capabilities.os.indexOf("iPhone11,8") != -1 && predictionsLegendsContainer != null && predictionsLegendsContainer.layout != null) 
+						{
+							(predictionsLegendsContainer.layout as VerticalLayout).paddingTop += 17;
 						}
 						
 						headerProperties.centerItems = new <DisplayObject>[

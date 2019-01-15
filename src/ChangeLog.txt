@@ -10,6 +10,7 @@ ENHANCEMENT: Small improvements to Spike to Spike follower mode. (Miguel)
 ENHANCEMENT: Spike will automatically delete treatments older than 3 months from its internal database to keep the file as small as possible. (Miguel)
 ENHANCEMENT: Improved connection and parsing logic when syncing Nightscout treatments. (Miguel)
 FIX: Addresses a bug that could sometimes not display the correct insulin name when editing a treatment by going to + menu > treatments > pencil icon. (Miguel)
+FIX: Attempt to fix the header that lists all predictions curves being cut off on iPhone XR phones. Untested, please report back. (Miguel)
 
 3.5.1
 FEATURE: Ability to press on prediction markers located on the chart to visualize details. (Miguel)
