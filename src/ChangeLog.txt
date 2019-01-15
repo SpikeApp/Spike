@@ -1,12 +1,13 @@
 3.5.2
 FEATURE: Extended/Combo bolus support. Available in bolus, meal and bolus wizard treatments. By pressing a combo bolus treatment on the chart Spike will tell you how much insulin has already been administered and how much remains. (Miguel)
-FEATURE: Support for exercise, insulin cartridge change, pump battery change and pump site change treatments. Access these new treatments by going to the upper right + menu (small screen devices might need to scroll the menu to view all available treatments. (Miguel)
+FEATURE: New exercise, insulin cartridge change, pump battery change and pump site change treatments. Add these new treatments by going to the upper right + menu (small screen devices might need to scroll the menu to view all available treatments). (Miguel)
 FEATURE: All new treatments have bidirectional Nightscout sync support and will update their respective pills. Support for IFTTT has also been added. (Miguel)
+FEATURE: New advanced glucose variability & treatments stats. Scroll the lower stats (next to the pie chart) to the left to access them. New stats include: standard deviation, glycemic variability index, patient glycemic status, mean change per hour, time in fluctuation, total bolus, total carbs, total exercise. Time ranges for these new stats can be changed in Settings > Chart. From there the user can also access a Wiki explaining all stats in detail. (Miguel)
 ENHANCEMENT: Added ability to add treatments with a future time/date. (Miguel)
 ENHANCEMENT: Small improvements to Spike to Spike follower mode. (Miguel)
 ENHANCEMENT: Spike will automatically delete treatments older than 3 months from its internal database to keep the file as small as possible. (Miguel)
 ENHANCEMENT: Improved connection and parsing logic when syncing Nightscout treatments. (Miguel)
-FIX: Addresses a bug that could sometimes not display the correct insulin when editing a treatment by going to + menu > treatments > pencil icon. (Miguel)
+FIX: Addresses a bug that could sometimes not display the correct insulin name when editing a treatment by going to + menu > treatments > pencil icon. (Miguel)
 
 3.5.1
 FEATURE: Ability to press on prediction markers located on the chart to visualize details. (Miguel)
