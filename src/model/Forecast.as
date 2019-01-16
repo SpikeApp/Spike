@@ -67,6 +67,12 @@ package model
 					return null;
 				}
 				
+				if (CGMBlueToothDevice.isDexcomFollower())
+				{
+					//Disable IOB/COB for Dexcom follower
+					ignoreIOBCOB = true;
+				}
+				
 				var currentTime:Number = new Date().valueOf();
 				var now:Number = !isNaN(glucose_status.date) && currentTime - glucose_status.date < TimeSpan.TIME_16_MINUTES && !forceNewIOBCOB ? glucose_status.date : currentTime;
 				if (isNaN(now))
@@ -212,6 +218,7 @@ package model
 				// calculate current carb absorption rate, and how long to absorb all carbs
 				// CI = current carb impact on BG in mg/dL/5m
 				ci = round((minDelta - bgi),1);
+				
 				var uci:Number = round((minDelta - bgi),1);
 				
 				// ISF (mg/dL/U) / CR (g/U) = CSF (mg/dL/g)
@@ -230,7 +237,7 @@ package model
 				var csf:Number = sens / carb_ratio; 
 				
 				var maxCarbAbsorptionRate:Number = ProfileManager.getCarbAbsorptionRate(); // g/h; maximum rate to assume carbs will absorb if no CI observed
-				if (isNaN(maxCarbAbsorptionRate))
+				if (isNaN(maxCarbAbsorptionRate) || maxCarbAbsorptionRate == 0)
 				{
 					status += "Can't determine carbs absorption rate. Defaulting to 30g/h" + "\n";
 					maxCarbAbsorptionRate = 30;
@@ -403,6 +410,7 @@ package model
 					// for IOBpredBGs, predicted deviation impact drops linearly from current deviation down to zero
 					// over 60 minutes (data points every 5m)
 					predDev = ci * ( 1 - Math.min(1,IOBpredBGs.length/(60/5)) );
+					
 					IOBpredBG = IOBpredBGs[IOBpredBGs.length-1] + predBGI + predDev;
 					// calculate predBGs with long zero temp without deviations
 					ZTpredBG = ZTpredBGs[ZTpredBGs.length-1] + predZTBGI;

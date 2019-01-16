@@ -102,7 +102,7 @@ package ui.screens
 			moreButton.addEventListener( Event.TRIGGERED, onMoreButtonTriggered );
 			moreButton.validate();
 			
-			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true") || !CGMBlueToothDevice.isFollower()) 
+			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true" && !CGMBlueToothDevice.isDexcomFollower()) || !CGMBlueToothDevice.isFollower()) 
 			{
 				/* Add treatments to the header */
 				treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.addTexture;

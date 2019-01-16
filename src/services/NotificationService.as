@@ -361,6 +361,7 @@ package services
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, updateBgNotification);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
+				DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
 				Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
@@ -558,6 +559,7 @@ package services
 			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, updateBgNotification);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
 			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
 			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);

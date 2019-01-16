@@ -201,7 +201,7 @@ package ui
 			/* Transmitter Info Alerts */
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) 
 			{
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE) == "Follower")
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "Follow" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE) == "Follower")
 					return;
 				
 				if (CGMBlueToothDevice.alwaysScan()) 

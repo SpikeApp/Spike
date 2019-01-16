@@ -184,6 +184,11 @@ package database
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "FOLLOW"); 
 		}
 		
+		public static function isDexcomFollower():Boolean
+		{
+			return isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Dexcom";
+		}
+		
 		/**
 		 * for type BlueReader, Limitter, BluKon, ie devices that transmit FSL sensor data<br>
 		 * important for calibration

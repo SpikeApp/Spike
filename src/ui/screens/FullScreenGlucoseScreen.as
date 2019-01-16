@@ -37,6 +37,7 @@ package ui.screens
 	import model.Forecast;
 	import model.ModelLocator;
 	
+	import services.DexcomShareService;
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
@@ -235,6 +236,7 @@ package ui.screens
 		{
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived, false, 0, true);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, 0, true);
+			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, 0, true);
 			this.addEventListener(TouchEvent.TOUCH, onTouch);
 		}
 		
@@ -814,6 +816,7 @@ package ui.screens
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 			this.removeEventListener(TouchEvent.TOUCH, onTouch);
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")

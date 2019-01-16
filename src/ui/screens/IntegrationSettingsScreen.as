@@ -3,6 +3,8 @@ package ui.screens
 	import flash.display.StageOrientation;
 	import flash.system.System;
 	
+	import database.CGMBlueToothDevice;
+	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
@@ -80,13 +82,16 @@ package ui.screens
 			iFTTTSettingsChooser = new IFTTTSettingsChooser();
 			screenRenderer.addChild(iFTTTSettingsChooser);
 			
-			//SiDiary Section Label
-			siDiaryLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','sidiary_section_label'));
-			screenRenderer.addChild(siDiaryLabel);
-			
-			//SiDiary Settings
-			siDiarySettings = new SiDiarySettingsList();
-			screenRenderer.addChild(siDiarySettings);
+			if (!CGMBlueToothDevice.isFollower())
+			{
+				//SiDiary Section Label
+				siDiaryLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','sidiary_section_label'));
+				screenRenderer.addChild(siDiaryLabel);
+				
+				//SiDiary Settings
+				siDiarySettings = new SiDiarySettingsList();
+				screenRenderer.addChild(siDiarySettings);
+			}
 			
 			//HTTP Server Section Label
 			httpServerSectionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','server_section_label'));

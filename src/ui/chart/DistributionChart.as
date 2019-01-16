@@ -216,6 +216,10 @@ package ui.chart
 			firstPageX = statsContainer.x;
 			secondPageX = firstPageX - statsWidth;
 			thirdPageX = firstPageX - (2 * statsWidth);
+			if (CGMBlueToothDevice.isDexcomFollower() || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")
+			{
+				thirdPageX = secondPageX;
+			}
 			
 			/* PIE BACKGROUND */
 			pieBackground = new Quad((pieSize * 2) + (10 - sectionsGap), pieSize * 2, sectionColor);
@@ -445,10 +449,8 @@ package ui.chart
 			if (userStats.page == BasicUserStats.PAGE_ALL || userStats.page == BasicUserStats.PAGE_BG_DISTRIBUTION)
 			{
 				//If there's no good readings then activate dummy mode.
-				if (userStats.numReadingsDay == 0)
+				if (isNaN(userStats.numReadingsDay) || userStats.numReadingsDay == 0)
 					dummyModeActive = true;
-				else
-					dummyModeActive = false;
 				
 				//Angles
 				var highAngle:Number = (userStats.percentageHigh * 360) / 100;
@@ -504,7 +506,7 @@ package ui.chart
 				//Legend
 				highSection.message.text = !dummyModeActive ? userStats.percentageHighRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			}
-				
+			
 			//DUMMY NGON
 			if (dummyModeActive)
 			{

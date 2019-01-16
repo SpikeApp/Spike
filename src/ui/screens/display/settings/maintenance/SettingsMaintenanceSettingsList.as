@@ -536,8 +536,6 @@ package ui.screens.display.settings.maintenance
 		
 		private function onQRCodeFound( event:ScannerEvent ):void
 		{
-			
-			
 			//Remove scanner events
 			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, onQRCodeFound );
 			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, onScanCanceled );
@@ -605,8 +603,8 @@ package ui.screens.display.settings.maintenance
 			var response:String = loader.data;
 			
 			//Dispose loader
-			loader.removeEventListener(flash.events.Event.COMPLETE, onSettingsUploaded);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onSettingsUploadError);
+			loader.removeEventListener(flash.events.Event.COMPLETE, onEncyptedSettingsReceived);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onSettingsReceivedError);
 			loader = null;
 			
 			//Parse response and extract link

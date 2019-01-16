@@ -7,6 +7,7 @@ package ui.screens.display.settings.integration
 	import cryptography.Keys;
 	
 	import database.BgReading;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
@@ -574,44 +575,54 @@ package ui.screens.display.settings.integration
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_glucose_snoozed_label"), accessory: lowGlucoseSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_low_glucose_triggered_label"), accessory: urgentLowGlucoseTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_low_glucose_snoozed_label"), accessory: urgentLowGlucoseSnoozedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_triggered_label"), accessory: calibrationTriggeredCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_snoozed_label"), accessory: calibrationSnoozedCheck } );
+				if (!CGMBlueToothDevice.isFollower())
+				{
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_triggered_label"), accessory: calibrationTriggeredCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_snoozed_label"), accessory: calibrationSnoozedCheck } );
+				}
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","missed_readings_triggered_label"), accessory: missedReadingsTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","missed_readings_snoozed_label"), accessory: missedReadingsSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","phone_muted_triggered_label"), accessory: phoneMutedTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","phone_muted_snoozed_label"), accessory: phoneMutedSnoozedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_triggered_label"), accessory: transmitterLowBatteryTriggeredCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_snoozed_label"), accessory: transmitterLowBatterySnoozedCheck } );
-				screenContent.push( { label: "", accessory: treatmentsLabel } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","iob_updated_label"), accessory: treatmentIOBUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","cob_updated_label"), accessory: treatmentCOBUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_added_label"), accessory: treatmentBolusAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_updated_label"), accessory: treatmentBolusUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_deleted_label"), accessory: treatmentBolusDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_added_label"), accessory: treatmentCarbsAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_updated_label"), accessory: treatmentCarbsUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_deleted_label"), accessory: treatmentCarbsDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_added_label"), accessory: treatmentMealAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_updated_label"), accessory: treatmentMealUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_deleted_label"), accessory: treatmentMealDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_added_label"), accessory: treatmentBGCheckAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_updated_label"), accessory: treatmentBGCheckUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_deleted_label"), accessory: treatmentBGCheckDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_added_label"), accessory: treatmentNoteAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_updated_label"), accessory: treatmentNoteUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_deleted_label"), accessory: treatmentNoteDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_added_label"), accessory: treatmentExerciseAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_updated_label"), accessory: treatmentExerciseUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_deleted_label"), accessory: treatmentExerciseDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_added_label"), accessory: treatmentInsulinCartridgeAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_updated_label"), accessory: treatmentInsulinCartridgeUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_deleted_label"), accessory: treatmentInsulinCartridgeDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_added_label"), accessory: treatmentPumpSiteAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_updated_label"), accessory: treatmentPumpSiteUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_deleted_label"), accessory: treatmentPumpSiteDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_added_label"), accessory: treatmentPumpBatteryAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_updated_label"), accessory: treatmentPumpBatteryUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_deleted_label"), accessory: treatmentPumpBatteryDeletedCheck } );
+				if (!CGMBlueToothDevice.isFollower())
+				{
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_triggered_label"), accessory: transmitterLowBatteryTriggeredCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_snoozed_label"), accessory: transmitterLowBatterySnoozedCheck } );
+				}
+				
+				if (!CGMBlueToothDevice.isDexcomFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true")
+				{
+					screenContent.push( { label: "", accessory: treatmentsLabel } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","iob_updated_label"), accessory: treatmentIOBUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","cob_updated_label"), accessory: treatmentCOBUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_added_label"), accessory: treatmentBolusAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_updated_label"), accessory: treatmentBolusUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_deleted_label"), accessory: treatmentBolusDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_added_label"), accessory: treatmentCarbsAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_updated_label"), accessory: treatmentCarbsUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_deleted_label"), accessory: treatmentCarbsDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_added_label"), accessory: treatmentMealAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_updated_label"), accessory: treatmentMealUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_deleted_label"), accessory: treatmentMealDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_added_label"), accessory: treatmentBGCheckAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_updated_label"), accessory: treatmentBGCheckUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_deleted_label"), accessory: treatmentBGCheckDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_added_label"), accessory: treatmentNoteAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_updated_label"), accessory: treatmentNoteUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_deleted_label"), accessory: treatmentNoteDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_added_label"), accessory: treatmentExerciseAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_updated_label"), accessory: treatmentExerciseUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_deleted_label"), accessory: treatmentExerciseDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_added_label"), accessory: treatmentInsulinCartridgeAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_updated_label"), accessory: treatmentInsulinCartridgeUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_deleted_label"), accessory: treatmentInsulinCartridgeDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_added_label"), accessory: treatmentPumpSiteAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_updated_label"), accessory: treatmentPumpSiteUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_deleted_label"), accessory: treatmentPumpSiteDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_added_label"), accessory: treatmentPumpBatteryAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_updated_label"), accessory: treatmentPumpBatteryUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_deleted_label"), accessory: treatmentPumpBatteryDeletedCheck } );
+				}
 			}
 			
 			dataProvider = screenContent;

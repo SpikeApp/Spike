@@ -63,6 +63,7 @@ package ui.popups
 		private static var emailSentMessageProperty:String;
 		private static var emailFailedMessageProperty:String;
 		private static var fileNotFoundMessageProperty:String;
+		private static var calloutTitleMessageProperty:String;
 		
 		//Instance
 		private static var _instance:EmailFileSender = new EmailFileSender();
@@ -74,7 +75,7 @@ package ui.popups
 				throw new IllegalOperationError("EmailFileSender class is not meant to be instantiated!");
 		}
 		
-		public static function sendFile(emailSubject:String, emailBody:String, fileName:String, fileData:*, mimeType:String, emailSentMessage:String, emailFailedMessage:String, fileNotFoundMessage:String):void
+		public static function sendFile(emailSubject:String, emailBody:String, fileName:String, fileData:*, mimeType:String, emailSentMessage:String, emailFailedMessage:String, fileNotFoundMessage:String, calloutTitleMessage:String = null):void
 		{
 			if (!NetworkInfo.networkInfo.isReachable())
 			{
@@ -95,6 +96,7 @@ package ui.popups
 			emailSentMessageProperty = emailSentMessage;
 			emailFailedMessageProperty = emailFailedMessage;
 			fileNotFoundMessageProperty = fileNotFoundMessage;
+			calloutTitleMessageProperty = calloutTitleMessage == null ? ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label") : calloutTitleMessage;
 			
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
@@ -113,7 +115,7 @@ package ui.popups
 			mainContainer.layout = mainLayout;
 			
 			/* Title */
-			emailLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('globaltranslations',"user_email_label"), HorizontalAlign.CENTER);
+			emailLabel = LayoutFactory.createLabel(calloutTitleMessageProperty, HorizontalAlign.CENTER);
 			mainContainer.addChild(emailLabel);
 			
 			/* Email Input */

@@ -164,7 +164,7 @@ package services
 		private static var phoneBatteryLevel:Number = 0;
 		private static var lastPredictionsUploadTimestamp:Number = 0;
 		private static var propertiesV2Timeout:uint = 0;
-		private static var treatmentsAPIServerResponse:String = "";
+		public static var treatmentsAPIServerResponse:String = "";
 
 		public function NightscoutService()
 		{
@@ -963,16 +963,6 @@ package services
 			
 			var now:Number = (new Date()).valueOf();
 			
-			//Validate call
-			if (!waitingForNSData || (now - lastFollowDownloadAttempt > TimeSpan.TIME_4_MINUTES_30_SECONDS)) 
-			{
-				Trace.myTrace("NightscoutService.as", "Not waiting for data or last download attempt was more than 4 minutes, 30 seconds ago. Ignoring!");
-				waitingForNSData = false;
-				return;
-			}
-			
-			waitingForNSData = false;
-			
 			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
 			
@@ -983,6 +973,16 @@ package services
 			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
 			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
+			
+			//Validate call
+			if (!waitingForNSData || (now - lastFollowDownloadAttempt > TimeSpan.TIME_4_MINUTES_30_SECONDS)) 
+			{
+				Trace.myTrace("NightscoutService.as", "Not waiting for data or last download attempt was more than 4 minutes, 30 seconds ago. Ignoring!");
+				waitingForNSData = false;
+				return;
+			}
+			
+			waitingForNSData = false;
 			
 			//Validate response
 			if (response.length == 0)

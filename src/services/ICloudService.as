@@ -71,6 +71,7 @@ package services
 								Trace.myTrace("ICloudService.as", "Automatic iCloud backups are enabled.");
 								TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived, false, -1000, true);
 								NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, -1000, true);
+								DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, -1000, true);
 							}
 							else
 								Trace.myTrace("ICloudService.as", "Automatic iCloud backups are disabled.");
@@ -376,6 +377,7 @@ package services
 			{
 				TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
 				NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
+				DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 				return;
 			}
 			var lastBackup:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ICLOUD_BACKUP_LAST_PERFORMED));
@@ -409,12 +411,14 @@ package services
 					Trace.myTrace("ICloudService.as", "Setting automatic database iCloud backups to " + timeSpan);
 					TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived, false, -1000, true);
 					NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, -1000, true);
+					DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, -1000, true);
 				}
 				else
 				{
 					Trace.myTrace("ICloudService.as", "Deactivating automatic iCloud backups...");
 					TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
 					NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
+					DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 				}
 			}
 		}

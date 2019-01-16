@@ -100,6 +100,7 @@ package services
 				
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgreadingReceived);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
+				DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 				
 				Trace.myTrace("HTTPServerService.as", "Service activated!");
 			} 
@@ -141,6 +142,7 @@ package services
 			
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgreadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			
 			serviceActive = false;
 		}

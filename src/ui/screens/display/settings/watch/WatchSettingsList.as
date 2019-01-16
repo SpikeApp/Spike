@@ -259,10 +259,9 @@ package ui.screens.display.settings.watch
 					populateCalendarList();
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','calendar_label'), accessory: calendarPickerList });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_name_label'), accessory: displayNameToggle });
-					if (displayNameEnabled)
-						content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','your_name_label'), accessory: displayNameTextInput });
-					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_iob_label'), accessory: displayIOBCheck });
-					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_cob_label'), accessory: displayCOBCheck });
+					if (displayNameEnabled) content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','your_name_label'), accessory: displayNameTextInput });
+					if (!CGMBlueToothDevice.isDexcomFollower()) content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_iob_label'), accessory: displayIOBCheck });
+					if (!CGMBlueToothDevice.isDexcomFollower()) content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_cob_label'), accessory: displayCOBCheck });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_predictions_label'), accessory: displayPredictionsCheck });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_trend_label'), accessory: displayTrend });
 					content.push({ label: ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','display_delta_label'), accessory: displayDelta });

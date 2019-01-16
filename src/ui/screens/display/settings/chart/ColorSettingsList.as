@@ -123,7 +123,7 @@ package ui.screens.display.settings.chart
 			targetBGColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TARGET_LINE_COLOR));
 			glucoseDefaultPredictionsColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_DEFAULT_COLOR));
 			glucoseUAMPredictionsColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_UAM_COLOR));
-			displayUAMColor = Forecast.externalLoopAPS == false;
+			displayUAMColor = Forecast.externalLoopAPS == false && !CGMBlueToothDevice.isDexcomFollower();
 			glucoseZTPredictionsColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ZT_COLOR));
 			displayZTColor = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true" && Forecast.externalLoopAPS == false;
 		}
@@ -321,7 +321,7 @@ package ui.screens.display.settings.chart
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_low_color_title'), accessory: pieLowColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','old_data_title'), accessory: oldDataColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_title'), accessory: axisColorPicker } );
-			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','target_glucose_line_color'), accessory: targetBGLineColorPicker } );
+			if (!CGMBlueToothDevice.isDexcomFollower()) data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','target_glucose_line_color'), accessory: targetBGLineColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','chart_font_title'), accessory: chartFontColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_title'), accessory: axisFontColorPicker } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','pie_chart_font_title'), accessory: pieChartFontColorPicker } );

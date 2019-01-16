@@ -279,9 +279,9 @@ package ui.chart
 		private var now:String;
 		private var yAxisHeight:Number = 0;
 		private var allTreatmentsAdded:Boolean = false;
-		private var displayTreatmentsOnChart:Boolean;
-		private var displayCOBEnabled:Boolean;
-		private var displayIOBEnabled:Boolean;
+		private var displayTreatmentsOnChart:Boolean = false;
+		private var displayCOBEnabled:Boolean = false;
+		private var displayIOBEnabled:Boolean = false;
 		private var totalIOBTimeoutID:int = -1;
 		private var totalCOBTimeoutID:int = -1;
 		
@@ -327,6 +327,7 @@ package ui.chart
 		private var localBAGEAdded:Boolean = false;
 		private var localIAGEAdded:Boolean = false;
 		private var localCAGEAdded:Boolean = false;
+		private var isDexcomFollower:Boolean = false;
 		
 		//Absorption curves
 		private var insulinCurveCallout:Callout;
@@ -448,6 +449,9 @@ package ui.chart
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
+			//Dexcom Follower
+			isDexcomFollower = CGMBlueToothDevice.isDexcomFollower();
+			
 			//Header
 			this.headerProperties = headerProperties;
 			
@@ -547,10 +551,17 @@ package ui.chart
 			now = ModelLocator.resourceManagerInstance.getString('chartscreen','now');
 			
 			//Treatments
-			treatmentsActive = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
-			displayTreatmentsOnChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
-			displayIOBEnabled = dontDisplayIOB == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
-			displayCOBEnabled = dontDisplayCOB == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
+			if (!isDexcomFollower)
+			{
+				treatmentsActive = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
+				displayTreatmentsOnChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ON_CHART_ENABLED) == "true";
+				displayIOBEnabled = dontDisplayIOB == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_IOB_ENABLED) == "true";
+				displayCOBEnabled = dontDisplayCOB == true ? false : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_COB_ENABLED) == "true";
+			}
+			else
+			{
+				dontDisplayInfoPill = true;
+			}
 			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
@@ -6092,7 +6103,7 @@ package ui.chart
 				widestPreditctionPill = Math.max(widestPreditctionPill, predictionsTimeFramePill.width);
 				
 				//IOB/COB Toggle
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true")
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true" && !isDexcomFollower)
 				{
 					if (predictionsIOBCOBCheck != null) predictionsIOBCOBCheck.removeFromParent(true);
 					predictionsIOBCOBCheck = LayoutFactory.createCheckMark(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true");
@@ -6204,31 +6215,34 @@ package ui.chart
 				}
 				
 				//Treatments Outcome
-				var outcome:Number = Forecast.predictOutcome();
-				if (!isNaN(outcome))
+				if (!isDexcomFollower)
 				{
-					//Outcome
-					if (predictedTreatmentsOutcomePill != null) predictedTreatmentsOutcomePill.removeFromParent(true);
-					predictedTreatmentsOutcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'));
-					predictedTreatmentsOutcomePill.setValue(String(outcome));
-					predictedTreatmentsOutcomePill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-					predictionsContainer.addChild(predictedTreatmentsOutcomePill);
-					
-					widestPreditctionPill = Math.max(widestPreditctionPill, predictedTreatmentsOutcomePill.width);
-					
-					//Effect
-					var latestReading:BgReading = BgReading.lastWithCalculatedValue();
-					if (latestReading != null)
+					var outcome:Number = Forecast.predictOutcome();
+					if (!isNaN(outcome))
 					{
-						var effect:Number = outcome - latestReading._calculatedValue;
+						//Outcome
+						if (predictedTreatmentsOutcomePill != null) predictedTreatmentsOutcomePill.removeFromParent(true);
+						predictedTreatmentsOutcomePill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_outcome'));
+						predictedTreatmentsOutcomePill.setValue(String(outcome));
+						predictedTreatmentsOutcomePill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+						predictionsContainer.addChild(predictedTreatmentsOutcomePill);
 						
-						if (predictedTreatmentsEffectPill != null) predictedTreatmentsEffectPill.removeFromParent(true);
-						predictedTreatmentsEffectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_effect'));
-						predictedTreatmentsEffectPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(effect)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(effect * 10)) / 10));
-						predictedTreatmentsEffectPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
-						predictionsContainer.addChild(predictedTreatmentsEffectPill);
+						widestPreditctionPill = Math.max(widestPreditctionPill, predictedTreatmentsOutcomePill.width);
 						
-						widestPreditctionPill = Math.max(widestPreditctionPill, predictedTreatmentsEffectPill.width);
+						//Effect
+						var latestReading:BgReading = BgReading.lastWithCalculatedValue();
+						if (latestReading != null)
+						{
+							var effect:Number = outcome - latestReading._calculatedValue;
+							
+							if (predictedTreatmentsEffectPill != null) predictedTreatmentsEffectPill.removeFromParent(true);
+							predictedTreatmentsEffectPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_treatments_effect'));
+							predictedTreatmentsEffectPill.setValue(glucoseUnit == "mg/dL" ? MathHelper.formatNumberToStringWithPrefix(Math.round(effect)) : MathHelper.formatNumberToStringWithPrefix(Math.round(BgReading.mgdlToMmol(effect * 10)) / 10));
+							predictedTreatmentsEffectPill.addEventListener(TouchEvent.TOUCH, onPredictionPillExplanation);
+							predictionsContainer.addChild(predictedTreatmentsEffectPill);
+							
+							widestPreditctionPill = Math.max(widestPreditctionPill, predictedTreatmentsEffectPill.width);
+						}
 					}
 				}
 				
@@ -6270,7 +6284,7 @@ package ui.chart
 				}
 				
 				//COB BG
-				if (!isNaN(predictedCOBBG))
+				if (!isNaN(predictedCOBBG) && !isDexcomFollower)
 				{
 					if (predictedCOBBGPill != null) predictedCOBBGPill.removeFromParent(true);
 					predictedCOBBGPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_cob_blood_glucose'));
@@ -6342,7 +6356,7 @@ package ui.chart
 				}
 				
 				//Incomplete profile
-				if (predictionsIncompleteProfile && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true")
+				if (predictionsIncompleteProfile && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) != "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB) == "true" && !isDexcomFollower)
 				{
 					if (incompleteProfileWarningLabel != null) incompleteProfileWarningLabel.removeFromParent(true);
 					incompleteProfileWarningLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('chartscreen','incomplete_user_profile'), HorizontalAlign.JUSTIFY, VerticalAlign.TOP, 11, true, 0xFF0000);

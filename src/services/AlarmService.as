@@ -303,6 +303,7 @@ package services
 			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, checkAlarms);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
+			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
 			
 			//Get snooze times from database
 			_veryHighAlertSnoozePeriodInMinutes = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_VERY_HIGH_ALERT_SNOOZE_PERIOD_IN_MINUTES));
@@ -2676,6 +2677,7 @@ package services
 		{
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, checkAlarms);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, checkAlarms);
 			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_ACTION_EVENT, notificationReceived);
 			SpikeANE.instance.removeEventListener(SpikeANEEvent.PHONE_MUTED, phoneMuted);
