@@ -225,6 +225,7 @@ package services
 		private static function createGlucoseReading(glucoseReading:BgReading):Object
 		{
 			var newReading:Object = new Object();
+			newReading["_id"] = glucoseReading.uniqueId;
 			newReading["device"] = CGMBlueToothDevice.name;
 			newReading["date"] = glucoseReading.timestamp;
 			newReading["dateString"] = formatter.format(glucoseReading.timestamp);
