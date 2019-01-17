@@ -244,6 +244,8 @@ package ui.screens.display.settings.maintenance
 				insulinAsObject.isDefault = insulin.isDefault;
 				insulinAsObject.timestamp = insulin.timestamp;
 				insulinAsObject.isHidden = insulin.isHidden;
+				insulinAsObject.peak = insulin.peak;
+				insulinAsObject.curve = insulin.curve;
 				
 				allInsulins.push(insulinAsObject);
 			}
@@ -273,6 +275,11 @@ package ui.screens.display.settings.maintenance
 			allSettingsObject.localSettings = allLocalSettings;
 			allSettingsObject.insulins = allInsulins;
 			allSettingsObject.profiles = allProfiles;
+			allSettingsObject.algorithmIOBCOB = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM);
+			allSettingsObject.fastAbsortionCarbTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME));
+			allSettingsObject.mediumAbsortionCarbTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME));
+			allSettingsObject.slowAbsortionCarbTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME));
+			allSettingsObject.defaultAbsortionCarbTime = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME));
 			
 			try
 			{
@@ -681,7 +688,10 @@ package ui.screens.display.settings.maintenance
 										insulinAsObject.isDefault, 
 										insulinAsObject.ID, 
 										true, 
-										insulinAsObject.isHidden
+										insulinAsObject.isHidden,
+										insulinAsObject.curve != null ? insulinAsObject.curve : "bilinear",
+										insulinAsObject.peak != null ? insulinAsObject.peak : 75,
+										true
 									);
 								}
 							}
@@ -723,12 +733,38 @@ package ui.screens.display.settings.maintenance
 											profileAsObject.timestamp
 										);
 									
-									ProfileManager.insertProfile(profile);
+									ProfileManager.insertProfile(profile, true);
 								}
 							}
 						}
 					} 
 					catch(error:Error) {}
+					
+					//Import Individual Profile Settings
+					if (allSettingsJSON.algorithmIOBCOB != null)
+					{
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM, String(allSettingsJSON.algorithmIOBCOB));
+					}
+					
+					if (allSettingsJSON.fastAbsortionCarbTime != null)
+					{
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME, String(allSettingsJSON.fastAbsortionCarbTime));
+					}
+					
+					if (allSettingsJSON.mediumAbsortionCarbTime != null)
+					{
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME, String(allSettingsJSON.mediumAbsortionCarbTime));
+					}
+					
+					if (allSettingsJSON.slowAbsortionCarbTime != null)
+					{
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME, String(allSettingsJSON.slowAbsortionCarbTime));
+					}
+					
+					if (allSettingsJSON.defaultAbsortionCarbTime != null)
+					{
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME, String(allSettingsJSON.defaultAbsortionCarbTime));
+					}
 					
 					//Import Settings
 					for (i = 0; i < commonSettingsLength; i++) 

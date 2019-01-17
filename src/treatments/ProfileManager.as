@@ -6,10 +6,15 @@ package treatments
 	import database.CommonSettings;
 	import database.Database;
 	
+	import model.ModelLocator;
+	
 	import ui.popups.AlertManager;
 	
 	import utils.Trace;
 	import utils.UniqueId;
+	
+	[ResourceBundle("profilesettingsscreen")]
+	[ResourceBundle("globaltranslations")]
 
 	public class ProfileManager
 	{
@@ -233,7 +238,16 @@ package treatments
 			return insulinsMap[ID];
 		}
 		
-		public static function addInsulin(name:String, dia:Number, type:String, isDefault:Boolean = false, insulinID:String = null, saveToDatabase:Boolean = true, isHidden:Boolean = false, curve:String = "bilinear", peak:Number = 75):void
+		public static function addInsulin(name:String, 
+										  dia:Number, 
+										  type:String, 
+										  isDefault:Boolean = false, 
+										  insulinID:String = null, 
+										  saveToDatabase:Boolean = true, 
+										  isHidden:Boolean = false, 
+										  curve:String = "bilinear", 
+										  peak:Number = 75, 
+										  overwrite:Boolean = false):void
 		{
 			Trace.myTrace("ProfileManager.as", "addInsulin called!");
 			
@@ -241,6 +255,22 @@ package treatments
 			var newInsulinID:String = insulinID == null ? UniqueId.createEventId() : insulinID;
 			
 			//Check duplicates
+			if (insulinsMap[newInsulinID] != null && insulinID != "000000" && overwrite)
+			{
+				var existingInsulin:Insulin = insulinsMap[newInsulinID];
+				existingInsulin.curve = curve;
+				existingInsulin.dia = dia;
+				existingInsulin.isDefault = isDefault;
+				existingInsulin.isHidden = isHidden;
+				existingInsulin.name = name;
+				existingInsulin.peak = peak;
+				existingInsulin.type = type;
+				
+				updateInsulin(existingInsulin, saveToDatabase);
+				
+				return;
+			}
+			
 			if (insulinsMap[newInsulinID] != null && insulinID != "000000")
 				return;
 			
@@ -382,7 +412,7 @@ package treatments
 			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
 		}
 		
-		public static function insertProfile(profile:Profile):void
+		public static function insertProfile(profile:Profile, overwrite:Boolean = false):void
 		{	
 			Trace.myTrace("ProfileManager.as", "insertProfile called!");
 			
@@ -401,11 +431,37 @@ package treatments
 			}
 			else
 			{
-				AlertManager.showSimpleAlert
-				(
-					"Warning",
-					"Error creating profile! Found existing profile with the same start time."
-				);
+				if (overwrite)
+				{
+					var existingProfile:Profile = profilesMapByTime[profile.time];
+					existingProfile.basalRates = profile.basalRates;
+					existingProfile.carbsAbsorptionRate = profile.carbsAbsorptionRate;
+					existingProfile.insulinCurve = profile.insulinCurve;
+					existingProfile.insulinPeakTime = profile.insulinPeakTime;
+					existingProfile.insulinSensitivityFactors = profile.insulinSensitivityFactors;
+					existingProfile.insulinToCarbRatios = profile.insulinToCarbRatios;
+					existingProfile.name = profile.name;
+					existingProfile.targetGlucoseRates = profile.targetGlucoseRates;
+					existingProfile.time = profile.time;
+					existingProfile.trend45Down = profile.trend45Down;
+					existingProfile.trend45Up = profile.trend45Up;
+					existingProfile.trend90Down = profile.trend90Down;
+					existingProfile.trend90Up = profile.trend90Up;
+					existingProfile.trendCorrections = profile.trendCorrections;
+					existingProfile.trendDoubleDown = profile.trendDoubleDown;
+					existingProfile.trendDoubleUp = profile.trendDoubleUp;
+					existingProfile.useCustomInsulinPeakTime = profile.useCustomInsulinPeakTime;
+					
+					updateProfile(existingProfile);
+				}
+				else
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+						ModelLocator.resourceManagerInstance.getString("profilesettingsscreen","duplicate_profile_label")
+					);
+				}
 			}
 		}
 		

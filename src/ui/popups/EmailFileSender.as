@@ -293,6 +293,8 @@ package ui.popups
 			
 			if (response.success == "true")
 			{
+				PopUpManager.removeAllPopUps();
+				
 				AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),

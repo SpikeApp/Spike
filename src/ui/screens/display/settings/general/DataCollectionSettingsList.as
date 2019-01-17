@@ -44,6 +44,8 @@ package ui.screens.display.settings.general
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
+	import treatments.Profile;
+	import treatments.ProfileManager;
 	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
@@ -326,15 +328,15 @@ package ui.screens.display.settings.general
 				nightscoutURLInput.text = followNSURL;
 			}
 			
+			var apiSecretToSave:String = nightscoutAPISecretValue != "" ? Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, String(nightscoutAPISecretValue)) : "";
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != apiSecretToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET, apiSecretToSave);
+			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != followNSURL)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL, followNSURL);
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET) != String(nightscoutOffset))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET, String(nightscoutOffset));
-			
-			var apiSecretToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, String(nightscoutAPISecretValue));
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != apiSecretToSave)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET, apiSecretToSave);
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != String(followerService))
 			{
@@ -736,17 +738,175 @@ package ui.screens.display.settings.general
 							needsSave = true;
 							
 							refreshContent();
+							
+							AlertManager.showSimpleAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
+								ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','settings_imported_successfully')
+							);
 						}
-						
-						AlertManager.showSimpleAlert
-						(
-							ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
-							ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','settings_imported_successfully')
-						);
+						else
+						{
+							AlertManager.showSimpleAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+								ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','invalid_qr_code')
+							);
+						}
 					}
 					else if (followerSettingsJSON.followerService == "Nightscout")
 					{
-						//Code NS Support
+						if (followerSettingsJSON.url != null 
+							&&
+							followerSettingsJSON.urgentHigh != null 
+							&&
+							followerSettingsJSON.high != null 
+							&&
+							followerSettingsJSON.low != null 
+							&&
+							followerSettingsJSON.urgentLow != null 
+						)
+						{
+							collectionMode = "Follower";
+							collectionModePicker.selectedIndex = 1;
+							followerService = "Nightscout";
+							followerServicePicker.selectedIndex = 1;
+							followNSURL = followerSettingsJSON.url;
+							nightscoutURLInput.text = followNSURL;
+							nightscoutAPISecretValue = followerSettingsJSON.apiSecret != null ? followerSettingsJSON.apiSecret : "";
+							nightscoutAPISecretTextInput.text = nightscoutAPISecretValue;
+							
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK, String(followerSettingsJSON.urgentHigh));
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK, String(followerSettingsJSON.high));
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK, String(followerSettingsJSON.low));
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK, String(followerSettingsJSON.urgentLow));
+							
+							var i:int;
+							
+							//Master's Profile
+							if (followerSettingsJSON.insulins != null && followerSettingsJSON.insulins is Array)
+							{
+								var insulinsArray:Array = followerSettingsJSON.insulins;
+								var insulinsLength:uint = insulinsArray.length;
+								
+								try
+								{
+									for (i = 0; i < insulinsLength; i++) 
+									{
+										var insulinAsObject:Object = insulinsArray[i] as Object;
+										if (insulinAsObject.ID != null &&
+											insulinAsObject.name != null &&
+											insulinAsObject.dia != null &&
+											insulinAsObject.type != null &&
+											insulinAsObject.isDefault != null &&
+											insulinAsObject.isHidden != null
+										)
+										{
+											ProfileManager.addInsulin
+											(
+												insulinAsObject.name,
+												insulinAsObject.dia, 
+												insulinAsObject.type, 
+												insulinAsObject.isDefault, 
+												insulinAsObject.ID, 
+												true, 
+												insulinAsObject.isHidden,
+												insulinAsObject.curve != null ? insulinAsObject.curve : "bilinear",
+												insulinAsObject.peak != null ? insulinAsObject.peak : 75,
+												true
+											);
+										}
+									}
+								} 
+								catch(error:Error) {}
+							}
+							
+							if (followerSettingsJSON.profiles != null && followerSettingsJSON.profiles is Array)
+							{
+								var profilesArray:Array = followerSettingsJSON.profiles;
+								var profilesLength:uint = profilesArray.length;
+								
+								try
+								{
+									for (i = 0; i < profilesLength; i++) 
+									{
+										var profileAsObject:Object = profilesArray[i] as Object;
+										if (profileAsObject.ID != null &&
+											profileAsObject.time != null &&
+											profileAsObject.name != null &&
+											profileAsObject.insulinToCarbRatios != null &&
+											profileAsObject.insulinSensitivityFactors != null &&
+											profileAsObject.carbsAbsorptionRate != null &&
+											profileAsObject.basalRates != null &&
+											profileAsObject.targetGlucoseRates != null &&
+											profileAsObject.trendCorrections != null &&
+											profileAsObject.timestamp != null
+										)
+										{
+											var profile:Profile = new Profile
+												(
+													profileAsObject.ID,
+													profileAsObject.time,
+													profileAsObject.name,
+													profileAsObject.insulinToCarbRatios,
+													profileAsObject.insulinSensitivityFactors,
+													profileAsObject.carbsAbsorptionRate,
+													profileAsObject.basalRates,
+													profileAsObject.targetGlucoseRates,
+													profileAsObject.trendCorrections,
+													profileAsObject.timestamp
+												);
+												
+											ProfileManager.insertProfile(profile, true);
+										}
+									}
+								} 
+								catch(error:Error) {}
+							}
+							
+							if (followerSettingsJSON.algorithmIOBCOB != null)
+							{
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM, String(followerSettingsJSON.algorithmIOBCOB));
+							}
+							
+							if (followerSettingsJSON.fastAbsortionCarbTime != null)
+							{
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_FAST_ABSORTION_TIME, String(followerSettingsJSON.fastAbsortionCarbTime));
+							}
+							
+							if (followerSettingsJSON.mediumAbsortionCarbTime != null)
+							{
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_MEDIUM_ABSORTION_TIME, String(followerSettingsJSON.mediumAbsortionCarbTime));
+							}
+							
+							if (followerSettingsJSON.slowAbsortionCarbTime != null)
+							{
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CARB_SLOW_ABSORTION_TIME, String(followerSettingsJSON.slowAbsortionCarbTime));
+							}
+							
+							if (followerSettingsJSON.defaultAbsortionCarbTime != null)
+							{
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME, String(followerSettingsJSON.defaultAbsortionCarbTime));
+							}
+							
+							needsSave = true;
+							
+							refreshContent();
+							
+							AlertManager.showSimpleAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title'),
+								ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','settings_imported_successfully')
+							);
+						}
+						else
+						{
+							AlertManager.showSimpleAlert
+								(
+									ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+									ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','invalid_qr_code')
+								);
+						}
 					}
 					else
 					{
@@ -826,6 +986,10 @@ package ui.screens.display.settings.general
 		
 		override public function dispose():void
 		{
+			Scanner.service.removeEventListener( AuthorisationEvent.CHANGED, onCameraAuthorization );
+			Scanner.service.removeEventListener( ScannerEvent.CODE_FOUND, onQRCodeFound );
+			Scanner.service.removeEventListener( ScannerEvent.CANCELLED, onScanCanceled );
+			
 			if (collectionModePicker != null)
 			{
 				collectionModePicker.removeEventListener(starling.events.Event.CHANGE, onCollectionModeChanged);
