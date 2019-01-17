@@ -6,6 +6,8 @@ package ui.screens.display.settings.general
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
+	import events.SettingsServiceEvent;
+	
 	import feathers.controls.Check;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
@@ -39,6 +41,7 @@ package ui.screens.display.settings.general
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
+		private var isSaving:Boolean = false;
 		private var glucoseUrgentLowValue:Number;
 		private var glucoseLowValue:Number;
 		private var glucoseUrgentHighValue:Number;
@@ -81,6 +84,29 @@ package ui.screens.display.settings.general
 			autoHideBackground = true;
 			hasElasticEdges = false;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			//Event Listeners
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSpikeSettingChanged);
+		}
+		
+		private function onSpikeSettingChanged(e:SettingsServiceEvent):void
+		{
+			if (isSaving)
+			{
+				return;
+			}
+			
+			if (e.data == CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK
+				||
+				e.data == CommonSettings.COMMON_SETTING_HIGH_MARK
+				||
+				e.data == CommonSettings.COMMON_SETTING_LOW_MARK
+				||
+				e.data == CommonSettings.COMMON_SETTING_URGENT_LOW_MARK
+			) 
+			{
+				setupInitialState();
+			}
 		}
 		
 		private function setupContent():void
@@ -295,6 +321,8 @@ package ui.screens.display.settings.general
 		
 		public function save():void
 		{
+			isSaving = true;
+			
 			/* Save Glucose Units */
 			if (glucoseUnitsPicker.selectedIndex == 0) //mg/dl
 			{
@@ -321,6 +349,7 @@ package ui.screens.display.settings.general
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON) != String(roundMfDlValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON, String(roundMfDlValue));
 			
+			isSaving = false;
 			needsSave = false;
 		}
 		
@@ -541,6 +570,8 @@ package ui.screens.display.settings.general
 		 */
 		override public function dispose():void
 		{	
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSpikeSettingChanged);
+			
 			if(glucoseUnitsPicker != null)
 			{
 				glucoseUnitsPicker.removeEventListener(Event.CHANGE, onUnitsChanged);

@@ -449,6 +449,10 @@ package ui.screens.display.settings.share
 				masterSettings.username = selectedUsername;
 				masterSettings.password = selectedPassword;
 				masterSettings.server = selectedServerCode;
+				masterSettings.urgentHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+				masterSettings.high = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+				masterSettings.low = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+				masterSettings.urgentLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
 				
 				//Encode master settings
 				try

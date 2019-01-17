@@ -707,6 +707,14 @@ package ui.screens.display.settings.general
 							followerSettingsJSON.password != null 
 							&&
 							followerSettingsJSON.server != null 
+							&&
+							followerSettingsJSON.urgentHigh != null 
+							&&
+							followerSettingsJSON.high != null 
+							&&
+							followerSettingsJSON.low != null 
+							&&
+							followerSettingsJSON.urgentLow != null 
 						)
 						{
 							collectionMode = "Follower";
@@ -719,6 +727,12 @@ package ui.screens.display.settings.general
 							dsPassword.text = dsPasswordValue;
 							dsServerCodeValue = followerSettingsJSON.server;
 							dsServer.selectedIndex = dsServerCodeValue == "us" ? 0 : 1;
+							
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK, String(followerSettingsJSON.urgentHigh));
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK, String(followerSettingsJSON.high));
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK, String(followerSettingsJSON.low));
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK, String(followerSettingsJSON.urgentLow));
+							
 							needsSave = true;
 							
 							refreshContent();
