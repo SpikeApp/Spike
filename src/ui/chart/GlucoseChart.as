@@ -2095,25 +2095,32 @@ package ui.chart
 				{
 					if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 					{
-						if (treatment.treatment.type != Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.type != Treatment.TYPE_SENSOR_START && treatment.treatment.note != ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+						if (treatment.treatment.type != Treatment.TYPE_SENSOR_START)
 						{
-							if (moveBtn != null) moveBtn.removeFromParent(true);
-							if (deleteBtn != null) deleteBtn.removeFromParent(true);
-							var actionsLayout:HorizontalLayout = new HorizontalLayout();
-							actionsLayout.gap = 5;
-							if (actionsContainer != null) actionsContainer.removeFromParent(true);
-							actionsContainer = new LayoutGroup();
-							actionsContainer.layout = actionsLayout;
-							
-							moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
-							moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
-							actionsContainer.addChild(moveBtn);
-							
-							deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
-							deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
-							actionsContainer.addChild(deleteBtn);
-							
-							treatmentContainer.addChild(actionsContainer);
+							if (treatment.treatment.type == Treatment.TYPE_GLUCOSE_CHECK && treatment.treatment.note == ModelLocator.resourceManagerInstance.getString("treatments","sensor_calibration_note"))
+							{
+								//No action buttons for sensor calibrations
+							}
+							else
+							{
+								if (moveBtn != null) moveBtn.removeFromParent(true);
+								if (deleteBtn != null) deleteBtn.removeFromParent(true);
+								var actionsLayout:HorizontalLayout = new HorizontalLayout();
+								actionsLayout.gap = 5;
+								if (actionsContainer != null) actionsContainer.removeFromParent(true);
+								actionsContainer = new LayoutGroup();
+								actionsContainer.layout = actionsLayout;
+								
+								moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
+								moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+								actionsContainer.addChild(moveBtn);
+								
+								deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
+								deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+								actionsContainer.addChild(deleteBtn);
+								
+								treatmentContainer.addChild(actionsContainer);
+							}
 						}
 					}
 				}

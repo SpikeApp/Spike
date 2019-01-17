@@ -8,12 +8,14 @@ FEATURE: New advanced glucose variability & treatments stats. Scroll the lower s
 FEATURE: Trigger different IFTTT events based on glucose thresholds (urgent high, high, in range, low, urgent low). This allows to set different colors for your smart bulbs (ex: Philips Hue) based on your glucose levels. Head over to Settings > Integration > IFTTT, turn on "All Glucose Readings" and "Separate IFTTT Events For Each Glucose Threshold". This will trigger the following events: spike-bgreading-urgent-high, spike-bgreading-high, spike-bgreading-in-range, spike-bgreading-low and spike-bgreading-urgent-low. More info here: https://github.com/SpikeApp/Spike/wiki/IFTTT (Miguel)
 ENHANCEMENT: Ability to set I:C ration with 0.1 increments in Settings > Treatments > Profile. (Miguel)
 ENHANCEMENT: Added ability to add treatments with a future time/date. (Miguel)
+ENHANCEMENT: Improved download logic when using Spike to follow a Nightscout site. Should be much more reliable now. (Miguel)
 ENHANCEMENT: Small improvements to Spike to Spike follower mode. (Miguel)
 ENHANCEMENT: Spike will automatically delete treatments older than 3 months from its internal database to keep the file as small as possible. (Miguel)
 ENHANCEMENT: Improved connection and parsing logic when syncing Nightscout treatments. (Miguel)
 FIX: Important fix for the initial calibration. Addresses the LOW values seen after adding an initial calibration. (Johan)
 FIX: Addresses a bug that could sometimes not display the correct insulin name when editing a treatment by going to + menu > treatments > pencil icon. (Miguel)
 FIX: Attempt to fix the header that lists all predictions curves being cut off on iPhone XR phones. Untested, please report back. (Miguel)
+FIX: As usual, a lot of other small bug fixes and enhancements to improve overall experience. (Miguel)
 
 3.5.1
 FEATURE: Ability to press on prediction markers located on the chart to visualize details. (Miguel)
