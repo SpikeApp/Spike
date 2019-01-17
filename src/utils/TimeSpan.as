@@ -42,6 +42,7 @@ package utils
 		public static const TIME_7_MINUTES:int = 420000;
 		public static const TIME_6_MINUTES:int = 360000;
 		public static const TIME_5_MINUTES_30_SECONDS:int = 330000;
+		public static const TIME_5_MINUTES_20_SECONDS:int = 320000;
 		public static const TIME_5_MINUTES_10_SECONDS:int = 310000;
 		public static const TIME_5_MINUTES:int = 300000;
 		public static const TIME_4_MINUTES_45_SECONDS:int = 315000;

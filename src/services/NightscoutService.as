@@ -138,6 +138,8 @@ package services
 		private static var nightscoutProfileURL:String = "";
 		private static var isNSProfileSet:Boolean = false;
 		private static var nightscoutDeviceStatusURL:String = "";
+		private static var followerAggressiveFetchRetry:uint = 0;
+		private static var followerModerateFetchRetry:uint = 0;
 		
 		private static var _instance:NightscoutService = new NightscoutService();
 
@@ -165,7 +167,7 @@ package services
 		private static var lastPredictionsUploadTimestamp:Number = 0;
 		private static var propertiesV2Timeout:uint = 0;
 		public static var treatmentsAPIServerResponse:String = "";
-
+		
 		public function NightscoutService()
 		{
 			if (_instance != null)
@@ -206,14 +208,16 @@ package services
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "" &&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false")
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false" &&
+				!CGMBlueToothDevice.isDexcomFollower())
 			{
 				testNightscoutCredentials();
 			}
 			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_ON) == "true" &&
 					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != "" &&
 					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "" &&
-					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true")
+					 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true" &&
+					 !CGMBlueToothDevice.isDexcomFollower())
 			{
 				activateService();
 			}
@@ -805,6 +809,9 @@ package services
 		
 		private static function activateFollower():void
 		{
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() != "NIGHTSCOUT")
+				return;
+			
 			Trace.myTrace("NightscoutService.as", "Follower mode activated!");
 			
 			followerModeEnabled = true;
@@ -826,15 +833,13 @@ package services
 			Trace.myTrace("NightscoutService.as", "Follower mode deactivated!");
 			
 			clearTimeout(followerTimer);
-			
 			followerModeEnabled = false;
-			
-			deactivateTimer();
-			
+			followerAggressiveFetchRetry = 0;
+			followerModerateFetchRetry = 0;
 			nextFollowDownloadTime = 0;
-			
 			ModelLocator.bgReadings.length = 0;
 			
+			deactivateTimer();
 			clearTreatments();
 		}
 		
@@ -852,21 +857,43 @@ package services
 			isNSProfileSet = false;
 		}
 		
-		private static function calculateNextFollowDownloadTime():void 
+		private static function setNextFollowerFetch():void
 		{
-			var now:Number = (new Date()).valueOf();
+			//Time variables
+			var now:Number = new Date().valueOf();
 			var latestBGReading:BgReading = BgReading.lastNoSensor();
+			
 			if (latestBGReading != null) 
 			{
-				if (now - latestBGReading.timestamp >= TimeSpan.TIME_5_MINUTES_30_SECONDS)
+				if (now - latestBGReading.timestamp >= TimeSpan.TIME_5_MINUTES_20_SECONDS)
 				{
-					//Some users are uploading values to nightscout with a bigger delay than it was supposed (>10 seconds)... 
-					//This will make Spike retry in 10sec so they don't see outdated values in the chart.
-					nextFollowDownloadTime = now + TimeSpan.TIME_10_SECONDS; 
+					//We missed at least a reading. Start with more aggressive into less aggressive fetch strategies.
+					if (followerAggressiveFetchRetry < 3)
+					{
+						//Try in 10 seconds. 3 aggressive mode retries.
+						nextFollowDownloadTime = now + TimeSpan.TIME_10_SECONDS; 
+						followerAggressiveFetchRetry++
+					}
+					else if (followerModerateFetchRetry < 10)
+					{
+						//Try in 1 minute. 10 moderate mode retries.
+						nextFollowDownloadTime = now + TimeSpan.TIME_1_MINUTE; 
+						followerModerateFetchRetry++
+					}
+					else
+					{
+						//Try every 5 minuets. Light mode that goes on indefinitely
+						nextFollowDownloadTime = latestBGReading.timestamp + TimeSpan.TIME_5_MINUTES_20_SECONDS;
+						while (nextFollowDownloadTime < now) 
+						{
+							nextFollowDownloadTime += TimeSpan.TIME_5_MINUTES;
+						}
+					}
 				}
 				else
 				{
-					nextFollowDownloadTime = latestBGReading.timestamp + TimeSpan.TIME_5_MINUTES_10_SECONDS;
+					//Last reading fetch was successful. Set next fetch to 5m20s after last reading.
+					nextFollowDownloadTime = latestBGReading.timestamp + TimeSpan.TIME_5_MINUTES_20_SECONDS;
 					while (nextFollowDownloadTime < now) 
 					{
 						nextFollowDownloadTime += TimeSpan.TIME_5_MINUTES;
@@ -874,15 +901,29 @@ package services
 				}
 			}
 			else
-				nextFollowDownloadTime = now + TimeSpan.TIME_5_MINUTES;		
-		}
-		
-		private static function setNextFollowerFetch(delay:int = 0):void
-		{
-			var now:Number = new Date().valueOf();
+			{
+				//We still don't have readings. Start with more aggressive into less aggressive fetch strategies.
+				if (followerAggressiveFetchRetry < 3)
+				{
+					//Try in 30 seconds. 3 aggressive mode retries.
+					nextFollowDownloadTime = now + TimeSpan.TIME_30_SECONDS;
+					followerAggressiveFetchRetry++;
+				}
+				else if (followerModerateFetchRetry < 10)
+				{
+					//Try in 1 minute. 10 moderate mode retries.
+					nextFollowDownloadTime = now + TimeSpan.TIME_1_MINUTE;
+					followerModerateFetchRetry++;
+				}
+				else
+				{
+					//Try every 5 minuets. Light mode that goes on indefinitely
+					nextFollowDownloadTime = now + TimeSpan.TIME_5_MINUTES;	
+				}
+			}
 			
-			calculateNextFollowDownloadTime();
-			var interval:Number = nextFollowDownloadTime + delay - now;
+			//Calculate timer interval
+			var interval:Number = nextFollowDownloadTime - now;
 			clearTimeout(followerTimer);
 			followerTimer = setTimeout(getRemoteReadings, interval);
 			
@@ -895,8 +936,16 @@ package services
 			Trace.myTrace("NightscoutService.as", "getRemoteReadings called!");
 			
 			var now:Number = (new Date()).valueOf();
+			var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
 			
-			if (!CGMBlueToothDevice.isFollower())
+			if (latestBGReading != null && !isNaN(latestBGReading.timestamp) && now - latestBGReading.timestamp < TimeSpan.TIME_5_MINUTES)
+			{
+				Trace.myTrace("NightscoutService.as", "Last BG reading is less than 5 minutes old. Ignoring...");
+				
+				return;
+			}
+			
+			if (!CGMBlueToothDevice.isFollower() || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() != "NIGHTSCOUT")
 			{
 				Trace.myTrace("NightscoutService.as", "Spike is not in follower mode. Aborting!");
 				
@@ -918,15 +967,10 @@ package services
 			{
 				Trace.myTrace("NightscoutService.as", "There's no Internet connection. Will try again later!");
 				
-				setNextFollowerFetch(TimeSpan.TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
+				setNextFollowerFetch();
 				
 				return;
 			}
-			
-			var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
-			
-			if (latestBGReading != null && !isNaN(latestBGReading.timestamp) && now - latestBGReading.timestamp < TimeSpan.TIME_5_MINUTES)
-				return;
 			
 			if (nextFollowDownloadTime < now) 
 			{
@@ -943,14 +987,14 @@ package services
 				parameters["count"] = Math.round(numberOfReadings);
 				
 				waitingForNSData = true;
-				lastFollowDownloadAttempt = (new Date()).valueOf();
+				lastFollowDownloadAttempt = now;
 				
 				NetworkConnector.createNSConnector(nightscoutFollowURL + parameters.toString(), CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" ? nightscoutFollowAPISecret : null, URLRequestMethod.GET, null, MODE_GLUCOSE_READING_GET, onDownloadGlucoseReadingsComplete, onConnectionFailed);
 			}
 			else
 			{
-				Trace.myTrace("NightscoutService.as", "Tried to make a fetch while in the past. Setting new fetch again.");
-				setNextFollowerFetch(TimeSpan.TIME_10_SECONDS); 
+				Trace.myTrace("NightscoutService.as", "Tried to make a fetch while in the past. Scheduling new fetch...");
+				setNextFollowerFetch(); 
 			}
 		}
 		
@@ -991,15 +1035,14 @@ package services
 				Trace.myTrace("NightscoutService.as", "Server's gave an empty response. Retrying in a few minutes.");
 				
 				setNextFollowerFetch();
-				
 				return;
 			}
 			
 			try 
 			{
 				var BgReadingsToSend:Array = [];
-				//var NSResponseJSON:Object = JSON.parse(response);
 				var NSResponseJSON:Object = SpikeJSON.parse(response);
+				
 				if (NSResponseJSON is Array) 
 				{
 					var NSBgReadings:Array = NSResponseJSON as Array;
@@ -1090,6 +1133,10 @@ package services
 							if (pumpUserEnabled)
 								getPropertiesV2Endpoint();
 						}
+						
+						//Reset Variables
+						followerAggressiveFetchRetry = 0;
+						followerModerateFetchRetry = 0;
 					}
 				} 
 				else 
@@ -2871,6 +2918,11 @@ package services
 		 */
 		private static function activateService():void
 		{
+			if(CGMBlueToothDevice.isDexcomFollower())
+			{
+				return;
+			}
+			
 			Trace.myTrace("NightscoutService.as", "Service activated!");
 			serviceActive = true;
 			setupNightscoutProperties();
@@ -2978,8 +3030,6 @@ package services
 			
 			if (activeSensorStarts.length > 0) syncSensorStart();
 			
-			if (CGMBlueToothDevice.isFollower()) getRemoteReadings();
-			
 			if (activeTreatmentsUpload.length > 0) syncTreatmentsUpload();
 			
 			if (activeTreatmentsDelete.length > 0) syncTreatmentsDelete();
@@ -3023,7 +3073,7 @@ package services
 			{
 				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Can't make connection to the server while trying to download glucose readings. Error: " +  error.message);
 				
-				setNextFollowerFetch(TimeSpan.TIME_10_SECONDS); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
+				setNextFollowerFetch(); //Plus 10 seconds to ensure it passes the getRemoteReadings validation
 			}
 			else if (mode == MODE_TREATMENT_UPLOAD)
 			{

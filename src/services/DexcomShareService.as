@@ -119,9 +119,9 @@ package services
 		private static var timeOfFirstBgReadingToDowload:Number;
 		private static var lastFollowDownloadAttempt:Number;
 		private static var waitingForDSData:Boolean = false;
-		private static var followerFetchErrorRetryAttempt:Number = 0;
 		private static var followerTimer:uint = 0;
-		private static var missedFollowerReadingAgressiveRetryAttemp:Number = 0;
+		private static var followerAggressiveFetchRetry:uint = 0;
+		private static var followerModerateFetchRetry:uint = 0;
 		
 		public function DexcomShareService()
 		{
@@ -1058,8 +1058,6 @@ package services
 		private static function resync():void
 		{
 			if (activeGlucoseReadings.length > 0) syncGlucoseReadings();
-			
-			if (CGMBlueToothDevice.isFollower()) getFollowerGlucoseReadings();
 		}
 		
 		/**
@@ -1074,12 +1072,16 @@ package services
 		
 		private static function activateFollower():void
 		{
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() != "DEXCOM")
+			{
+				return;
+			}
+			
 			Trace.myTrace("DexcomShareService.as", "Follower mode activated!");
 			
 			followerModeEnabled = true;
 			serviceActive = false;
 			clearTimeout(followerTimer);
-			activateTimer();
 			activateFollowerEventListeners()
 			
 			nextFunctionToCall = getFollowerGlucoseReadings;
@@ -1093,10 +1095,9 @@ package services
 			followerModeEnabled = false;
 			clearTimeout(followerTimer);
 			nextFollowDownloadTime = 0;
-			missedFollowerReadingAgressiveRetryAttemp = 0;
-			followerFetchErrorRetryAttempt = 0;
+			followerAggressiveFetchRetry = 0;
+			followerModerateFetchRetry = 0;
 			ModelLocator.bgReadings.length = 0;
-			deactivateTimer();
 			deactivateFollowerEventListeners();
 		}
 		
@@ -1113,39 +1114,70 @@ package services
 		
 		private static function setNextFollowerFetch():void
 		{
+			//Time variables
 			var now:Number = new Date().valueOf();
-			
 			var latestBGReading:BgReading = BgReading.lastNoSensor();
+			
 			if (latestBGReading != null) 
 			{
-				if (now - latestBGReading.timestamp >= TimeSpan.TIME_5_MINUTES_30_SECONDS)
+				if (now - latestBGReading.timestamp >= TimeSpan.TIME_5_MINUTES_20_SECONDS)
 				{
-					//Some users are uploading values to nightscout with a bigger delay than it was supposed (>10 seconds)... 
-					//This will make Spike retry in 10sec so they don't see outdated values in the chart.
-					if (missedFollowerReadingAgressiveRetryAttemp < 3)
+					//We missed at least a reading. Start with more aggressive into less aggressive fetch strategies.
+					if (followerAggressiveFetchRetry < 3)
 					{
-						missedFollowerReadingAgressiveRetryAttemp++;
+						//Try in 10 seconds. 3 aggressive mode retries.
 						nextFollowDownloadTime = now + TimeSpan.TIME_10_SECONDS; 
+						followerAggressiveFetchRetry++
+					}
+					else if (followerModerateFetchRetry < 10)
+					{
+						//Try in 1 minute. 10 moderate mode retries.
+						nextFollowDownloadTime = now + TimeSpan.TIME_1_MINUTE; 
+						followerModerateFetchRetry++
 					}
 					else
 					{
-						nextFollowDownloadTime = now + TimeSpan.TIME_1_MINUTE; 
+						//Try every 5 minuets. Light mode that goes on indefinitely
+						nextFollowDownloadTime = latestBGReading.timestamp + TimeSpan.TIME_5_MINUTES_20_SECONDS;
+						while (nextFollowDownloadTime < now) 
+						{
+							nextFollowDownloadTime += TimeSpan.TIME_5_MINUTES;
+						}
 					}
 				}
 				else
 				{
-					nextFollowDownloadTime = latestBGReading.timestamp + TimeSpan.TIME_5_MINUTES_30_SECONDS;
+					//Last reading fetch was successful. Set next fetch to 5m20s after last reading.
+					nextFollowDownloadTime = latestBGReading.timestamp + TimeSpan.TIME_5_MINUTES_20_SECONDS;
 					while (nextFollowDownloadTime < now) 
 					{
-						nextFollowDownloadTime += TimeSpan.TIME_30_SECONDS;
+						nextFollowDownloadTime += TimeSpan.TIME_5_MINUTES;
 					}
 				}
 			}
 			else
 			{
-				nextFollowDownloadTime = now + TimeSpan.TIME_5_MINUTES;
+				//We still don't have readings. Start with more aggressive into less aggressive fetch strategies.
+				if (followerAggressiveFetchRetry < 3)
+				{
+					//Try in 30 seconds. 3 aggressive mode retries.
+					nextFollowDownloadTime = now + TimeSpan.TIME_30_SECONDS;
+					followerAggressiveFetchRetry++;
+				}
+				else if (followerModerateFetchRetry < 10)
+				{
+					//Try in 1 minute. 10 moderate mode retries.
+					nextFollowDownloadTime = now + TimeSpan.TIME_1_MINUTE;
+					followerModerateFetchRetry++;
+				}
+				else
+				{
+					//Try every 5 minuets. Light mode that goes on indefinitely
+					nextFollowDownloadTime = now + TimeSpan.TIME_5_MINUTES;	
+				}
 			}
 			
+			//Calculate timer interval
 			var interval:Number = nextFollowDownloadTime - now;
 			clearTimeout(followerTimer);
 			followerTimer = setTimeout(getFollowerGlucoseReadings, interval);
@@ -1162,10 +1194,14 @@ package services
 			var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
 			
 			if (latestBGReading != null && !isNaN(latestBGReading.timestamp) && now - latestBGReading.timestamp < TimeSpan.TIME_5_MINUTES)
-				return;
-			
-			if (!CGMBlueToothDevice.isFollower())
 			{
+				Trace.myTrace("DexcomShareService.as", "Last BG reading is less than 5 minutes old. Ignoring...");
+				
+				return;
+			}
+			
+			if (!CGMBlueToothDevice.isFollower() || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE).toUpperCase() != "DEXCOM")
+			{ 
 				Trace.myTrace("DexcomShareService.as", "Spike is not in follower mode. Aborting!");
 				
 				deactivateFollowerMode();
@@ -1191,10 +1227,10 @@ package services
 				return;
 			}
 			
-			var minutesToDownload:Number = 0;
-			
 			if (nextFollowDownloadTime < now) 
 			{
+				var minutesToDownload:Number = 0;
+				
 				if (latestBGReading == null)
 				{
 					minutesToDownload = 24 * 60; //24h in minutes, 1 full day
@@ -1202,7 +1238,7 @@ package services
 				}
 				else
 				{
-					minutesToDownload = (now - (latestBGReading.timestamp + 1)) / 1000 / 60; //Mnutes since last BG Reading
+					minutesToDownload = (now - (latestBGReading.timestamp + 1)) / 1000 / 60; //iMnutes since last BG Reading
 					timeOfFirstBgReadingToDowload = latestBGReading.timestamp + 1;
 				}
 				
@@ -1218,21 +1254,29 @@ package services
 			}
 			else
 			{
+				Trace.myTrace("DexcomShareService.as", "Tried to make a fetch while in the past. Scheduling new fetch...");
 				setNextFollowerFetch();
 			}
 		}
 		
 		private static function onGetFollowerReadingsComplete(e:flash.events.Event):void
 		{
+			if (serviceHalted)
+				return;
+			
 			Trace.myTrace("DexcomShareService.as", "onGetFollowerReadingsComplete called");
 			
 			var now:Number = (new Date()).valueOf();
 			
-			if (serviceHalted)
-				return;
-			
+			//Get loader
 			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
 			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(flash.events.Event.COMPLETE, onGetFollowerReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
 			loader = null;
 			
 			//Validate call
@@ -1245,12 +1289,22 @@ package services
 			
 			waitingForDSData = false;
 			
+			//Validate response
+			if (response.length == 0)
+			{
+				Trace.myTrace("DexcomShareService.as", "Server's gave an empty response. Retrying in a few minutes.");
+				
+				setNextFollowerFetch();
+				return;
+			}
+			
 			if (response.indexOf("[") != -1)
 			{
 				try
 				{
 					var BgReadingsToSend:Array = [];
 					var DSResponseJSON:Object = SpikeJSON.parse(response);
+					
 					if (DSResponseJSON is Array)
 					{
 						var DSBgReadings:Array = DSResponseJSON as Array;
@@ -1318,11 +1372,10 @@ package services
 							//Notify Listeners
 							instance.dispatchEvent(new FollowerEvent(FollowerEvent.BG_READING_RECEIVED, false, false, BgReadingsToSend));
 							
-							missedFollowerReadingAgressiveRetryAttemp = 0;
+							//Reset Variables
+							followerAggressiveFetchRetry = 0;
+							followerModerateFetchRetry = 0;
 						}
-						
-						followerFetchErrorRetryAttempt = 0;
-						setNextFollowerFetch();
 					}
 					else 
 					{
@@ -1339,6 +1392,7 @@ package services
 			{
 				nextFunctionToCall = getFollowerGlucoseReadings;
 				login(true);
+				return;
 			}
 			else
 			{
