@@ -15,6 +15,7 @@ package ui.screens.display.settings.share
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
 	import feathers.controls.Check;
@@ -31,6 +32,7 @@ package ui.screens.display.settings.share
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
@@ -81,6 +83,11 @@ package ui.screens.display.settings.share
 		private var followerManagerContainer:ScrollContainer;
 		private var nonDexcomInstructions:Label;
 		private var wifiSyncOnlyCheck:Check;
+		private var qrCodeBitmapData:BitmapData;
+		private var qrCodeImage:Image;
+		private var qrCodePopup:Alert;
+		private var qrCodeContainer:LayoutGroup;
+		private var qrCodeExplanation:Label;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -380,16 +387,17 @@ package ui.screens.display.settings.share
 		{
 			if(DexcomShareService.isAuthorized())
 			{
-				AlertManager.showActionAlert
+				var alert:Alert = AlertManager.showActionAlert
 				(
 					ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"),
 					ModelLocator.resourceManagerInstance.getString("sharesettingsscreen","select_dexcom_follower_app_popup_body"),
 					Number.NaN,
 					[
-						{ label: "Dexcom Follow", triggered: onOfficialDexcomFollower },
-						{ label: "Spike", triggered: onSpikeDexcomFollower }
+						{ label: "DEXCOM FOLLOW", triggered: onOfficialDexcomFollower },
+						{ label: "SPIKE", triggered: onSpikeDexcomFollower }
 					]
 				);
+				alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 			}
 			else
 			{
@@ -524,7 +532,8 @@ package ui.screens.display.settings.share
 						var masterSettingsQRCode:QRCode = new QRCode();
 						masterSettingsQRCode.encode(encryptedURL);
 						
-						var qrCodeBitmapData:BitmapData = masterSettingsQRCode.bitmapData;
+						if (qrCodeBitmapData != null) qrCodeBitmapData.dispose();
+						qrCodeBitmapData = masterSettingsQRCode.bitmapData;
 						
 						if (qrCodeBitmapData == null)
 						{
@@ -536,21 +545,69 @@ package ui.screens.display.settings.share
 						}
 						else
 						{
-							//Send QR Code by Email
-							EmailFileSender.instance.addEventListener(starling.events.Event.COMPLETE, onFileSenderClosed);
-							EmailFileSender.instance.addEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
-							EmailFileSender.sendFile
+							if (qrCodeContainer != null) qrCodeContainer.dispose();
+							qrCodeContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.TOP, 15);
+							
+							if (qrCodeImage != null) 
+							{
+								if (qrCodeImage.texture != null) qrCodeImage.texture.dispose();
+								qrCodeImage.dispose();
+							}
+							qrCodeImage = new Image(Texture.fromBitmapData(qrCodeBitmapData));
+							qrCodeContainer.addChild(qrCodeImage);
+							
+							if (qrCodeExplanation != null) qrCodeExplanation.dispose();
+							qrCodeExplanation = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_invitation_in_app_instructions'), HorizontalAlign.JUSTIFY);
+							qrCodeExplanation.wordWrap = true;
+							
+							if (qrCodePopup != null) qrCodePopup.removeFromParent(true);
+							qrCodePopup = AlertManager.showActionAlert
 							(
-								ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_invitation_email_subject'),
-								ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_invitation_email_body'),
-								"SpikeDexcomShareQRCode.png",
-								PNGEncoder.encode(qrCodeBitmapData),
-								"image/png",
-								ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_qr_code_email_sent_success_message'),
-								ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_error_message'),
+								ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','qr_code'),
 								"",
-								ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_email_address_popup_title')
+								Number.NaN,
+								[
+									{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+									{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','email_button_label').toUpperCase(), triggered: sendQRCodeByEmail }
+								],
+								HorizontalAlign.JUSTIFY,
+								qrCodeContainer
 							);
+							qrCodePopup.validate();
+							qrCodeContainer.width = qrCodePopup.width;
+							qrCodeExplanation.width = qrCodeContainer.width;
+							qrCodeContainer.addChild(qrCodeExplanation);
+							
+							qrCodePopup.gap = 0;
+							qrCodePopup.headerProperties.maxHeight = 30;
+							qrCodePopup.buttonGroupProperties.paddingTop = -10;
+							qrCodePopup.buttonGroupProperties.gap = 10;
+							qrCodePopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+							
+							function sendQRCodeByEmail(e:starling.events.Event):void
+							{
+								//Close popup
+								if (qrCodePopup != null)
+								{
+									qrCodePopup.removeFromParent(true);
+								}
+								
+								//Send QR Code by Email
+								EmailFileSender.instance.addEventListener(starling.events.Event.COMPLETE, onFileSenderClosed);
+								EmailFileSender.instance.addEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
+								EmailFileSender.sendFile
+								(
+									ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_invitation_email_subject'),
+									ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_invitation_email_body'),
+									"SpikeDexcomShareQRCode.png",
+									PNGEncoder.encode(qrCodeBitmapData),
+									"image/png",
+									ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_qr_code_email_sent_success_message'),
+									ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_error_message'),
+									"",
+									ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_email_address_popup_title')
+								);
+							}
 						}
 					} 
 					catch(error:Error) 
@@ -755,6 +812,44 @@ package ui.screens.display.settings.share
 				wifiSyncOnlyCheck.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 				wifiSyncOnlyCheck.dispose();
 				wifiSyncOnlyCheck = null;
+			}
+			
+			if (qrCodeExplanation != null)
+			{
+				qrCodeExplanation.removeFromParent();
+				qrCodeExplanation.dispose();
+				qrCodeExplanation = null;
+			}
+			
+			if (qrCodeImage != null)
+			{
+				qrCodeImage.removeFromParent();
+				if (qrCodeImage.texture != null)
+				{
+					qrCodeImage.texture.dispose();
+				}
+				qrCodeImage.dispose();
+				qrCodeImage = null;
+			}
+			
+			if (qrCodeBitmapData != null)
+			{
+				qrCodeBitmapData.dispose();
+				qrCodeBitmapData = null;
+			}
+			
+			if (qrCodeContainer != null)
+			{
+				qrCodeContainer.removeFromParent();
+				qrCodeContainer.dispose();
+				qrCodeContainer = null;
+			}
+			
+			if (qrCodePopup != null)
+			{
+				qrCodePopup.removeFromParent();
+				qrCodePopup.dispose();
+				qrCodePopup = null;
 			}
 			
 			super.dispose();

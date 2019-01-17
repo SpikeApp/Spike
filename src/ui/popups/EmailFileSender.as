@@ -221,6 +221,7 @@ package ui.popups
 			
 			sendButton.isEnabled = false;
 			sendButton.label = ModelLocator.resourceManagerInstance.getString('sidiarysettingsscreen',"export_button__standby_label");
+			sendButton.invalidate();
 			sendButton.validate();
 			mainContainer.validate();
 			emailCallout.validate();
