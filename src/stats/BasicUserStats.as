@@ -22,6 +22,7 @@ package stats
 		public var a1c:Number = Number.NaN;
 		public var captureRate:Number = Number.NaN;
 		public var standardDeviation:Number = Number.NaN;
+		public var coefficientOfVariation:Number = Number.NaN;
 		public var gvi:Number = Number.NaN;
 		public var pgs:Number = Number.NaN;
 		public var hourlyChange:Number = Number.NaN;

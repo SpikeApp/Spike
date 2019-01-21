@@ -134,7 +134,9 @@ package stats
 				if (page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_VARIABILITY)
 				{
 					var advancedStats:Object = GlucoseFactory.calculateAdvancedStats(cleanReadings, (inRange * 100) / realReadingsNumber);
-					followerUserStats.standardDeviation = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(MathHelper.standardDeviation(cleanReadings) * 10) / 10 : Math.round(BgReading.mgdlToMmol(MathHelper.standardDeviation(cleanReadings)) * 100) / 100;
+					var stdDeviation:Number = MathHelper.standardDeviation(cleanReadings);
+					followerUserStats.standardDeviation = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(stdDeviation * 10) / 10 : Math.round(BgReading.mgdlToMmol(stdDeviation) * 100) / 100;
+					followerUserStats.coefficientOfVariation = Math.round(((stdDeviation / advancedStats.glucoseMean) * 100));
 					followerUserStats.gvi = advancedStats.GVI != null && !isNaN(advancedStats.GVI) ? advancedStats.GVI : Number.NaN;
 					followerUserStats.pgs = advancedStats.PGS != null && !isNaN(advancedStats.PGS) ? advancedStats.PGS : Number.NaN;
 					followerUserStats.hourlyChange = advancedStats.meanHourlyChange != null && !isNaN( advancedStats.meanHourlyChange) ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(advancedStats.meanHourlyChange * 10) / 10 : Math.round(advancedStats.meanHourlyChange * 100) / 100 : Number.NaN;

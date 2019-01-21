@@ -128,6 +128,7 @@ package ui.screens
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
@@ -750,6 +751,24 @@ package ui.screens
 			}
 		}
 		
+		private function onTreatmentDeleted(e:TreatmentsEvent):void
+		{
+			var treatment:Treatment = e.treatment;
+			if (treatment != null && glucoseChart != null)
+			{
+				if (SystemUtil.isApplicationActive && pieChart != null && pieChart.currentPageName == BasicUserStats.PAGE_TREATMENTS && (treatment.insulinAmount > 0 || treatment.carbs > 0 || treatment.type == Treatment.TYPE_EXERCISE))
+				{
+					clearTimeout(pieChartTreatmentUpdaterTimeout);
+					
+					pieChartTreatmentUpdaterTimeout = setTimeout( function():void 
+					{
+						if (pieChart == null) return;
+						SystemUtil.executeWhenApplicationIsActive(pieChart.updateStats, BasicUserStats.PAGE_TREATMENTS);
+					}, 1000 );
+				}
+			}
+		}
+		
 		private function onAppInBackground (e:SpikeEvent):void
 		{
 			appInBackground = true;
@@ -950,6 +969,7 @@ package ui.screens
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_MODIFIED, onTreatmentExternallyModified);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			

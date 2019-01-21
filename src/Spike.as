@@ -315,6 +315,19 @@ package
 				error.indexOf("Error #3768 at flash.external::ExtensionContext/call()") != -1 ||
 				error.indexOf("Error #3768 at utils::Trace$/myTrace()") != -1 ||
 				error.indexOf("Error #3768 at utils::FromtimeAndValueArrayCollection$/createList()") != -1 ||
+				error.indexOf("Object not connected to target") != -1 ||
+				error.indexOf("setMilliseconds") != -1 ||
+				error.indexOf("UniqueId$/createNonce()") != -1 ||
+				error.indexOf("Error #3768 at String/http://adobe.com/AS3/2006/builtin::split()") != -1 ||
+				error.indexOf("Error #3768 at com.hurlant.util::Base64$/decodeToByteArray()") != -1 ||
+				error.indexOf("Error #3768 at services::DeepSleepService$/playSound()") != -1 ||
+				error.indexOf("TypeError: Error #1009 at database::Database$/getAlertType()") != -1 ||
+				error.indexOf("Error #3768 at treatments::TreatmentsManager$/getTotalIOB()") != -1 ||
+				error.indexOf("Error #3768 at treatments::TreatmentsManager$/calcMealCOB()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLStatement/execute()") != -1 ||
+				error.indexOf("Error #3768 at flash.events::EventDispatcher/dispatchEvent()") != -1 ||
+				error.indexOf("Error #3768 at mx.collections::ListCollectionView/removeItemsFromView()") != -1 ||
+				error.indexOf("Error #3768 at services::WidgetService$/removeDuplicates()") != -1 ||
 				error.indexOf("Graphic/getBounds()") != -1
 			)
 			{

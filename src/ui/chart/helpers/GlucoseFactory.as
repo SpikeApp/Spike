@@ -575,7 +575,6 @@ package ui.chart.helpers
 				var events:Number = 0;
 				var GVITotal:Number = 0;
 				var GVIIdeal:Number = 0;
-				var RMSTotal:Number = 0;
 				var usedRecords:Number = 0;
 				var glucoseTotal:Number = 0;
 				var deltaTotal:Number = 0;
@@ -595,8 +594,6 @@ package ui.chart.helpers
 					if (delta >= t2) t2count += 1;
 					GVITotal += Math.sqrt(25 + Math.pow(delta, 2));  
 					glucoseTotal += currentReading;
-					if (currentReading < lowTreshold) RMSTotal += Math.pow(lowTreshold - currentReading, 2);
-					if (currentReading > highTreshold) RMSTotal += Math.pow(currentReading - highTreshold, 2);
 				}
 				
 				var GVIDelta:Number = Math.abs(readingsList[totalReadings-1].calculatedValue - readingsList[0].calculatedValue); //var GVIDelta:Number = Math.floor(readingsList[0], readingsList[totalReadings-1]);
@@ -607,7 +604,6 @@ package ui.chart.helpers
 				PGS = Math.round(GVI * glucoseMean * (1-tirMultiplier) * 100) / 100;
 				TDC = deltaTotal / daysTotal;
 				TDCHourly = TDC / 24;
-				var RMS:Number = Math.sqrt(RMSTotal / events);
 				timeInT1 = Number(Math.round(100 * t1count / events).toFixed(1));
 				timeInT2 = Number(Math.round(100 * t2count / events).toFixed(1));
 				
@@ -615,7 +611,6 @@ package ui.chart.helpers
 				{
 					TDC = TDC / 18.0182;
 					TDCHourly = TDCHourly / 18.0182;
-					RMS = RMS / 18.0182;
 				}
 				
 				TDC = Math.round(TDC * 100) / 100;
@@ -628,7 +623,8 @@ package ui.chart.helpers
 				meanTotalDailyChange: TDC,
 				meanHourlyChange: TDCHourly,
 				timeInFluctuation: timeInT1,
-				timeInRapidFluctuation: timeInT2
+				timeInRapidFluctuation: timeInT2,
+				glucoseMean: glucoseMean
 			}
 		}
 	}

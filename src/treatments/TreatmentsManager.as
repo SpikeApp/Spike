@@ -59,6 +59,7 @@ package treatments
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
 	import treatments.food.Food;
@@ -151,6 +152,28 @@ package treatments
 		private static var lowIntensity:Radio;
 		private static var moderateIntensity:Radio;
 		private static var highIntendity:Radio;
+
+		private static var contentOriginalHeight:Number;
+
+		private static var suggestedCalloutHeight:Number;
+
+		private static var finalCalloutHeight:Number;
+
+		private static var treatmentCallOutWidth:Number;
+
+		private static var treatmentCallOutHeight:Number;
+
+		private static var treatmentCallOutPaddingRight:Number;
+
+		private static var contentScrollContainerWidth:Number;
+
+		private static var contentScrollContainerHeight:Number;
+
+		private static var totalScrollContainerWidth:Number;
+
+		private static var totalScrollContainerHeight:Number;
+
+		private static var yPos:Number;
 		
 		public function TreatmentsManager()
 		{
@@ -1833,6 +1856,9 @@ package treatments
 		{	
 			Trace.myTrace("TreatmentsManager.as", "addTreatment called!");
 			
+			//Event Listeners
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			//Time
 			var now:Number = new Date().valueOf();
 			
@@ -2224,7 +2250,7 @@ package treatments
 			
 			//Callout
 			calloutPositionHelper = new Sprite();
-			var yPos:Number = 0;
+			yPos = 0;
 			if (!isNaN(Constants.headerHeight))
 				yPos = Constants.headerHeight - 10;
 			else
@@ -2239,9 +2265,9 @@ package treatments
 			Starling.current.stage.addChild(calloutPositionHelper);
 			
 			treatmentInserterContainer.validate();
-			var contentOriginalHeight:Number = treatmentInserterContainer.height + 60;
-			var suggestedCalloutHeight:Number = Constants.stageHeight - yPos - 10;
-			var finalCalloutHeight:Number = contentOriginalHeight > suggestedCalloutHeight ?  suggestedCalloutHeight : contentOriginalHeight;
+			contentOriginalHeight = treatmentInserterContainer.height + 60;
+			suggestedCalloutHeight = Constants.stageHeight - yPos - 10;
+			finalCalloutHeight = contentOriginalHeight > suggestedCalloutHeight ?  suggestedCalloutHeight : contentOriginalHeight;
 			
 			treatmentCallout = Callout.show(totalScrollContainer, calloutPositionHelper);
 			treatmentCallout.disposeContent = true;
@@ -2265,13 +2291,13 @@ package treatments
 			totalScrollContainer.maxHeight = finalCalloutHeight - 50;
 			totalScrollContainer.validate();
 			
-			var treatmentCallOutWidth:Number = treatmentCallout.width;
-			var treatmentCallOutHeight:Number = treatmentCallout.height;
-			var treatmentCallOutPaddingRight:Number = treatmentCallout.paddingRight;
-			var contentScrollContainerWidth:Number = contentScrollContainer.width;
-			var contentScrollContainerHeight:Number = contentScrollContainer.height;
-			var totalScrollContainerWidth:Number = totalScrollContainer.width;
-			var totalScrollContainerHeight:Number = totalScrollContainer.height;
+			treatmentCallOutWidth = treatmentCallout.width;
+			treatmentCallOutHeight = treatmentCallout.height;
+			treatmentCallOutPaddingRight = treatmentCallout.paddingRight;
+			contentScrollContainerWidth = contentScrollContainer.width;
+			contentScrollContainerHeight = contentScrollContainer.height;
+			totalScrollContainerWidth = totalScrollContainer.width;
+			totalScrollContainerHeight = totalScrollContainer.height;
 			
 			//Keyboard Focus
 			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS)
@@ -3315,6 +3341,58 @@ package treatments
 				}
 			}
 			
+			function onStarlingResize(e:ResizeEvent):void
+			{
+				if (!SystemUtil.isApplicationActive)
+				{
+					SystemUtil.executeWhenApplicationIsActive(onStarlingResize, e);
+					return;
+				}
+				
+				if (calloutPositionHelper != null && treatmentInserterContainer != null && treatmentCallout != null)
+				{
+					if (!isNaN(Constants.headerHeight))
+						yPos = Constants.headerHeight - 10;
+					else
+					{
+						if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
+							yPos = 68;
+						else
+							yPos = Constants.isPortrait ? 98 : 68;
+					}
+					calloutPositionHelper.y = yPos;
+					calloutPositionHelper.x = Constants.stageWidth / 2;
+					
+					treatmentInserterContainer.validate();
+					contentOriginalHeight = treatmentInserterContainer.height + 60;
+					suggestedCalloutHeight = Constants.stageHeight - yPos - 10;
+					finalCalloutHeight = contentOriginalHeight > suggestedCalloutHeight ?  suggestedCalloutHeight : contentOriginalHeight;
+					
+					if (finalCalloutHeight != contentOriginalHeight)
+					{
+						contentScrollContainerLayout.paddingRight = 10;
+						treatmentCallout.paddingRight = 10;
+					}
+					treatmentCallout.height = finalCalloutHeight;
+					treatmentCallout.validate();
+					
+					contentScrollContainer.height = finalCalloutHeight - 50;
+					contentScrollContainer.maxHeight = finalCalloutHeight - 50;
+					contentScrollContainer.validate();
+					totalScrollContainer.height = finalCalloutHeight - 50;
+					totalScrollContainer.maxHeight = finalCalloutHeight - 50;
+					totalScrollContainer.validate();
+					
+					treatmentCallOutWidth = treatmentCallout.width;
+					treatmentCallOutHeight = treatmentCallout.height;
+					treatmentCallOutPaddingRight = treatmentCallout.paddingRight;
+					contentScrollContainerWidth = contentScrollContainer.width;
+					contentScrollContainerHeight = contentScrollContainer.height;
+					totalScrollContainerWidth = totalScrollContainer.width;
+					totalScrollContainerHeight = totalScrollContainer.height;
+				}
+			}
+			
 			function disposeExtendedBolusComponents():void
 			{
 				if (firstSplitLabel != null)
@@ -3376,6 +3454,8 @@ package treatments
 			
 			function onTreatmentsCalloutClosed(e:Event):void
 			{
+				Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+				
 				//Dispose Components	
 				if (foodManager != null)
 				{

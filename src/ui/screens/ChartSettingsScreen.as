@@ -79,9 +79,9 @@ package ui.screens
 			
 			//24H Distribution Section Label
 			if (!CGMBlueToothDevice.isFollower())
-				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title_master'), true);
+				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','statistics_settings_title_master'), true);
 			else
-				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title_follower'), true);
+				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','statistics_settings_title_follower'), true);
 			screenRenderer.addChild(chartGlucoseDistributionLabel);
 			
 			//24H Distribution Settings

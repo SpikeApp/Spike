@@ -278,7 +278,7 @@ package ui.screens.display.settings.chart
 		
 		private function onWikiPressed(e:Event):void
 		{
-			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/stats"));
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Statistics"));
 		}
 		
 		/**

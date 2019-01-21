@@ -445,6 +445,10 @@ package ui.chart
 			}
 			
 			var userStats:BasicUserStats = StatsManager.getBasicUserStats(fromTime, untilTime, page);
+			if (userStats == null)
+			{
+				return false;
+			}
 			
 			if (userStats.page == BasicUserStats.PAGE_ALL || userStats.page == BasicUserStats.PAGE_BG_DISTRIBUTION)
 			{
@@ -474,8 +478,11 @@ package ui.chart
 					pieChartDrawn = true;
 				}
 				//Legend
-				lowSection.message.text = !dummyModeActive ? userStats.percentageLowRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				
+				if (lowSection != null)
+				{
+					lowSection.message.text = !dummyModeActive ? userStats.percentageLowRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				}
+					
 				//IN RANGE PORTION
 				//Graphics
 				if (!dummyModeActive)
@@ -489,8 +496,11 @@ package ui.chart
 					pieChartDrawn = true;
 				}
 				//Legend
-				inRangeSection.message.text = !dummyModeActive ? userStats.percentageInRangeRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				
+				if (inRangeSection != null)
+				{
+					inRangeSection.message.text = !dummyModeActive ? userStats.percentageInRangeRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				}
+					
 				//HIGH PORTION
 				//Graphics
 				if (!dummyModeActive)
@@ -504,11 +514,14 @@ package ui.chart
 					pieChartDrawn = true;
 				}
 				//Legend
-				highSection.message.text = !dummyModeActive ? userStats.percentageHighRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (highSection != null)
+				{
+					highSection.message.text = !dummyModeActive ? userStats.percentageHighRounded + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				}
 			}
 			
 			//DUMMY NGON
-			if (dummyModeActive)
+			if (dummyModeActive && nGons != null)
 			{
 				if (outterNGonSpike != null) outterNGonSpike.removeFromParent(true);
 				outterNGonSpike = new SpikeNGon(pieRadius, numSides, 0, 360, highColor);
@@ -549,26 +562,26 @@ package ui.chart
 				}
 				
 				//Populate Stats
-				numReadingsSection.message.text = !dummyModeActive ? userStats.numReadingsDay + " (" + userStats.captureRate + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				avgGlucoseSection.message.text = !dummyModeActive ? averageGlucoseValueOutput + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				estA1CSection.message.text = !dummyModeActive ? userStats.a1c + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != "true" ? "%" : " mmol/mol") : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (numReadingsSection != null) numReadingsSection.message.text = !dummyModeActive && !isNaN(userStats.numReadingsDay) ? userStats.numReadingsDay + " (" + userStats.captureRate + "%)" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (avgGlucoseSection != null) avgGlucoseSection.message.text = !dummyModeActive ? averageGlucoseValueOutput + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (estA1CSection != null) estA1CSection.message.text = !dummyModeActive && !isNaN(userStats.a1c) ? userStats.a1c + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != "true" ? "%" : " mmol/mol") : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			}
 			
 			if (userStats.page == BasicUserStats.PAGE_ALL || userStats.page == BasicUserStats.PAGE_VARIABILITY)
 			{
-				stDeviationSection.message.text = !dummyModeActive && !isNaN(userStats.standardDeviation) ? userStats.standardDeviation + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				gviSection.message.text = !dummyModeActive && !isNaN(userStats.gvi) ? userStats.gvi + " " + "(" + getGVIGrade(userStats.gvi) + ")" + (userStats.gvi <= 1.2 ? " " + "(" + ModelLocator.resourceManagerInstance.getString('chartscreen','non_diabetic_small') + ")" : "") : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				pgsSection.message.text = !dummyModeActive && !isNaN(userStats.pgs) ? userStats.pgs + " " + "(" + getPGSGrade(userStats.pgs) + ")" + (userStats.pgs <= 35 ? " " + "(" + ModelLocator.resourceManagerInstance.getString('chartscreen','non_diabetic_small') + ")" : "") : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				meanHourlyChangeSection.message.text = !dummyModeActive && !isNaN(userStats.hourlyChange) ? userStats.hourlyChange + " " + glucoseUnit + "/" + ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label') : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				timeFluctuation5Section.message.text = !dummyModeActive && !isNaN(userStats.fluctuation5) ? userStats.fluctuation5 + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				timeFluctuation10Section.message.text = !dummyModeActive && !isNaN(userStats.fluctuation10) ? userStats.fluctuation10 + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (stDeviationSection != null) stDeviationSection.message.text = !dummyModeActive && !isNaN(userStats.standardDeviation) ? userStats.standardDeviation + " " + glucoseUnit : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (gviSection != null) gviSection.message.text = !dummyModeActive && !isNaN(userStats.gvi) ? userStats.gvi + " " + "(" + getGVIGrade(userStats.gvi) + ")" + (userStats.gvi <= 1.2 ? " " + "(" + ModelLocator.resourceManagerInstance.getString('chartscreen','non_diabetic_small') + ")" : "") : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (pgsSection != null) pgsSection.message.text = !dummyModeActive && !isNaN(userStats.pgs) ? userStats.pgs + " " + "(" + getPGSGrade(userStats.pgs) + ")" + (userStats.pgs <= 35 ? " " + "(" + ModelLocator.resourceManagerInstance.getString('chartscreen','non_diabetic_small') + ")" : "") : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (meanHourlyChangeSection != null) meanHourlyChangeSection.message.text = !dummyModeActive && !isNaN(userStats.hourlyChange) ? userStats.hourlyChange + " " + glucoseUnit + "/" + ModelLocator.resourceManagerInstance.getString('chartscreen','hours_small_abbreviation_label') : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (timeFluctuation5Section != null) timeFluctuation5Section.message.text = !dummyModeActive && !isNaN(userStats.fluctuation5) ? userStats.fluctuation5 + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (timeFluctuation10Section != null) timeFluctuation10Section.message.text = !dummyModeActive && !isNaN(userStats.fluctuation10) ? userStats.fluctuation10 + "%" : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			}
 			
 			if (userStats.page == BasicUserStats.PAGE_ALL || userStats.page == BasicUserStats.PAGE_TREATMENTS)
 			{
-				carbsSection.message.text = !dummyModeActive && !isNaN(userStats.carbs) ? GlucoseFactory.formatCOB(userStats.carbs) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				bolusSection.message.text = !dummyModeActive && !isNaN(userStats.bolus) ? GlucoseFactory.formatIOB(userStats.bolus) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
-				exerciseSection.message.text = !dummyModeActive && !isNaN(userStats.exercise) ? TimeSpan.formatHoursMinutesFromMinutes(userStats.exercise, true, userStats.exercise != 0) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (carbsSection != null) carbsSection.message.text = !dummyModeActive && !isNaN(userStats.carbs) ? GlucoseFactory.formatCOB(userStats.carbs) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (bolusSection != null) bolusSection.message.text = !dummyModeActive && !isNaN(userStats.bolus) ? GlucoseFactory.formatIOB(userStats.bolus) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (exerciseSection != null) exerciseSection.message.text = !dummyModeActive && !isNaN(userStats.exercise) ? TimeSpan.formatHoursMinutesFromMinutes(userStats.exercise, true, userStats.exercise != 0) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			}
 			
 			if (page != BasicUserStats.PAGE_ALL && page != BasicUserStats.PAGE_BG_DISTRIBUTION && !pieChartDrawn)
