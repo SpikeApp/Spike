@@ -14,6 +14,7 @@ ENHANCEMENT: Improved connection and parsing logic when syncing Nightscout treat
 FIX: Important fix for the initial calibration. Addresses the LOW values seen after adding an initial calibration. (Github issue #30) (Johan)
 FIX: Addresses a bug that could sometimes not display the correct insulin name when editing a treatment by going to + menu > treatments > pencil icon. (Miguel)
 FIX: Addresses a bug when editing a meal treatment with a carb delay that would prevent insulin and/or carbs to be set to zero. (Github issue #141) (Miguel)
+FIX: BG value inside the OpenAPS pill in Nightscout is now correctly converted for mmol/L users. (Miguel) 
 FIX: Attempt to fix the header that lists all predictions curves being cut off on iPhone XR phones. Untested, please report back. (Miguel)
 FIX: As usual, a lot of other small bug fixes and enhancements to improve overall experience. (Miguel)
 

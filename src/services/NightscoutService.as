@@ -534,7 +534,7 @@ package services
 			}
 			
 			var suggestedObject:Object = {};
-			suggestedObject["bg"] = predictionsData.bg != null ? Math.round(predictionsData.bg) : Number.NaN;
+			suggestedObject["bg"] = predictionsData.bg != null ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(predictionsData.bg) : Math.round(BgReading.mgdlToMmol(predictionsData.bg * 10)) / 10 : Number.NaN;
 			suggestedObject["eventualBG"] = predictionsData.eventualBG != null ? predictionsData.eventualBG : Number.NaN;
 			suggestedObject["deliverAt"] = formattedNow;
 			suggestedObject["predBGs"] = predictBGsObject;
