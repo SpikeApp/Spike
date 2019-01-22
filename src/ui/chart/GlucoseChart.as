@@ -2275,8 +2275,10 @@ package ui.chart
 				function onMove(e:starling.events.Event):void
 				{
 					var movedTimestamp:Number = treatmentTimeSpinner.value.valueOf();
+					var now:Number = new Date().valueOf();
+					var maxMovedTimestamp:Number = predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0 ? now + (predictionsLengthInMinutes * 60 * 1000) : now;
 					
-					if(movedTimestamp < firstBGReadingTimeStamp)
+					if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > maxMovedTimestamp)
 					{
 						AlertManager.showSimpleAlert
 						(

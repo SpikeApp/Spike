@@ -152,7 +152,7 @@ package ui.screens.display.treatments
 				insulinsPicker.addEventListener(Event.CHANGE, onSettingsChanged);
 				
 				//Insulin Amount
-				insulinAmountStepper = LayoutFactory.createNumericStepper(0.1, 150, treatment.insulinAmount, 0.1);
+				insulinAmountStepper = LayoutFactory.createNumericStepper(treatment.type == Treatment.TYPE_MEAL_BOLUS ? 0 : 0.1, 150, treatment.insulinAmount, 0.1);
 				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 				{
 					insulinAmountStepper.value = treatment.getTotalInsulin();
@@ -188,7 +188,7 @@ package ui.screens.display.treatments
 					treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_carbs");
 				
 				//Carbs Amount
-				carbsAmountStepper = LayoutFactory.createNumericStepper(1, 1000, treatment.carbs, 0.5);
+				carbsAmountStepper = LayoutFactory.createNumericStepper(treatment.type == Treatment.TYPE_MEAL_BOLUS ? 0 : 1, 1000, treatment.carbs, 0.5);
 				carbsAmountStepper.pivotX = -10;
 				carbsAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 				

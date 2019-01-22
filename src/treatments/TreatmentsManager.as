@@ -2090,7 +2090,7 @@ package treatments
 			treatmentTime = new DateTimeSpinner();
 			treatmentTime.locale = Constants.getUserLocale(true);
 			treatmentTime.minimum = new Date(now - TimeSpan.TIME_24_HOURS);
-			treatmentTime.maximum = new Date(now);
+			treatmentTime.maximum = new Date(now + TimeSpan.TIME_6_HOURS);
 			treatmentTime.value = new Date();
 			treatmentTime.height = 30;
 			treatmentInserterContainer.addChild(treatmentTime);
