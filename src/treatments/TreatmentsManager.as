@@ -4928,7 +4928,7 @@ package treatments
 		
 		public static function getBasalByTimestamp(time:Number, suggestedIndex:Number = Number.NaN):Object
 		{
-			var basalData:Object = { basal: 0, index: suggestedIndex };
+			var basalData:Object = { basal: 0, index: suggestedIndex, timestamp:time };
 			var numberOfBasals:Number = basalsList.length;
 			var loopStart:int = isNaN(suggestedIndex) ? numberOfBasals - 1 : suggestedIndex;
 			
@@ -4943,6 +4943,7 @@ package treatments
 				)
 				{
 					basalData.basal = basal.basalAbsoluteAmount;
+					basalData.timestamp = basal.timestamp;
 					basalData.index = i;
 					
 					break;

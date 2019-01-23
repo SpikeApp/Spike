@@ -36,6 +36,7 @@ package services
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
+	import events.TreatmentsEvent;
 	import events.UserInfoEvent;
 	
 	import feathers.layout.HorizontalAlign;
@@ -2464,6 +2465,9 @@ package services
 				if (response == basalsAPIServerResponse)
 				{
 					Trace.myTrace("NightscoutService.as", "No basals where modified in Nightscout. No further processing.");
+					
+					//Force chart to redraw basals
+					TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
 				}
 				else
 				{

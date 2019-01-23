@@ -259,7 +259,7 @@ package ui.screens
 				glucoseChart.calculateTotalCOB( now );
 				if (TreatmentsManager.basalsList.length > 0)
 				{
-					glucoseChart.renderBasals();
+					glucoseChart.renderPumpBasals();
 				}
 				addChild(glucoseChart);
 			}
@@ -700,7 +700,7 @@ package ui.screens
 			
 			Trace.myTrace("ChartScreen.as", "Updating Basals");
 			
-			SystemUtil.executeWhenApplicationIsActive(glucoseChart.renderBasals);
+			SystemUtil.executeWhenApplicationIsActive(glucoseChart.renderPumpBasals);
 		}
 		
 		private function onTreatmentAdded(e:TreatmentsEvent):void
