@@ -2987,7 +2987,12 @@ package database
 					var preLow:Number = Math.round((userStats.numReadingsLow * 100) / userStats.numReadingsTotal) * 10 / 10;
 					var percentageLow:Number;
 					var percentageLowRounded:Number;
-					if (preLow != 0 && !isNaN(preLow))
+					if (userStats.numReadingsLow == 0)
+					{
+						userStats.percentageLow = 0;
+						userStats.percentageLowRounded = 0;
+					}
+					else if (preLow != 0 && !isNaN(preLow))
 					{
 						userStats.percentageLow = 100 - userStats.percentageInRange - userStats.percentageHigh;
 						userStats.percentageLowRounded = Math.round ((100 - userStats.percentageInRangeRounded - userStats.percentageHighRounded) * 10) / 10;

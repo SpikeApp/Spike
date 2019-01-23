@@ -2293,6 +2293,9 @@ package services
 				if (response == treatmentsAPIServerResponse)
 				{
 					Trace.myTrace("NightscoutService.as", "No treatments where modified in Nightscout. No further processing.");
+					
+					//Cache response
+					treatmentsAPIServerResponse = response;
 				}
 				else
 				{
@@ -2305,6 +2308,9 @@ package services
 							TreatmentsManager.processNightscoutTreatments(nightscoutTreatments);
 							TreatmentsManager.nightscoutTreatmentsLastModifiedHeader = NetworkConnector.nightscoutTreatmentsLastModifiedHeader;
 							retriesForTreatmentsDownload = 0;
+							
+							//Cache response
+							treatmentsAPIServerResponse = response;
 						}
 						else
 						{
@@ -2336,9 +2342,6 @@ package services
 					retriesForTreatmentsDownload++;
 				}
 			}
-			
-			//Cache response
-			treatmentsAPIServerResponse = response;
 		}
 		
 		/**

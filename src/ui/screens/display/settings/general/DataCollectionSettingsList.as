@@ -261,7 +261,7 @@ package ui.screens.display.settings.general
 			dsLogin.addEventListener(starling.events.Event.TRIGGERED, onDexcomShareLogin);
 			
 			//QR Code Scanner
-			qrCodeScannerButton = LayoutFactory.createButton("Scan QR Code");
+			qrCodeScannerButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','scan_qr_code_button_label'));
 			qrCodeScannerButton.addEventListener(starling.events.Event.TRIGGERED, onScanQRCode);
 			
 			refreshContent();

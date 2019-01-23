@@ -83,7 +83,13 @@ package stats
 					followerUserStats.percentageInRange = (inRange * 100) / realReadingsNumber;
 					followerUserStats.percentageInRangeRounded = (( followerUserStats.percentageInRange * 10 + 0.5)  >> 0) / 10;
 					var preLow:Number = Math.round((low * 100) / realReadingsNumber) * 10 / 10;
-					if ( preLow != 0 && !isNaN(preLow))
+					
+					if (followerUserStats.numReadingsLow == 0)
+					{
+						followerUserStats.percentageLow = 0;
+						followerUserStats.percentageLowRounded = 0;
+					}
+					else if ( preLow != 0 && !isNaN(preLow))
 					{
 						followerUserStats.percentageLow = 100 - followerUserStats.percentageInRange - followerUserStats.percentageHigh;
 						followerUserStats.percentageLowRounded = Math.round ((100 - followerUserStats.percentageInRangeRounded - followerUserStats.percentageHighRounded) * 10) / 10;
