@@ -11,6 +11,8 @@ package treatments
 	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -87,6 +89,8 @@ package treatments
 		/* Internal objects */
 		public static var treatmentsList:Array = [];
 		public static var treatmentsMap:Dictionary = new Dictionary();
+		public static var basalsList:Array = [];
+		public static var basalsMap:Dictionary = new Dictionary();
 		
 		/* Internal Properties */
 		private static const MAX_IOB_COB_CACHED_ITEMS:int = 30;
@@ -396,8 +400,7 @@ package treatments
 							dbTreatment.glucoseestimated,
 							dbTreatment.note,
 							null,
-							dbTreatment.carbdelay,
-							dbTreatment.basalduration
+							dbTreatment.carbdelay
 						);
 						
 						treatment.ID = dbTreatment.id;
@@ -1783,7 +1786,8 @@ package treatments
 			}
 			
 			//Notify listeners
-			_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
+			if (treatment.type != Treatment.TYPE_BASAL)
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			
 			//Update in Database
 			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -1813,26 +1817,50 @@ package treatments
 			}
 			
 			//Insert in Database
-			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (treatment.type != Treatment.TYPE_BASAL)
 			{
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				{
+					if (treatmentsMap[treatment.ID] == null) //new treatment
+						Database.insertTreatmentSynchronous(treatment);
+				}
+				
 				if (treatmentsMap[treatment.ID] == null) //new treatment
-					Database.insertTreatmentSynchronous(treatment);
+				{
+					Trace.myTrace("TreatmentsManager.as", "Adding treatment to Spike...");
+					
+					//Add treatment to Spike
+					treatmentsList.push(treatment);
+					treatmentsMap[treatment.ID] = treatment;
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+					
+					//Upload to Nightscout
+					if (uploadToNightscout)
+						NightscoutService.uploadTreatment(treatment);
+				}
 			}
-			
-			if (treatmentsMap[treatment.ID] == null) //new treatment
+			else
 			{
-				Trace.myTrace("TreatmentsManager.as", "Adding treatment to Spike...");
+				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+				{
+					if (basalsMap[treatment.ID] == null) //new treatment
+						Database.insertTreatmentSynchronous(treatment);
+				}
 				
-				//Add treatment to Spike
-				treatmentsList.push(treatment);
-				treatmentsMap[treatment.ID] = treatment;
-				
-				//Notify listeners
-				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
-				
-				//Upload to Nightscout
-				if (uploadToNightscout)
-					NightscoutService.uploadTreatment(treatment);
+				if (basalsMap[treatment.ID] == null) //new treatment
+				{
+					Trace.myTrace("TreatmentsManager.as", "Adding treatment to Spike...");
+					
+					//Add treatment to Spike
+					basalsList.push(treatment);
+					basalsMap[treatment.ID] = treatment;
+					
+					//Upload to Nightscout
+					if (uploadToNightscout)
+						NightscoutService.uploadTreatment(treatment);
+				}
 			}
 		}
 		
@@ -3967,6 +3995,101 @@ package treatments
 			}
 		}
 		
+		public static function processNightscoutBasals(nsTreatments:Array):void
+		{
+			var nightscoutBasalsMap:Dictionary = new Dictionary();
+			var newBasalData:Boolean = false;
+			var firstReadingTimestamp:Number;
+			var lastReadingTimestamp:Number;
+			var now:Number = new Date().valueOf();
+			
+			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
+			{
+				firstReadingTimestamp = (ModelLocator.bgReadings[0] as BgReading).timestamp;
+				lastReadingTimestamp = new Date().valueOf();
+			}
+			else
+			{
+				//There's still no readings in Spike. Abort!
+				return
+			}
+			
+			for (var i:int = nsTreatments.length - 1 ; i >= 0; i--)
+			{
+				var nsBasal:Object = nsTreatments[i];
+				var basalTimestamp:Number = DateUtil.parseW3CDTF(nsBasal.created_at).valueOf();
+				var basalID:String = nsBasal._id;
+				var basalDuration:Number = nsBasal.duration != null && !isNaN(nsBasal.duration) ? nsBasal.duration : 30;
+				var basalAbsoluteAmount:Number = nsBasal.absolute != null && !isNaN(nsBasal.absolute) ? nsBasal.absolute : 0;
+				var basalPercentAmount:Number = nsBasal.percent != null && !isNaN(nsBasal.percent) ? nsBasal.percent : 0;
+				
+				nightscoutBasalsMap[basalID] = nsBasal;
+				
+				if (basalTimestamp < firstReadingTimestamp)
+				{
+					//Treatment is outside timespan of first bg reading in spike. Let's ignore it
+					continue;
+				}
+				
+				//Check if treatment already exists in Spike
+				if (basalsMap[basalID] == null)
+				{
+					//It's a new treatment. Let's create it
+					var basal:Treatment = new Treatment(Treatment.TYPE_BASAL, basalTimestamp);
+					basal.basalDuration = basalDuration;
+					basal.basalAbsoluteAmount = basalAbsoluteAmount;
+					basal.basalPercentAmount = basalPercentAmount;
+					
+					//Add treatment to Spike and Databse
+					addNightscoutTreatment(basal);
+					
+					newBasalData = true;
+					
+					Trace.myTrace("TreatmentsManager.as", "Added basal treatment!");
+				}
+				else
+				{
+					//Treatment exists... Lets check if it was modified
+					var wasBasalModified:Boolean = false;
+					var spikeBasal:Treatment = basalsMap[basalID];
+					
+					if (!isNaN(basalDuration) && spikeBasal.basalDuration != basalDuration)
+					{
+						spikeBasal.basalDuration = basalDuration;
+						wasBasalModified = true;
+					}
+					
+					if (!isNaN(basalAbsoluteAmount) && spikeBasal.basalAbsoluteAmount != basalAbsoluteAmount)
+					{
+						spikeBasal.basalAbsoluteAmount = basalAbsoluteAmount;
+						wasBasalModified = true;
+					}
+					
+					if (!isNaN(basalPercentAmount) && spikeBasal.basalPercentAmount != basalAbsoluteAmount)
+					{
+						spikeBasal.basalPercentAmount = basalPercentAmount;
+						wasBasalModified = true;
+					}
+						
+					if (wasBasalModified)
+					{
+						//Treatment was modified. Update Spike and notify listeners
+						updateTreatment(spikeBasal, false);
+						
+						newBasalData = true;
+						
+						Trace.myTrace("TreatmentsManager.as", "Updated nightscout basal treatment.");
+					}
+				}
+			}
+			
+			if (newBasalData)
+			{
+				//Notify listeners
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+			}
+		}
+		
 		public static function processNightscoutTreatments(nsTreatments:Array):void
 		{
 			Trace.myTrace("TreatmentsManager.as", "processNightscoutTreatments called!");
@@ -4781,7 +4904,57 @@ package treatments
 			
 			return isLastTreatmentCarb;
 		}
+		
+		/**
+		 * Basals
+		 */
+		public static function getLastBasalTimestamp():Number
+		{
+			var lastBasalTimestamp:Number = 0;
+			
+			var numberOfBasals:uint = basalsList.length;
+			if (basalsList.length > 0)
+			{
+				basalsList.sortOn(["timestamp"], Array.NUMERIC);
+				var lastBasalTreatment:Treatment = basalsList[numberOfBasals - 1];
+				if (lastBasalTreatment != null)
+				{
+					lastBasalTimestamp = lastBasalTreatment.timestamp;
+				}
+			}
+			
+			return lastBasalTimestamp;
+		}
+		
+		public static function getBasalByTimestamp(time:Number, suggestedIndex:Number = Number.NaN):Object
+		{
+			var basalData:Object = { basal: 0, index: suggestedIndex };
+			var numberOfBasals:Number = basalsList.length;
+			var loopStart:int = isNaN(suggestedIndex) ? numberOfBasals - 1 : suggestedIndex;
+			
+			for(var i:int = loopStart ; i >= 0; i--)
+			{
+				var basal:Treatment = basalsList[i];
+				if (basal != null 
+					&& 
+					basal.timestamp <= time 
+					&& 
+					basal.timestamp + (basal.basalDuration * TimeSpan.TIME_1_MINUTE) >= time
+				)
+				{
+					basalData.basal = basal.basalAbsoluteAmount;
+					basalData.index = i;
+					
+					break;
+				}
+			}
+			
+			return basalData;
+		}
 
+		/**
+		 * Setters & Getters
+		 */
 		public static function get instance():TreatmentsManager
 		{
 			return _instance;

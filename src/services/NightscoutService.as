@@ -78,6 +78,7 @@ package services
 		private static const MODE_TREATMENT_DELETE:String = "treatmentDelete";
 		private static const MODE_PROFILE_GET:String = "profileGet";
 		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
+		private static const MODE_BASALS_GET:String = "basalsGet";
 		private static const MODE_PROPERTIES_V2_GET:String = "propertiesV2Get";
 		private static const MODE_USER_INFO_GET:String = "userInfoGet";
 		private static const MODE_BATTERY_UPLOAD:String = "batteryUpload";
@@ -150,6 +151,7 @@ package services
 		private static var activeTreatmentsUpload:Array = [];
 		private static var activeTreatmentsDelete:Array = [];
 		private static var retriesForTreatmentsDownload:int = 0;
+		private static var retriesForBasalsDownload:int = 0;
 		private static var retriesForPropertiesV2Download:int = 0;
 		private static var _syncTreatmentsUploadActive:Boolean = false;
 		private static var _syncTreatmentsDeleteActive:Boolean = false;
@@ -160,6 +162,7 @@ package services
 		private static var syncTreatmentsDownloadActiveLastChange:Number = (new Date()).valueOf();
 		private static var syncPebbleActiveLastChange:Number = (new Date()).valueOf();
 		private static var lastRemoteTreatmentsSync:Number = 0;
+		private static var lastRemoteBasalsSync:Number = 0;
 		private static var lastRemoteProfileSync:Number = 0;
 		private static var lastRemotePropertiesV2Sync:Number = 0;
 		private static var pumpUserEnabled:Boolean;
@@ -167,6 +170,8 @@ package services
 		private static var lastPredictionsUploadTimestamp:Number = 0;
 		private static var propertiesV2Timeout:uint = 0;
 		public static var treatmentsAPIServerResponse:String = "";
+		public static var basalsAPIServerResponse:String = "";
+		private static var syncBasals:Boolean = true;
 		
 		public function NightscoutService()
 		{
@@ -382,6 +387,9 @@ package services
 					
 					if (pumpUserEnabled)
 						propertiesV2Timeout = setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_1_MINUTE);
+					
+					if (syncBasals)
+						getRemoteBasals();
 				}
 				
 				//Upload predictions
@@ -783,6 +791,9 @@ package services
 						
 						if (pumpUserEnabled)
 							getPropertiesV2Endpoint();
+						
+						if (syncBasals)
+							getRemoteBasals();
 					}
 				} 
 				catch(error:Error) 
@@ -1132,6 +1143,9 @@ package services
 							
 							if (pumpUserEnabled)
 								getPropertiesV2Endpoint();
+							
+							if (syncBasals)
+								getRemoteBasals();
 						}
 						
 						//Reset Variables
@@ -1466,6 +1480,9 @@ package services
 					
 					if (pumpUserEnabled)
 						getPropertiesV2Endpoint();
+					
+					if (syncBasals)
+						getRemoteBasals();
 				}
 			}
 			else
@@ -2345,6 +2362,156 @@ package services
 		}
 		
 		/**
+		 * BASALS
+		 */
+		private static function getRemoteBasals():void
+		{
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !syncBasals || serviceHalted)
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "getRemoteBasals called!");
+			
+			//Validation	
+			if (!NetworkInfo.networkInfo.isReachable())
+			{
+				Trace.myTrace("NightscoutService.as", "There's no Internet connection.");
+				
+				return;
+			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_WIFI_ONLY_UPLOADER_ON) == "true" && NetworkInfo.networkInfo.isWWAN() && !CGMBlueToothDevice.isFollower())
+				return;
+			
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastRemoteBasalsSync < TimeSpan.TIME_30_SECONDS)
+				return;
+			
+			lastRemoteBasalsSync = now;
+			
+			//syncTreatmentsDownloadActive = true;
+			
+			//Define request parameters
+			var lastBasalTimestamp:Number = TreatmentsManager.getLastBasalTimestamp();
+			var parameters:URLVariables = new URLVariables();
+			parameters["find[created_at][$gte]"] = formatter.format(lastBasalTimestamp != 0 ? lastBasalTimestamp : now - TimeSpan.TIME_24_HOURS);
+			parameters["find[eventType][$in][0]"] = "Temp Basal";
+			
+			//API Secret
+			var treatmentAPISecret:String = "";
+			if (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "")
+			{
+				if (nightscoutFollowAPISecret == null) return;
+				treatmentAPISecret = nightscoutFollowAPISecret;
+			}
+			else if (!CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != "")
+			{
+				if (apiSecret == null) return;
+				treatmentAPISecret = apiSecret;
+			}
+			
+			NetworkConnector.createNSConnector(nightscoutTreatmentsURL + ".json?" + parameters, treatmentAPISecret != "" ? treatmentAPISecret : null, URLRequestMethod.GET, null, MODE_BASALS_GET, onGetBasalsComplete, onConnectionFailed);
+		}
+		
+		private static function onGetBasalsComplete(e:Event):void
+		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !syncBasals)
+				return;
+			
+			Trace.myTrace("NightscoutService.as", "onGetBasalsComplete called!");
+			
+			//syncTreatmentsDownloadActive = false;
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onDownloadGlucoseReadingsComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
+			loader = null;
+			
+			//Validate if we can process treatments
+			if ((activeTreatmentsDelete.length > 0 || activeTreatmentsUpload.length > 0 || activeSensorStarts.length > 0 || activeVisualCalibrations.length > 0) && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+			{
+				Trace.myTrace("NightscoutService.as", "Spike is still syncing treatments added by user. Will retry in 30 seconds to avoid overlaps!");
+				
+				if (activeTreatmentsDelete.length > 0 && !syncTreatmentsDeleteActive)
+					syncTreatmentsDelete();
+				else if (activeTreatmentsUpload.length > 0 && !syncTreatmentsUploadActive)
+					syncTreatmentsUpload();
+				else if (activeSensorStarts.length > 0 && !syncSensorStartActive)
+					syncSensorStart();
+				else if (activeVisualCalibrations.length > 0 && !syncVisualCalibrationsActive)
+					syncVisualCalibrations();
+				
+				setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
+				
+				retriesForBasalsDownload++;
+				
+				return;
+			}
+			
+			//Validate response
+			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
+			{
+				if (response == basalsAPIServerResponse)
+				{
+					Trace.myTrace("NightscoutService.as", "No basals where modified in Nightscout. No further processing.");
+				}
+				else
+				{
+					try
+					{
+						var basalTreatments:Array = SpikeJSON.parse(response) as Array;
+						if (basalTreatments!= null && basalTreatments is Array)
+						{
+							//Send nightscout treatments to TreatmentsManager for further processing
+							TreatmentsManager.processNightscoutBasals(basalTreatments);
+							retriesForBasalsDownload = 0;
+						}
+						else
+						{
+							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+							{
+								Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new basals fetch in 30 seconds. Responder: " + response);
+								setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
+								retriesForBasalsDownload++;
+							}
+						}
+					} 
+					catch(error:Error) 
+					{
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+						{
+							Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new basals fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
+							setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
+							retriesForBasalsDownload++;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				{
+					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new basals fetch in 30 seconds. Responder: " + response);
+					setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
+					retriesForBasalsDownload++;
+				}
+			}
+			
+			//Cache response
+			basalsAPIServerResponse = response;
+		}
+		
+		/**
 		 * CALIBRATIONS
 		 */
 		private static function createCalibrationObject(calibration:Calibration):Object
@@ -3095,6 +3262,15 @@ package services
 					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting treatments. Retrying in 30 seconds. Error: " + error.message);
 					setTimeout(getRemoteTreatments, TimeSpan.TIME_30_SECONDS);
 					retriesForTreatmentsDownload++;
+				}
+			}
+			else if (mode == MODE_BASALS_GET)
+			{
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				{
+					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting basals. Retrying in 30 seconds. Error: " + error.message);
+					setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
+					retriesForBasalsDownload++;
 				}
 			}
 			else if (mode == MODE_PROFILE_GET)

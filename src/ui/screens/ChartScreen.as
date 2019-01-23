@@ -130,6 +130,7 @@ package ui.screens
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.NEW_BASAL_DATA, onNewBasalData);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			//Scroll Policies
@@ -256,6 +257,10 @@ package ui.screens
 				var now:Number = new Date().valueOf();
 				glucoseChart.calculateTotalIOB( now );
 				glucoseChart.calculateTotalCOB( now );
+				if (TreatmentsManager.basalsList.length > 0)
+				{
+					glucoseChart.renderBasals();
+				}
 				addChild(glucoseChart);
 			}
 			else
@@ -688,6 +693,16 @@ package ui.screens
 			SystemUtil.executeWhenApplicationIsActive(glucoseChart.calculateTotalCOB, now);
 		}
 		
+		private function onNewBasalData(e:TreatmentsEvent):void
+		{
+			if (glucoseChart == null || !SystemUtil.isApplicationActive)
+				return;
+			
+			Trace.myTrace("ChartScreen.as", "Updating Basals");
+			
+			SystemUtil.executeWhenApplicationIsActive(glucoseChart.renderBasals);
+		}
+		
 		private function onTreatmentAdded(e:TreatmentsEvent):void
 		{
 			var treatment:Treatment = e.treatment;
@@ -971,6 +986,7 @@ package ui.screens
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, onTreatmentExternallyDeleted);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentDeleted);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onUpdateIOBCOB);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.NEW_BASAL_DATA, onNewBasalData);
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
 			/* Display Objects */

@@ -16,6 +16,8 @@ package ui.chart
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -38,6 +40,7 @@ package ui.chart
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollContainer;
 	import feathers.controls.ScrollPolicy;
+	import feathers.controls.TextCallout;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.core.FeathersControl;
@@ -104,6 +107,7 @@ package ui.chart
 	import ui.chart.visualcomponents.IOBActivityCurve;
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
+	import ui.screens.TreatmentsManagementScreen;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
 	
@@ -446,6 +450,16 @@ package ui.chart
 		private var predictionDetailTimeContainer:LayoutGroup;
 		private var predictionDetailTimeTitle:Label;
 		private var predictionDetailTimeBody:Label;
+		
+		//Basals
+		private var basalsFirstRun:Boolean = true;
+		private var basalsContainer:Sprite;
+
+		private var basalLine:SpikeLine;
+
+		private var basalCallout:TextCallout;
+
+		private var basalScaler:Number;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -1562,6 +1576,216 @@ package ui.chart
 					}
 				}
 			}
+		}
+		
+		private function onAbsoluteBasalTouched(e:starling.events.TouchEvent):void
+		{
+			var targetQuad:Quad;
+			var touch:Touch = e.getTouch(stage);
+			if(touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				targetQuad = e.currentTarget as Quad;
+				if (targetQuad != null)
+				{
+					//Visual Filter
+					targetQuad.removeFromParent();
+					basalsContainer.addChild(targetQuad);
+					targetQuad.filter = new GlowFilter(0xFFFFFF, 2, 4, 1);
+					
+					//Basal Amount
+					var basalAmount:Number = Math.round(Math.abs(targetQuad.height / basalScaler) * 100) / 100;
+					displayBasalCallout(basalAmount, targetQuad);
+				}
+			}
+			else if(touch != null && touch.phase == TouchPhase.ENDED) 
+			{
+				targetQuad = e.currentTarget as Quad;
+				if (targetQuad != null)
+				{
+					targetQuad.filter = null;
+				}
+				
+				disposeBasalCallout();
+			}
+		}
+		
+		private function displayBasalCallout(amount:Number, origin:Quad):void
+		{
+			if (basalCallout != null)
+			{
+				basalCallout.removeFromParent(true);
+			}
+			
+			basalCallout = TextCallout.show(amount + "U", origin, new <String>[RelativePosition.TOP]);
+		}
+		
+		private function disposeBasalCallout():void
+		{
+			if (basalCallout != null)
+			{
+				basalCallout.removeFromParent(true);
+			}
+		}
+		
+		public function renderBasals():void
+		{
+			if (TreatmentsManager.basalsList.length > 0)
+			{
+				var fromTime:Number = firstBGReadingTimeStamp;
+				var toTime:Number = new Date().valueOf();
+				
+				var suggestedIndex:Number = Number.NaN;
+				
+				//Sort Basals #1
+				TreatmentsManager.basalsList.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
+				var highestBasalAmount:Number = TreatmentsManager.basalsList[TreatmentsManager.basalsList.length - 1].basalAbsoluteAmount;
+				
+				TreatmentsManager.basalsList.sortOn(["timestamp"], Array.NUMERIC);
+				
+				/**
+				 * NEW STUFF
+				 */
+				
+				//Setup initial timeline/mask properties
+				if (basalsFirstRun && basalsContainer == null)
+				{
+					basalsFirstRun = false;
+					basalsContainer = new Sprite();
+					basalsContainer.x = mainChart.x;
+					basalsContainer.y = glucoseDelimiter.height;
+					mainChartContainer.addChildAt(basalsContainer, 0);
+				}
+				var desiredBasalHeight:Number = _graphHeight * 0.25;
+				basalScaler = desiredBasalHeight / highestBasalAmount;
+				var prevBasalY:Number = 0;
+				var startXValue:Number = 0;
+				var startYValue:Number = 0;
+				
+				//for (var time:Number = toTime; time >= fromTime; time -= TimeSpan.TIME_1_MINUTE) 
+				for (var time:Number = toTime; time >= fromTime; time -= TimeSpan.TIME_1_MINUTE) 
+				{
+					var basalResponse:Object = TreatmentsManager.getBasalByTimestamp(time, suggestedIndex);
+					if (basalResponse.basal != null && basalResponse.index != null)
+					{
+						suggestedIndex = basalResponse.index;
+						var basalValue:Number = basalResponse.basal;
+						
+						if (basalValue != prevBasalY)
+						{
+							if (startXValue == 0 && startYValue == 0)
+							{
+								startXValue = (time - firstBGReadingTimeStamp) * mainChartXFactor;
+								startYValue = basalValue * basalScaler;
+							}
+							else
+							{
+								//Translate coordinates
+								var endXValue:Number = (time - firstBGReadingTimeStamp) * mainChartXFactor;
+								var endYValue:Number = basalValue * basalScaler;
+								
+								//Create Quad
+								if (startYValue != 0)
+								{
+									var quadWidth:Number = Math.abs(endXValue - startXValue);
+									
+									var quad:Quad = new Quad(quadWidth, Math.abs(startYValue), 0x0099ff);
+									quad.alpha = 0.5;
+									quad.x = startXValue - quadWidth;
+									quad.y = -startYValue;
+									quad.addEventListener(TouchEvent.TOUCH, onAbsoluteBasalTouched);
+									basalsContainer.addChild(quad);
+								}
+								
+								//Reset
+								if (endYValue == 0)
+								{
+									startXValue = 0;
+									startYValue = 0;
+								}
+								else
+								{
+									startXValue = endXValue;
+									startYValue = endYValue;
+								}
+							}
+						}
+						
+						prevBasalY = basalValue;
+					}
+				}
+				
+				lineBasals();
+			}
+		}
+		
+		private function lineBasals():void
+		{
+			var numberOfBasals:uint = TreatmentsManager.basalsList.length;
+			
+			var fromTime:Number = firstBGReadingTimeStamp;
+			var toTime:Number = new Date().valueOf();
+			
+			var maxBasalValueFound:Number = 0;
+			
+			var absoluteBasalDataPointsArray:Array = [];
+			var lastAbsoluteLineBasal:Number = -1;
+			var suggestedIndex:Number = Number.NaN;
+			
+			//Sort Basals
+			TreatmentsManager.basalsList.sortOn(["timestamp"], Array.NUMERIC);
+			
+			for (var time:Number = toTime; time >= fromTime; time -= TimeSpan.TIME_1_MINUTE) 
+			{
+				var basalResponse:Object = TreatmentsManager.getBasalByTimestamp(time, suggestedIndex);
+				if (basalResponse.basal != null && basalResponse.index != null)
+				{
+					suggestedIndex = basalResponse.index;
+					
+					absoluteBasalDataPointsArray.unshift( { x: (time - firstBGReadingTimeStamp) * mainChartXFactor, y: -basalResponse.basal * basalScaler } );
+					
+					lastAbsoluteLineBasal = basalResponse.basal;
+				}
+			}
+			
+			if (absoluteBasalDataPointsArray.length > 0)
+			{
+				if (basalLine != null) basalLine.removeFromParent(true);
+				basalLine = new SpikeLine();
+				basalLine.lineStyle(1, 0x00FF00);
+				basalLine.moveTo(0, 0);
+				var previousY:Number = 0;
+				var previousX:Number = 0;
+				var drawNumber:Number = 0;
+				
+				var numberOfLinePoints:Number = absoluteBasalDataPointsArray.length;
+				for (var i:int = 0; i < numberOfLinePoints; i++) 
+				{
+					var point:Object = absoluteBasalDataPointsArray[i];
+					
+					if (point.x != previousX || point.y != previousY)
+					{
+						if (point.y == previousY)
+						{
+							basalLine.lineTo(point.x, point.y);
+							basalLine.moveTo(point.x, point.y);
+							drawNumber++;
+						}
+						else
+						{
+							basalLine.lineTo(previousX, point.y);
+							basalLine.moveTo(previousX, point.y);
+							drawNumber++;
+						}
+					}
+					
+					previousX = point.x;
+					previousY = point.y;
+				}
+				
+				basalsContainer.addChild(basalLine);
+			}
+			
+			trace("drawNumber", drawNumber);
 		}
 		
 		public function addTreatment(treatment:Treatment):void
@@ -7702,6 +7926,10 @@ package ui.chart
 				//Raw
 				if (displayRaw && rawDataContainer != null)
 					rawDataContainer.x = mainChart.x;
+				
+				//Basals
+				if (basalsContainer != null)
+					basalsContainer.x = mainChart.x;
 				
 				/**
 				 * Dummy Mode

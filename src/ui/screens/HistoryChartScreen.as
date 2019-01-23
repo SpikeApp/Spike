@@ -315,8 +315,7 @@ package ui.screens
 							dbTreatment.glucoseestimated,
 							dbTreatment.note,
 							null,
-							dbTreatment.carbdelay,
-							dbTreatment.basalduration
+							dbTreatment.carbdelay
 						);
 					treatment.ID = dbTreatment.id;
 					if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
