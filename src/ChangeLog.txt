@@ -1,3 +1,6 @@
+3.5.3
+FIX: Addresses an issue that prevents the glucose distribution pie chart from being rendered and the percentage in low range from being properly calculated.
+
 3.5.2
 FEATURE: Dexcom Share follower mode. Besides being able to use Spike to follow a Nightscout site, users can now also use Spike to follow a Dexcom Share account. The Dexcom Share server only supports sharing glucose data, this means treatments are not synced between the master and the follower. Masters can generate QR Codes and send them to followers. The follower only needs to scan the QR Code to configure Spike. Wiki available here: https://github.com/SpikeApp/Spike/wiki/Dexcom-Share-Follower-Mode (Miguel)
 FEATURE: QR Code support for Nightscout followers. Spike masters can now generate QR Codes and invite followers. With Nightscout, when generating an invitation QR Code the master also has the option to include permissions for the follower to add treatments and can also include his complete profile (insulins, ISF, I:C, etc...) so the follower has the same insulins available when inserting treatments and the same profile data for predictions. QR Codes can also be sent by email. Wiki here: https://github.com/SpikeApp/Spike/wiki/Spike-Follower-Mode#configure-spike-follower-by-qr-code (Miguel)
