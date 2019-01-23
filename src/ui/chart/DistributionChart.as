@@ -450,6 +450,16 @@ package ui.chart
 				return false;
 			}
 			
+			if ((isNaN(userStats.percentageLow) || isNaN(userStats.percentageLowRounded))
+				&&
+				!isNaN(userStats.percentageInRange)
+				&&
+				!isNaN(userStats.percentageHigh))
+			{
+				userStats.percentageLow = Math.round((100 - userStats.percentageInRange - userStats.percentageHigh) * 100) / 100;
+				userStats.percentageInRangeRounded = userStats.percentageLow;
+			}
+			
 			if (userStats.page == BasicUserStats.PAGE_ALL || userStats.page == BasicUserStats.PAGE_BG_DISTRIBUTION)
 			{
 				//If there's no good readings then activate dummy mode.
