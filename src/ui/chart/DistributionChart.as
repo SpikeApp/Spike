@@ -450,14 +450,9 @@ package ui.chart
 				return false;
 			}
 			
-			if ((isNaN(userStats.percentageLow) || isNaN(userStats.percentageLowRounded))
-				&&
-				!isNaN(userStats.percentageInRange)
-				&&
-				!isNaN(userStats.percentageHigh))
+			if (isNaN(userStats.percentageHigh) || isNaN(userStats.percentageInRange) || isNaN(userStats.percentageLow))
 			{
-				userStats.percentageLow = Math.round((100 - userStats.percentageInRange - userStats.percentageHigh) * 100) / 100;
-				userStats.percentageInRangeRounded = userStats.percentageLow;
+				dummyModeActive = true;
 			}
 			
 			if (userStats.page == BasicUserStats.PAGE_ALL || userStats.page == BasicUserStats.PAGE_BG_DISTRIBUTION)

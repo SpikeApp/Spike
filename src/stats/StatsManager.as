@@ -82,18 +82,8 @@ package stats
 					followerUserStats.percentageHighRounded = (( followerUserStats.percentageHigh * 10 + 0.5)  >> 0) / 10;
 					followerUserStats.percentageInRange = (inRange * 100) / realReadingsNumber;
 					followerUserStats.percentageInRangeRounded = (( followerUserStats.percentageInRange * 10 + 0.5)  >> 0) / 10;
-					var preLow:Number = Math.round((low * 100) / realReadingsNumber) * 10 / 10;
-					
-					if (followerUserStats.numReadingsLow == 0)
-					{
-						followerUserStats.percentageLow = 0;
-						followerUserStats.percentageLowRounded = 0;
-					}
-					else if ( preLow != 0 && !isNaN(preLow))
-					{
-						followerUserStats.percentageLow = 100 - followerUserStats.percentageInRange - followerUserStats.percentageHigh;
-						followerUserStats.percentageLowRounded = Math.round ((100 - followerUserStats.percentageInRangeRounded - followerUserStats.percentageHighRounded) * 10) / 10;
-					}
+					followerUserStats.percentageLow = 100 - followerUserStats.percentageInRange - followerUserStats.percentageHigh;
+					followerUserStats.percentageLowRounded = Math.round((100 - followerUserStats.percentageHighRounded - followerUserStats.percentageInRangeRounded) * 10) / 10;
 					
 					//Overcome AS3 number precision limitation
 					if (followerUserStats.percentageHighRounded == 0 && followerUserStats.percentageLowRounded == 0)

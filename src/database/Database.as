@@ -2984,19 +2984,8 @@ package database
 					userStats.percentageHighRounded = ((userStats.percentageHigh * 10 + 0.5)  >> 0) / 10;
 					userStats.percentageInRange = (userStats.numReadingsInRange * 100) / userStats.numReadingsTotal;
 					userStats.percentageInRangeRounded = ((userStats.percentageInRange * 10 + 0.5)  >> 0) / 10;
-					var preLow:Number = Math.round((userStats.numReadingsLow * 100) / userStats.numReadingsTotal) * 10 / 10;
-					var percentageLow:Number;
-					var percentageLowRounded:Number;
-					if (userStats.numReadingsLow == 0)
-					{
-						userStats.percentageLow = 0;
-						userStats.percentageLowRounded = 0;
-					}
-					else if (preLow != 0 && !isNaN(preLow))
-					{
-						userStats.percentageLow = 100 - userStats.percentageInRange - userStats.percentageHigh;
-						userStats.percentageLowRounded = Math.round ((100 - userStats.percentageInRangeRounded - userStats.percentageHighRounded) * 10) / 10;
-					}
+					userStats.percentageLow = 100 - userStats.percentageInRange - userStats.percentageHigh;
+					userStats.percentageLowRounded = Math.round((100 - userStats.percentageHighRounded - userStats.percentageInRangeRounded) * 10) / 10;
 					userStats.captureRate = ((((userStats.numReadingsDay * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 					if (userStats.captureRate > 100) userStats.captureRate = 100;
 				}
