@@ -1,3 +1,6 @@
+3.5.4
+FIX: More bug fixes for low/in range/high percentage calculations for the lower glucose distribution stats. (Miguel)
+
 3.5.3
 FIX: Addresses an issue that prevents the glucose distribution pie chart from being rendered and the percentage in low range from being properly calculated.
 
