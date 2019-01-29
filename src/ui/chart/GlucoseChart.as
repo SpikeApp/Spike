@@ -1650,8 +1650,8 @@ package ui.chart
 				
 				//Data variables
 				var fromTime:Number = firstBGReadingTimeStamp;
-				//var toTime:Number = new Date().valueOf();
-				var toTime:Number = firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
+				var toTime:Number = !displayLatestBGValue ? new Date().valueOf() + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
+				if (isNaN(toTime)) toTime = new Date().valueOf();
 				var suggestedIndex:Number = Number.NaN;
 				
 				//Sort Basals By Value
