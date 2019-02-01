@@ -553,6 +553,31 @@ package treatments
 			}
 		}
 		
+		public static function getBasalRateByTime(time:Number):Number
+		{
+			var scheduledBasalRate:Number = 0;
+			var numberOfScheduleBasalRates:uint = basalRatesList.length;
+			
+			if (numberOfScheduleBasalRates > 0)
+			{
+				var scheduledBasalTimeSpan:TimeSpan = TimeSpan.fromMilliseconds(time - (Constants.systemTimeZoneOffset * TimeSpan.TIME_1_HOUR));
+				var scheduledBasalTimeSpanHours:int = scheduledBasalTimeSpan.hours;
+				var scheduledBasalTimeSpanMinutes:int = scheduledBasalTimeSpan.minutes;
+				
+				for (var i:int = numberOfScheduleBasalRates - 1 ; i >= 0; i--)
+				{
+					var basalRate:BasalRate = basalRatesList[i];
+					if (basalRate != null && (scheduledBasalTimeSpanHours > basalRate.startHours || (scheduledBasalTimeSpanHours == basalRate.startHours && scheduledBasalTimeSpanMinutes >= basalRate.startMinutes)))
+					{
+						scheduledBasalRate = basalRate.basalRate;
+						break;
+					}
+				}
+			}
+			
+			return scheduledBasalRate;
+		}
+		
 		public static function getPumpBasalData(time:Number, suggestedIndex:Number = Number.NaN):Object
 		{
 			//Common Variables

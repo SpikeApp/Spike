@@ -299,7 +299,7 @@ package ui.screens.display.treatments
 			
 			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
 			{
-				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_temp_basal");
+				treatmentType = !treatment.isTempBasalEnd ? ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_temp_basal") : ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_temp_basal_end");
 				
 				//Insulin Amount
 				insulinAmountStepper = LayoutFactory.createNumericStepper(treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_TEMP_BASAL ? 0 : 0.1, 150, treatment.type != Treatment.TYPE_TEMP_BASAL ? treatment.insulinAmount : treatment.isBasalAbsolute ? Math.round(treatment.basalAbsoluteAmount * 100) / 100 : treatment.basalPercentAmount, treatment.type != Treatment.TYPE_TEMP_BASAL ? 0.1 : 0.01);
@@ -368,12 +368,10 @@ package ui.screens.display.treatments
 			
 			var infoSectionChildren:Array = [];
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_time_label"), accessory: treatmentTimeConatiner });
-			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT || treatment.type == Treatment.TYPE_TEMP_BASAL)
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
-				if (treatment.type != Treatment.TYPE_TEMP_BASAL)
-					infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
-				
-				infoSectionChildren.push({ label: treatment.type == Treatment.TYPE_TEMP_BASAL && treatment.isBasalRelative ? ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_relative_temp_basal_label") : ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
 			}
 			if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
@@ -397,6 +395,8 @@ package ui.screens.display.treatments
 			}
 			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
 			{
+				if (!treatment.isTempBasalEnd)
+					infoSectionChildren.push({ label: treatment.type == Treatment.TYPE_TEMP_BASAL && treatment.isBasalRelative ? ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_relative_temp_basal_label") : ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: tempBasalDurationStepper });
 			}
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_note_label"), accessory: noteTextArea });

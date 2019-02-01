@@ -1701,9 +1701,8 @@ package ui.chart
 			}
 			
 			//Temp Basals Sorting
-			TreatmentsManager.basalsList.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
-			var highestBasalAmount:Number = Math.max(TreatmentsManager.basalsList.length > 0 ? TreatmentsManager.basalsList[TreatmentsManager.basalsList.length - 1].basalAbsoluteAmount : 0, scheduledHighestBasal);
 			TreatmentsManager.basalsList.sortOn(["timestamp"], Array.NUMERIC);
+			var highestBasalAmount:Number = Math.max(TreatmentsManager.getHighestTempBasal(), scheduledHighestBasal);
 			
 			//Temp Basal Area Calculation & Plotting
 			var absoluteBasalDataPointsArray:Array = [];

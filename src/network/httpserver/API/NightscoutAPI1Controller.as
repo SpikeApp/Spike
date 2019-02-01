@@ -678,7 +678,7 @@ package network.httpserver.API
 					}
 					
 					//Add treatment to Spike and Databse
-					TreatmentsManager.addNightscoutTreatment(treatment, true);
+					TreatmentsManager.addInternalTreatment(treatment, true);
 					
 					//Format response
 					var responseArray:Array = [];

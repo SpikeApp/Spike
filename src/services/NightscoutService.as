@@ -790,7 +790,7 @@ package services
 							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!" + " Unit: " + (isNightscoutMgDl ? "mg/dL" : "mmol/L")  + " DIA: " + dia + " CAR: " + carbAbsorptionRate);
 						}
 							
-						if (syncPumpBasals && CGMBlueToothDevice.isFollower() || basalProfileImport)
+						if ((syncPumpBasals && CGMBlueToothDevice.isFollower()) || basalProfileImport)
 						{
 							var nightscoutBasalsList:Array;
 							
@@ -833,6 +833,10 @@ package services
 								if (basalProfileImport)
 								{
 									_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NIGHTSCOUT_BASAL_PROFILE_IMPORTED));
+								}
+								else
+								{
+									TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
 								}
 							}
 						}

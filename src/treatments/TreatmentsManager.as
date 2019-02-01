@@ -102,6 +102,19 @@ package treatments
 		private static var COBCacheTimes:Array = [];
 		private static var lastSavedCachesTimestamp:Number = 0;
 		private static var mostRecentIOBCaches:Array = [];
+		
+		/* Domension Variables */
+		private static var contentOriginalHeight:Number;
+		private static var suggestedCalloutHeight:Number;
+		private static var finalCalloutHeight:Number;
+		private static var treatmentCallOutWidth:Number;
+		private static var treatmentCallOutHeight:Number;
+		private static var treatmentCallOutPaddingRight:Number;
+		private static var contentScrollContainerWidth:Number;
+		private static var contentScrollContainerHeight:Number;
+		private static var totalScrollContainerWidth:Number;
+		private static var totalScrollContainerHeight:Number;
+		private static var yPos:Number;
 
 		//Treatments callout display objects
 		private static var treatmentInserterContainer:LayoutGroup;
@@ -154,28 +167,6 @@ package treatments
 		private static var lowIntensity:Radio;
 		private static var moderateIntensity:Radio;
 		private static var highIntendity:Radio;
-
-		private static var contentOriginalHeight:Number;
-
-		private static var suggestedCalloutHeight:Number;
-
-		private static var finalCalloutHeight:Number;
-
-		private static var treatmentCallOutWidth:Number;
-
-		private static var treatmentCallOutHeight:Number;
-
-		private static var treatmentCallOutPaddingRight:Number;
-
-		private static var contentScrollContainerWidth:Number;
-
-		private static var contentScrollContainerHeight:Number;
-
-		private static var totalScrollContainerWidth:Number;
-
-		private static var totalScrollContainerHeight:Number;
-
-		private static var yPos:Number;
 		
 		public function TreatmentsManager()
 		{
@@ -404,6 +395,7 @@ package treatments
 						treatment.ID = dbTreatment.id;
 						treatment.isBasalAbsolute = dbTreatment.isbasalabsolute != null && dbTreatment.isbasalabsolute == "true";
 						treatment.isBasalRelative = dbTreatment.isbasalrelative != null && dbTreatment.isbasalrelative == "true";
+						treatment.isTempBasalEnd = dbTreatment.istempbasalend != null && dbTreatment.istempbasalend == "true";
 						
 						if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
 						{
@@ -426,15 +418,25 @@ package treatments
 							treatment.exerciseIntensity = String(dbTreatment.intensity);
 						}
 						
-						treatmentsList.push(treatment);
-						treatmentsMap[treatment.ID] = treatment;
+						if (treatment.type != Treatment.TYPE_TEMP_BASAL)
+						{
+							treatmentsList.push(treatment);
+							treatmentsMap[treatment.ID] = treatment;
+						}
+						else
+						{
+							basalsList.push(treatment);
+							basalsMap[treatment.ID] = treatment;
+						}
 						
 						//Sort Treatments
 						treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
+						basalsList.sortOn(["timestamp"], Array.NUMERIC);
 					}
 				}
 				
 				Trace.myTrace("TreatmentsManager.as", "Fetched " + treatmentsList.length + " treatment(s)");
+				Trace.myTrace("TreatmentsManager.as", "Fetched " + basalsList.length + " basal(s)");
 			}
 		}
 		
@@ -1803,22 +1805,31 @@ package treatments
 				NightscoutService.uploadTreatment(treatment);
 		}
 		
-		public static function addNightscoutTreatment(treatment:Treatment, uploadToNightscout:Boolean = false):void
+		public static function addInternalTreatment(treatment:Treatment, uploadToNightscout:Boolean = false):void
 		{	
 			Trace.myTrace("TreatmentsManager.as", "addNightscoutTreatment called! Treatment type: " + treatment.type);
 			
 			//Save settings
 			if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
 			{
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatment.timestamp), true, false);
+				if (treatment.timestamp > Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE)))
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatment.timestamp), true, false);
+				}
 			}
 			else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
 			{
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE, String(treatment.timestamp), true, false);
+				if (treatment.timestamp > Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE)))
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE, String(treatment.timestamp), true, false);
+				}
 			}
 			else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
 			{
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatment.timestamp), true, false);
+				if (treatment.timestamp > Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE)))
+				{
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatment.timestamp), true, false);
+				}
 			}
 			
 			//Insert in Database
@@ -4043,10 +4054,7 @@ package treatments
 				var isBasalAbsolute:Boolean = nsBasal.absolute != null && !isNaN(nsBasal.absolute) ? true : false;
 				var basalPercentAmount:Number = nsBasal.percent != null && !isNaN(nsBasal.percent) ? nsBasal.percent : 0;
 				var isBasalRelative:Boolean = nsBasal.percent != null && !isNaN(nsBasal.percent) && !isBasalAbsolute ? true : false;
-				if (!isBasalAbsolute && !isBasalRelative)
-				{
-					isBasalAbsolute = true;
-				}
+				var isTempBasalEnd:Boolean = !isBasalAbsolute && !isBasalRelative;
 				
 				nightscoutBasalsMap[basalID] = nsBasal;
 				
@@ -4066,9 +4074,10 @@ package treatments
 					basal.isBasalAbsolute = isBasalAbsolute;
 					basal.basalPercentAmount = basalPercentAmount;
 					basal.isBasalRelative = isBasalRelative;
+					basal.isTempBasalEnd = isTempBasalEnd;
 					
 					//Add treatment to Spike and Databse
-					addNightscoutTreatment(basal);
+					addInternalTreatment(basal);
 					
 					newBasalData = true;
 					
@@ -4107,6 +4116,12 @@ package treatments
 					if (spikeBasal.isBasalRelative != isBasalRelative)
 					{
 						spikeBasal.isBasalRelative = isBasalRelative;
+						wasBasalModified = true;
+					}
+					
+					if (spikeBasal.isTempBasalEnd != isTempBasalEnd)
+					{
+						spikeBasal.isTempBasalEnd = isTempBasalEnd;
 						wasBasalModified = true;
 					}
 						
@@ -4601,7 +4616,7 @@ package treatments
 							treatment.needsAdjustment = true;
 						
 						//Add treatment to Spike and Databse
-						addNightscoutTreatment(treatment);
+						addInternalTreatment(treatment);
 						
 						Trace.myTrace("TreatmentsManager.as", "Added nightscout treatment. Type: " + treatmentType);
 					}
@@ -4968,6 +4983,59 @@ package treatments
 			}
 			
 			return lastBasalTimestamp;
+		}
+		
+		private static function getTempBasalAmount(treatment:Treatment):Number 
+		{
+			var basalAmount:Number = 0;
+			
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+			{
+				if (treatment.isBasalAbsolute)
+				{
+					basalAmount = treatment.basalAbsoluteAmount;
+				}
+				else if (treatment.isBasalRelative)
+				{
+					var currentBasalRate:Number = ProfileManager.getBasalRateByTime(treatment.timestamp);
+					basalAmount = currentBasalRate * (100 + treatment.basalPercentAmount) / 100;
+				}
+			}
+			
+			return Math.round(basalAmount * 100) / 100;
+		}
+		
+		public static function getHighestTempBasal():Number
+		{
+			var highestTempBasalAmount:Number = 0;
+			
+			var numberOfTempBasals:uint = basalsList.length;
+			for (var i:int = 0; i < numberOfTempBasals; i++) 
+			{
+				var tempBasal:Treatment = basalsList[i];
+				if (tempBasal != null && tempBasal.type == Treatment.TYPE_TEMP_BASAL && (tempBasal.basalAbsoluteAmount > 0 || tempBasal.basalPercentAmount > 0))
+				{
+					//Determine Basal Amount
+					var basalAmount:Number = 0;
+					if (tempBasal.isBasalAbsolute)
+					{
+						basalAmount = tempBasal.basalAbsoluteAmount;
+					}
+					else if (tempBasal.isBasalRelative)
+					{
+						var currentBasalRate:Number = ProfileManager.getBasalRateByTime(tempBasal.timestamp);
+						basalAmount = currentBasalRate * (100 + tempBasal.basalPercentAmount) / 100;
+					}
+					
+					//Compare to highest value
+					if (basalAmount > highestTempBasalAmount)
+					{
+						highestTempBasalAmount = basalAmount;
+					}
+				}
+			}
+			
+			return highestTempBasalAmount;
 		}
 
 		/**

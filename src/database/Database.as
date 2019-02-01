@@ -169,6 +169,7 @@ package database
 			"intensity STRING, " +
 			"isbasalabsolute STRING, " +
 			"isbasalrelative STRING, " +
+			"istempbasalend STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -799,8 +800,28 @@ package database
 													sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check9Error);
 													sqlStatement.clearParameters();
 													
-													//All checks performed. Continue with next table
-													createInsulinsTable();
+													sqlStatement.text = "SELECT istempbasalend FROM treatments";
+													sqlStatement.addEventListener(SQLEvent.RESULT,check10Performed);
+													sqlStatement.addEventListener(SQLErrorEvent.ERROR,check10Error);
+													sqlStatement.execute();
+													
+													function check10Performed(se:SQLEvent):void 
+													{
+														sqlStatement.removeEventListener(SQLEvent.RESULT,check10Performed);
+														sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check10Error);
+														sqlStatement.clearParameters();
+														
+														//All checks performed. Continue with next table
+														createInsulinsTable();
+													}
+													
+													function check10Error(see:SQLErrorEvent):void 
+													{
+														if (debugMode) trace("Database.as : istempbasalend column not found in treatments table (old version of Spike). Updating table...");
+														sqlStatement.clearParameters();
+														sqlStatement.text = "ALTER TABLE treatments ADD COLUMN istempbasalend STRING;";
+														sqlStatement.execute();
+													}
 												}
 												
 												function check9Error(see:SQLErrorEvent):void 
@@ -2545,6 +2566,7 @@ package database
 				text += "intensity, ";
 				text += "isbasalabsolute, ";
 				text += "isbasalrelative, ";
+				text += "istempbasalend, ";
 				text += "needsadjustment) ";
 				text += "VALUES (";
 				text += "'" + treatment.ID + "', ";
@@ -2564,6 +2586,7 @@ package database
 				text += "'" + treatment.exerciseIntensity + "', ";
 				text += "'" + String(treatment.isBasalAbsolute) + "', ";
 				text += "'" + String(treatment.isBasalRelative) + "', ";
+				text += "'" + String(treatment.isTempBasalEnd) + "', ";
 				text += "'" + String(treatment.needsAdjustment) + "')";
 				
 				insertRequest.text = text;
@@ -2613,6 +2636,7 @@ package database
 				"intensity = '" + treatment.exerciseIntensity + "', " +
 				"isbasalabsolute = '" + String(treatment.isBasalAbsolute) + "', " +
 				"isbasalrelative = '" + String(treatment.isBasalRelative) + "', " +
+				"istempbasalend = '" + String(treatment.isTempBasalEnd) + "', " +
 				"needsadjustment = '" + String(treatment.needsAdjustment) + "' " +
 				"WHERE id = '" + treatment.ID + "'";
 				updateRequest.execute();

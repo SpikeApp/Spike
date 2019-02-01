@@ -291,6 +291,10 @@ package ui.screens.display.treatments
 					{
 						tempBasalValue = treatment.basalPercentAmount + "%";
 					}
+					else if (treatment.isTempBasalEnd)
+					{
+						tempBasalValue = ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+					}
 					
 					treatmentValue = tempBasalValue;
 					icon = tempBasalTexture;
@@ -311,6 +315,8 @@ package ui.screens.display.treatments
 			}
 			
 			dataProvider = new ArrayCollection(dataList);
+			
+			(layout as VerticalLayout).hasVariableItemDimensions = true;
 		}
 		
 		override protected function setupRenderFactory():void
@@ -337,6 +343,8 @@ package ui.screens.display.treatments
 				}
 				itemRenderer.accessoryOffsetX = -30;
 				itemRenderer.labelField = "label";
+				itemRenderer.paddingTop = 10;
+				itemRenderer.paddingBottom = 10;
 				
 				if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				{

@@ -55,6 +55,7 @@ package treatments
 		public var isBasalAbsolute:Boolean = false;
 		public var basalPercentAmount:Number = 0;
 		public var isBasalRelative:Boolean = false;
+		public var isTempBasalEnd:Boolean = false;
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = Number.NaN)
 		{
