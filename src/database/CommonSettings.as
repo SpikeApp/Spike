@@ -666,6 +666,11 @@ package database
 		 public static const COMMON_SETTING_DATA_COLLECTION_DS_USERNAME:int = 279;
 		 public static const COMMON_SETTING_DATA_COLLECTION_DS_PASSWORD:int = 280;
 		 public static const COMMON_SETTING_DATA_COLLECTION_DS_SERVER:int = 281;
+		 
+		 /**
+		 * Basals
+		 */
+		 public static const COMMON_SETTING_BASALS_MODE:int = 282;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -949,7 +954,8 @@ package database
 			 "1", //COMMON_SETTING_PIE_CHART_ACTIVE_PAGE
 			 "", //COMMON_SETTING_DATA_COLLECTION_DS_USERNAME
 			 "", //COMMON_SETTING_DATA_COLLECTION_DS_PASSWORD
-			 "us" //COMMON_SETTING_DATA_COLLECTION_DS_SERVER
+			 "us", //COMMON_SETTING_DATA_COLLECTION_DS_SERVER
+			 "mdi", //COMMON_SETTING_BASALS_MODE
 		 ];
 
 		 public function CommonSettings()

@@ -1,13 +1,8 @@
 package ui.chart.pills
 {
-	import flash.filters.BitmapFilterQuality;
-	import flash.filters.GlowFilter;
-	
 	import database.CommonSettings;
 	
 	import feathers.controls.Label;
-	import feathers.controls.text.TextFieldTextRenderer;
-	import feathers.core.ITextRenderer;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.VerticalAlign;
 	

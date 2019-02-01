@@ -10,6 +10,8 @@ package treatments
 	
 	import ui.popups.AlertManager;
 	
+	import utils.Constants;
+	import utils.TimeSpan;
 	import utils.Trace;
 	import utils.UniqueId;
 	
@@ -23,6 +25,9 @@ package treatments
 		public static var profilesList:Array = [];
 		private static var profilesMap:Dictionary = new Dictionary();
 		private static var profilesMapByTime:Object = {};
+		public static var basalRatesList:Array = [];
+		public static var basalRatesMap:Dictionary = new Dictionary();
+		public static var basalRatesMapByTime:Object = {};
 		private static var nightscoutCarbAbsorptionRate:Number = 0;
 		
 		public function ProfileManager()
@@ -119,8 +124,42 @@ package treatments
 			}
 			
 			removeDuplicateProfiles();
+			
+			//Get Basal Rates
+			var dbBasalRates:Array = Database.getBasalRatesSynchronous();
+			if (dbBasalRates != null && dbBasalRates.length > 0)
+			{
+				for (i = 0; i < dbBasalRates.length; i++) 
+				{
+					var dbBasalRate:Object = dbBasalRates[i] as Object;
+					if (dbBasalRate == null)
+						continue;
+					
+					var basalRate:BasalRate = new BasalRate
+					(
+						dbBasalRate.rate,
+						dbBasalRate.hours,
+						dbBasalRate.minutes,
+						dbBasalRate.time,
+						dbBasalRate.id,
+						dbBasalRate.lastmodifiedtimestamp
+					)
+					
+					basalRatesList.push(basalRate);
+					basalRatesMap[dbBasalRate.id] = basalRate;
+					basalRatesMapByTime[dbBasalRate.time] = basalRate;
+				}
+				basalRatesList.sortOn(["startTime"], Array.CASEINSENSITIVE);
+				
+				Trace.myTrace("ProfileManager.as", "Got basal rates from database!");
+			}
+			else
+				Trace.myTrace("ProfileManager.as", "No basal rates stored in database!");
 		}
 		
+		/**
+		 * PROFILES
+		 */
 		private static function removeDuplicateProfiles():void
 		{
 			var tempProfilesList:Object = {};
@@ -233,6 +272,373 @@ package treatments
 			return defaultProfile;
 		}
 		
+		public static function updateProfile(profile:Profile):void
+		{	
+			Trace.myTrace("ProfileManager.as", "updateProfile called!");
+			
+			//Update Database
+			Database.updateProfileSynchronous(profile);
+			
+			//Sort profile list by time
+			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+		}
+		
+		public static function insertProfile(profile:Profile, overwrite:Boolean = false):void
+		{	
+			Trace.myTrace("ProfileManager.as", "insertProfile called!");
+			
+			if (profilesMapByTime[profile.time] == null)
+			{
+				//Push to memory
+				profilesList.push(profile);
+				profilesMap[profile.ID] = profile;
+				profilesMapByTime[profile.time] = profile;
+				
+				//Save to Database
+				Database.insertProfileSynchronous(profile);
+				
+				//Sort profile list by time
+				profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+			}
+			else
+			{
+				if (overwrite)
+				{
+					var existingProfile:Profile = profilesMapByTime[profile.time];
+					existingProfile.basalRates = profile.basalRates;
+					existingProfile.carbsAbsorptionRate = profile.carbsAbsorptionRate;
+					existingProfile.insulinCurve = profile.insulinCurve;
+					existingProfile.insulinPeakTime = profile.insulinPeakTime;
+					existingProfile.insulinSensitivityFactors = profile.insulinSensitivityFactors;
+					existingProfile.insulinToCarbRatios = profile.insulinToCarbRatios;
+					existingProfile.name = profile.name;
+					existingProfile.targetGlucoseRates = profile.targetGlucoseRates;
+					existingProfile.time = profile.time;
+					existingProfile.trend45Down = profile.trend45Down;
+					existingProfile.trend45Up = profile.trend45Up;
+					existingProfile.trend90Down = profile.trend90Down;
+					existingProfile.trend90Up = profile.trend90Up;
+					existingProfile.trendCorrections = profile.trendCorrections;
+					existingProfile.trendDoubleDown = profile.trendDoubleDown;
+					existingProfile.trendDoubleUp = profile.trendDoubleUp;
+					existingProfile.useCustomInsulinPeakTime = profile.useCustomInsulinPeakTime;
+					
+					updateProfile(existingProfile);
+				}
+				else
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+						ModelLocator.resourceManagerInstance.getString("profilesettingsscreen","duplicate_profile_label")
+					);
+				}
+			}
+		}
+		
+		public static function deleteProfile(profile:Profile):void
+		{
+			Trace.myTrace("ProfileManager.as", "deleteProfile called!");
+			
+			if (profilesMap[profile.ID] != null)
+			{
+				//Find Profile
+				for (var i:int = 0; i < profilesList.length; i++) 
+				{
+					var userProfile:Profile = profilesList[i];
+					if (userProfile.ID == profile.ID)
+					{
+						Trace.myTrace("ProfileManager.as", "Deleting profile... Name: " + profile.name + ", Time: " + profile.time);
+						
+						//Profile found. Remove it from Spike.
+						profilesList.removeAt(i);
+						profilesMap[profile.ID] = null;
+						profilesMapByTime[profile.time] = null;
+						
+						//Delete from database
+						Database.deleteProfileSynchronous(userProfile);
+						
+						//Sort profile list by time
+						profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
+						
+						break;
+					}
+				}
+			}
+		}
+		
+		public static function getProfileByTime(requestedTimestamp:Number):Profile
+		{
+			var currentProfile:Profile;
+			
+			try
+			{
+				var requestedDate:Date = new Date(requestedTimestamp);
+				var requestedDateAdjusted:Date = new Date();
+				requestedDateAdjusted.hours = requestedDate.hours;
+				requestedDateAdjusted.minutes = requestedDate.minutes;
+				requestedDateAdjusted.seconds = requestedDate.seconds;
+				requestedDateAdjusted.milliseconds = requestedDate.milliseconds;
+				var requestedTimestampAdjusted:Number = requestedDateAdjusted.valueOf();
+				
+				var numberOfProfiles:int = profilesList.length;
+				if (numberOfProfiles == 0)
+				{
+					createDefaultProfile();
+					numberOfProfiles = profilesList.length;
+				}
+				
+				for (var i:int = numberOfProfiles - 1 ; i >= 0; i--)
+				{
+					var profile:Profile = profilesList[i] as Profile;
+					if (profile != null)
+					{	
+						var profileDate:Date = getProfileDate(profile);
+						var profileTimestamp:Number = profileDate.valueOf();
+						
+						if (requestedTimestampAdjusted >= profileTimestamp)
+						{
+							currentProfile = profile;
+							break;
+						}
+					}
+				}
+			} 
+			catch(error:Error) {}
+			
+			if (currentProfile == null)
+			{
+				currentProfile = createDefaultProfile();
+			}
+			
+			return currentProfile;
+		}
+		
+		public static function getProfileDate(profile:Profile):Date
+		{
+			var profileDate:Date = new Date();
+			profileDate.hours = 0;
+			profileDate.minutes = 0;
+			profileDate.seconds = 0;
+			profileDate.milliseconds = 0;
+			
+			try
+			{
+				var profileDividedTime:Array = profile.time.split(":");
+				var profileHour:Number = Number(profileDividedTime[0]);
+				var profileMinutes:Number = Number(profileDividedTime[1]);
+				
+				if (isNaN(profileHour))
+					profileHour = 0;
+				
+				if (isNaN(profileMinutes))
+					profileMinutes = 0;
+				
+				profileDate.hours = profileHour;
+				profileDate.minutes = profileMinutes;
+				profileDate.seconds = 0;
+				profileDate.milliseconds = 0;
+			} 
+			catch(error:Error) {}
+			
+			return profileDate;
+		}
+		
+		/**
+		 * BASAL RATES
+		 */
+		public static function updateBasalRate(basalRate:BasalRate):void
+		{	
+			Trace.myTrace("ProfileManager.as", "updateBasalRate called!");
+			
+			//Update Database
+			Database.updateBasalRateSynchronous(basalRate);
+			
+			//Sort basal rates list by time
+			basalRatesList.sortOn(["startTime"], Array.CASEINSENSITIVE);
+		}
+		
+		public static function insertBasalRate(basalRate:BasalRate, overwrite:Boolean = false, saveToDatabase:Boolean = true):void
+		{	
+			Trace.myTrace("ProfileManager.as", "insertBasalRate called!");
+			
+			if (basalRatesMapByTime[basalRate.startTime] == null)
+			{
+				//Push to memory
+				basalRatesList.push(basalRate);
+				basalRatesMap[basalRate.ID] = basalRate;
+				basalRatesMapByTime[basalRate.startTime] = basalRate;
+				
+				//Save to Database
+				if (saveToDatabase)
+				{
+					Database.insertBasalRateSynchronous(basalRate);
+				}
+				
+				//Sort basal rates list by time
+				basalRatesList.sortOn(["startTime"], Array.CASEINSENSITIVE);
+			}
+			else
+			{
+				if (overwrite)
+				{
+					var existingBasalRate:BasalRate = basalRatesMapByTime[basalRate.startTime];
+					existingBasalRate.basalRate = basalRate.basalRate;
+					existingBasalRate.startHours = basalRate.startHours;
+					existingBasalRate.startMinutes = basalRate.startMinutes;
+					existingBasalRate.startTime = basalRate.startTime;
+					existingBasalRate.timestamp = basalRate.timestamp;
+					
+					if (saveToDatabase)
+					{
+						updateBasalRate(existingBasalRate);
+					}
+					else
+					{
+						//Sort basal rates list by time
+						basalRatesList.sortOn(["startTime"], Array.CASEINSENSITIVE);
+					}
+				}
+				else
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+						ModelLocator.resourceManagerInstance.getString("profilesettingsscreen","duplicate_basal_rate_label")
+					);
+				}
+			}
+		}
+		
+		public static function deleteBasalRate(basalRate:BasalRate):void
+		{
+			Trace.myTrace("ProfileManager.as", "deleteBasalRate called!");
+			
+			if (basalRatesMap[basalRate.ID] != null)
+			{
+				//Find Basal Rate
+				for (var i:int = 0; i < basalRatesList.length; i++) 
+				{
+					var userBasalRate:BasalRate = basalRatesList[i];
+					if (userBasalRate.ID == basalRate.ID)
+					{
+						Trace.myTrace("ProfileManager.as", "Deleting basal rate... Time: " + basalRate.startTime);
+						
+						//Basal rate found. Remove it from Spike.
+						basalRatesList.removeAt(i);
+						basalRatesMap[basalRate.ID] = null;
+						basalRatesMapByTime[basalRate.startTime] = null;
+						
+						//Delete from database
+						Database.deleteBasalRateSynchronous(basalRate);
+						
+						//Sort basal rate list by time
+						basalRatesList.sortOn(["startTime"], Array.CASEINSENSITIVE);
+						
+						break;
+					}
+				}
+			}
+		}
+		
+		public static function deleteAllBasalRates():void
+		{
+			for (var i:int = basalRatesList.length - 1 ; i >= 0; i--)
+			{
+				var basalRate:BasalRate = basalRatesList[i];
+				if (basalRate != null)
+				{
+					deleteBasalRate(basalRate);
+				}
+			}
+		}
+		
+		public static function getPumpBasalData(time:Number, suggestedIndex:Number = Number.NaN):Object
+		{
+			//Common Variables
+			var i:int;
+			
+			//Basal Rate
+			var scheduledBasalRate:Number = 0;
+			var numberOfScheduleBasalRates:uint = basalRatesList.length;
+			
+			if (numberOfScheduleBasalRates > 0)
+			{
+				var scheduledBasalTimeSpan:TimeSpan = TimeSpan.fromMilliseconds(time - (Constants.systemTimeZoneOffset * TimeSpan.TIME_1_HOUR));
+				var scheduledBasalTimeSpanHours:int = scheduledBasalTimeSpan.hours;
+				var scheduledBasalTimeSpanMinutes:int = scheduledBasalTimeSpan.minutes;
+				
+				for (i = numberOfScheduleBasalRates - 1 ; i >= 0; i--)
+				{
+					var basalRate:BasalRate = basalRatesList[i];
+					if (basalRate != null
+						&&
+						(scheduledBasalTimeSpanHours > basalRate.startHours
+						||
+						(scheduledBasalTimeSpanHours == basalRate.startHours && scheduledBasalTimeSpanMinutes >= basalRate.startMinutes))
+					)
+					{
+						scheduledBasalRate = basalRate.basalRate;
+						break;
+					}
+				}
+			}
+			
+			//Temp Basal
+			var tempBasalAreaAmount:Number = 0;
+			var tempBasalAmount:Number = scheduledBasalRate;
+			var tempBasalTreatment:Treatment = null;
+			var tempBasalIndex:Number = suggestedIndex;
+			var tempBasalTime:Number = time;
+			var numberOfBasals:Number = TreatmentsManager.basalsList.length;
+			
+			if (numberOfBasals > 0)
+			{
+				var loopStart:int = isNaN(suggestedIndex) ? numberOfBasals - 1 : suggestedIndex;
+				for (i = loopStart ; i >= 0; i--)
+				{
+					var tempBasalInternalTreatment:Treatment = TreatmentsManager.basalsList[i];
+					if (tempBasalInternalTreatment != null 
+						&& 
+						tempBasalInternalTreatment.timestamp <= time 
+						&& 
+						tempBasalInternalTreatment.timestamp + (tempBasalInternalTreatment.basalDuration * TimeSpan.TIME_1_MINUTE) >= time
+					)
+					{
+						tempBasalTreatment = tempBasalInternalTreatment;
+						tempBasalTime = tempBasalInternalTreatment.timestamp;
+						tempBasalIndex = i;
+						
+						break;
+					}
+				}
+				
+				//Special handling for absolute to support temp to 0
+				if (tempBasalTreatment != null && tempBasalTreatment.isBasalAbsolute && tempBasalTreatment.basalDuration > 0) 
+				{
+					tempBasalAreaAmount = tempBasalTreatment.basalAbsoluteAmount;
+					tempBasalAmount = tempBasalAreaAmount;
+				} 
+				else if (tempBasalTreatment != null && tempBasalTreatment.isBasalRelative) 
+				{
+					tempBasalAreaAmount = scheduledBasalRate * (100 + tempBasalTreatment.basalPercentAmount) / 100;
+					tempBasalAmount = tempBasalAreaAmount;
+				} 
+			}
+			
+			//Result
+			return {
+				scheduledBasalRate: scheduledBasalRate,
+				tempBasalAreaAmount: tempBasalAreaAmount,
+				tempBasalAmount: tempBasalAmount,
+				tempBasalTime: tempBasalTime,
+				tempBasalIndex: tempBasalIndex
+			};
+		}
+		
+		/**
+		 * INSULINS
+		 */
 		public static function getInsulin(ID:String):Insulin
 		{
 			return insulinsMap[ID];
@@ -280,17 +686,17 @@ package treatments
 				
 				//Create new insulin
 				var insulin:Insulin = new Insulin
-				(
-					newInsulinID,
-					name,
-					dia,
-					type,
-					isDefault,
-					new Date().valueOf(),
-					isHidden,
-					curve,
-					peak
-				);
+					(
+						newInsulinID,
+						name,
+						dia,
+						type,
+						isDefault,
+						new Date().valueOf(),
+						isHidden,
+						curve,
+						peak
+					);
 				
 				//Add to Spike
 				insulinsList.push(insulin);
@@ -401,101 +807,9 @@ package treatments
 			return insulinID;
 		}
 		
-		public static function updateProfile(profile:Profile):void
-		{	
-			Trace.myTrace("ProfileManager.as", "updateProfile called!");
-			
-			//Update Database
-			Database.updateProfileSynchronous(profile);
-			
-			//Sort profile list by time
-			profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
-		}
-		
-		public static function insertProfile(profile:Profile, overwrite:Boolean = false):void
-		{	
-			Trace.myTrace("ProfileManager.as", "insertProfile called!");
-			
-			if (profilesMapByTime[profile.time] == null)
-			{
-				//Push to memory
-				profilesList.push(profile);
-				profilesMap[profile.ID] = profile;
-				profilesMapByTime[profile.time] = profile;
-				
-				//Save to Database
-				Database.insertProfileSynchronous(profile);
-				
-				//Sort profile list by time
-				profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
-			}
-			else
-			{
-				if (overwrite)
-				{
-					var existingProfile:Profile = profilesMapByTime[profile.time];
-					existingProfile.basalRates = profile.basalRates;
-					existingProfile.carbsAbsorptionRate = profile.carbsAbsorptionRate;
-					existingProfile.insulinCurve = profile.insulinCurve;
-					existingProfile.insulinPeakTime = profile.insulinPeakTime;
-					existingProfile.insulinSensitivityFactors = profile.insulinSensitivityFactors;
-					existingProfile.insulinToCarbRatios = profile.insulinToCarbRatios;
-					existingProfile.name = profile.name;
-					existingProfile.targetGlucoseRates = profile.targetGlucoseRates;
-					existingProfile.time = profile.time;
-					existingProfile.trend45Down = profile.trend45Down;
-					existingProfile.trend45Up = profile.trend45Up;
-					existingProfile.trend90Down = profile.trend90Down;
-					existingProfile.trend90Up = profile.trend90Up;
-					existingProfile.trendCorrections = profile.trendCorrections;
-					existingProfile.trendDoubleDown = profile.trendDoubleDown;
-					existingProfile.trendDoubleUp = profile.trendDoubleUp;
-					existingProfile.useCustomInsulinPeakTime = profile.useCustomInsulinPeakTime;
-					
-					updateProfile(existingProfile);
-				}
-				else
-				{
-					AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
-						ModelLocator.resourceManagerInstance.getString("profilesettingsscreen","duplicate_profile_label")
-					);
-				}
-			}
-		}
-		
-		public static function deleteProfile(profile:Profile):void
-		{
-			Trace.myTrace("ProfileManager.as", "deleteProfile called!");
-			
-			if (profilesMap[profile.ID] != null)
-			{
-				//Find Profile
-				for (var i:int = 0; i < profilesList.length; i++) 
-				{
-					var userProfile:Profile = profilesList[i];
-					if (userProfile.ID == profile.ID)
-					{
-						Trace.myTrace("ProfileManager.as", "Deleting profile... Name: " + profile.name + ", Time: " + profile.time);
-						
-						//Profile found. Remove it from Spike.
-						profilesList.removeAt(i);
-						profilesMap[profile.ID] = null;
-						profilesMapByTime[profile.time] = null;
-						
-						//Delete from database
-						Database.deleteProfileSynchronous(userProfile);
-						
-						//Sort profile list by time
-						profilesList.sortOn(["time"], Array.CASEINSENSITIVE);
-						
-						break;
-					}
-				}
-			}
-		}
-		
+		/**
+		 * CARBS
+		 */
 		public static function addNightscoutCarbAbsorptionRate(rate:Number):void
 		{
 			Trace.myTrace("ProfileManager.as", "Adding Nightscout carbs absorption rate: " + rate);
@@ -534,83 +848,6 @@ package treatments
 				carbType = "slow";
 			
 			return carbType;
-		}
-		
-		public static function getProfileByTime(requestedTimestamp:Number):Profile
-		{
-			var currentProfile:Profile;
-			
-			try
-			{
-				var requestedDate:Date = new Date(requestedTimestamp);
-				var requestedDateAdjusted:Date = new Date();
-				requestedDateAdjusted.hours = requestedDate.hours;
-				requestedDateAdjusted.minutes = requestedDate.minutes;
-				requestedDateAdjusted.seconds = requestedDate.seconds;
-				requestedDateAdjusted.milliseconds = requestedDate.milliseconds;
-				var requestedTimestampAdjusted:Number = requestedDateAdjusted.valueOf();
-				
-				var numberOfProfiles:int = profilesList.length;
-				if (numberOfProfiles == 0)
-				{
-					createDefaultProfile();
-					numberOfProfiles = profilesList.length;
-				}
-				
-				for (var i:int = numberOfProfiles - 1 ; i >= 0; i--)
-				{
-					var profile:Profile = profilesList[i] as Profile;
-					if (profile != null)
-					{	
-						var profileDate:Date = getProfileDate(profile);
-						var profileTimestamp:Number = profileDate.valueOf();
-						
-						if (requestedTimestampAdjusted >= profileTimestamp)
-						{
-							currentProfile = profile;
-							break;
-						}
-					}
-				}
-			} 
-			catch(error:Error) {}
-			
-			if (currentProfile == null)
-			{
-				currentProfile = createDefaultProfile();
-			}
-			
-			return currentProfile;
-		}
-		
-		public static function getProfileDate(profile:Profile):Date
-		{
-			var profileDate:Date = new Date();
-			profileDate.hours = 0;
-			profileDate.minutes = 0;
-			profileDate.seconds = 0;
-			profileDate.milliseconds = 0;
-			
-			try
-			{
-				var profileDividedTime:Array = profile.time.split(":");
-				var profileHour:Number = Number(profileDividedTime[0]);
-				var profileMinutes:Number = Number(profileDividedTime[1]);
-				
-				if (isNaN(profileHour))
-					profileHour = 0;
-				
-				if (isNaN(profileMinutes))
-					profileMinutes = 0;
-				
-				profileDate.hours = profileHour;
-				profileDate.minutes = profileMinutes;
-				profileDate.seconds = 0;
-				profileDate.milliseconds = 0;
-			} 
-			catch(error:Error) {}
-			
-			return profileDate;
 		}
 	}
 }

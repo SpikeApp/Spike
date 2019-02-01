@@ -46,6 +46,7 @@ package services
 	
 	import network.NetworkConnector;
 	
+	import treatments.BasalRate;
 	import treatments.Insulin;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
@@ -171,8 +172,11 @@ package services
 		private static var lastPredictionsUploadTimestamp:Number = 0;
 		private static var propertiesV2Timeout:uint = 0;
 		public static var treatmentsAPIServerResponse:String = "";
+		
+		/* Basals */
+		private static var syncPumpBasals:Boolean = true;
+		private static var basalProfileImport:Boolean = false;
 		public static var basalsAPIServerResponse:String = "";
-		private static var syncBasals:Boolean = true;
 		
 		public function NightscoutService()
 		{
@@ -389,7 +393,7 @@ package services
 					if (pumpUserEnabled)
 						propertiesV2Timeout = setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_1_MINUTE);
 					
-					if (syncBasals)
+					if (syncPumpBasals)
 						getRemoteBasals();
 				}
 				
@@ -666,7 +670,7 @@ package services
 		/**
 		 * PROFILE
 		 */
-		private static function getNightscoutProfile():void
+		public static function getNightscoutProfile(isBasalProfileImport:Boolean = false):void
 		{
 			Trace.myTrace("NightscoutService.as", "getNightscoutProfile called!");
 			
@@ -678,15 +682,16 @@ package services
 			
 			var now:Number = new Date().valueOf();
 			
-			if (now - lastRemoteProfileSync < TimeSpan.TIME_30_SECONDS)
+			if (now - lastRemoteProfileSync < TimeSpan.TIME_30_SECONDS && !isBasalProfileImport)
 			{
 				Trace.myTrace("NightscoutService.as", "Fetched profile less than 30 seconds ago. Ignoring!");
 				return;
 			}
 			
 			lastRemoteProfileSync = now;
+			basalProfileImport = isBasalProfileImport;
 			
-			if (!isNSProfileSet)
+			if (!isNSProfileSet || isBasalProfileImport)
 			{
 				if (!NetworkInfo.networkInfo.isReachable())
 				{
@@ -739,62 +744,118 @@ package services
 				try
 				{
 					var profileProperties:Object = SpikeJSON.parse(response);
+					
+					//trace(ObjectUtil.toString(profileProperties));
+					
 					if (profileProperties != null)
 					{
-						//Get Nightscout default unit
-						if (profileProperties[0].units != null && (profileProperties[0].units as String).indexOf("mg") == -1)
-							isNightscoutMgDl = false;
-						
-						var dia:Number = Number.NaN;
-						var carbAbsorptionRate:Number = Number.NaN;
-						
-						if (profileProperties[0].dia)
-							dia = Number(profileProperties[0].dia);
-						else if (profileProperties[0].store && profileProperties[0].defaultProfile && profileProperties[0].store[profileProperties[0].defaultProfile].dia)
-							dia = Number(profileProperties[0].store[profileProperties[0].defaultProfile].dia);
-						
-						if (profileProperties[0].carbs_hr)
-							carbAbsorptionRate = Number(profileProperties[0].carbs_hr);
-						else if (profileProperties[0].store && profileProperties[0].defaultProfile && profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr)
-							carbAbsorptionRate = Number(profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr);
-						
-						
-						if (isNaN(dia) || isNaN(carbAbsorptionRate))
+						if (!basalProfileImport)
 						{
-							Trace.myTrace("NightscoutService.as", "User has not yet set a profile in Nightscout!");
+							//Get Nightscout default unit
+							if (profileProperties[0].units != null && (profileProperties[0].units as String).indexOf("mg") == -1)
+								isNightscoutMgDl = false;
 							
-							if (!profileAlertShown)
+							var dia:Number = Number.NaN;
+							var carbAbsorptionRate:Number = Number.NaN;
+							
+							if (profileProperties[0].dia)
+								dia = Number(profileProperties[0].dia);
+							else if (profileProperties[0].store && profileProperties[0].defaultProfile && profileProperties[0].store[profileProperties[0].defaultProfile].dia)
+								dia = Number(profileProperties[0].store[profileProperties[0].defaultProfile].dia);
+							
+							if (profileProperties[0].carbs_hr)
+								carbAbsorptionRate = Number(profileProperties[0].carbs_hr);
+							else if (profileProperties[0].store && profileProperties[0].defaultProfile && profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr)
+								carbAbsorptionRate = Number(profileProperties[0].store[profileProperties[0].defaultProfile].carbs_hr);
+							
+							
+							if (isNaN(dia) || isNaN(carbAbsorptionRate))
 							{
-								AlertManager.showSimpleAlert
-								(
-									ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
-									ModelLocator.resourceManagerInstance.getString("treatments","nightscout_profile_not_set")
-								);
-									
-								profileAlertShown = true;
+								Trace.myTrace("NightscoutService.as", "User has not yet set a profile in Nightscout!");
+								
+								if (!profileAlertShown)
+								{
+									AlertManager.showSimpleAlert
+									(
+										ModelLocator.resourceManagerInstance.getString("globaltranslations","warning_alert_title"),
+										ModelLocator.resourceManagerInstance.getString("treatments","nightscout_profile_not_set")
+									);
+										
+									profileAlertShown = true;
+								}
+								
+								return;
 							}
 							
-							return;
+							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!" + " Unit: " + (isNightscoutMgDl ? "mg/dL" : "mmol/L")  + " DIA: " + dia + " CAR: " + carbAbsorptionRate);
+						}
+							
+						if (syncPumpBasals && CGMBlueToothDevice.isFollower() || basalProfileImport)
+						{
+							var nightscoutBasalsList:Array;
+							
+							if (profileProperties[0].basal != null && profileProperties[0].basal is Array)
+							{
+								nightscoutBasalsList = profileProperties[0].basal;
+							}
+							else if (profileProperties[0].store && profileProperties[0].defaultProfile && profileProperties[0].store[profileProperties[0].defaultProfile].basal)
+							{
+								nightscoutBasalsList = profileProperties[0].store[profileProperties[0].defaultProfile].basal;
+							}
+							
+							if (nightscoutBasalsList != null && nightscoutBasalsList.length > 0)
+							{
+								var numBasalRateAdded:uint = 0;
+								var numberOfBasals:uint = nightscoutBasalsList.length;
+								for (var i:int = 0; i < numberOfBasals; i++) 
+								{
+									var nsBasal:Object = nightscoutBasalsList[i];
+									if (nsBasal != null && nsBasal.time != null && nsBasal.time is String && String(nsBasal.time).indexOf(":") != -1 && nsBasal.value != null && !isNaN(nsBasal.value))
+									{
+										var nsBasalTimes:Array = String(nsBasal.time).split(":");
+										var spikeBasal:BasalRate = new BasalRate
+										(
+											Number(nsBasal.value),
+											Number(nsBasalTimes[0]),
+											Number(nsBasalTimes[1])
+										);
+										
+										ProfileManager.insertBasalRate(spikeBasal, false, basalProfileImport);
+										numBasalRateAdded++;
+									}
+								}
+								
+								if (numBasalRateAdded > 0)
+								{
+									Trace.myTrace("NightscoutService.as", "Parsed and added " + numBasalRateAdded + " remote basal rates!");
+								}
+								
+								if (basalProfileImport)
+								{
+									_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NIGHTSCOUT_BASAL_PROFILE_IMPORTED));
+								}
+							}
 						}
 						
-						Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!" + " Unit: " + (isNightscoutMgDl ? "mg/dL" : "mmol/L")  + " DIA: " + dia + " CAR: " + carbAbsorptionRate);
-						
-						isNSProfileSet = true; //Mark profile as downloaded
+						if (!basalProfileImport)
+						{
+							isNSProfileSet = true; //Mark profile as downloaded
+								
+							//Add nightscout insulin to Spike and don't save it to DB
+							ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", CGMBlueToothDevice.isFollower() ? true : false, "000000", !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING ? true : false, true);
+								
+							//Add nightscout carbs absorption rate and don't save it to DB
+							ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
+								
+							//Get treatmenents
+							getRemoteTreatments();
 							
-						//Add nightscout insulin to Spike and don't save it to DB
-						ProfileManager.addInsulin(ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin"), dia, "", CGMBlueToothDevice.isFollower() ? true : false, "000000", !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING ? true : false, true);
+							if (pumpUserEnabled)
+								getPropertiesV2Endpoint();
 							
-						//Add nightscout carbs absorption rate and don't save it to DB
-						ProfileManager.addNightscoutCarbAbsorptionRate(carbAbsorptionRate);
-							
-						//Get treatmenents
-						getRemoteTreatments();
-						
-						if (pumpUserEnabled)
-							getPropertiesV2Endpoint();
-						
-						if (syncBasals)
-							getRemoteBasals();
+							if (syncPumpBasals)
+								getRemoteBasals();
+						}
 					}
 				} 
 				catch(error:Error) 
@@ -803,7 +864,11 @@ package services
 				}
 			}
 			else
+			{
 				Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Will try on next transmitter reading! Response: " + response);
+			}
+			
+			basalProfileImport = false;
 		}
 		
 		/**
@@ -1145,7 +1210,7 @@ package services
 							if (pumpUserEnabled)
 								getPropertiesV2Endpoint();
 							
-							if (syncBasals)
+							if (syncPumpBasals)
 								getRemoteBasals();
 						}
 						
@@ -1482,7 +1547,7 @@ package services
 					if (pumpUserEnabled)
 						getPropertiesV2Endpoint();
 					
-					if (syncBasals)
+					if (syncPumpBasals)
 						getRemoteBasals();
 				}
 			}
@@ -2367,7 +2432,7 @@ package services
 		 */
 		private static function getRemoteBasals():void
 		{
-			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !syncBasals || serviceHalted)
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !syncPumpBasals || serviceHalted)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "getRemoteBasals called!");
@@ -2420,7 +2485,7 @@ package services
 			if (serviceHalted)
 				return;
 			
-			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !syncBasals)
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !syncPumpBasals)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "onGetBasalsComplete called!");
@@ -2482,7 +2547,7 @@ package services
 						}
 						else
 						{
-							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncPumpBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
 							{
 								Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new basals fetch in 30 seconds. Responder: " + response);
 								setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
@@ -2492,7 +2557,7 @@ package services
 					} 
 					catch(error:Error) 
 					{
-						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncPumpBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
 						{
 							Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new basals fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
 							setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
@@ -2503,7 +2568,7 @@ package services
 			}
 			else
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncPumpBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new basals fetch in 30 seconds. Responder: " + response);
 					setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
@@ -3270,7 +3335,7 @@ package services
 			}
 			else if (mode == MODE_BASALS_GET)
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncPumpBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting basals. Retrying in 30 seconds. Error: " + error.message);
 					setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);

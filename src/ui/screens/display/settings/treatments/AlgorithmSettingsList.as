@@ -1,9 +1,5 @@
 package ui.screens.display.settings.treatments
 {
-	import mx.utils.ObjectUtil;
-	
-	import spark.components.richTextEditorClasses.BoldTool;
-	
 	import database.CommonSettings;
 	
 	import feathers.controls.Button;
@@ -156,13 +152,6 @@ package ui.screens.display.settings.treatments
 					var userProfile:Profile = ProfileManager.profilesList[i];
 					if (userProfile != null)
 					{
-						
-						trace("---------");
-						
-						trace(ObjectUtil.toString(userProfile));
-						
-						trace("-----------");
-						
 						
 						if (userProfile.insulinSensitivityFactors == "" || userProfile.insulinToCarbRatios == "")
 						{

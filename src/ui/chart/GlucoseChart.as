@@ -1,7 +1,6 @@
 package ui.chart
 { 
 	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.hurlant.crypto.symmetric.NullPad;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
@@ -44,7 +43,10 @@ package ui.chart
 	import feathers.controls.TextCallout;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
+	import feathers.controls.text.TextBlockTextRenderer;
+	import feathers.controls.text.TextFieldTextRenderer;
 	import feathers.core.FeathersControl;
+	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
@@ -79,6 +81,7 @@ package ui.chart
 	import starling.utils.Align;
 	import starling.utils.SystemUtil;
 	
+	import treatments.BasalRate;
 	import treatments.Insulin;
 	import treatments.Profile;
 	import treatments.ProfileManager;
@@ -108,7 +111,6 @@ package ui.chart
 	import ui.chart.visualcomponents.IOBActivityCurve;
 	import ui.popups.AlertManager;
 	import ui.screens.Screens;
-	import ui.screens.TreatmentsManagementScreen;
 	import ui.screens.display.LayoutFactory;
 	import ui.shapes.SpikeLine;
 	
@@ -453,15 +455,17 @@ package ui.chart
 		private var predictionDetailTimeBody:Label;
 		
 		//Basals
-		private var basalQuadsList:Array = [];
+		private var basalAreasList:Array = [];
 		private var basalLinesList:Array = [];
-		private var basalProperties:Object;
+		private var tempBasalAreaPropertiesMap:Object;
 		private var basalsFirstRun:Boolean = true;
-		private var displayPumpBasals:Boolean = true;
+		private var displayPumpBasals:Boolean = false;
 		private var basalScaler:Number = 1;
 		private var basalsContainer:Sprite;
 		private var basalAbsoluteLine:SpikeLine;
 		private var basalCallout:TextCallout;
+		private var basalScheduledLine:SpikeLine;
+		private var lastTimePumpBasalWasRendered:Number = 0;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -578,6 +582,9 @@ package ui.chart
 			{
 				dontDisplayInfoPill = true;
 			}
+			
+			//Basals
+			displayPumpBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "pump" && treatmentsActive && displayTreatmentsOnChart;
 			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
@@ -1595,7 +1602,7 @@ package ui.chart
 				targetQuad = e.currentTarget as Quad;
 				if (targetQuad != null)
 				{
-					var basalProps:Object = basalProperties[targetQuad.x];
+					var basalProps:Object = tempBasalAreaPropertiesMap[targetQuad.x];
 					if (basalProps != null)
 					{
 						//Visual Filter
@@ -1606,7 +1613,7 @@ package ui.chart
 						//Basal Details
 						var basalDate:Date = new Date(basalProps.timestamp);
 						var basalTime:String = dateFormat.slice(0,2) == "24" ? TimeSpan.formatHoursMinutes(basalDate.getHours(), basalDate.getMinutes(), TimeSpan.TIME_FORMAT_24H) : TimeSpan.formatHoursMinutes(basalDate.getHours(), basalDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
-						var infoString:String = "Amount" + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + "Start" + ":" + " " + basalTime;
+						var infoString:String = "Temp Basal" + "\n\n" + "Amount" + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + "Start" + ":" + " " + basalTime;
 						
 						//Basal Amount
 						displayBasalCallout(infoString, targetQuad);
@@ -1633,167 +1640,343 @@ package ui.chart
 			}
 			
 			basalCallout = TextCallout.show(details, origin, new <String>[RelativePosition.TOP]);
+			basalCallout.textRendererFactory = function():ITextRenderer
+			{
+				var render:TextBlockTextRenderer = new TextBlockTextRenderer();
+				render.textAlign = HorizontalAlign.CENTER;
+				
+				return render;
+			}
 		}
-		
-		
 		
 		public function renderPumpBasals():void
 		{
-			var timer:int = getTimer();
-			
-			if (TreatmentsManager.basalsList.length > 0)
+			//Validation
+			if (ProfileManager.basalRatesList.length == 0 && TreatmentsManager.basalsList.length == 0)
 			{
-				//Dispose previous basals
-				disposePumpBasalCallout();
-				disposePumpBasals();
-				basalProperties = {};
+				return;
+			}
+			
+			if (!displayPumpBasals || !SystemUtil.isApplicationActive)
+			{
+				return
+			}
+			
+			//Setup initial timeline/mask properties
+			if (basalsFirstRun && basalsContainer == null)
+			{
+				basalsFirstRun = false;
+				basalsContainer = new Sprite();
+				basalsContainer.x = mainChart.x;
+				basalsContainer.y = glucoseDelimiter.height;
+				mainChartContainer.addChildAt(basalsContainer, 0);
+			}
+			
+			//Dispose previous basals
+			disposePumpBasalCallout();
+			disposePumpBasals();
+			
+			//Common variables
+			var timer:int = getTimer();
+			var now:Number = new Date().valueOf();
+			var i:int
+			lastTimePumpBasalWasRendered = now;
+			tempBasalAreaPropertiesMap = {};
+			
+			//Data variables
+			var fromTime:Number = firstBGReadingTimeStamp;
+			var toTime:Number = !displayLatestBGValue ? now + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
+			if (isNaN(toTime)) toTime = now;
+			var suggestedAbsoluteBasalIndex:Number = Number.NaN;
+			
+			//Scheduled Basals Sorting
+			var scheduledBasalRatesPointsList:Array = [];
+			var scheduledHighestBasal:Number = 0;
+			var numberOfBasalRates:uint = ProfileManager.basalRatesList.length;
+			if (numberOfBasalRates > 0)
+			{
+				ProfileManager.basalRatesList.sortOn(["basalRate"], Array.NUMERIC);
+				scheduledHighestBasal = ProfileManager.basalRatesList[numberOfBasalRates - 1].basalRate;
+				ProfileManager.basalRatesList.sortOn(["startTime"], Array.CASEINSENSITIVE);
+			}
+			
+			//Temp Basals Sorting
+			TreatmentsManager.basalsList.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
+			var highestBasalAmount:Number = Math.max(TreatmentsManager.basalsList.length > 0 ? TreatmentsManager.basalsList[TreatmentsManager.basalsList.length - 1].basalAbsoluteAmount : 0, scheduledHighestBasal);
+			TreatmentsManager.basalsList.sortOn(["timestamp"], Array.NUMERIC);
+			
+			//Temp Basal Area Calculation & Plotting
+			var absoluteBasalDataPointsArray:Array = [];
+			var desiredBasalHeight:Number = _graphHeight * 0.25;
+			basalScaler = desiredBasalHeight / highestBasalAmount;
+			var prevTempBasalAreaValue:Number = 0;
+			var prevAbsoluteBasalAreaValue:Number = 0;
+			var startXTempAreaValue:Number = 0;
+			var startYTempAreaValue:Number = 0;
+			var superStartYTempAreaValue:Number = 0;
+			var startXAbsoluteAreaValue:Number = 0;
+			var startYAbsoluteAreaValue:Number = 0;
+			var previousTempBasalAreaProps:Object;
+			var prevXAbsoluteValue:Number = Number.NaN;
+			var prevYAbsoluteValue:Number = Number.NaN;
+			var prevXScheduledValue:Number = Number.NaN;
+			var prevYScheduledValue:Number = Number.NaN;
+			
+			for (var time:Number = toTime; time >= fromTime; time -= TimeSpan.TIME_1_MINUTE) 
+			{
+				//Gather Basal Data
+				var basalProperties:Object = ProfileManager.getPumpBasalData(time, suggestedAbsoluteBasalIndex);
 				
-				//Data variables
-				var fromTime:Number = firstBGReadingTimeStamp;
-				var toTime:Number = !displayLatestBGValue ? new Date().valueOf() + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
-				if (isNaN(toTime)) toTime = new Date().valueOf();
-				var suggestedIndex:Number = Number.NaN;
+				//Calculate Coordinates (Area & Basal Amount)
+				var tempBasalAreaValue:Number = basalProperties.tempBasalAreaAmount;
+				var xTempBasalAreaValue:Number = (time - firstBGReadingTimeStamp) * mainChartXFactor;
+				var yTempBasalAreaValue:Number = tempBasalAreaValue * basalScaler;
 				
-				//Sort Basals By Value
-				TreatmentsManager.basalsList.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
-				var highestBasalAmount:Number = TreatmentsManager.basalsList[TreatmentsManager.basalsList.length - 1].basalAbsoluteAmount;
+				var tempBasalAmountValue:Number = basalProperties.tempBasalAmount;
+				var xTempBasalAmountValue:Number = xTempBasalAreaValue;
+				var yTempBasalAmountValue:Number = tempBasalAmountValue * basalScaler * -1;
 				
-				//Sort Basals By Time
-				TreatmentsManager.basalsList.sortOn(["timestamp"], Array.NUMERIC);
-				
-				//Setup initial timeline/mask properties
-				if (basalsFirstRun && basalsContainer == null)
+				//Save absolute basal line data points
+				if (yTempBasalAmountValue != prevYAbsoluteValue)
 				{
-					basalsFirstRun = false;
-					basalsContainer = new Sprite();
-					basalsContainer.x = mainChart.x;
-					basalsContainer.y = glucoseDelimiter.height;
-					mainChartContainer.addChildAt(basalsContainer, 0);
+					if (!isNaN(prevYAbsoluteValue))
+					{
+						absoluteBasalDataPointsArray.unshift( { x: xTempBasalAmountValue, y: prevYAbsoluteValue } );
+					}
+					
+					absoluteBasalDataPointsArray.unshift( { x: xTempBasalAmountValue, y: yTempBasalAmountValue } );
 				}
 				
-				var absoluteBasalDataPointsArray:Array = [];
-				var desiredBasalHeight:Number = _graphHeight * 0.25;
-				basalScaler = desiredBasalHeight / highestBasalAmount;
-				var prevBasalY:Number = 0;
-				var startXValue:Number = 0;
-				var startYValue:Number = 0;
-				var previousBasalProps:Object;
+				//Save absolute variables state for next iteration
+				prevXAbsoluteValue = xTempBasalAmountValue;
+				prevYAbsoluteValue = yTempBasalAmountValue;
 				
-				for (var time:Number = toTime; time >= fromTime; time -= TimeSpan.TIME_1_MINUTE) 
+				//Render temp basal areas
+				if (tempBasalAreaValue != prevTempBasalAreaValue)
 				{
-					var basalResponse:Object = TreatmentsManager.getBasalByTimestamp(time, suggestedIndex);
-					if (basalResponse.basal != null && basalResponse.index != null)
+					if (startXTempAreaValue == 0 && startYTempAreaValue == 0)
+					{
+						startXTempAreaValue = xTempBasalAreaValue;
+						startYTempAreaValue = yTempBasalAreaValue;
+					}
+					else
+					{
+						//Translate coordinates
+						var endXAreaValue:Number = xTempBasalAreaValue;
+						var endYAreaValue:Number = yTempBasalAreaValue;
+						
+						//Create Quad
+						if (startYTempAreaValue != 0)
+						{
+							var tempBasalAreaWidth:Number = Math.abs(endXAreaValue - startXTempAreaValue);
+							
+							var tempBasalArea:Quad = new Quad(tempBasalAreaWidth, Math.abs(startYTempAreaValue), 0x0099ff);
+							tempBasalArea.alpha = 0.3;
+							tempBasalArea.x = startXTempAreaValue - tempBasalAreaWidth;
+							tempBasalArea.y = -startYTempAreaValue;
+							tempBasalArea.addEventListener(TouchEvent.TOUCH, onAbsoluteBasalTouched);
+							basalsContainer.addChild(tempBasalArea);
+							
+							basalAreasList.push(tempBasalArea);
+							
+							if (previousTempBasalAreaProps != null)
+							{
+								tempBasalAreaPropertiesMap[tempBasalArea.x] = previousTempBasalAreaProps;
+							}
+						}
+						
+						//Reset
+						superStartYTempAreaValue = startYTempAreaValue;
+						if (endYAreaValue == 0)
+						{
+							startXTempAreaValue = 0;
+							startYTempAreaValue = 0;
+						}
+						else
+						{
+							startXTempAreaValue = endXAreaValue;
+							startYTempAreaValue = endYAreaValue;
+						}
+					}
+				}
+				
+				//Save temp basal areas variables state
+				prevTempBasalAreaValue = tempBasalAreaValue;
+				suggestedAbsoluteBasalIndex = basalProperties.tempBasalIndex;
+				previousTempBasalAreaProps = { basalAmount: basalProperties.tempBasalAreaAmount, timestamp: basalProperties.tempBasalTime };
+				
+				//Render absolute basal areas
+				if (tempBasalAmountValue != prevAbsoluteBasalAreaValue)
+				{
+					if (startXAbsoluteAreaValue == 0 && startYAbsoluteAreaValue == 0)
+					{
+						startXAbsoluteAreaValue = xTempBasalAmountValue;
+						startYAbsoluteAreaValue = -yTempBasalAmountValue;
+					}
+					else
+					{
+						//Translate coordinates
+						var endXAbsoluteAreaValue:Number = xTempBasalAmountValue;
+						var endYAbsoluteAreaValue:Number = -yTempBasalAmountValue;
+						
+						//Create Quad
+						if (startYAbsoluteAreaValue != 0 && startYAbsoluteAreaValue != superStartYTempAreaValue)
+						{
+							var tempAbsoluteBasalAreaWidth:Number = Math.abs(endXAbsoluteAreaValue - startXAbsoluteAreaValue);
+							
+							var tempAbsoluteBasalArea:Quad = new Quad(tempAbsoluteBasalAreaWidth, Math.abs(startYAbsoluteAreaValue), 0x0099ff);
+							tempAbsoluteBasalArea.alpha = 0.1;
+							tempAbsoluteBasalArea.x = startXAbsoluteAreaValue - tempAbsoluteBasalAreaWidth;
+							tempAbsoluteBasalArea.y = -startYAbsoluteAreaValue;
+							basalsContainer.addChild(tempAbsoluteBasalArea);
+							
+							basalAreasList.push(tempAbsoluteBasalArea);
+						}
+						
+						//Reset
+						if (endYAbsoluteAreaValue == 0)
+						{
+							startXAbsoluteAreaValue = 0;
+							startYAbsoluteAreaValue = 0;
+						}
+						else
+						{
+							startXAbsoluteAreaValue = endXAbsoluteAreaValue;
+							startYAbsoluteAreaValue = endYAbsoluteAreaValue;
+						}
+					}
+				}
+				
+				//Save absolute basal areas variables state
+				prevAbsoluteBasalAreaValue = tempBasalAmountValue;
+				
+				//Calculate Schedule Basals Data Points
+				if (numberOfBasalRates > 0)
+				{
+					var scheduledBasalRate:Number = basalProperties.scheduledBasalRate;
+					if (!isNaN(scheduledBasalRate))
 					{
 						//Gather calculation data
-						var basalValue:Number = basalResponse.basal;
-						var xValue:Number = (time - firstBGReadingTimeStamp) * mainChartXFactor;
-						var yValue:Number = basalValue * basalScaler;
+						var xScheduledValue:Number = (time - firstBGReadingTimeStamp) * mainChartXFactor;
+						var yScheduledValue:Number = scheduledBasalRate * basalScaler * -1;
 						
-						//Save absolute basal line data points
-						absoluteBasalDataPointsArray.unshift( { x: xValue, y: -yValue } );
-						
-						//Render absolute basal quads
-						if (basalValue != prevBasalY)
+						if (yScheduledValue != prevYScheduledValue)
 						{
-							if (startXValue == 0 && startYValue == 0)
+							if (!isNaN(prevYScheduledValue))
 							{
-								startXValue = xValue;
-								startYValue = yValue;
+								scheduledBasalRatesPointsList.unshift( { x: xScheduledValue, y: prevYScheduledValue } );
 							}
-							else
-							{
-								//Translate coordinates
-								var endXValue:Number = xValue;
-								var endYValue:Number = yValue;
-								
-								//Create Quad
-								if (startYValue != 0)
-								{
-									var quadWidth:Number = Math.abs(endXValue - startXValue);
-									
-									var quad:Quad = new Quad(quadWidth, Math.abs(startYValue), 0x0099ff);
-									quad.alpha = 0.3;
-									quad.x = startXValue - quadWidth;
-									quad.y = -startYValue;
-									quad.addEventListener(TouchEvent.TOUCH, onAbsoluteBasalTouched);
-									basalsContainer.addChild(quad);
-									
-									basalQuadsList.push(quad);
-									
-									if (previousBasalProps != null)
-									{
-										basalProperties[quad.x] = previousBasalProps;
-									}
-								}
-								
-								//Reset
-								if (endYValue == 0)
-								{
-									startXValue = 0;
-									startYValue = 0;
-								}
-								else
-								{
-									startXValue = endXValue;
-									startYValue = endYValue;
-								}
-							}
+							
+							scheduledBasalRatesPointsList.unshift( { x: xScheduledValue, y: yScheduledValue } );
 						}
 						
 						//Save variables state
-						prevBasalY = basalValue;
-						suggestedIndex = basalResponse.index;
-						previousBasalProps = { basalAmount:basalResponse.basal, timestamp: basalResponse.timestamp };
+						prevXScheduledValue = xScheduledValue;
+						prevYScheduledValue = yScheduledValue;
 					}
-				}
-				
-				//Render absolute basal line
-				if (absoluteBasalDataPointsArray.length > 0)
-				{
-					//Create and configure line
-					basalAbsoluteLine = new SpikeLine();
-					basalAbsoluteLine.lineStyle(1.5, uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)));
-					basalAbsoluteLine.moveTo(0, 0);
-					
-					//Data holders
-					var previousY:Number = 0;
-					var previousX:Number = 0;
-					
-					//Loop line data points
-					var numberOfLinePoints:Number = absoluteBasalDataPointsArray.length;
-					for (var i:int = 0; i < numberOfLinePoints; i++) 
-					{
-						//Plot line
-						var point:Object = absoluteBasalDataPointsArray[i];
-						if (point.x != previousX || point.y != previousY)
-						{
-							if (point.y == previousY)
-							{
-								basalAbsoluteLine.lineTo(point.x, point.y);
-								basalAbsoluteLine.moveTo(point.x, point.y);
-							}
-							else
-							{
-								basalAbsoluteLine.lineTo(previousX, point.y);
-								basalAbsoluteLine.moveTo(previousX, point.y);
-							}
-						}
-						
-						//Save state
-						previousX = point.x;
-						previousY = point.y;
-					}
-					
-					//Add line to display list
-					basalsContainer.addChild(basalAbsoluteLine);
-					basalLinesList.push(basalAbsoluteLine);
 				}
 			}
 			
-			trace("BASAL RENDERING IN:", getTimer() - timer + "ms");
+			//Render absolute basal line
+			var numberOfLinePoints:Number = absoluteBasalDataPointsArray.length;
+			if (numberOfLinePoints > 0)
+			{
+				//Create and configure line
+				basalAbsoluteLine = new SpikeLine();
+				basalAbsoluteLine.lineStyle(1.5, uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)));
+				basalAbsoluteLine.moveTo(0, absoluteBasalDataPointsArray[0].y);
+				
+				//Loop line data points
+				var prevAbsoluteLinePoint:Object;
+				for (i= 0; i < numberOfLinePoints; i++) 
+				{
+					//Plot line
+					var absoluteLinePoint:Object = absoluteBasalDataPointsArray[i];
+					basalAbsoluteLine.lineTo(absoluteLinePoint.x, absoluteLinePoint.y);
+					basalAbsoluteLine.moveTo(absoluteLinePoint.x, absoluteLinePoint.y);
+					
+					prevAbsoluteLinePoint = absoluteLinePoint;
+				}
+				
+				//Close Absolute Line Graphic
+				if (prevAbsoluteLinePoint != null)
+				{
+					basalAbsoluteLine.lineTo(prevAbsoluteLinePoint.x, 0);
+				}
+				
+				//Add line to display list
+				basalsContainer.addChild(basalAbsoluteLine);
+				basalLinesList.push(basalAbsoluteLine);
+			}
+			
+			//Plot scheduled basals line
+			var numberOfScheduledLinePoints:Number = scheduledBasalRatesPointsList.length;
+			if (numberOfScheduledLinePoints > 0)
+			{
+				//Constants
+				const lineThickness:uint = 1;
+				const sizeOfDash:uint = 2;
+				const sizeOfGap:uint = 2;
+				
+				//Create and configure line
+				basalScheduledLine = new SpikeLine();
+				basalScheduledLine.lineStyle(lineThickness, uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)));
+				basalScheduledLine.moveTo(0, scheduledBasalRatesPointsList[0].y);
+				
+				//Loop line data points
+				for (i = -1; i < numberOfScheduledLinePoints - 1; i++) 
+				{
+					var startPoint:Object = i >= 0 ? scheduledBasalRatesPointsList[i] : { x: 0, y: scheduledBasalRatesPointsList[0].y };
+					var endPoint:Object = scheduledBasalRatesPointsList[i+1];
+					
+					if (startPoint.y == endPoint.y)
+					{
+						//Horizontal
+						var horizontalDashedLineTotalWidth:Number = Math.abs(endPoint.x - startPoint.x - lineThickness);
+						var numHorizontalDashedLines:Number = Math.ceil(horizontalDashedLineTotalWidth/(sizeOfDash + sizeOfGap));
+						var realSizeOfHorizontalDash:Number = (horizontalDashedLineTotalWidth - ((numHorizontalDashedLines - 1) * sizeOfGap)) / numHorizontalDashedLines;
+						var currentHorizontalLineX:Number = startPoint.x;
+						
+						for (var j:int = 0; j < numHorizontalDashedLines; j++)
+						{
+							basalScheduledLine.moveTo(currentHorizontalLineX, endPoint.y);
+							basalScheduledLine.lineTo(currentHorizontalLineX + realSizeOfHorizontalDash, endPoint.y);
+							
+							currentHorizontalLineX += realSizeOfHorizontalDash + sizeOfGap;
+						}
+					}
+					else
+					{
+						//Vertical
+						var verticalDashedLineTotalHeight:Number = Math.abs(endPoint.y - startPoint.y);
+						var numVerticalDashedLines:Number = Math.ceil(verticalDashedLineTotalHeight/(sizeOfDash + sizeOfGap));
+						var realSizeOfVerticalDash:Number = (verticalDashedLineTotalHeight - ((numVerticalDashedLines - 1) * sizeOfGap)) / numVerticalDashedLines;
+						var currentVerticalLineY:Number = startPoint.y;
+						
+						for (var k:int = 0; k <numVerticalDashedLines; k++)
+						{
+							basalScheduledLine.moveTo(startPoint.x, currentVerticalLineY);
+							if (endPoint.y >= startPoint.y)
+							{
+								basalScheduledLine.lineTo(endPoint.x, currentVerticalLineY + realSizeOfVerticalDash);
+								currentVerticalLineY += realSizeOfVerticalDash + sizeOfGap;
+							}
+							else
+							{
+								basalScheduledLine.lineTo(endPoint.x, currentVerticalLineY - realSizeOfVerticalDash);
+								currentVerticalLineY -= realSizeOfVerticalDash + sizeOfGap;
+							}
+						}
+					}
+				}
+				
+				//Add line to display list
+				basalsContainer.addChild(basalScheduledLine);
+				basalLinesList.push(basalScheduledLine);
+			}
+			
+			trace("BASAL RENDERING COMPLETED IN:", getTimer() - timer + "ms");
 		}
-		
-		
 		
 		public function addTreatment(treatment:Treatment):void
 		{
@@ -8183,6 +8366,9 @@ package ui.chart
 		{
 			if (SystemUtil.isApplicationActive)
 			{
+				//Common Variables
+				var lastAvailableReading:BgReading;
+				
 				//Update Labels
 				calculateDisplayLabels();
 				
@@ -8196,10 +8382,24 @@ package ui.chart
 				//Fetch predictions (Loop/OpenAPS users only)
 				if (predictionsEnabled && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true")
 				{
-					var lastAvailableReading:BgReading = BgReading.lastWithCalculatedValue();
+					lastAvailableReading = BgReading.lastWithCalculatedValue();
 					if (lastAvailableReading != null && lastAvailableReading.timestamp > Forecast.lastExternalPredictionFetchTimestamp)
 					{
 						NightscoutService.getPropertiesV2Endpoint();
+					}
+				}
+				
+				//Update Basals
+				if (displayPumpBasals)
+				{
+					if (lastAvailableReading == null)
+					{
+						lastAvailableReading = BgReading.lastWithCalculatedValue();
+					}
+					
+					if (lastAvailableReading != null && lastAvailableReading._timestamp > lastTimePumpBasalWasRendered)
+					{
+						renderPumpBasals()
 					}
 				}
 			}
@@ -8970,9 +9170,9 @@ package ui.chart
 		{
 			var i:int;
 			
-			for (i = basalQuadsList.length - 1 ; i >= 0; i--)
+			for (i = basalAreasList.length - 1 ; i >= 0; i--)
 			{
-				var quad:Quad = basalQuadsList[i];
+				var quad:Quad = basalAreasList[i];
 				if (quad != null)
 				{
 					quad.removeFromParent();
@@ -8981,7 +9181,7 @@ package ui.chart
 					quad = null;
 				}
 			}
-			basalQuadsList.length = 0;
+			basalAreasList.length = 0;
 			
 			for (i = basalLinesList.length - 1 ; i >= 0; i--)
 			{

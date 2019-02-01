@@ -11,8 +11,6 @@ package treatments
 	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -404,6 +402,8 @@ package treatments
 						);
 						
 						treatment.ID = dbTreatment.id;
+						treatment.isBasalAbsolute = dbTreatment.isbasalabsolute != null && dbTreatment.isbasalabsolute == "true";
+						treatment.isBasalRelative = dbTreatment.isbasalrelative != null && dbTreatment.isbasalrelative == "true";
 						
 						if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
 						{
@@ -1700,12 +1700,15 @@ package treatments
 			
 			Trace.myTrace("TreatmentsManager.as", "deleteTreatment called!");
 			
-			if (treatmentsMap[treatment.ID] != null) //treatment exists
+			var treatmentListSource:Array = treatment.type != Treatment.TYPE_TEMP_BASAL ? treatmentsList : basalsList;
+			var treatmentMapSource:Dictionary = treatment.type != Treatment.TYPE_TEMP_BASAL ? treatmentsMap : basalsMap;
+			
+			if (treatmentMapSource[treatment.ID] != null) //treatment exists
 			{
 				//Delete from Spike
-				for(var i:int = treatmentsList.length - 1 ; i >= 0; i--)
+				for (var i:int = treatmentListSource.length - 1 ; i >= 0; i--)
 				{
-					var spikeTreatment:Treatment = treatmentsList[i] as Treatment;
+					var spikeTreatment:Treatment = treatmentListSource[i] as Treatment;
 					if (treatment.ID == spikeTreatment.ID)
 					{
 						if (spikeTreatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || spikeTreatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
@@ -1714,7 +1717,7 @@ package treatments
 							var numberOfChildren:uint = spikeTreatment.childTreatments.length;
 							for (var j:int = 0; j < numberOfChildren; j++) 
 							{
-								var child:Treatment = treatmentsMap[spikeTreatment.childTreatments[j]];
+								var child:Treatment = treatmentMapSource[spikeTreatment.childTreatments[j]];
 								if (child != null)
 								{
 									deleteTreatment(child, false, true, deleteFromDatabase, notifyInternally, notiyExternally);
@@ -1724,7 +1727,7 @@ package treatments
 						
 						Trace.myTrace("TreatmentsManager.as", "Treatment deleted. Type: " + spikeTreatment.type);
 						
-						treatmentsList.removeAt(i);
+						treatmentListSource.removeAt(i);
 						
 						//Notify listeners
 						if (notifyInternally)
@@ -1755,7 +1758,7 @@ package treatments
 						if ((!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING) && deleteFromDatabase)
 							Database.deleteTreatmentSynchronous(spikeTreatment);
 						
-						treatmentsMap[spikeTreatment.ID] = null;
+						treatmentMapSource[spikeTreatment.ID] = null;
 						if (nullifyTreatment) spikeTreatment = null;
 						
 						break;
@@ -1786,8 +1789,10 @@ package treatments
 			}
 			
 			//Notify listeners
-			if (treatment.type != Treatment.TYPE_BASAL)
+			if (treatment.type != Treatment.TYPE_TEMP_BASAL)
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
+			else
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
 			
 			//Update in Database
 			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -1817,7 +1822,7 @@ package treatments
 			}
 			
 			//Insert in Database
-			if (treatment.type != Treatment.TYPE_BASAL)
+			if (treatment.type != Treatment.TYPE_TEMP_BASAL)
 			{
 				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				{
@@ -4019,9 +4024,29 @@ package treatments
 				var nsBasal:Object = nsTreatments[i];
 				var basalTimestamp:Number = DateUtil.parseW3CDTF(nsBasal.created_at).valueOf();
 				var basalID:String = nsBasal._id;
+				var basalNote:String = "";
+				if (nsBasal.reason != null && nsBasal.reason != "")
+				{
+					basalNote = nsBasal.reason;
+				}
+				if (nsBasal.notes != null && nsBasal.notes != "")
+				{
+					if (basalNote != "")
+					{
+						basalNote += "\n";
+					}
+					
+					basalNote += nsBasal.notes;
+				}
 				var basalDuration:Number = nsBasal.duration != null && !isNaN(nsBasal.duration) ? nsBasal.duration : 30;
 				var basalAbsoluteAmount:Number = nsBasal.absolute != null && !isNaN(nsBasal.absolute) ? nsBasal.absolute : 0;
+				var isBasalAbsolute:Boolean = nsBasal.absolute != null && !isNaN(nsBasal.absolute) ? true : false;
 				var basalPercentAmount:Number = nsBasal.percent != null && !isNaN(nsBasal.percent) ? nsBasal.percent : 0;
+				var isBasalRelative:Boolean = nsBasal.percent != null && !isNaN(nsBasal.percent) && !isBasalAbsolute ? true : false;
+				if (!isBasalAbsolute && !isBasalRelative)
+				{
+					isBasalAbsolute = true;
+				}
 				
 				nightscoutBasalsMap[basalID] = nsBasal;
 				
@@ -4035,10 +4060,12 @@ package treatments
 				if (basalsMap[basalID] == null)
 				{
 					//It's a new treatment. Let's create it
-					var basal:Treatment = new Treatment(Treatment.TYPE_BASAL, basalTimestamp);
+					var basal:Treatment = new Treatment(Treatment.TYPE_TEMP_BASAL, basalTimestamp);
 					basal.basalDuration = basalDuration;
 					basal.basalAbsoluteAmount = basalAbsoluteAmount;
+					basal.isBasalAbsolute = isBasalAbsolute;
 					basal.basalPercentAmount = basalPercentAmount;
+					basal.isBasalRelative = isBasalRelative;
 					
 					//Add treatment to Spike and Databse
 					addNightscoutTreatment(basal);
@@ -4068,6 +4095,18 @@ package treatments
 					if (!isNaN(basalPercentAmount) && spikeBasal.basalPercentAmount != basalAbsoluteAmount)
 					{
 						spikeBasal.basalPercentAmount = basalPercentAmount;
+						wasBasalModified = true;
+					}
+					
+					if (spikeBasal.isBasalAbsolute != isBasalAbsolute)
+					{
+						spikeBasal.isBasalAbsolute = isBasalAbsolute;
+						wasBasalModified = true;
+					}
+					
+					if (spikeBasal.isBasalRelative != isBasalRelative)
+					{
+						spikeBasal.isBasalRelative = isBasalRelative;
 						wasBasalModified = true;
 					}
 						
@@ -4691,6 +4730,11 @@ package treatments
 		{
 			treatmentsList.length = 0;
 			treatmentsMap = new Dictionary();
+			basalsList.length = 0;
+			basalsMap = new Dictionary();
+			ProfileManager.basalRatesList.length = 0;
+			ProfileManager.basalRatesMap = new Dictionary();
+			ProfileManager.basalRatesMapByTime = {};
 		}
 		
 		public static function getEstimatedGlucose(timestamp:Number):Number
@@ -4924,33 +4968,6 @@ package treatments
 			}
 			
 			return lastBasalTimestamp;
-		}
-		
-		public static function getBasalByTimestamp(time:Number, suggestedIndex:Number = Number.NaN):Object
-		{
-			var basalData:Object = { basal: 0, index: suggestedIndex, timestamp:time };
-			var numberOfBasals:Number = basalsList.length;
-			var loopStart:int = isNaN(suggestedIndex) ? numberOfBasals - 1 : suggestedIndex;
-			
-			for(var i:int = loopStart ; i >= 0; i--)
-			{
-				var basal:Treatment = basalsList[i];
-				if (basal != null 
-					&& 
-					basal.timestamp <= time 
-					&& 
-					basal.timestamp + (basal.basalDuration * TimeSpan.TIME_1_MINUTE) >= time
-				)
-				{
-					basalData.basal = basal.basalAbsoluteAmount;
-					basalData.timestamp = basal.timestamp;
-					basalData.index = i;
-					
-					break;
-				}
-			}
-			
-			return basalData;
 		}
 
 		/**

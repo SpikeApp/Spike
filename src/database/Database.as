@@ -28,6 +28,7 @@ package database
 	
 	import stats.BasicUserStats;
 	
+	import treatments.BasalRate;
 	import treatments.Insulin;
 	import treatments.Profile;
 	import treatments.Treatment;
@@ -166,6 +167,8 @@ package database
 			"prebolus REAL, " +
 			"duration REAL, " +
 			"intensity STRING, " +
+			"isbasalabsolute STRING, " +
+			"isbasalrelative STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -247,6 +250,14 @@ package database
 			"cobindexes BLOB," +
 			"iob BLOB," +
 			"iobindexes BLOB)";
+		
+		private static const CREATE_TABLE_BASAL_RATES:String = "CREATE TABLE IF NOT EXISTS basalrates(" +
+			"id STRING PRIMARY KEY," +
+			"time STRING, " +
+			"hours REAL, " +
+			"minutes REAL, " +
+			"rate REAL, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
 		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
@@ -766,8 +777,48 @@ package database
 											sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check7Error);
 											sqlStatement.clearParameters();
 											
-											//All checks performed. Continue with next table
-											createInsulinsTable();
+											sqlStatement.text = "SELECT isbasalabsolute FROM treatments";
+											sqlStatement.addEventListener(SQLEvent.RESULT,check8Performed);
+											sqlStatement.addEventListener(SQLErrorEvent.ERROR,check8Error);
+											sqlStatement.execute();
+											
+											function check8Performed(se:SQLEvent):void 
+											{
+												sqlStatement.removeEventListener(SQLEvent.RESULT,check8Performed);
+												sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check8Error);
+												sqlStatement.clearParameters();
+												
+												sqlStatement.text = "SELECT isbasalrelative FROM treatments";
+												sqlStatement.addEventListener(SQLEvent.RESULT,check9Performed);
+												sqlStatement.addEventListener(SQLErrorEvent.ERROR,check9Error);
+												sqlStatement.execute();
+												
+												function check9Performed(se:SQLEvent):void 
+												{
+													sqlStatement.removeEventListener(SQLEvent.RESULT,check9Performed);
+													sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check9Error);
+													sqlStatement.clearParameters();
+													
+													//All checks performed. Continue with next table
+													createInsulinsTable();
+												}
+												
+												function check9Error(see:SQLErrorEvent):void 
+												{
+													if (debugMode) trace("Database.as : isbasalrelative column not found in treatments table (old version of Spike). Updating table...");
+													sqlStatement.clearParameters();
+													sqlStatement.text = "ALTER TABLE treatments ADD COLUMN isbasalrelative STRING;";
+													sqlStatement.execute();
+												}
+											}
+											
+											function check8Error(see:SQLErrorEvent):void 
+											{
+												if (debugMode) trace("Database.as : isbasalabsolute column not found in treatments table (old version of Spike). Updating table...");
+												sqlStatement.clearParameters();
+												sqlStatement.text = "ALTER TABLE treatments ADD COLUMN isbasalabsolute STRING;";
+												sqlStatement.execute();
+											}
 										}
 										
 										function check7Error(see:SQLErrorEvent):void 
@@ -1070,7 +1121,7 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				finishedCreatingTables();
+				createBasalRatesTable();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -1078,6 +1129,27 @@ package database
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				dispatchInformation('failed_to_create_iobcobcaches_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createBasalRatesTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_BASAL_RATES;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				finishedCreatingTables();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create basalrates table.");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_basalrates_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -2471,6 +2543,8 @@ package database
 				text += "prebolus, ";
 				text += "duration, ";
 				text += "intensity, ";
+				text += "isbasalabsolute, ";
+				text += "isbasalrelative, ";
 				text += "needsadjustment) ";
 				text += "VALUES (";
 				text += "'" + treatment.ID + "', ";
@@ -2488,6 +2562,8 @@ package database
 				text += (!isNaN(treatment.preBolus) ? treatment.preBolus : "NULL") + ", ";
 				text += (!isNaN(treatment.duration) ? treatment.duration : "NULL") + ", ";
 				text += "'" + treatment.exerciseIntensity + "', ";
+				text += "'" + String(treatment.isBasalAbsolute) + "', ";
+				text += "'" + String(treatment.isBasalRelative) + "', ";
 				text += "'" + String(treatment.needsAdjustment) + "')";
 				
 				insertRequest.text = text;
@@ -2535,6 +2611,8 @@ package database
 				"prebolus = " + (!isNaN(treatment.preBolus) ? treatment.preBolus : "NULL") + ", " +
 				"duration = " + (!isNaN(treatment.duration ) ? treatment.duration : "NULL") + ", " +
 				"intensity = '" + treatment.exerciseIntensity + "', " +
+				"isbasalabsolute = '" + String(treatment.isBasalAbsolute) + "', " +
+				"isbasalrelative = '" + String(treatment.isBasalRelative) + "', " +
 				"needsadjustment = '" + String(treatment.needsAdjustment) + "' " +
 				"WHERE id = '" + treatment.ID + "'";
 				updateRequest.execute();
@@ -2575,7 +2653,7 @@ package database
 		}
 		
 		/**
-		 * Deletes treatments older than 3 months (not needed any more)
+		 * Deletes treatments older than 3 months (not needed anymore)
 		 */
 		public static function deleteOldTreatments():void {
 			try {
@@ -2875,6 +2953,136 @@ package database
 					conn.close();
 				}
 				dispatchInformation('error_while_deleting_profile_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Get Basal Rates Synchronously
+		 */
+		public static function getBasalRatesSynchronous():Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text =  "SELECT * FROM basalrates";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_basal_rates', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_basal_rates',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		/**
+		 * inserts a basal rate in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertBasalRateSynchronous(basalRate:BasalRate):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO basalrates (";
+				text += "id, ";
+				text += "time, ";
+				text += "hours, ";
+				text += "minutes, ";
+				text += "rate, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + basalRate.ID + "', ";
+				text += "'" + basalRate.startTime + "', ";
+				text += basalRate.startHours + ", ";
+				text += basalRate.startMinutes + ", ";
+				text += basalRate.basalRate + ", ";
+				text += basalRate.timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_basal_rate_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * updates a basal rate in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function updateBasalRateSynchronous(basalRate:BasalRate):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE basalrates SET " +
+					"id = '" + basalRate.ID + "', " +
+					"time = '" + basalRate.startTime + "', " +
+					"hours = " + basalRate.startHours + ", " +
+					"minutes = " + basalRate.startMinutes + ", " +
+					"rate = " + basalRate.basalRate + ", " +
+					"lastmodifiedtimestamp = " + basalRate.timestamp + " " +
+					"WHERE id = '" + basalRate.ID + "'";
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_basal_rate_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * deletes a basal rate in the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteBasalRateSynchronous(basalRate:BasalRate):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from basalrates WHERE id = " + "'" + basalRate.ID + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_basal_rate_in_db', error.message + " - " + error.details);
 			}
 		}
 		

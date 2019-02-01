@@ -21,7 +21,8 @@ package treatments
 		public static const TYPE_PUMP_SITE_CHANGE:String = "pumpSiteChange";
 		public static const TYPE_PUMP_BATTERY_CHANGE:String = "pumpBatteryChange";
 		public static const TYPE_INSULIN_CARTRIDGE_CHANGE:String = "insulinCartridgeChange";
-		public static const TYPE_BASAL:String = "basal";
+		public static const TYPE_TEMP_BASAL:String = "tempBasal";
+		public static const TYPE_PEN_BASAL:String = "penBasal";
 		public static const EXERCISE_INTENSITY_LOW:String = "low";
 		public static const EXERCISE_INTENSITY_MODERATE:String = "moderate";
 		public static const EXERCISE_INTENSITY_HIGH:String = "high";
@@ -51,7 +52,9 @@ package treatments
 		/* Basal */
 		public var basalDuration:Number = 0;
 		public var basalAbsoluteAmount:Number = 0;
+		public var isBasalAbsolute:Boolean = false;
 		public var basalPercentAmount:Number = 0;
+		public var isBasalRelative:Boolean = false;
 		
 		public function Treatment(type:String, timestamp:Number, insulin:Number = 0, insulinID:String = "", carbs:Number = 0, glucose:Number = 100, glucoseEstimated:Number = 100, note:String = "", treatmentID:String = null, carbDelayTime:Number = Number.NaN)
 		{

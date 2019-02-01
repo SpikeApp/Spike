@@ -17,6 +17,7 @@ package ui.screens
 	import ui.AppInterface;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.treatments.AlgorithmSettingsList;
+	import ui.screens.display.settings.treatments.BasalRatesSettingsList;
 	import ui.screens.display.settings.treatments.CarbsSettingsList;
 	import ui.screens.display.settings.treatments.InsulinsSettingsList;
 	import ui.screens.display.settings.treatments.ProfileSettingsList;
@@ -37,6 +38,8 @@ package ui.screens
 		private var profileLabel:Label;
 		private var algorithmLabel:Label;
 		private var algorithmsSetting:AlgorithmSettingsList;
+		private var basalsLabel:Label;
+		private var basalsSettings:BasalRatesSettingsList;
 		
 		public function ProfileSettingsScreen() 
 		{
@@ -103,6 +106,14 @@ package ui.screens
 			//ISF Settings
 			profileSettings = new ProfileSettingsList();
 			screenRenderer.addChild(profileSettings);
+			
+			//Basals Section Label
+			basalsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_settings_section_label'), true);
+			screenRenderer.addChild(basalsLabel);
+			
+			//Basals Section Settings
+			basalsSettings = new BasalRatesSettingsList();
+			screenRenderer.addChild(basalsSettings);
 		}
 		
 		/**
@@ -115,8 +126,11 @@ package ui.screens
 		
 		override protected function onBackButtonTriggered(event:Event):void
 		{
-			if (carbsSettings.needsSave)
+			if (carbsSettings != null && carbsSettings.needsSave)
 				carbsSettings.save();
+			
+			if (basalsSettings != null && basalsSettings.needsSave)
+				basalsSettings.save();
 			
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
@@ -139,6 +153,7 @@ package ui.screens
 				if (insulinsLabel != null) insulinsLabel.paddingLeft = 30;
 				if (carbsLabel != null) carbsLabel.paddingLeft = 30;
 				if (profileLabel != null) carbsLabel.paddingLeft = 30;
+				if (basalsLabel != null) basalsLabel.paddingLeft = 30;
 			}
 			else
 			{
@@ -146,6 +161,7 @@ package ui.screens
 				if (insulinsLabel != null) insulinsLabel.paddingLeft = 0;
 				if (carbsLabel != null) carbsLabel.paddingLeft = 0;
 				if (profileLabel != null) carbsLabel.paddingLeft = 0;
+				if (basalsLabel != null) basalsLabel.paddingLeft = 0;
 			}
 			
 			setupHeaderSize();
@@ -212,6 +228,20 @@ package ui.screens
 				profileSettings.removeFromParent();
 				profileSettings.dispose();
 				profileSettings = null;
+			}
+			
+			if (basalsLabel != null)
+			{
+				basalsLabel.removeFromParent();
+				basalsLabel.dispose();
+				basalsLabel = null;
+			}
+			
+			if (basalsSettings != null)
+			{
+				basalsSettings.removeFromParent();
+				basalsSettings.dispose();
+				basalsSettings = null;
 			}
 			
 			super.dispose();

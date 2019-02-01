@@ -29,6 +29,7 @@ package ui.screens.display.treatments
 	import starling.display.Canvas;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
+	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
@@ -78,6 +79,8 @@ package ui.screens.display.treatments
 		private var pumpSiteTexture:RenderTexture;
 		private var pumpBatteryCanvas:Canvas;
 		private var pumpBatteryTexture:RenderTexture;
+		private var tempBasalCanvas:Canvas;
+		private var tempBasalTexture:RenderTexture;
 		
 		/* Objects */
 		private var allTreatments:Array;
@@ -123,6 +126,16 @@ package ui.screens.display.treatments
 		{
 			//Get treatments
 			allTreatments = TreatmentsManager.treatmentsList.concat();
+			
+			var numberOfTempBasals:uint = TreatmentsManager.basalsList.length;
+			for (var i:int = 0; i < numberOfTempBasals; i++) 
+			{
+				var tempBasal:Treatment = TreatmentsManager.basalsList[i];
+				if (tempBasal != null && tempBasal.type == Treatment.TYPE_TEMP_BASAL)
+				{
+					allTreatments.push(tempBasal);
+				}
+			}
 			
 			//Get user's date format (24H/12H)
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
@@ -183,9 +196,15 @@ package ui.screens.display.treatments
 			pumpBatteryTexture = new RenderTexture(pumpBatteryCanvas.width, pumpBatteryCanvas.height);
 			pumpBatteryTexture.draw(pumpBatteryCanvas);
 			
-			var dataList:Array = [];
+			//Temp Basals Icons
+			tempBasalCanvas = createTreatmentIcon(Treatment.TYPE_TEMP_BASAL);
+			tempBasalTexture = new RenderTexture(tempBasalCanvas.width, tempBasalCanvas.height);
+			tempBasalTexture.draw(tempBasalCanvas);
 			
-			for(var i:int = allTreatments.length - 1 ; i >= 0; i--)
+			var dataList:Array = [];
+			var i:int;
+			
+			for(i = allTreatments.length - 1 ; i >= 0; i--)
 			{
 				//Treatment properties
 				var treatment:Treatment = allTreatments[i] as Treatment;
@@ -259,6 +278,22 @@ package ui.screens.display.treatments
 				{
 					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change');
 					icon = pumpSiteTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+				{
+					var tempBasalValue:String = "0U";
+					
+					if (treatment.isBasalAbsolute)
+					{
+						tempBasalValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount)
+					}
+					else if (treatment.isBasalRelative)
+					{
+						tempBasalValue = treatment.basalPercentAmount + "%";
+					}
+					
+					treatmentValue = tempBasalValue;
+					icon = tempBasalTexture;
 				}
 				
 				var treatmentTime:Date = new Date(treatment.timestamp);
@@ -423,6 +458,11 @@ package ui.screens.display.treatments
 				var pumpSiteImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.pumpSiteChartTexture);
 				pumpSiteImage.scale = 0.75;
 				icon.addChild(pumpSiteImage);
+			}
+			else if (treatmentType == Treatment.TYPE_TEMP_BASAL)
+			{
+				var tbQuad:Quad = new Quad(radius * 1.85, radius * 1.85, bolusColor);
+				icon.addChild(tbQuad);
 			}
 			
 			return icon;
@@ -791,6 +831,33 @@ package ui.screens.display.treatments
 				}
 				pumpSiteCanvas.dispose();
 				pumpSiteCanvas = null;
+			}
+			
+			if (tempBasalTexture != null)
+			{
+				tempBasalTexture.dispose();
+				tempBasalTexture = null;
+			}
+			
+			if (tempBasalCanvas != null)
+			{
+				for(i = tempBasalCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (tempBasalCanvas.getChildAt(i) is Image)
+					{
+						childImage = tempBasalCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				tempBasalCanvas.dispose();
+				tempBasalCanvas = null;
 			}
 			
 			if (pumpSiteTexture != null)

@@ -3,8 +3,6 @@ package ui.screens.display.treatments
 	import database.BgReading;
 	import database.CommonSettings;
 	
-	import events.TreatmentsEvent;
-	
 	import feathers.controls.Button;
 	import feathers.controls.DateTimeMode;
 	import feathers.controls.DateTimeSpinner;
@@ -69,6 +67,7 @@ package ui.screens.display.treatments
 		private var extensionDuration:NumericStepper;
 		private var exerciseDurationStepper:NumericStepper;
 		private var exerciseIntensityPicker:PickerList;
+		private var tempBasalDurationStepper:NumericStepper;
 		
 		/* Properties */
 		private var treatment:Treatment;
@@ -80,6 +79,7 @@ package ui.screens.display.treatments
 			
 			this.treatment = treatment;
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
@@ -289,13 +289,32 @@ package ui.screens.display.treatments
 			}
 			
 			if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
-				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_insulin_cartridge_change"); //Treatment Type
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_insulin_cartridge_change");
 			
 			if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
-				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_pump_battery_change"); //Treatment Type
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_pump_battery_change"); 
 			
 			if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
-				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_pump_site_change"); //Treatment Type
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_pump_site_change"); 
+			
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_temp_basal");
+				
+				//Insulin Amount
+				insulinAmountStepper = LayoutFactory.createNumericStepper(treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_TEMP_BASAL ? 0 : 0.1, 150, treatment.type != Treatment.TYPE_TEMP_BASAL ? treatment.insulinAmount : treatment.isBasalAbsolute ? Math.round(treatment.basalAbsoluteAmount * 100) / 100 : treatment.basalPercentAmount, treatment.type != Treatment.TYPE_TEMP_BASAL ? 0.1 : 0.01);
+				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+				{
+					insulinAmountStepper.value = treatment.getTotalInsulin();
+				}
+				insulinAmountStepper.pivotX = -10;
+				insulinAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+				
+				//Basal Duration
+				tempBasalDurationStepper = LayoutFactory.createNumericStepper(10, 10000, treatment.basalDuration, 5);
+				tempBasalDurationStepper.pivotX = -10;
+				tempBasalDurationStepper.addEventListener(Event.CHANGE, onSettingsChanged);
+			}
 			
 			//Treatment Time
 			var treatmentTimeLayout:VerticalLayout = new VerticalLayout();
@@ -349,10 +368,12 @@ package ui.screens.display.treatments
 			
 			var infoSectionChildren:Array = [];
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_time_label"), accessory: treatmentTimeConatiner });
-			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT || treatment.type == Treatment.TYPE_TEMP_BASAL)
 			{
-				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
-				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
+				if (treatment.type != Treatment.TYPE_TEMP_BASAL)
+					infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
+				
+				infoSectionChildren.push({ label: treatment.type == Treatment.TYPE_TEMP_BASAL && treatment.isBasalRelative ? ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_relative_temp_basal_label") : ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
 			}
 			if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
@@ -373,6 +394,10 @@ package ui.screens.display.treatments
 			{
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: exerciseDurationStepper });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_intensity_label"), accessory: exerciseIntensityPicker });
+			}
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+			{
+				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: tempBasalDurationStepper });
 			}
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_note_label"), accessory: noteTextArea });
 			infoSectionChildren.push({ label: "", accessory: actionButtonsContainer });
@@ -443,7 +468,8 @@ package ui.screens.display.treatments
 			
 			//Update treatment properties that are the same for all treatments
 			treatment.timestamp = treatmentTime.value.valueOf();
-			treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatmentTime.value.valueOf());
+			if (treatment.type != Treatment.TYPE_TEMP_BASAL)
+				treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatmentTime.value.valueOf());
 			treatment.note = noteTextArea.text;
 			
 			var carbDelayTime:Number;
@@ -606,6 +632,18 @@ package ui.screens.display.treatments
 				treatment.duration = exerciseDurationStepper.value;
 				treatment.exerciseIntensity = exerciseIntensity;
 			}
+			else if(treatment.type == Treatment.TYPE_TEMP_BASAL)
+			{
+				treatment.basalDuration = tempBasalDurationStepper.value;
+				if (treatment.isBasalAbsolute)
+				{
+					treatment.basalAbsoluteAmount = insulinAmountStepper.value;
+				}
+				else if (treatment.isBasalRelative)
+				{
+					treatment.basalPercentAmount = insulinAmountStepper.value;
+				}
+			}
 			
 			//Update treatment in Spike and DB
 			TreatmentsManager.updateTreatment(treatment);
@@ -737,6 +775,13 @@ package ui.screens.display.treatments
 				exerciseIntensityPicker.removeEventListener(Event.CHANGE, onSettingsChanged);
 				exerciseIntensityPicker.dispose();
 				exerciseIntensityPicker = null;
+			}
+			
+			if (tempBasalDurationStepper != null)
+			{
+				tempBasalDurationStepper.removeEventListener(Event.CHANGE, onSettingsChanged);
+				tempBasalDurationStepper.dispose();
+				tempBasalDurationStepper = null;
 			}
 			
 			super.dispose();
