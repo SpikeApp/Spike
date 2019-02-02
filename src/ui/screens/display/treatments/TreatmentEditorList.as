@@ -311,7 +311,7 @@ package ui.screens.display.treatments
 				insulinAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 				
 				//Basal Duration
-				tempBasalDurationStepper = LayoutFactory.createNumericStepper(10, 10000, treatment.basalDuration, 5);
+				tempBasalDurationStepper = LayoutFactory.createNumericStepper(1, 10000, treatment.basalDuration, 5);
 				tempBasalDurationStepper.pivotX = -10;
 				tempBasalDurationStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}

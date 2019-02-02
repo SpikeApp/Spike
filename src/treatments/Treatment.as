@@ -22,6 +22,7 @@ package treatments
 		public static const TYPE_PUMP_BATTERY_CHANGE:String = "pumpBatteryChange";
 		public static const TYPE_INSULIN_CARTRIDGE_CHANGE:String = "insulinCartridgeChange";
 		public static const TYPE_TEMP_BASAL:String = "tempBasal";
+		public static const TYPE_TEMP_BASAL_END:String = "tempBasalEnd";
 		public static const TYPE_PEN_BASAL:String = "penBasal";
 		public static const EXERCISE_INTENSITY_LOW:String = "low";
 		public static const EXERCISE_INTENSITY_MODERATE:String = "moderate";

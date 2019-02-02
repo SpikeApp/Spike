@@ -1395,6 +1395,12 @@ package services
 		
 		public static function uploadTreatment(treatment:Treatment):void
 		{
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+			{
+				return;
+			}
+			
+			
 			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			

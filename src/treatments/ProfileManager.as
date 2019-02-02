@@ -648,7 +648,7 @@ package treatments
 				{
 					tempBasalAreaAmount = scheduledBasalRate * (100 + tempBasalTreatment.basalPercentAmount) / 100;
 					tempBasalAmount = tempBasalAreaAmount;
-				} 
+				}
 			}
 			
 			//Result
