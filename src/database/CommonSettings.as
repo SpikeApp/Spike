@@ -671,6 +671,11 @@ package database
 		 * Basals
 		 */
 		 public static const COMMON_SETTING_BASALS_MODE:int = 282;
+		 public static const COMMON_SETTING_PREFERRED_TEMP_BASAL_MODE:int = 283;
+		 public static const COMMON_SETTING_TEMP_BASAL_AREA_COLOR:int = 284;
+		 public static const COMMON_SETTING_ABSOLUTE_BASAL_LINE_COLOR:int = 285;
+		 public static const COMMON_SETTING_BASAL_RATE_LINE_COLOR:int = 286;
+		 public static const COMMON_SETTING_ABSOLUTE_BASAL_AREA_COLOR:int = 287;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -956,6 +961,11 @@ package database
 			 "", //COMMON_SETTING_DATA_COLLECTION_DS_PASSWORD
 			 "us", //COMMON_SETTING_DATA_COLLECTION_DS_SERVER
 			 "mdi", //COMMON_SETTING_BASALS_MODE
+			 "absolute", //COMMON_SETTING_PREFERRED_TEMP_BASAL_MODE
+			 "0x164569", //COMMON_SETTING_TEMP_BASAL_AREA_COLOR
+			 "0x0086FF", //COMMON_SETTING_ABSOLUTE_BASAL_LINE_COLOR
+			 "0x0086FF", //COMMON_SETTING_BASAL_RATE_LINE_COLOR
+			 "0x1A344C" //COMMON_SETTING_ABSOLUTE_BASAL_AREA_COLOR
 		 ];
 
 		 public function CommonSettings()

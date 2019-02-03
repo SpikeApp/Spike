@@ -1359,6 +1359,28 @@ package services
 			{
 				newTreatment["eventType"] = "Site Change";
 			}
+			else if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+			{
+				newTreatment["eventType"] = "Temp Basal";
+				if (!treatment.isTempBasalEnd)
+				{
+					newTreatment["duration"] = treatment.basalDuration;
+					if (treatment.isBasalAbsolute)
+					{
+						newTreatment["absolute"] = treatment.basalAbsoluteAmount;
+					}
+					else if (treatment.isBasalRelative)
+					{
+						newTreatment["percent"] = treatment.basalPercentAmount;
+					}
+				}
+			}
+			else if (treatment.type == Treatment.TYPE_PEN_BASAL)
+			{
+				newTreatment["eventType"] = "Temp Basal";
+				newTreatment["duration"] = treatment.basalDuration;
+				newTreatment["absolute"] = treatment.basalAbsoluteAmount;
+			}
 			
 			newTreatment["_id"] = treatment.ID;
 			newTreatment["created_at"] = formatter.format(treatment.timestamp).replace("000+0000", "000Z");
@@ -1395,12 +1417,6 @@ package services
 		
 		public static function uploadTreatment(treatment:Treatment):void
 		{
-			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
-			{
-				return;
-			}
-			
-			
 			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			

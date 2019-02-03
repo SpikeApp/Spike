@@ -47,7 +47,7 @@ package ui.screens.display
 		}
 		
 		//Input Text Fields
-		public static function createTextInput(isPassword:Boolean = false, isNumeric: Boolean = false, width:Number = 140, horizontalAlign:String = null, isNumericExtended:Boolean = false, isEmail:Boolean = false, isURL:Boolean = false, capitalizeOnFirstFocus:Boolean = false, autoCorrect:Boolean = false):TextInput
+		public static function createTextInput(isPassword:Boolean = false, isNumeric: Boolean = false, width:Number = 140, horizontalAlign:String = null, isNumericExtended:Boolean = false, isEmail:Boolean = false, isURL:Boolean = false, capitalizeOnFirstFocus:Boolean = false, autoCorrect:Boolean = false, isNumericExtendedWithNegatives:Boolean = false):TextInput
 		{
 			var inputField:TextInput = new TextInput();
 			inputField.displayAsPassword = isPassword;
@@ -68,6 +68,12 @@ package ui.screens.display
 			else if (isNumericExtended)
 			{
 				inputField.restrict = "0-9.,";
+				inputField.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
+				
+			}
+			else if (isNumericExtendedWithNegatives)
+			{
+				inputField.restrict = "0-9.,\\-";
 				inputField.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
 				
 			}

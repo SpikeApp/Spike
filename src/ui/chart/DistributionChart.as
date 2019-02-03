@@ -550,7 +550,8 @@ package ui.chart
 			}
 			
 			//Add pie to display list
-			pieContainer.addChild(pieGraphicContainer);
+			if (pieContainer != null && pieGraphicContainer != null)
+				pieContainer.addChild(pieGraphicContainer);
 			
 			if (userStats.page == BasicUserStats.PAGE_ALL || userStats.page == BasicUserStats.PAGE_BG_DISTRIBUTION)
 			{

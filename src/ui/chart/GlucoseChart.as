@@ -16,8 +16,6 @@ package ui.chart
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -44,7 +42,6 @@ package ui.chart
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.text.TextBlockTextRenderer;
-	import feathers.controls.text.TextFieldTextRenderer;
 	import feathers.core.FeathersControl;
 	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
@@ -81,7 +78,6 @@ package ui.chart
 	import starling.utils.Align;
 	import starling.utils.SystemUtil;
 	
-	import treatments.BasalRate;
 	import treatments.Insulin;
 	import treatments.Profile;
 	import treatments.ProfileManager;
@@ -466,6 +462,11 @@ package ui.chart
 		private var basalCallout:TextCallout;
 		private var basalScheduledLine:SpikeLine;
 		private var lastTimePumpBasalWasRendered:Number = 0;
+		private var tempBasalAreaColor:uint;
+		private var basalLineColor:uint;
+		private var basalRateLineColor:uint;
+		private var basalRenderMode:String;
+		private var basalAreaColor:uint;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -547,6 +548,10 @@ package ui.chart
 			oldColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_OLD_DATA_COLOR)); 
 			rawColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_RAW_COLOR));
 			targetLineColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TARGET_LINE_COLOR));
+			tempBasalAreaColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TEMP_BASAL_AREA_COLOR));
+			basalAreaColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ABSOLUTE_BASAL_AREA_COLOR));
+			basalLineColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ABSOLUTE_BASAL_LINE_COLOR));
+			basalRateLineColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_RATE_LINE_COLOR));
 			
 			//Size
 			mainChartGlucoseMarkerRadius = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_MARKER_RADIUS));
@@ -584,7 +589,8 @@ package ui.chart
 			}
 			
 			//Basals
-			displayPumpBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "pump" && treatmentsActive && displayTreatmentsOnChart;
+			basalRenderMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE);
+			displayPumpBasals = basalRenderMode == "pump" && treatmentsActive && displayTreatmentsOnChart;
 			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
@@ -821,7 +827,7 @@ package ui.chart
 			//Basals
 			if (displayPumpBasals)
 			{
-				renderPumpBasals();
+				renderBasals();
 			}
 		}
 		
@@ -1613,7 +1619,7 @@ package ui.chart
 						//Basal Details
 						var basalDate:Date = new Date(basalProps.timestamp);
 						var basalTime:String = dateFormat.slice(0,2) == "24" ? TimeSpan.formatHoursMinutes(basalDate.getHours(), basalDate.getMinutes(), TimeSpan.TIME_FORMAT_24H) : TimeSpan.formatHoursMinutes(basalDate.getHours(), basalDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
-						var infoString:String = "Temp Basal" + "\n\n" + "Amount" + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + "Start" + ":" + " " + basalTime;
+						var infoString:String = "Temp Basal" + "\n\n" + "Amount" + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + (basalProps.basalPercentage != null ? " " + "(" + (basalProps.basalPercentage > 0 ? "+" : "") + basalProps.basalPercentage + "%" + ")" : "") + "\n" + "Start" + ":" + " " + basalTime;
 						
 						//Basal Amount
 						displayBasalCallout(infoString, targetQuad);
@@ -1649,7 +1655,24 @@ package ui.chart
 			}
 		}
 		
-		public function renderPumpBasals():void
+		public function renderBasals():void
+		{
+			if (basalRenderMode == "pump")
+			{
+				renderPumpBasals();
+			}
+			else if (basalRenderMode == "mdi")
+			{
+				renderPenBasals();
+			}
+		}
+		
+		private function renderPenBasals():void
+		{
+			
+		}
+		
+		private function renderPumpBasals():void
 		{
 			//Validation
 			if (ProfileManager.basalRatesList.length == 0 && TreatmentsManager.basalsList.length == 0)
@@ -1721,7 +1744,7 @@ package ui.chart
 			var prevXScheduledValue:Number = Number.NaN;
 			var prevYScheduledValue:Number = Number.NaN;
 			
-			for (var time:Number = toTime; time >= fromTime; time -= TimeSpan.TIME_1_MINUTE) 
+			for (var time:Number = toTime; time >= fromTime - TimeSpan.TIME_1_MINUTE; time -= TimeSpan.TIME_1_MINUTE) 
 			{
 				//Gather Basal Data
 				var basalProperties:Object = ProfileManager.getPumpBasalData(time, suggestedAbsoluteBasalIndex);
@@ -1734,6 +1757,17 @@ package ui.chart
 				var tempBasalAmountValue:Number = basalProperties.tempBasalAmount;
 				var xTempBasalAmountValue:Number = xTempBasalAreaValue;
 				var yTempBasalAmountValue:Number = tempBasalAmountValue * basalScaler * -1;
+				
+				if (time < fromTime)
+				{
+					tempBasalAreaValue = 0;
+					xTempBasalAreaValue = -1;
+					yTempBasalAreaValue = 0;
+					
+					tempBasalAmountValue = 0;
+					xTempBasalAmountValue = -1;
+					yTempBasalAmountValue = 0;
+				}
 				
 				//Save absolute basal line data points
 				if (yTempBasalAmountValue != prevYAbsoluteValue)
@@ -1769,8 +1803,7 @@ package ui.chart
 						{
 							var tempBasalAreaWidth:Number = Math.abs(endXAreaValue - startXTempAreaValue);
 							
-							var tempBasalArea:Quad = new Quad(tempBasalAreaWidth, Math.abs(startYTempAreaValue), 0x0099ff);
-							tempBasalArea.alpha = 0.3;
+							var tempBasalArea:Quad = new Quad(tempBasalAreaWidth, Math.abs(startYTempAreaValue), tempBasalAreaColor);
 							tempBasalArea.x = startXTempAreaValue - tempBasalAreaWidth;
 							tempBasalArea.y = -startYTempAreaValue;
 							tempBasalArea.addEventListener(TouchEvent.TOUCH, onAbsoluteBasalTouched);
@@ -1802,7 +1835,14 @@ package ui.chart
 				//Save temp basal areas variables state
 				prevTempBasalAreaValue = tempBasalAreaValue;
 				suggestedAbsoluteBasalIndex = basalProperties.tempBasalIndex;
-				previousTempBasalAreaProps = { basalAmount: basalProperties.tempBasalAreaAmount, timestamp: basalProperties.tempBasalTime };
+				
+				previousTempBasalAreaProps = {}
+				previousTempBasalAreaProps.basalAmount = basalProperties.tempBasalAreaAmount;
+				previousTempBasalAreaProps.timestamp = basalProperties.tempBasalTime;
+				if (basalProperties.tempBasalTreatment != null && basalProperties.tempBasalTreatment.isBasalRelative == true)
+				{
+					previousTempBasalAreaProps.basalPercentage = basalProperties.tempBasalTreatment.basalPercentAmount;
+				}
 				
 				//Render absolute basal areas
 				if (tempBasalAmountValue != prevAbsoluteBasalAreaValue)
@@ -1823,8 +1863,7 @@ package ui.chart
 						{
 							var tempAbsoluteBasalAreaWidth:Number = Math.abs(endXAbsoluteAreaValue - startXAbsoluteAreaValue);
 							
-							var tempAbsoluteBasalArea:Quad = new Quad(tempAbsoluteBasalAreaWidth, Math.abs(startYAbsoluteAreaValue), 0x0099ff);
-							tempAbsoluteBasalArea.alpha = 0.1;
+							var tempAbsoluteBasalArea:Quad = new Quad(tempAbsoluteBasalAreaWidth, Math.abs(startYAbsoluteAreaValue), basalAreaColor);
 							tempAbsoluteBasalArea.x = startXAbsoluteAreaValue - tempAbsoluteBasalAreaWidth;
 							tempAbsoluteBasalArea.y = -startYAbsoluteAreaValue;
 							basalsContainer.addChild(tempAbsoluteBasalArea);
@@ -1882,7 +1921,7 @@ package ui.chart
 			{
 				//Create and configure line
 				basalAbsoluteLine = new SpikeLine();
-				basalAbsoluteLine.lineStyle(1.5, uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)));
+				basalAbsoluteLine.lineStyle(1.5, basalLineColor);
 				basalAbsoluteLine.moveTo(0, absoluteBasalDataPointsArray[0].y);
 				
 				//Loop line data points
@@ -1919,7 +1958,7 @@ package ui.chart
 				
 				//Create and configure line
 				basalScheduledLine = new SpikeLine();
-				basalScheduledLine.lineStyle(lineThickness, uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_INSULIN_MARKER_COLOR)));
+				basalScheduledLine.lineStyle(lineThickness, basalRateLineColor);
 				basalScheduledLine.moveTo(0, scheduledBasalRatesPointsList[0].y);
 				
 				//Loop line data points
@@ -6900,7 +6939,7 @@ package ui.chart
 				//Basals
 				if (displayPumpBasals)
 				{
-					renderPumpBasals();
+					renderBasals();
 				}
 			}
 		}
@@ -7098,7 +7137,7 @@ package ui.chart
 			//Basals
 			if (displayPumpBasals)
 			{
-				renderPumpBasals();
+				renderBasals();
 			}
 		}
 		
@@ -8210,7 +8249,7 @@ package ui.chart
 				
 				//Loop through all glucose markers displayed in the main chart. Looping backwards because it probably saves CPU cycles
 				//for(var i:int = mainChartGlucoseMarkersList.length; --i;)
-				for(var i:int = mainChartGlucoseMarkersList.length - 1 ; i >= 0; i--)
+				for (var i:int = mainChartGlucoseMarkersList.length - 1 ; i >= 0; i--)
 				{
 					//Get Current and Previous Glucose Markers
 					var currentMarker:GlucoseMarker = mainChartGlucoseMarkersList[i];
@@ -8398,7 +8437,7 @@ package ui.chart
 					
 					if (lastAvailableReading != null && lastAvailableReading._timestamp > lastTimePumpBasalWasRendered)
 					{
-						renderPumpBasals()
+						renderBasals()
 					}
 				}
 			}

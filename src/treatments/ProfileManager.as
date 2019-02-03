@@ -651,13 +651,17 @@ package treatments
 				}
 			}
 			
+			if (tempBasalAreaAmount < 0) tempBasalAreaAmount = 0;
+			if (tempBasalAmount < 0) tempBasalAmount = 0;
+			
 			//Result
 			return {
 				scheduledBasalRate: scheduledBasalRate,
 				tempBasalAreaAmount: tempBasalAreaAmount,
 				tempBasalAmount: tempBasalAmount,
 				tempBasalTime: tempBasalTime,
-				tempBasalIndex: tempBasalIndex
+				tempBasalIndex: tempBasalIndex,
+				tempBasalTreatment: tempBasalTreatment
 			};
 		}
 		

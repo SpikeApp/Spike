@@ -696,7 +696,7 @@ package ui.screens
 			
 			Trace.myTrace("ChartScreen.as", "Updating Basals");
 			
-			glucoseChart.renderPumpBasals();
+			glucoseChart.renderBasals();
 		}
 		
 		private function onTreatmentAdded(e:TreatmentsEvent):void

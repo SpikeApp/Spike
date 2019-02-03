@@ -2154,7 +2154,7 @@ package treatments
 				if (type != Treatment.TYPE_TEMP_BASAL_END)
 				{
 					//Insulin Amout
-					insulinTextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, true);
+					insulinTextInput = LayoutFactory.createTextInput(false, false, 159, HorizontalAlign.CENTER, false, false, false, false, false, true);
 					insulinTextInput.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
 					insulinTextInput.addEventListener(FeathersEventType.ENTER, onClearFocus);
 					insulinTextInput.maxChars = 5;
@@ -2181,11 +2181,20 @@ package treatments
 						basalModeContainer.layout = basalModeLayout;
 						
 						basalModeGroup = new ToggleGroup();
+						basalModeGroup.addEventListener( Event.CHANGE, onBasalModeChanged );
 						
 						basalAbsoluteRadio = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_absolute_label') , basalModeGroup);
 						basalRelativeRadio = LayoutFactory.createRadioButton(ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_relative_label'), basalModeGroup);
 						
-						basalModeGroup.selectedItem = basalAbsoluteRadio;
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREFERRED_TEMP_BASAL_MODE) == "absolute")
+						{
+							basalModeGroup.selectedItem = basalAbsoluteRadio;
+							onBasalModeChanged(null);
+						}
+						else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREFERRED_TEMP_BASAL_MODE) == "relative")
+						{
+							basalModeGroup.selectedItem = basalRelativeRadio;
+						}
 						
 						basalModeContainer.addChild(basalAbsoluteRadio);
 						basalModeContainer.addChild(basalRelativeRadio);
@@ -2224,7 +2233,7 @@ package treatments
 			treatmentTime.value = new Date();
 			treatmentTime.height = 30;
 			treatmentInserterContainer.addChild(treatmentTime);
-			if (type == Treatment.TYPE_MEAL_BOLUS || type == Treatment.TYPE_EXERCISE)
+			if (type == Treatment.TYPE_MEAL_BOLUS || type == Treatment.TYPE_EXERCISE || type == Treatment.TYPE_TEMP_BASAL)
 			{
 				treatmentTime.minWidth = 270;
 			}
@@ -2738,6 +2747,25 @@ package treatments
 				if (treatmentCallout != null) treatmentCallout.close();
 			}
 			
+			function onBasalModeChanged(e:Event):void
+			{
+				if (basalModeGroup.selectedItem == basalAbsoluteRadio)
+				{
+					insulinTextInput.restrict = "0-9.,";
+					insulinTextInput.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
+					insulinTextInput.text = insulinTextInput.text.split("-").join("");
+					insulinTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_absolute_prompt');
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PREFERRED_TEMP_BASAL_MODE, "absolute", true, false);
+				}
+				else if (basalModeGroup.selectedItem == basalRelativeRadio)
+				{
+					insulinTextInput.restrict = "0-9.,\\-";
+					insulinTextInput.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
+					insulinTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_relative_prompt');
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PREFERRED_TEMP_BASAL_MODE, "relative", true, false);
+				}
+			}
+			
 			function onTempBasalStartEntered (e:Event):void
 			{
 				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onTempBasalStartEntered);
@@ -2789,7 +2817,7 @@ package treatments
 					
 					if (basalModeGroup.selectedItem == basalAbsoluteRadio)
 					{
-						tempBasalStartTreatment.basalAbsoluteAmount = Number(insulinTextInput.text);
+						tempBasalStartTreatment.basalAbsoluteAmount = Math.abs(Number(insulinTextInput.text));
 						tempBasalStartTreatment.isBasalAbsolute = true;
 					}
 					else if (basalModeGroup.selectedItem == basalRelativeRadio)
@@ -4121,6 +4149,12 @@ package treatments
 					treatmentCallout = null;
 				}
 				
+				if (basalModeGroup != null)
+				{
+					basalModeGroup.removeEventListener( Event.CHANGE, onBasalModeChanged);
+					basalModeGroup = null;
+				}
+				
 				System.pauseForGCIfCollectionImminent(0);
 				System.gc();
 			}
@@ -4374,6 +4408,7 @@ package treatments
 				var basalPercentAmount:Number = nsBasal.percent != null && !isNaN(nsBasal.percent) ? nsBasal.percent : 0;
 				var isBasalRelative:Boolean = nsBasal.percent != null && !isNaN(nsBasal.percent) && !isBasalAbsolute ? true : false;
 				var isTempBasalEnd:Boolean = !isBasalAbsolute && !isBasalRelative;
+				if (isTempBasalEnd && basalDuration < 30) basalDuration = 30;
 				
 				nightscoutBasalsMap[basalID] = nsBasal;
 				
@@ -5327,13 +5362,25 @@ package treatments
 		public static function getHighestTempBasal():Number
 		{
 			var highestTempBasalAmount:Number = 0;
+			var twentyFourHoursAgo:Number = new Date().valueOf() - TimeSpan.TIME_24_HOURS;
 			
-			var numberOfTempBasals:uint = basalsList.length;
-			for (var i:int = 0; i < numberOfTempBasals; i++) 
+			for (var i:int = basalsList.length - 1 ; i >= 0; i--)
 			{
 				var tempBasal:Treatment = basalsList[i];
 				if (tempBasal != null && tempBasal.type == Treatment.TYPE_TEMP_BASAL && (tempBasal.basalAbsoluteAmount > 0 || tempBasal.basalPercentAmount > 0))
 				{
+					//CleanUp
+					if (tempBasal.timestamp < twentyFourHoursAgo)
+					{
+						//Treatment has expired. Dispose it.
+						basalsList.removeAt(i);
+						basalsMap[tempBasal.ID] = null;
+						delete basalsMap[tempBasal.ID];
+						tempBasal = null;
+						
+						continue;
+					}
+					
 					//Determine Basal Amount
 					var basalAmount:Number = 0;
 					if (tempBasal.isBasalAbsolute)
