@@ -450,7 +450,7 @@ package ui.chart
 				return false;
 			}
 			
-			if (isNaN(userStats.percentageHigh) || isNaN(userStats.percentageInRange) || isNaN(userStats.percentageLow))
+			if ((isNaN(userStats.percentageHigh) || isNaN(userStats.percentageInRange) || isNaN(userStats.percentageLow)) && (userStats.page == BasicUserStats.PAGE_ALL || userStats.page == BasicUserStats.PAGE_BG_DISTRIBUTION))
 			{
 				dummyModeActive = true;
 			}
