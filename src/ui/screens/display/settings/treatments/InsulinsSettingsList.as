@@ -77,6 +77,7 @@ package ui.screens.display.settings.treatments
 		private var accessoryList:Array = [];
 		private var insulinToEdit:Insulin;
 		private var selectedInsulinCurve:String = "bilinear";
+		private var isBasalEnabled:Boolean = false;
 		
 		public function InsulinsSettingsList()
 		{
@@ -141,6 +142,7 @@ package ui.screens.display.settings.treatments
 			insulinTypesPicker.popUpContentManager = new DropDownPopUpContentManager();
 			insulinTypesPicker.dataProvider = insulinTypesList;
 			insulinTypesPicker.addEventListener(Event.CHANGE, onSettingsChanged);
+			insulinTypesPicker.addEventListener(Event.CHANGE, onInsulinTypeChanged);
 			
 			//New Insulin DIA
 			insulinDIA = LayoutFactory.createNumericStepper(1.1, 8, 3, 0.1);
@@ -256,6 +258,23 @@ package ui.screens.display.settings.treatments
 			refreshContent();
 		}
 		
+		private function onInsulinTypeChanged(e:Event):void
+		{
+			if (insulinTypesPicker != null && insulinTypesPicker.selectedIndex == 4)
+			{
+				insulinDIA.maximum = 72;
+				isBasalEnabled = true;
+			}
+			else
+			{
+				insulinDIA.maximum = 8;
+				if (insulinDIA.value > 8) insulinDIA.value = 8;
+				isBasalEnabled = false;
+			}
+			
+			refreshContent();
+		}
+		
 		private function refreshContent():void
 		{
 			//Set screen content
@@ -282,37 +301,47 @@ package ui.screens.display.settings.treatments
 				data.push( { label: "", accessory: modeLabel } );
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','name_label'), accessory: insulinName } );
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','type_label'), accessory: insulinTypesPicker } );
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps")
+				if (!isBasalEnabled)
 				{
-					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_label'), accessory: insulinCurvePicker } );
-					
-					if (selectedInsulinCurve == "exponential")
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps")
 					{
-						data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_presets_label'), accessory: insulinCurvePresetsPicker } );
+						data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_label'), accessory: insulinCurvePicker } );
+						
+						if (selectedInsulinCurve == "exponential")
+						{
+							data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_presets_label'), accessory: insulinCurvePresetsPicker } );
+						}
 					}
 				}
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','dia_label'), accessory: insulinDIA } );
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && selectedInsulinCurve == "exponential")
+				if (!isBasalEnabled)
 				{
-					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_peak_label'), accessory: insulinPeak } );
-				}
-				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','default_insulin_label'), accessory: defaultInsulinCheck } );
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && selectedInsulinCurve == "exponential")
+					{
+						data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_peak_label'), accessory: insulinPeak } );
+					}
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','default_insulin_label'), accessory: defaultInsulinCheck } );
 				
-				//if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && selectedInsulinCurve == "exponential")
-				//if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps")
-				//{
 					plotInsulinCurve();
 					data.push( { label: "", accessory: insulinCurveContainer } );
-				//}
+				}
 				
 				data.push( { label: "", accessory: actionsContainer } );
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps")
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && !isBasalEnabled)
 				{
 					insulinSettingsExplanation.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_curve_peak_description') + "\n\n" + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation');
 				}
 				else
 				{
-					insulinSettingsExplanation.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation');
+					if (!isBasalEnabled)
+					{
+						insulinSettingsExplanation.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation');
+					}
+					else
+					{
+						var startIndex:int = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation').indexOf("\n");
+						insulinSettingsExplanation.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation').slice(0, startIndex);
+					}
 				}
 				data.push( { label: "", accessory: insulinSettingsExplanation } );
 				data.push( { label: "", accessory: guideContainer } );
@@ -397,6 +426,12 @@ package ui.screens.display.settings.treatments
 		
 		private function onDiaPeakChanged(e:Event):void
 		{
+			//Check if it's basal
+			if (insulinTypesPicker != null && insulinTypesPicker.selectedIndex == 4)
+			{
+				return;
+			}
+			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && selectedInsulinCurve == "exponential")
 			{
 				//Perform validations to avoid breaking the exponential algorithm
@@ -529,10 +564,12 @@ package ui.screens.display.settings.treatments
 		private function onNewInsulin(e:Event):void
 		{
 			insulinDIA.value = 3;
+			insulinDIA.maximum = 8;
 			
 			newInsulinMode = true;
 			editInsulinMode = false;
 			isSaveEnabled = false;
+			isBasalEnabled = false;
 			
 			refreshContent();
 		}
@@ -543,6 +580,7 @@ package ui.screens.display.settings.treatments
 			newInsulinMode = false;
 			editInsulinMode = false;
 			isSaveEnabled = false;
+			isBasalEnabled = false;
 			
 			//Reset controls
 			defaultInsulinCheck.isSelected = false;
@@ -564,10 +602,11 @@ package ui.screens.display.settings.treatments
 		private function onEditInsulin(e:Event):void
 		{
 			//Set display controls to insulin properties
+			isBasalEnabled = false;
+			
 			var insulin:Insulin = (((e.currentTarget as TreatmentManagerAccessory).parent as Object).data as Object).insulin as Insulin;
 			insulinName.text = insulin.name;
 			defaultInsulinCheck.isSelected = insulin.isDefault;
-			insulinDIA.value = insulin.dia;
 			var selectedInsulinTypeIndex:int = 0;
 			for (var i:int = 0; i < insulinTypesPicker.dataProvider.length; i++) 
 			{
@@ -580,6 +619,7 @@ package ui.screens.display.settings.treatments
 			}
 			insulinTypesPicker.selectedIndex = selectedInsulinTypeIndex;
 			insulinPeak.value = insulin.peak;
+			insulinDIA.value = insulin.dia;
 			
 			if (insulin.dia == 5 && insulin.peak == 75)
 			{
