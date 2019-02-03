@@ -1740,10 +1740,19 @@ package treatments
 						
 						//Notify listeners
 						if (notifyInternally)
-							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, spikeTreatment));
+						{
+							if (spikeTreatment.type != Treatment.TYPE_TEMP_BASAL && spikeTreatment.type != Treatment.TYPE_PEN_BASAL)
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, spikeTreatment));
+							
+							if (spikeTreatment.type == Treatment.TYPE_TEMP_BASAL || spikeTreatment.type == Treatment.TYPE_PEN_BASAL)
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+						}
 						
 						if (notiyExternally)
-							_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, spikeTreatment));
+						{
+							if (spikeTreatment.type != Treatment.TYPE_TEMP_BASAL && spikeTreatment.type != Treatment.TYPE_PEN_BASAL)
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, spikeTreatment));
+						}
 						
 						//Delete from settings
 						if (spikeTreatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
@@ -2760,7 +2769,7 @@ package treatments
 				else if (basalModeGroup.selectedItem == basalRelativeRadio)
 				{
 					insulinTextInput.restrict = "0-9.,\\-";
-					insulinTextInput.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
+					insulinTextInput.textEditorProperties.softKeyboardType = SoftKeyboardType.PUNCTUATION;
 					insulinTextInput.prompt = ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_relative_prompt');
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PREFERRED_TEMP_BASAL_MODE, "relative", true, false);
 				}
@@ -4366,7 +4375,6 @@ package treatments
 		
 		public static function processNightscoutBasals(nsTreatments:Array):void
 		{
-			var nightscoutBasalsMap:Dictionary = new Dictionary();
 			var newBasalData:Boolean = false;
 			var firstReadingTimestamp:Number;
 			var lastReadingTimestamp:Number;
@@ -4409,8 +4417,6 @@ package treatments
 				var isBasalRelative:Boolean = nsBasal.percent != null && !isNaN(nsBasal.percent) && !isBasalAbsolute ? true : false;
 				var isTempBasalEnd:Boolean = !isBasalAbsolute && !isBasalRelative;
 				if (isTempBasalEnd && basalDuration < 30) basalDuration = 30;
-				
-				nightscoutBasalsMap[basalID] = nsBasal;
 				
 				if (basalTimestamp < firstReadingTimestamp)
 				{

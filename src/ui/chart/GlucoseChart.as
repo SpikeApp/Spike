@@ -459,7 +459,7 @@ package ui.chart
 		private var basalScaler:Number = 1;
 		private var basalsContainer:Sprite;
 		private var basalAbsoluteLine:SpikeLine;
-		private var basalCallout:TextCallout;
+		private var basalCallout:Callout;
 		private var basalScheduledLine:SpikeLine;
 		private var lastTimePumpBasalWasRendered:Number = 0;
 		private var tempBasalAreaColor:uint;
@@ -467,6 +467,7 @@ package ui.chart
 		private var basalRateLineColor:uint;
 		private var basalRenderMode:String;
 		private var basalAreaColor:uint;
+		private var activeTempBasalQuad:Quad;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -1599,62 +1600,6 @@ package ui.chart
 			}
 		}
 		
-		private function onAbsoluteBasalTouched(e:starling.events.TouchEvent):void
-		{
-			var targetQuad:Quad;
-			var touch:Touch = e.getTouch(stage);
-			if(touch != null && touch.phase == TouchPhase.BEGAN) 
-			{
-				targetQuad = e.currentTarget as Quad;
-				if (targetQuad != null)
-				{
-					var basalProps:Object = tempBasalAreaPropertiesMap[targetQuad.x];
-					if (basalProps != null)
-					{
-						//Visual Filter
-						targetQuad.removeFromParent();
-						basalsContainer.addChild(targetQuad);
-						targetQuad.filter = new GlowFilter(0xFFFFFF, 2, 4, 1);
-						
-						//Basal Details
-						var basalDate:Date = new Date(basalProps.timestamp);
-						var basalTime:String = dateFormat.slice(0,2) == "24" ? TimeSpan.formatHoursMinutes(basalDate.getHours(), basalDate.getMinutes(), TimeSpan.TIME_FORMAT_24H) : TimeSpan.formatHoursMinutes(basalDate.getHours(), basalDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
-						var infoString:String = "Temp Basal" + "\n\n" + "Amount" + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + (basalProps.basalPercentage != null ? " " + "(" + (basalProps.basalPercentage > 0 ? "+" : "") + basalProps.basalPercentage + "%" + ")" : "") + "\n" + "Start" + ":" + " " + basalTime;
-						
-						//Basal Amount
-						displayBasalCallout(infoString, targetQuad);
-					}
-				}
-			}
-			else if(touch != null && touch.phase == TouchPhase.ENDED) 
-			{
-				targetQuad = e.currentTarget as Quad;
-				if (targetQuad != null)
-				{
-					targetQuad.filter = null;
-				}
-				
-				disposePumpBasalCallout();
-			}
-		}
-		
-		private function displayBasalCallout(details:String, origin:Quad):void
-		{
-			if (basalCallout != null)
-			{
-				basalCallout.removeFromParent(true);
-			}
-			
-			basalCallout = TextCallout.show(details, origin, new <String>[RelativePosition.TOP]);
-			basalCallout.textRendererFactory = function():ITextRenderer
-			{
-				var render:TextBlockTextRenderer = new TextBlockTextRenderer();
-				render.textAlign = HorizontalAlign.CENTER;
-				
-				return render;
-			}
-		}
-		
 		public function renderBasals():void
 		{
 			if (basalRenderMode == "pump")
@@ -1696,7 +1641,7 @@ package ui.chart
 			}
 			
 			//Dispose previous basals
-			disposePumpBasalCallout();
+			disposeBasalCallout();
 			disposePumpBasals();
 			
 			//Common variables
@@ -1729,7 +1674,7 @@ package ui.chart
 			
 			//Temp Basal Area Calculation & Plotting
 			var absoluteBasalDataPointsArray:Array = [];
-			var desiredBasalHeight:Number = _graphHeight * 0.25;
+			var desiredBasalHeight:Number = _graphHeight * 0.2; //20%
 			basalScaler = desiredBasalHeight / highestBasalAmount;
 			var prevTempBasalAreaValue:Number = 0;
 			var prevAbsoluteBasalAreaValue:Number = 0;
@@ -1843,6 +1788,7 @@ package ui.chart
 				{
 					previousTempBasalAreaProps.basalPercentage = basalProperties.tempBasalTreatment.basalPercentAmount;
 				}
+				previousTempBasalAreaProps.basalTreatment = basalProperties.tempBasalTreatment;
 				
 				//Render absolute basal areas
 				if (tempBasalAmountValue != prevAbsoluteBasalAreaValue)
@@ -2014,6 +1960,159 @@ package ui.chart
 			}
 			
 			trace("BASAL RENDERING COMPLETED IN:", getTimer() - timer + "ms");
+		}
+		
+		private function onAbsoluteBasalTouched(e:starling.events.TouchEvent):void
+		{
+			
+			var touch:Touch = e.getTouch(stage);
+			if (touch != null && touch.phase == TouchPhase.BEGAN) 
+			{
+				activeTempBasalQuad = e.currentTarget as Quad;
+				if (activeTempBasalQuad != null)
+				{
+					var basalProps:Object = tempBasalAreaPropertiesMap[activeTempBasalQuad.x];
+					if (basalProps != null)
+					{
+						//Visual Filter
+						activeTempBasalQuad.removeFromParent();
+						basalsContainer.addChild(activeTempBasalQuad);
+						activeTempBasalQuad.filter = new GlowFilter(0xFFFFFF, 2, 4, 1);
+						
+						//Basal Amount
+						displayBasalCallout(basalProps, activeTempBasalQuad);
+					}
+				}
+			}
+		}
+		
+		private function displayBasalCallout(basalProps:Object, origin:Quad):void
+		{
+			if (!SystemUtil.isApplicationActive || dummyModeActive || !treatmentsActive || !displayTreatmentsOnChart)
+				return;
+			
+			if (basalCallout != null)
+			{
+				basalCallout.removeFromParent(true);
+			}
+			
+			//Layout Container
+			var treatmentLayout:VerticalLayout = new VerticalLayout();
+			treatmentLayout.horizontalAlign = HorizontalAlign.CENTER;
+			treatmentLayout.gap = 10;
+			if (treatmentContainer != null) treatmentContainer.removeFromParent(true);
+			treatmentContainer = new LayoutGroup();
+			treatmentContainer.layout = treatmentLayout;
+			
+			//Basal Properties
+			var treatmentValue:String = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + (basalProps.basalPercentage != null ? " " + "(" + (basalProps.basalPercentage > 0 ? "+" : "") + basalProps.basalPercentage + "%" + ")" : "");
+			var treatmentNotes:String = basalProps.basalTreatment != null ? basalProps.basalTreatment.note : "";
+			
+			if (treatmentValue != "")
+			{
+				if (treatmentValueLabel != null) treatmentValueLabel.removeFromParent(true);
+				treatmentValueLabel = LayoutFactory.createLabel(treatmentValue, HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+				treatmentValueLabel.paddingBottom = 12;
+				treatmentContainer.addChild(treatmentValueLabel);
+			}
+			
+			//Treatment Time
+			if (treatmentTimeSpinner != null) treatmentTimeSpinner.removeFromParent(true);
+			treatmentTimeSpinner = new DateTimeSpinner();
+			treatmentTimeSpinner.editingMode = DateTimeMode.TIME;
+			treatmentTimeSpinner.locale = Constants.getUserLocale(true);
+			treatmentTimeSpinner.value = new Date(basalProps.timestamp);
+			treatmentTimeSpinner.height = 30;
+			treatmentTimeSpinner.paddingTop = treatmentTimeSpinner.paddingBottom = 0;
+			
+			if (isHistoricalData) treatmentTimeSpinner.isEnabled = false;
+			if (timeSpacer != null) timeSpacer.removeFromParent(true);
+			timeSpacer = new Sprite();
+			timeSpacer.height = 10;
+			treatmentContainer.addChild(treatmentTimeSpinner);
+			treatmentContainer.addChild(timeSpacer);
+			
+			//Notes
+			if (treatmentNotes != "")
+			{
+				if (treatmentNoteLabel != null) treatmentNoteLabel.removeFromParent(true);
+				treatmentNoteLabel = LayoutFactory.createLabel(treatmentNotes, HorizontalAlign.CENTER, VerticalAlign.TOP);
+				treatmentNoteLabel.wordWrap = true;
+				treatmentNoteLabel.maxWidth = 150;
+				treatmentContainer.addChild(treatmentNoteLabel);
+			}
+			
+			//Action Buttons
+			if (!isHistoricalData)
+			{
+				if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+				{
+					if (moveBtn != null) moveBtn.removeFromParent(true);
+					if (deleteBtn != null) deleteBtn.removeFromParent(true);
+					var actionsLayout:HorizontalLayout = new HorizontalLayout();
+					actionsLayout.gap = 5;
+					if (actionsContainer != null) actionsContainer.removeFromParent(true);
+					actionsContainer = new LayoutGroup();
+					actionsContainer.layout = actionsLayout;
+					
+					moveBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','move_button_label'));
+					moveBtn.addEventListener(starling.events.Event.TRIGGERED, onMove);
+					actionsContainer.addChild(moveBtn);
+					
+					deleteBtn = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('treatments','delete_button_label'));
+					deleteBtn.addEventListener(starling.events.Event.TRIGGERED, onDelete);
+					actionsContainer.addChild(deleteBtn);
+					
+					treatmentContainer.addChild(actionsContainer);
+				}
+			}
+			
+			if (treatmentCallout != null) treatmentCallout.dispose();
+			treatmentCallout = Callout.show(treatmentContainer, origin, new <String>[RelativePosition.TOP], true);
+			treatmentCallout.addEventListener(starling.events.Event.CLOSE, disposeBasalCallout);
+			
+			
+			function onDelete(e:starling.events.Event):void
+			{
+				if (basalProps != null && basalProps.basalTreatment != null)
+				{
+					TreatmentsManager.deleteTreatment(basalProps.basalTreatment);
+				}
+				
+				if (treatmentCallout != null)
+				{
+					treatmentCallout.close();
+				}
+			}
+			
+			function onMove(e:starling.events.Event):void
+			{
+				var movedTimestamp:Number = treatmentTimeSpinner.value.valueOf();
+				var maxMovedTimestamp:Number = new Date().valueOf();
+				
+				if(movedTimestamp < firstBGReadingTimeStamp || movedTimestamp > maxMovedTimestamp)
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('treatments','out_of_bounds_treatment')
+					);
+				}
+				else
+				{
+					if (basalProps != null && basalProps.basalTreatment != null)
+					{
+						//Update Basal
+						basalProps.basalTreatment.timestamp = movedTimestamp;
+						TreatmentsManager.updateTreatment(basalProps.basalTreatment);
+					}
+					
+					if (treatmentCallout != null)
+					{
+						treatmentCallout.close();
+					}
+				}
+			}
 		}
 		
 		public function addTreatment(treatment:Treatment):void
@@ -2570,7 +2669,11 @@ package ui.chart
 					}
 				}
 				
-				if (treatmentCallout != null) treatmentCallout.dispose();
+				if (treatmentCallout != null)
+				{
+					treatmentCallout.removeEventListeners();
+					treatmentCallout.dispose();
+				}
 				treatmentCallout = Callout.show(treatmentContainer, treatment, null, true);
 				
 				function onDelete(e:starling.events.Event):void
@@ -9196,11 +9299,78 @@ package ui.chart
 		/**
 		 * Utility
 		 */
-		private function disposePumpBasalCallout():void
+		private function disposeBasalCallout (e:starling.events.Event = null):void
 		{
-			if (basalCallout != null)
+			if (treatmentValueLabel != null) 
 			{
-				basalCallout.removeFromParent(true);
+				treatmentValueLabel.removeFromParent();
+				treatmentValueLabel.dispose();
+				treatmentValueLabel = null;
+			}
+			
+			if (treatmentTimeSpinner != null) 
+			{
+				treatmentTimeSpinner.removeFromParent();
+				treatmentTimeSpinner.dispose();
+				treatmentTimeSpinner = null;
+			}
+			
+			if (timeSpacer != null) 
+			{
+				timeSpacer.removeFromParent();
+				timeSpacer.dispose();
+				timeSpacer = null;
+			}
+			
+			if (treatmentContainer != null) 
+			{
+				treatmentContainer.removeFromParent();
+				treatmentContainer.dispose();
+				treatmentContainer = null;
+			}
+			
+			if (treatmentNoteLabel != null) 
+			{
+				treatmentNoteLabel.removeFromParent();
+				treatmentNoteLabel.dispose();
+				treatmentNoteLabel = null;
+			}
+			
+			if (moveBtn != null) 
+			{
+				moveBtn.removeFromParent();
+				moveBtn.removeEventListeners();
+				moveBtn.dispose();
+				moveBtn = null;
+			}
+			
+			if (deleteBtn != null) 
+			{
+				deleteBtn.removeFromParent();
+				deleteBtn.removeEventListeners();
+				deleteBtn.dispose();
+				deleteBtn = null;
+			}
+			
+			if (actionsContainer != null)
+			{
+				actionsContainer.removeFromParent();
+				actionsContainer.dispose();
+				actionsContainer = null;
+			}
+			
+			if (treatmentCallout != null) 
+			{
+				treatmentCallout.removeFromParent();
+				treatmentCallout.removeEventListeners();
+				treatmentCallout.dispose();
+				treatmentCallout = null;
+			}
+			
+			if (activeTempBasalQuad != null)
+			{
+				activeTempBasalQuad.filter = null;
+				activeTempBasalQuad = null;
 			}
 		}
 		
@@ -9511,7 +9681,7 @@ package ui.chart
 			}
 			
 			//Basals
-			disposePumpBasalCallout();
+			disposeBasalCallout();
 			disposePumpBasals();
 			
 			//Predictions
