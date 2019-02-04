@@ -4483,7 +4483,7 @@ package treatments
 				var isBasalRelative:Boolean = nsBasal.percent != null && !isNaN(nsBasal.percent) && !isBasalAbsolute ? true : false;
 				var isTempBasalEnd:Boolean = !isBasalAbsolute && !isBasalRelative;
 				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "mdi" && basalDuration < 6 * 60) continue;
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi" && basalDuration < 6 * 60) continue;
 				
 				if (isTempBasalEnd && basalDuration < 30) basalDuration = 30;
 				

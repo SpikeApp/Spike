@@ -594,7 +594,7 @@ package ui.chart
 			}
 			
 			//Basals
-			basalRenderMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE);
+			basalRenderMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
 			displayPumpBasals = basalRenderMode == "pump" && treatmentsActive && displayTreatmentsOnChart;
 			displayMDIBasals = basalRenderMode == "mdi" && treatmentsActive && displayTreatmentsOnChart;
 			

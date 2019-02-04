@@ -889,6 +889,16 @@ package ui.screens.display.settings.general
 								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_CARB_ABSORTION_TIME, String(followerSettingsJSON.defaultAbsortionCarbTime));
 							}
 							
+							if (followerSettingsJSON.userType != null)
+							{
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI, String(followerSettingsJSON.userType));
+							}
+							
+							if (followerSettingsJSON.isAPSUser != null)
+							{
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED, String(followerSettingsJSON.isAPSUser));
+							}
+							
 							needsSave = true;
 							
 							refreshContent();

@@ -139,7 +139,7 @@ package ui.screens.display.settings.chart
 			basalAreaColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ABSOLUTE_BASAL_AREA_COLOR));
 			basalLineColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ABSOLUTE_BASAL_LINE_COLOR));
 			basalRateLineColorValue = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_RATE_LINE_COLOR));
-			displayPumpBasalColors = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "pump";
+			displayPumpBasalColors = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump";
 		}
 		
 		private function setupContent():void

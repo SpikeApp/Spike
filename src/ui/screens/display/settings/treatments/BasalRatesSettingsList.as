@@ -98,7 +98,7 @@ package ui.screens.display.settings.treatments
 		{
 			/* Get Settings */
 			userBasalRates = ProfileManager.basalRatesList;
-			basalsModeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE);
+			basalsModeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
 			timeFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 		}
 		
@@ -342,8 +342,8 @@ package ui.screens.display.settings.treatments
 		
 		public function save():void
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) != basalsModeValue)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE, basalsModeValue);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) != basalsModeValue)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI, basalsModeValue);
 			
 			needsSave = false;
 		}

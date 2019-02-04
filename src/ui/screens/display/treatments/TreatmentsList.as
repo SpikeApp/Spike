@@ -170,12 +170,12 @@ package ui.screens.display.treatments
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: canAddTreatments, id: 2 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: canAddTreatments, id: 3 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: canAddTreatments, id: 4 } );
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "pump")
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
 				{
 					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal_start'), icon: basalStartImage, selectable: canAddTreatments, id: 5 } );
 					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal_end'), icon: basalEndImage, selectable: canAddTreatments, id: 6 } );
 				}
-				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "mdi")
+				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi")
 				{
 					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal'), icon: basalStartImage, selectable: canAddTreatments, id: 7 } );
 				}
