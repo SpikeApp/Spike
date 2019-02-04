@@ -16,6 +16,8 @@ package ui.chart
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -38,12 +40,9 @@ package ui.chart
 	import feathers.controls.ScrollBarDisplayMode;
 	import feathers.controls.ScrollContainer;
 	import feathers.controls.ScrollPolicy;
-	import feathers.controls.TextCallout;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.DropDownPopUpContentManager;
-	import feathers.controls.text.TextBlockTextRenderer;
 	import feathers.core.FeathersControl;
-	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.extensions.MaterialDesignSpinner;
 	import feathers.layout.HorizontalAlign;
@@ -453,21 +452,26 @@ package ui.chart
 		//Basals
 		private var basalAreasList:Array = [];
 		private var basalLinesList:Array = [];
+		private var basalLabelsList:Array = [];
 		private var tempBasalAreaPropertiesMap:Object;
+		private var mdiBasalAreaPropertiesMap:Object;
+		private var mdiBasalLabelPropertiesMap:Object;
 		private var basalsFirstRun:Boolean = true;
 		private var displayPumpBasals:Boolean = false;
+		private var displayMDIBasals:Boolean = false;
 		private var basalScaler:Number = 1;
 		private var basalsContainer:Sprite;
 		private var basalAbsoluteLine:SpikeLine;
 		private var basalCallout:Callout;
 		private var basalScheduledLine:SpikeLine;
 		private var lastTimePumpBasalWasRendered:Number = 0;
+		private var lastTimeMDIBasalWasRendered:Number = 0;
 		private var tempBasalAreaColor:uint;
 		private var basalLineColor:uint;
 		private var basalRateLineColor:uint;
 		private var basalRenderMode:String;
 		private var basalAreaColor:uint;
-		private var activeTempBasalQuad:Quad;
+		private var activeBasalAreaQuad:Quad;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -592,6 +596,7 @@ package ui.chart
 			//Basals
 			basalRenderMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE);
 			displayPumpBasals = basalRenderMode == "pump" && treatmentsActive && displayTreatmentsOnChart;
+			displayMDIBasals = basalRenderMode == "mdi" && treatmentsActive && displayTreatmentsOnChart;
 			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
@@ -826,9 +831,12 @@ package ui.chart
 			}
 			
 			//Basals
-			if (displayPumpBasals)
+			if (displayPumpBasals || displayMDIBasals)
 			{
 				renderBasals();
+				
+				if (basalsContainer != null)
+					basalsContainer.x = mainChart.x;
 			}
 		}
 		
@@ -1614,7 +1622,289 @@ package ui.chart
 		
 		private function renderPenBasals():void
 		{
+			if (!displayMDIBasals || !SystemUtil.isApplicationActive)
+			{
+				return
+			}
 			
+			//Dispose previous basals
+			disposeBasalCallout();
+			disposeBasals();
+			
+			//Setup initial timeline/mask properties
+			if (basalsFirstRun && basalsContainer == null)
+			{
+				basalsFirstRun = false;
+				basalsContainer = new Sprite();
+				basalsContainer.x = mainChart.x;
+				basalsContainer.y = glucoseDelimiter.height;
+				mainChartContainer.addChildAt(basalsContainer, 0);
+			}
+			
+			//Validation
+			if (TreatmentsManager.basalsList.length == 0)
+			{
+				if (mainChart != null)
+				{
+					//Create and configure line
+					basalAbsoluteLine = new SpikeLine();
+					basalAbsoluteLine.lineStyle(1.5, basalLineColor);
+					basalAbsoluteLine.moveTo(0, 0);
+					basalAbsoluteLine.lineTo(predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0 ? mainChart.width + Constants.stageWidth : mainChart.width, 0);
+					
+					//Add line to display list
+					basalsContainer.addChild(basalAbsoluteLine);
+					basalLinesList.push(basalAbsoluteLine);
+				}
+				
+				return;
+			}
+			
+			//Common variables
+			var timer:int = getTimer();
+			var now:Number = new Date().valueOf();
+			var i:int;
+			lastTimeMDIBasalWasRendered = now;
+			mdiBasalAreaPropertiesMap = {};
+			mdiBasalLabelPropertiesMap = {};
+			
+			//Data variables
+			var fromTime:Number = firstBGReadingTimeStamp;
+			var toTime:Number = !displayLatestBGValue ? now + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
+			
+			var numberOfPredictions:uint = predictionsMainGlucoseDataPoints.length;
+			if (predictionsEnabled && numberOfPredictions > 0)
+			{
+				var lastPredictionMarker:GlucoseMarker = predictionsMainGlucoseDataPoints[numberOfPredictions - 1];
+				if (lastPredictionMarker != null)
+				{
+					toTime = lastPredictionMarker.bgReading.timestamp + ((mainChartGlucoseMarkerRadius * 2)/mainChartXFactor);
+				}
+			}
+			
+			
+			if (isNaN(toTime)) toTime = now;
+			var time:Number;
+			
+			//Sorting
+			var basalHolder:Array = [];
+			
+			for (time = toTime; time >= fromTime - TimeSpan.TIME_1_MINUTE; time -= TimeSpan.TIME_1_MINUTE) 
+			{
+				var basalPropertiesForSorting:Object = ProfileManager.getMDIBasalData(time);
+				basalHolder.push(basalPropertiesForSorting);
+			}
+			
+			basalHolder.sortOn(["mdiBasalAmount"], Array.NUMERIC);
+			var highestBasalAmount:Number = basalHolder[basalHolder.length - 1].mdiBasalAmount;
+			
+			//Misc
+			var absoluteBasalDataPointsArray:Array = [];
+			var desiredBasalHeight:Number = _graphHeight * 0.2; //20%
+			basalScaler = desiredBasalHeight / highestBasalAmount;
+			var prevTempBasalAreaValue:Number = 0;
+			var startXTempAreaValue:Number = 0;
+			var startYTempAreaValue:Number = 0;
+			var prevXAbsoluteValue:Number = Number.NaN;
+			var prevYAbsoluteValue:Number = Number.NaN;
+			var previousTempBasalAreaProps:Object;
+			
+			for (time = toTime; time >= fromTime - TimeSpan.TIME_1_MINUTE; time -= TimeSpan.TIME_1_MINUTE) 
+			{
+				//Gather Basal Data
+				var basalProperties:Object = ProfileManager.getMDIBasalData(time);
+				
+				//Calculate Coordinates (Area & Basal Amount)
+				var tempBasalAreaValue:Number = basalProperties.mdiBasalAmount;
+				var xTempBasalAreaValue:Number = (time - firstBGReadingTimeStamp) * mainChartXFactor;
+				var yTempBasalAreaValue:Number = tempBasalAreaValue * basalScaler;
+				
+				var tempBasalAmountValue:Number = basalProperties.mdiBasalAmount;
+				var xTempBasalAmountValue:Number = xTempBasalAreaValue;
+				var yTempBasalAmountValue:Number = tempBasalAmountValue * basalScaler * -1;
+				
+				if (time < fromTime)
+				{
+					tempBasalAreaValue = 0;
+					xTempBasalAreaValue = -1;
+					yTempBasalAreaValue = 0;
+					
+					tempBasalAmountValue = 0;
+					xTempBasalAmountValue = -1;
+					yTempBasalAmountValue = 0;
+				}
+				
+				//Save absolute basal line data points
+				if (yTempBasalAmountValue != prevYAbsoluteValue)
+				{
+					if (!isNaN(prevYAbsoluteValue))
+					{
+						absoluteBasalDataPointsArray.unshift( { x: xTempBasalAmountValue, y: prevYAbsoluteValue } );
+					}
+					
+					absoluteBasalDataPointsArray.unshift( { x: xTempBasalAmountValue, y: yTempBasalAmountValue } );
+				}
+				
+				//Save absolute variables state for next iteration
+				prevXAbsoluteValue = xTempBasalAmountValue;
+				prevYAbsoluteValue = yTempBasalAmountValue;
+				
+				//Render temp basal areas
+				if (tempBasalAreaValue != prevTempBasalAreaValue)
+				{
+					if (startXTempAreaValue == 0 && startYTempAreaValue == 0)
+					{
+						startXTempAreaValue = xTempBasalAreaValue;
+						startYTempAreaValue = yTempBasalAreaValue;
+					}
+					else
+					{
+						//Translate coordinates
+						var endXAreaValue:Number = xTempBasalAreaValue;
+						var endYAreaValue:Number = yTempBasalAreaValue;
+						
+						//Create Quad
+						if (startYTempAreaValue != 0)
+						{
+							var tempBasalAreaWidth:Number = Math.abs(endXAreaValue - startXTempAreaValue);
+							
+							var tempBasalArea:Quad = new Quad(tempBasalAreaWidth, Math.abs(startYTempAreaValue), tempBasalAreaColor);
+							tempBasalArea.x = startXTempAreaValue - tempBasalAreaWidth;
+							tempBasalArea.y = -startYTempAreaValue;
+							tempBasalArea.addEventListener(TouchEvent.TOUCH, onBasalAreaTouched);
+							basalsContainer.addChild(tempBasalArea);
+							
+							basalAreasList.push(tempBasalArea);
+							
+							//Label
+							if (previousTempBasalAreaProps != null && previousTempBasalAreaProps.basalTreatment != null)
+							{
+								var selectedBasalTreatment:Treatment = previousTempBasalAreaProps.basalTreatment;
+								var selectedBasalInsulin:Insulin = ProfileManager.getInsulin(selectedBasalTreatment.insulinID);
+								if (selectedBasalTreatment != null)
+								{
+									var areaLabelString:String = "";
+									
+									if (selectedBasalInsulin != null)
+									{
+										areaLabelString = selectedBasalInsulin.name + " " + "(" + previousTempBasalAreaProps.basalAmount + "U" + " - " + (Math.round(previousTempBasalAreaProps.basalAmount/(selectedBasalTreatment.basalDuration / 60) * 100) / 100) + "U/h" + ")";
+									}
+									else
+									{
+										areaLabelString = previousTempBasalAreaProps.basalAmount + "U" + " - " + (Math.round(previousTempBasalAreaProps.basalAmount/(selectedBasalTreatment.basalDuration / 60) * 100) / 100) + "U/h";
+									}
+									
+									var basalLabel:Label = LayoutFactory.createLabel(areaLabelString, HorizontalAlign.CENTER, VerticalAlign.TOP, 10);
+									basalLabel.validate();
+									
+									if (tempBasalAreaWidth < basalLabel.width + 10)
+									{
+										basalLabel.text = previousTempBasalAreaProps.basalAmount + "U";
+										basalLabel.validate();
+									}
+									
+									while (tempBasalArea.height <= basalLabel.height)
+									{
+										if (basalLabel.fontStyles != null)
+										{
+											if (basalLabel.fontStyles.size > 6)
+											{
+												basalLabel.fontStyles.size -= 1;
+												basalLabel.validate();
+											}
+											else
+											{
+												break;
+											}
+										}
+										else
+										{
+											break;
+										}
+									}
+									
+									if (tempBasalAreaWidth >= basalLabel.width + 10 && tempBasalArea.height > basalLabel.height)
+									{
+										basalLabel.x = tempBasalArea.x + ((tempBasalAreaWidth - basalLabel.width) / 2);
+										basalLabel.y = tempBasalArea.y + ((tempBasalArea.height - basalLabel.height) / 2);
+										basalLabel.touchable = false;
+										
+										basalsContainer.addChild(basalLabel);
+										basalLabelsList.push(basalLabel);
+										mdiBasalLabelPropertiesMap[tempBasalArea.x] = basalLabel;
+									}
+									else
+									{
+										basalLabel.dispose();
+										basalLabel = null;
+									}
+								}
+							}
+							
+							if (previousTempBasalAreaProps != null)
+							{
+								mdiBasalAreaPropertiesMap[tempBasalArea.x] = previousTempBasalAreaProps;
+							}
+						}
+						
+						//Reset
+						if (endYAreaValue == 0)
+						{
+							startXTempAreaValue = 0;
+							startYTempAreaValue = 0;
+						}
+						else
+						{
+							startXTempAreaValue = endXAreaValue;
+							startYTempAreaValue = endYAreaValue;
+						}
+					}
+				}
+				
+				//Save temp basal areas variables state
+				prevTempBasalAreaValue = tempBasalAreaValue;
+				
+				previousTempBasalAreaProps = {}
+				previousTempBasalAreaProps.basalAmount = basalProperties.mdiBasalAmount;
+				previousTempBasalAreaProps.timestamp = basalProperties.mdiBasalTime;
+				previousTempBasalAreaProps.basalTreatment = basalProperties.mdiBasalTreatment;
+				previousTempBasalAreaProps.hasOverlap = basalProperties.hasOverlap;
+				previousTempBasalAreaProps.basalTreatmentsList = basalProperties.mdiBasalTreatmentsList;
+			}
+			
+			//Render absolute basal line
+			var numberOfLinePoints:Number = absoluteBasalDataPointsArray.length;
+			if (numberOfLinePoints > 0)
+			{
+				//Create and configure line
+				basalAbsoluteLine = new SpikeLine();
+				basalAbsoluteLine.lineStyle(1.5, basalLineColor);
+				basalAbsoluteLine.moveTo(0, absoluteBasalDataPointsArray[0].y);
+				
+				//Loop line data points
+				var prevAbsoluteLinePoint:Object;
+				for (i= 0; i < numberOfLinePoints; i++) 
+				{
+					//Plot line
+					var absoluteLinePoint:Object = absoluteBasalDataPointsArray[i];
+					basalAbsoluteLine.lineTo(absoluteLinePoint.x, absoluteLinePoint.y);
+					basalAbsoluteLine.moveTo(absoluteLinePoint.x, absoluteLinePoint.y);
+					
+					prevAbsoluteLinePoint = absoluteLinePoint;
+				}
+				
+				//Close Absolute Line Graphic
+				if (prevAbsoluteLinePoint != null)
+				{
+					basalAbsoluteLine.lineTo(prevAbsoluteLinePoint.x, 0);
+				}
+				
+				//Add line to display list
+				basalsContainer.addChild(basalAbsoluteLine);
+				basalLinesList.push(basalAbsoluteLine);
+			}
+			
+			trace("PEN BASAL RENDERING COMPLETED IN:", getTimer() - timer + "ms");
 		}
 		
 		private function renderPumpBasals():void
@@ -1642,10 +1932,9 @@ package ui.chart
 			
 			//Dispose previous basals
 			disposeBasalCallout();
-			disposePumpBasals();
+			disposeBasals();
 			
 			//Common variables
-			var timer:int = getTimer();
 			var now:Number = new Date().valueOf();
 			var i:int
 			lastTimePumpBasalWasRendered = now;
@@ -1670,7 +1959,7 @@ package ui.chart
 			
 			//Temp Basals Sorting
 			TreatmentsManager.basalsList.sortOn(["timestamp"], Array.NUMERIC);
-			var highestBasalAmount:Number = Math.max(TreatmentsManager.getHighestTempBasal(), scheduledHighestBasal);
+			var highestBasalAmount:Number = Math.max(TreatmentsManager.getHighestBasal(Treatment.TYPE_TEMP_BASAL), scheduledHighestBasal);
 			
 			//Temp Basal Area Calculation & Plotting
 			var absoluteBasalDataPointsArray:Array = [];
@@ -1751,7 +2040,7 @@ package ui.chart
 							var tempBasalArea:Quad = new Quad(tempBasalAreaWidth, Math.abs(startYTempAreaValue), tempBasalAreaColor);
 							tempBasalArea.x = startXTempAreaValue - tempBasalAreaWidth;
 							tempBasalArea.y = -startYTempAreaValue;
-							tempBasalArea.addEventListener(TouchEvent.TOUCH, onAbsoluteBasalTouched);
+							tempBasalArea.addEventListener(TouchEvent.TOUCH, onBasalAreaTouched);
 							basalsContainer.addChild(tempBasalArea);
 							
 							basalAreasList.push(tempBasalArea);
@@ -1958,29 +2247,37 @@ package ui.chart
 				basalsContainer.addChild(basalScheduledLine);
 				basalLinesList.push(basalScheduledLine);
 			}
-			
-			trace("BASAL RENDERING COMPLETED IN:", getTimer() - timer + "ms");
 		}
 		
-		private function onAbsoluteBasalTouched(e:starling.events.TouchEvent):void
+		private function onBasalAreaTouched(e:starling.events.TouchEvent):void
 		{
-			
 			var touch:Touch = e.getTouch(stage);
 			if (touch != null && touch.phase == TouchPhase.BEGAN) 
 			{
-				activeTempBasalQuad = e.currentTarget as Quad;
-				if (activeTempBasalQuad != null)
+				activeBasalAreaQuad = e.currentTarget as Quad;
+				if (activeBasalAreaQuad != null)
 				{
-					var basalProps:Object = tempBasalAreaPropertiesMap[activeTempBasalQuad.x];
+					var basalProps:Object = displayPumpBasals ? tempBasalAreaPropertiesMap[activeBasalAreaQuad.x] : mdiBasalAreaPropertiesMap[activeBasalAreaQuad.x];
 					if (basalProps != null)
 					{
 						//Visual Filter
-						activeTempBasalQuad.removeFromParent();
-						basalsContainer.addChild(activeTempBasalQuad);
-						activeTempBasalQuad.filter = new GlowFilter(0xFFFFFF, 2, 4, 1);
+						activeBasalAreaQuad.removeFromParent();
+						basalsContainer.addChild(activeBasalAreaQuad);
+						activeBasalAreaQuad.filter = new GlowFilter(0xFFFFFF, 2, 4, 1);
 						
-						//Basal Amount
-						displayBasalCallout(basalProps, activeTempBasalQuad);
+						//Reposition Basal Label
+						if (displayMDIBasals)
+						{
+							var basalLabel:Label = mdiBasalLabelPropertiesMap[activeBasalAreaQuad.x];
+							if (basalLabel != null)
+							{
+								basalLabel.removeFromParent();
+								basalsContainer.addChild(basalLabel);
+							}
+						}
+						
+						//Basal Callout
+						displayBasalCallout(basalProps, activeBasalAreaQuad);
 					}
 				}
 			}
@@ -2005,7 +2302,81 @@ package ui.chart
 			treatmentContainer.layout = treatmentLayout;
 			
 			//Basal Properties
-			var treatmentValue:String = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + (basalProps.basalPercentage != null ? " " + "(" + (basalProps.basalPercentage > 0 ? "+" : "") + basalProps.basalPercentage + "%" + ")" : "");
+			var treatmentValue:String = "";
+			if (displayPumpBasals)
+			{
+				treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + (basalProps.basalPercentage != null ? " " + "(" + (basalProps.basalPercentage > 0 ? "+" : "") + basalProps.basalPercentage + "%" + ")" : "");
+			}
+			else if (displayMDIBasals)
+			{
+				var bTreatment:Treatment;
+				var basalInsulin:Insulin;
+				
+				if (basalProps != null && basalProps.hasOverlap == false)
+				{
+					bTreatment = basalProps.basalTreatment;
+					if (bTreatment != null)
+					{
+						basalInsulin = ProfileManager.getInsulin(bTreatment.insulinID);
+						if (basalInsulin != null)
+						{
+							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ":" + " " + basalInsulin.name + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + (Math.round((bTreatment.basalAbsoluteAmount / (bTreatment.basalDuration / 60) * 100)) / 100) + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour');
+						}
+						else
+						{
+							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + (Math.round((bTreatment.basalAbsoluteAmount / (bTreatment.basalDuration / 60) * 100)) / 100) + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour');
+						}
+					}
+					else
+					{
+						treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount);
+					}
+				}
+				else if (basalProps != null && basalProps.hasOverlap == true && basalProps.basalTreatmentsList != null)
+				{
+					var overlappedTreatmentsList:Array = basalProps.basalTreatmentsList;
+					var amountsList:Array = [];
+					var totalBasalRate:Number = 0;
+					var basalRatesStringsList:Array = [];
+					
+					for (var i:int = 0; i < overlappedTreatmentsList.length; i++) 
+					{
+						var overlappedTreatment:Treatment = overlappedTreatmentsList[i];
+						
+						if (overlappedTreatment != null)
+						{
+							amountsList.push(String(Math.round(overlappedTreatment.basalAbsoluteAmount * 100) / 100) + "U");
+							totalBasalRate += overlappedTreatment.basalAbsoluteAmount / (overlappedTreatment.basalDuration / 60);
+							basalRatesStringsList.push((Math.round((overlappedTreatment.basalAbsoluteAmount / (overlappedTreatment.basalDuration / 60)) * 100) / 100) + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour'));
+						}
+					}
+					
+					var combinedAmounts:String = amountsList.join(" + ");
+					if (combinedAmounts == null) combinedAmounts = "";
+					totalBasalRate = Math.round(totalBasalRate * 100) / 100;
+					var combinedBasalRates:String = basalRatesStringsList.join(" + ");
+					if (combinedBasalRates == null) combinedBasalRates = "";
+					
+					bTreatment = basalProps.basalTreatment;
+					if (bTreatment != null)
+					{
+						basalInsulin = ProfileManager.getInsulin(bTreatment.insulinID);
+						if (basalInsulin != null)
+						{
+							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ":" + " " + basalInsulin.name + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")";
+						}
+						else
+						{
+							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")";
+						}
+					}
+					else
+					{
+						treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")";
+					}
+				}
+			}
+			
 			var treatmentNotes:String = basalProps.basalTreatment != null ? basalProps.basalTreatment.note : "";
 			
 			if (treatmentValue != "")
@@ -7040,9 +7411,12 @@ package ui.chart
 					rawDataContainer.x = mainChart.x;
 				
 				//Basals
-				if (displayPumpBasals)
+				if (displayPumpBasals || displayMDIBasals)
 				{
 					renderBasals();
+					
+					if (basalsContainer != null)
+						basalsContainer.x = mainChart.x;
 				}
 			}
 		}
@@ -7238,9 +7612,12 @@ package ui.chart
 				rawDataContainer.x = mainChart.x;
 			
 			//Basals
-			if (displayPumpBasals)
+			if (displayPumpBasals || displayMDIBasals)
 			{
 				renderBasals();
+				
+				if (basalsContainer != null)
+					basalsContainer.x = mainChart.x;
 			}
 		}
 		
@@ -8531,16 +8908,22 @@ package ui.chart
 				}
 				
 				//Update Basals
-				if (displayPumpBasals)
+				if (displayPumpBasals || displayMDIBasals)
 				{
 					if (lastAvailableReading == null)
 					{
 						lastAvailableReading = BgReading.lastWithCalculatedValue();
 					}
 					
-					if (lastAvailableReading != null && lastAvailableReading._timestamp > lastTimePumpBasalWasRendered)
+					if ((displayPumpBasals && lastAvailableReading != null && lastAvailableReading._timestamp > lastTimePumpBasalWasRendered)
+						||
+						(displayMDIBasals && lastAvailableReading != null && lastAvailableReading._timestamp > lastTimeMDIBasalWasRendered)
+					)
 					{
-						renderBasals()
+						renderBasals();
+						
+						if (basalsContainer != null)
+							basalsContainer.x = mainChart.x;
 					}
 				}
 			}
@@ -9367,14 +9750,14 @@ package ui.chart
 				treatmentCallout = null;
 			}
 			
-			if (activeTempBasalQuad != null)
+			if (activeBasalAreaQuad != null)
 			{
-				activeTempBasalQuad.filter = null;
-				activeTempBasalQuad = null;
+				activeBasalAreaQuad.filter = null;
+				activeBasalAreaQuad = null;
 			}
 		}
 		
-		private function disposePumpBasals():void
+		private function disposeBasals():void
 		{
 			var i:int;
 			
@@ -9384,7 +9767,7 @@ package ui.chart
 				if (quad != null)
 				{
 					quad.removeFromParent();
-					quad.removeEventListener(TouchEvent.TOUCH, onAbsoluteBasalTouched);
+					quad.removeEventListener(TouchEvent.TOUCH, onBasalAreaTouched);
 					quad.dispose();
 					quad = null;
 				}
@@ -9402,6 +9785,18 @@ package ui.chart
 				}
 			}
 			basalLinesList.length = 0;
+			
+			for (i = basalLabelsList.length - 1 ; i >= 0; i--)
+			{
+				var label:Label = basalLabelsList[i];
+				if (label != null)
+				{
+					label.removeFromParent();
+					label.dispose();
+					label = null;
+				}
+			}
+			basalLabelsList.length = 0;
 		}
 		
 		private function disposeInfoPills():void
@@ -9682,7 +10077,7 @@ package ui.chart
 			
 			//Basals
 			disposeBasalCallout();
-			disposePumpBasals();
+			disposeBasals();
 			
 			//Predictions
 			disposePredictions();

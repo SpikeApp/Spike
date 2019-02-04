@@ -1417,6 +1417,8 @@ package services
 		
 		public static function uploadTreatment(treatment:Treatment):void
 		{
+			return;
+			
 			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			

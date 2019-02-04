@@ -1709,8 +1709,8 @@ package treatments
 			
 			Trace.myTrace("TreatmentsManager.as", "deleteTreatment called!");
 			
-			var treatmentListSource:Array = treatment.type != Treatment.TYPE_TEMP_BASAL ? treatmentsList : basalsList;
-			var treatmentMapSource:Dictionary = treatment.type != Treatment.TYPE_TEMP_BASAL ? treatmentsMap : basalsMap;
+			var treatmentListSource:Array = treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_PEN_BASAL ? treatmentsList : basalsList;
+			var treatmentMapSource:Dictionary = treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_PEN_BASAL ? treatmentsMap : basalsMap;
 			
 			if (treatmentMapSource[treatment.ID] != null) //treatment exists
 			{
@@ -1807,7 +1807,7 @@ package treatments
 			}
 			
 			//Notify listeners
-			if (treatment.type != Treatment.TYPE_TEMP_BASAL)
+			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_PEN_BASAL)
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			else
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
@@ -2405,6 +2405,8 @@ package treatments
 				actionFunction = onTempBasalStartEntered;
 			else if (type == Treatment.TYPE_TEMP_BASAL_END)
 				actionFunction = onTempBasalEndEntered;
+			else if (type == Treatment.TYPE_PEN_BASAL)
+				actionFunction = onPenBasalEntered;
 			
 			var actionLayout:HorizontalLayout = new HorizontalLayout();
 			actionLayout.gap = 5;
@@ -2904,6 +2906,70 @@ package treatments
 				
 				//Upload to Nightscout
 				NightscoutService.uploadTreatment(tempBasalEndTreatment);
+				
+				//Close Callout
+				if (treatmentCallout != null) treatmentCallout.close();
+			}
+			
+			function onPenBasalEntered (e:Event):void
+			{
+				if (addButton != null) addButton.removeEventListener(Event.TRIGGERED, onTempBasalEndEntered);
+				
+				if (!SpikeANE.appIsInForeground())
+					return;
+				
+				function onAskNewBasal():void
+				{
+					addTreatment(type);
+				}
+				
+				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
+				var insulinValue:Number = Number((insulinTextInput.text as String).replace(",","."));
+				if (isNaN(insulinValue) || insulinTextInput.text == "") 
+				{
+					AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('treatments','non_numeric_insulin'),
+							Number.NaN,
+							onAskNewBasal
+						);
+				}
+				else
+				{
+					//Create Basal Treatment
+					var penBasalTreatment:Treatment = new Treatment
+					(
+						Treatment.TYPE_PEN_BASAL,
+						treatmentTime.value.valueOf(),
+						0,
+						insulinList.selectedItem.id,
+						0,
+						0,
+						0,
+						notes.text
+					);
+					
+					penBasalTreatment.basalAbsoluteAmount = Math.abs(Number(insulinTextInput.text));
+					penBasalTreatment.isBasalAbsolute = true;
+					penBasalTreatment.basalDuration = penBasalTreatment.dia * 60;
+					
+					//Add to list
+					basalsList.push(penBasalTreatment);
+					basalsMap[penBasalTreatment.ID] = penBasalTreatment;
+					
+					Trace.myTrace("TreatmentsManager.as", "Added treatment to Spike. Type: " + penBasalTreatment.type);
+					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+					
+					//Insert in DB
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						Database.insertTreatmentSynchronous(penBasalTreatment);
+					
+					//Upload to Nightscout
+					NightscoutService.uploadTreatment(penBasalTreatment);
+				}
 				
 				//Close Callout
 				if (treatmentCallout != null) treatmentCallout.close();
@@ -4416,6 +4482,9 @@ package treatments
 				var basalPercentAmount:Number = nsBasal.percent != null && !isNaN(nsBasal.percent) ? nsBasal.percent : 0;
 				var isBasalRelative:Boolean = nsBasal.percent != null && !isNaN(nsBasal.percent) && !isBasalAbsolute ? true : false;
 				var isTempBasalEnd:Boolean = !isBasalAbsolute && !isBasalRelative;
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "mdi" && basalDuration < 6 * 60) continue;
+				
 				if (isTempBasalEnd && basalDuration < 30) basalDuration = 30;
 				
 				if (basalTimestamp < firstReadingTimestamp)
@@ -5365,7 +5434,7 @@ package treatments
 			return Math.round(basalAmount * 100) / 100;
 		}
 		
-		public static function getHighestTempBasal():Number
+		public static function getHighestBasal(type:String):Number
 		{
 			var highestTempBasalAmount:Number = 0;
 			var twentyFourHoursAgo:Number = new Date().valueOf() - TimeSpan.TIME_24_HOURS;
@@ -5373,7 +5442,7 @@ package treatments
 			for (var i:int = basalsList.length - 1 ; i >= 0; i--)
 			{
 				var tempBasal:Treatment = basalsList[i];
-				if (tempBasal != null && tempBasal.type == Treatment.TYPE_TEMP_BASAL && (tempBasal.basalAbsoluteAmount > 0 || tempBasal.basalPercentAmount > 0))
+				if (tempBasal != null && tempBasal.type == type && (tempBasal.basalAbsoluteAmount > 0 || tempBasal.basalPercentAmount > 0))
 				{
 					//CleanUp
 					if (tempBasal.timestamp < twentyFourHoursAgo)

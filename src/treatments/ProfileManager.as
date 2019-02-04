@@ -625,6 +625,8 @@ package treatments
 					var tempBasalInternalTreatment:Treatment = TreatmentsManager.basalsList[i];
 					if (tempBasalInternalTreatment != null 
 						&& 
+						tempBasalInternalTreatment.type == Treatment.TYPE_TEMP_BASAL
+						&&
 						tempBasalInternalTreatment.timestamp <= time 
 						&& 
 						tempBasalInternalTreatment.timestamp + (tempBasalInternalTreatment.basalDuration * TimeSpan.TIME_1_MINUTE) >= time
@@ -662,6 +664,57 @@ package treatments
 				tempBasalTime: tempBasalTime,
 				tempBasalIndex: tempBasalIndex,
 				tempBasalTreatment: tempBasalTreatment
+			};
+		}
+		
+		public static function getMDIBasalData(time:Number):Object
+		{
+			//Temp Basal
+			var mdiBasalAmount:Number = 0;
+			var mdiBasalTreatment:Treatment = null;
+			var mdiBasalTreatmentsList:Array = [];
+			var mdiBasalTime:Number = time;
+			var hasOverlap:Boolean = false;
+			var numberOfBasals:Number = TreatmentsManager.basalsList.length;
+			
+			if (numberOfBasals > 0)
+			{
+				for (var i:int = numberOfBasals ; i >= 0; i--)
+				{
+					var mdiBasalInternalTreatment:Treatment = TreatmentsManager.basalsList[i];
+					if (mdiBasalInternalTreatment != null 
+						&&
+						mdiBasalInternalTreatment.type == Treatment.TYPE_PEN_BASAL
+						&& 
+						mdiBasalInternalTreatment.timestamp <= time 
+						&& 
+						mdiBasalInternalTreatment.timestamp + (mdiBasalInternalTreatment.basalDuration * TimeSpan.TIME_1_MINUTE) >= time
+					)
+					{
+						mdiBasalAmount += mdiBasalInternalTreatment.basalAbsoluteAmount;
+						if (mdiBasalTreatment == null)
+						{
+							mdiBasalTreatment = mdiBasalInternalTreatment;
+							mdiBasalTime = mdiBasalInternalTreatment.timestamp;
+						}
+						else
+						{
+							hasOverlap = true;
+						}
+						
+						mdiBasalTreatmentsList.push(mdiBasalInternalTreatment);
+					}
+				}
+			}
+			
+			if (mdiBasalAmount < 0) mdiBasalAmount = 0;
+			
+			return {
+				mdiBasalAmount: mdiBasalAmount,
+				mdiBasalTime: mdiBasalTime,
+				mdiBasalTreatment: mdiBasalTreatment,
+				mdiBasalTreatmentsList: mdiBasalTreatmentsList,
+				hasOverlap: hasOverlap
 			};
 		}
 		
