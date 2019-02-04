@@ -263,6 +263,7 @@ package ui.screens.display.settings.treatments
 			if (insulinTypesPicker != null && insulinTypesPicker.selectedIndex == 4)
 			{
 				insulinDIA.maximum = 72;
+				insulinDIA.value = 24;
 				isBasalEnabled = true;
 			}
 			else

@@ -1,5 +1,7 @@
 package ui.screens.display.treatments
 {
+	import com.adobe.utils.StringUtil;
+	
 	import database.BgReading;
 	import database.CommonSettings;
 	
@@ -114,6 +116,14 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			var treatmentType:String;
+			var userInsulins:Array;
+			var insulinsList:ArrayCollection;
+			var selectedInsulin:int;
+			var insulin:Insulin;
+			var allInsulinTypes:Array;
+			var longActing:String;
+			var i:int
+			
 			if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 			{
 				//Treatment Type
@@ -121,21 +131,26 @@ package ui.screens.display.treatments
 					treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_bolus");
 				
 				//User's insulins
-				var userInsulins:Array = ProfileManager.insulinsList;
+				userInsulins = ProfileManager.insulinsList;
 				insulinsPicker = LayoutFactory.createPickerList()
-				var insulinsList:ArrayCollection = new ArrayCollection();
+				insulinsList = new ArrayCollection();
+				allInsulinTypes = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_types_list').split(",");
+				longActing = StringUtil.trim(allInsulinTypes[4]);
 				
-				var selectedInsulin:int = 0;
+				selectedInsulin = 0;
 				if (userInsulins != null)
 				{
-					for (var i:int = 0; i < userInsulins.length; i++) 
+					for (i = 0; i < userInsulins.length; i++) 
 					{
-						var insulin:Insulin = userInsulins[i];
+						insulin = userInsulins[i];
 						
-						insulinsList.push( {label: insulin.name + (insulin.isHidden == true && insulin.name.indexOf("Nightscout") == -1 ? " " + "(" + ModelLocator.resourceManagerInstance.getString('generalsettingsscreen',"collection_list").split(",")[0] + ")" : ""), id: insulin.ID} );
-						
-						if (insulin.ID == treatment.insulinID)
-							selectedInsulin = i;
+						if (insulin != null && insulin.type != longActing)
+						{
+							insulinsList.push( {label: insulin.name + (insulin.isHidden == true && insulin.name.indexOf("Nightscout") == -1 ? " " + "(" + ModelLocator.resourceManagerInstance.getString('generalsettingsscreen',"collection_list").split(",")[0] + ")" : ""), id: insulin.ID} );
+							
+							if (insulin.ID == treatment.insulinID)
+								selectedInsulin = insulinsList.length - 1;
+						}
 					}
 				}
 				insulinsPicker.maxWidth = 150;
@@ -297,21 +312,68 @@ package ui.screens.display.treatments
 			if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
 				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_pump_site_change"); 
 			
-			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_PEN_BASAL)
 			{
 				treatmentType = !treatment.isTempBasalEnd ? ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_temp_basal") : ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_temp_basal_end");
+				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				{
+					treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_basal")
+				}
+				
+				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				{
+					//User's insulins
+					userInsulins = ProfileManager.insulinsList;
+					insulinsPicker = LayoutFactory.createPickerList()
+					insulinsList = new ArrayCollection();
+				 	allInsulinTypes = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_types_list').split(",");
+					longActing = StringUtil.trim(allInsulinTypes[4]);
+					
+					selectedInsulin = 0;
+					if (userInsulins != null)
+					{
+						for (i = 0; i < userInsulins.length; i++) 
+						{
+							insulin = userInsulins[i];
+							
+							if (insulin != null && insulin.type == longActing)
+							{
+								insulinsList.push( {label: insulin.name + (insulin.isHidden == true && insulin.name.indexOf("Nightscout") == -1 ? " " + "(" + ModelLocator.resourceManagerInstance.getString('generalsettingsscreen',"collection_list").split(",")[0] + ")" : ""), id: insulin.ID} );
+								
+								if (insulin.ID == treatment.insulinID)
+								{
+									selectedInsulin = insulinsList.length - 1;
+								}
+							}
+						}
+					}
+					insulinsPicker.maxWidth = 150;
+					insulinsPicker.labelField = "label";
+					insulinsPicker.itemRendererFactory = function():IListItemRenderer
+					{
+						var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+						renderer.paddingRight = renderer.paddingLeft = 20;
+						return renderer;
+					};
+					insulinsPicker.popUpContentManager = new DropDownPopUpContentManager();
+					insulinsPicker.dataProvider = insulinsList;
+					insulinsPicker.selectedIndex = selectedInsulin;
+					insulinsPicker.addEventListener(Event.CHANGE, onSettingsChanged);
+				}
 				
 				//Insulin Amount
-				insulinAmountStepper = LayoutFactory.createNumericStepper(treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_TEMP_BASAL ? 0 : 0.1, 150, treatment.type != Treatment.TYPE_TEMP_BASAL ? treatment.insulinAmount : treatment.isBasalAbsolute ? Math.round(treatment.basalAbsoluteAmount * 100) / 100 : treatment.basalPercentAmount, treatment.type != Treatment.TYPE_TEMP_BASAL ? 0.1 : 0.01);
-				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+				insulinAmountStepper = LayoutFactory.createNumericStepper(treatment.type == Treatment.TYPE_TEMP_BASAL ? 0 : 0.1, 150, treatment.isBasalAbsolute ? Math.round(treatment.basalAbsoluteAmount * 100) / 100 : treatment.basalPercentAmount, treatment.type == Treatment.TYPE_TEMP_BASAL ? 0.01 : 0.5);
+				if (treatment.type == Treatment.TYPE_PEN_BASAL)
 				{
-					insulinAmountStepper.value = treatment.getTotalInsulin();
+					insulinAmountStepper.step = 0.5;
+					insulinAmountStepper.minimum = 0.5;
+					insulinAmountStepper.maximum = 200;
 				}
 				insulinAmountStepper.pivotX = -10;
 				insulinAmountStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 				
 				//Basal Duration
-				tempBasalDurationStepper = LayoutFactory.createNumericStepper(1, 10000, treatment.basalDuration, 5);
+				tempBasalDurationStepper = LayoutFactory.createNumericStepper(0, 10000, treatment.basalDuration, 5);
 				tempBasalDurationStepper.pivotX = -10;
 				tempBasalDurationStepper.addEventListener(Event.CHANGE, onSettingsChanged);
 			}
@@ -393,11 +455,16 @@ package ui.screens.display.treatments
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: exerciseDurationStepper });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_intensity_label"), accessory: exerciseIntensityPicker });
 			}
-			if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_PEN_BASAL)
 			{
+				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+					infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
+				
 				if (!treatment.isTempBasalEnd)
 					infoSectionChildren.push({ label: treatment.type == Treatment.TYPE_TEMP_BASAL && treatment.isBasalRelative ? ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_relative_temp_basal_label") : ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
-				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: tempBasalDurationStepper });
+				
+				if (!treatment.isTempBasalEnd && treatment.type != Treatment.TYPE_PEN_BASAL)
+					infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: tempBasalDurationStepper });
 			}
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_note_label"), accessory: noteTextArea });
 			infoSectionChildren.push({ label: "", accessory: actionButtonsContainer });
@@ -468,8 +535,10 @@ package ui.screens.display.treatments
 			
 			//Update treatment properties that are the same for all treatments
 			treatment.timestamp = treatmentTime.value.valueOf();
-			if (treatment.type != Treatment.TYPE_TEMP_BASAL)
+			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_PEN_BASAL)
+			{
 				treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatmentTime.value.valueOf());
+			}
 			treatment.note = noteTextArea.text;
 			
 			var carbDelayTime:Number;
@@ -632,16 +701,40 @@ package ui.screens.display.treatments
 				treatment.duration = exerciseDurationStepper.value;
 				treatment.exerciseIntensity = exerciseIntensity;
 			}
-			else if(treatment.type == Treatment.TYPE_TEMP_BASAL)
+			else if(treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_PEN_BASAL)
 			{
-				treatment.basalDuration = tempBasalDurationStepper.value;
-				if (treatment.isBasalAbsolute)
+				//Basal Duration
+				if (!treatment.isTempBasalEnd && treatment.type != Treatment.TYPE_PEN_BASAL)
 				{
-					treatment.basalAbsoluteAmount = insulinAmountStepper.value;
+					treatment.basalDuration = tempBasalDurationStepper.value;
 				}
-				else if (treatment.isBasalRelative)
+				
+				//Basal Amount
+				if (!treatment.isTempBasalEnd)
 				{
-					treatment.basalPercentAmount = insulinAmountStepper.value;
+					if (treatment.isBasalAbsolute)
+					{
+						treatment.basalAbsoluteAmount = insulinAmountStepper.value;
+					}
+					else if (treatment.isBasalRelative)
+					{
+						treatment.basalPercentAmount = insulinAmountStepper.value;
+					}
+				}
+				
+				//Insulin & DIA
+				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				{
+					if (insulinsPicker != null && insulinsPicker.selectedItem != null && insulinsPicker.selectedItem.id != null)
+					{
+						treatment.insulinID = String(insulinsPicker.selectedItem.id);
+						
+						var updatedInsulin:Insulin = ProfileManager.getInsulin(String(insulinsPicker.selectedItem.id));
+						if (updatedInsulin != null)
+						{
+							treatment.basalDuration = updatedInsulin.dia * 60;
+						}
+					}
 				}
 			}
 			

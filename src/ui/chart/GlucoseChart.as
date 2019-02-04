@@ -1866,6 +1866,7 @@ package ui.chart
 				
 				previousTempBasalAreaProps = {}
 				previousTempBasalAreaProps.basalAmount = basalProperties.mdiBasalAmount;
+				previousTempBasalAreaProps.basalDuration = basalProperties.mdiBasalDuration;
 				previousTempBasalAreaProps.timestamp = basalProperties.mdiBasalTime;
 				previousTempBasalAreaProps.basalTreatment = basalProperties.mdiBasalTreatment;
 				previousTempBasalAreaProps.hasOverlap = basalProperties.hasOverlap;
@@ -2320,16 +2321,16 @@ package ui.chart
 						basalInsulin = ProfileManager.getInsulin(bTreatment.insulinID);
 						if (basalInsulin != null)
 						{
-							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ":" + " " + basalInsulin.name + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + (Math.round((bTreatment.basalAbsoluteAmount / (bTreatment.basalDuration / 60) * 100)) / 100) + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour');
+							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ":" + " " + basalInsulin.name + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + (Math.round((bTreatment.basalAbsoluteAmount / (bTreatment.basalDuration / 60) * 100)) / 100) + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_label') + ":" + " " + TimeSpan.formatHoursMinutesFromMinutes(basalProps.basalDuration, false);
 						}
 						else
 						{
-							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + (Math.round((bTreatment.basalAbsoluteAmount / (bTreatment.basalDuration / 60) * 100)) / 100) + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour');
+							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + (Math.round((bTreatment.basalAbsoluteAmount / (bTreatment.basalDuration / 60) * 100)) / 100) + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_label') + ":" + " " + TimeSpan.formatHoursMinutesFromMinutes(basalProps.basalDuration, false);
 						}
 					}
 					else
 					{
-						treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount);
+						treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_label') + ":" + " " + TimeSpan.formatHoursMinutesFromMinutes(basalProps.basalDuration, false);
 					}
 				}
 				else if (basalProps != null && basalProps.hasOverlap == true && basalProps.basalTreatmentsList != null)
@@ -2363,16 +2364,16 @@ package ui.chart
 						basalInsulin = ProfileManager.getInsulin(bTreatment.insulinID);
 						if (basalInsulin != null)
 						{
-							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ":" + " " + basalInsulin.name + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")";
+							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','treatment_insulin_label') + ":" + " " + basalInsulin.name + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_label') + ":" + " " + TimeSpan.formatHoursMinutesFromMinutes(basalProps.basalDuration, false);
 						}
 						else
 						{
-							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")";
+							treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_label') + ":" + " " + TimeSpan.formatHoursMinutesFromMinutes(basalProps.basalDuration, false);
 						}
 					}
 					else
 					{
-						treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")";
+						treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') + "\n\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_amount_label') + ":" + " " + GlucoseFactory.formatIOB(basalProps.basalAmount) + " " + "(" + combinedAmounts + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','basal_delivery_rate') + ":" + " " + totalBasalRate + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour') + " " + "(" + combinedBasalRates + ")" + "\n" + ModelLocator.resourceManagerInstance.getString('treatments','exercise_duration_label') + ":" + " " + TimeSpan.formatHoursMinutesFromMinutes(basalProps.basalDuration, false);
 					}
 				}
 			}

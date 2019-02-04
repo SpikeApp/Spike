@@ -80,7 +80,7 @@ package ui.screens.display.treatments
 		private var pumpBatteryCanvas:Canvas;
 		private var pumpBatteryTexture:RenderTexture;
 		private var tempBasalCanvas:Canvas;
-		private var tempBasalTexture:RenderTexture;
+		private var basalTexture:RenderTexture;
 		
 		/* Objects */
 		private var allTreatments:Array;
@@ -128,10 +128,11 @@ package ui.screens.display.treatments
 			allTreatments = TreatmentsManager.treatmentsList.concat();
 			
 			var numberOfTempBasals:uint = TreatmentsManager.basalsList.length;
+			var basalType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "pump" ? Treatment.TYPE_TEMP_BASAL : Treatment.TYPE_PEN_BASAL;
 			for (var i:int = 0; i < numberOfTempBasals; i++) 
 			{
 				var tempBasal:Treatment = TreatmentsManager.basalsList[i];
-				if (tempBasal != null && tempBasal.type == Treatment.TYPE_TEMP_BASAL)
+				if (tempBasal != null && tempBasal.type == basalType)
 				{
 					allTreatments.push(tempBasal);
 				}
@@ -198,8 +199,8 @@ package ui.screens.display.treatments
 			
 			//Temp Basals Icons
 			tempBasalCanvas = createTreatmentIcon(Treatment.TYPE_TEMP_BASAL);
-			tempBasalTexture = new RenderTexture(tempBasalCanvas.width, tempBasalCanvas.height);
-			tempBasalTexture.draw(tempBasalCanvas);
+			basalTexture = new RenderTexture(tempBasalCanvas.width, tempBasalCanvas.height);
+			basalTexture.draw(tempBasalCanvas);
 			
 			var dataList:Array = [];
 			var i:int;
@@ -285,7 +286,7 @@ package ui.screens.display.treatments
 					
 					if (treatment.isBasalAbsolute)
 					{
-						tempBasalValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount)
+						tempBasalValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount);
 					}
 					else if (treatment.isBasalRelative)
 					{
@@ -297,7 +298,12 @@ package ui.screens.display.treatments
 					}
 					
 					treatmentValue = tempBasalValue;
-					icon = tempBasalTexture;
+					icon = basalTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				{
+					treatmentValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount);
+					icon = basalTexture;
 				}
 				
 				var treatmentTime:Date = new Date(treatment.timestamp);
@@ -467,7 +473,7 @@ package ui.screens.display.treatments
 				pumpSiteImage.scale = 0.75;
 				icon.addChild(pumpSiteImage);
 			}
-			else if (treatmentType == Treatment.TYPE_TEMP_BASAL)
+			else if (treatmentType == Treatment.TYPE_TEMP_BASAL || treatmentType == Treatment.TYPE_PEN_BASAL)
 			{
 				var tbQuad:Quad = new Quad(radius * 1.85, radius * 1.85, bolusColor);
 				icon.addChild(tbQuad);
@@ -841,10 +847,10 @@ package ui.screens.display.treatments
 				pumpSiteCanvas = null;
 			}
 			
-			if (tempBasalTexture != null)
+			if (basalTexture != null)
 			{
-				tempBasalTexture.dispose();
-				tempBasalTexture = null;
+				basalTexture.dispose();
+				basalTexture = null;
 			}
 			
 			if (tempBasalCanvas != null)

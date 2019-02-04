@@ -671,6 +671,7 @@ package treatments
 		{
 			//Temp Basal
 			var mdiBasalAmount:Number = 0;
+			var mdiBasalDuration:Number = 0;
 			var mdiBasalTreatment:Treatment = null;
 			var mdiBasalTreatmentsList:Array = [];
 			var mdiBasalTime:Number = time;
@@ -696,10 +697,12 @@ package treatments
 						{
 							mdiBasalTreatment = mdiBasalInternalTreatment;
 							mdiBasalTime = mdiBasalInternalTreatment.timestamp;
+							mdiBasalDuration = mdiBasalInternalTreatment.basalDuration;
 						}
 						else
 						{
 							hasOverlap = true;
+							mdiBasalDuration = ((mdiBasalInternalTreatment.timestamp + (mdiBasalInternalTreatment.basalDuration * TimeSpan.TIME_1_MINUTE)) - mdiBasalTreatment.timestamp) / TimeSpan.TIME_1_MINUTE;
 						}
 						
 						mdiBasalTreatmentsList.push(mdiBasalInternalTreatment);
@@ -711,6 +714,7 @@ package treatments
 			
 			return {
 				mdiBasalAmount: mdiBasalAmount,
+				mdiBasalDuration: mdiBasalDuration,
 				mdiBasalTime: mdiBasalTime,
 				mdiBasalTreatment: mdiBasalTreatment,
 				mdiBasalTreatmentsList: mdiBasalTreatmentsList,
