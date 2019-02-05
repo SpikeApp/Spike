@@ -323,7 +323,7 @@ package ui.screens.display.treatments
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
-				TreatmentsManager.addTreatment(Treatment.TYPE_PEN_BASAL);
+				TreatmentsManager.addTreatment(Treatment.TYPE_MDI_BASAL);
 			}
 			else if(treatmentID == 8) //Bolus Wizard
 			{	

@@ -1375,11 +1375,20 @@ package services
 					}
 				}
 			}
-			else if (treatment.type == Treatment.TYPE_PEN_BASAL)
+			else if (treatment.type == Treatment.TYPE_MDI_BASAL)
 			{
 				newTreatment["eventType"] = "Temp Basal";
 				newTreatment["duration"] = treatment.basalDuration;
 				newTreatment["absolute"] = treatment.basalAbsoluteAmount;
+				
+				usedInsulin = ProfileManager.getInsulin(treatment.insulinID);
+				if (usedInsulin != null)
+				{
+					newTreatment["insulinName"] = usedInsulin != null ? usedInsulin.name : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");	
+					newTreatment["insulinType"] = usedInsulin != null ? usedInsulin.type : "Unknown";	
+					newTreatment["insulinID"] = usedInsulin.ID;
+					newTreatment["insulinDIA"] = usedInsulin.dia;
+				}
 			}
 			
 			newTreatment["_id"] = treatment.ID;
@@ -1417,8 +1426,6 @@ package services
 		
 		public static function uploadTreatment(treatment:Treatment):void
 		{
-			return;
-			
 			if (!CGMBlueToothDevice.isFollower() && !serviceActive)
 				return;
 			

@@ -685,7 +685,7 @@ package treatments
 					var mdiBasalInternalTreatment:Treatment = TreatmentsManager.basalsList[i];
 					if (mdiBasalInternalTreatment != null 
 						&&
-						mdiBasalInternalTreatment.type == Treatment.TYPE_PEN_BASAL
+						mdiBasalInternalTreatment.type == Treatment.TYPE_MDI_BASAL
 						&& 
 						mdiBasalInternalTreatment.timestamp <= time 
 						&& 

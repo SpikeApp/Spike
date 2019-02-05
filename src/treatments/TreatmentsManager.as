@@ -1709,8 +1709,8 @@ package treatments
 			
 			Trace.myTrace("TreatmentsManager.as", "deleteTreatment called!");
 			
-			var treatmentListSource:Array = treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_PEN_BASAL ? treatmentsList : basalsList;
-			var treatmentMapSource:Dictionary = treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_PEN_BASAL ? treatmentsMap : basalsMap;
+			var treatmentListSource:Array = treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL ? treatmentsList : basalsList;
+			var treatmentMapSource:Dictionary = treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL ? treatmentsMap : basalsMap;
 			
 			if (treatmentMapSource[treatment.ID] != null) //treatment exists
 			{
@@ -1741,16 +1741,16 @@ package treatments
 						//Notify listeners
 						if (notifyInternally)
 						{
-							if (spikeTreatment.type != Treatment.TYPE_TEMP_BASAL && spikeTreatment.type != Treatment.TYPE_PEN_BASAL)
+							if (spikeTreatment.type != Treatment.TYPE_TEMP_BASAL && spikeTreatment.type != Treatment.TYPE_MDI_BASAL)
 								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, spikeTreatment));
 							
-							if (spikeTreatment.type == Treatment.TYPE_TEMP_BASAL || spikeTreatment.type == Treatment.TYPE_PEN_BASAL)
+							if (spikeTreatment.type == Treatment.TYPE_TEMP_BASAL || spikeTreatment.type == Treatment.TYPE_MDI_BASAL)
 								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
 						}
 						
 						if (notiyExternally)
 						{
-							if (spikeTreatment.type != Treatment.TYPE_TEMP_BASAL && spikeTreatment.type != Treatment.TYPE_PEN_BASAL)
+							if (spikeTreatment.type != Treatment.TYPE_TEMP_BASAL && spikeTreatment.type != Treatment.TYPE_MDI_BASAL)
 								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_EXTERNALLY_DELETED, false, false, spikeTreatment));
 						}
 						
@@ -1807,7 +1807,7 @@ package treatments
 			}
 			
 			//Notify listeners
-			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_PEN_BASAL)
+			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL)
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			else
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
@@ -1849,7 +1849,7 @@ package treatments
 			}
 			
 			//Insert in Database
-			if (treatment.type != Treatment.TYPE_TEMP_BASAL)
+			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL)
 			{
 				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				{
@@ -1981,7 +1981,7 @@ package treatments
 				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal_start');
 			else if (type == Treatment.TYPE_TEMP_BASAL_END)
 				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal_end');
-			else if (type == Treatment.TYPE_PEN_BASAL)
+			else if (type == Treatment.TYPE_MDI_BASAL)
 				treatmentTitle = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal');
 			
 			treatmentInserterTitleLabel = LayoutFactory.createLabel(treatmentTitle, HorizontalAlign.CENTER, VerticalAlign.TOP, 18, true);
@@ -2155,7 +2155,7 @@ package treatments
 				treatmentInserterContainer.addChild(carbSpacer);
 			}
 			
-			if (type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_PEN_BASAL || type == Treatment.TYPE_TEMP_BASAL_END)
+			if (type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_MDI_BASAL || type == Treatment.TYPE_TEMP_BASAL_END)
 			{
 				//Logical
 				canAddInsulin = true;
@@ -2279,7 +2279,7 @@ package treatments
 				carbDelayContainer.width = treatmentTime.width;
 				foodManagerContainer.width = treatmentTime.width;
 			}
-			else if (type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_PEN_BASAL)
+			else if (type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_MDI_BASAL)
 			{
 				insulinTextInput.width = treatmentTime.width;
 				if (type == Treatment.TYPE_TEMP_BASAL)
@@ -2309,7 +2309,7 @@ package treatments
 				|| 
 				type == Treatment.TYPE_TEMP_BASAL
 				|| 
-				type == Treatment.TYPE_PEN_BASAL
+				type == Treatment.TYPE_MDI_BASAL
 			)
 			{
 				//Insulin Type
@@ -2326,7 +2326,7 @@ package treatments
 					for (var i:int = 0; i < numInsulins; i++) 
 					{
 						var insulin:Insulin = userInsulins[i];
-						if (type == Treatment.TYPE_PEN_BASAL)
+						if (type == Treatment.TYPE_MDI_BASAL)
 						{
 							if (insulin.name.indexOf("Nightscout") == -1 
 								&& 
@@ -2405,7 +2405,7 @@ package treatments
 				actionFunction = onTempBasalStartEntered;
 			else if (type == Treatment.TYPE_TEMP_BASAL_END)
 				actionFunction = onTempBasalEndEntered;
-			else if (type == Treatment.TYPE_PEN_BASAL)
+			else if (type == Treatment.TYPE_MDI_BASAL)
 				actionFunction = onPenBasalEntered;
 			
 			var actionLayout:HorizontalLayout = new HorizontalLayout();
@@ -2438,7 +2438,7 @@ package treatments
 				|| 
 				type == Treatment.TYPE_TEMP_BASAL_END
 				||
-				((type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_PEN_BASAL) && canAddInsulin) 
+				((type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_MDI_BASAL) && canAddInsulin) 
 			)
 			{
 				addButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations','add_button_label').toUpperCase());
@@ -2500,7 +2500,7 @@ package treatments
 			totalScrollContainerHeight = totalScrollContainer.height;
 			
 			//Keyboard Focus
-			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS || type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_PEN_BASAL)
+			if (type == Treatment.TYPE_BOLUS || type == Treatment.TYPE_CORRECTION_BOLUS || type == Treatment.TYPE_MEAL_BOLUS || type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_MDI_BASAL)
 				insulinTextInput.setFocus();
 			else if (type == Treatment.TYPE_NOTE)
 				notes.setFocus();
@@ -2508,7 +2508,7 @@ package treatments
 				glucoseTextInput.setFocus();
 			else if (type == Treatment.TYPE_CARBS_CORRECTION)
 				carbsTextInput.setFocus();
-			else if (type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_PEN_BASAL)
+			else if (type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_MDI_BASAL)
 				insulinTextInput.setFocus();
 			else if (type == Treatment.TYPE_EXERCISE)
 				exerciseDurationTextInput.setFocus();
@@ -2543,7 +2543,7 @@ package treatments
 					carbDelayContainer.width = actionContainer.width;
 					foodManagerContainer.width = actionContainer.width;
 				}
-				else if (type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_PEN_BASAL)
+				else if (type == Treatment.TYPE_TEMP_BASAL || type == Treatment.TYPE_MDI_BASAL)
 				{
 					insulinTextInput.width = actionContainer.width;
 					if (type == Treatment.TYPE_TEMP_BASAL)
@@ -2940,7 +2940,7 @@ package treatments
 					//Create Basal Treatment
 					var penBasalTreatment:Treatment = new Treatment
 					(
-						Treatment.TYPE_PEN_BASAL,
+						Treatment.TYPE_MDI_BASAL,
 						treatmentTime.value.valueOf(),
 						0,
 						insulinList.selectedItem.id,
@@ -4445,6 +4445,7 @@ package treatments
 			var firstReadingTimestamp:Number;
 			var lastReadingTimestamp:Number;
 			var now:Number = new Date().valueOf();
+			var isMDIUser:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi";
 			
 			if (ModelLocator.bgReadings != null && ModelLocator.bgReadings.length > 0)
 			{
@@ -4461,6 +4462,7 @@ package treatments
 			{
 				var nsBasal:Object = nsTreatments[i];
 				var basalTimestamp:Number = DateUtil.parseW3CDTF(nsBasal.created_at).valueOf();
+				if (basalTimestamp < firstReadingTimestamp) continue; //Treatment is outside timespan of first bg reading in spike. Let's ignore it
 				var basalID:String = nsBasal._id;
 				var basalNote:String = "";
 				if (nsBasal.reason != null && nsBasal.reason != "")
@@ -4482,28 +4484,71 @@ package treatments
 				var basalPercentAmount:Number = nsBasal.percent != null && !isNaN(nsBasal.percent) ? nsBasal.percent : 0;
 				var isBasalRelative:Boolean = nsBasal.percent != null && !isNaN(nsBasal.percent) && !isBasalAbsolute ? true : false;
 				var isTempBasalEnd:Boolean = !isBasalAbsolute && !isBasalRelative;
+				var basalInsulinID:String = nsBasal.insulinID != null ? String(nsBasal.insulinID) : "";
 				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi" && basalDuration < 6 * 60) continue;
-				
-				if (isTempBasalEnd && basalDuration < 30) basalDuration = 30;
-				
-				if (basalTimestamp < firstReadingTimestamp)
+				if (isMDIUser && basalDuration < 6 * 60)
 				{
-					//Treatment is outside timespan of first bg reading in spike. Let's ignore it
+					//Basal has less than 6h duration. Not relevant for MDI users.
 					continue;
+				}
+				
+				if (isTempBasalEnd && basalDuration < 30)
+				{
+					basalDuration = 30;
+				}
+				
+				//Insulin
+				if (isMDIUser && basalInsulinID != "")
+				{
+					//It's a basal from Spike Master
+					var localInsulin:Insulin = ProfileManager.getInsulin(basalInsulinID);
+					var basalInsulinName:String = nsBasal.insulinName != null ? nsBasal.insulinName : ModelLocator.resourceManagerInstance.getString("treatments","nightscout_insulin");
+					var basalInsulinDIA:Number = nsBasal.insulinDIA != null ? nsBasal.insulinDIA : 24;
+					var basalInsulinType:String = nsBasal.insulinType == null ? "Unknown" : String(nsBasal.insulinType);
+					
+					if (localInsulin == null)
+					{
+						//Let's create this insulin
+						ProfileManager.addInsulin(basalInsulinName, basalInsulinDIA, basalInsulinType, false, basalInsulinID, true, true);
+					}
+					else
+					{
+						//Check if insulin needs to be updated
+						var needsDBUpdate:Boolean = false;
+						if (localInsulin.dia != basalInsulinDIA)
+						{
+							localInsulin.dia = basalInsulinDIA;
+							needsDBUpdate = true;
+						}
+						
+						if (localInsulin.name != basalInsulinName)
+						{
+							localInsulin.name = basalInsulinName;
+							needsDBUpdate = true;
+						}
+						
+						if (needsDBUpdate)
+						{
+							ProfileManager.updateInsulin(localInsulin, true);
+						}
+					}
 				}
 				
 				//Check if treatment already exists in Spike
 				if (basalsMap[basalID] == null)
 				{
 					//It's a new treatment. Let's create it
-					var basal:Treatment = new Treatment(Treatment.TYPE_TEMP_BASAL, basalTimestamp);
+					var basal:Treatment = new Treatment(isMDIUser ? Treatment.TYPE_MDI_BASAL : Treatment.TYPE_TEMP_BASAL, basalTimestamp);
 					basal.basalDuration = basalDuration;
 					basal.basalAbsoluteAmount = basalAbsoluteAmount;
 					basal.isBasalAbsolute = isBasalAbsolute;
 					basal.basalPercentAmount = basalPercentAmount;
 					basal.isBasalRelative = isBasalRelative;
 					basal.isTempBasalEnd = isTempBasalEnd;
+					if (isMDIUser)
+					{
+						basal.insulinID = basalInsulinID;	
+					}
 					
 					//Add treatment to Spike and Databse
 					addInternalTreatment(basal);
@@ -4594,7 +4639,7 @@ package treatments
 				return
 			}
 				
-			for(var i:int = nsTreatments.length - 1 ; i >= 0; i--)
+			for (var i:int = nsTreatments.length - 1 ; i >= 0; i--)
 			{
 				//Define initial treatment properties
 				var nsTreatment:Object = nsTreatments[i];

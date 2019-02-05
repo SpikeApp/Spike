@@ -128,11 +128,11 @@ package ui.screens.display.treatments
 			allTreatments = TreatmentsManager.treatmentsList.concat();
 			
 			var numberOfTempBasals:uint = TreatmentsManager.basalsList.length;
-			var basalType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_MODE) == "pump" ? Treatment.TYPE_TEMP_BASAL : Treatment.TYPE_PEN_BASAL;
+			var userType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump" ? Treatment.TYPE_TEMP_BASAL : Treatment.TYPE_MDI_BASAL;
 			for (var i:int = 0; i < numberOfTempBasals; i++) 
 			{
 				var tempBasal:Treatment = TreatmentsManager.basalsList[i];
-				if (tempBasal != null && tempBasal.type == basalType)
+				if (tempBasal != null && tempBasal.type == userType)
 				{
 					allTreatments.push(tempBasal);
 				}
@@ -300,7 +300,7 @@ package ui.screens.display.treatments
 					treatmentValue = tempBasalValue;
 					icon = basalTexture;
 				}
-				else if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				else if (treatment.type == Treatment.TYPE_MDI_BASAL)
 				{
 					treatmentValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount);
 					icon = basalTexture;
@@ -473,7 +473,7 @@ package ui.screens.display.treatments
 				pumpSiteImage.scale = 0.75;
 				icon.addChild(pumpSiteImage);
 			}
-			else if (treatmentType == Treatment.TYPE_TEMP_BASAL || treatmentType == Treatment.TYPE_PEN_BASAL)
+			else if (treatmentType == Treatment.TYPE_TEMP_BASAL || treatmentType == Treatment.TYPE_MDI_BASAL)
 			{
 				var tbQuad:Quad = new Quad(radius * 1.85, radius * 1.85, bolusColor);
 				icon.addChild(tbQuad);

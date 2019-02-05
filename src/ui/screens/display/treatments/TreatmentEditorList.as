@@ -312,15 +312,15 @@ package ui.screens.display.treatments
 			if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
 				treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_pump_site_change"); 
 			
-			if (treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_PEN_BASAL)
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_MDI_BASAL)
 			{
 				treatmentType = !treatment.isTempBasalEnd ? ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_temp_basal") : ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_temp_basal_end");
-				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				if (treatment.type == Treatment.TYPE_MDI_BASAL)
 				{
 					treatmentType = ModelLocator.resourceManagerInstance.getString('treatments',"treatment_name_basal")
 				}
 				
-				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				if (treatment.type == Treatment.TYPE_MDI_BASAL)
 				{
 					//User's insulins
 					userInsulins = ProfileManager.insulinsList;
@@ -363,7 +363,7 @@ package ui.screens.display.treatments
 				
 				//Insulin Amount
 				insulinAmountStepper = LayoutFactory.createNumericStepper(treatment.type == Treatment.TYPE_TEMP_BASAL ? 0 : 0.1, 150, treatment.isBasalAbsolute ? Math.round(treatment.basalAbsoluteAmount * 100) / 100 : treatment.basalPercentAmount, treatment.type == Treatment.TYPE_TEMP_BASAL ? 0.01 : 0.5);
-				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				if (treatment.type == Treatment.TYPE_MDI_BASAL)
 				{
 					insulinAmountStepper.step = 0.5;
 					insulinAmountStepper.minimum = 0.5;
@@ -455,15 +455,15 @@ package ui.screens.display.treatments
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: exerciseDurationStepper });
 				infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_intensity_label"), accessory: exerciseIntensityPicker });
 			}
-			if (treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_PEN_BASAL)
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_MDI_BASAL)
 			{
-				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				if (treatment.type == Treatment.TYPE_MDI_BASAL)
 					infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_label"), accessory: insulinsPicker });
 				
 				if (!treatment.isTempBasalEnd)
 					infoSectionChildren.push({ label: treatment.type == Treatment.TYPE_TEMP_BASAL && treatment.isBasalRelative ? ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_relative_temp_basal_label") : ModelLocator.resourceManagerInstance.getString('treatments',"treatment_insulin_amount_label"), accessory: insulinAmountStepper });
 				
-				if (!treatment.isTempBasalEnd && treatment.type != Treatment.TYPE_PEN_BASAL)
+				if (!treatment.isTempBasalEnd && treatment.type != Treatment.TYPE_MDI_BASAL)
 					infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"exercise_duration_label"), accessory: tempBasalDurationStepper });
 			}
 			infoSectionChildren.push({ label: ModelLocator.resourceManagerInstance.getString('treatments',"treatment_note_label"), accessory: noteTextArea });
@@ -535,7 +535,7 @@ package ui.screens.display.treatments
 			
 			//Update treatment properties that are the same for all treatments
 			treatment.timestamp = treatmentTime.value.valueOf();
-			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_PEN_BASAL)
+			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL)
 			{
 				treatment.glucoseEstimated = TreatmentsManager.getEstimatedGlucose(treatmentTime.value.valueOf());
 			}
@@ -701,10 +701,10 @@ package ui.screens.display.treatments
 				treatment.duration = exerciseDurationStepper.value;
 				treatment.exerciseIntensity = exerciseIntensity;
 			}
-			else if(treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_PEN_BASAL)
+			else if(treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_MDI_BASAL)
 			{
 				//Basal Duration
-				if (!treatment.isTempBasalEnd && treatment.type != Treatment.TYPE_PEN_BASAL)
+				if (!treatment.isTempBasalEnd && treatment.type != Treatment.TYPE_MDI_BASAL)
 				{
 					treatment.basalDuration = tempBasalDurationStepper.value;
 				}
@@ -723,7 +723,7 @@ package ui.screens.display.treatments
 				}
 				
 				//Insulin & DIA
-				if (treatment.type == Treatment.TYPE_PEN_BASAL)
+				if (treatment.type == Treatment.TYPE_MDI_BASAL)
 				{
 					if (insulinsPicker != null && insulinsPicker.selectedItem != null && insulinsPicker.selectedItem.id != null)
 					{
