@@ -1669,7 +1669,7 @@ package ui.chart
 			mdiBasalLabelPropertiesMap = {};
 			
 			//Data variables
-			var fromTime:Number = firstBGReadingTimeStamp;
+			var fromTime:Number = firstBGReadingTimeStamp != 0 ? firstBGReadingTimeStamp : now - TimeSpan.TIME_24_HOURS;
 			var toTime:Number = !displayLatestBGValue ? now + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
 			
 			var numberOfPredictions:uint = predictionsMainGlucoseDataPoints.length;
@@ -1911,15 +1911,14 @@ package ui.chart
 		private function renderPumpBasals():void
 		{
 			//Validation
-			if (ProfileManager.basalRatesList.length == 0 && TreatmentsManager.basalsList.length == 0)
-			{
-				return;
-			}
-			
 			if (!displayPumpBasals || !SystemUtil.isApplicationActive)
 			{
 				return
 			}
+			
+			//Dispose previous basals
+			disposeBasalCallout();
+			disposeBasals();
 			
 			//Setup initial timeline/mask properties
 			if (basalsFirstRun && basalsContainer == null)
@@ -1931,9 +1930,23 @@ package ui.chart
 				mainChartContainer.addChildAt(basalsContainer, 0);
 			}
 			
-			//Dispose previous basals
-			disposeBasalCallout();
-			disposeBasals();
+			if (false)//(ProfileManager.basalRatesList.length == 0 && TreatmentsManager.basalsList.length == 0)
+			{
+				if (mainChart != null)
+				{
+					//Create and configure line
+					basalAbsoluteLine = new SpikeLine();
+					basalAbsoluteLine.lineStyle(1.5, basalLineColor);
+					basalAbsoluteLine.moveTo(0, 0);
+					basalAbsoluteLine.lineTo(predictionsEnabled && predictionsMainGlucoseDataPoints.length > 0 ? mainChart.width + Constants.stageWidth : mainChart.width, 0);
+					
+					//Add line to display list
+					basalsContainer.addChild(basalAbsoluteLine);
+					basalLinesList.push(basalAbsoluteLine);
+				}
+				
+				return;
+			}
 			
 			//Common variables
 			var now:Number = new Date().valueOf();
@@ -1942,8 +1955,19 @@ package ui.chart
 			tempBasalAreaPropertiesMap = {};
 			
 			//Data variables
-			var fromTime:Number = firstBGReadingTimeStamp;
+			var fromTime:Number = firstBGReadingTimeStamp != 0 ? firstBGReadingTimeStamp : now - TimeSpan.TIME_24_HOURS;
 			var toTime:Number = !displayLatestBGValue ? now + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
+			
+			var numberOfPredictions:uint = predictionsMainGlucoseDataPoints.length;
+			if (predictionsEnabled && numberOfPredictions > 0)
+			{
+				var lastPredictionMarker:GlucoseMarker = predictionsMainGlucoseDataPoints[numberOfPredictions - 1];
+				if (lastPredictionMarker != null)
+				{
+					toTime = lastPredictionMarker.bgReading.timestamp + ((mainChartGlucoseMarkerRadius * 2)/mainChartXFactor);
+				}
+			}
+			
 			if (isNaN(toTime)) toTime = now;
 			var suggestedAbsoluteBasalIndex:Number = Number.NaN;
 			
