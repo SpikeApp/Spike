@@ -457,6 +457,7 @@ package ui.chart
 		private var mdiBasalAreaPropertiesMap:Object;
 		private var mdiBasalLabelPropertiesMap:Object;
 		private var basalsFirstRun:Boolean = true;
+		private var displayBasalsOnChart:Boolean = false;
 		private var displayPumpBasals:Boolean = false;
 		private var displayMDIBasals:Boolean = false;
 		private var basalScaler:Number = 1;
@@ -594,9 +595,10 @@ package ui.chart
 			}
 			
 			//Basals
+			displayBasalsOnChart = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SHOW_BASALS_ON_CHART) == "true";
 			basalRenderMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
-			displayPumpBasals = basalRenderMode == "pump" && treatmentsActive && displayTreatmentsOnChart;
-			displayMDIBasals = basalRenderMode == "mdi" && treatmentsActive && displayTreatmentsOnChart;
+			displayPumpBasals = basalRenderMode == "pump" && treatmentsActive && displayTreatmentsOnChart && displayBasalsOnChart;
+			displayMDIBasals = basalRenderMode == "mdi" && treatmentsActive && displayTreatmentsOnChart && displayBasalsOnChart;
 			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
@@ -1622,7 +1624,7 @@ package ui.chart
 		
 		private function renderPenBasals():void
 		{
-			if (!displayMDIBasals || !SystemUtil.isApplicationActive)
+			if (!displayMDIBasals || !SystemUtil.isApplicationActive || firstBGReadingTimeStamp == 0)
 			{
 				return
 			}
@@ -1904,16 +1906,14 @@ package ui.chart
 				basalsContainer.addChild(basalAbsoluteLine);
 				basalLinesList.push(basalAbsoluteLine);
 			}
-			
-			trace("PEN BASAL RENDERING COMPLETED IN:", getTimer() - timer + "ms");
 		}
 		
 		private function renderPumpBasals():void
 		{
 			//Validation
-			if (!displayPumpBasals || !SystemUtil.isApplicationActive)
+			if (!displayPumpBasals || !SystemUtil.isApplicationActive || firstBGReadingTimeStamp == 0)
 			{
-				return
+				return;
 			}
 			
 			//Dispose previous basals
@@ -9709,6 +9709,12 @@ package ui.chart
 		 */
 		private function disposeBasalCallout (e:starling.events.Event = null):void
 		{
+			if (displayPumpBasals && activeBasalAreaQuad != null && basalsContainer != null)
+			{
+				activeBasalAreaQuad.removeFromParent();
+				basalsContainer.addChildAt(activeBasalAreaQuad, 0);
+			}
+			
 			if (treatmentValueLabel != null) 
 			{
 				treatmentValueLabel.removeFromParent();

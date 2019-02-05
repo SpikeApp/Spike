@@ -5523,6 +5523,12 @@ package treatments
 			
 			return highestTempBasalAmount;
 		}
+		
+		public static function clearAllBasals():void
+		{
+			basalsList.length = 0;
+			basalsMap = new Dictionary();
+		}
 
 		/**
 		 * Setters & Getters

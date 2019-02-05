@@ -13,8 +13,6 @@ package ui.screens.display.settings.treatments
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
-	import feathers.controls.PickerList;
-	import feathers.controls.popups.DropDownPopUpContentManager;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
@@ -33,6 +31,7 @@ package ui.screens.display.settings.treatments
 	
 	import treatments.BasalRate;
 	import treatments.ProfileManager;
+	import treatments.TreatmentsManager;
 	
 	import ui.chart.helpers.GlucoseFactory;
 	import ui.popups.AlertManager;
@@ -57,19 +56,16 @@ package ui.screens.display.settings.treatments
 		private var actionsContainer:LayoutGroup;
 		private var basalRateStartTime:DateTimeSpinner;
 		private var basalRateStepper:NumericStepper;
-		private var basalModePicker:PickerList;
 		private var inserterContainer:LayoutGroup;
 		private var nsBasalProfileImporterButton:Button;
 		
 		/* Properties */
-		public var needsSave:Boolean = false;
 		private var userBasalRates:Array;
 		private var accessoryList:Array = [];
 		private var addMode:Boolean = false;
 		private var editMode:Boolean = false;	
 		private var selectedBasalRate:BasalRate;
 		private var timeFormat:String;
-		private var basalsModeValue:String;
 		
 		public function BasalRatesSettingsList()
 		{
@@ -78,6 +74,7 @@ package ui.screens.display.settings.treatments
 			setupProperties();
 			setupInitialContent();	
 			setupContent();
+			setupEventListeners();
 		}
 		
 		/**
@@ -98,8 +95,12 @@ package ui.screens.display.settings.treatments
 		{
 			/* Get Settings */
 			userBasalRates = ProfileManager.basalRatesList;
-			basalsModeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
 			timeFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
+		}
+		
+		private function setupEventListeners():void
+		{
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.NIGHTSCOUT_BASAL_PROFILE_IMPORTED, onRefreshBasalRates);
 		}
 		
 		private function setupContent():void
@@ -108,29 +109,6 @@ package ui.screens.display.settings.treatments
 			modeLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
 			modeLabel.wordWrap = true;
 			modeLabel.width = width;
-			
-			//BASAL MODE
-			basalModePicker = LayoutFactory.createPickerList();
-			
-			var basalModeList:ArrayCollection = new ArrayCollection();
-			basalModeList.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','multiple_daily_injections_aka_pen_user_label'), id: "mdi" } );
-			basalModeList.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','pump_user_label'), id: "pump" } );
-			
-			basalModePicker.popUpContentManager = new DropDownPopUpContentManager();
-			basalModePicker.dataProvider = basalModeList;
-			
-			if (basalsModeValue == "mdi")
-				basalModePicker.selectedIndex = 0;
-			else if (basalsModeValue == "pump")
-				basalModePicker.selectedIndex = 1;
-			
-			basalModePicker.itemRendererFactory = function():IListItemRenderer
-			{
-				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
-				itemRenderer.labelField = "label";
-				return itemRenderer;
-			}
-			basalModePicker.addEventListener(Event.CHANGE, onBasalsModeChanged);
 			
 			//Inserter Container
 			inserterContainer = LayoutFactory.createLayoutGroup("horizontal", HorizontalAlign.LEFT, VerticalAlign.TOP, 5);
@@ -187,64 +165,59 @@ package ui.screens.display.settings.treatments
 			//Set screen content
 			var data:Array = [];
 			
-			data.push( { label: "Mode", accessory:  basalModePicker} );
-			
-			if (basalsModeValue == "pump")
+			//Basal Rates Title
+			data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_rates_title') } );
+				
+			//Loop Basal Rates
+			var validBasalRate:Boolean = false;
+			for (var i:int = 0; i < userBasalRates.length; i++) 
 			{
-				//Basal Rates Title
-				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_rates_title') } );
-				
-				//Loop Basal Rates
-				var validBasalRate:Boolean = false;
-				for (var i:int = 0; i < userBasalRates.length; i++) 
+				var basalRate:BasalRate = userBasalRates[i];
+				if (basalRate != null && basalRate.startTime != "" && !isNaN(basalRate.basalRate))
 				{
-					var basalRate:BasalRate = userBasalRates[i];
-					if (basalRate != null && basalRate.startTime != "" && !isNaN(basalRate.basalRate))
+					//Accessory
+					var basalRateAccessory:TreatmentManagerAccessory;
+					if (!CGMBlueToothDevice.isFollower())
 					{
-						//Accessory
-						var basalRateAccessory:TreatmentManagerAccessory;
-						if (!CGMBlueToothDevice.isFollower())
-						{
-							basalRateAccessory = new TreatmentManagerAccessory();
-							basalRateAccessory.addEventListener(TreatmentManagerAccessory.EDIT, onEditBasalRate);
-							basalRateAccessory.addEventListener(TreatmentManagerAccessory.DELETE, onDeleteBasalRate);
-							accessoryList.push(basalRateAccessory);
-						}
+						basalRateAccessory = new TreatmentManagerAccessory();
+						basalRateAccessory.addEventListener(TreatmentManagerAccessory.EDIT, onEditBasalRate);
+						basalRateAccessory.addEventListener(TreatmentManagerAccessory.DELETE, onDeleteBasalRate);
+						accessoryList.push(basalRateAccessory);
+					}
 						
-						//Data
-						data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','start_time_label') + ": " + TimeSpan.formatHoursMinutes(basalRate.startHours, basalRate.startMinutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_rate_label') + ": " + GlucoseFactory.formatIOB(basalRate.basalRate), accessory: basalRateAccessory, basalRate: basalRate  } );
-						validBasalRate = true;
-					}
+					//Data
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','start_time_label') + ": " + TimeSpan.formatHoursMinutes(basalRate.startHours, basalRate.startMinutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_rate_label') + ": " + GlucoseFactory.formatIOB(basalRate.basalRate), accessory: basalRateAccessory, basalRate: basalRate  } );
+					validBasalRate = true;
 				}
+			}
 				
-				if (!validBasalRate && !editMode && !addMode)
-				{
-					data.push( { label: !CGMBlueToothDevice.isFollower() ? ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','add_configuration_label') : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') } );
-				}
+			if (!validBasalRate && !editMode && !addMode)
+			{
+				data.push( { label: !CGMBlueToothDevice.isFollower() ? ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','add_configuration_label') : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') } );
+			}
 				
-				//Add Components
-				if (addMode || editMode)
-				{
-					if (addMode) modeLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','add_basal_rate_label');	
-					else if (editMode)modeLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','edit_basal_rate_label');
+			//Add Components
+			if (addMode || editMode)
+			{
+				if (addMode) modeLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','add_basal_rate_label');	
+				else if (editMode)modeLabel.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','edit_basal_rate_label');
 					
-					data.push( { label: "", accessory:  modeLabel} );
-					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','start_time_label'), accessory: basalRateStartTime } );
-					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_rate_label'), accessory: basalRateStepper } );
-				}
+				data.push( { label: "", accessory:  modeLabel} );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','start_time_label'), accessory: basalRateStartTime } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_rate_label'), accessory: basalRateStepper } );
+			}
 				
-				if (!addMode && !editMode)
+			if (!addMode && !editMode)
+			{
+				var lastBasalRate:BasalRate = userBasalRates[userBasalRates.length - 1] as BasalRate;
+				if (((lastBasalRate != null && lastBasalRate.startTime != "23:59") || lastBasalRate == null) && !CGMBlueToothDevice.isFollower())
 				{
-					var lastBasalRate:BasalRate = userBasalRates[userBasalRates.length - 1] as BasalRate;
-					if (((lastBasalRate != null && lastBasalRate.startTime != "23:59") || lastBasalRate == null) && !CGMBlueToothDevice.isFollower())
-					{
-						data.push( { label: "", accessory: inserterContainer } );
-					}
+					data.push( { label: "", accessory: inserterContainer } );
 				}
-				else
-				{
-					data.push( { label: "", accessory: actionsContainer } );
-				}
+			}
+			else
+			{
+				data.push( { label: "", accessory: actionsContainer } );
 			}
 			
 			dataProvider = new ArrayCollection(data);
@@ -338,14 +311,6 @@ package ui.screens.display.settings.treatments
 			}
 			
 			return overlapFound;
-		}
-		
-		public function save():void
-		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) != basalsModeValue)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI, basalsModeValue);
-			
-			needsSave = false;
 		}
 		
 		override protected function setupRenderFactory():void
@@ -481,15 +446,6 @@ package ui.screens.display.settings.treatments
 			refreshContent();
 		}
 		
-		private function onBasalsModeChanged(e:Event):void
-		{
-			basalsModeValue = basalModePicker.selectedItem.id;
-
-			refreshContent();
-			
-			needsSave = true;
-		}
-		
 		private function onTimeChanged(e:Event):void
 		{
 			saveBasalRateButton.isEnabled = doesBasalRateTimeOverlap() ? false : true;
@@ -512,6 +468,11 @@ package ui.screens.display.settings.treatments
 		{
 			NightscoutService.instance.removeEventListener(TreatmentsEvent.NIGHTSCOUT_BASAL_PROFILE_IMPORTED, onNightscoutBasalProfileImported);
 			
+			refreshContent();
+		}
+		
+		private function onRefreshBasalRates(e:TreatmentsEvent):void
+		{
 			refreshContent();
 		}
 		
@@ -542,6 +503,7 @@ package ui.screens.display.settings.treatments
 		override public function dispose():void
 		{
 			NightscoutService.instance.removeEventListener(TreatmentsEvent.NIGHTSCOUT_BASAL_PROFILE_IMPORTED, onNightscoutBasalProfileImported);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.NIGHTSCOUT_BASAL_PROFILE_IMPORTED, onRefreshBasalRates);
 			
 			if (basalRateStepper != null)
 			{
@@ -593,14 +555,6 @@ package ui.screens.display.settings.treatments
 				cancelBasalRateButton.removeFromParent();
 				cancelBasalRateButton.dispose();
 				cancelBasalRateButton = null;
-			}
-			
-			if (basalModePicker != null)
-			{
-				basalModePicker.removeEventListener(Event.CHANGE, onBasalsModeChanged);
-				basalModePicker.removeFromParent();
-				basalModePicker.dispose();
-				basalModePicker = null;
 			}
 			
 			if (actionsContainer != null)

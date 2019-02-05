@@ -3,6 +3,10 @@ package ui.screens
 	import flash.display.StageOrientation;
 	import flash.system.System;
 	
+	import database.CommonSettings;
+	
+	import events.SettingsServiceEvent;
+	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -21,6 +25,7 @@ package ui.screens
 	import ui.screens.display.settings.treatments.CarbsSettingsList;
 	import ui.screens.display.settings.treatments.InsulinsSettingsList;
 	import ui.screens.display.settings.treatments.ProfileSettingsList;
+	import ui.screens.display.settings.treatments.UserTypeSettingsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -40,6 +45,8 @@ package ui.screens
 		private var algorithmsSetting:AlgorithmSettingsList;
 		private var basalsLabel:Label;
 		private var basalsSettings:BasalRatesSettingsList;
+		private var userTypeLabel:Label;
+		private var userTypeSettings:UserTypeSettingsList;
 		
 		public function ProfileSettingsScreen() 
 		{
@@ -52,6 +59,8 @@ package ui.screens
 			super.initialize();
 			
 			setupContent();
+			
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
 		}
 		
 		/**
@@ -72,6 +81,14 @@ package ui.screens
 		{
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
+			
+			//User Type Section Label
+			userTypeLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','user_type_section_title'), true);
+			screenRenderer.addChild(userTypeLabel);
+			
+			//Algorithms Settings
+			userTypeSettings = new UserTypeSettingsList();
+			screenRenderer.addChild(userTypeSettings);
 			
 			//Algorithms Section Label
 			algorithmLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','iob_cob_algorithm_label'), true);
@@ -107,13 +124,52 @@ package ui.screens
 			profileSettings = new ProfileSettingsList();
 			screenRenderer.addChild(profileSettings);
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+			{
+				showBasalRates();
+			}
+		}
+		
+		private function showBasalRates():void
+		{
+			//Validation
+			if (screenRenderer == null)
+			{
+				return;
+			}
+			
 			//Basals Section Label
-			basalsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_settings_section_label'), true);
-			screenRenderer.addChild(basalsLabel);
+			if (basalsLabel == null || basalsLabel.parent == null)
+			{
+				if (basalsLabel == null)
+				{
+					basalsLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_settings_section_label'), true);
+				}
+				screenRenderer.addChild(basalsLabel);
+			}
 			
 			//Basals Section Settings
-			basalsSettings = new BasalRatesSettingsList();
-			screenRenderer.addChild(basalsSettings);
+			if (basalsSettings == null || basalsSettings.parent == null)
+			{
+				if (basalsSettings == null)
+				{
+					basalsSettings = new BasalRatesSettingsList();
+				}
+				screenRenderer.addChild(basalsSettings);
+			}
+		}
+		
+		private function removeBasalRates():void
+		{
+			if (basalsLabel != null)
+			{
+				basalsLabel.removeFromParent();
+			}
+			
+			if (basalsSettings != null)
+			{
+				basalsSettings.removeFromParent();
+			}
 		}
 		
 		/**
@@ -129,9 +185,6 @@ package ui.screens
 			if (carbsSettings != null && carbsSettings.needsSave)
 				carbsSettings.save();
 			
-			if (basalsSettings != null && basalsSettings.needsSave)
-				basalsSettings.save();
-			
 			//Activate menu drag gesture
 			AppInterface.instance.drawers.openGesture = DragGesture.EDGE;
 			
@@ -145,10 +198,26 @@ package ui.screens
 			AppInterface.instance.navigator.isSwipeToPopEnabled = true;
 		}
 		
+		private function onSettingChanged(e:SettingsServiceEvent):void
+		{
+			if (e.data == CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) 
+			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+				{
+					showBasalRates();
+				}
+				else
+				{
+					removeBasalRates();
+				}
+			}
+		}
+		
 		override protected function onStarlingBaseResize(e:ResizeEvent):void 
 		{
 			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
+				if (userTypeLabel != null) userTypeLabel.paddingLeft = 30;
 				if (algorithmLabel != null) algorithmLabel.paddingLeft = 30;
 				if (insulinsLabel != null) insulinsLabel.paddingLeft = 30;
 				if (carbsLabel != null) carbsLabel.paddingLeft = 30;
@@ -157,6 +226,7 @@ package ui.screens
 			}
 			else
 			{
+				if (userTypeLabel != null) userTypeLabel.paddingLeft = 0;
 				if (algorithmLabel != null) algorithmLabel.paddingLeft = 0;
 				if (insulinsLabel != null) insulinsLabel.paddingLeft = 0;
 				if (carbsLabel != null) carbsLabel.paddingLeft = 0;
@@ -172,6 +242,8 @@ package ui.screens
 		 */
 		override public function dispose():void
 		{
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingChanged);
+			
 			if (algorithmLabel != null)
 			{
 				algorithmLabel.removeFromParent();
@@ -242,6 +314,20 @@ package ui.screens
 				basalsSettings.removeFromParent();
 				basalsSettings.dispose();
 				basalsSettings = null;
+			}
+			
+			if (userTypeLabel != null)
+			{
+				userTypeLabel.removeFromParent();
+				userTypeLabel.dispose();
+				userTypeLabel = null;
+			}
+			
+			if (userTypeSettings != null)
+			{
+				userTypeSettings.removeFromParent();
+				userTypeSettings.dispose();
+				userTypeSettings = null;
 			}
 			
 			super.dispose();

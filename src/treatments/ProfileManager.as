@@ -722,6 +722,13 @@ package treatments
 			};
 		}
 		
+		public static function clearAllBasalRates():void
+		{
+			basalRatesList.length = 0;
+			basalRatesMap = new Dictionary();
+			basalRatesMapByTime = {};
+		}
+		
 		/**
 		 * INSULINS
 		 */

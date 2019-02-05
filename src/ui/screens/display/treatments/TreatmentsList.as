@@ -183,9 +183,12 @@ package ui.screens.display.treatments
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: canAddTreatments, id: 9 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: canAddTreatments, id: 10 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_exercise'), icon: exerciseImage, selectable: canAddTreatments, id: 11 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_insulin_cartridge_change'), icon: insulinCartridgeImage, selectable: canAddTreatments, id: 12 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change'), icon: pumpSiteImage, selectable: canAddTreatments, id: 13 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_battery_change'), icon: pumpBatteryImage, selectable: canAddTreatments, id: 14 } );
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+				{
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_insulin_cartridge_change'), icon: insulinCartridgeImage, selectable: canAddTreatments, id: 12 } );
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change'), icon: pumpSiteImage, selectable: canAddTreatments, id: 13 } );
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_battery_change'), icon: pumpBatteryImage, selectable: canAddTreatments, id: 14 } );
+				}
 			}
 			if (treatmentsEnabled)
 			{

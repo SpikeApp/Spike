@@ -174,7 +174,8 @@ package services
 		public static var treatmentsAPIServerResponse:String = "";
 		
 		/* Basals */
-		private static var syncPumpBasals:Boolean = true;
+		private static var downloadBasals:Boolean = false;
+		private static var syncPumpBasalRates:Boolean = false;
 		private static var basalProfileImport:Boolean = false;
 		public static var basalsAPIServerResponse:String = "";
 		
@@ -393,7 +394,7 @@ package services
 					if (pumpUserEnabled)
 						propertiesV2Timeout = setTimeout(getPropertiesV2Endpoint, TimeSpan.TIME_1_MINUTE);
 					
-					if (syncPumpBasals)
+					if (downloadBasals)
 						getRemoteBasals();
 				}
 				
@@ -790,7 +791,7 @@ package services
 							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!" + " Unit: " + (isNightscoutMgDl ? "mg/dL" : "mmol/L")  + " DIA: " + dia + " CAR: " + carbAbsorptionRate);
 						}
 							
-						if ((syncPumpBasals && CGMBlueToothDevice.isFollower()) || basalProfileImport)
+						if ((downloadBasals && syncPumpBasalRates && CGMBlueToothDevice.isFollower()) || basalProfileImport)
 						{
 							var nightscoutBasalsList:Array;
 							
@@ -828,6 +829,8 @@ package services
 								if (numBasalRateAdded > 0)
 								{
 									Trace.myTrace("NightscoutService.as", "Parsed and added " + numBasalRateAdded + " remote basal rates!");
+									
+									TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NIGHTSCOUT_BASAL_PROFILE_IMPORTED));
 								}
 								
 								if (basalProfileImport)
@@ -857,7 +860,7 @@ package services
 							if (pumpUserEnabled)
 								getPropertiesV2Endpoint();
 							
-							if (syncPumpBasals)
+							if (downloadBasals)
 								getRemoteBasals();
 						}
 					}
@@ -886,6 +889,9 @@ package services
 			nightscoutFollowOffset = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_OFFSET));
 			
 			nightscoutFollowAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET))))));
+			
+			syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump";
+			downloadBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS) == "true";
 		}
 		
 		private static function activateFollower():void
@@ -1214,7 +1220,7 @@ package services
 							if (pumpUserEnabled)
 								getPropertiesV2Endpoint();
 							
-							if (syncPumpBasals)
+							if (downloadBasals)
 								getRemoteBasals();
 						}
 						
@@ -1582,7 +1588,7 @@ package services
 					if (pumpUserEnabled)
 						getPropertiesV2Endpoint();
 					
-					if (syncPumpBasals)
+					if (downloadBasals)
 						getRemoteBasals();
 				}
 			}
@@ -2467,7 +2473,7 @@ package services
 		 */
 		private static function getRemoteBasals():void
 		{
-			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !syncPumpBasals || serviceHalted)
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !downloadBasals || serviceHalted)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "getRemoteBasals called!");
@@ -2520,7 +2526,7 @@ package services
 			if (serviceHalted)
 				return;
 			
-			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !syncPumpBasals)
+			if (!treatmentsEnabled || !nightscoutTreatmentsSyncEnabled || !downloadBasals)
 				return;
 			
 			Trace.myTrace("NightscoutService.as", "onGetBasalsComplete called!");
@@ -2582,7 +2588,7 @@ package services
 						}
 						else
 						{
-							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncPumpBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+							if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && downloadBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
 							{
 								Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new basals fetch in 30 seconds. Responder: " + response);
 								setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
@@ -2592,7 +2598,7 @@ package services
 					} 
 					catch(error:Error) 
 					{
-						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncPumpBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+						if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && downloadBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
 						{
 							Trace.myTrace("NightscoutService.as", "Error parsing Nightscout response. Retrying new basals fetch in 30 seconds. Error: " + error.message + " | Response: " + response);
 							setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
@@ -2603,7 +2609,7 @@ package services
 			}
 			else
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncPumpBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && downloadBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new basals fetch in 30 seconds. Responder: " + response);
 					setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
@@ -3269,6 +3275,8 @@ package services
 			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 			nightscoutTreatmentsSyncEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
 			pumpUserEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true";
+			syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump";
+			downloadBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS) == "true";
 		}
 		
 		private static function activateEventListeners():void
@@ -3370,7 +3378,7 @@ package services
 			}
 			else if (mode == MODE_BASALS_GET)
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && syncPumpBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && downloadBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
 				{
 					Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting basals. Retrying in 30 seconds. Error: " + error.message);
 					setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
@@ -3497,6 +3505,22 @@ package services
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) == "True")
 				{
 					uploadPredictions();
+				}
+			}
+			else if (e.data == CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS || e.data == CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI)
+			{
+				syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump";
+				downloadBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS) == "true";
+				
+				if (downloadBasals)
+				{
+					if (syncPumpBasalRates)
+					{
+						getNightscoutProfile(true);
+					}
+					
+					basalsAPIServerResponse = "";
+					getRemoteBasals();
 				}
 			}
 		}
