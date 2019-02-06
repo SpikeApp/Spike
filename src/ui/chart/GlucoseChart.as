@@ -16,8 +16,6 @@ package ui.chart
 	import flash.utils.getTimer;
 	import flash.utils.setTimeout;
 	
-	import mx.utils.ObjectUtil;
-	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -473,6 +471,7 @@ package ui.chart
 		private var basalRenderMode:String;
 		private var basalAreaColor:uint;
 		private var activeBasalAreaQuad:Quad;
+		private var localBasalPillAdded:Boolean = false;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -9226,6 +9225,7 @@ package ui.chart
 				localCAGEAdded = false;
 				localIAGEAdded = false;
 				localBAGEAdded = false;
+				localBasalPillAdded = false;
 				
 				//Raw & Sage for master
 				if (!CGMBlueToothDevice.isFollower())
@@ -9334,6 +9334,21 @@ package ui.chart
 						infoContainer.addChild(bagePill);
 						
 						localBAGEAdded = true;
+					}
+				}
+				
+				if (!CGMBlueToothDevice.isFollower() || displayMDIBasals)
+				{
+					//Basal
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_ON) == "true")
+					{
+						if (basalPill != null) basalPill.dispose();
+						basalPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','basal_insulin'));
+						basalPill.setValue(GlucoseFactory.getCurrentBasalForPill());
+						basalPill.touchable = false;
+						infoContainer.addChild(basalPill);
+						
+						localBasalPillAdded = true;
 					}
 				}
 				
@@ -9541,13 +9556,24 @@ package ui.chart
 			}
 			
 			//Basal Rate
-			if (basalPill != null) basalPill.dispose();
-			if (e.userInfo.basal != null && e.userInfo.basal != "" && String(e.userInfo.basal).indexOf("n/a") == -1)
+			if (!localBasalPillAdded)
 			{
-				basalPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','basal_insulin'));
-				basalPill.setValue(e.userInfo.basal);
-				basalPill.touchable = false;
-				infoContainer.addChild(basalPill);
+				if (basalPill != null) basalPill.dispose();
+				if (e.userInfo.basal != null && e.userInfo.basal != "" && String(e.userInfo.basal).indexOf("n/a") == -1)
+				{
+					basalPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','basal_insulin'));
+					basalPill.setValue(e.userInfo.basal);
+					basalPill.touchable = false;
+					infoContainer.addChild(basalPill);
+				}
+			}
+			else
+			{
+				if (basalPill != null)
+				{
+					basalPill.removeFromParent();
+					infoContainer.addChild(basalPill);
+				}
 			}
 			
 			//Last OpenAPS Moment

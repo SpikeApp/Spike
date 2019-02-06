@@ -14,6 +14,8 @@ package ui.chart.helpers
 	
 	import model.ModelLocator;
 	
+	import treatments.ProfileManager;
+	
 	import ui.InterfaceController;
 	
 	import utils.Constants;
@@ -21,6 +23,7 @@ package ui.chart.helpers
 	
 	[ResourceBundle("chartscreen")]
 	[ResourceBundle("transmitterscreen")]
+	[ResourceBundle("treatments")]
 
 	public class GlucoseFactory
 	{
@@ -626,6 +629,44 @@ package ui.chart.helpers
 				timeInRapidFluctuation: timeInT2,
 				glucoseMean: glucoseMean
 			}
+		}
+		
+		public static function getCurrentBasalForPill():String
+		{
+			var userType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
+			var now:Number = new Date().valueOf();
+			var basalResult:String = "0.000" + (userType == "pump" ? "U" : ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour'));
+			
+			if (userType == "pump")
+			{
+				var pumpBasalProperties:Object = ProfileManager.getPumpBasalData(now);
+				if (pumpBasalProperties != null)
+				{
+					var currentPumpBasal:Number = pumpBasalProperties.tempBasalAmount != null && !isNaN(pumpBasalProperties.tempBasalAmount) ? pumpBasalProperties.tempBasalAmount : 0;
+					var isTempBasal:Boolean = pumpBasalProperties.tempBasalTreatment != null;
+					
+					if (isTempBasal)
+					{
+						basalResult = "T: " + (Math.round(currentPumpBasal * 1000) / 1000) + "U";
+					}
+					else
+					{
+						basalResult = (Math.round(currentPumpBasal * 1000) / 1000) + "U";
+					}
+				}
+			}
+			else if (userType == "mdi")
+			{
+				var mdiBasalProperties:Object = ProfileManager.getMDIBasalData(now);
+				if (mdiBasalProperties != null)
+				{
+					var currentMDIBasal:Number = mdiBasalProperties.mdiBasalAmount != null && !isNaN(mdiBasalProperties.mdiBasalAmount) ? mdiBasalProperties.mdiBasalAmount : 0;
+					var currentMDIDuration:Number = mdiBasalProperties.mdiBasalDuration != null && !isNaN(mdiBasalProperties.mdiBasalDuration) ? mdiBasalProperties.mdiBasalDuration : 1;
+					basalResult = (Math.round((currentMDIBasal / (currentMDIDuration / 60)) * 1000) / 1000) + ModelLocator.resourceManagerInstance.getString('treatments','basal_units_per_hour');
+				}
+			}
+			
+			return basalResult;
 		}
 	}
 }
