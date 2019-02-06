@@ -44,6 +44,7 @@ package ui.screens.display.settings.treatments
 	import utils.TimeSpan;
 	
 	[ResourceBundle("profilesettingsscreen")]
+	[ResourceBundle("sensorscreen")]
 	[ResourceBundle("globaltranslations")]
 	
 	public class BasalRatesSettingsList extends SpikeList 
@@ -170,6 +171,7 @@ package ui.screens.display.settings.treatments
 				
 			//Loop Basal Rates
 			var validBasalRate:Boolean = false;
+			var totalBasalRate:Number = 0;
 			for (var i:int = 0; i < userBasalRates.length; i++) 
 			{
 				var basalRate:BasalRate = userBasalRates[i];
@@ -177,7 +179,7 @@ package ui.screens.display.settings.treatments
 				{
 					//Accessory
 					var basalRateAccessory:TreatmentManagerAccessory;
-					if (!CGMBlueToothDevice.isFollower())
+					if (true)//(!CGMBlueToothDevice.isFollower())
 					{
 						basalRateAccessory = new TreatmentManagerAccessory();
 						basalRateAccessory.addEventListener(TreatmentManagerAccessory.EDIT, onEditBasalRate);
@@ -187,8 +189,14 @@ package ui.screens.display.settings.treatments
 						
 					//Data
 					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','start_time_label') + ": " + TimeSpan.formatHoursMinutes(basalRate.startHours, basalRate.startMinutes, timeFormat.slice(0,2) == "24" ? TimeSpan.TIME_FORMAT_24H : TimeSpan.TIME_FORMAT_12H) + ", " + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','basal_rate_label') + ": " + GlucoseFactory.formatIOB(basalRate.basalRate), accessory: basalRateAccessory, basalRate: basalRate  } );
+					totalBasalRate += basalRate.basalRate;
 					validBasalRate = true;
 				}
+			}
+			
+			if (validBasalRate)
+			{
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','total_basal_rate_per_day') + ": " + GlucoseFactory.formatIOB(getBasalRateTotals()) } );
 			}
 				
 			if (!validBasalRate && !editMode && !addMode)
@@ -221,6 +229,46 @@ package ui.screens.display.settings.treatments
 			}
 			
 			dataProvider = new ArrayCollection(data);
+			
+			
+			
+			for (var j:int = 0; j < data.length; j++) 
+			{
+				
+			}
+			
+		}
+		
+		private function getBasalRateTotals():Number
+		{
+			var total:Number = 0;
+			
+			for (var i:Number = 0, len:uint = userBasalRates.length; i < len; i++) 
+			{
+				var basalRate1:BasalRate = userBasalRates[i];
+				var basalRate2:BasalRate = userBasalRates[(i+1)%len];
+				
+				if (basalRate1 != null && basalRate2 != null)
+				{
+					var time1:Date = new Date();
+					time1.hours = basalRate1.startHours;
+					time1.minutes = basalRate1.startMinutes;
+					time1.seconds = 0;
+					time1.milliseconds = 0;
+					
+					var time2:Date = new Date();
+					time2.hours = i < len - 1 ? basalRate2.startHours : 23;
+					time2.minutes = i < len - 1 ? basalRate2.startMinutes : 59;
+					time2.seconds = 0;
+					time2.milliseconds = 0;
+					
+					var value:Number = basalRate1.basalRate;
+					
+					total += TimeSpan.fromDates(time1, time2).totalMinutes * value / 60;
+				}
+			}
+			
+			return total;
 		}
 		
 		private function configureComponents():void

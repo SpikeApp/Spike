@@ -4463,7 +4463,8 @@ package treatments
 				var nsBasal:Object = nsTreatments[i];
 				var basalTimestamp:Number = DateUtil.parseW3CDTF(nsBasal.created_at).valueOf();
 				if (basalTimestamp < firstReadingTimestamp) continue; //Treatment is outside timespan of first bg reading in spike. Let's ignore it
-				var basalID:String = nsBasal._id;
+				var basalID:String = nsBasal._id != null ? nsBasal._id : UniqueId.createEventId();
+				
 				var basalNote:String = "";
 				if (nsBasal.reason != null && nsBasal.reason != "")
 				{
@@ -4539,6 +4540,7 @@ package treatments
 				{
 					//It's a new treatment. Let's create it
 					var basal:Treatment = new Treatment(isMDIUser ? Treatment.TYPE_MDI_BASAL : Treatment.TYPE_TEMP_BASAL, basalTimestamp);
+					basal.ID = basalID;
 					basal.basalDuration = basalDuration;
 					basal.basalAbsoluteAmount = basalAbsoluteAmount;
 					basal.isBasalAbsolute = isBasalAbsolute;
